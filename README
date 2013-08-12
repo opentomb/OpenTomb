@@ -1,0 +1,47 @@
+Release optimisation flags: "-march=prescott" (MMX, SSE, SSE2, SSE3). You may rebuild it with other flags (I.E. "march=i486", "march=core2", ...).
+
+*How to use engine
+    0) Use LMB (Left Mouse Button) to strike test sphere to the world. My physics for character controls will be deleted in the next build. Not of all is optimal in algoritms, may be glitches, but you can see dynamic world with bullet physics. Use RMB (Right Mouse Button) to select object in worlsd or delete test sphere. 
+	1) Put in data/tr#/data your tr levels.
+	2) Configure engine with config.cfg.
+	3) Use ~ to open console. Type help and see commands.
+	4) move with SWAD, space for jump, ctrl for use, shift for walk, arrows to rotate camera.
+    5) to use mouse for camera control use config or console with command "mlook 1"
+    
+How to use model_view
+    0) Use 't' and 'y' keys for mesh list
+    1) Use 'm' and 'n' keys for sprite list
+    2) Use 'o' and 'p' keys for model list
+    3) Use 'u' and 'i' keys for animation list
+    4) Use 'z' key for pause animation. To list frames use 'v' and 'b' keys.
+
+*How to build
+	1) You need GCC compiler
+	2) You need libraryes: SDL library (do not forget to enable GL support in this library), OpenGL library, zlib.
+	3) In "vt" folder is modyfied vt project.
+    4) In src folder there is *.bat files for manual engine building. Use build_all to rebuild engine fully or see inside to know other script running order.
+	*) It is my own engine, not a branch of OpenRaider, but I use some useful code from it.
+
+Used here:
+    1) SDL library http://www.libsdl.org/
+    2) OpenGL http://www.opengl.org/
+    3) zlib http://www.zlib.net/
+    4) LUA v5.1.4. http://www.lua.org/
+    5) Vera Mono font http://www.dafont.com/
+    6) EasterEgg ASCII art http://www.chris.com/ascii/index.php
+    7) Code from or integrated lib:
+        - openraider project https://sourceforge.net/projects/openraider/
+        - quaketenebrae (parser and mem manager) http://tenebrae.sourceforge.net/
+        - vt project http://icculus.org/vt/vt/website/
+        - freetype2 http://freetype.sourceforge.net/freetype2/index.html
+        - ftgl http://sourceforge.net/projects/ftgl/
+        - BULLET http://bulletphysics.org/wordpress/
+    
+Note:
+Added test object interaction like doors and statics (test it in TR_I). To change selected object animation press "e" (next animation), or "q" (previous animation).
+    
+P.S. If i forget some information or share that I should not, please tell about it, I will try to fix it. 
+PPS. If you have some useful advises about engine or alghoritms, please write it to me.
+
+Thanks for helping to 'Lwmte', 'Cochrane', 'godmodder' and 'Ado Croft' from http://www.tombraiderforums.com (http://www.tombraiderforums.com/showthread.php?p=6873088)
+
