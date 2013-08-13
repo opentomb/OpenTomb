@@ -52,22 +52,14 @@ class  FTGL_EXPORT FTGLTextureFont : public FTFont
          * @param string    'C' style string to be output.   
          */
         virtual void Render( const char* string);
-        
-        void RenderRaw( const char* string)
-        {
-            FTFont::Render( string);
-        }
+        virtual void RenderRaw( const char* string);
         /**
          * Renders a string of characters
          * 
          * @param string    wchar_t string to be output.     
          */
         virtual void Render( const wchar_t* string);
-
-        void RenderRaw( const wchar_t* string)
-        {
-            FTFont::Render( string);
-        }
+        virtual void RenderRaw( const wchar_t* string);
         
     private:
         /**

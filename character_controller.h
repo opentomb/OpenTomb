@@ -26,6 +26,19 @@
 #define CHARACTER_SLIDE_FRONT                   (0x02)
 #define CHARACTER_SLIDE_BACK                    (0x01)
 
+/*
+ * Next step height information
+ */
+#define CHARACTER_STEP_DOWN_CAN_HANG            (-0x04)                         // enough height to hang here
+#define CHARACTER_STEP_DOWN_DROP                (-0x03)                         // big height, cannot walk next, drop only
+#define CHARACTER_STEP_DOWN_BIG                 (-0x02)                         // enough height change, step down is needed
+#define CHARACTER_STEP_DOWN_LITTLE              (-0x01)                         // too little height change, step down is not needed
+#define CHARACTER_STEP_HORIZONTAL               (0x00)                          // horizontal plane
+#define CHARACTER_STEP_UP_LITTLE                (0x01)                          // too little height change, step up is not needed
+#define CHARACTER_STEP_UP_BIG                   (0x02)                          // enough height change, step up is needed
+#define CHARACTER_STEP_UP_CLIMB                 (0x03)                          // big height, cannot walk next, climb only
+#define CHARACTER_STEP_UP_IMPOSSIBLE            (0x04)                          // too big height, no one ways here, or phantom case
+
 struct entity_s;
 class bt_engine_ClosestConvexResultCallback;
 class bt_engine_ClosestRayResultCallback;
@@ -124,6 +137,7 @@ void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cm
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz);
 int Character_SetToJump(struct entity_s *ent, character_command_p cmd, btScalar vz);
 void Character_UpdateCurrentRoom(struct entity_s *ent);
+void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor);
 
 int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd);

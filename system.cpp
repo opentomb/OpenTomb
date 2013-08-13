@@ -59,13 +59,9 @@ void Sys_Init()
     system_fps.x = -96;
     system_fps.y = -con_base.line_height - 8;
     
-    system_fps.rect[0] = -96.0;
-    system_fps.rect[1] = -con_base.line_height - 12;
-    system_fps.rect[2] = -8.0;
-    system_fps.rect[3] = -4.0;
-    
     system_fps.show = 1;
-    system_fps.has_rect = 1;
+    system_fps.show_rect = 0;
+    system_fps.rect_border = 2.0;
     
     Gui_AddLine(&system_fps);
 }

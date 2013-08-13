@@ -3,7 +3,7 @@
 #define CONSOLE_H
 
 #include "ftgl/FTGLBitmapFont.h"
-#include "ftgl/FTGLPixmapFont.h"
+#include "ftgl/FTGLTextureFont.h"
 
 #include <stdint.h>
 #include "script.h"
@@ -24,13 +24,13 @@ typedef struct console_info_s
 {
     char                        font_patch[255];            // путь к файлу шрифта
     FTGLBitmapFont             *font_bitmap;                // рендерер простого шрифта
-    FTGLPixmapFont             *font_pixmap;                // рендерер сглаженного шрифта
+    FTGLTextureFont            *font_texture;               // рендерер сглаженного шрифта
 
     uint16_t                    font_size;                  // размер шрифта в чем то =)
     GLfloat                     font_color[4];
     GLfloat                     background_color[4];
 
-    int8_t                      pixmap;                     // Режим вывода текста - сглаживание вкл.
+    int8_t                      smooth;                     // Режим вывода текста - сглаживание вкл.
 
     int                         log_lines_count;            // объём лога
     int                         log_pos;                    // текущая позиция указателя в логе

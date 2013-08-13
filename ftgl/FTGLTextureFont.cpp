@@ -166,6 +166,13 @@ void FTGLTextureFont::Render( const char* string)
 }
 
 
+void FTGLTextureFont::RenderRaw( const char* string)
+{
+    FTTextureGlyph::ResetActiveTexture();
+    FTFont::Render( string);
+}
+        
+
 void FTGLTextureFont::Render( const wchar_t* string)
 {   
     glPushAttrib( GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
@@ -180,3 +187,9 @@ void FTGLTextureFont::Render( const wchar_t* string)
     glPopAttrib();
 }
 
+
+void FTGLTextureFont::RenderRaw( const wchar_t* string)
+{
+    FTTextureGlyph::ResetActiveTexture();
+    FTFont::Render( string);
+}

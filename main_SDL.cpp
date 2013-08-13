@@ -580,6 +580,7 @@ void Engine_Frame(btScalar time)
     {
         screen_info.fps = (10.0 / time_cycl);
         snprintf(system_fps.text, system_fps.buf_size, "%.1f", screen_info.fps);
+        Gui_StringAutoRect(&system_fps);
         cycles = 0;
         time_cycl = 0.0;
     }   
@@ -788,11 +789,12 @@ void ShowDebugInfo()
         txt = Gui_OutTextXY(screen_info.w-420, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc.floor_point.m_floats[2], (int)fc.ceiling_point.m_floats[2], (int)fc.water_level);
         if(txt)
         {
-            txt->rect[0] = -420.0;
-            txt->rect[1] = 4.0;
-            txt->rect[2] = -20.0;
-            txt->rect[3] = 132.0;
-            txt->has_rect = 1;
+            Gui_StringAutoRect(txt);
+            //txt->rect[0] = -420.0;
+            //txt->rect[1] = 4.0;
+            //txt->rect[2] = -20.0;
+            //txt->rect[3] = 132.0;
+            //txt->show_rect = 1;
         }
         
         Gui_OutTextXY(screen_info.w-420, 68, "anim = %d, state = %d, frame = %d", ent->current_animation, ent->current_stateID, ent->current_frame);

@@ -1,1 +1,1 @@
-hg push -f ssh://tesla_rus@hg.code.sf.net/p/opentomb/code
+hg push

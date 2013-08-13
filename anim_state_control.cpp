@@ -134,6 +134,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     btScalar t, *pos = ent->transform + 12;
     btScalar offset[3], move[3];
     height_info_t fc;
+    
     fc.cb = ent->character->ray_cb;
     fc.cb->m_closestHitFraction = 1.0;
     fc.cb->m_collisionObject = NULL;
@@ -141,7 +142,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     fc.ccb->m_closestHitFraction = 1.0;
     fc.ccb->m_hitCollisionObject = NULL;
     ent->anim_flags = ANIM_NORMAL_CONTROL;
-
+    Character_UpdateCurrentHeight(ent);
 /*
  * - On floor animations
  * - Climbing animations

@@ -12,6 +12,7 @@
 #include "entity.h"
 #include "mesh.h"
 #include "vmath.h"
+#include "polygon.h"
 
 
 #define CHARACTER_BOX_HALF_SIZE (128.0)
@@ -45,7 +46,7 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->cmd.slide = 0x00;
     vec3_set_zero(ret->cmd.move);
     vec3_set_zero(ret->cmd.rot);
-            
+
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->max_move_iterations = DEFAULT_MAX_MOVE_ITERATIONS;
     ret->min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -54,7 +55,7 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
     ret->climb_r = DEFAULT_CHARACTER_CLIMB_R;
-    
+
     vec3_set_zero(ret->speed.m_floats);
 
     ret->Radius = r;
@@ -208,6 +209,17 @@ void Character_UpdateCurrentRoom(struct entity_s *ent)
 }
 
 /**
+ * Calculates next height info and information about next step
+ * @param ent
+ */
+void Character_UpdateCurrentHeight(struct entity_s *ent)
+{
+    btScalar pos[3];
+    vec3_add(pos, ent->transform + 12, ent->collision_offset.m_floats);
+    Character_GetHeightInfo(pos, &ent->character->height_info); 
+}
+
+/**
  * Start position are taken from ent->transform
  */
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
@@ -313,11 +325,59 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
 }
 
 /**
- * @function calculates next floor info + fantom filter + returns step info
+ * @function calculates next floor info + fantom filter + returns step info. 
+ * Current height info must be calculated!
  */
 int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc)
 {
+    btScalar pos[3];
+    height_info_p fc = &ent->character->height_info;
+    int ret = CHARACTER_STEP_HORIZONTAL;
+    ///penetration test?
     
+    vec3_add(pos, ent->transform + 12, offset);
+    Character_GetHeightInfo(pos, nfc);
+    
+    if(fc->floor_hit && nfc->floor_hit)
+    {
+        if(fabs(fc->floor_point.m_floats[2] - nfc->floor_point.m_floats[2]) < SPLIT_EPSILON)
+        {
+            ret = CHARACTER_STEP_HORIZONTAL;                                    // horizontal
+        }
+        else if(fc->floor_point.m_floats[2] > nfc->floor_point.m_floats[2])     // down way
+        {
+            
+        }
+        else                                                                    // up way
+        {
+            
+        }
+    }
+    else if(!fc->floor_hit && !nfc->floor_hit)
+    {
+        ret = CHARACTER_STEP_HORIZONTAL;                                        // horizontal? yes no maybe...
+    }
+    else if(!fc->floor_hit && nfc->floor_hit)                                   // strange cas
+    {
+        ret = 0x00;
+    }
+    else //if(fc->floor_hit && !nfc->floor_hit)                                 // bottomless 
+    {
+        ret = CHARACTER_STEP_DOWN_CAN_HANG;
+    }
+    /*
+#define CHARACTER_STEP_DOWN_CAN_HANG            (-0x04)                         // enough height to hang here
+#define CHARACTER_STEP_DOWN_DROP                (-0x03)                         // big height, cannot walk next, drop only
+#define CHARACTER_STEP_DOWN_BIG                 (-0x02)                         // enough height change, step down is needed
+#define CHARACTER_STEP_DOWN_LITTLE              (-0x01)                         // too little height change, step down is not needed
+#define CHARACTER_STEP_HORIZONTAL               (0x00)                          // horizontal plane
+#define CHARACTER_STEP_UP_LITTLE                (0x01)                          // too little height change, step up is not needed
+#define CHARACTER_STEP_UP_BIG                   (0x02)                          // enough height change, step up is needed
+#define CHARACTER_STEP_UP_CLIMB                 (0x03)                          // big height, cannot walk next, climb only
+#define CHARACTER_STEP_UP_IMPOSSIBLE            (0x04)                          // too big height, no one ways here, or phantom case
+*/
+  
+   
 }
 
 /**
@@ -330,9 +390,9 @@ int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct
 {
     btVector3 from, to, tmp;
     btScalar d, *pos = ent->transform + 12;
-    btScalar n0[4], n1[4], n2[4], *v;                                           // planes equations
+    btScalar n0[4], n1[4], n2[4];                                               // planes equations
     btTransform t1, t2;
-    //extern GLfloat cast_ray[6];
+    //extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
     /*
      * init callbacks functions
      */

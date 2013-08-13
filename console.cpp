@@ -4,7 +4,7 @@
 #include <SDL/SDL_opengl.h>
 #include <SDL/SDL_keysym.h>
 #include "ftgl/FTGLBitmapFont.h"
-#include "ftgl/FTGLPixmapFont.h"
+#include "ftgl/FTGLTextureFont.h"
 #include "console.h"
 #include "system.h"
 #include "engine.h"
@@ -42,8 +42,8 @@ void Con_Init()
     
     con_base.font_bitmap = new FTGLBitmapFont(con_base.font_patch);
     con_base.font_bitmap->FaceSize(con_base.font_size);
-    con_base.font_pixmap = new FTGLPixmapFont(con_base.font_patch);
-    con_base.font_pixmap->FaceSize(con_base.font_size);
+    con_base.font_texture = new FTGLTextureFont(con_base.font_patch);
+    con_base.font_texture->FaceSize(con_base.font_size);
 
     con_base.shown_lines = (char**) malloc(con_base.shown_lines_count*sizeof(char*));
     for(i=0;i<con_base.shown_lines_count;i++)
@@ -57,7 +57,7 @@ void Con_Init()
         con_base.log_lines[i] = (char*) calloc(con_base.line_size*sizeof(char), 1);
     }
 
-    con_base.line_height = con_base.spacing * ((con_base.pixmap)?(con_base.font_pixmap->Ascender()):(con_base.font_bitmap->Ascender()));
+    con_base.line_height = con_base.spacing * ((con_base.smooth)?(con_base.font_texture->Ascender()):(con_base.font_bitmap->Ascender()));
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -73,9 +73,9 @@ void Con_Destroy()
     int i;
     if(con_base.inited)
     {
-        if(con_base.font_pixmap)
+        if(con_base.font_texture)
         {
-            delete con_base.font_pixmap;
+            delete con_base.font_texture;
         }
 
         if(con_base.font_bitmap)
@@ -109,8 +109,8 @@ void Con_SetFontSize(int size)
     con_base.inited = 0;
     con_base.font_size = size;
     con_base.font_bitmap->FaceSize(con_base.font_size);
-    con_base.font_pixmap->FaceSize(con_base.font_size);
-    con_base.line_height = con_base.spacing * ((con_base.pixmap)?(con_base.font_pixmap->Ascender()):(con_base.font_bitmap->Ascender()));
+    con_base.font_texture->FaceSize(con_base.font_size);
+    con_base.line_height = con_base.spacing * ((con_base.smooth)?(con_base.font_texture->Ascender()):(con_base.font_bitmap->Ascender()));
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -131,7 +131,7 @@ void Con_SetLineInterval(float interval)
 
     con_base.inited = 0;
     con_base.spacing = interval;
-    con_base.line_height = con_base.spacing * ((con_base.pixmap)?(con_base.font_pixmap->Ascender()):(con_base.font_bitmap->Ascender()));
+    con_base.line_height = con_base.spacing * ((con_base.smooth)?(con_base.font_texture->Ascender()):(con_base.font_bitmap->Ascender()));
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -150,18 +150,18 @@ void Con_Draw()
         Con_DrawBackground();
         x = 8;
         y = con_base.cursor_y;
-        if(con_base.pixmap)
+        glColor4fv(con_base.font_color);
+        if(con_base.smooth)
         {
             for(i=0;i<con_base.showing_lines;i++)
             {
                 y += con_base.line_height;
-                glRasterPos2i(x, y);
-                glPixelTransferf(GL_RED_SCALE,   con_base.font_color[0]);
-                glPixelTransferf(GL_GREEN_SCALE, con_base.font_color[1]);
-                glPixelTransferf(GL_BLUE_SCALE,  con_base.font_color[2]);
-                glPixelTransferf(GL_ALPHA_SCALE, con_base.font_color[3]);
-                con_base.font_pixmap->RenderRaw(con_base.shown_lines[i]);
+                glPushMatrix();
+                glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
+                con_base.font_texture->RenderRaw(con_base.shown_lines[i]);
+                glPopMatrix();
             }
+            glBindTexture(GL_TEXTURE_2D, 0);                                    // otherways cursor does not swown
         }
         else    
         {
@@ -169,7 +169,6 @@ void Con_Draw()
             {
                 y += con_base.line_height;
                 glRasterPos2i(x, y);
-                glColor4fv(con_base.font_color);
                 con_base.font_bitmap->RenderRaw(con_base.shown_lines[i]);
             }
         }
@@ -220,8 +219,8 @@ void Con_DrawCursor()
     {
         GLfloat coords[4];
         glColor4fv(con_base.font_color);
-        coords[0] = (GLfloat)con_base.cursor_x;     coords[1] = (GLfloat)(y - 0.1 * con_base.line_height);
-        coords[2] = (GLfloat)con_base.cursor_x;     coords[3] = (GLfloat)(y + 0.7 * con_base.line_height);
+        coords[0] = (GLfloat)con_base.cursor_x;     coords[1] = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
+        coords[2] = (GLfloat)con_base.cursor_x;     coords[3] = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
         glVertexPointer(2, GL_FLOAT, 0, coords);
         glDrawArrays(GL_LINES, 0, 2); 
     }
@@ -342,7 +341,14 @@ void Con_CalcCursorPosition()
 {
     char ch = con_base.shown_lines[0][con_base.cursor_pos];
     con_base.shown_lines[0][con_base.cursor_pos] = 0;
-    con_base.cursor_x = 8 + 1 + ((con_base.pixmap)?(con_base.font_pixmap->Advance(con_base.shown_lines[0])):(con_base.font_bitmap->Advance(con_base.shown_lines[0])));
+    if(con_base.smooth)
+    {
+        con_base.cursor_x = 8 + 1 + con_base.font_texture->Advance(con_base.shown_lines[0]);
+    }
+    else
+    {
+        con_base.cursor_x = 8 + 1 + con_base.font_bitmap->Advance(con_base.shown_lines[0]);
+    }
     con_base.shown_lines[0][con_base.cursor_pos] = ch;
 }
 

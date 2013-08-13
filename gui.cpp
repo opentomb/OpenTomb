@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "gl_util.h"
 #include "ftgl/FTGLBitmapFont.h"
-#include "ftgl/FTGLPixmapFont.h"
+#include "ftgl/FTGLTextureFont.h"
 
 #include "gui.h"
 #include "engine.h"
@@ -30,7 +30,8 @@ void Gui_Init()
         gui_temp_lines[i].text = (char*)malloc(TEMP_LINE_LENGHT * sizeof(char));
         gui_temp_lines[i].text[0] = 0;
         gui_temp_lines[i].show = 0;
-        gui_temp_lines[i].has_rect = 0;
+        gui_temp_lines[i].show_rect = 0;
+        gui_temp_lines[i].rect_border = 2.0;
         gui_temp_lines[i].next = NULL;
         gui_temp_lines[i].prev = NULL;
 
@@ -179,6 +180,29 @@ void Gui_DeleteLine(gui_text_line_p line)
     }
 }
 
+gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
+{
+    if(l)
+    {
+        float llx, lly, llz, urx, ury, urz;
+        if(con_base.smooth)
+        {
+            con_base.font_texture->BBox(l->text, llx, lly, llz, urx, ury, urz);
+        }
+        else
+        {
+            con_base.font_bitmap->BBox(l->text, llx, lly, llz, urx, ury, urz);
+        }
+        l->rect[0] = llx + l->x;
+        l->rect[1] = lly + l->y;
+        l->rect[2] = urx + l->x;
+        l->rect[3] = ury + l->y;
+        l->show_rect = 1;
+    }
+    
+    return l;
+}
+
 /**
  * For simple temporary lines rendering.
  * Really all strings will be rendered in Gui_Render() function.
@@ -194,27 +218,29 @@ gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...)
         vsnprintf(l->text, TEMP_LINE_LENGHT, fmt, argptr);
         va_end(argptr);
 
-        l->has_rect = 0;
+        l->show_rect = 0;
         l->next = NULL;
         l->prev = NULL;
-
+        l->rect_border = 2.0;
+        
         l->font_color[0] = 0.0;
         l->font_color[1] = 0.0;
         l->font_color[2] = 0.0;
         l->font_color[3] = 1.0;
-
+        
         l->rect_color[0] = 0.0;
         l->rect_color[1] = 1.0;
         l->rect_color[2] = 0.0;
         l->rect_color[3] = 0.25;
-
+        
         temp_lines_used ++;
         l->x = x;
         l->y = y;
+        Gui_StringAutoRect(l);
         l->show = 1;
         return l;
     }
-
+    
     return NULL;
 }
 
@@ -235,7 +261,7 @@ void Gui_Render()
     Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_RenderStringsRect();
-    if(con_base.pixmap == 0)
+    if(con_base.smooth == 0)
     {
         glDisable(GL_BLEND);
     }
@@ -256,12 +282,12 @@ void Gui_RenderStringsRect()
 
     while(l)
     {
-        if(l->show && l->has_rect)
+        if(l->show && l->show_rect)
         {
-            x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0]));
-            y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1]));
-            x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2]));
-            y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3]));
+            x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0])) - l->rect_border;
+            y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1])) - l->rect_border;
+            x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2])) + l->rect_border;
+            y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3])) + l->rect_border;
             rectCoords[0] = x0; rectCoords[1] = y0;
             rectCoords[2] = x1; rectCoords[3] = y0;
             rectCoords[4] = x1; rectCoords[5] = y1;
@@ -272,17 +298,17 @@ void Gui_RenderStringsRect()
         }
         l = l->next;
     }
-
+    
     uint16_t i;
     l = gui_temp_lines;
     for(i=0;i<temp_lines_used;i++,l++)
     {
-        if(l->show && l->has_rect)
+        if(l->show && l->show_rect)
         {
-            x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0]));
-            y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1]));
-            x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2]));
-            y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3]));
+            x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0])) - l->rect_border;
+            y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1])) - l->rect_border;
+            x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2])) + l->rect_border;
+            y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3])) + l->rect_border;
             rectCoords[0] = x0; rectCoords[1] = y0;
             rectCoords[2] = x1; rectCoords[3] = y0;
             rectCoords[4] = x1; rectCoords[5] = y1;
@@ -297,29 +323,38 @@ void Gui_RenderStringsRect()
 void Gui_RenderStrings()
 {
     gui_text_line_p l = gui_base_lines;
-
+    
     while(l)
     {
         if(l->show)
-        {
-            glColor4fv(l->font_color);
-            glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
-            if(con_base.pixmap)
+        {     
+            glColor4fv(l->font_color);      
+            if(con_base.smooth)
             {
-                glPixelTransferf(GL_RED_SCALE,   l->font_color[0]);
-                glPixelTransferf(GL_GREEN_SCALE, l->font_color[1]);
-                glPixelTransferf(GL_BLUE_SCALE,  l->font_color[2]);
-                glPixelTransferf(GL_ALPHA_SCALE, l->font_color[3]);
-                con_base.font_pixmap->RenderRaw(l->text);
+                glPushMatrix();
+                glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
+                con_base.font_texture->RenderRaw(l->text);
+                glPopMatrix();
             }
             else
             {
+                glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
+
+
+
+
+
+
+
+
+
+
                 con_base.font_bitmap->RenderRaw(l->text);
             }
         }
         l = l->next;
     }
-
+    
     uint16_t i;
     l = gui_temp_lines;
     for(i=0;i<temp_lines_used;i++,l++)
@@ -327,20 +362,29 @@ void Gui_RenderStrings()
         if(l->show)
         {
             glColor4fv(l->font_color);
-            glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
-            if(con_base.pixmap)
+            if(con_base.smooth)
             {
-                glPixelTransferf(GL_RED_SCALE,   l->font_color[0]);
-                glPixelTransferf(GL_GREEN_SCALE, l->font_color[1]);
-                glPixelTransferf(GL_BLUE_SCALE,  l->font_color[2]);
-                glPixelTransferf(GL_ALPHA_SCALE, l->font_color[3]);
-                con_base.font_pixmap->RenderRaw(l->text);
+                glPushMatrix();
+                glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
+                con_base.font_texture->RenderRaw(l->text);
+                glPopMatrix();
             }
             else
             {
+                glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
+
+
+
+
+
+
+
+
+
+
                 con_base.font_bitmap->RenderRaw(l->text);
             }
-            l->has_rect = 0;
+            l->show_rect = 0;
             l->show = 0;
         }
     }
@@ -350,7 +394,7 @@ void Gui_RenderStrings()
 void Gui_SwitchConGLMode(char is_gui)
 {
     static char curr_mode = 0;
-    if((0 != is_gui) && (0 == curr_mode))                                       // перевести ОГЛ в систему координат графического интерфейса
+    if((0 != is_gui) && (0 == curr_mode))                                       // set gui coordinate system
     {
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -363,7 +407,7 @@ void Gui_SwitchConGLMode(char is_gui)
 
         curr_mode = is_gui;
     }
-    else if((0 == is_gui) && (0 != curr_mode))                                  // перевести ОГЛ в прежнюю систему координат
+    else if((0 == is_gui) && (0 != curr_mode))                                  // restore coordinate system
     {
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
@@ -376,13 +420,13 @@ void Gui_SwitchConGLMode(char is_gui)
 
 void Gui_DrawCrosshair()
 {
-    GLdouble crosshairCoords[] = {
+    GLfloat crosshairCoords[] = {
             screen_info.w/2.0-5, screen_info.h/2.0,
             screen_info.w/2.0+5, screen_info.h/2.0,
             screen_info.w/2.0, screen_info.h/2.0-5,
             screen_info.w/2.0, screen_info.h/2.0+5
     };
-
+    
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);
@@ -390,7 +434,7 @@ void Gui_DrawCrosshair()
     glColor3f(1.0, 0.0, 0.0);
 
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glVertexPointer(2, GL_DOUBLE, 0, crosshairCoords);
+    glVertexPointer(2, GL_FLOAT, 0, crosshairCoords);
     glDrawArrays(GL_LINES, 0, 4);
 
     glPopAttrib();
@@ -439,29 +483,17 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     glBegin(GL_POLYGON);
 
-        glColor4f(colorUpperLeft[0],    // Upper left
-                  colorUpperLeft[1],
-                  colorUpperLeft[2],
-                  colorUpperLeft[3]);
-        glVertex3f(x, y + height, 0.0);
+        glColor4fv(colorUpperLeft);     // Upper left
+        glVertex2f(x, y + height);
 
-        glColor4f(colorUpperRight[0],   // Upper right
-                  colorUpperRight[1],
-                  colorUpperRight[2],
-                  colorUpperRight[3]);
-        glVertex3f(x + width, y + height, 0.0);
+        glColor4fv(colorUpperRight);    // Upper right
+        glVertex2f(x + width, y + height);
 
-        glColor4f(colorLowerRight[0],   // Lower right
-                  colorLowerRight[1],
-                  colorLowerRight[2],
-                  colorLowerRight[3]);
-        glVertex3f(x + width, y, 0.0);
+        glColor4fv(colorLowerRight);    // Lower right
+        glVertex2f(x + width, y);
 
-        glColor4f(colorLowerLeft[0],    // Lower left
-                  colorLowerLeft[1],
-                  colorLowerLeft[2],
-                  colorLowerLeft[3]);
-        glVertex3f(x, y, 0.0);
+        glColor4fv(colorLowerLeft);     // Lower left
+        glVertex2f(x, y);
 
     glEnd();
 }

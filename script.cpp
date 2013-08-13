@@ -402,10 +402,10 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         delete con_base.font_bitmap;
         con_base.font_bitmap = new FTGLBitmapFont(con_base.font_patch);
         
-        delete con_base.font_pixmap;
-        con_base.font_pixmap = new FTGLPixmapFont(con_base.font_patch);
+        delete con_base.font_texture;
+        con_base.font_texture = new FTGLTextureFont(con_base.font_patch);
     }
-    cn->pixmap = lua_GetScalarField(lua, "pixmap");
+    cn->smooth = lua_GetScalarField(lua, "smooth");
     lua_getfield(lua, -1, "font_color");
     if(lua_istable(lua, -1))
     {

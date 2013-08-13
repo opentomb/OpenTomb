@@ -7,7 +7,7 @@ typedef struct gui_text_line_s
 {
     char                       *text;
     uint16_t                    buf_size;
-    int8_t                      has_rect;
+    int8_t                      show_rect;
     int8_t                      show;
 
     GLint                       x;
@@ -15,6 +15,7 @@ typedef struct gui_text_line_s
 
     GLfloat                     rect_color[4];
     GLfloat                     font_color[4];
+    GLfloat                     rect_border;
     GLfloat                     rect[4];                                        //x0, yo, x1, y1
 
     struct gui_text_line_s     *next;
@@ -136,6 +137,10 @@ void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);
 void Gui_RenderStrings();
 void Gui_RenderStringsRect();
+/*
+ * Calculates rect coordinates around the text
+ */
+gui_text_line_p Gui_StringAutoRect(gui_text_line_p l);
 /**
  * Draws text using a current console font.
  */
@@ -180,8 +185,8 @@ void Gui_Render();
 
 void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat &width, const GLfloat &height,
-                  const float colorUpperLeft[], const float colorUpperRight[],
-                  const float colorLowerLeft[], const float colorLowerRight[],
+                  const GLfloat colorUpperLeft[], const GLfloat colorUpperRight[],
+                  const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
                   const int &blendMode);
 void Gui_DrawCrosshair();
 void Gui_DrawBars();
