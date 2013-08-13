@@ -8,15 +8,15 @@ typedef struct gui_text_line_s
     char                       *text;
     uint16_t                    buf_size;
     int8_t                      has_rect;
-    int8_t                      show;  
-    
+    int8_t                      show;
+
     GLint                       x;
     GLint                       y;
 
     GLfloat                     rect_color[4];
     GLfloat                     font_color[4];
     GLfloat                     rect[4];                                        //x0, yo, x1, y1
-    
+
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;
 } gui_text_line_t, *gui_text_line_p;
@@ -27,10 +27,9 @@ typedef struct gui_text_line_s
 enum Bars
 {
     BAR_HEALTH,     // TR 1-5
-    BAR_AIR,        // TR 1-5
-    BAR_SPRINT,    // TR 3-5
+    BAR_AIR,        // TR 1-5, alternate state - gas (TR5)
+    BAR_SPRINT,     // TR 3-5
     BAR_FREEZE,     // TR 3 only
-    BAR_GAS,        // TR 5 only
     BAR_LASTINDEX
 };
 

@@ -38,13 +38,13 @@ void Gui_Init()
         gui_temp_lines[i].font_color[1] = 0.0;
         gui_temp_lines[i].font_color[2] = 0.0;
         gui_temp_lines[i].font_color[3] = 1.0;
-        
+
         gui_temp_lines[i].rect_color[0] = 0.0;
         gui_temp_lines[i].rect_color[1] = 1.0;
         gui_temp_lines[i].rect_color[2] = 0.0;
         gui_temp_lines[i].rect_color[3] = 0.5;
     }
-    
+
     for(int i = 0; i < BAR_LASTINDEX; i++)
     {
         switch(i)
@@ -54,9 +54,9 @@ void Gui_Init()
                     Bar[i].Visible =      false;
                     Bar[i].Alternate =    false;
                     Bar[i].Invert =       false;
-                    Bar[i].Vertical =     true;
+                    Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(0, 0, 15, 1000, 1);
+                    Bar[i].SetDimensions(50, 30, 250, 25, 3);
                     Bar[i].SetColor(BASE_MAIN, 255, 50, 50, 200);
                     Bar[i].SetColor(BASE_FADE, 100, 255, 50, 200);
                     Bar[i].SetColor(ALT_MAIN, 255, 180, 0, 255);
@@ -65,10 +65,10 @@ void Gui_Init()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(1000, 999);
-                    Bar[i].SetBlink(50);
+                    Bar[i].SetValues(1000, 300);
+                    Bar[i].SetBlink(300);
                     Bar[i].SetExtrude(true, 100);
-                    Bar[i].SetAutoshow(true, 5000, true, 1000);
+                    Bar[i].SetAutoshow(true, 2000, true, 400);
                 }
                 break;
             case BAR_AIR:
@@ -76,19 +76,19 @@ void Gui_Init()
                     Bar[i].Visible =      false;
                     Bar[i].Alternate =    false;
                     Bar[i].Invert =       true;
-                    Bar[i].Vertical =     true;
+                    Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(983, 0, 15, 1000, 1);
+                    Bar[i].SetDimensions(700, 30, 250, 25, 3);
                     Bar[i].SetColor(BASE_MAIN, 0, 50, 255, 200);
                     Bar[i].SetColor(BASE_FADE, 190, 190, 255, 200);
                     Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(1000, 999);
-                    Bar[i].SetBlink(100);
+                    Bar[i].SetValues(1800, 400);
+                    Bar[i].SetBlink(300);
                     Bar[i].SetExtrude(true, 100);
-                    Bar[i].SetAutoshow(true, 5000, true, 1000);
+                    Bar[i].SetAutoshow(true, 2000, true, 400);
                 }
                 break;
             case BAR_SPRINT:
@@ -98,17 +98,16 @@ void Gui_Init()
                     Bar[i].Invert =       false;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(50, 30, 250, 25, 3);
-                    Bar[i].SetColor(BASE_MAIN, 255, 0, 50, 200);
-                    Bar[i].SetColor(BASE_FADE, 0, 255, 50, 200);
+                    Bar[i].SetDimensions(50, 70, 250, 25, 3);
+                    Bar[i].SetColor(BASE_MAIN, 255, 100, 50, 200);
+                    Bar[i].SetColor(BASE_FADE, 255, 200, 0, 200);
                     Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 220);
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 220);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(1, 0.5);
-                    Bar[i].SetBlink(200);
+                    Bar[i].SetColor(BORDER_MAIN, 110, 110, 110, 100);
+                    Bar[i].SetColor(BORDER_FADE, 60, 60, 60, 180);
+                    Bar[i].SetValues(120, 0);
                     Bar[i].SetExtrude(true, 100);
-                    Bar[i].SetAutoshow(true, 5000, true, 1000);
+                    Bar[i].SetAutoshow(true, 500, true, 300);
                 }
                 break;
             case BAR_FREEZE:
@@ -118,37 +117,17 @@ void Gui_Init()
                     Bar[i].Invert =       true;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(700, 30, 250, 25, 3);
-                    Bar[i].SetColor(BASE_MAIN, 100, 0, 255, 255);
-                    Bar[i].SetColor(BASE_FADE, 150, 90, 255, 255);
+                    Bar[i].SetDimensions(700, 70, 250, 25, 3);
+                    Bar[i].SetColor(BASE_MAIN, 255, 0, 255, 255);
+                    Bar[i].SetColor(BASE_FADE, 190, 120, 255, 255);
                     Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(1000, 999);
-                    Bar[i].SetBlink(400);
+                    Bar[i].SetValues(450, 100);
+                    Bar[i].SetBlink(200);
                     Bar[i].SetExtrude(true, 60);
-                    Bar[i].SetAutoshow(true, 5000, true, 1000);
-                }
-                break;
-            case BAR_GAS:
-                {
-                    Bar[i].Visible =      false;
-                    Bar[i].Alternate =    false;
-                    Bar[i].Invert =       false;
-                    Bar[i].Vertical =     true;
-
-                    Bar[i].SetDimensions(100, 100, 25, 500, 5);
-                    Bar[i].SetColor(BASE_MAIN, 20, 255, 20, 200);
-                    Bar[i].SetColor(BASE_FADE, 110, 255, 110, 200);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 110);
-                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 110);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 110);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 110);
-                    Bar[i].SetValues(1000, 999);
-                    Bar[i].SetBlink(300);
-                    Bar[i].SetExtrude(true, 30);
-                    Bar[i].SetAutoshow(true, 15000, true, 11000);
+                    Bar[i].SetAutoshow(true, 500, true, 300);
                 }
                 break;
         } // end switch(i)
@@ -176,7 +155,7 @@ void Gui_AddLine(gui_text_line_p line)
         line->prev = NULL;
         return;
     }
-    
+
     line->prev = NULL;
     line->next = gui_base_lines;
     gui_base_lines->prev = line;
@@ -192,7 +171,7 @@ void Gui_DeleteLine(gui_text_line_p line)
         gui_base_lines->prev = NULL;
         return;
     }
-    
+
     line->prev->next = line->next;
     if(line->next)
     {
@@ -210,7 +189,7 @@ gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...)
     {
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;
-        
+
         va_start(argptr, fmt);
         vsnprintf(l->text, TEMP_LINE_LENGHT, fmt, argptr);
         va_end(argptr);
@@ -223,19 +202,19 @@ gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...)
         l->font_color[1] = 0.0;
         l->font_color[2] = 0.0;
         l->font_color[3] = 1.0;
-        
+
         l->rect_color[0] = 0.0;
         l->rect_color[1] = 1.0;
         l->rect_color[2] = 0.0;
         l->rect_color[3] = 0.25;
-        
+
         temp_lines_used ++;
         l->x = x;
         l->y = y;
         l->show = 1;
         return l;
     }
-    
+
     return NULL;
 }
 
@@ -251,21 +230,21 @@ void Gui_Render()
     glDisable(GL_LIGHTING);
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
-    
+
     Con_Draw();
     Gui_DrawCrosshair();
     Gui_DrawBars();
-    Gui_RenderStringsRect();    
+    Gui_RenderStringsRect();
     if(con_base.pixmap == 0)
     {
         glDisable(GL_BLEND);
     }
     Gui_RenderStrings();
-    
+
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
     glPopAttrib();
-    
+
     Gui_SwitchConGLMode(0);
 }
 
@@ -274,7 +253,7 @@ void Gui_RenderStringsRect()
     gui_text_line_p l = gui_base_lines;
     GLfloat x0, y0, x1, y1;
     GLfloat rectCoords[8];
-    
+
     while(l)
     {
         if(l->show && l->has_rect)
@@ -293,7 +272,7 @@ void Gui_RenderStringsRect()
         }
         l = l->next;
     }
-    
+
     uint16_t i;
     l = gui_temp_lines;
     for(i=0;i<temp_lines_used;i++,l++)
@@ -318,12 +297,12 @@ void Gui_RenderStringsRect()
 void Gui_RenderStrings()
 {
     gui_text_line_p l = gui_base_lines;
-    
+
     while(l)
     {
         if(l->show)
-        {     
-            glColor4fv(l->font_color);      
+        {
+            glColor4fv(l->font_color);
             glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
             if(con_base.pixmap)
             {
@@ -334,13 +313,13 @@ void Gui_RenderStrings()
                 con_base.font_pixmap->RenderRaw(l->text);
             }
             else
-            {  
+            {
                 con_base.font_bitmap->RenderRaw(l->text);
             }
         }
         l = l->next;
     }
-    
+
     uint16_t i;
     l = gui_temp_lines;
     for(i=0;i<temp_lines_used;i++,l++)
@@ -403,7 +382,7 @@ void Gui_DrawCrosshair()
             screen_info.w/2.0, screen_info.h/2.0-5,
             screen_info.w/2.0, screen_info.h/2.0+5
     };
-    
+
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);
@@ -421,8 +400,10 @@ void Gui_DrawBars()
 {
     for(int i = 0; i < BAR_LASTINDEX; i++)
     {
-        Bar[i].Show(300); ///@FIXME: TEST VALUE!!!
+        Bar[i].Show(1000);
     }
+
+    //Bar[BAR_HEALTH].Show(1000); ///@FIXME: TEST VALUE!!!
 }
 
 /**
@@ -686,22 +667,18 @@ void ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay)
 void ProgressBar::Show(float value)
 {
     // Initial value limiters (to prevent bar overflow).
-    value = (value >= 0)?(value):(0);
-    value = (value > mMaxValue)?(mMaxValue):(value);
+    value  = (value >= 0)?(value):(0);
+    value  = (value > mMaxValue)?(mMaxValue):(value);
+
+    // Enable blink mode, if value is gone below warning value.
+    mBlink = (value <= mWarnValue)?(true):(false);
 
     if(mAutoShow)   // Check autoshow visibility conditions.
     {
-        // 1. If bar value gone less than warning value, we set bar into
-        //    warning state and show it in any case, bypassing all other conditions.
+        // 1. If bar value gone less than warning value, we show it
+        //    in any case, bypassing all other conditions.
         if(value <= mWarnValue)
-        {
             Visible = true;
-            mBlink = true;
-        }
-        else
-        {
-            mBlink = false;  // Reset warning state flag.
-        }
 
         // 2. Check if bar's value changed,
         //    and if so, start showing it automatically for a given delay time.
@@ -795,6 +772,20 @@ void ProgressBar::Show(float value)
 
     // SECTION FOR BASE BAR RECTANGLE.
 
+    // We check if bar is in a warning state. If it is, we blink it continously.
+    if(mBlink)
+    {
+      mBlinkCnt -= engine_frame_time;
+      if(mBlinkCnt > mBlinkInterval)
+      {
+          value = 0; // Force zero value, which results in empty bar.
+      }
+      else if(mBlinkCnt <= 0)
+      {
+          mBlinkCnt = mBlinkInterval * 2;
+      }
+    }
+
     // If bar value is zero, just render background overlay and immediately exit.
     // It is needed in case bar is used as a simple UI box to bypass unnecessary calculations.
     if(!value)
@@ -805,25 +796,6 @@ void ProgressBar::Show(float value)
                        (Vertical)?(mBackMainColor):(mBackFadeColor), mBackFadeColor,
                        BM_OPAQUE);
           return;
-    }
-
-    // Now, we check if bar is in a warning state. If it is, we blink it continously.
-    if(mBlink)
-    {
-      mBlinkCnt -= engine_frame_time;
-      if(mBlinkCnt > mBlinkInterval)
-      {
-          // Draw full-sized background rect (instead of base bar rect)
-          Gui_DrawRect(mX + mBorderWidth, mY + mBorderHeight, mWidth, mHeight,
-                       mBackMainColor, (Vertical)?(mBackFadeColor):(mBackMainColor),
-                       (Vertical)?(mBackMainColor):(mBackFadeColor), mBackFadeColor,
-                       BM_OPAQUE);
-          return;
-      }
-      else if(mBlinkCnt <= 0)
-      {
-          mBlinkCnt = mBlinkInterval * 2;
-      }
     }
 
     // Calculate base bar width, according to current value and range unit.
