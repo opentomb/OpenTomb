@@ -16,14 +16,14 @@ How to use model_view
     4) Use 'z' key for pause animation. To list frames use 'v' and 'b' keys.
 
 *How to build
-	1) You need GCC compiler
+	1) You need GCC compiler, use -O2 optimization, -O3 prevents to crash (bullet).
 	2) You need libraryes: SDL library (do not forget to enable GL support in this library), OpenGL library, zlib.
 	3) In "vt" folder is modyfied vt project.
     4) In src folder there is *.bat files for manual engine building. Use build_all to rebuild engine fully or see inside to know other script running order.
 	*) It is my own engine, not a branch of OpenRaider, but I use some useful code from it.
 
 Used here:
-    1) SDL library http://www.libsdl.org/
+    1) SDL v2.0 library http://www.libsdl.org/
     2) OpenGL http://www.opengl.org/
     3) zlib http://www.zlib.net/
     4) LUA v5.1.4. http://www.lua.org/

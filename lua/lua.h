@@ -14,8 +14,8 @@
 #include <stdio.h>
 
 
-int engine_lua_fputs(const char *str, FILE *f);
-int engine_lua_fprintf(FILE *f, const char *fmt, ...);
+//int engine_lua_fputs(const char *str, FILE *f);
+//int engine_lua_fprintf(FILE *f, const char *fmt, ...);
 
 #include "luaconf.h"
 

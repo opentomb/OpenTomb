@@ -1,8 +1,9 @@
 
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include <stdlib.h>
 #include <math.h>
 
+#include "gl_util.h"
 #include "camera.h"
 #include "vmath.h"
 #include "polygon.h"

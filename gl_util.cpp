@@ -20,10 +20,9 @@
  * TeslaRus - modyfied
  =================================================================*/
 
-#include <SDL/SDL_video.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL_video.h>
+#include <SDL2/SDL_opengl.h>
 #include <string.h>
-
 #include "gl_util.h"
 
 #ifndef GL_GLEXT_PROTOTYPES

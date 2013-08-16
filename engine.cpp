@@ -1,6 +1,6 @@
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,6 +36,10 @@ extern "C" {
 #include "gui.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
+
+extern SDL_Window             *displayWindow;
+extern SDL_GLContext           openglContext;
+extern SDL_Joystick           *joystick;
 
 struct engine_control_state_s           control_states = {0};
 struct engine_control_mapper_s          control_mapper = {0};
@@ -179,7 +183,7 @@ void Engine_Init()
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-   
+    
     Sys_Init();
     Com_Init();
     Render_Init();
@@ -216,6 +220,7 @@ void Engine_Init()
     engine_lua = luaL_newstate();
     if(engine_lua != NULL)
     {
+        ///@FIXME: CRITICAL: ALL LUA's ACTIONS PREVENTS TO CRASH!!!
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
     }
@@ -345,11 +350,8 @@ void Engine_Destroy()
 
 void Engine_Shutdown(int val)
 {
-    Game_Save("exit");
-
     Render_Empty(&renderer);
     World_Empty(&engine_world);
-
     Engine_Destroy();
 
     if(frame_vertex_buffer)
@@ -359,6 +361,10 @@ void Engine_Shutdown(int val)
     frame_vertex_buffer = NULL;
     frame_vertex_buffer_size = 0;
     frame_vertex_buffer_size_left = 0;
+    
+    SDL_GL_DeleteContext(openglContext);
+    SDL_DestroyWindow(displayWindow);
+    SDL_Quit();
     exit(val);
 }
 
@@ -366,30 +372,22 @@ void Engine_Shutdown(int val)
 int engine_lua_fputs(const char *str, FILE *f)
 {
     Con_AddText(str);
-        
-    if(f == stderr)
-    {
-        Sys_DebugLog("lua_out.txt", str);
-    }
-    return fputs(str, f);
+    return strlen(str);
 }
 
 int engine_lua_fprintf(FILE *f, const char *fmt, ...)
 {
     va_list argptr;
     char buf[4096];
+    int ret;
     
     va_start(argptr, fmt);
-    vsnprintf(buf, 4096, fmt, argptr);
+    ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
     
     Con_AddText(buf);
-    
-    if(f == stderr)
-    {
-        Sys_DebugLog("lua_out.txt", buf);
-    }
-    return vfprintf(f, fmt, argptr);
+
+    return ret;//vfprintf(f, fmt, argptr);
 }
 
 
@@ -564,7 +562,7 @@ int Engine_LoadMap(const char *name)
     int trv;
     VT_Level tr_level;
     char buf[LEVEL_NAME_MAX_LEN];
-    char time[64];
+    //char time[64];
 
     //Sys_StrRunSec(time, 64);
     //Sys_DebugLog("d_log.txt", "\nStart Load Map: %s", time);
@@ -630,20 +628,19 @@ int Engine_ExecCmd(char *ch)
         ch = parse_token(ch, token);
         if(!strcmp(token, "help"))
         {
-            Con_AddLine("help - show help info");
-            Con_AddLine("map - load level \"file_name\"");
-            Con_AddLine("save, load - save and load game state in \"file_name\"");
-            Con_AddLine("exit - close program");
-            Con_AddLine("cls - clean console");
-            Con_AddLine("show_fps - switch show fps flag");
-            Con_AddLine("font_size - get and set font size");
-            Con_AddLine("spacing - read and write spacing");
-            Con_AddLine("showing_lines - read and write number of showing lines");
-            Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)");
-            Con_AddLine("free_look - switch camera mode");
-            Con_AddLine("cam_distance - camera distance to actor");
-            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes,");
-            Con_AddLine("r_boxes, r_normals, r_skip_room - render modes");
+            Con_AddLine("help - show help info\0");
+            Con_AddLine("map - load level \"file_name\"\0");
+            Con_AddLine("save, load - save and load game state in \"file_name\"\0");
+            Con_AddLine("exit - close program\0");
+            Con_AddLine("cls - clean console\0");
+            Con_AddLine("show_fps - switch show fps flag\0");
+            Con_AddLine("font_size - get and set font size\0");
+            Con_AddLine("spacing - read and write spacing\0");
+            Con_AddLine("showing_lines - read and write number of showing lines\0");
+            Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0");
+            Con_AddLine("free_look - switch camera mode\0");
+            Con_AddLine("cam_distance - camera distance to actor\0");
+            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0");
         }
         else if(!strcmp(token, "map"))
         {
@@ -717,7 +714,7 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                snprintf(buf, con_base.line_size + 32, "showing_lines = %d", con_base.showing_lines);
+                snprintf(buf, con_base.line_size + 32, "showing_lines = %d\0", con_base.showing_lines);
                 Con_AddLine(buf);
                 return 1;
             }
@@ -731,7 +728,7 @@ int Engine_ExecCmd(char *ch)
                 }
                 else
                 {
-                    Con_AddLine("Invalid showing_lines values");
+                    Con_AddLine("Invalid showing_lines values\0");
                 }
             }
             return 1;
@@ -862,7 +859,7 @@ int Engine_ExecCmd(char *ch)
             }
             else
             {
-                snprintf(buf, con_base.line_size + 32, "Command \"%s\" not found", token);
+                snprintf(buf, con_base.line_size + 32, "Command \"%s\" not found\0", token);
                 Con_AddLine(buf);
             }
             return 0;

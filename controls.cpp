@@ -1,5 +1,6 @@
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_keycode.h>
 #include <stdlib.h>
 
 #include "engine.h"
@@ -9,8 +10,9 @@
 #include "game.h"
 
 
-void Controls_Key(int button, int state)
+void Controls_Key(uint32_t button, int state)
 {
+    button &= 0x0000FFFF;
     for(int i = 0; i < ACT_LASTINDEX; i++)                                      // Compare ALL mapped buttons.
     {
         if( (button == control_mapper.action_map[i]) ||
@@ -83,12 +85,10 @@ void Controls_Key(int button, int state)
                         if(con_base.show)
                         {
                             SDL_ShowCursor(1);
-                            SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
                         }
                         else
                         {
                             SDL_ShowCursor(0);
-                            SDL_EnableKeyRepeat(0, 0);
                         }
                     }
                     return;
@@ -363,16 +363,16 @@ int Controls_KeyConsoleFilter(int key, int kmod_states)
         case SDLK_KP_PERIOD:
             return (kmod_states & KMOD_NUM)?(SDLK_PERIOD):(SDLK_DELETE);
 
-        case SDLK_KP0:
-        case SDLK_KP1:
-        case SDLK_KP2:
-        case SDLK_KP3:
-        case SDLK_KP4:
-        case SDLK_KP5:
-        case SDLK_KP6:
-        case SDLK_KP7:
-        case SDLK_KP8:
-        case SDLK_KP9:
+        case SDLK_KP_0:
+        case SDLK_KP_1:
+        case SDLK_KP_2:
+        case SDLK_KP_3:
+        case SDLK_KP_4:
+        case SDLK_KP_5:
+        case SDLK_KP_6:
+        case SDLK_KP_7:
+        case SDLK_KP_8:
+        case SDLK_KP_9:
             if(kmod_states & KMOD_NUM)
             {
                 return key - 208;
@@ -381,17 +381,17 @@ int Controls_KeyConsoleFilter(int key, int kmod_states)
             {
                 switch(key)
                 {
-                case SDLK_KP1:
+                case SDLK_KP_1:
                     return SDLK_END;
-                case SDLK_KP2:
+                case SDLK_KP_2:
                     return SDLK_DOWN;
-                case SDLK_KP4:
+                case SDLK_KP_4:
                     return SDLK_LEFT;
-                case SDLK_KP6:
+                case SDLK_KP_6:
                     return SDLK_RIGHT;
-                case SDLK_KP7:
+                case SDLK_KP_7:
                     return SDLK_HOME;
-                case SDLK_KP8:
+                case SDLK_KP_8:
                     return SDLK_UP;
                 default:
                     return 0;
@@ -500,7 +500,7 @@ void Controls_InitGlobals()
     control_mapper.action_map[ACT_LOOKLEFT]   = SDLK_LEFT;
     control_mapper.action_map[ACT_LOOKRIGHT]  = SDLK_RIGHT;
 
-    control_mapper.action_map[ACT_SCREENSHOT] = SDLK_PRINT;
+    control_mapper.action_map[ACT_SCREENSHOT] = SDLK_PRINTSCREEN;
     control_mapper.action_map[ACT_CONSOLE]    = SDLK_BACKQUOTE;
     control_mapper.action_map[ACT_SAVEGAME]   = SDLK_F5;
     control_mapper.action_map[ACT_LOADGAME]   = SDLK_F6;

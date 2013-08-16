@@ -3,7 +3,7 @@
 #define POLYGON_H
 
 #include <stdint.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include "bullet/LinearMath/btScalar.h"
 
 #define SPLIT_FRONT 0x00

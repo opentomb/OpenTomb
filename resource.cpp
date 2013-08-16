@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 
 extern "C" {
 #include "lua/lua.h"
@@ -830,7 +830,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, struct bordered_texture_atlas_s *atlas, class VT_Level *tr)
 {
-    int i, j, flag, top;
+    int i, j, top;
     portal_p p;
     room_p r_dest;
     tr5_room_t *tr_room = &tr->rooms[room_index];
@@ -936,7 +936,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, s
                 room->static_mesh[i].self->collide_flag = 0xff & lua_tointeger(level_script, -2);  // get returned value
                 room->static_mesh[i].hide = lua_tointeger(level_script, -1);                       // get returned value
             }
-
             lua_settop(level_script, top);                                                         // restore LUA stack
         }
 

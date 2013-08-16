@@ -1,8 +1,18 @@
 #ifndef     __FTGL__
 #define     __FTGL__
 
-#include <SDL/SDL_opengl.h>
-
+#include <SDL2/SDL_platform.h>
+#include <SDL2/SDL_opengl.h>
+#if defined(__MACOSX__)
+#include <OpenGL/gl.h>	/* Header File For The OpenGL Library */
+#include <OpenGL/glu.h>	/* Header File For The GLU Library */
+#elif defined(__MACOS__)
+#include <gl.h>		/* Header File For The OpenGL Library */
+#include <glu.h>	/* Header File For The GLU Library */
+#else
+#include <GL/gl.h>	/* Header File For The OpenGL Library */
+#include <GL/glu.h>	/* Header File For The GLU Library */
+#endif
 typedef double   FTGL_DOUBLE;
 typedef float    FTGL_FLOAT;
 

@@ -108,13 +108,13 @@ void Game_InitGlobals()
     control_states.noclip = 0;
     control_states.cam_distance = 800.0;
     
-    lua_register(engine_lua, "mlook", lua_mlook);
-    lua_register(engine_lua, "freelook", lua_freelook);
-    lua_register(engine_lua, "noclip", lua_noclip);
-    lua_register(engine_lua, "cam_distance", lua_cam_distance);
-    
-    //CVAR_Register("fly_rotate_speed_mult", "0.6");
-    //CVAR_Register("fly_move_speed_mult", "0.01");
+    if(engine_lua)
+    {
+        lua_register(engine_lua, "mlook", lua_mlook);
+        lua_register(engine_lua, "freelook", lua_freelook);
+        lua_register(engine_lua, "noclip", lua_noclip);
+        lua_register(engine_lua, "cam_distance", lua_cam_distance);
+    }
 }
 
 /**

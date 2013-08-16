@@ -20,7 +20,7 @@
 #include "lualib.h"
 
 
-
+int engine_lua_fputs(const char *str, FILE *f);
 
 /*
 ** If your system does not support `stdout', you can just remove this function.

@@ -1,6 +1,6 @@
 
 #include <stdlib.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include "gl_util.h"
 
 #include "bullet/LinearMath/btScalar.h"

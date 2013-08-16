@@ -1,5 +1,5 @@
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_endian.h>
 
 static unsigned int colorMask = 0xF7DEF7DE;
 static unsigned int lowPixelMask = 0x08210821;

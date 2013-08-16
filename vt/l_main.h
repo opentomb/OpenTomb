@@ -1,7 +1,7 @@
 #ifndef _L_MAIN_H_
 #define _L_MAIN_H_
 
-#include <SDL/SDL_rwops.h>
+#include <SDL2/SDL_rwops.h>
 #include <stdlib.h>
 #include "tr_types.h"
 #include "tr_versions.h"

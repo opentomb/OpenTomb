@@ -11,7 +11,7 @@
 #define CON_MIN_LOG 16
 #define CON_MAX_LOG 128
 
-#define CON_MIN_LINES 15
+#define CON_MIN_LINES 64
 #define CON_MAX_LINES 256
 
 #define CON_MIN_LINE_SIZE 80

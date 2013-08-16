@@ -2,16 +2,15 @@
 #ifndef SYS_DEF_H
 #define SYS_DEF_H
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_video.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_video.h>
+#include <SDL2/SDL_opengl.h>
 
 #include <sys/time.h>
 #include <stdio.h>
 #include <string.h>
 
 
-int inline IsVideoFullscreen();
 void TestGenScene();
 int KeyToChar(SDL_Event *event);
 

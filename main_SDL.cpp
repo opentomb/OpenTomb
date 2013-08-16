@@ -1,6 +1,7 @@
-#include <SDL/SDL.h>
-#include <SDL/SDL_video.h>
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_video.h>
+#include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_events.h>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,8 +35,9 @@
 
 #define SKELETAL_TEST 0
 
-SDL_Surface *screen;
-SDL_Joystick *joystick;
+SDL_Window             *displayWindow;
+SDL_GLContext           openglContext;
+SDL_Joystick           *joystick;
 
 static int done = 0;
 GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
@@ -91,10 +93,6 @@ static entity_p         last_rmb = NULL;
 void TempDrawFrame();
 void ShowDebugInfo();
 
-int inline IsVideoFullscreen()
-{
-    return (((SDL_Surface *)SDL_GetVideoSurface())->flags & SDL_FULLSCREEN);
-}
 
 void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans);
 
@@ -256,7 +254,6 @@ void TempDrawFrame()
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_ALPHA_TEST);
     glDisable(GL_CULL_FACE);
-    glAlphaFunc(GL_GEQUAL, 0.25);
     Render_Sprite(bsprite);
     glPopAttrib();
     glPopMatrix();
@@ -317,15 +314,6 @@ void Engine_PrepareOpenGL()
     glAlphaFunc(GL_GEQUAL, 0.5);
 }
 
-void Engine_TerminateProgram()
-{
-    Engine_Shutdown(0);
-
-    printf("\nSDL_Quit...");
-    //Engine_Destroy();
-    Engine_SaveConfig();
-}
-
 
 int main(int argc, char **argv)
 {
@@ -333,40 +321,37 @@ int main(int argc, char **argv)
     btScalar      time, newtime;
     static btScalar oldtime = 0.0;
     
-    video_flags = SDL_SWSURFACE | SDL_RESIZABLE | SDL_DOUBLEBUF | SDL_OPENGL;
-
+    video_flags = SDL_SWSURFACE | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
     Engine_Init();
     Engine_InitGlobals();
     Engine_LoadConfig();
-    
     if(control_mapper.use_joy == 1)
     {
-        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER);
         SDL_JoystickEventState(SDL_ENABLE);
         joystick = SDL_JoystickOpen(control_mapper.joy_number);
-    
     }
     else
     {
-        SDL_Init(SDL_INIT_VIDEO);
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_HAPTIC);
     }
+    displayWindow = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
+    openglContext = SDL_GL_CreateContext(displayWindow);
+
+    // set the opengl context version
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, screen_info.bpp);
     
-    screen = SDL_SetVideoMode(screen_info.w, screen_info.h, screen_info.bpp, video_flags);
-    SDL_WM_SetCaption("OpenTomb", "OpenTomb");
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
     Engine_PrepareOpenGL();
-#if SKELETAL_TEST
-    SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
-#else
-    SDL_EnableKeyRepeat(0, 0);
-#endif
     World_Prepare(&engine_world);
     TestGenScene();
-    
-    SDL_WarpMouse(screen_info.w/2, screen_info.h/2);
+    SDL_WarpMouseInWindow(displayWindow, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
 #if SKELETAL_TEST
-    CVAR_set_val_d("free_look", 1.0);
+    control_states.free_look = 1;
 #endif
     
     dbgSphere = gluNewQuadric();
@@ -389,11 +374,11 @@ int main(int argc, char **argv)
         SDL_JoystickClose(joystick);
     }
     
-    Engine_Shutdown(0);
-    SDL_Quit();
-    printf("\nSDL_Quit...");
-    //Engine_Destroy();
-    Engine_SaveConfig();
+    Engine_Shutdown(0); 
+    //SDL_GL_DeleteContext(openglContext);                                        // non needed here, shutdown uses it and calls exit(val)
+    //SDL_DestroyWindow(displayWindow);
+    //SDL_Quit();
+    //printf("\nSDL_Quit...");
     return(0);
 }
 
@@ -430,14 +415,11 @@ void Engine_Display()
 #endif
         glPopClientAttrib();
         Render_DrawList_DebugLines();
-        
         ShowDebugInfo();
-        if(engine_world.tex_count)
-        {
-            glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
-        }
+        
+        glBindTexture(GL_TEXTURE_2D, 0);
         Gui_Render();
-        SDL_GL_SwapBuffers();
+        SDL_GL_SwapWindow(displayWindow);
     }
 }
 
@@ -604,7 +586,7 @@ void Engine_Frame(btScalar time)
                        (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
                        (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
                     {
-                        SDL_WarpMouse(screen_info.w/2, screen_info.h/2);
+                        SDL_WarpMouseInWindow(displayWindow, screen_info.w/2, screen_info.h/2);
                     }
                 }
                 mouse_setup = 1;
@@ -663,9 +645,11 @@ void Engine_Frame(btScalar time)
                 done = 1;
                 break;
 
-            case SDL_VIDEORESIZE:
-                Engine_Resize(event.resize.w, event.resize.h, event.resize.w, event.resize.h);
-                SDL_UpdateRect(screen, 0, 0, screen_info.w, screen_info.h);
+            case SDL_WINDOWEVENT:
+                if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
+                }
                 break;
                 
             default:
@@ -693,10 +677,7 @@ void ShowDebugInfo()
     vec3_copy(light_position, engine_camera.pos);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     
-    if(engine_world.tex_count)
-    {
-        glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
-    }
+    glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
     glColor3f(1.0, 1.0, 1.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);

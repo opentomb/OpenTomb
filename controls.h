@@ -2,7 +2,7 @@
 #ifndef CONTROLS_H
 #define	CONTROLS_H
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <stdint.h>
 
 
@@ -113,7 +113,7 @@ enum AXES {
 };
 
 
-void Controls_Key(int button, int state);
+void Controls_Key(uint32_t button, int state);
 void Controls_JoyAxis(int axis, Sint16 value);
 void Controls_JoyHat(int value);
 void Controls_InitGlobals();

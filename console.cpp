@@ -1,8 +1,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL/SDL_opengl.h>
-#include <SDL/SDL_keysym.h>
+#include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_keycode.h>
 #include "ftgl/FTGLBitmapFont.h"
 #include "ftgl/FTGLTextureFont.h"
 #include "console.h"
@@ -25,12 +25,17 @@ void Con_Init()
     con_base.log_pos = 0;
     con_base.log_lines_count = 0;
 
+    con_base.font_color[0] = 0.0;
+    con_base.font_color[1] = 0.0;
+    con_base.font_color[2] = 0.0;
+    con_base.font_color[3] = 1.0;
+    
     con_base.background_color[0] = 1.0;
     con_base.background_color[1] = 0.9;
     con_base.background_color[2] = 0.7;
     con_base.background_color[3] = 0.4;
     
-    strncpy(con_base.font_patch, "Verdana.ttf", 255);
+    strncpy(con_base.font_patch, "VeraMono.ttf", 255);
     
     con_base.font_size = 12;
     con_base.log_lines_count = CON_MIN_LOG;
@@ -44,7 +49,8 @@ void Con_Init()
     con_base.font_bitmap->FaceSize(con_base.font_size);
     con_base.font_texture = new FTGLTextureFont(con_base.font_patch);
     con_base.font_texture->FaceSize(con_base.font_size);
-
+    con_base.smooth = 0;
+    
     con_base.shown_lines = (char**) malloc(con_base.shown_lines_count*sizeof(char*));
     for(i=0;i<con_base.shown_lines_count;i++)
     {
@@ -161,7 +167,6 @@ void Con_Draw()
                 con_base.font_texture->RenderRaw(con_base.shown_lines[i]);
                 glPopMatrix();
             }
-            glBindTexture(GL_TEXTURE_2D, 0);                                    // otherways cursor does not swown
         }
         else    
         {
@@ -205,6 +210,7 @@ void Con_DrawCursor()
 {
     GLint y = con_base.cursor_y + con_base.line_height;
 
+    glBindTexture(GL_TEXTURE_2D, 0);                                            // otherways cursor does not swown in smooth font case
     if(con_base.show_cursor_period)
     {
         con_base.cursor_time += engine_frame_time;
@@ -361,8 +367,8 @@ void Con_AddLog(const char *text)
     {
         if(con_base.log_lines_count > 1)
         {
-            last = con_base.log_lines[con_base.log_lines_count-1];                     // сохраняем указатель на последнюю строку лога
-            for(i=con_base.log_lines_count-1;i>0;i--)                                  // Сдвигаем лог
+            last = con_base.log_lines[con_base.log_lines_count-1];              // сохраняем указатель на последнюю строку лога
+            for(i=con_base.log_lines_count-1;i>0;i--)                           // Сдвигаем лог
             {
                 con_base.log_lines[i] = con_base.log_lines[i-1];                // лог идет по кругу
             }
@@ -446,10 +452,11 @@ void Con_AddText(const char *text)
 void Con_Printf(const char *fmt, ...)
 {
     va_list argptr;
-    char buf[con_base.line_size+32];
+    char buf[4096];
 
     va_start(argptr, fmt);
-    vsnprintf(buf, con_base.line_size+32, fmt, argptr);
+    vsnprintf(buf, 4096, fmt, argptr);
+    buf[4096-1] = 0;
     va_end(argptr);
     Con_AddLine(buf);
 }

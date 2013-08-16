@@ -7,7 +7,7 @@
 #include "world.h"
 #include "render.h"
 #include "frustum.h"
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include "bullet/LinearMath/btScalar.h"
 #include "engine.h"
 
@@ -20,7 +20,6 @@ struct room_sector_s;
 
 void Portal_InitGlobals()
 {
-    //CVAR_Register(&portal_eps, "portal_eps", "0.05", NULL);
 }
 
 

@@ -17,6 +17,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+int engine_lua_fputs(const char *str, FILE *f);
 
 
 static int db_getregistry (lua_State *L) {

@@ -2,7 +2,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include <SDL/SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 #include "bullet/LinearMath/btScalar.h"
 

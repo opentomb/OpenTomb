@@ -18,7 +18,7 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-
+int engine_lua_fprintf(FILE *f, const char *fmt, ...);
 
 #define IO_INPUT	1
 #define IO_OUTPUT	2

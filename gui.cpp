@@ -1,5 +1,4 @@
 
-#include <SDL/SDL_opengl.h>
 #include <stdint.h>
 #include "gl_util.h"
 #include "ftgl/FTGLBitmapFont.h"
@@ -45,7 +44,7 @@ void Gui_Init()
         gui_temp_lines[i].rect_color[2] = 0.0;
         gui_temp_lines[i].rect_color[3] = 0.5;
     }
-
+#if 0
     for(int i = 0; i < BAR_LASTINDEX; i++)
     {
         switch(i)
@@ -133,6 +132,7 @@ void Gui_Init()
                 break;
         } // end switch(i)
     } // end for(int i = 0; i < BAR_LASTINDEX; i++)
+#endif
 }
 
 void Gui_Destroy()
@@ -145,6 +145,7 @@ void Gui_Destroy()
         free(gui_temp_lines[i].text);
         gui_temp_lines[i].text = NULL;
     }
+    temp_lines_used = MAX_TEMP_LINES;
 }
 
 void Gui_AddLine(gui_text_line_p line)
@@ -257,9 +258,12 @@ void Gui_Render()
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
 
+    glBindTexture(GL_TEXTURE_2D, 0);                                            /// in other case +textured font we lost background in all rects and console
+    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     Con_Draw();
     Gui_DrawCrosshair();
-    Gui_DrawBars();
+    //Gui_DrawBars();
     Gui_RenderStringsRect();
     if(con_base.smooth == 0)
     {
@@ -339,16 +343,6 @@ void Gui_RenderStrings()
             else
             {
                 glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
-
-
-
-
-
-
-
-
-
-
                 con_base.font_bitmap->RenderRaw(l->text);
             }
         }
@@ -372,16 +366,6 @@ void Gui_RenderStrings()
             else
             {
                 glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
-
-
-
-
-
-
-
-
-
-
                 con_base.font_bitmap->RenderRaw(l->text);
             }
             l->show_rect = 0;

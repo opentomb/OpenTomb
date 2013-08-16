@@ -1,5 +1,5 @@
-#include <SDL/SDL.h>
-#include <SDL/SDL_endian.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_endian.h>
 #include "vt_level.h"
 
 #define RCSID "$Id: vt_level.cpp,v 1.1 2002/09/20 15:59:02 crow Exp $"
