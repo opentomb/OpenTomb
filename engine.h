@@ -56,8 +56,8 @@ typedef struct engine_control_mapper_s
 
     int8_t   joy_axis_map[AXIS_LASTINDEX];      // Axis array for action mapper.
 
-    int16_t  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
-    int16_t  action_alt[ACT_LASTINDEX];         // Alternate actions array for alternate controls.
+    int32_t  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
+    int32_t  action_alt[ACT_LASTINDEX];         // Alternate actions array for alternate controls.
 
 }engine_control_mapper_t, *engine_control_mapper_p;
 

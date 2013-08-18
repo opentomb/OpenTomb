@@ -44,7 +44,7 @@ void Gui_Init()
         gui_temp_lines[i].rect_color[2] = 0.0;
         gui_temp_lines[i].rect_color[3] = 0.5;
     }
-#if 0
+#if 1
     for(int i = 0; i < BAR_LASTINDEX; i++)
     {
         switch(i)
@@ -258,12 +258,13 @@ void Gui_Render()
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
 
-    glBindTexture(GL_TEXTURE_2D, 0);                                            /// in other case +textured font we lost background in all rects and console
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   
     Con_Draw();
+    glBindTexture(GL_TEXTURE_2D, 0);                                            // in other case +textured font we lost background in all rects and console
     Gui_DrawCrosshair();
-    //Gui_DrawBars();
+    Gui_DrawBars();
     Gui_RenderStringsRect();
     if(con_base.smooth == 0)
     {

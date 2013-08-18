@@ -151,8 +151,10 @@ void Con_SetLineInterval(float interval)
 void Con_Draw()
 {
     int x, y, i;
+    
     if(con_base.inited && con_base.show)
     {
+        glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
         Con_DrawBackground();
         x = 8;
         y = con_base.cursor_y;
@@ -210,7 +212,6 @@ void Con_DrawCursor()
 {
     GLint y = con_base.cursor_y + con_base.line_height;
 
-    glBindTexture(GL_TEXTURE_2D, 0);                                            // otherways cursor does not swown in smooth font case
     if(con_base.show_cursor_period)
     {
         con_base.cursor_time += engine_frame_time;
@@ -227,6 +228,7 @@ void Con_DrawCursor()
         glColor4fv(con_base.font_color);
         coords[0] = (GLfloat)con_base.cursor_x;     coords[1] = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
         coords[2] = (GLfloat)con_base.cursor_x;     coords[3] = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
+        glBindTexture(GL_TEXTURE_2D, 0);                                        // otherways cursor does not swown in smooth font case
         glVertexPointer(2, GL_FLOAT, 0, coords);
         glDrawArrays(GL_LINES, 0, 2); 
     }

@@ -113,12 +113,12 @@ enum AXES {
 };
 
 
-void Controls_Key(uint32_t button, int state);
+void Controls_Key(int32_t button, int state);
 void Controls_JoyAxis(int axis, Sint16 value);
 void Controls_JoyHat(int value);
 void Controls_InitGlobals();
 
-int  Controls_KeyConsoleFilter(int key, int kmod_states);
+int  Controls_KeyConsoleFilter(int32_t key, int kmod_states);
 
 #endif	/* CONTROLS_H */
 

@@ -106,7 +106,7 @@ void TR_Level::read_tr2_room(SDL_RWops * const src, tr5_room_t & room)
 {
 	uint32_t num_data_words;
 	uint32_t i;
-	int pos;
+	int64_t pos;
 
 	// read and change coordinate system
 	room.offset.x = (float)read_bit32(src);

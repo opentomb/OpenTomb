@@ -834,6 +834,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, s
     portal_p p;
     room_p r_dest;
     tr5_room_t *tr_room = &tr->rooms[room_index];
+    tr_staticmesh_t *tr_static;
+    static_mesh_p r_static;
     tr_room_portal_t *tr_portal;
     room_sector_p sector;
     btScalar pos[3];
@@ -882,44 +884,68 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, s
         room->static_mesh = (static_mesh_p)malloc(room->static_mesh_count * sizeof(static_mesh_t));
     }
 
+    r_static = room->static_mesh;
     for(i=0;i<tr_room->num_static_meshes;i++)
     {
-        room->static_mesh[i].self = (engine_container_p)malloc(sizeof(engine_container_t));
-        room->static_mesh[i].self->room = room;
-        room->static_mesh[i].self->next = NULL;
-        room->static_mesh[i].self->object = room->static_mesh + i;
-        room->static_mesh[i].self->object_type = OBJECT_STATIC_MESH;
-        room->static_mesh[i].ID = tr_room->static_meshes[i].object_id;
-        room->static_mesh[i].mesh = world->meshes + tr->mesh_indices[tr->find_staticmesh_id(room->static_mesh[i].ID)->mesh];
-        room->static_mesh[i].pos[0] = tr_room->static_meshes[i].pos.x;
-        room->static_mesh[i].pos[1] =-tr_room->static_meshes[i].pos.z;
-        room->static_mesh[i].pos[2] = tr_room->static_meshes[i].pos.y;
-        room->static_mesh[i].rot[0] = tr_room->static_meshes[i].rotation;
-        room->static_mesh[i].rot[1] = 0.0;
-        room->static_mesh[i].rot[2] = 0.0;
-        room->static_mesh[i].bv = BV_Create();
-        room->static_mesh[i].bv->transform = room->static_mesh[i].transform;
-        room->static_mesh[i].bv->r = room->static_mesh[i].mesh->R;
-        Mat4_E(room->static_mesh[i].transform);
-        Mat4_Translate(room->static_mesh[i].transform, room->static_mesh[i].pos);
-        Mat4_RotateZ(room->static_mesh[i].transform, room->static_mesh[i].rot[0]);
-        room->static_mesh[i].was_rendered = 0;
-        BV_InitBox(room->static_mesh[i].bv, room->static_mesh[i].mesh->bb_min, room->static_mesh[i].mesh->bb_max);
-        BV_Transform(room->static_mesh[i].bv);
+        tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
+        if(tr_static == NULL)
+        {
+            room->static_mesh_count--;
+            continue;
+        }
+        r_static->self = (engine_container_p)malloc(sizeof(engine_container_t));
+        r_static->self->room = room;
+        r_static->self->next = NULL;
+        r_static->self->object = room->static_mesh + i;
+        r_static->self->object_type = OBJECT_STATIC_MESH;
+        r_static->object_id = tr_room->static_meshes[i].object_id;
+        r_static->mesh = world->meshes + tr->mesh_indices[tr_static->mesh];
+        r_static->pos[0] = tr_room->static_meshes[i].pos.x;
+        r_static->pos[1] =-tr_room->static_meshes[i].pos.z;
+        r_static->pos[2] = tr_room->static_meshes[i].pos.y;
+        r_static->rot[0] = tr_room->static_meshes[i].rotation;
+        r_static->rot[1] = 0.0;
+        r_static->rot[2] = 0.0;
+        r_static->bv = BV_Create();
 
-        room->static_mesh[i].self->collide_flag = 0x0000;
-        room->static_mesh[i].bt_body = NULL;
-        room->static_mesh[i].hide = 0;
+        r_static->cbb_min[0] = tr_static->collision_box[0].x;
+        r_static->cbb_min[1] =-tr_static->collision_box[0].z;
+        r_static->cbb_min[2] = tr_static->collision_box[1].y;
+        r_static->cbb_max[0] = tr_static->collision_box[1].x;
+        r_static->cbb_max[1] =-tr_static->collision_box[1].z;
+        r_static->cbb_max[2] = tr_static->collision_box[0].y;
+        vec3_copy(r_static->mesh->bb_min, r_static->cbb_min);
+        vec3_copy(r_static->mesh->bb_max, r_static->cbb_max);
+        
+        r_static->vbb_min[0] = tr_static->visibility_box[0].x;
+        r_static->vbb_min[1] =-tr_static->visibility_box[0].z;
+        r_static->vbb_min[2] = tr_static->visibility_box[1].y;
+        r_static->vbb_max[0] = tr_static->visibility_box[1].x;
+        r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
+        r_static->vbb_max[2] = tr_static->visibility_box[0].y;
+        
+        r_static->bv->transform = room->static_mesh[i].transform;
+        r_static->bv->r = room->static_mesh[i].mesh->R;
+        Mat4_E(r_static->transform);
+        Mat4_Translate(r_static->transform, r_static->pos);
+        Mat4_RotateZ(r_static->transform, r_static->rot[0]);
+        r_static->was_rendered = 0;
+        BV_InitBox(r_static->bv, r_static->vbb_min, r_static->vbb_max);
+        BV_Transform(r_static->bv);
+
+        r_static->self->collide_flag = 0x0000;
+        r_static->bt_body = NULL;
+        r_static->hide = 0;
 
         if(collide_flags_conf)
         {
             top = lua_gettop(collide_flags_conf);                                               // save LUA stack
             lua_getfield(collide_flags_conf, LUA_GLOBALSINDEX, "GetStaticMeshFlags");           // add to the up of stack LUA's function
             lua_pushinteger(collide_flags_conf, tr->game_version);                              // add to stack first argument
-            lua_pushinteger(collide_flags_conf, room->static_mesh[i].ID);                       // add to stack second argument
+            lua_pushinteger(collide_flags_conf, r_static->object_id);                           // add to stack second argument
             lua_pcall(collide_flags_conf, 2, 2, 0);                                             // call that function
-            room->static_mesh[i].self->collide_flag = 0xff & lua_tointeger(collide_flags_conf, -2);    // get returned value
-            room->static_mesh[i].hide = lua_tointeger(collide_flags_conf, -1);                  // get returned value
+            r_static->self->collide_flag = 0xff & lua_tointeger(collide_flags_conf, -2);        // get returned value
+            r_static->hide = lua_tointeger(collide_flags_conf, -1);                             // get returned value
             lua_settop(collide_flags_conf, top);                                                // restore LUA stack
         }
 
@@ -931,26 +957,27 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, s
             if(lua_isfunction(level_script, -1))                                                   // If function exists...
             {
                 lua_pushinteger(level_script, tr->game_version);                                   // add to stack first argument
-                lua_pushinteger(level_script, room->static_mesh[i].ID);                            // add to stack second argument
+                lua_pushinteger(level_script, r_static->object_id);                                // add to stack second argument
                 lua_pcall(level_script, 2, 2, 0);                                                  // call that function
-                room->static_mesh[i].self->collide_flag = 0xff & lua_tointeger(level_script, -2);  // get returned value
-                room->static_mesh[i].hide = lua_tointeger(level_script, -1);                       // get returned value
+                r_static->self->collide_flag = 0xff & lua_tointeger(level_script, -2);             // get returned value
+                r_static->hide = lua_tointeger(level_script, -1);                                  // get returned value
             }
             lua_settop(level_script, top);                                                         // restore LUA stack
         }
-
-        if(room->static_mesh[i].self->collide_flag != 0x0000)
+        
+        if(r_static->self->collide_flag != 0x0000)
         {
-            cshape = MeshToBTCS(room->static_mesh[i].mesh, true, true, room->static_mesh[i].self->collide_flag);
+            cshape = MeshToBTCS(r_static->mesh, true, true, r_static->self->collide_flag);
             if(cshape)
             {
-                startTransform.setFromOpenGLMatrix(room->static_mesh[i].transform);
+                startTransform.setFromOpenGLMatrix(r_static->transform);
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-                room->static_mesh[i].bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                bt_engine_dynamicsWorld->addRigidBody(room->static_mesh[i].bt_body);
-                room->static_mesh[i].bt_body->setUserPointer(room->static_mesh[i].self);
+                r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+                bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body);
+                r_static->bt_body->setUserPointer(r_static->self);
             }
         }
+        r_static++;
     }
     /*
      * sprites loading section
@@ -1187,8 +1214,22 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
     polygon_p p;
     btScalar *t, n;
     vertex_p vertex;
-    uint16_t mask = (tr->game_version < TR_V)?(0x7fff):(0x3fff);
 
+    /* TR WAD FORMAT DOCUMENTATION!
+     * tr4_face[3,4]_t:
+     * flipped texture & 0x8000 (1 bit  ) - horizontal flipping.
+     * shape texture   & 0x7000 (3 bits ) - texture sample shape.
+     * index texture   & $0FFF  (12 bits) - texture sample index.
+     * 
+     * if bit [15] is set, as in ( texture and $8000 ), it indicates that the texture
+     * sample must be flipped horizontally prior to be used.
+     * Bits [14..12] as in ( texture and $7000 ), are used to store the texture
+     * shape, given by: ( texture and $7000 ) shr 12.
+     * The valid values are: 0, 2, 4, 6, 7, as assigned to a square starting from
+     * the top-left corner and going clockwise: 0, 2, 4, 6 represent the positions
+     * of the square angle of the triangles, 7 represents a quad.
+     */
+    
     tr_mesh = &tr->meshes[mesh_index];
     mesh->ID = mesh_index;
     mesh->centre[0] = tr_mesh->centre.x;
@@ -1221,7 +1262,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
     for(i=0;i<tr_mesh->num_textured_triangles;i++,p++)
     {
         face3 = &tr_mesh->textured_triangles[i];
-        tex = &tr->object_textures[face3->texture & mask];
+        tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
@@ -1243,7 +1284,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         vec4_set_one(p->vertices[1].base_color);         vec4_set_one(p->vertices[1].color);
         vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
 
-        BorderedTextureAtlas_GetCoordinates(atlas, face3->texture & mask, 1, p);
+        BorderedTextureAtlas_GetCoordinates(atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 1, p);
     }
 
     /*
@@ -1299,7 +1340,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
     for(i=0;i<tr_mesh->num_textured_rectangles;i++,p++)
     {
         face4 = &tr_mesh->textured_rectangles[i];
-        tex = &tr->object_textures[face4->texture & mask];
+        tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
@@ -1323,7 +1364,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
         vec4_set_one(p->vertices[3].base_color);         vec4_set_one(p->vertices[3].color);
 
-        BorderedTextureAtlas_GetCoordinates(atlas, face4->texture & mask, 1, p);
+        BorderedTextureAtlas_GetCoordinates(atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 1, p);
     }
 
     /*
@@ -1465,7 +1506,6 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
     base_mesh_p mesh;
     btScalar *t, n;
     vertex_p vertex;
-    uint16_t mask = (tr->game_version < TR_V)?(0x7fff):(0x3fff);
 
     tr_room = &tr->rooms[room_index];
 
@@ -1508,7 +1548,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
     for(i=0;i<tr_room->num_triangles;i++,p++)
     {
         face3 = &tr_room->triangles[i];
-        tex = &tr->object_textures[face3->texture & mask];
+        tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
@@ -1539,7 +1579,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
         vec4_set_one(p->vertices[1].base_color);         vec4_set_one(p->vertices[1].color);
         vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
 
-        BorderedTextureAtlas_GetCoordinates(atlas, face3->texture & mask, 1, p);
+        BorderedTextureAtlas_GetCoordinates(atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 1, p);
     }
 
     /*
@@ -1552,7 +1592,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
             Con_AddLine("AHTUNG");
         }*/
         face4 = &tr_room->rectangles[i];
-        tex = &tr->object_textures[face4->texture & mask];
+        tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
@@ -1587,7 +1627,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
         vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
         vec4_set_one(p->vertices[3].base_color);         vec4_set_one(p->vertices[3].color);
 
-        BorderedTextureAtlas_GetCoordinates(atlas, face4->texture & mask, 1, p);
+        BorderedTextureAtlas_GetCoordinates(atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 1, p);
     }
 
     /*
@@ -2025,7 +2065,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                         high = tr_adisp->high - tr_animation->frame_start;
 
                         adsp->frame_low = (low / ((anim->frame_rate)?(anim->frame_rate):(1))) % anim->frames_count;
-                        adsp->frame_high = (high / ((anim->next_anim->frame_rate)?(anim->next_anim->frame_rate):(1))) % anim->frames_count;
+                        adsp->frame_high = (high / ((anim->next_anim->frame_rate)?(anim->next_anim->frame_rate):(1)) - 1) % anim->frames_count;
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         next_rate = model->animations[adsp->next_anim].frame_rate;
                         adsp->next_frame = (next_frame / ((next_rate)?(next_rate):(1))) % next_frames_count;
@@ -2049,12 +2089,18 @@ int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
     tr_moveable_t *curr_moveable, *next_moveable;
 
     curr_moveable = &tr->moveables[moveable_ind];
+    
+    if(curr_moveable->animation_index == 0xFFFF)
+    {
+        return 1;
+    }
+    
     if(moveable_ind == tr->moveables_count-1)
     {
-        ret = tr->animations_count - curr_moveable->animation_index;
-        if(ret >= 0x0AFF)                                                       // some magick number
-        {                                                                       // there are not so much animations
-            return 1;                                                           // in normal models
+        ret = (int32_t)tr->animations_count - (int32_t)curr_moveable->animation_index;
+        if(ret < 0)
+        {                                                                       
+            return 1;
         }
         else
         {
@@ -2063,12 +2109,20 @@ int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
     }
 
     next_moveable = &tr->moveables[moveable_ind+1];
-
-    ret = next_moveable->animation_index - curr_moveable->animation_index;
-    if(ret >= 0x0AFF)
+    if(next_moveable->animation_index == 0xFFFF)
     {
-        return 1;
+        if(moveable_ind + 2 < tr->moveables_count)                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
+        {
+            next_moveable = &tr->moveables[moveable_ind+2];
+        }
+        else
+        {
+            return 1;
+        }
     }
+    
+    ret = (next_moveable->animation_index <= tr->animations_count)?(next_moveable->animation_index):(tr->animations_count);
+    ret -= (int32_t)curr_moveable->animation_index;
 
     return ret;
 }
@@ -2106,25 +2160,7 @@ void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_
 {
     unsigned short int *frame;
 
-    if(frame_offset < 0 || frame_offset >= tr->frame_data_size)
-    {
-        bone_frame->bb_min[0] = 0.0;
-        bone_frame->bb_min[1] = 0.0;
-        bone_frame->bb_min[2] = 0.0;
-
-        bone_frame->bb_max[0] = 0.0;
-        bone_frame->bb_max[1] = 0.0;
-        bone_frame->bb_max[2] = 0.0;
-
-        bone_frame->pos[0] = 0.0;
-        bone_frame->pos[1] = 0.0;
-        bone_frame->pos[2] = 0.0;
-
-        bone_frame->centre[0] = 0.0;
-        bone_frame->centre[1] = 0.0;
-        bone_frame->centre[2] = 0.0;
-    }
-    else
+    if((frame_offset >= 0) && (frame_offset < tr->frame_data_size))
     {
         frame = tr->frame_data + frame_offset;
         bone_frame->bb_min[0] = (short int)frame[0];                            // x_min
@@ -2142,6 +2178,24 @@ void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_
         bone_frame->centre[0] = (bone_frame->bb_min[0] + bone_frame->bb_max[0]) / 2.0;
         bone_frame->centre[1] = (bone_frame->bb_min[1] + bone_frame->bb_max[1]) / 2.0;
         bone_frame->centre[2] = (bone_frame->bb_min[2] + bone_frame->bb_max[2]) / 2.0;
+    }
+    else
+    {
+        bone_frame->bb_min[0] = 0.0;
+        bone_frame->bb_min[1] = 0.0;
+        bone_frame->bb_min[2] = 0.0;
+
+        bone_frame->bb_max[0] = 0.0;
+        bone_frame->bb_max[1] = 0.0;
+        bone_frame->bb_max[2] = 0.0;
+
+        bone_frame->pos[0] = 0.0;
+        bone_frame->pos[1] = 0.0;
+        bone_frame->pos[2] = 0.0;
+
+        bone_frame->centre[0] = 0.0;
+        bone_frame->centre[1] = 0.0;
+        bone_frame->centre[2] = 0.0;
     }
 }
 
@@ -2389,10 +2443,6 @@ btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool
 
                 for(j=1;j<p->vertex_count-1;j++)
                 {
-                    /*if(IsInUCRect(p->tex_index, p->vertices[0].tex_coord, p->vertices[j].tex_coord, p->vertices[j + 1].tex_coord))
-                    {
-                        continue;                                               // skip uncollisional texture
-                    }*/
                     vec3_copy(v0.m_floats, p->vertices[0].position);
                     vec3_copy(v1.m_floats, p->vertices[j].position);
                     vec3_copy(v2.m_floats, p->vertices[j + 1].position);
@@ -2433,6 +2483,13 @@ btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool
                 }
                 cnt ++;
             }
+
+            if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
+            {
+                delete trimesh;
+                return NULL;
+            }
+            
             ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
             BV_Clear(bv);
             free(bv);

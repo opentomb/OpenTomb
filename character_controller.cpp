@@ -50,6 +50,7 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->max_move_iterations = DEFAULT_MAX_MOVE_ITERATIONS;
     ret->min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
+    ret->max_climb_height = DEFAULT_CLIMB_UP_HEIGHT;
     ret->max_step_up_height = DEFAULT_MAX_STEP_UP_HEIGHT;
     ret->fall_down_height = DEFAULT_FALL_DAWN_HEIGHT;
     ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
@@ -330,8 +331,9 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
  */
 int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc)
 {
-    btScalar pos[3];
+    btScalar pos[3], delta;
     height_info_p fc = &ent->character->height_info;
+    btVector3 from, to;
     int ret = CHARACTER_STEP_HORIZONTAL;
     ///penetration test?
     
@@ -340,44 +342,88 @@ int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct hei
     
     if(fc->floor_hit && nfc->floor_hit)
     {
-        if(fabs(fc->floor_point.m_floats[2] - nfc->floor_point.m_floats[2]) < SPLIT_EPSILON)
+        delta = nfc->floor_point.m_floats[2] - fc->floor_point.m_floats[2];
+        if(fabs(delta) < SPLIT_EPSILON)
         {
+            from.m_floats[2] = fc->floor_point.m_floats[2];
             ret = CHARACTER_STEP_HORIZONTAL;                                    // horizontal
         }
-        else if(fc->floor_point.m_floats[2] > nfc->floor_point.m_floats[2])     // down way
+        else if(delta < 0.0)                                                    // down way
         {
-            
+            delta = -delta;
+            from.m_floats[2] = fc->floor_point.m_floats[2];
+            if(delta <= ent->character->min_step_up_height)
+            {
+                ret = CHARACTER_STEP_DOWN_LITTLE;
+            }
+            else if(delta <= ent->character->max_step_up_height)
+            {
+                ret = CHARACTER_STEP_DOWN_BIG;
+            }
+            else if(delta <= ent->character->Height)
+            {
+                ret = CHARACTER_STEP_DOWN_DROP;
+            }
+            else
+            {
+                ret = CHARACTER_STEP_DOWN_CAN_HANG;
+            }
         }
         else                                                                    // up way
         {
-            
+            from.m_floats[2] = nfc->floor_point.m_floats[2];
+            if(delta <= ent->character->min_step_up_height)
+            {
+                ret = CHARACTER_STEP_UP_LITTLE;
+            }
+            else if(delta <= ent->character->max_step_up_height)
+            {
+                ret = CHARACTER_STEP_UP_BIG;
+            }
+            else if(delta <= ent->character->max_climb_height)
+            {
+                ret = CHARACTER_STEP_UP_CLIMB;
+            }
+            else
+            {
+                ret = CHARACTER_STEP_UP_IMPOSSIBLE;
+            }
         }
     }
     else if(!fc->floor_hit && !nfc->floor_hit)
     {
+        from.m_floats[2] = pos[2];
         ret = CHARACTER_STEP_HORIZONTAL;                                        // horizontal? yes no maybe...
     }
-    else if(!fc->floor_hit && nfc->floor_hit)                                   // strange cas
+    else if(!fc->floor_hit && nfc->floor_hit)                                   // strange case
     {
+        from.m_floats[2] = nfc->floor_point.m_floats[2];
         ret = 0x00;
     }
     else //if(fc->floor_hit && !nfc->floor_hit)                                 // bottomless 
     {
+        from.m_floats[2] = fc->floor_point.m_floats[2];
         ret = CHARACTER_STEP_DOWN_CAN_HANG;
     }
+    
     /*
-#define CHARACTER_STEP_DOWN_CAN_HANG            (-0x04)                         // enough height to hang here
-#define CHARACTER_STEP_DOWN_DROP                (-0x03)                         // big height, cannot walk next, drop only
-#define CHARACTER_STEP_DOWN_BIG                 (-0x02)                         // enough height change, step down is needed
-#define CHARACTER_STEP_DOWN_LITTLE              (-0x01)                         // too little height change, step down is not needed
-#define CHARACTER_STEP_HORIZONTAL               (0x00)                          // horizontal plane
-#define CHARACTER_STEP_UP_LITTLE                (0x01)                          // too little height change, step up is not needed
-#define CHARACTER_STEP_UP_BIG                   (0x02)                          // enough height change, step up is needed
-#define CHARACTER_STEP_UP_CLIMB                 (0x03)                          // big height, cannot walk next, climb only
-#define CHARACTER_STEP_UP_IMPOSSIBLE            (0x04)                          // too big height, no one ways here, or phantom case
-*/
-  
-   
+     * check walls! If test is positive, than CHARACTER_STEP_UP_IMPOSSIBLE - can not go next!
+     */
+    from.m_floats[2] += ent->character->climb_r;
+    to.m_floats[2] = from.m_floats[2];
+    from.m_floats[0] = ent->transform[12 + 0];
+    from.m_floats[1] = ent->transform[12 + 1];
+    to.m_floats[0] = pos[0];
+    to.m_floats[1] = pos[1];
+    fc->cb->m_closestHitFraction = 1.0;
+    fc->cb->m_collisionObject = NULL;
+    bt_engine_dynamicsWorld->rayTest(from, to, *fc->cb);
+    if(fc->cb->hasHit())
+    {
+        ret = CHARACTER_STEP_UP_IMPOSSIBLE;
+    }
+    
+    return ret;
 }
 
 /**

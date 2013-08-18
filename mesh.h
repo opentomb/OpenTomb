@@ -70,12 +70,18 @@ typedef struct sprite_s
  */
 typedef struct static_mesh_s
 {
-    uint32_t                    ID;                                             // ID модели
+    uint32_t                    object_id;                                      //
     uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparancy, 3 - full rendered
     uint8_t                     was_rendered_lines;
     uint8_t                     hide;                                           // disable static mesh rendering
     btScalar                    pos[3];                                         // model position
     btScalar                    rot[3];                                         // model angles
+    
+    btScalar                    vbb_min[3];                                     // visible bounding box
+    btScalar                    vbb_max[3];
+    btScalar                    cbb_min[3];                                     // collision bounding box
+    btScalar                    cbb_max[3];
+    
     btScalar                    transform[16];                                  // gl transformation matrix
     struct bounding_volume_s   *bv;
     struct engine_container_s  *self;

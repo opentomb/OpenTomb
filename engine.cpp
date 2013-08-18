@@ -37,9 +37,9 @@ extern "C" {
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
-extern SDL_Window             *displayWindow;
-extern SDL_GLContext           openglContext;
-extern SDL_Joystick           *joystick;
+extern SDL_Window             *sdl_window;
+extern SDL_GLContext           sdl_gl_context;
+extern SDL_Joystick           *sdl_joystick;
 
 struct engine_control_state_s           control_states = {0};
 struct engine_control_mapper_s          control_mapper = {0};
@@ -350,6 +350,11 @@ void Engine_Destroy()
 
 void Engine_Shutdown(int val)
 {
+    if(sdl_joystick)
+    {
+        SDL_JoystickClose(sdl_joystick);
+    }
+    
     Render_Empty(&renderer);
     World_Empty(&engine_world);
     Engine_Destroy();
@@ -362,8 +367,8 @@ void Engine_Shutdown(int val)
     frame_vertex_buffer_size = 0;
     frame_vertex_buffer_size_left = 0;
     
-    SDL_GL_DeleteContext(openglContext);
-    SDL_DestroyWindow(displayWindow);
+    SDL_GL_DeleteContext(sdl_gl_context);
+    SDL_DestroyWindow(sdl_window);
     SDL_Quit();
     exit(val);
 }
@@ -797,7 +802,7 @@ int Engine_ExecCmd(char *ch)
                     Con_Printf("secret = %d, end = %d, kill = %d", sect->fd_secret, sect->fd_end_level, sect->fd_kill);
                     for(int i=0;i<sect->owner_room->static_mesh_count;i++)
                     {
-                        Con_Printf("static[%d].ID = %d", i, sect->owner_room->static_mesh[i].ID);
+                        Con_Printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i].object_id);
                     }
                 }
             }

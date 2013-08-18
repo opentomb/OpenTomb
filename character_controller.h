@@ -17,6 +17,7 @@
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
 #define DEFAULT_MAX_STEP_UP_HEIGHT              (320.0)                         ///@FIXME: check original
 #define DEFAULT_FALL_DAWN_HEIGHT                (320.0)                         ///@FIXME: check original
+#define DEFAULT_CLIMB_UP_HEIGHT                 (4096.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (0.707)                         ///@FIXME: cos(alpha = 45 deg)
 #define DEFAULT_CHARACTER_SPEED_MULT            (32.0)                          ///@FIXME: magic - not like in original
@@ -102,6 +103,7 @@ typedef struct character_s
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
+    btScalar                     max_climb_height;
     btScalar                     fall_down_height;
     btScalar                     critical_slant_z_component;
     btScalar                     critical_wall_component;

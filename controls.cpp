@@ -10,13 +10,12 @@
 #include "game.h"
 
 
-void Controls_Key(uint32_t button, int state)
+void Controls_Key(int32_t button, int state)
 {
-    button &= 0x0000FFFF;
     for(int i = 0; i < ACT_LASTINDEX; i++)                                      // Compare ALL mapped buttons.
     {
-        if( (button == control_mapper.action_map[i]) ||
-            (button == control_mapper.action_alt[i]) )                          // If button = mapped action...
+        if((button == control_mapper.action_map[i]) ||
+           (button == control_mapper.action_alt[i]))                            // If button = mapped action...
         {
             switch(i)                                                           // ...Choose corresponding action.
             {
@@ -274,7 +273,7 @@ void Controls_JoyHat(int value)
         Controls_Key(1100 + SDL_HAT_RIGHT, SDL_PRESSED);
 }
 
-int Controls_KeyConsoleFilter(int key, int kmod_states)
+int Controls_KeyConsoleFilter(int32_t key, int kmod_states)
 {
     switch(key)
     {

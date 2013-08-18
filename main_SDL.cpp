@@ -35,9 +35,10 @@
 
 #define SKELETAL_TEST 0
 
-SDL_Window             *displayWindow;
-SDL_GLContext           openglContext;
-SDL_Joystick           *joystick;
+SDL_Window             *sdl_window = NULL;
+SDL_GLContext           sdl_gl_context = 0;
+SDL_Renderer           *sdl_renderer = NULL;
+SDL_Joystick           *sdl_joystick = NULL;
 
 static int done = 0;
 GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
@@ -210,7 +211,8 @@ void TempDrawFrame()
     tr[15] = 1.0;
     vec3_add(tr+12, mt->offset, bframe->pos);
     Mat4_set_qrotation(tr, btag->qrotate);
-    
+    //glEnable(GL_TEXTURE_2D);
+    glColor3f(1.0, 1.0, 1.0);
     glMultMatrixf(tr);
     Render_Mesh(mt->mesh, NULL, NULL);
     btag++;
@@ -270,13 +272,20 @@ void TestGenScene()
     {
         CVAR_set_val_d("free_look", 1.0);
     }
+    
+    dbgSphere = gluNewQuadric();
+    dbgCyl = gluNewQuadric();
+    gluQuadricDrawStyle(dbgSphere, GLU_FILL);
+    gluQuadricTexture(dbgSphere, true);
+    gluQuadricDrawStyle(dbgCyl, GLU_FILL);
+    gluQuadricTexture(dbgCyl, true);
 }
 
 
 void Engine_PrepareOpenGL()
 {
     InitGLExtFuncs();
-    glClearColor( 1.0, 1.0, 1.0, 1.0 );
+    glClearColor(1.0, 1.0, 1.0, 1.0);
     glShadeModel(GL_SMOOTH);
 
     glEnable(GL_DEPTH_TEST);
@@ -315,7 +324,7 @@ void Engine_PrepareOpenGL()
 }
 
 
-int main(int argc, char **argv)
+int SDL_main(int argc, char **argv)
 {
     Uint32      video_flags;
     btScalar      time, newtime;
@@ -329,14 +338,15 @@ int main(int argc, char **argv)
     {
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER);
         SDL_JoystickEventState(SDL_ENABLE);
-        joystick = SDL_JoystickOpen(control_mapper.joy_number);
+        sdl_joystick = SDL_JoystickOpen(control_mapper.joy_number);
     }
     else
     {
         SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_HAPTIC);
     }
-    displayWindow = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
-    openglContext = SDL_GL_CreateContext(displayWindow);
+    sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
+    sdl_renderer = SDL_CreateRenderer(sdl_window, -1, 0);
+    sdl_gl_context = SDL_GL_CreateContext(sdl_window);
 
     // set the opengl context version
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -348,18 +358,14 @@ int main(int argc, char **argv)
     Engine_PrepareOpenGL();
     World_Prepare(&engine_world);
     TestGenScene();
-    SDL_WarpMouseInWindow(displayWindow, screen_info.w/2, screen_info.h/2);
+    SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
     
-    dbgSphere = gluNewQuadric();
-    dbgCyl = gluNewQuadric();
-    gluQuadricDrawStyle(dbgSphere, GLU_FILL);
-    gluQuadricTexture(dbgSphere, true);
-    gluQuadricDrawStyle(dbgCyl, GLU_FILL);
-    gluQuadricTexture(dbgCyl, true);
+    //Con_Printf("LShift = %X, RShift = %X", SDLK_LSHIFT , SDLK_RSHIFT);
+    //Con_Printf("LCTRL = %X, RCTRL = %X", SDLK_LCTRL , SDLK_RCTRL);
     
     while(!done)
     {
@@ -368,17 +374,8 @@ int main(int argc, char **argv)
         oldtime = newtime;        
         Engine_Frame(time);
     }
-    
-    if(control_mapper.use_joy == 1)
-    {
-        SDL_JoystickClose(joystick);
-    }
-    
+       
     Engine_Shutdown(0); 
-    //SDL_GL_DeleteContext(openglContext);                                        // non needed here, shutdown uses it and calls exit(val)
-    //SDL_DestroyWindow(displayWindow);
-    //SDL_Quit();
-    //printf("\nSDL_Quit...");
     return(0);
 }
 
@@ -386,8 +383,8 @@ void Engine_Display()
 {
     if(!done)
     {
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_ACCUM_BUFFER_BIT );  
-        glColor4f( 0.0, 0.0, 0.0, 1.0 );
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT );  
+        glColor4f(0.0, 0.0, 0.0, 1.0);
 
         glEnable(GL_TEXTURE_2D);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
@@ -412,14 +409,18 @@ void Engine_Display()
         Render_SkyBox(); 
         Render_GenWorldList();
         Render_DrawList();
+#else
+        TempDrawFrame();
 #endif
+        
         glPopClientAttrib();
         Render_DrawList_DebugLines();
         ShowDebugInfo();
         
         glBindTexture(GL_TEXTURE_2D, 0);
+        Render_DrawAxis(10000.0);
         Gui_Render();
-        SDL_GL_SwapWindow(displayWindow);
+        SDL_GL_SwapWindow(sdl_window);
     }
 }
 
@@ -586,7 +587,7 @@ void Engine_Frame(btScalar time)
                        (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
                        (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
                     {
-                        SDL_WarpMouseInWindow(displayWindow, screen_info.w/2, screen_info.h/2);
+                        SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
                     }
                 }
                 mouse_setup = 1;
@@ -707,11 +708,8 @@ void ShowDebugInfo()
             }
         }
     }
-        
-#else 
-    TempDrawFrame();
+    
 #endif
-    Render_DrawAxis(10000.0);
     
 #if !SKELETAL_TEST
     

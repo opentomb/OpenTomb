@@ -18,6 +18,7 @@
 #include "bsp_tree_2d.h"
 #include "gl_util.h"
 #include "polygon.h"
+#include "vt/vt_level.h"
 
 #ifndef __APPLE__
 /*!
@@ -305,7 +306,7 @@ void BorderedTextureAtlas_AddObjectTexture(bordered_texture_atlas_p atlas, const
     {
         struct canonical_object_texture_s *canonical_candidate = &(atlas->canonical_object_textures[i]);
 
-        if (canonical_candidate->original_page == (texture->tile_and_flag & 0x7FFF)
+        if (canonical_candidate->original_page == (texture->tile_and_flag & TR_TEXTURE_INDEX_MASK)
             && canonical_candidate->original_x == min[0]
             && canonical_candidate->original_y == min[1]
             && canonical_candidate->width == width
@@ -332,7 +333,7 @@ void BorderedTextureAtlas_AddObjectTexture(bordered_texture_atlas_p atlas, const
         canonical = atlas->canonical_object_textures + canonical_index;
         canonical->width = width;
         canonical->height = height;
-        canonical->original_page = texture->tile_and_flag & 0x7FFF;
+        canonical->original_page = texture->tile_and_flag & TR_TEXTURE_INDEX_MASK;
         canonical->original_x = min[0];
         canonical->original_y = min[1];
     }
@@ -385,7 +386,7 @@ void BorderedTextureAtlas_AddSpriteTexture(bordered_texture_atlas_p atlas,
     {
         struct canonical_object_texture_s *canonical_candidate = &(atlas->canonical_object_textures[i]);
 
-        if (canonical_candidate->original_page == (texture->tile & 0x7FFF)
+        if (canonical_candidate->original_page == (texture->tile & TR_TEXTURE_INDEX_MASK)
             && canonical_candidate->original_x == x
             && canonical_candidate->original_y == y
             && canonical_candidate->width == width
@@ -412,7 +413,7 @@ void BorderedTextureAtlas_AddSpriteTexture(bordered_texture_atlas_p atlas,
         canonical = atlas->canonical_object_textures + canonical_index;
         canonical->width = width;
         canonical->height = height;
-        canonical->original_page = texture->tile & 0x7FFF;
+        canonical->original_page = texture->tile & TR_TEXTURE_INDEX_MASK;
         canonical->original_x = x;
         canonical->original_y = y;
     }
