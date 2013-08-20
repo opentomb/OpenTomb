@@ -30,6 +30,7 @@ extern "C" {
 #include "bounding_volume.h"
 #include "engine.h"
 #include "bordered_texture_atlas.h"
+#include "render.h"
 
 
 typedef struct uncollision_tex_rect_s
@@ -70,12 +71,12 @@ int IsInUCRectFace3(tr4_object_texture_t *tex)
     //return 0;
     v0[0] = tex->vertices[0].xpixel + tex->vertices[0].xcoordinate * 0.5;
     v0[1] = tex->vertices[0].ypixel + tex->vertices[0].ycoordinate * 0.5;
-    
+
     v1[0] = tex->vertices[1].xpixel + tex->vertices[1].xcoordinate * 0.5;
     v1[1] = tex->vertices[1].ypixel + tex->vertices[1].ycoordinate * 0.5;
-    
+
     v2[0] = tex->vertices[2].xpixel + tex->vertices[2].xcoordinate * 0.5;
-    v2[1] = tex->vertices[2].ypixel + tex->vertices[2].ycoordinate * 0.5;  
+    v2[1] = tex->vertices[2].ypixel + tex->vertices[2].ycoordinate * 0.5;
 
     for(i=0;i<uc_rect_count;i++,uc++)
     {
@@ -99,16 +100,16 @@ int IsInUCRectFace4(tr4_object_texture_t *tex)
     //return 0;
     v0[0] = tex->vertices[0].xpixel + tex->vertices[0].xcoordinate * 0.5;
     v0[1] = tex->vertices[0].ypixel + tex->vertices[0].ycoordinate * 0.5;
-    
+
     v1[0] = tex->vertices[1].xpixel + tex->vertices[1].xcoordinate * 0.5;
     v1[1] = tex->vertices[1].ypixel + tex->vertices[1].ycoordinate * 0.5;
-    
+
     v2[0] = tex->vertices[2].xpixel + tex->vertices[2].xcoordinate * 0.5;
-    v2[1] = tex->vertices[2].ypixel + tex->vertices[2].ycoordinate * 0.5;  
-    
+    v2[1] = tex->vertices[2].ypixel + tex->vertices[2].ycoordinate * 0.5;
+
     v3[0] = tex->vertices[3].xpixel + tex->vertices[3].xcoordinate * 0.5;
-    v3[1] = tex->vertices[3].ypixel + tex->vertices[3].ycoordinate * 0.5;  
-    
+    v3[1] = tex->vertices[3].ypixel + tex->vertices[3].ycoordinate * 0.5;
+
     for(i=0;i<uc_rect_count;i++,uc++)
     {
         if((tile == uc->tile) &&
@@ -540,7 +541,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     /*
      * Generate OGL textures
      */
-    
+
     top = lua_gettop(engine_lua);
     lua_getglobal(engine_lua, "render");
     i = lua_GetScalarField(engine_lua,"texture_border");
@@ -562,7 +563,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         BorderedTextureAtlas_AddObjectTexture(bordered_texture_atlas, tr->object_textures + i);
     }
-    
+
     if(level_script)
     {
         top = lua_gettop(level_script);
@@ -599,56 +600,38 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     long int tmpLuaValue;   // Temporary value for reading Lua parameters.
 
-    // Read mipmap mode
-    top = lua_gettop(engine_lua);
-    lua_getglobal(engine_lua, "render");
-    tmpLuaValue = lua_GetScalarField(engine_lua, "mipmap_mode");
-    tmpLuaValue = (tmpLuaValue < 0)?(0):(tmpLuaValue);
-    tmpLuaValue = (tmpLuaValue > 3)?(3):(tmpLuaValue);
-    switch(tmpLuaValue)
+    // Select mipmap mode
+    switch(render_settings.mipmap_mode)
     {
         case 0:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
             break;
-            
+
         case 1:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
             break;
-            
+
         case 2:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
             break;
-            
+
         case 3:
         default:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
             break;
     };
 
-    // Read mipmaps number
-    tmpLuaValue = lua_GetScalarField(engine_lua, "mipmaps");
-    tmpLuaValue = (tmpLuaValue < 0)?(0):(tmpLuaValue);
-    tmpLuaValue = (tmpLuaValue > 20)?(20):(tmpLuaValue);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, tmpLuaValue);
+    // Set mipmaps number
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, render_settings.mipmaps);
 
-    // Read anisotropy degree
-    tmpLuaValue = lua_GetScalarField(engine_lua, "anisotropy");
-    tmpLuaValue = (tmpLuaValue < 0)?(0):(tmpLuaValue);
-    tmpLuaValue = (tmpLuaValue > 16)?(16):(tmpLuaValue);
-    if(tmpLuaValue)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, tmpLuaValue);
-    }
-    
+    // Set anisotropy degree
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, render_settings.anisotropy);
+
     // Read lod bias
-    btScalar tmpLuaFloatValue;
-    tmpLuaFloatValue = lua_GetScalarField(engine_lua, "lod_bias");
-    lua_settop(engine_lua, top);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, tmpLuaFloatValue);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, render_settings.lod_bias);
 
 
     glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 4, 4, GL_RGBA, GL_UNSIGNED_BYTE, whtx);

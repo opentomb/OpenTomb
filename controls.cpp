@@ -1,6 +1,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_scancode.h>
 #include <stdlib.h>
 
 #include "engine.h"
@@ -8,7 +9,9 @@
 #include "console.h"
 #include "common.h"
 #include "game.h"
+#include "main_SDL.h"
 
+extern SDL_Haptic           *sdl_haptic;
 
 void Controls_Key(int32_t button, int state)
 {
@@ -257,20 +260,84 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
 
 void Controls_JoyHat(int value)
 {
-    // NOTE: Hat movements emulate +1100 keypresses.
-    Controls_Key(1100 + SDL_HAT_UP,    SDL_RELEASED);     // Reset all directions.
-    Controls_Key(1100 + SDL_HAT_DOWN,  SDL_RELEASED);
-    Controls_Key(1100 + SDL_HAT_LEFT,  SDL_RELEASED);
-    Controls_Key(1100 + SDL_HAT_RIGHT, SDL_RELEASED);
+    // NOTE: Hat movements emulate keypresses
+    // with HAT direction + JOY_HAT_MASK (1100) index.
+
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    SDL_RELEASED);     // Reset all directions.
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  SDL_RELEASED);
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  SDL_RELEASED);
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, SDL_RELEASED);
 
     if(value & SDL_HAT_UP)
-        Controls_Key(1100 + SDL_HAT_UP,    SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    SDL_PRESSED);
     if(value & SDL_HAT_DOWN)
-        Controls_Key(1100 + SDL_HAT_DOWN,  SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  SDL_PRESSED);
     if(value & SDL_HAT_LEFT)
-        Controls_Key(1100 + SDL_HAT_LEFT,  SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  SDL_PRESSED);
     if(value & SDL_HAT_RIGHT)
-        Controls_Key(1100 + SDL_HAT_RIGHT, SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, SDL_PRESSED);
+}
+
+void Controls_WrapGameControllerKey(int button, int state)
+{
+    // SDL2 Game Controller interface doesn't operate with HAT directions,
+    // instead it treats them as button pushes. So, HAT doesn't return
+    // hat motion event on any HAT direction release - instead, each HAT
+    // direction generates its own press and release event. That's why
+    // game controller's HAT (DPAD) events are directly translated to
+    // Controls_Key function.
+
+    switch(button)
+    {
+        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            Controls_Key(JOY_HAT_MASK + SDL_HAT_UP, state);
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN, state);
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT, state);
+            break;
+        case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, state);
+            break;
+        default:
+            Controls_Key((JOY_BUTTON_MASK + button), state);
+            break;
+    }
+}
+
+void Controls_WrapGameControllerAxis(int axis, Sint16 value)
+{
+    // Since left/right triggers on X360-like controllers are actually axes,
+    // and we still need them as buttons, we remap these axes to button events.
+    // Button event is invoked only if trigger is pressed more than 1/3 of its range.
+    // Triggers are coded as native SDL2 enum number + JOY_TRIGGER_MASK (1200).
+
+    if( (axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT) ||
+        (axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) )
+    {
+        if(value >= JOY_TRIGGER_DEADZONE)
+        {
+            Controls_Key((axis + JOY_TRIGGER_MASK), SDL_PRESSED);
+        }
+        else
+        {
+            Controls_Key((axis + JOY_TRIGGER_MASK), SDL_RELEASED);
+        }
+    }
+    else
+    {
+        Controls_JoyAxis(axis, value);
+    }
+}
+
+void Controls_JoyRumble(float power, int time)
+{
+    // JoyRumble is a simple wrapper for SDL's haptic rumble play.
+
+    if(sdl_haptic)
+        SDL_HapticRumblePlay(sdl_haptic, power, time);
 }
 
 int Controls_KeyConsoleFilter(int32_t key, int kmod_states)

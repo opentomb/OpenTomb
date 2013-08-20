@@ -10,13 +10,16 @@
 #include <stdio.h>
 #include <string.h>
 
-
 void TestGenScene();
 int KeyToChar(SDL_Event *event);
 
 void Engine_PrepareOpenGL();
 //void Engine_TerminateProgram();
 void Engine_Display();
+
+void Engine_InitSDLControls();
+void Engine_InitSDLVideo();
+
 // nominal values are used e.g. to set the size for the console.
 // pixel values are used for glViewport. Both will be the same on
 // normal displays, but on retina displays or similar, pixels will be twice nominal (or more)

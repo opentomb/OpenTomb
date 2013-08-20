@@ -74,7 +74,20 @@ typedef struct render_s
     uint32_t style;                                                             // куллфейс, фулл, вирефрейм и т.п.
 }render_t, *render_p;
 
+typedef struct render_settings_s
+{
+    float     lod_bias;
+    uint32_t  mipmap_mode;
+    uint32_t  mipmaps;
+    uint32_t  anisotropy;
+    int8_t    antialias;
+    int8_t    antialias_samples;
+    int8_t    texture_border;
+    int8_t    z_depth;
+}render_settings_t, *render_settings_p;
+
 extern render_t renderer;
+extern render_settings_t render_settings;
 
 void Render_Empty(render_p render);
 void Render_InitGlobals();

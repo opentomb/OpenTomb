@@ -117,7 +117,7 @@ void TR_Level::read_tr2_room(SDL_RWops * const src, tr5_room_t & room)
 
 	num_data_words = read_bitu32(src);
 
-	pos = SDL_RWseek(src, 0, SEEK_CUR);
+	pos = SDL_RWseek(src, 0, RW_SEEK_CUR);
 
 	room.num_layers = 0;
 
@@ -142,7 +142,7 @@ void TR_Level::read_tr2_room(SDL_RWops * const src, tr5_room_t & room)
 		read_tr_room_sprite(src, room.sprites[i]);
 
 	// set to the right position in case that there is some unused data
-	SDL_RWseek(src, pos + (num_data_words * 2), SEEK_SET);
+	SDL_RWseek(src, pos + (num_data_words * 2), RW_SEEK_SET);
 
 	room.num_portals = read_bitu16(src);
 	room.portals = (tr_room_portal_t*)malloc(room.num_portals * sizeof(tr_room_portal_t));
@@ -233,10 +233,10 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
 	for (i = 0; i < this->rooms_count; i++)
 		read_tr2_room(src, this->rooms[i]);
 
-	this->floor_data_size = read_bitu32(src); 
+	this->floor_data_size = read_bitu32(src);
         this->floor_data = (uint16_t*)malloc(this->floor_data_size * sizeof(uint16_t));
         for(i = 0; i < this->floor_data_size; i++)
-                this->floor_data[i] = read_bitu16(src); 
+                this->floor_data[i] = read_bitu16(src);
 
 	read_mesh_data(src);
 
@@ -297,7 +297,7 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
                 this->cameras[i].x = read_bit32(src);
                 this->cameras[i].y = read_bit32(src);
                 this->cameras[i].z = read_bit32(src);
-                
+
                 this->cameras[i].room = read_bit16(src);
                 this->cameras[i].unknown1 = read_bitu16(src);
         }
@@ -309,7 +309,7 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
             this->sound_sources[i].x = read_bit32(src);
             this->sound_sources[i].y = read_bit32(src);
             this->sound_sources[i].z = read_bit32(src);
-            
+
             this->sound_sources[i].sound_id = read_bitu16(src);
             this->sound_sources[i].flags = read_bitu16(src);
         }
@@ -325,14 +325,14 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
                 this->overlaps[i] = read_bitu16(src);
 
 	// Zones
-	SDL_RWseek(src, this->boxes_count * 20, SEEK_CUR);
+	SDL_RWseek(src, this->boxes_count * 20, RW_SEEK_CUR);
 
         this->animated_textures_count = read_bitu32(src);
 	this->animated_textures = (tr_animated_textures_t*)malloc(this->animated_textures_count * sizeof(tr_animated_textures_t));
         for (i = 0; i < this->animated_textures_count; i++)
         {
                 this->animated_textures[i].texture_ids = NULL;                  // FIXME: complete this section!
-                this->animated_textures[i].texture_ids_count = read_bit16(src); 
+                this->animated_textures[i].texture_ids_count = read_bit16(src);
         }
 
         this->items_count = read_bitu32(src);
@@ -356,7 +356,7 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
                 this->demo_data[i] = read_bitu8(src);
 
 	// Soundmap
-	SDL_RWseek(src, 2 * 370, SEEK_CUR);
+	SDL_RWseek(src, 2 * 370, RW_SEEK_CUR);
 
 	this->sound_details_count = read_bitu32(src);
         this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));

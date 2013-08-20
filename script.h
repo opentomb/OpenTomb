@@ -28,8 +28,9 @@ float SC_ParseFloat(char **ch);
 int SC_ParseInt(char **ch);
 
 int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc);
+int lua_ParseRender(lua_State *lua, struct render_settings_s *rs);
 int lua_ParseConsole(lua_State *lua, struct console_info_s *cn);
-int lua_ParseJoystick(lua_State *lua);
+int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs);
 
 int SC_ParseEntity(char **ch, struct entity_s *ent);
 

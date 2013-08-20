@@ -134,7 +134,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     btScalar t, *pos = ent->transform + 12;
     btScalar offset[3], move[3];
     height_info_t fc;
-    
+
     fc.cb = ent->character->ray_cb;
     fc.cb->m_closestHitFraction = 1.0;
     fc.cb->m_collisionObject = NULL;
@@ -1595,7 +1595,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_ANIMATION_LARA_OSCILLATE_HANG_ON:
             if(cmd->action == 1)
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT); 
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
             }
             else
             {
@@ -1603,7 +1603,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
             }
             break;
-            
+
         case TR_ANIMATION_LARA_HANG_IDLE:
             cmd->rot[0] = 0.0;
             climb = 0x00;
@@ -1640,7 +1640,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 else
                 {
                     ent->anim_flags = ANIM_LOOP_LAST_FRAME;                     // disable shake
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT); 
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
                 }
             }
             else if(cmd->action == 1 && cmd->move[1] ==-1)
@@ -1657,7 +1657,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 else
                 {
                     ent->anim_flags = ANIM_LOOP_LAST_FRAME;                     // disable shake
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT); 
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
                 }
             }
             else if(cmd->action == 1 && cmd->move[1] == 1)
@@ -1674,7 +1674,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 else
                 {
                     ent->anim_flags = ANIM_LOOP_LAST_FRAME;                     // disable shake
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT); 
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
                 }
             }
             else if((cmd->action == 1) && (ent->move_type == MOVE_CLIMBING))
@@ -2883,9 +2883,18 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             break;
 
-            /*
-             * intermediate animations are processed automatically.
-             */
+        case TR_ANIMATION_LARA_WALL_SMASH_LEFT:
+        case TR_ANIMATION_LARA_WALL_SMASH_RIGHT:
+        case TR_ANIMATION_LARA_SMASH_JUMP:
+            if( (1 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT)) &&
+                (ent->current_frame == 1) )
+                    Controls_JoyRumble(1, 150);
+            cmd->rot[0] = 0;
+            break;
+
+        /*
+         * intermediate animations are processed automatically.
+         */
         default:
             cmd->rot[0] = 0;
             Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
@@ -2894,4 +2903,3 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
     return 0;
 }
-

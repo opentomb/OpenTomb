@@ -2,6 +2,7 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_haptic.h>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
@@ -35,10 +36,11 @@
 
 #define SKELETAL_TEST 0
 
-SDL_Window             *sdl_window = NULL;
+SDL_Window             *sdl_window     = NULL;
+SDL_Joystick           *sdl_joystick   = NULL;
+SDL_GameController     *sdl_controller = NULL;
+SDL_Haptic             *sdl_haptic     = NULL;
 SDL_GLContext           sdl_gl_context = 0;
-SDL_Renderer           *sdl_renderer = NULL;
-SDL_Joystick           *sdl_joystick = NULL;
 
 static int done = 0;
 GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
@@ -59,11 +61,11 @@ static btScalar         dbgR = 128.0;
 static entity_p         last_rmb = NULL;
 //#error "ADD ft2build.h to the repo!"
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
-/* 
+/*
  * 1) console
  *      - add notify functions
  * 2) LUA enngine global script:
- *      - add base functions for entity manipulation, I.E.: (get / set) - pos, 
+ *      - add base functions for entity manipulation, I.E.: (get / set) - pos,
  *        angles, anim, frame, frame time, speed, health, collision. new, delete.
  * 6) Menu
  *      - settings
@@ -85,7 +87,7 @@ static entity_p         last_rmb = NULL;
  *      - cutscenes playing
  *      - triggers
  *      - enemies AI
- *      - end level -> next level 
+ *      - end level -> next level
  * 42) sound
  *      - add OpenAL lib
  *      - loading TR's sounds format
@@ -102,22 +104,22 @@ void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans)
     btScalar tr[16];
     btScalar r = cshape->getRadius();
     btScalar h = cshape->getHalfHeight();
-    
+
     gluQuadricDrawStyle(dbgSphere, GLU_LINE);
     gluQuadricDrawStyle(dbgCyl, GLU_LINE);
     glColor3f(1.0, 1.0, 1.0);
     trans->getOpenGLMatrix(tr);
-    
+
     glPushMatrix();
     glTranslatef(0.0, 0.0, -h);
-    glMultMatrixf(tr);                
+    glMultMatrixf(tr);
     gluSphere(dbgSphere, r, 12, 12);
     gluCylinder(dbgCyl, r, r, 2.0 * h, 12, 12);
     glPopMatrix();
 
     glPushMatrix();
     glTranslatef(0.0, 0.0, h);
-    glMultMatrixf(tr);                
+    glMultMatrixf(tr);
     gluSphere(dbgSphere, r, 12, 12);
     glPopMatrix();
 }
@@ -138,17 +140,17 @@ void TempDrawFrame()
     GLfloat tr[16];
     mesh_tree_tag_p mt;
     int i, j, y, stack;
-    
+
     if((engine_world.skeletal_models == NULL) || (engine_world.meshes == NULL))
     {
         return;
-    }    
-    
+    }
+
     if(frame < 0)
     {
         frame = 0;
     }
-       
+
     if(model < 0 || model > engine_world.skeletal_model_count)
     {
         model = 0;
@@ -160,7 +162,7 @@ void TempDrawFrame()
         anim = 0;
     }
     af = smodel->animations + anim;
-    
+
     if(!paused)
     {
         time += engine_frame_time;
@@ -174,40 +176,40 @@ void TempDrawFrame()
             time = 0.0;
         }
     }
-    
+
     sprite %= engine_world.sprites_count;
     bsprite = engine_world.sprites + sprite;
-    
+
     frame %= smodel->animations[anim].frames_count;
-    bframe = smodel->animations[anim].frames + frame;    
-    
+    bframe = smodel->animations[anim].frames + frame;
+
     glColor3b(0, 0, 0);
     Gui_OutTextXY(screen_info.w-480, 120, "sprite ID = %d;  mesh ID = %d", bsprite->ID, mesh);
-    Gui_OutTextXY(screen_info.w-480, 96, "model ID = %d, anim = %d of %d, frame = %d of %d", smodel->ID, anim, smodel->animation_count, frame, smodel->animations[anim].frames_count);   
+    Gui_OutTextXY(screen_info.w-480, 96, "model ID = %d, anim = %d of %d, frame = %d of %d", smodel->ID, anim, smodel->animation_count, frame, smodel->animations[anim].frames_count);
     Gui_OutTextXY(screen_info.w-480, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->ID):-1, af->next_frame, af->state_change_count);
     Gui_OutTextXY(screen_info.w-480, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
     Gui_OutTextXY(screen_info.w-480, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
     Gui_OutTextXY(screen_info.w-480, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
-    
+
     y = screen_info.h - 24;
     for(i=0;i<af->state_change_count;i++)
     {
         for(j=0;j<af->state_change[i].anim_dispath_count;j++)
         {
             adsp = af->state_change[i].anim_dispath + j;
-            Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",  
+            Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
                           i, j, af->state_change[i].ID, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
             y -= 24;
         }
     }
-    
+
     /*
      * RENDER MODEL
-     */   
+     */
     glPushMatrix();
     btag = bframe->bone_tags;
     mt = smodel->mesh_tree;
-    
+
     tr[15] = 1.0;
     vec3_add(tr+12, mt->offset, bframe->pos);
     Mat4_set_qrotation(tr, btag->qrotate);
@@ -243,14 +245,14 @@ void TempDrawFrame()
             Render_SkinMesh(mt->mesh2, tr);
         }
     }
-    
+
     for(i=0;i<stack;i++)                                                        // PARANOID: GL STACK CHECK AND CORRECTION
     {
         glPopMatrix();
     }
     stack = 0;
     glPopMatrix();
-    
+
     glPushMatrix();
     glTranslated(1024.0, 0.0, 0.0);
     glPushAttrib(GL_ENABLE_BIT);
@@ -259,7 +261,7 @@ void TempDrawFrame()
     Render_Sprite(bsprite);
     glPopAttrib();
     glPopMatrix();
-    
+
     glPushMatrix();
     glTranslated(-1024.0, 0.0, 0.0);
     Render_Mesh(engine_world.meshes + mesh, NULL, NULL);
@@ -267,12 +269,12 @@ void TempDrawFrame()
 }
 
 void TestGenScene()
-{         
+{
     if(!Engine_LoadMap(CVAR_get_val_s("game_level")))
     {
         CVAR_set_val_d("free_look", 1.0);
     }
-    
+
     dbgSphere = gluNewQuadric();
     dbgCyl = gluNewQuadric();
     gluQuadricDrawStyle(dbgSphere, GLU_FILL);
@@ -291,6 +293,9 @@ void Engine_PrepareOpenGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_COLOR_MATERIAL);
+
+    if(render_settings.antialias)
+        glEnable(GL_MULTISAMPLE);
 
     //glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
     //glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
@@ -323,59 +328,125 @@ void Engine_PrepareOpenGL()
     glAlphaFunc(GL_GEQUAL, 0.5);
 }
 
-
-int SDL_main(int argc, char **argv)
+void Engine_InitSDLControls()
 {
-    Uint32      video_flags;
-    btScalar      time, newtime;
-    static btScalar oldtime = 0.0;
-    
-    video_flags = SDL_SWSURFACE | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-    Engine_Init();
-    Engine_InitGlobals();
-    Engine_LoadConfig();
+    int    NumJoysticks;
+    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_EVENTS;      // These flags are used in any case.
+
     if(control_mapper.use_joy == 1)
     {
-        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER);
-        SDL_JoystickEventState(SDL_ENABLE);
-        sdl_joystick = SDL_JoystickOpen(control_mapper.joy_number);
+        init_flags |= SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER;  // Update init flags for joystick.
+
+        if(control_mapper.joy_rumble)
+            init_flags |= SDL_INIT_HAPTIC;  // Update init flags for force feedback.
+
+        SDL_Init(init_flags);
+
+        NumJoysticks = SDL_NumJoysticks();
+        if( (NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number) )
+            return;
+
+        if(SDL_IsGameController(control_mapper.joy_number)) // If joystick has mapping (e.g. X360 controller)
+        {
+            SDL_GameControllerEventState(SDL_ENABLE);   // Use GameController API
+            sdl_controller = SDL_GameControllerOpen(control_mapper.joy_number);
+
+            if(!sdl_controller)
+            {
+                SDL_GameControllerEventState(SDL_DISABLE);  // If controller init failed, close state.
+                control_mapper.use_joy = 0;
+            }
+            else
+            {
+                if(control_mapper.joy_rumble)   // Create force feedback interface.
+                    sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
+            }
+        }
+        else
+        {
+            SDL_JoystickEventState(SDL_ENABLE);     // If joystick isn't mapped, use generic API.
+            sdl_joystick = SDL_JoystickOpen(control_mapper.joy_number);
+
+            if(!sdl_joystick)
+            {
+                SDL_JoystickEventState(SDL_DISABLE);    // If joystick init failed, close state.
+                control_mapper.use_joy = 0;
+            }
+            else
+            {
+                if(control_mapper.joy_rumble)       // Create force feedback interface.
+                    sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
+            }
+        }
+
+        if(sdl_haptic)  // To check if force feedback is working or not.
+        {
+            SDL_HapticRumbleInit(sdl_haptic);
+            SDL_HapticRumblePlay(sdl_haptic, 1.0, 300);
+        }
     }
     else
     {
-        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_HAPTIC);
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
     }
+}
+
+void Engine_InitSDLVideo()
+{
+    Uint32 video_flags = SDL_SWSURFACE | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, render_settings.z_depth);
+
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, render_settings.antialias);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, render_settings.antialias_samples);
+
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
-    sdl_renderer = SDL_CreateRenderer(sdl_window, -1, 0);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
 
     // set the opengl context version
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, screen_info.bpp);
-    
+}
+
+int SDL_main(int argc, char **argv)
+{
+    btScalar      time, newtime;
+    static btScalar oldtime = 0.0;
+
+    Engine_Init();
+    Engine_InitGlobals();
+    Engine_LoadConfig();
+
+    Engine_InitSDLControls();
+    Engine_InitSDLVideo();
+
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
+
     Engine_PrepareOpenGL();
     World_Prepare(&engine_world);
     TestGenScene();
+
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
+
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
-    
+
     //Con_Printf("LShift = %X, RShift = %X", SDLK_LSHIFT , SDLK_RSHIFT);
     //Con_Printf("LCTRL = %X, RCTRL = %X", SDLK_LCTRL , SDLK_RCTRL);
-    
+
     while(!done)
     {
         newtime = Sys_FloatTime();
         time = newtime - oldtime;
-        oldtime = newtime;        
+        oldtime = newtime;
         Engine_Frame(time);
     }
-       
-    Engine_Shutdown(0); 
+
+    Engine_Shutdown(0);
+
     return(0);
 }
 
@@ -383,8 +454,8 @@ void Engine_Display()
 {
     if(!done)
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT );  
-        glColor4f(0.0, 0.0, 0.0, 1.0);
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_ACCUM_BUFFER_BIT );
+        glColor4f( 0.0, 0.0, 0.0, 1.0 );
 
         glEnable(GL_TEXTURE_2D);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
@@ -402,21 +473,20 @@ void Engine_Display()
         glFogf(GL_FOG_END, renderer.cam->dist_far);                             // Fog End Depth
         glEnable(GL_FOG);                                                       // Enables GL_FOG
 #endif
-        
+
         Cam_RecalcClipPlanes(&engine_camera);
         Cam_Apply(&engine_camera);
 #if !SKELETAL_TEST
-        Render_SkyBox(); 
+        Render_SkyBox();
         Render_GenWorldList();
         Render_DrawList();
 #else
         TempDrawFrame();
 #endif
-        
         glPopClientAttrib();
         Render_DrawList_DebugLines();
         ShowDebugInfo();
-        
+
         glBindTexture(GL_TEXTURE_2D, 0);
         Render_DrawAxis(10000.0);
         Gui_Render();
@@ -464,7 +534,7 @@ void Engine_PrimaryMouseDown()
     startTransform.setOrigin(btVector3(new_pos[0], new_pos[1], new_pos[2]));
     cshape->calculateLocalInertia(12.0, localInertia);
     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-    body = new btRigidBody(12.0, motionState, cshape, localInertia);  
+    body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
     cont->room = Room_FindPosCogerrence(&engine_world, new_pos, engine_camera.current_room);
@@ -483,7 +553,7 @@ void Engine_SecondaryMouseDown()
     engine_container_t cam_cont;
 
     vec3_copy(from.m_floats, engine_camera.pos);
-    to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;                    
+    to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;
     cont.next = NULL;
     cont.object = NULL;
     cont.object_type = 0;
@@ -566,18 +636,18 @@ void Engine_Frame(btScalar time)
         Gui_StringAutoRect(&system_fps);
         cycles = 0;
         time_cycl = 0.0;
-    }   
-    
+    }
+
     while (SDL_PollEvent(&event))
     {
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(!con_base.show && control_states.mouse_look != 0 && 
+                if(!con_base.show && control_states.mouse_look != 0 &&
                     ((event.motion.x != (screen_info.w/2)) ||
-                     (event.motion.y != (screen_info.h/2)))) 
+                     (event.motion.y != (screen_info.h/2))))
                 {
-                    if(mouse_setup)                                             // it is not perfect way, but cursor 
+                    if(mouse_setup)                                             // it is not perfect way, but cursor
                     {                                                           // every engine start is in one place
                         control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
                         control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
@@ -592,9 +662,9 @@ void Engine_Frame(btScalar time)
                 }
                 mouse_setup = 1;
                 break;
-                
+
             case SDL_MOUSEBUTTONDOWN:
-                if(event.button.button == 1) //LM = 1, MM = 2, RM = 3, S_UP = 4, S_DOWN = 5
+                if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
                 {
                     Engine_PrimaryMouseDown();
                 }
@@ -603,32 +673,46 @@ void Engine_Frame(btScalar time)
                     Engine_SecondaryMouseDown();
                 }
                 break;
-                
+
+            // Controller events are only invoked when joystick is initialized as
+            // game controller, otherwise, generic joystick event will be used.
+            case SDL_CONTROLLERAXISMOTION:
+                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value);
+                break;
+
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state);
+                break;
+
+            // Joystick events are still invoked, even if joystick is initialized as game
+            // controller - that's why we need sdl_joystick checking - to filter out
+            // duplicate event calls.
+
             case SDL_JOYAXISMOTION:
-                if( (control_mapper.use_joy >= 1) && (event.jaxis.which == control_mapper.joy_number) )
-                {
+                if(sdl_joystick)
                     Controls_JoyAxis(event.jaxis.axis, event.jaxis.value);
-                }
                 break;
-                
+
             case SDL_JOYHATMOTION:
-                if( (control_mapper.use_joy >= 1) && (event.jhat.which == control_mapper.joy_number) )
-                {
+                if(sdl_joystick)
                     Controls_JoyHat(event.jhat.value);
-                }
                 break;
-                
+
             case SDL_JOYBUTTONDOWN:
             case SDL_JOYBUTTONUP:
-                // NOTE: Joystick button numbers are passed as 1000 + 1 keycodes.
-                if( (control_mapper.use_joy >= 1) && (event.jbutton.which == control_mapper.joy_number) )
-                {
-                    Controls_Key((event.jbutton.button + 1001), event.jbutton.state);
-                }
+                // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
+                if(sdl_joystick)
+                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
                 break;
-                
-            case SDL_KEYUP:    
+
+            case SDL_KEYUP:
             case SDL_KEYDOWN:
+                if( (event.key.keysym.sym == SDLK_F4) &&
+                    (event.key.state == SDL_PRESSED)  &&
+                    (event.key.keysym.mod & KMOD_ALT) )
+                        done = 1;
+
                 if(con_base.show && event.key.state)
                 {
                     Con_Edit(Controls_KeyConsoleFilter(event.key.keysym.sym, event.key.keysym.mod));
@@ -636,7 +720,7 @@ void Engine_Frame(btScalar time)
                 }
                 else
                 {
-                    Controls_Key(event.key.keysym.sym, event.key.state);
+                    Controls_Key(event.key.keysym.scancode, event.key.state);
                     // DEBUG KEYBOARD COMMANDS
                     DebugKeys(event.key.keysym.sym, event.key.state);
                 }
@@ -652,18 +736,18 @@ void Engine_Frame(btScalar time)
                     Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
                 }
                 break;
-                
+
             default:
             break;
         }
     }
-    
+
 #if SKELETAL_TEST
     Game_ApplyControls();
 #else
     GameFrame(time);
 #endif
-    
+
     Engine_Display();
 }
 
@@ -673,19 +757,19 @@ void ShowDebugInfo()
     room_sector_p rs = NULL;
     entity_p ent;
     btScalar tr[16], r, h;
-    btTransform trans; 
+    btTransform trans;
     gui_text_line_p txt;
     vec3_copy(light_position, engine_camera.pos);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    
+
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
     glColor3f(1.0, 1.0, 1.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);
     glDrawArrays(GL_LINES, 0, 2);
-    
-#if !SKELETAL_TEST    
-    
+
+#if !SKELETAL_TEST
+
     glColor3f(0.0, 0.0, 0.0);
     for (int j=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
     {
@@ -699,7 +783,7 @@ void ShowDebugInfo()
                 body->getMotionState()->getWorldTransform(trans);
                 glPushMatrix();
                 trans.getOpenGLMatrix(tr);
-                glMultMatrixf(tr);                
+                glMultMatrixf(tr);
                 glColor3f(1.0, 1.0, 1.0);
                 gluQuadricDrawStyle(dbgSphere, GLU_LINE);
                 gluSphere(dbgSphere, dbgR, 12, 12);
@@ -708,18 +792,18 @@ void ShowDebugInfo()
             }
         }
     }
-    
+
 #endif
-    
+
 #if !SKELETAL_TEST
-    
+
     rs = NULL;
     ent = engine_world.Lara;
     if(ent && ent->character && ent->character->ray_cb)
     {
        height_info_t fc;
        btScalar pos[3];
-       
+
        fc.cb = ent->character->ray_cb;
        fc.ccb = ent->character->convex_cb;
        vec3_add(pos, ent->transform+12, ent->collision_offset.m_floats);
@@ -731,13 +815,13 @@ void ShowDebugInfo()
        }
 
        /*
-        glPushMatrix();         
+        glPushMatrix();
         glTranslatef(hang_offset_point[0], hang_offset_point[1], hang_offset_point[2]);
         gluSphere(dbgSphere, 72.0, 8, 8);
         glPopMatrix();
         */
 #if 0
-        glPushMatrix();         
+        glPushMatrix();
         trans.setFromOpenGLMatrix(ent->transform);
         trans.getOrigin() += ent->character->curr_offset;
 
@@ -749,20 +833,20 @@ void ShowDebugInfo()
             trans.getOpenGLMatrix(tr);
 
             glPushMatrix();
-            glMultMatrixf(tr);  
+            glMultMatrixf(tr);
             glScalef(ent->character->base_scale.m_floats[0], ent->character->base_scale.m_floats[1], ent->character->shapeZ->getLocalScaling().getZ());
-            glTranslatef(0.0, 0.0, -h);              
+            glTranslatef(0.0, 0.0, -h);
             gluSphere(dbgSphere, r, 12, 12);
             gluCylinder(dbgCyl, r, r, 2.0 * h, 12, 12);
             glPopMatrix();
 
             glPushMatrix();
-            glMultMatrixf(tr);  
+            glMultMatrixf(tr);
             glScalef(ent->character->base_scale.m_floats[0], ent->character->base_scale.m_floats[1], ent->character->shapeZ->getLocalScaling().getZ());
-            glTranslatef(0.0, 0.0, h);          
+            glTranslatef(0.0, 0.0, h);
             gluSphere(dbgSphere, r, 12, 12);
             glPopMatrix();
-            
+
         glPopMatrix();
 #endif
         txt = Gui_OutTextXY(screen_info.w-420, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc.floor_point.m_floats[2], (int)fc.ceiling_point.m_floats[2], (int)fc.water_level);
@@ -775,7 +859,7 @@ void ShowDebugInfo()
             //txt->rect[3] = 132.0;
             //txt->show_rect = 1;
         }
-        
+
         Gui_OutTextXY(screen_info.w-420, 68, "anim = %d, state = %d, frame = %d", ent->current_animation, ent->current_stateID, ent->current_frame);
         if(last_rmb)
         {
@@ -783,12 +867,12 @@ void ShowDebugInfo()
         }
         Gui_OutTextXY(screen_info.w-420, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Lara->character->cmd.rot[0], engine_world.Lara->character->cmd.rot[1], (btScalar)engine_world.Lara->angles[1]);
     }
-  
+
     if(engine_world.Lara && engine_world.Lara->self->room)
     {
         Gui_OutTextXY(screen_info.w-420, 28, "room = %d, co = %d", engine_world.Lara->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
     }
-    
+
     //Gui_OutTextXY(screen_info.w-380, 68, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
     //Gui_OutTextXY(screen_info.w-380, 68, "r_room_active = %d", renderer.r_list_active_count);
 #endif
@@ -824,7 +908,7 @@ void DebugKeys(int button, int state)
 
                 /*animations switching*/
 
-            case SDLK_u:   
+            case SDLK_u:
                 anim--;
                 if(anim < 0)
                 {
@@ -840,7 +924,7 @@ void DebugKeys(int button, int state)
                 }
                 break;
 
-            case SDLK_t:   
+            case SDLK_t:
                 mesh--;
                 if(mesh < 0)
                 {
@@ -916,8 +1000,8 @@ void DebugKeys(int button, int state)
                 }
                 break;
 
-                /* 
-                 * alternate rooms testing 
+                /*
+                 * alternate rooms testing
                  */
             case SDLK_r:
 #if !SKELETAL_TEST
@@ -933,7 +1017,7 @@ void DebugKeys(int button, int state)
                 }
 #endif
                 break;
-                
+
             default:
                 //Con_Printf("key = %d", button);
                 break;

@@ -19,13 +19,21 @@
 #include "bounding_volume.h"
 
 render_t renderer;
+render_settings_t render_settings;
 
 int R_List_Less(const void *v1, const void *v2);
 int R_List_Great(const void *v1, const void *v2);
 
 void Render_InitGlobals()
 {
-    // Now... It is empty
+    render_settings.anisotropy = 0;
+    render_settings.lod_bias = 0;
+    render_settings.antialias = 0;
+    render_settings.antialias_samples = 0;
+    render_settings.mipmaps = 3;
+    render_settings.mipmap_mode = 3;
+    render_settings.texture_border = 8;
+    render_settings.z_depth = 16;
 }
 
 
@@ -83,7 +91,7 @@ render_list_p Render_CreateRoomListArray(unsigned int count)
 void Render_Sprite(struct sprite_s *sprite)
 {
     btScalar v[12], *up, *right;
-    
+
     up = renderer.cam->up_dir;
     right = renderer.cam->right_dir;
 
@@ -104,7 +112,7 @@ void Render_Sprite(struct sprite_s *sprite)
     v[11]= sprite->right * right[2] + sprite->bottom * up[2];
 
     glBindTexture(GL_TEXTURE_2D, renderer.world->textures[sprite->texture]);
-    
+
     /// Perfect and easy Cochrane's optimisation!
     glColor3f(1.0, 1.0, 1.0);
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
@@ -117,7 +125,7 @@ void Render_Sprite(struct sprite_s *sprite)
 void Render_SkyBox()
 {
     GLfloat tr[16];
-    
+
     if(renderer.world != NULL && renderer.world->sky_box != NULL)
     {
         //glDisable(GL_LIGHTING);
@@ -155,7 +163,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         glNormalPointer(GL_FLOAT, sizeof(vertex_t), mesh->vertices->normal);
         glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), mesh->vertices->tex_coord);
     }
-    
+
     // Bind overriden vertices if they exist
     if (overrideVertices != NULL)
     {
@@ -172,15 +180,15 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
         elementsbase = NULL;
     }
-    
+
     unsigned long offset = 0;
     for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
     {
-        if(mesh->element_count_per_texture[texture] == 0) 
+        if(mesh->element_count_per_texture[texture] == 0)
         {
             continue;
         }
-        
+
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
         glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
         offset += mesh->element_count_per_texture[texture];
@@ -199,18 +207,18 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
     uint32_t i;
     polygon_p p;
 
-    if(mesh->transparancy_count <= 0) 
+    if(mesh->transparancy_count <= 0)
     {
         return;
     }
-    
+
     p = mesh->polygons;
     for(i=0;i<mesh->transparancy_count;i++,p++)
     {
         // Blending mode switcher.
         // Note that modes above 2 aren't explicitly used in TR textures, only for
         // internal particle processing. Theoretically it's still possible to use
-        // them if you will force type via TRTextur utility.        
+        // them if you will force type via TRTextur utility.
         switch(p->transparency)
         {
             default:
@@ -227,7 +235,7 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
                 glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
                 break;
         };
-        
+
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
         if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
@@ -246,7 +254,7 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
     btScalar *p_vertex, *src_v, *dst_v, t;
     GLfloat *p_normale, *src_n, *dst_n;
     int8_t *ch = mesh->skin_map;
-    
+
     p_vertex  = (GLfloat*)GetTempbtScalar(3 * mesh->vertex_count);
     p_normale = (GLfloat*)GetTempbtScalar(3 * mesh->vertex_count);
     dst_v = p_vertex;
@@ -266,15 +274,15 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
                 dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
                 dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
                 dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
-                
+
                 vec3_add(dst_v, dst_v, src_v);
                 dst_v[0] /= 2.0;
                 dst_v[1] /= 2.0;
                 dst_v[2] /= 2.0;
                 vec3_add(dst_n, dst_n, src_n);
-                vec3_norm(dst_n, t);                
-                break;  
-                
+                vec3_norm(dst_n, t);
+                break;
+
             case 2:
                 dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
                 dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
@@ -368,12 +376,12 @@ void Render_Room(struct room_s *room, struct render_s *render)
         {
             continue;
         }
-        
+
         if((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS))
         {
             continue;
         }
-        
+
         glPushMatrix();
         glMultMatrixbt(room->static_mesh[i].transform);
         Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
@@ -405,7 +413,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render)
 {
     unsigned int i;
     btScalar *v;
-	
+
     for(i=0;i<room->sprites_count;i++)
     {
         if(!room->sprites[i].was_rendered)
@@ -417,7 +425,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render)
 #else
             glTranslatef(v[0], v[1], v[2]);
 #endif
-			
+
             Render_Sprite(room->sprites[i].sprite);
             glPopMatrix();
         }
@@ -487,7 +495,7 @@ int Render_AddRoom(struct room_s *room)
     {
         room->sprites[i].was_rendered = 0;
     }
-    
+
     room->is_in_r_list = 1;
 
     return ret;
@@ -556,7 +564,7 @@ void Render_DrawList()
     {
         glPolygonMode(GL_FRONT, GL_FILL);
     }
-    
+
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
@@ -572,7 +580,7 @@ void Render_DrawList()
     {
         Render_Room(renderer.r_list[i].room, &renderer);
     }
-    
+
     glDisable(GL_CULL_FACE);
     glDisableClientState(GL_COLOR_ARRAY);                                       ///@FIXME: reduce number of gl state changes
     glDisableClientState(GL_NORMAL_ARRAY);
@@ -580,7 +588,7 @@ void Render_DrawList()
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer);
     }
-    
+
     /*
      * NOW render transparency
      */
@@ -630,7 +638,7 @@ void Render_DrawList_DebugLines()
 /**
  * The reccursion algorithm прохода по комнатам с отсечкой порталов по фрустумам порталов
  * @portal - we entered to the room through that portal
- * @frus - frustum that intersects the portal 
+ * @frus - frustum that intersects the portal
  * @return number of added rooms
  */
 int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
@@ -784,13 +792,13 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
     {
         return;
     }
-	
+
     unsigned int i, flag;
     frustum_p frus;
     engine_container_p cont;
     room_sector_p s;
     entity_p ent;
-	
+
     if(room->use_alternate && room->alternate_room)
     {
         room = room->alternate_room;
@@ -803,7 +811,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
         glColor3f(0.0, 0.1, 0.9);
         Render_BBox(room->bb_min, room->bb_max);
     }
-	
+
     flag = render->style & R_DRAW_PORTALS;
     if(flag)
     {
@@ -875,7 +883,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
         glPopMatrix();
         room->static_mesh[i].was_rendered_lines = 1;
     }
-	
+
     for(cont=room->containers;cont;cont=cont->next)
     {
         switch(cont->object_type)
@@ -899,14 +907,14 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
 void Render_SkyBox_DebugLines()
 {
     GLfloat tr[16], *q;
-    if(!(renderer.style & R_DRAW_NORMALS)) 
+    if(!(renderer.style & R_DRAW_NORMALS))
     {
         return;
     }
 
     if(renderer.world != NULL && renderer.world->sky_box != NULL)
     {
-        glDepthMask(GL_FALSE);	
+        glDepthMask(GL_FALSE);
         glPushMatrix();
         tr[15] = 1.0;
         q = renderer.world->sky_box->all_bone_tags->qrotate;
@@ -928,7 +936,7 @@ void Render_Entity_DebugLines(struct entity_s *entity)
     {
         return;
     }
-    
+
     if((entity->model->hide == 1) && !(renderer.style & R_DRAW_NULLMESHES))
     {
         return;
@@ -939,7 +947,7 @@ void Render_Entity_DebugLines(struct entity_s *entity)
         glColor3f(0.0, 0.0, 1.0);
         Render_BV(entity->bv);
     }
-    
+
     if(entity->model && entity->model->animations)
     {
         glPushMatrix();
@@ -948,7 +956,7 @@ void Render_Entity_DebugLines(struct entity_s *entity)
         Render_SkeletalModel_DebugLines(&entity->bf);
         glPopMatrix();
     }
-    
+
     entity->was_rendered_lines = 1;
 }
 
@@ -959,7 +967,7 @@ void Render_SkeletalModel_DebugLines(struct ss_bone_frame_s *bframe)
     {
         return;
     }
-	
+
     int i;
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -987,7 +995,7 @@ void Render_Mesh_DebugLines(struct base_mesh_s *mesh, const btScalar *overrideVe
 {
     uint32_t i;
 
-    if(renderer.style & R_DRAW_NORMALS)                                         
+    if(renderer.style & R_DRAW_NORMALS)
     {
         btScalar *normalLines = GetTempbtScalar(3 * 2 * mesh->vertex_count);
 
@@ -1031,7 +1039,7 @@ void Render_DrawAxis(btScalar r)
             0.0, 0.0, 1.0,	0.0, 0.0, 0.0,
             0.0, 0.0, 1.0,	0.0, 0.0, r
     };
- 
+
     glEnableClientState(GL_COLOR_ARRAY);                                        ///@FIXME: reduce number of gl state changes
     if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
     glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), &vertexArray[3]);
@@ -1106,7 +1114,7 @@ void Render_SectorBorders(struct room_sector_s *sector)
     {
         return;
     }
-    
+
     bb_min[2] = (btScalar)sector->floor;
     bb_max[2] = (btScalar)sector->ceiling;
 
@@ -1120,7 +1128,7 @@ void Render_SectorBorders(struct room_sector_s *sector)
 
     bb_max[0] = bb_min[0] + 1024.0;
     bb_max[1] = bb_min[1] + 1024.0;
-	
+
     Render_BBox(bb_min, bb_max);
 }
 
@@ -1128,7 +1136,7 @@ void Render_BV(struct bounding_volume_s *bv)
 {
     uint16_t i;
     polygon_p p;
-	
+
     p = bv->polygons;
     for(i=0;i<bv->polygons_count;i++,p++)
     {

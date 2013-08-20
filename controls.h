@@ -5,49 +5,11 @@
 #include <SDL2/SDL.h>
 #include <stdint.h>
 
+#define JOY_BUTTON_MASK  1000
+#define JOY_HAT_MASK     1100
+#define JOY_TRIGGER_MASK 1200
 
-#define ACTIONS_NAMES_LUA "actions = {}; \
-    actions.key_up = 0; \
-    actions.key_down = 1; \
-    actions.key_left = 2; \
-    actions.key_right = 3; \
-    actions.key_action = 4; \
-    actions.key_jump = 5; \
-    actions.key_roll = 6; \
-    actions.key_drawweapon = 7; \
-    actions.key_look = 8; \
-    actions.key_walk = 9; \
-    actions.key_sprint = 10; \
-    actions.key_crouch = 11; \
-    actions.key_stepleft = 12; \
-    actions.key_stepright = 13; \
-    actions.key_lookup = 14; \
-    actions.key_lookdown = 15; \
-    actions.key_lookleft = 16; \
-    actions.key_lookright = 17; \
-    actions.key_nextweapon = 18; \
-    actions.key_prevweapon = 19; \
-    actions.key_flare = 20; \
-    actions.key_bigmedi = 21; \
-    actions.key_smallmedi = 22; \
-    actions.key_weapon1 = 23; \
-    actions.key_weapon2 = 24; \
-    actions.key_weapon3 = 25; \
-    actions.key_weapon4 = 26; \
-    actions.key_weapon5 = 27; \
-    actions.key_weapon6 = 28; \
-    actions.key_weapon7 = 29; \
-    actions.key_weapon8 = 30; \
-    actions.key_binoculars = 31; \
-    actions.key_pls = 32; \
-    actions.key_pause = 33; \
-    actions.key_inventory = 34; \
-    actions.key_diary = 35; \
-    actions.key_map = 36; \
-    actions.key_loadgame = 37; \
-    actions.key_savegame = 38; \
-    actions.key_console = 39; \
-    actions.key_screenshot = 40;"
+#define JOY_TRIGGER_DEADZONE 10000
 
 // Action mapper index constants
 enum ACTIONS {
@@ -112,10 +74,43 @@ enum AXES {
     AXIS_LASTINDEX
 };
 
+typedef struct control_settings_s
+{
+    float    mouse_sensitivity;
+
+    // Global joystick settings.
+    int8_t   use_joy;
+    int8_t   joy_number;
+
+    int8_t   joy_rumble;
+    // Look axis settings.
+    btScalar joy_look_x;                        // Raw look axis data!
+    btScalar joy_look_y;                        // Raw look axis data!
+    int8_t   joy_look_invert_x;
+    int8_t   joy_look_invert_y;
+    btScalar joy_look_sensitivity;
+    int16_t  joy_look_deadzone;
+    // Move axis settings.
+    btScalar joy_move_x;                        // Raw move axis data!
+    btScalar joy_move_y;                        // Raw move axis data!
+    int8_t   joy_move_invert_x;
+    int8_t   joy_move_invert_y;
+    btScalar joy_move_sensitivity;
+    int16_t  joy_move_deadzone;
+
+    int8_t   joy_axis_map[AXIS_LASTINDEX];      // Axis array for action mapper.
+
+    int16_t  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
+    int16_t  action_alt[ACT_LASTINDEX];         // Alternate actions array for alternate controls.
+
+}control_settings_t, *control_settings_p;
 
 void Controls_Key(int32_t button, int state);
+void Controls_WrapGameControllerKey(int button, int state);
+void Controls_WrapGameControllerAxis(int axis, Sint16 value);
 void Controls_JoyAxis(int axis, Sint16 value);
 void Controls_JoyHat(int value);
+void Controls_JoyRumble(float power, int time);
 void Controls_InitGlobals();
 
 int  Controls_KeyConsoleFilter(int32_t key, int kmod_states);

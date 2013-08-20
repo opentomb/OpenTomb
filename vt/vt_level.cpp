@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
+#include <stdio.h>
 #include "vt_level.h"
 
 #define RCSID "$Id: vt_level.cpp,v 1.1 2002/09/20 15:59:02 crow Exp $"
@@ -8,9 +9,9 @@ void VT_Level::prepare_level()
 {
 	uint32_t i;
 
-	if ((game_version >= TR_II) && (game_version <= TR_V)) 
+	if ((game_version >= TR_II) && (game_version <= TR_V))
         {
-		if (!read_32bit_textiles) 
+		if (!read_32bit_textiles)
                 {
 			if (textile32_count == 0)
                         {
@@ -20,8 +21,8 @@ void VT_Level::prepare_level()
 			for (i = 0; i < (num_textiles - num_misc_textiles); i++)
 				convert_textile16_to_textile32(textile16[i], textile32[i]);
 		}
-	} 
-        else 
+	}
+        else
         {
 		this->textile32_count = this->num_textiles;
                 this->textile32 = (tr4_textile32_t*)malloc(this->textile32_count * sizeof(tr4_textile32_t));
@@ -147,7 +148,7 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
         if(invY)
         {
             for (y = 0; y < height; y++)
-                for (x = 0; x < width; x++) 
+                for (x = 0; x < width; x++)
                 {
                         fwrite(&data[(y * width + x) * 4 + 2], sizeof(uint8_t), 1, st);
                         fwrite(&data[(y * width + x) * 4 + 1], sizeof(uint8_t), 1, st);
@@ -158,7 +159,7 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
         else
         {
             for (y = height-1; y >= 0; y--)
-                for (x = 0; x < width; x++) 
+                for (x = 0; x < width; x++)
                 {
                         fwrite(&data[(y * width + x) * 4 + 2], sizeof(uint8_t), 1, st);
                         fwrite(&data[(y * width + x) * 4 + 1], sizeof(uint8_t), 1, st);

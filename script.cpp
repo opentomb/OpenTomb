@@ -14,6 +14,7 @@
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "vmath.h"
+#include "render.h"
 
 extern "C" {
 #include "lua/lua.h"
@@ -27,12 +28,12 @@ extern "C" {
 int CVAR_Register(const char *name, const char *val)
 {
     int top;
-    
+
     if(!name || !engine_lua || !val)
     {
         return -1;
     }
-    
+
     top = lua_gettop(engine_lua);
     lua_getglobal(engine_lua, CVAR_LUA_TABLE_NAME);
     if (!lua_istable(engine_lua, -1))
@@ -40,7 +41,7 @@ int CVAR_Register(const char *name, const char *val)
         lua_settop(engine_lua, top);
         return 0;
     }
-    
+
     lua_pushstring(engine_lua, val);
     lua_setfield(engine_lua, -2, name);
     lua_settop(engine_lua, top);
@@ -54,12 +55,12 @@ int CVAR_Register(const char *name, const char *val)
 int CVAR_Delete(const char *name)
 {
     int top;
-    
+
     if(!name || !engine_lua)
     {
         return -1;
     }
-    
+
     top = lua_gettop(engine_lua);
     lua_getglobal(engine_lua, CVAR_LUA_TABLE_NAME);
     if (!lua_istable(engine_lua, -1))
@@ -67,7 +68,7 @@ int CVAR_Delete(const char *name)
         lua_settop(engine_lua, top);
         return 0;
     }
-    
+
     lua_pushnil(engine_lua);
     lua_setfield(engine_lua, -2, name);
     lua_settop(engine_lua, top);
@@ -79,14 +80,14 @@ btScalar CVAR_get_val_d(const char *key)
 {
     int top = lua_gettop(engine_lua);
     btScalar ret;
-    
+
     lua_getglobal(engine_lua, CVAR_LUA_TABLE_NAME);
     if (!lua_istable(engine_lua, -1))
     {
         lua_settop(engine_lua, top);
         return 0.0;
     }
-    
+
     lua_getfield(engine_lua, -1, key);
     ret = lua_tonumber(engine_lua, -1);
     lua_settop(engine_lua, top);
@@ -97,14 +98,14 @@ const char *CVAR_get_val_s(const char *key)
 {
     int top = lua_gettop(engine_lua);
     const char *ret;
-    
+
     lua_getglobal(engine_lua, CVAR_LUA_TABLE_NAME);
     if (!lua_istable(engine_lua, -1))
     {
         lua_settop(engine_lua, top);
         return NULL;
     }
-    
+
     lua_getfield(engine_lua, -1, key);
     ret = lua_tostring(engine_lua, -1);
     lua_settop(engine_lua, top);
@@ -114,14 +115,14 @@ const char *CVAR_get_val_s(const char *key)
 int CVAR_set_val_d(const char *key, btScalar val)
 {
     int top = lua_gettop(engine_lua);
-    
+
     lua_getglobal(engine_lua, CVAR_LUA_TABLE_NAME);
     if (!lua_istable(engine_lua, -1))
     {
         lua_settop(engine_lua, top);
         return 0;
     }
-    
+
     lua_pushnumber(engine_lua, val);
     lua_setfield(engine_lua, -2, key);
     lua_settop(engine_lua, top);
@@ -131,14 +132,14 @@ int CVAR_set_val_d(const char *key, btScalar val)
 int CVAR_set_val_s(const char *key, const char *val)
 {
     int top = lua_gettop(engine_lua);
-    
+
     lua_getglobal(engine_lua, CVAR_LUA_TABLE_NAME);
     if (!lua_istable(engine_lua, -1))
     {
         lua_settop(engine_lua, top);
         return 0;
     }
-    
+
     lua_pushstring(engine_lua, val);
     lua_setfield(engine_lua, -2, key);
     lua_settop(engine_lua, top);
@@ -247,19 +248,19 @@ int SC_ParseInt(char **ch)
 }
 
 /**
- * get tbl[key] 
+ * get tbl[key]
  */
 const char *lua_GetStrField(lua_State *lua, const char *key)
 {
     int top;
     const char *ret;
-    
+
     top = lua_gettop(lua);
     if (!lua_istable(lua, -1))
     {
         return NULL;
     }
-    
+
     lua_getfield(lua, -1, key);
     ret = lua_tostring(lua, -1);
     lua_settop(lua, top);
@@ -271,13 +272,13 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
 {
     int top;
     btScalar ret = 0.0;
-    
+
     top = lua_gettop(lua);
     if (!lua_istable(lua, -1))
     {
         return 0.0;
     }
-    
+
     lua_getfield(lua, -1, key);
     ret = lua_tonumber(lua, -1);
     lua_settop(lua, top);
@@ -285,18 +286,18 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
 }
 
 /**
- * set tbl[key] 
+ * set tbl[key]
  */
 int lua_SetScalarField(lua_State *lua, const char *key, btScalar val)
 {
     int top;
-    
+
     top = lua_gettop(lua);
     if (!lua_istable(lua, -1))
     {
         return 0;
     }
-    
+
     lua_pushnumber(lua, val);
     lua_setfield(lua, -2, key);
     lua_settop(lua, top);
@@ -307,13 +308,13 @@ int lua_SetScalarField(lua_State *lua, const char *key, btScalar val)
 int lua_SetStrField(lua_State *lua, const char *key, const char *val)
 {
     int top;
-    
+
     top = lua_gettop(lua);
     if (!lua_istable(lua, -1))
     {
         return 0;
     }
-    
+
     lua_pushstring(lua, val);
     lua_setfield(lua, -2, key);
     lua_settop(lua, top);
@@ -323,7 +324,7 @@ int lua_SetStrField(lua_State *lua, const char *key, const char *val)
 /*
  * Game structures parse
  */
-int lua_ParseJoystick(lua_State *lua)
+int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs)
 {
     if(!lua)
     {
@@ -331,23 +332,25 @@ int lua_ParseJoystick(lua_State *lua)
     }
 
     int top = lua_gettop(lua);
-    lua_getglobal(lua, "joystick");
-    control_mapper.use_joy = lua_GetScalarField(lua, "use_joy");
-    control_mapper.joy_number = lua_GetScalarField(lua, "joy_number");
-    control_mapper.joy_axis_map[AXIS_LOOK_X] = lua_GetScalarField(lua, "joy_look_axis_x");
-    control_mapper.joy_axis_map[AXIS_LOOK_Y] = lua_GetScalarField(lua, "joy_look_axis_y");
-    control_mapper.joy_look_invert_x = lua_GetScalarField(lua, "joy_look_invert_x");
-    control_mapper.joy_look_invert_y = lua_GetScalarField(lua, "joy_look_invert_y");
-    control_mapper.joy_look_sensitivity = lua_GetScalarField(lua, "joy_look_sensitivity");
-    control_mapper.joy_look_deadzone = lua_GetScalarField(lua, "joy_look_deadzone");
-    control_mapper.joy_axis_map[AXIS_MOVE_X] = lua_GetScalarField(lua, "joy_move_axis_x");
-    control_mapper.joy_axis_map[AXIS_MOVE_Y] = lua_GetScalarField(lua, "joy_move_axis_y");
-    control_mapper.joy_move_invert_x = lua_GetScalarField(lua, "joy_move_invert_x");
-    control_mapper.joy_move_invert_y = lua_GetScalarField(lua, "joy_move_invert_y");
-    control_mapper.joy_move_sensitivity = lua_GetScalarField(lua, "joy_move_sensitivity");
-    control_mapper.joy_move_deadzone = lua_GetScalarField(lua, "joy_move_deadzone");
+    lua_getglobal(lua, "controls");
+    cs->mouse_sensitivity = lua_GetScalarField(lua, "mouse_sensitivity");
+    cs->use_joy = lua_GetScalarField(lua, "use_joy");
+    cs->joy_number = lua_GetScalarField(lua, "joy_number");
+    cs->joy_rumble = lua_GetScalarField(lua, "joy_rumble");
+    cs->joy_axis_map[AXIS_LOOK_X] = lua_GetScalarField(lua, "joy_look_axis_x");
+    cs->joy_axis_map[AXIS_LOOK_Y] = lua_GetScalarField(lua, "joy_look_axis_y");
+    cs->joy_look_invert_x = lua_GetScalarField(lua, "joy_look_invert_x");
+    cs->joy_look_invert_y = lua_GetScalarField(lua, "joy_look_invert_y");
+    cs->joy_look_sensitivity = lua_GetScalarField(lua, "joy_look_sensitivity");
+    cs->joy_look_deadzone = lua_GetScalarField(lua, "joy_look_deadzone");
+    cs->joy_axis_map[AXIS_MOVE_X] = lua_GetScalarField(lua, "joy_move_axis_x");
+    cs->joy_axis_map[AXIS_MOVE_Y] = lua_GetScalarField(lua, "joy_move_axis_y");
+    cs->joy_move_invert_x = lua_GetScalarField(lua, "joy_move_invert_x");
+    cs->joy_move_invert_y = lua_GetScalarField(lua, "joy_move_invert_y");
+    cs->joy_move_sensitivity = lua_GetScalarField(lua, "joy_move_sensitivity");
+    cs->joy_move_deadzone = lua_GetScalarField(lua, "joy_move_deadzone");
     lua_settop(lua, top);
-    
+
     return 1;
 }
 
@@ -364,17 +367,39 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
     sc->x = lua_GetScalarField(lua, "x");
     sc->y = lua_GetScalarField(lua, "y");
     sc->w = lua_GetScalarField(lua, "width");
-    sc->h = lua_GetScalarField(lua, "height");  
-    
-    sc->bpp = lua_GetScalarField(lua, "bpp");  
+    sc->h = lua_GetScalarField(lua, "height");
+
+    sc->bpp = lua_GetScalarField(lua, "bpp");
     if(sc->bpp != 16 || sc->bpp != 24 || sc->bpp != 32)
     {
         sc->bpp = 32;
     }
-    sc->FS_flag = lua_GetScalarField(lua, "fullscreen");  
-    sc->fov = lua_GetScalarField(lua, "fov");  
+    sc->FS_flag = lua_GetScalarField(lua, "fullscreen");
+    sc->fov = lua_GetScalarField(lua, "fov");
     lua_settop(lua, top);
-    
+
+    return 1;
+}
+
+int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
+{
+    if(!lua)
+    {
+        return -1;
+    }
+
+    int top = lua_gettop(lua);
+    lua_getglobal(lua, "render");
+    rs->mipmap_mode = lua_GetScalarField(lua, "mipmap_mode");
+    rs->mipmaps = lua_GetScalarField(lua, "mipmaps");
+    rs->lod_bias = lua_GetScalarField(lua, "lod_bias");
+    rs->anisotropy = lua_GetScalarField(lua, "anisotropy");
+    rs->antialias = lua_GetScalarField(lua, "antialias");
+    rs->antialias_samples = lua_GetScalarField(lua, "antialias_samples");
+    rs->texture_border = lua_GetScalarField(lua, "texture_border");
+    rs->z_depth = lua_GetScalarField(lua, "z_depth");
+    lua_settop(lua, top);
+
     return 1;
 }
 
@@ -384,14 +409,14 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     int32_t t, i;
     int top;
     float tf;
-    
+
     if(!lua)
     {
         return -1;
     }
-    
+
     con_base.inited = 0;
-    
+
     top = lua_gettop(lua);
     lua_getglobal(lua, "console");
     patch = lua_GetStrField(lua, "font_path");
@@ -401,7 +426,7 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
 
         delete con_base.font_bitmap;
         con_base.font_bitmap = new FTGLBitmapFont(con_base.font_patch);
-        
+
         delete con_base.font_texture;
         con_base.font_texture = new FTGLTextureFont(con_base.font_patch);
     }
@@ -425,7 +450,7 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         cn->background_color[3] = (GLfloat)lua_GetScalarField(lua, "a") / 255.0;
     }
     lua_pop(lua, 1);
-    
+
     t = lua_GetScalarField(lua, "font_size");
     if(t >= 1 && t <= 128)
     {
@@ -472,15 +497,15 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         }
         cn->shown_lines_count = t;
     }
-    
+
     cn->show = lua_GetScalarField(lua, "show");
     cn->show_cursor_period = lua_GetScalarField(lua, "show_cursor_period");
     con_base.inited = 1;
     lua_settop(lua, top);
-    
+
     Con_SetFontSize(con_base.font_size);
     Con_SetLineInterval(con_base.spacing);
-    
+
     return 1;
 }
 

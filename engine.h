@@ -30,38 +30,6 @@ typedef struct engine_container_s
     struct engine_container_s   *next;
 }engine_container_t, *engine_container_p;
 
-
-typedef struct engine_control_mapper_s
-{
-    float    mouse_sensitivity;
-    
-    // Global joystick settings.
-    int8_t   use_joy;
-    int8_t   joy_number;
-    int8_t   joy_rumble;                        // Not functional yet - requires SDL 2.0!
-    // Look axis settings.
-    btScalar joy_look_x;                        // Raw look axis data!
-    btScalar joy_look_y;                        // Raw look axis data!
-    int8_t   joy_look_invert_x;
-    int8_t   joy_look_invert_y;
-    btScalar joy_look_sensitivity;
-    int16_t  joy_look_deadzone;
-    // Move axis settings.
-    btScalar joy_move_x;                        // Raw move axis data!
-    btScalar joy_move_y;                        // Raw move axis data!
-    int8_t   joy_move_invert_x;
-    int8_t   joy_move_invert_y;
-    btScalar joy_move_sensitivity;
-    int16_t  joy_move_deadzone;
-
-    int8_t   joy_axis_map[AXIS_LASTINDEX];      // Axis array for action mapper.
-
-    int32_t  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
-    int32_t  action_alt[ACT_LASTINDEX];         // Alternate actions array for alternate controls.
-
-}engine_control_mapper_t, *engine_control_mapper_p;
-
-
 typedef struct engine_control_state_s
 {
     int8_t   free_look;
@@ -70,7 +38,7 @@ typedef struct engine_control_state_s
     int8_t   mouse_look;
     btScalar cam_distance;
     int8_t   noclip;
-    
+
     btScalar look_axis_x;                       // Unified look axis data.
     btScalar look_axis_y;
 
@@ -121,7 +89,7 @@ typedef struct engine_control_state_s
 
 
 extern struct engine_control_state_s            control_states;
-extern struct engine_control_mapper_s           control_mapper;
+extern struct control_settings_s                control_mapper;
 
 
 extern btScalar                                 engine_frame_time;
@@ -178,7 +146,7 @@ public:
 
         return 1.0;
     }
-    
+
     engine_container_p m_cont;
 };
 
@@ -195,7 +163,7 @@ public:
     {
         room_p r0 = NULL, r1 = NULL;
         engine_container_p c1;
-        
+
         r0 = (m_cont)?(m_cont->room):(NULL);
         c1 = (engine_container_p)convexResult.m_hitCollisionObject->getUserPointer();
         r1 = (c1)?(c1->room):(NULL);
@@ -224,7 +192,7 @@ public:
 
         return 1.0;
     }
-    
+
 protected:
     engine_container_p m_cont;
 };

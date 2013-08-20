@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
@@ -39,10 +40,12 @@ extern "C" {
 
 extern SDL_Window             *sdl_window;
 extern SDL_GLContext           sdl_gl_context;
+extern SDL_GameController     *sdl_controller;
 extern SDL_Joystick           *sdl_joystick;
+extern SDL_Haptic             *sdl_haptic;
 
 struct engine_control_state_s           control_states = {0};
-struct engine_control_mapper_s          control_mapper = {0};
+struct control_settings_s               control_mapper = {0};
 btScalar                                engine_frame_time = 0.0;
 
 //cvar_t                                  mouse_sensitivity;
@@ -179,15 +182,15 @@ void Engine_Init()
 {
     Con_Init();
     Gui_Init();
-    
+
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-    
+
     Sys_Init();
     Com_Init();
     Render_Init();
-    
+
     Cam_Init(&engine_camera);
     engine_camera.dist_near = 10.0;
     engine_camera.dist_far = 65536.0;
@@ -224,7 +227,7 @@ void Engine_Init()
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
     }
-    
+
     CVAR_Register("game_level", "data/tr1/data/LEVEL1.PHD");
     CVAR_Register("engine_version", "1");
     CVAR_Register("time_scale", "1.0");
@@ -237,14 +240,14 @@ int lua_SetGravity(lua_State * lua)                                             
 {
     int num = lua_gettop(lua);                                                  // get # of arguments
     btVector3 g;
-    
+
     switch(num)
     {
         case 0:                                                                 // get value
             g = bt_engine_dynamicsWorld->getGravity();
             Con_Printf("gravity = (%.3f, %.3f, %.3f)", g.m_floats[0], g.m_floats[1], g.m_floats[2]);
             break;
-            
+
         case 1:                                                                 // set z only value
             g.m_floats[0] = 0.0;
             g.m_floats[1] = 0.0;
@@ -252,7 +255,7 @@ int lua_SetGravity(lua_State * lua)                                             
             bt_engine_dynamicsWorld->setGravity(g);
             Con_Printf("gravity = (%.3f, %.3f, %.3f)", g.m_floats[0], g.m_floats[1], g.m_floats[2]);
             break;
-            
+
         case 3:                                                                 // set xyz value
             g.m_floats[0] = lua_tonumber(lua, 1);
             g.m_floats[1] = lua_tonumber(lua, 2);
@@ -260,19 +263,19 @@ int lua_SetGravity(lua_State * lua)                                             
             bt_engine_dynamicsWorld->setGravity(g);
             Con_Printf("gravity = (%.3f, %.3f, %.3f)", g.m_floats[0], g.m_floats[1], g.m_floats[2]);
             break;
-            
+
         default:
             Con_Printf("wrong arguments number, must be 0 or 1 or 3");
             break;
     };
-    
+
     return 0;                                                                   // we returned two vaues
 }
 
 int lua_BindKey(lua_State * lua)
-{   
+{
     int act, top;
-       
+
     top = lua_gettop(lua);
     act = lua_tointeger(lua, 1);
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
@@ -280,7 +283,7 @@ int lua_BindKey(lua_State * lua)
         Con_Printf("wrong action number");
         return 0;
     }
-    
+
     else if(top == 2)
     {
         control_mapper.action_map[act] = lua_tointeger(lua, 2);
@@ -292,21 +295,20 @@ int lua_BindKey(lua_State * lua)
         control_mapper.action_alt[act] = lua_tointeger(lua, 3);
         return 0;
     }
-    
+
     Con_Printf("wrong arguments number, must be 2 or 3");
     return 0;
 }
 
 
 void Engine_LuaRegisterFuncs(lua_State *lua)
-{   
+{
     /*
      * register globals
      */
     luaL_dostring(lua, CVAR_LUA_TABLE_NAME" = {};");
     luaL_dostring(lua, "function show_table(tbl) for k, v in pairs(tbl) do print(k..' = '..v) end end");
-    luaL_dostring(lua, ACTIONS_NAMES_LUA);
-    
+
     /*
      * register functions
      */
@@ -338,23 +340,18 @@ void Engine_Destroy()
 
     delete bt_engine_ghostPairCallback;
 
-    ///-----cleanup_end-----   
+    ///-----cleanup_end-----
     if(engine_lua)
     {
         lua_close(engine_lua);
         engine_lua = NULL;
     }
-    
+
     Gui_Destroy();
 }
 
 void Engine_Shutdown(int val)
 {
-    if(sdl_joystick)
-    {
-        SDL_JoystickClose(sdl_joystick);
-    }
-    
     Render_Empty(&renderer);
     World_Empty(&engine_world);
     Engine_Destroy();
@@ -366,10 +363,21 @@ void Engine_Shutdown(int val)
     frame_vertex_buffer = NULL;
     frame_vertex_buffer_size = 0;
     frame_vertex_buffer_size_left = 0;
-    
+
     SDL_GL_DeleteContext(sdl_gl_context);
     SDL_DestroyWindow(sdl_window);
+
+    if(sdl_joystick)
+        SDL_JoystickClose(sdl_joystick);
+
+    if(sdl_controller)
+        SDL_GameControllerClose(sdl_controller);
+
+    if(sdl_haptic)
+        SDL_HapticClose(sdl_haptic);
+
     SDL_Quit();
+    //printf("\nSDL_Quit...");
     exit(val);
 }
 
@@ -385,11 +393,11 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     va_list argptr;
     char buf[4096];
     int ret;
-    
+
     va_start(argptr, fmt);
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
-    
+
     Con_AddText(buf);
 
     return ret;//vfprintf(f, fmt, argptr);
@@ -881,11 +889,13 @@ void Engine_LoadConfig()
         return;
     }
 
+    luaL_dofile(engine_lua, "scripts/config_names.lua");
     luaL_dofile(engine_lua, "config.lua");
 
     lua_ParseScreen(engine_lua, &screen_info);
+    lua_ParseRender(engine_lua, &render_settings);
     lua_ParseConsole(engine_lua, &con_base);
-    lua_ParseJoystick(engine_lua);
+    lua_ParseControlSettings(engine_lua, &control_mapper);
 }
 
 void Engine_SaveConfig()

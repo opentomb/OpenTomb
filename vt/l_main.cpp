@@ -54,7 +54,7 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
 
         this->meshes_count = this->mesh_indices_count;
         this->meshes = (tr4_mesh_t*)calloc(this->meshes_count, sizeof(tr4_mesh_t));
-        
+
         for (i = 0; i < this->mesh_indices_count; i++) {
                 uint32_t j;
 
@@ -62,7 +62,7 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
                         if (this->mesh_indices[j] == pos)
                                 this->mesh_indices[j] = mesh;
 
-                SDL_RWseek(newsrc, pos, SEEK_SET);
+                SDL_RWseek(newsrc, pos, RW_SEEK_SET);
 
                 if (this->game_version >= TR_IV)
                         read_tr4_mesh(newsrc, this->meshes[mesh]);
@@ -96,7 +96,7 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
 
         this->frame_data_size = read_bitu32(src);
         this->frame_data = new uint16_t[this->frame_data_size];
-        
+
         if (SDL_RWread(src, this->frame_data, sizeof(uint16_t), this->frame_data_size) < (int)frame_data_size)
                 Sys_extError("read_tr_level: frame_data: SDL_RWread(buffer)");
 
@@ -121,7 +121,7 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
                                 this->moveables[j].frame_offset = 0;
                         }
 
-                SDL_RWseek(newsrc, pos, SEEK_SET);
+                SDL_RWseek(newsrc, pos, RW_SEEK_SET);
 
 /*
                 if (this->game_version < TR_II)
