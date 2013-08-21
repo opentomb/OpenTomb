@@ -335,7 +335,7 @@ void Engine_InitSDLControls()
 
     if(control_mapper.use_joy == 1)
     {
-        init_flags |= SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER;  // Update init flags for joystick.
+        init_flags |= SDL_INIT_GAMECONTROLLER;  // Update init flags for joystick.
 
         if(control_mapper.joy_rumble)
             init_flags |= SDL_INIT_HAPTIC;  // Update init flags for force feedback.
@@ -393,7 +393,7 @@ void Engine_InitSDLControls()
 
 void Engine_InitSDLVideo()
 {
-    Uint32 video_flags = SDL_SWSURFACE | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+    Uint32 video_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, render_settings.z_depth);
