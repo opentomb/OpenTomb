@@ -432,8 +432,9 @@ int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct hei
  * @param offset - offset, when we check height
  * @param nfc - height info (floor / ceiling)
  */
-int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height)
+climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height)
 {
+    climb_info_t ret;
     btVector3 from, to, tmp;
     btScalar d, *pos = ent->transform + 12;
     btScalar n0[4], n1[4], n2[4];                                               // planes equations
@@ -442,30 +443,19 @@ int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct
     /*
      * init callbacks functions
      */
+    ret.climb_flag = CLIMB_ABSENT;
     nfc->cb = ent->character->ray_cb;
     nfc->ccb = ent->character->convex_cb;
-    nfc->edge_hit = 0x00; 
-    nfc->floor_hit = 0x00; 
-    nfc->ceiling_hit = 0x00; 
     vec3_add(tmp.m_floats, pos, offset);                                        // tmp = native offset point
+    ret.height_info = Character_CheckNextStep(ent, offset, nfc);
     /*
      * check max height
      */   
-    vec3_add(from.m_floats, pos, ent->collision_offset.m_floats);               // from - centre of model
-    to = from;
-    to.m_floats[2] += ent->character->Height;
-    nfc->cb->m_closestHitFraction = 1.0;
-    nfc->cb->m_collisionObject = NULL;
-    bt_engine_dynamicsWorld->rayTest(from, to, *nfc->cb);
-    if(nfc->cb->hasHit())
+    if(ent->character->height_info.ceiling_hit)
     {
-        nfc->ceiling_hit = 0x01;
-        nfc->ceiling_normale = nfc->cb->m_hitNormalWorld;
-        nfc->ceiling_point.setInterpolate3(from, to, nfc->cb->m_closestHitFraction);
-        nfc->ceiling_obj = (engine_container_p)nfc->cb->m_collisionObject->getUserPointer();
-        if(tmp.m_floats[2] > nfc->ceiling_point.m_floats[2] - 1.0)              ///@FIXME: magick
+        if(tmp.m_floats[2] > ent->character->height_info.ceiling_point.m_floats[2] - 1.0)              ///@FIXME: magick
         {
-            tmp.m_floats[2] = nfc->ceiling_point.m_floats[2] - 1.0;
+            tmp.m_floats[2] = ent->character->height_info.ceiling_point.m_floats[2] - 1.0;
         }
     }
     // ok, we set ceiling height limit, now we must to prevent direct slant surface skip
@@ -492,7 +482,7 @@ int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct
         bt_engine_dynamicsWorld->rayTest(from, to, *nfc->cb);
         if(!nfc->cb->hasHit() || nfc->cb->m_hitNormalWorld.m_floats[2] < 0.1)
         {
-            return 0;
+            return ret;
         }
     }
     
@@ -527,7 +517,7 @@ int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct
         }
         else
         {
-            return 0;
+            return ret;
         }
 
         // get the character plane equation
@@ -577,7 +567,7 @@ int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct
     if(nfc->cb->hasHit() && (nfc->cb->m_closestHitFraction < 0.99))
     {
         nfc->floor_hit = 0x00;
-        return 0;
+        return ret;
     }
 #endif
     /*
@@ -594,7 +584,7 @@ int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct
     if(n2[2] * n2[2] > d)
     {
         nfc->edge_hit = 0x00;
-        return 0x00;
+        return ret;
     }
     
     n2[2] = n2[0];
@@ -613,16 +603,17 @@ int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct
     nfc->edge_tan_xy.m_floats[2] = 0.0;
     nfc->edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
     
+    ret.climb_flag = CLIMB_HANG_ONLY;
     if(!nfc->ceiling_hit || (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= ent->character->Height))
     {
-        return 0x03;
+        ret.climb_flag = CLIMB_FULL_HEIGHT;
     }
     else if((test_height > 0.0) && (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= test_height))
     {
-        return 0x08;
+        ret.climb_flag = CLIMB_ALT_HEIGHT;
     }
     
-    return 0x01;
+    return ret;
 }
 
 /**

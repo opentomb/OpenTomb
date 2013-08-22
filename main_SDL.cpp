@@ -59,7 +59,7 @@ static GLUquadricObj   *dbgSphere;
 static GLUquadricObj   *dbgCyl;
 static btScalar         dbgR = 128.0;
 static entity_p         last_rmb = NULL;
-//#error "ADD ft2build.h to the repo!"
+
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
 /*
  * 1) console
@@ -295,8 +295,10 @@ void Engine_PrepareOpenGL()
     glEnable(GL_COLOR_MATERIAL);
 
     if(render_settings.antialias)
+    {
         glEnable(GL_MULTISAMPLE);
-
+    }
+    
     //glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
     //glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
     //glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
@@ -344,8 +346,10 @@ void Engine_InitSDLControls()
 
         NumJoysticks = SDL_NumJoysticks();
         if( (NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number) )
+        {
             return;
-
+        }
+        
         if(SDL_IsGameController(control_mapper.joy_number)) // If joystick has mapping (e.g. X360 controller)
         {
             SDL_GameControllerEventState(SDL_ENABLE);   // Use GameController API
@@ -711,8 +715,11 @@ void Engine_Frame(btScalar time)
                 if( (event.key.keysym.sym == SDLK_F4) &&
                     (event.key.state == SDL_PRESSED)  &&
                     (event.key.keysym.mod & KMOD_ALT) )
-                        done = 1;
-
+                {
+                    done = 1;
+                    break;
+                }
+                
                 if(con_base.show && event.key.state)
                 {
                     Con_Edit(Controls_KeyConsoleFilter(event.key.keysym.sym, event.key.keysym.mod));
@@ -720,7 +727,7 @@ void Engine_Frame(btScalar time)
                 }
                 else
                 {
-                    Controls_Key(event.key.keysym.scancode, event.key.state);
+                    Controls_Key(event.key.keysym.sym, event.key.state);
                     // DEBUG KEYBOARD COMMANDS
                     DebugKeys(event.key.keysym.sym, event.key.state);
                 }
@@ -756,7 +763,7 @@ void ShowDebugInfo()
 {
     room_sector_p rs = NULL;
     entity_p ent;
-    btScalar tr[16], r, h;
+    btScalar tr[16];
     btTransform trans;
     gui_text_line_p txt;
     vec3_copy(light_position, engine_camera.pos);

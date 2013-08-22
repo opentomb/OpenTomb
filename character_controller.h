@@ -40,10 +40,21 @@
 #define CHARACTER_STEP_UP_CLIMB                 (0x03)                          // big height, cannot walk next, climb only
 #define CHARACTER_STEP_UP_IMPOSSIBLE            (0x04)                          // too big height, no one ways here, or phantom case
 
+#define CLIMB_ABSENT                            (0x00)
+#define CLIMB_HANG_ONLY                         (0x01)
+#define CLIMB_ALT_HEIGHT                        (0x02)
+#define CLIMB_FULL_HEIGHT                       (0x03)
+
 struct entity_s;
 class bt_engine_ClosestConvexResultCallback;
 class bt_engine_ClosestRayResultCallback;
 class btPairCachingGhostObject;
+
+typedef struct climb_info_s
+{
+    int8_t      height_info;
+    int8_t      climb_flag;
+}climb_info_t, *climb_info_p;
 
 typedef struct height_info_s
 {
@@ -131,7 +142,7 @@ void Character_Clean(struct entity_s *ent);
 
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc);
 int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc);
-int Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
+climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
 int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar react[3]);
 void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, /*struct height_info_s *fc,*/ btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
