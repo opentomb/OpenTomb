@@ -563,7 +563,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             break;
 
         case TR_ANIMATION_LARA_TURN_LEFT_SLOW:
-            cmd->rot[0] = 0;
+            cmd->rot[0] *= 0.5;
             ent->dir_flag = ENT_STAY;
             if(cmd->move[0] == 1 && cmd->jump == 0 && cmd->crouch == 0 && cmd->shift == 1)
             {
@@ -2163,7 +2163,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else
                 {
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);   // landing - roll
+                    //Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);   // landing - roll; does not works with statechange
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_ROLL, 0);
                 }
             }
             else if(ent->move_type == MOVE_UNDER_WATER)

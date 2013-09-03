@@ -884,13 +884,34 @@ int Engine_ExecCmd(char *ch)
 
 void Engine_LoadConfig()
 {
+    FILE *f;
+    
     if(!engine_lua)
     {
         return;
     }
 
-    luaL_dofile(engine_lua, "scripts/config_names.lua");
-    luaL_dofile(engine_lua, "config.lua");
+    f = fopen("control_constants.lua", "r");
+    if(f)
+    {
+        fclose(f);
+        luaL_dofile(engine_lua, "control_constants.lua");
+    }
+    else
+    {
+        Sys_Warn("Could not find \"control_constants.lua\"");
+    }
+    
+    f = fopen("config.lua", "r");
+    if(f)
+    {
+        fclose(f);
+        luaL_dofile(engine_lua, "config.lua");
+    }
+    else
+    {
+        Sys_Warn("Could not find \"config.lua\"");
+    }
 
     lua_ParseScreen(engine_lua, &screen_info);
     lua_ParseRender(engine_lua, &render_settings);

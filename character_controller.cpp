@@ -19,6 +19,9 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
+#define NUM_PENETRATION_ITERATIONS      (6)
+#define PENETRATION_PART_KOEF           (0.2)
+
 void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
 {
     character_p ret;
@@ -672,7 +675,7 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
 
                 if (dist < 0.0)
                 {
-                    koef = directionSign * btScalar(0.2);
+                    koef = directionSign * PENETRATION_PART_KOEF;
                     pos += pt.m_normalWorldOnB * koef * dist;
                     react[0] += pt.m_normalWorldOnB.m_floats[0] * koef;
                     react[1] += pt.m_normalWorldOnB.m_floats[1] * koef;
@@ -710,7 +713,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd/*, 
         numPenetrationLoops++;
         vec3_add(reaction, reaction, tmp);
         
-        if(numPenetrationLoops > 4)                                             ///@FIXME: magic
+        if(numPenetrationLoops > NUM_PENETRATION_ITERATIONS)
         {
             break;
         }

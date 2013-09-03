@@ -50,17 +50,6 @@ void BaseMesh_Clear(base_mesh_p mesh)
         free(mesh->skin_map);
         mesh->skin_map = NULL;
     }
-
-    /*if(mesh->face_count)
-    {
-        for(i=0;i<mesh->face_count;i++)
-        {
-            Face_Clear(mesh->faces + i);
-        }
-        free(mesh->faces);
-        mesh->faces = NULL;
-        mesh->face_count = 0;
-    }*/
       
     if(mesh->element_count_per_texture)
     {
@@ -79,7 +68,7 @@ void BaseMesh_Clear(base_mesh_p mesh)
 
 
 /**
- * Поиск ограничивающего объема для меша
+ * Bounding box calculation
  */
 void BaseMesh_FindBB(base_mesh_p mesh)
 {
@@ -213,9 +202,9 @@ void SkeletalModel_Clear(skeletal_model_p model)
     {
         if(model->mesh_count)
         {
+            model->mesh_count = 0;
             free(model->mesh_tree);
             model->mesh_tree = NULL;
-            model->mesh_count = 0;
         }
 
         if(model->animation_count)
@@ -227,30 +216,35 @@ void SkeletalModel_Clear(skeletal_model_p model)
                 {
                     for(j=0;j<anim->state_change_count;j++)
                     {
+                        anim->state_change[j].anim_dispath_count = 0;
                         free(anim->state_change[j].anim_dispath);
                         anim->state_change[j].anim_dispath = NULL;
                         anim->state_change[j].ID = 0;
-                        anim->state_change[j].anim_dispath_count = 0;
                     }
                     anim->state_change_count = 0;
                     free(anim->state_change);
                     anim->state_change = NULL;
                 }
+                
+                if(anim->frames_count)
+                {
+                    for(j=0;j<anim->frames_count;j++)
+                    {
+                        if(anim->frames[j].bone_tag_count)
+                        {
+                            anim->frames[j].bone_tag_count = 0;
+                            free(anim->frames[j].bone_tags);
+                            anim->frames[j].bone_tags = NULL;
+                        }
+                    }
+                    anim->frames_count = 0;
+                    free(anim->frames);
+                    anim->frames = NULL;
+                }
             }
+            model->animation_count= 0;
             free(model->animations);
             model->animations = NULL;
-            model->animation_count= 0;
-        }
-
-        if(model->all_frames_count)
-        {
-            free(model->all_bone_frames);
-            model->all_bone_frames = NULL;
-
-            free(model->all_bone_tags);
-            model->all_bone_tags = NULL;
-
-            model->all_frames_count = 0;
         }
     }
 }
@@ -258,49 +252,52 @@ void SkeletalModel_Clear(skeletal_model_p model)
 
 void SkeletalModel_FillRotations(skeletal_model_p model)
 {
-    int i, j;
+    int i, j, k;
     bone_frame_p bf;
     bone_tag_p btag;
     btScalar angle, sin_t2, cos_t2, qt[4], qX[4], qY[4], qZ[4];
     
-    bf = model->all_bone_frames;
-    for(i=0;i<model->all_frames_count;i++,bf++)
+    for(k=0;k<model->animation_count;k++)
     {
-        btag = bf->bone_tags;
-        for(j=0;j<bf->bone_tag_count;j++,btag++)
+        bf = model->animations[k].frames;
+        for(i=0;i<model->animations[k].frames_count;i++,bf++)
         {
-            // OZ    Mat4_RotateZ(btag->transform, btag->rotate[2]);
-            angle = M_PI * btag->rotate[2] / 360.0;
-            sin_t2 = sin(angle);
-            cos_t2 = cos(angle);
-            
-            qZ[3] = cos_t2;
-            qZ[0] = 0.0 * sin_t2;
-            qZ[1] = 0.0 * sin_t2;
-            qZ[2] = 1.0 * sin_t2;
-            
-            // OX    Mat4_RotateX(btag->transform, btag->rotate[0]);
-            angle = M_PI * btag->rotate[0] / 360.0;
-            sin_t2 = sin(angle);
-            cos_t2 = cos(angle);
-            
-            qX[3] = cos_t2;
-            qX[0] = 1.0 * sin_t2;
-            qX[1] = 0.0 * sin_t2;
-            qX[2] = 0.0 * sin_t2;
-            
-            // OY    Mat4_RotateY(btag->transform, btag->rotate[1]);
-            angle = M_PI * btag->rotate[1] / 360.0;
-            sin_t2 = sin(angle);
-            cos_t2 = cos(angle);
-            
-            qY[3] = cos_t2;
-            qY[0] = 0.0 * sin_t2;
-            qY[1] = 1.0 * sin_t2;
-            qY[2] = 0.0 * sin_t2;
-            
-            vec4_mul(qt, qZ, qX); 
-            vec4_mul(btag->qrotate, qt, qY); 
+            btag = bf->bone_tags;
+            for(j=0;j<bf->bone_tag_count;j++,btag++)
+            {
+                // OZ    Mat4_RotateZ(btag->transform, btag->rotate[2]);
+                angle = M_PI * btag->rotate[2] / 360.0;
+                sin_t2 = sin(angle);
+                cos_t2 = cos(angle);
+
+                qZ[3] = cos_t2;
+                qZ[0] = 0.0 * sin_t2;
+                qZ[1] = 0.0 * sin_t2;
+                qZ[2] = 1.0 * sin_t2;
+
+                // OX    Mat4_RotateX(btag->transform, btag->rotate[0]);
+                angle = M_PI * btag->rotate[0] / 360.0;
+                sin_t2 = sin(angle);
+                cos_t2 = cos(angle);
+
+                qX[3] = cos_t2;
+                qX[0] = 1.0 * sin_t2;
+                qX[1] = 0.0 * sin_t2;
+                qX[2] = 0.0 * sin_t2;
+
+                // OY    Mat4_RotateY(btag->transform, btag->rotate[1]);
+                angle = M_PI * btag->rotate[1] / 360.0;
+                sin_t2 = sin(angle);
+                cos_t2 = cos(angle);
+
+                qY[3] = cos_t2;
+                qY[0] = 0.0 * sin_t2;
+                qY[1] = 1.0 * sin_t2;
+                qY[2] = 0.0 * sin_t2;
+
+                vec4_mul(qt, qZ, qX); 
+                vec4_mul(btag->qrotate, qt, qY); 
+            }
         }
     }
 }
@@ -321,6 +318,100 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
         vec3_copy(dst->bone_tags[i].rotate, src->bone_tags[i].rotate);
     }
 }
+
+void SkeletalModelSlerp(skeletal_model_p model)
+{
+    uint16_t i, j, k, l, new_frames_count;
+    animation_frame_p anim = model->animations;
+    bone_frame_p bf, new_bone_frames;
+    btScalar lerp, t;
+    
+    for(i=0;i<model->animation_count;i++,anim++)
+    {
+        if(anim->frames_count > 1 && anim->frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
+        {
+            new_frames_count = (uint16_t)anim->frame_rate * (anim->frames_count - 1) + 1;
+            bf = new_bone_frames = (bone_frame_p)malloc(new_frames_count * sizeof(bone_frame_t));
+            
+            /*
+             * the first frame does not changes
+             */
+            bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
+            bf->bone_tag_count = model->mesh_count;
+            vec3_copy(bf->centre, anim->frames[0].centre);
+            vec3_copy(bf->pos, anim->frames[0].pos);
+            vec3_copy(bf->bb_max, anim->frames[0].bb_max);
+            vec3_copy(bf->bb_min, anim->frames[0].bb_min);
+            for(k=0;k<model->mesh_count;k++)
+            {
+                vec3_copy(bf->bone_tags[k].offset, anim->frames[0].bone_tags[k].offset);
+                vec3_copy(bf->bone_tags[k].rotate, anim->frames[0].bone_tags[k].rotate);
+                vec4_copy(bf->bone_tags[k].qrotate, anim->frames[0].bone_tags[k].qrotate);
+            }
+            bf++;
+            
+            for(j=1;j<anim->frames_count;j++)
+            {
+                for(l=1;l<=anim->frame_rate;l++)
+                {
+                    lerp = ((btScalar)l) / (btScalar)anim->frame_rate;
+                    t = 1.0 - lerp;
+                    
+                    bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
+                    bf->bone_tag_count = model->mesh_count;
+
+                    bf->centre[0] = t * anim->frames[j-1].centre[0] + lerp * anim->frames[j].centre[0];
+                    bf->centre[1] = t * anim->frames[j-1].centre[1] + lerp * anim->frames[j].centre[1];
+                    bf->centre[2] = t * anim->frames[j-1].centre[2] + lerp * anim->frames[j].centre[2];
+
+                    bf->pos[0] = t * anim->frames[j-1].pos[0] + lerp * anim->frames[j].pos[0];
+                    bf->pos[1] = t * anim->frames[j-1].pos[1] + lerp * anim->frames[j].pos[1];
+                    bf->pos[2] = t * anim->frames[j-1].pos[2] + lerp * anim->frames[j].pos[2];
+
+                    bf->bb_max[0] = t * anim->frames[j-1].bb_max[0] + lerp * anim->frames[j].bb_max[0];
+                    bf->bb_max[1] = t * anim->frames[j-1].bb_max[1] + lerp * anim->frames[j].bb_max[1];
+                    bf->bb_max[2] = t * anim->frames[j-1].bb_max[2] + lerp * anim->frames[j].bb_max[2];
+
+                    bf->bb_min[0] = t * anim->frames[j-1].bb_min[0] + lerp * anim->frames[j].bb_min[0];
+                    bf->bb_min[1] = t * anim->frames[j-1].bb_min[1] + lerp * anim->frames[j].bb_min[1];
+                    bf->bb_min[2] = t * anim->frames[j-1].bb_min[2] + lerp * anim->frames[j].bb_min[2];
+
+                    for(k=0;k<model->mesh_count;k++)
+                    {
+                        bf->bone_tags[k].offset[0] = t * anim->frames[j-1].bone_tags[k].offset[0] + lerp * anim->frames[j].bone_tags[k].offset[0];
+                        bf->bone_tags[k].offset[1] = t * anim->frames[j-1].bone_tags[k].offset[1] + lerp * anim->frames[j].bone_tags[k].offset[1];
+                        bf->bone_tags[k].offset[2] = t * anim->frames[j-1].bone_tags[k].offset[2] + lerp * anim->frames[j].bone_tags[k].offset[2];
+
+                        ///@FIXME: make angles interpolation or delete angles!!!
+                        // vec3_copy(bf->bone_tags[k].rotate, anim->frames[j].bone_tags[k].rotate);
+
+                        vec4_slerp(bf->bone_tags[k].qrotate, anim->frames[j-1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
+                    }
+                    bf++;
+                }
+            }
+            
+            /*
+             * swap old and new animation bone brames
+             * free old bone frames;
+             */
+            for(j=0;j<anim->frames_count;j++)
+            {
+                if(anim->frames[j].bone_tag_count)
+                {
+                    anim->frames[j].bone_tag_count = 0;
+                    free(anim->frames[j].bone_tags);
+                    anim->frames[j].bone_tags = NULL;
+                }
+            }
+            free(anim->frames);
+            anim->frames = new_bone_frames;
+            anim->frames_count = new_frames_count;
+            anim->frame_rate = 1;
+        }
+    }
+}
+
 
 void SkeletonModelFillTransparancy(skeletal_model_p model)
 {

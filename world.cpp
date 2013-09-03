@@ -296,7 +296,7 @@ void World_Prepare(world_p world)
 
 void World_Empty(world_p world)
 {
-    int i;
+    int32_t i;
     entity_p ent_next;
     engine_container_p cont;
 
@@ -377,30 +377,32 @@ void World_Empty(world_p world)
         world->floor_data_size = 0;
     }
 
-    for (i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
+    if(bt_engine_dynamicsWorld)
     {
-        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if(body && body->getMotionState())
+        for (i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
         {
-            delete body->getMotionState();
-        }
-        if(body && body->getCollisionShape())
-        {
-            delete body->getCollisionShape();
-        }
-        cont = (engine_container_p)body->getUserPointer();
-        if(cont && cont->object_type == OBJECT_BULLET_MISC)
-        {
-            body->setUserPointer(NULL);
-            cont->room = NULL;
-            free(cont);
-        }
+            btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+            btRigidBody* body = btRigidBody::upcast(obj);
+            if(body && body->getMotionState())
+            {
+                delete body->getMotionState();
+            }
+            if(body && body->getCollisionShape())
+            {
+                delete body->getCollisionShape();
+            }
+            cont = (engine_container_p)body->getUserPointer();
+            if(cont && cont->object_type == OBJECT_BULLET_MISC)
+            {
+                body->setUserPointer(NULL);
+                cont->room = NULL;
+                free(cont);
+            }
 
-        bt_engine_dynamicsWorld->removeCollisionObject(obj);
-        delete obj;
+            bt_engine_dynamicsWorld->removeCollisionObject(obj);
+            delete obj;
+        }
     }
-    
     if(world->tex_count)
     {
         glDeleteTextures(world->tex_count ,world->textures);

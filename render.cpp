@@ -125,15 +125,18 @@ void Render_Sprite(struct sprite_s *sprite)
 void Render_SkyBox()
 {
     GLfloat tr[16];
-
+    btScalar *p;
+    
     if(renderer.world != NULL && renderer.world->sky_box != NULL)
     {
         //glDisable(GL_LIGHTING);
         glDepthMask(GL_FALSE);
         glPushMatrix();
         tr[15] = 1.0;
-        vec3_add(tr+12, renderer.cam->pos, renderer.world->sky_box->all_bone_tags->offset);
-        Mat4_set_qrotation(tr, renderer.world->sky_box->all_bone_tags->qrotate);
+        p = renderer.world->sky_box->animations->frames->bone_tags->offset;
+        vec3_add(tr+12, renderer.cam->pos, p);
+        p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
+        Mat4_set_qrotation(tr, p);
         glMultMatrixf(tr);
         Render_Mesh(renderer.world->sky_box->mesh_offset, NULL, NULL);
         glPopMatrix();
@@ -906,7 +909,9 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
 
 void Render_SkyBox_DebugLines()
 {
-    GLfloat tr[16], *q;
+    GLfloat tr[16];
+    btScalar *p;
+    
     if(!(renderer.style & R_DRAW_NORMALS))
     {
         return;
@@ -917,9 +922,10 @@ void Render_SkyBox_DebugLines()
         glDepthMask(GL_FALSE);
         glPushMatrix();
         tr[15] = 1.0;
-        q = renderer.world->sky_box->all_bone_tags->qrotate;
-        vec3_add(tr+12, renderer.cam->pos, renderer.world->sky_box->all_bone_tags->offset);
-        Mat4_set_qrotation(tr, q);
+        p = renderer.world->sky_box->animations->frames->bone_tags->offset;
+        vec3_add(tr+12, renderer.cam->pos, p);
+        p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
+        Mat4_set_qrotation(tr, p);
         glMultMatrixf(tr);
 
         Render_Mesh_DebugLines(renderer.world->sky_box->mesh_offset, NULL, NULL);

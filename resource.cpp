@@ -1704,7 +1704,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
     uint16_t *frame, temp1, temp2;
     float ang;
 
-    bone_tag_p bone_tag, bone_tag_malloc;
+    bone_tag_p bone_tag;
     bone_frame_p bone_frame;
     mesh_tree_tag_p tree_tag;
     animation_frame_p anim;
@@ -1749,8 +1749,6 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         model->animations = (animation_frame_p)malloc(sizeof(animation_frame_t));
         model->animations->frames_count = 1;
         model->animations->frames = (bone_frame_p)malloc(model->animations->frames_count * sizeof(bone_frame_t));
-        model->all_bone_frames = model->animations->frames;
-        model->all_frames_count = 1;
         bone_frame = model->animations->frames;
 
         model->animations->ID = 0;
@@ -1762,7 +1760,6 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
 
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
-        model->all_bone_tags = bone_frame->bone_tags;
 
         bone_frame->pos[0] = 0.0;
         bone_frame->pos[1] = 0.0;
@@ -1788,13 +1785,15 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         model->animation_count = 1;
     }
 
-    model->all_frames_count = 0;
-    for(i=0;i<model->animation_count;i++)
+    /*
+     * That calculation must be in VT module!
+     */
+    if(tr->game_version == TR_I || tr->game_version == TR_I_DEMO || tr->game_version == TR_I_UB)
     {
-        tr_animation = &tr->animations[tr_moveable->animation_index+i];
-        frame_offset = tr_animation->frame_offset / 2;
-        if(tr->game_version == TR_I || tr->game_version == TR_I_DEMO || tr->game_version == TR_I_UB)
+        for(i=0;i<model->animation_count;i++)
         {
+            tr_animation = &tr->animations[tr_moveable->animation_index+i];
+            frame_offset = tr_animation->frame_offset / 2;
             /*
              *   there is no difficult:
              * - first 9 words are bounding box and frame offset coordinates.
@@ -1805,19 +1804,11 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
              */
             tr_animation->frame_size = tr->frame_data[frame_offset + 9] * 2 + 10;
         }
-        j = GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
-        if(j>0)
-        {
-            model->all_frames_count += j;
-        }
-        else
-        {
-            model->all_frames_count++;
-        }
     }
 
-    model->all_bone_frames = (bone_frame_p)malloc(model->all_frames_count * sizeof(bone_frame_t));
-    bone_tag_malloc = model->all_bone_tags = (bone_tag_p)malloc(model->all_frames_count * model->mesh_count * sizeof(bone_tag_t));
+    /*
+     * Ok, let us calculate animations
+     */
     model->animations = (animation_frame_p)malloc(model->animation_count * sizeof(animation_frame_t));
     anim = model->animations;
     for(i=0;i<model->animation_count;i++,anim++)
@@ -1857,28 +1848,18 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
              */
             anim->frames_count = 1;
         }
-
+        anim->frames = (bone_frame_p)malloc(anim->frames_count * sizeof(bone_frame_t));
+        
         /*
          * let us begin to load animations
          */
-
-        if(i==0)
-        {
-            anim->frames = model->all_bone_frames;
-        }
-        else
-        {
-            anim->frames = (anim-1)->frames + (anim-1)->frames_count;
-        }
         bone_frame = anim->frames;
         frame = tr->frame_data + frame_offset;
-
         for(j=0;j<anim->frames_count;j++,bone_frame++,frame_offset+=frame_step)
         {
             frame = tr->frame_data + frame_offset;
             bone_frame->bone_tag_count = model->mesh_count;
-            bone_frame->bone_tags = bone_tag_malloc;
-            bone_tag_malloc += bone_frame->bone_tag_count;
+            bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
 
             GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
@@ -1976,7 +1957,11 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         }
     }
 
-
+    /*
+     * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
+     */
+    SkeletalModel_FillRotations(model);
+    SkeletalModelSlerp(model);
     /*
      * state change's loading
      */
@@ -1998,7 +1983,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         {
             anim->next_anim = model->animations + j;
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
-            anim->next_frame /= (anim->next_anim->frame_rate)?(anim->next_anim->frame_rate):(1);
+            //anim->next_frame /= (anim->next_anim->frame_rate)?(anim->next_anim->frame_rate):(1);
             //Sys_DebugLog("d_log.txt", "\nANIM[%d:%d], next_anim0 = %d, next_anim = %d", i, j, anim->next_frame, anim->next_frame % anim->next_anim->frames_count);
             anim->next_frame %= anim->next_anim->frames_count;
             if(anim->next_frame < 0)
@@ -2033,7 +2018,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                 {
                     tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch+l];
                     int next_anim = tr_adisp->next_animation & 0x7fff;
-                    int next_anim_ind = (next_anim - tr_moveable->animation_index) & 0x7fff;
+                    int next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
                     if((next_anim_ind >= 0) &&(next_anim_ind < model->animation_count))
                     {
                         sch_p->anim_dispath_count++;
@@ -2047,11 +2032,11 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                         low = tr_adisp->low - tr_animation->frame_start;
                         high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low = (low / ((anim->frame_rate)?(anim->frame_rate):(1))) % anim->frames_count;
-                        adsp->frame_high = (high / ((anim->next_anim->frame_rate)?(anim->next_anim->frame_rate):(1)) - 1) % anim->frames_count;
+                        adsp->frame_low = (low /*/ ((anim->frame_rate)?(anim->frame_rate):(1))*/) % anim->frames_count;
+                        adsp->frame_high = (high /*/ ((anim->next_anim->frame_rate)?(anim->next_anim->frame_rate):(1))*/ - 1) % anim->frames_count;
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         next_rate = model->animations[adsp->next_anim].frame_rate;
-                        adsp->next_frame = (next_frame / ((next_rate)?(next_rate):(1))) % next_frames_count;
+                        adsp->next_frame = (next_frame /*/ ((next_rate)?(next_rate):(1))*/) % next_frames_count;
 
                         //Sys_DebugLog("d_log.txt", "\nanim_disp[%d], %d : [%d, %d], next_anim = %d, %d : [%d]", l,
                         //            anim->frames_count, adsp->frame_low, adsp->frame_high,
@@ -2061,9 +2046,6 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
             }
         }
     }
-
-
-
 }
 
 int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
@@ -2199,7 +2181,6 @@ void GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         m_offset = tr->mesh_indices[tr_moveable->starting_mesh];
         smodel->mesh_offset = world->meshes + m_offset;                         // base mesh offset
         GenSkeletalModel(i, smodel, tr);
-        SkeletalModel_FillRotations(smodel);
         SkeletonModelFillTransparancy(smodel);
     }
 }

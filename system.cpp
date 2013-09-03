@@ -166,9 +166,9 @@ btScalar Sys_FloatTime (void)
     if (!secbase)
     {
         secbase = tp.tv_sec;
-        return tp.tv_usec/1000000.0;
+        return tp.tv_usec * 1.0e-6;
     }
 
-    return (tp.tv_sec - secbase) + tp.tv_usec/1000000.0;
+    return (tp.tv_sec - secbase) + tp.tv_usec * 1.0e-6;
 }
 

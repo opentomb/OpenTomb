@@ -406,6 +406,7 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
 int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
 {
     const char *patch;
+    FILE *f;
     int32_t t, i;
     int top;
     float tf;
@@ -422,13 +423,22 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     patch = lua_GetStrField(lua, "font_path");
     if(patch && strncmp(patch, cn->font_patch, 255))
     {
-        strncpy(cn->font_patch, patch, 255);
+        f = fopen(patch, "rb");
+        if(f)
+        {
+            fclose(f);
+            strncpy(cn->font_patch, patch, 255);
+            
+            delete con_base.font_bitmap;
+            con_base.font_bitmap = new FTGLBitmapFont(con_base.font_patch);
 
-        delete con_base.font_bitmap;
-        con_base.font_bitmap = new FTGLBitmapFont(con_base.font_patch);
-
-        delete con_base.font_texture;
-        con_base.font_texture = new FTGLTextureFont(con_base.font_patch);
+            delete con_base.font_texture;
+            con_base.font_texture = new FTGLTextureFont(con_base.font_patch);
+        }
+        else
+        {
+            Sys_Warn("Console: could not find font = \"%s\"", con_base.font_patch);
+        }
     }
     cn->smooth = lua_GetScalarField(lua, "smooth");
     lua_getfield(lua, -1, "font_color");

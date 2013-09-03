@@ -200,8 +200,8 @@ typedef struct state_change_s
 
 typedef struct animation_frame_s                                                
 {
-    unsigned int                ID;
-    unsigned char               frame_rate;
+    uint32_t                    ID;
+    uint8_t                     frame_rate;
     int                         accel_hi;
     int                         accel_hi2;
     int                         accel_lo;
@@ -210,13 +210,13 @@ typedef struct animation_frame_s
     int                         speed2;
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
-    unsigned int                state_id;
-    int                         unknown;
-    int                         unknown2;
-    unsigned int                frames_count;                                   // количество фреймов анимации
+    uint16_t                    state_id;
+    int16_t                     unknown;
+    int16_t                     unknown2;
+    uint16_t                    frames_count;                                   // количество фреймов анимации
     struct bone_frame_s        *frames;                                         // все анимации
     
-    unsigned int                state_change_count;                             // количество смен анимаций
+    uint16_t                    state_change_count;                             // количество смен анимаций
     struct state_change_s      *state_change;                                   // данные о сменах анимаций
     
     struct animation_frame_s   *next_anim;                                      // следующая анимация
@@ -230,22 +230,18 @@ typedef struct animation_frame_s
 typedef struct skeletal_model_s
 {
     uint32_t                    ID;                                             // ID
-    uint16_t                    transparancy_flags;                             // флаги прозрачности
+    uint16_t                    transparancy_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
     uint16_t                    hide;                                           // do not render
-    btScalar                    bbox_min[3];                                    // данные о размерах модели
+    btScalar                    bbox_min[3];                                    // bbox info
     btScalar                    bbox_max[3];
-    btScalar                    centre[3];                                      // центр модели
+    btScalar                    centre[3];                                      // the centre of model
         
-    uint16_t                    animation_count;                                // количество анимаций
-    struct animation_frame_s   *animations;                                     // сами анимации
+    uint16_t                    animation_count;                                // number of animations
+    struct animation_frame_s   *animations;                                     // animations data
     
-    uint16_t                    all_frames_count;                               // количество всех фреймов
-    struct bone_frame_s        *all_bone_frames;                                // все фреймы модели
-    struct bone_tag_s          *all_bone_tags;                                  // все повороты
-    
-    uint16_t                    mesh_count;                                     // количество мешей модели
+    uint16_t                    mesh_count;                                     // number of model meshes
     struct base_mesh_s         *mesh_offset;                                    // смещение от базовых мешей к мешам модели, дефолтный меш
-    struct mesh_tree_tag_s     *mesh_tree;                                      // базовый скелет модели.
+    struct mesh_tree_tag_s     *mesh_tree;                                      // base mesh tree.
 }skeletal_model_t, *skeletal_model_p; 
 
 
@@ -259,6 +255,7 @@ void Mesh_MullColors(struct base_mesh_s *mesh, float *cl_mult);
 void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletalModel_FillRotations(skeletal_model_p model);
 void SkeletonModelFillTransparancy(skeletal_model_p model);
+void SkeletalModelSlerp(skeletal_model_p models);
 void FillSkinnedMeshMap(skeletal_model_p model);
 
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);

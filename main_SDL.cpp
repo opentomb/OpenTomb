@@ -333,15 +333,17 @@ void Engine_PrepareOpenGL()
 void Engine_InitSDLControls()
 {
     int    NumJoysticks;
-    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_EVENTS;      // These flags are used in any case.
+    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_EVENTS;                    // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
     {
-        init_flags |= SDL_INIT_GAMECONTROLLER;  // Update init flags for joystick.
+        init_flags |= SDL_INIT_GAMECONTROLLER;                                  // Update init flags for joystick.
 
         if(control_mapper.joy_rumble)
-            init_flags |= SDL_INIT_HAPTIC;  // Update init flags for force feedback.
-
+        {
+            init_flags |= SDL_INIT_HAPTIC;                                      // Update init flags for force feedback.
+        }
+        
         SDL_Init(init_flags);
 
         NumJoysticks = SDL_NumJoysticks();
@@ -350,40 +352,38 @@ void Engine_InitSDLControls()
             return;
         }
         
-        if(SDL_IsGameController(control_mapper.joy_number)) // If joystick has mapping (e.g. X360 controller)
+        if(SDL_IsGameController(control_mapper.joy_number))                     // If joystick has mapping (e.g. X360 controller)
         {
-            SDL_GameControllerEventState(SDL_ENABLE);   // Use GameController API
+            SDL_GameControllerEventState(SDL_ENABLE);                           // Use GameController API
             sdl_controller = SDL_GameControllerOpen(control_mapper.joy_number);
 
             if(!sdl_controller)
             {
-                SDL_GameControllerEventState(SDL_DISABLE);  // If controller init failed, close state.
+                SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
                 control_mapper.use_joy = 0;
             }
-            else
+            else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
             {
-                if(control_mapper.joy_rumble)   // Create force feedback interface.
                     sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
             }
         }
         else
         {
-            SDL_JoystickEventState(SDL_ENABLE);     // If joystick isn't mapped, use generic API.
+            SDL_JoystickEventState(SDL_ENABLE);                                 // If joystick isn't mapped, use generic API.
             sdl_joystick = SDL_JoystickOpen(control_mapper.joy_number);
 
             if(!sdl_joystick)
             {
-                SDL_JoystickEventState(SDL_DISABLE);    // If joystick init failed, close state.
+                SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
                 control_mapper.use_joy = 0;
             }
-            else
+            else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
             {
-                if(control_mapper.joy_rumble)       // Create force feedback interface.
-                    sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
+                sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
             }
         }
 
-        if(sdl_haptic)  // To check if force feedback is working or not.
+        if(sdl_haptic)                                                          // To check if force feedback is working or not.
         {
             SDL_HapticRumbleInit(sdl_haptic);
             SDL_HapticRumblePlay(sdl_haptic, 1.0, 300);
@@ -397,7 +397,7 @@ void Engine_InitSDLControls()
 
 void Engine_InitSDLVideo()
 {
-    Uint32 video_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+    Uint32 video_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, render_settings.z_depth);
@@ -440,7 +440,9 @@ int SDL_main(int argc, char **argv)
 
     //Con_Printf("LShift = %X, RShift = %X", SDLK_LSHIFT , SDLK_RSHIFT);
     //Con_Printf("LCTRL = %X, RCTRL = %X", SDLK_LCTRL , SDLK_RCTRL);
-
+    //Con_Printf("LAlt = %X, RAlt = %X", SDLK_LALT , SDLK_RALT);
+    //Con_Printf("LGui = %X, RGui = %X", SDLK_LGUI , SDLK_RGUI);
+    
     while(!done)
     {
         newtime = Sys_FloatTime();
@@ -449,17 +451,16 @@ int SDL_main(int argc, char **argv)
         Engine_Frame(time);
     }
 
-    Engine_Shutdown(0);
-
-    return(0);
+    Engine_Shutdown(EXIT_SUCCESS);
+    return(EXIT_SUCCESS);
 }
 
 void Engine_Display()
 {
     if(!done)
     {
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_ACCUM_BUFFER_BIT );
-        glColor4f( 0.0, 0.0, 0.0, 1.0 );
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_ACCUM_BUFFER_BIT);
+        glColor4f(0.0, 0.0, 0.0, 1.0);
 
         glEnable(GL_TEXTURE_2D);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
@@ -628,14 +629,14 @@ void Engine_Frame(btScalar time)
     }*/
     ResetTempbtScalar();
     engine_frame_time = time;
-    if(cycles < 10)
+    if(cycles < 20)
     {
         cycles++;
         time_cycl += time;
     }
     else
     {
-        screen_info.fps = (10.0 / time_cycl);
+        screen_info.fps = (20.0 / time_cycl);
         snprintf(system_fps.text, system_fps.buf_size, "%.1f", screen_info.fps);
         Gui_StringAutoRect(&system_fps);
         cycles = 0;
