@@ -1773,6 +1773,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
             bone_tag->rotate[2] = 0.0;
             vec3_copy(bone_tag->offset, tree_tag->offset);
         }
+        SkeletalModel_FillRotations(model);
         return;
     }
     //Sys_DebugLog("d_log.txt", "\n\nmodel = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
@@ -1961,7 +1962,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
      * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
      */
     SkeletalModel_FillRotations(model);
-    SkeletalModelSlerp(model);
+    SkeletalModel_InterpolateFrames(model);
     /*
      * state change's loading
      */
@@ -2181,7 +2182,7 @@ void GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         m_offset = tr->mesh_indices[tr_moveable->starting_mesh];
         smodel->mesh_offset = world->meshes + m_offset;                         // base mesh offset
         GenSkeletalModel(i, smodel, tr);
-        SkeletonModelFillTransparancy(smodel);
+        SkeletonModel_FillTransparancy(smodel);
     }
 }
 

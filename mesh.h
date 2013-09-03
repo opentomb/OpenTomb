@@ -254,8 +254,8 @@ void Mesh_MullColors(struct base_mesh_s *mesh, float *cl_mult);
 
 void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletalModel_FillRotations(skeletal_model_p model);
-void SkeletonModelFillTransparancy(skeletal_model_p model);
-void SkeletalModelSlerp(skeletal_model_p models);
+void SkeletonModel_FillTransparancy(skeletal_model_p model);
+void SkeletalModel_InterpolateFrames(skeletal_model_p models);
 void FillSkinnedMeshMap(skeletal_model_p model);
 
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);

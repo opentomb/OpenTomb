@@ -319,7 +319,7 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
     }
 }
 
-void SkeletalModelSlerp(skeletal_model_p model)
+void SkeletalModel_InterpolateFrames(skeletal_model_p model)
 {
     uint16_t i, j, k, l, new_frames_count;
     animation_frame_p anim = model->animations;
@@ -413,7 +413,7 @@ void SkeletalModelSlerp(skeletal_model_p model)
 }
 
 
-void SkeletonModelFillTransparancy(skeletal_model_p model)
+void SkeletonModel_FillTransparancy(skeletal_model_p model)
 {
     unsigned int i;
 

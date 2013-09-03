@@ -697,7 +697,7 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
 }
 
 
-void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd/*, struct height_info_s *fc*/, btScalar move[3])
+void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, btScalar move[3])
 {
     int numPenetrationLoops = 0;
     btVector3 pos;
@@ -925,7 +925,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         {
             tv.m_floats[2] = -tv.m_floats[2];
             spd = tv * ent->character->speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
-            ang = 180.0 * atan2f(tv.m_floats[0], -tv.m_floats[1]) / M_PI;        // from -180 deg to +180 deg
+            ang = 180.0 * atan2f(tv.m_floats[0], -tv.m_floats[1]) / M_PI;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             t = tv.m_floats[0] * ent->transform[4] + tv.m_floats[1] * ent->transform[5];
             if(t >= 0.0)
