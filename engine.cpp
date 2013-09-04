@@ -914,7 +914,7 @@ void Engine_LoadConfig()
     }
 
     lua_ParseScreen(engine_lua, &screen_info);
-    lua_ParseRender(engine_lua, &render_settings);
+    lua_ParseRender(engine_lua, &renderer.settings);
     lua_ParseConsole(engine_lua, &con_base);
     lua_ParseControlSettings(engine_lua, &control_mapper);
 }

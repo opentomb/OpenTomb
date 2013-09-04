@@ -294,7 +294,7 @@ void Engine_PrepareOpenGL()
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_COLOR_MATERIAL);
 
-    if(render_settings.antialias)
+    if(renderer.settings.antialias)
     {
         glEnable(GL_MULTISAMPLE);
     }
@@ -400,10 +400,10 @@ void Engine_InitSDLVideo()
     Uint32 video_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, render_settings.z_depth);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, render_settings.antialias);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, render_settings.antialias_samples);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
 
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);

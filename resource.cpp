@@ -601,7 +601,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     long int tmpLuaValue;   // Temporary value for reading Lua parameters.
 
     // Select mipmap mode
-    switch(render_settings.mipmap_mode)
+    switch(renderer.settings.mipmap_mode)
     {
         case 0:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
@@ -622,13 +622,13 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     };
 
     // Set mipmaps number
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, render_settings.mipmaps);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings.mipmaps);
 
     // Set anisotropy degree
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, render_settings.anisotropy);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings.anisotropy);
 
     // Read lod bias
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, render_settings.lod_bias);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings.lod_bias);
 
 
     glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
@@ -1703,6 +1703,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
     uint32_t frame_offset, frame_step;
     uint16_t *frame, temp1, temp2;
     float ang;
+    btScalar rot[3];
 
     bone_tag_p bone_tag;
     bone_frame_p bone_frame;
@@ -1768,12 +1769,13 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         {
             tree_tag = model->mesh_tree + k;
             bone_tag = bone_frame->bone_tags + k;
-            bone_tag->rotate[0] = 0.0;
-            bone_tag->rotate[1] = 0.0;
-            bone_tag->rotate[2] = 0.0;
+            
+            rot[0] = 0.0;
+            rot[1] = 0.0;
+            rot[2] = 0.0;
+            vec4_SetTRRotations(bone_tag->qrotate, rot);
             vec3_copy(bone_tag->offset, tree_tag->offset);
         }
-        SkeletalModel_FillRotations(model);
         return;
     }
     //Sys_DebugLog("d_log.txt", "\n\nmodel = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
@@ -1787,28 +1789,13 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
     }
 
     /*
-     * That calculation must be in VT module!
-     */
-    if(tr->game_version == TR_I || tr->game_version == TR_I_DEMO || tr->game_version == TR_I_UB)
-    {
-        for(i=0;i<model->animation_count;i++)
-        {
-            tr_animation = &tr->animations[tr_moveable->animation_index+i];
-            frame_offset = tr_animation->frame_offset / 2;
-            /*
-             *   there is no difficult:
-             * - first 9 words are bounding box and frame offset coordinates.
-             * - 10's word is a rotations count, must be equal to number of meshes in model.
-             *   BUT! only in TR1. In TR2 - TR5 after first 9 words begins next section.
-             * - in the next follows rotation's data. one word - one rotation, if rotation is one-axis (one angle).
-             *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
-             */
-            tr_animation->frame_size = tr->frame_data[frame_offset + 9] * 2 + 10;
-        }
-    }
-
-    /*
-     * Ok, let us calculate animations
+     *   Ok, let us calculate animations;
+     *   there is no difficult:
+     * - first 9 words are bounding box and frame offset coordinates.
+     * - 10's word is a rotations count, must be equal to number of meshes in model.
+     *   BUT! only in TR1. In TR2 - TR5 after first 9 words begins next section.
+     * - in the next follows rotation's data. one word - one rotation, if rotation is one-axis (one angle).
+     *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
      */
     model->animations = (animation_frame_p)malloc(model->animation_count * sizeof(animation_frame_t));
     anim = model->animations;
@@ -1871,9 +1858,10 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                 {
                     tree_tag = model->mesh_tree + k;
                     bone_tag = bone_frame->bone_tags + k;
-                    bone_tag->rotate[0] = 0.0;
-                    bone_tag->rotate[1] = 0.0;
-                    bone_tag->rotate[2] = 0.0;
+                    rot[0] = 0.0;
+                    rot[1] = 0.0;
+                    rot[2] = 0.0;
+                    vec4_SetTRRotations(bone_tag->qrotate, rot);
                     vec3_copy(bone_tag->offset, tree_tag->offset);
                 }
             }
@@ -1884,9 +1872,10 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                 {
                     tree_tag = model->mesh_tree + k;
                     bone_tag = bone_frame->bone_tags + k;
-                    bone_tag->rotate[0] = 0.0;
-                    bone_tag->rotate[1] = 0.0;
-                    bone_tag->rotate[2] = 0.0;
+                    rot[0] = 0.0;
+                    rot[1] = 0.0;
+                    rot[2] = 0.0;
+                    vec4_SetTRRotations(bone_tag->qrotate, rot);
                     vec3_copy(bone_tag->offset, tree_tag->offset);
 
                     switch(tr->game_version)
@@ -1898,12 +1887,13 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                             l ++;
                             temp1 = tr->frame_data[frame_offset + l];
                             l ++;
-                            bone_tag->rotate[0] = (float)((temp1 & 0x3ff0) >> 4);
-                            bone_tag->rotate[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
-                            bone_tag->rotate[1] = (float)(temp2 & 0x03ff);
-                            bone_tag->rotate[0] *= 360.0 / 1024.0;
-                            bone_tag->rotate[1] *= 360.0 / 1024.0;
-                            bone_tag->rotate[2] *= 360.0 / 1024.0;
+                            rot[0] = (float)((temp1 & 0x3ff0) >> 4);
+                            rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
+                            rot[1] = (float)(temp2 & 0x03ff);
+                            rot[0] *= 360.0 / 1024.0;
+                            rot[1] *= 360.0 / 1024.0;
+                            rot[2] *= 360.0 / 1024.0;
+                            vec4_SetTRRotations(bone_tag->qrotate, rot);
                             break;
 
                         default:                                                /* TR_II + */
@@ -1923,31 +1913,35 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                             switch (temp1 & 0xc000)
                             {
                                 case 0x4000:	// x only
-                                    bone_tag->rotate[0] = ang;
-                                    bone_tag->rotate[1] = 0;
-                                    bone_tag->rotate[2] = 0;
+                                    rot[0] = ang;
+                                    rot[1] = 0;
+                                    rot[2] = 0;
+                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     break;
 
                                 case 0x8000:	// y only
-                                    bone_tag->rotate[0] = 0;
-                                    bone_tag->rotate[1] = 0;
-                                    bone_tag->rotate[2] =-ang;
+                                    rot[0] = 0;
+                                    rot[1] = 0;
+                                    rot[2] =-ang;
+                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     break;
 
                                 case 0xc000:	// z only
-                                    bone_tag->rotate[0] = 0;
-                                    bone_tag->rotate[1] = ang;
-                                    bone_tag->rotate[2] = 0;
+                                    rot[0] = 0;
+                                    rot[1] = ang;
+                                    rot[2] = 0;
+                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     break;
 
                                 default:	// all three
                                     temp2 = tr->frame_data[frame_offset + l];
-                                    bone_tag->rotate[0] = (float)((temp1 & 0x3ff0) >> 4);
-                                    bone_tag->rotate[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
-                                    bone_tag->rotate[1] = (float)(temp2 & 0x03ff);
-                                    bone_tag->rotate[0] *= 360.0 / 1024.0;
-                                    bone_tag->rotate[1] *= 360.0 / 1024.0;
-                                    bone_tag->rotate[2] *= 360.0 / 1024.0;
+                                    rot[0] = (float)((temp1 & 0x3ff0) >> 4);
+                                    rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
+                                    rot[1] = (float)(temp2 & 0x03ff);
+                                    rot[0] *= 360.0 / 1024.0;
+                                    rot[1] *= 360.0 / 1024.0;
+                                    rot[2] *= 360.0 / 1024.0;
+                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     l ++;
                                     break;
                             };
@@ -1961,7 +1955,6 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
     /*
      * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
      */
-    SkeletalModel_FillRotations(model);
     SkeletalModel_InterpolateFrames(model);
     /*
      * state change's loading
@@ -1984,7 +1977,6 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         {
             anim->next_anim = model->animations + j;
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
-            //anim->next_frame /= (anim->next_anim->frame_rate)?(anim->next_anim->frame_rate):(1);
             //Sys_DebugLog("d_log.txt", "\nANIM[%d:%d], next_anim0 = %d, next_anim = %d", i, j, anim->next_frame, anim->next_frame % anim->next_anim->frames_count);
             anim->next_frame %= anim->next_anim->frames_count;
             if(anim->next_frame < 0)
@@ -2033,11 +2025,11 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                         low = tr_adisp->low - tr_animation->frame_start;
                         high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low = (low /*/ ((anim->frame_rate)?(anim->frame_rate):(1))*/) % anim->frames_count;
-                        adsp->frame_high = (high /*/ ((anim->next_anim->frame_rate)?(anim->next_anim->frame_rate):(1))*/ - 1) % anim->frames_count;
+                        adsp->frame_low = low % anim->frames_count;
+                        adsp->frame_high = (high - 1) % anim->frames_count;
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         next_rate = model->animations[adsp->next_anim].frame_rate;
-                        adsp->next_frame = (next_frame /*/ ((next_rate)?(next_rate):(1))*/) % next_frames_count;
+                        adsp->next_frame = next_frame % next_frames_count;
 
                         //Sys_DebugLog("d_log.txt", "\nanim_disp[%d], %d : [%d, %d], next_anim = %d, %d : [%d]", l,
                         //            anim->frames_count, adsp->frame_low, adsp->frame_high,
@@ -2058,7 +2050,7 @@ int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
     
     if(curr_moveable->animation_index == 0xFFFF)
     {
-        return 1;
+        return 0;
     }
     
     if(moveable_ind == tr->moveables_count-1)
@@ -2100,7 +2092,7 @@ int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
 int GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
 {
     tr_animation_t *curr_anim, *next_anim;
-    int ret;
+    int ret, rate;
 
     curr_anim = &tr->animations[animation_ind];
     if(curr_anim->frame_size <= 0)
@@ -2108,6 +2100,10 @@ int GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
         return 1;                                                               // impossible!
     }
 
+    //rate = (curr_anim->frame_rate > 0)?(curr_anim->frame_rate):(1);
+    //ret = curr_anim->frame_end - curr_anim->frame_start + 1;
+    //return 1 + (ret - 1) / rate;                                              // strange, but that is not correct!
+    
     if(animation_ind == tr->animations_count - 1)
     {
         ret = 2 * tr->frame_data_size - curr_anim->frame_offset;

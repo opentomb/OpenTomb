@@ -95,6 +95,7 @@ void vec4_rotate(btScalar rot[4], btScalar vec[4], btScalar angle);
 void vec4_GetEilerOrientationTransform(btScalar R[4], btScalar ang[3]);
 void vec4_GetPlaneEquation(btScalar eq[4], btScalar poly[12]);
 void vec4_slerp(btScalar ret[4], btScalar q1[4], btScalar q2[4], btScalar t);
+void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
 /*
  * Matrix transformation functions and macro
  */

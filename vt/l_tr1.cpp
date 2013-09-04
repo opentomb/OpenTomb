@@ -624,6 +624,13 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
 
 	read_frame_moveable_data(src);
 
+        // try to fix ugly stick
+        for (i = 0; i < this->animations_count; i++)
+        {
+            uint32_t frame_offset = this->animations[i].frame_offset / 2;
+            this->animations[i].frame_size = this->frame_data[frame_offset + 9] * 2 + 10;
+        }
+        
         this->static_meshes_count = read_bitu32(src);
 	this->static_meshes = (tr_staticmesh_t*)malloc(this->static_meshes_count * sizeof(tr_staticmesh_t));
 	for (i = 0; i < this->static_meshes_count; i++)

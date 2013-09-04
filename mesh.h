@@ -91,94 +91,79 @@ typedef struct static_mesh_s
 }static_mesh_t, *static_mesh_p;
 
 /*
- * Это анимированные модели типа игрок, непись, креатура, двери, ловушки, прочая хрень
+ * Animated skeletal model. Taken from openraider.
+ * model -> animation -> frame -> bone
+ * thanks to Terry 'Mongoose' Hendrix II
  */
 
 /*
- * Структура костяной анимированной модели. Взято с openraider.
- * модель -> анимация -> фрейм -> кость
- * спасибо Terry 'Mongoose' Hendrix II
- */
-
-/*
- * SMOOTCHED ANIMATIONS
+ * SMOOTCHED ANIMATIONS STRUCTURES
+ * stack matrices are needed for skinned mesh transformations.
  */
 typedef struct ss_bone_tag_s
 {
-    base_mesh_p         mesh;                                                   // базовый меш
-    base_mesh_p         mesh2;                                                  // базовый меш 2, для ТР4+
-    btScalar            offset[3];                                              // смещение
+    base_mesh_p         mesh;                                                   // base mesh - pointer to the first mesh in array
+    base_mesh_p         mesh2;                                                  // base skinned mesh for ТР4+
+    btScalar            offset[3];                                              // model position offset
  
-    btScalar            qrotate[4];  
-    btScalar            transform[16];                                          // матрица 4 на 4 трансформации, напрямую используется в OpenGL - стековая
-    btScalar            full_transform[16];                                     // матрица 4 на 4 трансформации, напрямую используется в OpenGL - полная
+    btScalar            qrotate[4];                                             // quaternion rotation
+    btScalar            transform[16];                                          // 4x4 OpenGL matrix for stack usage
+    btScalar            full_transform[16];                                     // 4x4 OpenGL matrix for global usage
     
-    uint16_t            flag;                                                   // флаг стека // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
-    uint16_t            overrided;                                              // флаг - модель заменена на дополнительную анимацию
+    uint16_t            flag;                                                   // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
+    uint16_t            overrided;                                              // flag for shoot / guns animations
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 /*
- * базовый кадр анимационной скелетной модели
+ * base frame of animated skeletal model
  */
-
 typedef struct ss_bone_frame_s
 {
-    uint16_t                    bone_tag_count;                                 // количество костей
-    struct ss_bone_tag_s       *bone_tags;                                      // массив костей
-    btScalar                    pos[3];                                         // позиция (базовое смещение)
-    btScalar                    bb_min[3];                                      // ограничивающий бокс
-    btScalar                    bb_max[3];                                      // ограничивающий бокс
-    btScalar                    centre[3];                                      // Центр ограничивающего бокса
+    uint16_t                    bone_tag_count;                                 // number of bones
+    struct ss_bone_tag_s       *bone_tags;                                      // array of bones
+    btScalar                    pos[3];                                         // position (base offset)
+    btScalar                    bb_min[3];                                      // bounding box min coordinates
+    btScalar                    bb_max[3];                                      // bounding box max coordinates
+    btScalar                    centre[3];                                      // bounding box centre
 }ss_bone_frame_t, *ss_bone_frame_p;
 
 /*
  * ORIGINAL ANIMATIONS
  */
-
-/*
- * базовый элемент анимационной скелетной модели (кость, bone)
- * изначально были только углы поворота. для снятия нагрузок со стека OpenGL
- * и уменьшения вычислений теперь хранится полная матрица преобразований
- * стек не нужен. необходимо для шкурной анимации.
- */
 typedef struct bone_tag_s
 {
-    btScalar              offset[3];                                            // смещение
-    btScalar              rotate[3];                                            // поворот кости   
+    btScalar              offset[3];                                            // bone vector
     btScalar              qrotate[4];                                           // rotation quaternion
 }bone_tag_t, *bone_tag_p;
 
 /*
- * базовый кадр анимационной скелетной модели
+ * base frame of animated skeletal model
  */
-
 typedef struct bone_frame_s
 {
-    uint16_t            bone_tag_count;                                         // количество костей
-    struct bone_tag_s  *bone_tags;                                              // массив костей
-    btScalar            pos[3];                                                 // позиция (базовое смещение)
-    btScalar            bb_min[3];                                              // ограничивающий бокс
-    btScalar            bb_max[3];                                              // ограничивающий бокс
-    btScalar            centre[3];                                              // Центр ограничивающего бокса
+    uint16_t            bone_tag_count;                                         // number of bones
+    struct bone_tag_s  *bone_tags;                                              // bones data
+    btScalar            pos[3];                                                 // position (base offset)
+    btScalar            bb_min[3];                                              // bounding box min coordinates
+    btScalar            bb_max[3];                                              // bounding box max coordinates
+    btScalar            centre[3];                                              // bounding box centre
 }bone_frame_t, *bone_frame_p;
 
 /*
- * Базовый элемент дерева мешей
+ * mesh tree base element structure
  */
-
 typedef struct mesh_tree_tag_s                                                  
 {
-    base_mesh_p                 mesh;                                           // базовый меш
-    base_mesh_p                 mesh2;                                          // базовый меш 2, для ТР4+
-    btScalar                    offset[3];                                      // смещение
-    uint16_t                    flag;                                           // флаг стека // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
-    uint16_t                    overrided;                                      // флаг - модель заменена на дополнительную анимацию 
+    base_mesh_p                 mesh;                                           // base mesh - pointer to the first mesh in array
+    base_mesh_p                 mesh2;                                          // base skinned mesh for ТР4+
+    btScalar                    offset[3];                                      // model position offset
+    uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
+    uint16_t                    overrided;                                      // flag for shoot / guns animations
 }mesh_tree_tag_t, *mesh_tree_tag_p;
 
 /*
- * Структура переходов от одной анимации к другой
+ * animation switching control structure
  */
-
 typedef struct anim_dispath_s
 {
     uint16_t    next_anim;                                                      // Следующая анимация
@@ -195,9 +180,8 @@ typedef struct state_change_s
 } state_change_t, *state_change_p;
 
 /*
- * один фрейм анимацимаций модели
+ * one animation frame structure
  */
-
 typedef struct animation_frame_s                                                
 {
     uint32_t                    ID;
@@ -213,8 +197,8 @@ typedef struct animation_frame_s
     uint16_t                    state_id;
     int16_t                     unknown;
     int16_t                     unknown2;
-    uint16_t                    frames_count;                                   // количество фреймов анимации
-    struct bone_frame_s        *frames;                                         // все анимации
+    uint16_t                    frames_count;                                   // number of frames
+    struct bone_frame_s        *frames;                                         // frames data
     
     uint16_t                    state_change_count;                             // количество смен анимаций
     struct state_change_s      *state_change;                                   // данные о сменах анимаций
@@ -240,7 +224,7 @@ typedef struct skeletal_model_s
     struct animation_frame_s   *animations;                                     // animations data
     
     uint16_t                    mesh_count;                                     // number of model meshes
-    struct base_mesh_s         *mesh_offset;                                    // смещение от базовых мешей к мешам модели, дефолтный меш
+    struct base_mesh_s         *mesh_offset;                                    // pointer to the first mesh in skeletal model mesh array
     struct mesh_tree_tag_s     *mesh_tree;                                      // base mesh tree.
 }skeletal_model_t, *skeletal_model_p; 
 
@@ -253,7 +237,6 @@ void Mesh_DefaultColor(struct base_mesh_s *mesh);
 void Mesh_MullColors(struct base_mesh_s *mesh, float *cl_mult);
 
 void SkeletalModel_Clear(skeletal_model_p model);
-void SkeletalModel_FillRotations(skeletal_model_p model);
 void SkeletonModel_FillTransparancy(skeletal_model_p model);
 void SkeletalModel_InterpolateFrames(skeletal_model_p models);
 void FillSkinnedMeshMap(skeletal_model_p model);

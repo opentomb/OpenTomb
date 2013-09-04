@@ -250,59 +250,6 @@ void SkeletalModel_Clear(skeletal_model_p model)
 }
 
 
-void SkeletalModel_FillRotations(skeletal_model_p model)
-{
-    int i, j, k;
-    bone_frame_p bf;
-    bone_tag_p btag;
-    btScalar angle, sin_t2, cos_t2, qt[4], qX[4], qY[4], qZ[4];
-    
-    for(k=0;k<model->animation_count;k++)
-    {
-        bf = model->animations[k].frames;
-        for(i=0;i<model->animations[k].frames_count;i++,bf++)
-        {
-            btag = bf->bone_tags;
-            for(j=0;j<bf->bone_tag_count;j++,btag++)
-            {
-                // OZ    Mat4_RotateZ(btag->transform, btag->rotate[2]);
-                angle = M_PI * btag->rotate[2] / 360.0;
-                sin_t2 = sin(angle);
-                cos_t2 = cos(angle);
-
-                qZ[3] = cos_t2;
-                qZ[0] = 0.0 * sin_t2;
-                qZ[1] = 0.0 * sin_t2;
-                qZ[2] = 1.0 * sin_t2;
-
-                // OX    Mat4_RotateX(btag->transform, btag->rotate[0]);
-                angle = M_PI * btag->rotate[0] / 360.0;
-                sin_t2 = sin(angle);
-                cos_t2 = cos(angle);
-
-                qX[3] = cos_t2;
-                qX[0] = 1.0 * sin_t2;
-                qX[1] = 0.0 * sin_t2;
-                qX[2] = 0.0 * sin_t2;
-
-                // OY    Mat4_RotateY(btag->transform, btag->rotate[1]);
-                angle = M_PI * btag->rotate[1] / 360.0;
-                sin_t2 = sin(angle);
-                cos_t2 = cos(angle);
-
-                qY[3] = cos_t2;
-                qY[0] = 0.0 * sin_t2;
-                qY[1] = 1.0 * sin_t2;
-                qY[2] = 0.0 * sin_t2;
-
-                vec4_mul(qt, qZ, qX); 
-                vec4_mul(btag->qrotate, qt, qY); 
-            }
-        }
-    }
-}
-
-
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
 {
     unsigned int i;
@@ -315,7 +262,8 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
 
     for(i=0;i<dst->bone_tag_count;i++)
     {
-        vec3_copy(dst->bone_tags[i].rotate, src->bone_tags[i].rotate);
+        vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
+        vec3_copy(dst->bone_tags[i].offset, src->bone_tags[i].offset);
     }
 }
 
@@ -345,7 +293,6 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
             for(k=0;k<model->mesh_count;k++)
             {
                 vec3_copy(bf->bone_tags[k].offset, anim->frames[0].bone_tags[k].offset);
-                vec3_copy(bf->bone_tags[k].rotate, anim->frames[0].bone_tags[k].rotate);
                 vec4_copy(bf->bone_tags[k].qrotate, anim->frames[0].bone_tags[k].qrotate);
             }
             bf++;
@@ -381,9 +328,6 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                         bf->bone_tags[k].offset[0] = t * anim->frames[j-1].bone_tags[k].offset[0] + lerp * anim->frames[j].bone_tags[k].offset[0];
                         bf->bone_tags[k].offset[1] = t * anim->frames[j-1].bone_tags[k].offset[1] + lerp * anim->frames[j].bone_tags[k].offset[1];
                         bf->bone_tags[k].offset[2] = t * anim->frames[j-1].bone_tags[k].offset[2] + lerp * anim->frames[j].bone_tags[k].offset[2];
-
-                        ///@FIXME: make angles interpolation or delete angles!!!
-                        // vec3_copy(bf->bone_tags[k].rotate, anim->frames[j].bone_tags[k].rotate);
 
                         vec4_slerp(bf->bone_tags[k].qrotate, anim->frames[j-1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
                     }

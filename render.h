@@ -57,23 +57,6 @@ typedef struct render_list_s
     btScalar dist;
 }render_list_t, *render_list_p;
 
-typedef struct render_s
-{
-    char blocked;
-    struct world_s *world;
-    struct camera_s *cam;
-
-    uint32_t r_list_size;
-    uint32_t r_list_active_count;
-    struct render_list_s *r_list;
-
-    uint32_t r_transparancy_list_size;
-    uint32_t r_transparancy_list_active_count;
-    struct render_list_s *r_transparancy_list;
-
-    uint32_t style;                                                             // куллфейс, фулл, вирефрейм и т.п.
-}render_t, *render_p;
-
 typedef struct render_settings_s
 {
     float     lod_bias;
@@ -86,8 +69,24 @@ typedef struct render_settings_s
     int8_t    z_depth;
 }render_settings_t, *render_settings_p;
 
+typedef struct render_s
+{
+    int8_t                      blocked;
+    uint32_t                    style;                                          // 
+    struct world_s             *world;
+    struct camera_s            *cam;
+    struct render_settings_s    settings;
+    
+    uint32_t                    r_list_size;
+    uint32_t                    r_list_active_count;
+    struct render_list_s       *r_list;
+
+    uint32_t                    r_transparancy_list_size;
+    uint32_t                    r_transparancy_list_active_count;
+    struct render_list_s        *r_transparancy_list;
+}render_t, *render_p;
+
 extern render_t renderer;
-extern render_settings_t render_settings;
 
 void Render_Empty(render_p render);
 void Render_InitGlobals();

@@ -192,8 +192,47 @@ void vec4_slerp(btScalar ret[4], btScalar q1[4], btScalar q2[4], btScalar t)
     ret[3] /= fi;
 }
 
+void vec4_SetTRRotations(btScalar v[4], btScalar rot[3])
+{
+    btScalar angle, sin_t2, cos_t2, qt[4], qX[4], qY[4], qZ[4];
+    
+    // OZ    Mat4_RotateZ(btag->transform, btag->rotate[2]);
+    angle = M_PI * rot[2] / 360.0;
+    sin_t2 = sin(angle);
+    cos_t2 = cos(angle);
+
+    qZ[3] = cos_t2;
+    qZ[0] = 0.0 * sin_t2;
+    qZ[1] = 0.0 * sin_t2;
+    qZ[2] = 1.0 * sin_t2;
+
+    // OX    Mat4_RotateX(btag->transform, btag->rotate[0]);
+    angle = M_PI * rot[0] / 360.0;
+    sin_t2 = sin(angle);
+    cos_t2 = cos(angle);
+
+    qX[3] = cos_t2;
+    qX[0] = 1.0 * sin_t2;
+    qX[1] = 0.0 * sin_t2;
+    qX[2] = 0.0 * sin_t2;
+
+    // OY    Mat4_RotateY(btag->transform, btag->rotate[1]);
+    angle = M_PI * rot[1] / 360.0;
+    sin_t2 = sin(angle);
+    cos_t2 = cos(angle);
+
+    qY[3] = cos_t2;
+    qY[0] = 0.0 * sin_t2;
+    qY[1] = 1.0 * sin_t2;
+    qY[2] = 0.0 * sin_t2;
+
+    vec4_mul(qt, qZ, qX); 
+    vec4_mul(v, qt, qY); 
+}
+
+
 /*
- * Далее ф-ии матричных преобразований
+ * Matrix operations:
  */
 
 void Mat4_E(btScalar mat[16])
@@ -575,7 +614,7 @@ int ThreePlanesIntersection(btScalar v[3], btScalar n0[4], btScalar n1[4], btSca
         n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) - 
         n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
 
-    if(fabs(d) < 0.001)                                                         // if d == 0, than something wrong
+    if(fabs(d) < 0.001)                                                         // if d == 0, then something wrong
     {
         return 0;
     }
