@@ -35,4 +35,6 @@ void Sys_DebugLog(const char *file, const char *fmt, ...);
 #define Sys_extError(...) {Sys_LogCurrPlace Sys_Error(__VA_ARGS__);}
 #define Sys_extWarn(...) {Sys_LogCurrPlace Sys_Warn(__VA_ARGS__);}
 
+#define LOG_FILENAME "d_log.txt"
+
 #endif

@@ -1407,7 +1407,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         p->vertices[3].tex_coord[1] = 1.0;
     }
 
-    //Sys_DebugLog("d_log.txt", " \n\tcol rects = %d", tr_mesh->coloured_rectangles.size());
+    //Sys_DebugLog(LOG_FILENAME, " \n\tcol rects = %d", tr_mesh->coloured_rectangles.size());
     /*
      * let us normalise normales %)
      */
@@ -1778,7 +1778,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         }
         return;
     }
-    //Sys_DebugLog("d_log.txt", "\n\nmodel = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
+    //Sys_DebugLog(LOG_FILENAME, "\nmodel = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
     model->animation_count = GetNumAnimationsForMoveable(tr, model_num);
     if(model->animation_count <= 0)
     {
@@ -1810,7 +1810,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         }
         frame_step = tr_animation->frame_size;
 
-        //Sys_DebugLog("d_log.txt", "\nframe_step = %d", frame_step);
+        //Sys_DebugLog(LOG_FILENAME, "frame_step = %d", frame_step);
         anim->ID = i;
         anim->next_anim = NULL;
         anim->next_frame = 0;
@@ -1827,7 +1827,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         anim->unknown = tr_animation->unknown;
         anim->unknown2 = tr_animation->unknown2;
         anim->frames_count = GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
-        //Sys_DebugLog("d_log.txt", "\nAnim[%d], %d", tr_moveable->animation_index, GetNumFramesForAnimation(tr, tr_moveable->animation_index));
+        //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
         if(anim->frames_count <= 0)
         {
@@ -1962,7 +1962,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
 
     //if(model->animation_count > 1)
     //{
-    //    Sys_DebugLog("d_log.txt", "\n\nMODEL[%d], anims = %d, frames = %d", model_num, model->animation_count, model->all_frames_count);
+    //    Sys_DebugLog(LOG_FILENAME, "\nMODEL[%d], anims = %d, frames = %d", model_num, model->animation_count, model->all_frames_count);
     //}
     anim = model->animations;
     for(i=0;i<model->animation_count;i++,anim++)
@@ -1977,7 +1977,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         {
             anim->next_anim = model->animations + j;
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
-            //Sys_DebugLog("d_log.txt", "\nANIM[%d:%d], next_anim0 = %d, next_anim = %d", i, j, anim->next_frame, anim->next_frame % anim->next_anim->frames_count);
+            //Sys_DebugLog(LOG_FILENAME, "ANIM[%d:%d], next_anim0 = %d, next_anim = %d", i, j, anim->next_frame, anim->next_frame % anim->next_anim->frames_count);
             anim->next_frame %= anim->next_anim->frames_count;
             if(anim->next_frame < 0)
             {
@@ -1996,7 +1996,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         if((tr_animation->num_state_changes > 0) && (model->animation_count > 1))
         {
             state_change_p sch_p;
-            //Sys_DebugLog("d_log.txt", "\nANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?anim->next_anim->ID:-1, anim->next_frame);
+            //Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?anim->next_anim->ID:-1, anim->next_frame);
             anim->state_change_count = tr_animation->num_state_changes;
             sch_p = anim->state_change = (state_change_p)malloc(tr_animation->num_state_changes * sizeof(state_change_t));
 
@@ -2031,7 +2031,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
                         next_rate = model->animations[adsp->next_anim].frame_rate;
                         adsp->next_frame = next_frame % next_frames_count;
 
-                        //Sys_DebugLog("d_log.txt", "\nanim_disp[%d], %d : [%d, %d], next_anim = %d, %d : [%d]", l,
+                        //Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], %d : [%d, %d], next_anim = %d, %d : [%d]", l,
                         //            anim->frames_count, adsp->frame_low, adsp->frame_high,
                         //            adsp->next_anim, next_frames_count, adsp->next_frame);
                     }

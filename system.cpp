@@ -83,7 +83,7 @@ void Sys_Error(const char *error, ...)
     vsnprintf (string, 4096, error, argptr);
     va_end (argptr);
 
-    Sys_DebugLog("d_log.txt", "System error: %s\n", string);
+    Sys_DebugLog(LOG_FILENAME, "System error: %s", string);
     Engine_Shutdown(1);
 } 
 
@@ -95,8 +95,8 @@ void Sys_Warn(const char *warning, ...)
     va_start (argptr, warning);
     vsnprintf (string, 4096, warning, argptr);
     va_end (argptr);
-    Sys_DebugLog("d_log.txt", "Warning: %s\n", string);
-} 
+    Sys_DebugLog(LOG_FILENAME, "Warning: %s", string);
+}
 
 
 void Sys_DebugLog(const char *file, const char *fmt, ...)
@@ -106,7 +106,8 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
     FILE *fp;
     
     va_start(argptr, fmt);
-    vsnprintf(data, 4096, fmt, argptr);
+    sprintf(data, "\n");
+    vsnprintf(&data[1], 4095, fmt, argptr);
     va_end(argptr);
     fp = fopen(file, "a");
     if(fp == NULL)

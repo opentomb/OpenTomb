@@ -349,6 +349,7 @@ void Engine_InitSDLControls()
         NumJoysticks = SDL_NumJoysticks();
         if( (NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number) )
         {
+            Sys_DebugLog(LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
             return;
         }
         
@@ -359,12 +360,17 @@ void Engine_InitSDLControls()
 
             if(!sdl_controller)
             {
+                Sys_DebugLog(LOG_FILENAME, "Error: can't open game controller #%d.", control_mapper.joy_number);
                 SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
                 control_mapper.use_joy = 0;
             }
             else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
             {
                     sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
+                    if(!sdl_haptic)
+                    {
+                        Sys_DebugLog(LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
+                    }
             }
         }
         else
@@ -374,12 +380,17 @@ void Engine_InitSDLControls()
 
             if(!sdl_joystick)
             {
+                Sys_DebugLog(LOG_FILENAME, "Error: can't open joystick #%d.", control_mapper.joy_number);
                 SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
                 control_mapper.use_joy = 0;
             }
             else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
             {
                 sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
+                if(!sdl_haptic)
+                {
+                    Sys_DebugLog(LOG_FILENAME, "Error: can't initialize haptic from joystick #%d.", control_mapper.joy_number);
+                }
             }
         }
 

@@ -529,7 +529,7 @@ int SC_ParseEntity(char **ch, struct entity_s *ent)
     (*ch) = parse_token(*ch, token);
     if(strcmp(token,"{"))                                                       //если не открывающая фигурная скобка, то что-то не так
     {
-        Sys_DebugLog("d_log.txt", "Parse error: Expected '{'\n");
+        Sys_DebugLog(LOG_FILENAME, "Parse error: Expected '{'\n");
         return -1;
     }
 
@@ -598,7 +598,7 @@ int SC_ParseEntity(char **ch, struct entity_s *ent)
             ret --;
             if(strcmp(token,"{")&&strcmp(token,"}"))
             {
-                //Sys_DebugLog("d_log.txt", "\tScript error: Entity have no property: %s\n", token);
+                //Sys_DebugLog(LOG_FILENAME, "\tScript error: Entity have no property: %s\n", token);
             }
         }
     }

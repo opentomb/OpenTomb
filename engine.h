@@ -215,6 +215,7 @@ void Engine_Destroy();
 
 void Engine_Shutdown(int val);
 
+bool Engine_FileFound(const char *name, bool Write = false);
 int Engine_GetLevelVersion(const char *name);
 void GetLevelName(char *name, const char *path);
 int Engine_LoadMap(const char *name);

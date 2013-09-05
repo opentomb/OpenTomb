@@ -416,6 +416,30 @@ engine_container_p Container_Create()
 }
 
 
+bool Engine_FileFound(const char *name, bool Write)
+{
+    FILE *ff;
+    
+    if(Write)
+    {
+        ff = fopen(name, "ab");
+    }
+    else
+    {
+        ff = fopen(name, "rb");
+    }
+    
+    if(!ff)
+    {
+        return false;
+    }
+    else
+    {
+        fclose(ff);
+        return true;
+    }
+}
+
 int Engine_GetLevelVersion(const char *name)
 {
     int ret = TR_UNKNOWN;
@@ -578,7 +602,13 @@ int Engine_LoadMap(const char *name)
     //char time[64];
 
     //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog("d_log.txt", "\nStart Load Map: %s", time);
+    //Sys_DebugLog(LOG_FILENAME, "Start Load Map: %s", time);
+    if(!Engine_FileFound(name))
+    {
+        Con_Printf("File not found - \"%s\"", name);
+        return 0;
+    }
+
     trv = Engine_GetLevelVersion(name);
 
     if(trv == TR_UNKNOWN)
@@ -589,10 +619,10 @@ int Engine_LoadMap(const char *name)
     renderer.world = NULL;
 
     //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog("d_log.txt", "\nBegin Level Reading: %s", time);
+    //Sys_DebugLog(LOG_FILENAME, "Begin Level Reading: %s", time);
     tr_level.read_level(name, trv);
     //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog("d_log.txt", "\nBegin level prepare: %s", time);
+    //Sys_DebugLog(LOG_FILENAME, "Begin level prepare: %s", time);
     tr_level.prepare_level();
 
 #if 0
@@ -608,19 +638,19 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Num textures = %d", tr_level.textile32_count);
 
     //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog("d_log.txt", "\nStart world generation: %s", time);
+    //Sys_DebugLog(LOG_FILENAME, "Start world generation: %s", time);
     World_Empty(&engine_world);
     World_Prepare(&engine_world);
     TR_GenWorld(&engine_world, &tr_level);
     //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog("d_log.txt", "\nEnd world gen: %s", time);
+    //Sys_DebugLog(LOG_FILENAME, "End world gen: %s", time);
     engine_world.ID = 0;
     engine_world.name = 0;
     engine_world.type = 0;
 
     Render_SetWorld(&engine_world);
     //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog("d_log.txt", "\nEnd level loading: %s", time);
+    //Sys_DebugLog(LOG_FILENAME, "End level loading: %s", time);
     return 1;
 }
 
@@ -884,28 +914,22 @@ int Engine_ExecCmd(char *ch)
 
 void Engine_LoadConfig()
 {
-    FILE *f;
-    
     if(!engine_lua)
     {
         return;
     }
 
-    f = fopen("control_constants.lua", "r");
-    if(f)
+    if(Engine_FileFound("scripts/control_constants.lua"))
     {
-        fclose(f);
-        luaL_dofile(engine_lua, "control_constants.lua");
+        luaL_dofile(engine_lua, "scripts/control_constants.lua");
     }
     else
     {
-        Sys_Warn("Could not find \"control_constants.lua\"");
+        Sys_Warn("Could not find \"scripts/control_constants.lua\"");
     }
     
-    f = fopen("config.lua", "r");
-    if(f)
+    if(Engine_FileFound("config.lua"))
     {
-        fclose(f);
         luaL_dofile(engine_lua, "config.lua");
     }
     else

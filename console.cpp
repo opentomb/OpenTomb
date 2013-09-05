@@ -20,7 +20,6 @@ void Con_InitGlobals()
 void Con_Init()
 {
     long int i;
-    FILE *f;
     
     con_base.inited = 0;
     con_base.log_pos = 0;
@@ -46,12 +45,10 @@ void Con_Init()
     con_base.showing_lines = con_base.shown_lines_count;
     con_base.show_cursor_period = 0.5;
     
-    f = fopen(con_base.font_patch, "rb");
-    if(!f)
+    if(!Engine_FileFound(con_base.font_patch))
     {
         Sys_Error("Console: could not find font = \"%s\"", con_base.font_patch);
     }
-    fclose(f);
     
     con_base.font_bitmap = new FTGLBitmapFont(con_base.font_patch);
     con_base.font_bitmap->FaceSize(con_base.font_size);

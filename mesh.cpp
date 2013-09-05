@@ -393,10 +393,10 @@ mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
 void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
     int i;
-    //Sys_DebugLog("d_log.txt", "tree_1:\n");
+    //Sys_DebugLog(LOG_FILENAME, "tree_1:\n");
     for(i=0;i<tags_count;i++)
     {
-        //Sys_DebugLog("d_log.txt", "id = %d\n", src[i].mesh->ID);
+        //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->ID);
         dst[i].mesh = src[i].mesh;
     }
 }
@@ -404,10 +404,10 @@ void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count
 void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
     int i;
-    //Sys_DebugLog("d_log.txt", "tree_2:\n");
+    //Sys_DebugLog(LOG_FILENAME, "tree_2:\n");
     for(i=0;i<tags_count;i++)
     {
-        //Sys_DebugLog("d_log.txt", "id = %d\n", src[i].mesh->ID);
+        //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->ID);
         dst[i].mesh2 = src[i].mesh;
     }
 }
