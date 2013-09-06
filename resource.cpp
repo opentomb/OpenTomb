@@ -488,7 +488,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_pcall(level_script, 0, 0, 0);
         if(lua_err)
         {
-            Sys_DebugLog("lua_out.txt", "%s\n", lua_tostring(level_script, -1));
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(level_script, -1));
             lua_pop(level_script, 1);
             lua_close(level_script);
             level_script = NULL;
@@ -503,7 +503,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_pcall(collide_flags_conf, 0, 0, 0);
         if(lua_err)
         {
-            Sys_DebugLog("lua_out.txt", "%s\n", lua_tostring(collide_flags_conf, -1));
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(collide_flags_conf, -1));
             lua_pop(collide_flags_conf, 1);
             lua_close(collide_flags_conf);
             collide_flags_conf = NULL;
@@ -518,7 +518,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_pcall(ent_ID_override, 0, 0, 0);
         if(lua_err)
         {
-            Sys_DebugLog("lua_out.txt", "%s\n", lua_tostring(ent_ID_override, -1));
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(ent_ID_override, -1));
             lua_pop(ent_ID_override, 1);
             lua_close(ent_ID_override);
             ent_ID_override = NULL;
@@ -1407,7 +1407,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         p->vertices[3].tex_coord[1] = 1.0;
     }
 
-    //Sys_DebugLog(LOG_FILENAME, " \n\tcol rects = %d", tr_mesh->coloured_rectangles.size());
+    //Sys_DebugLog(LOG_FILENAME, "\tcol rects = %d", tr_mesh->coloured_rectangles.size());
     /*
      * let us normalise normales %)
      */
@@ -1778,7 +1778,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         }
         return;
     }
-    //Sys_DebugLog(LOG_FILENAME, "\nmodel = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
+    //Sys_DebugLog(LOG_FILENAME, "model = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
     model->animation_count = GetNumAnimationsForMoveable(tr, model_num);
     if(model->animation_count <= 0)
     {
@@ -1962,7 +1962,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
 
     //if(model->animation_count > 1)
     //{
-    //    Sys_DebugLog(LOG_FILENAME, "\nMODEL[%d], anims = %d, frames = %d", model_num, model->animation_count, model->all_frames_count);
+    //    Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d, frames = %d", model_num, model->animation_count, model->all_frames_count);
     //}
     anim = model->animations;
     for(i=0;i<model->animation_count;i++,anim++)
