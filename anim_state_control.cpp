@@ -119,8 +119,10 @@
 #define LARA_HANG_WALL_DISTANCE (128.0 - 24.0)
 #define LARA_HANG_VERTICAL_EPSILON (16.0)
 #define LARA_HANG_VERTICAL_OFFSET (12.0)        // in original is 0, in real life hands are little more higher than edhe
-#define LARA_TRY_HANG_WALL_OFFSET (64.0)        // It works more stable than 32 or 128
+#define LARA_TRY_HANG_WALL_OFFSET (48.0)        // It works more stable than 32 or 128
 #define LARA_HANG_SENSOR_Z (800.0)              // It works more stable than 1024 (after collision critical fix, of course)
+
+#define OSCILLATE_HANG_USE 0
 
 /**
  * Current animation == current state
@@ -511,15 +513,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 if(cmd->action)                                                 // try to climb
-                {
+                {//fff;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_SOLID, 0);
                     t = LARA_TRY_HANG_WALL_OFFSET + ent->bf.bb_max[1];
                     vec3_mul_scalar(offset, ent->transform + 4, t);
                     offset[2] += ent->character->max_step_up_height;
-                    t = ent->character->max_step_up_height;
-                    ent->character->max_step_up_height *= -1.0;
                     climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                    ent->character->max_step_up_height = t;
 
                     if(climb.climb_flag >= CLIMB_HANG_ONLY)
                     {
@@ -1518,9 +1517,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_set_zero(ent->character->speed.m_floats);
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_HANG))
                 {
-                    t = PENETRATION_TEST_OFFSET + 64;                           ///@FIXME: magick
-                    t += LARA_HANG_WALL_DISTANCE - ent->character->Radius;
-                    vec3_mul_scalar(move, ent->transform + 4, t);
+#if OSCILLATE_HANG_USE
+                    vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                     ent->collision_offset.m_floats[2] -= ent->character->max_step_up_height;
                     Character_CheckNextPenetration(ent, cmd, move);
                     ent->collision_offset.m_floats[2] += ent->character->max_step_up_height;
@@ -1528,6 +1526,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     {
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_OSCILLATE_HANG_ON, 0);
                     }
+#endif
                 }
             }
             else if(cmd->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
@@ -1562,7 +1561,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             break;
 
-        case TR_ANIMATION_LARA_OSCILLATE_HANG_ON:
+        case TR_ANIMATION_LARA_OSCILLATE_HANG_ON:                               ///@FIXME: does not works correct in TR3+ versions - ceiling climb IDLE
+            cmd->rot[0] = 0;
             if(cmd->action == 1)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT); 
@@ -2201,6 +2201,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_set_zero(ent->character->speed.m_floats);
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_HANG))
                 {
+#if OSCILLATE_HANG_USE
                     vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                     ent->collision_offset.m_floats[2] -= ent->character->max_step_up_height;
                     Character_CheckNextPenetration(ent, cmd, move);
@@ -2209,6 +2210,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     {
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_OSCILLATE_HANG_ON, 0);
                     }
+#endif
                 }
             }
             else if(cmd->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)

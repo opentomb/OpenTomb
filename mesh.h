@@ -166,10 +166,10 @@ typedef struct mesh_tree_tag_s
  */
 typedef struct anim_dispath_s
 {
-    uint16_t    next_anim;                                                      // Следующая анимация
-    uint16_t    next_frame;                                                     // Стартовый фрейм следующей анимации
-    uint16_t    frame_low;                                                      // Нижняя граний номера фрейма с которого можно начинать переход к следующему
-    uint16_t    frame_high;                                                     // Верхняя граний номера фрейма с которого можно начинать переход к следующему
+    uint16_t    next_anim;                                                      // "switch to" animation 
+    uint16_t    next_frame;                                                     // "switch to" frame 
+    uint16_t    frame_low;                                                      // low border of state change condition
+    uint16_t    frame_high;                                                     // high border of state change condition
 } anim_dispath_t, *anim_dispath_p;
 
 typedef struct state_change_s
@@ -200,11 +200,11 @@ typedef struct animation_frame_s
     uint16_t                    frames_count;                                   // number of frames
     struct bone_frame_s        *frames;                                         // frames data
     
-    uint16_t                    state_change_count;                             // количество смен анимаций
-    struct state_change_s      *state_change;                                   // данные о сменах анимаций
+    uint16_t                    state_change_count;                             // number of animation statechanges
+    struct state_change_s      *state_change;                                   // animation statechanges data
     
-    struct animation_frame_s   *next_anim;                                      // следующая анимация
-    int                         next_frame;                                     // следующий фрейм
+    struct animation_frame_s   *next_anim;                                      // next default animation
+    int                         next_frame;                                     // next default frame
 }animation_frame_t, *animation_frame_p;
 
 /*

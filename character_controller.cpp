@@ -442,70 +442,39 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     btScalar d, *pos = ent->transform + 12;
     btScalar n0[4], n1[4], n2[4];                                               // planes equations
     btTransform t1, t2;
+    char up_founded;
     //extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
     /*
      * init callbacks functions
      */
-    ret.climb_flag = CLIMB_ABSENT;
     nfc->cb = ent->character->ray_cb;
     nfc->ccb = ent->character->convex_cb;
     vec3_add(tmp.m_floats, pos, offset);                                        // tmp = native offset point
     ret.height_info = Character_CheckNextStep(ent, offset, nfc);
+    ret.climb_flag = CLIMB_ABSENT;
     /*
      * check max height
      */   
-    if(ent->character->height_info.ceiling_hit)
+    if(ent->character->height_info.ceiling_hit && (tmp.m_floats[2] > ent->character->height_info.ceiling_point.m_floats[2] - ent->character->climb_r - 1.0))
     {
-        if(tmp.m_floats[2] > ent->character->height_info.ceiling_point.m_floats[2] - 1.0)              ///@FIXME: magick
-        {
-            tmp.m_floats[2] = ent->character->height_info.ceiling_point.m_floats[2] - 1.0;
-        }
+        tmp.m_floats[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->character->climb_r - 1.0;
     }
-    // ok, we set ceiling height limit, now we must to prevent direct slant surface skip
+        
     /*
     * Let us calculate EDGE
     */
-    from = tmp;
-    to = from;
-    to.m_floats[2] -= ent->character->Height;
-    nfc->cb->m_closestHitFraction = 1.0;
-    nfc->cb->m_collisionObject = NULL;
-    bt_engine_dynamicsWorld->rayTest(from, to, *nfc->cb);
-    // add three ray test here, but more correct is using no hole collision model!
-    if(!nfc->cb->hasHit())
-    {
-        from.m_floats[0] = pos[0];
-        from.m_floats[1] = pos[1];
-        from.m_floats[2] = tmp.m_floats[2];
-        to.m_floats[0] = tmp.m_floats[0] + ent->transform[4 + 0] * ent->character->climb_r * 2;
-        to.m_floats[1] = tmp.m_floats[1] + ent->transform[4 + 1] * ent->character->climb_r * 2;
-        to.m_floats[2] = from.m_floats[2];
-        nfc->cb->m_closestHitFraction = 1.0;
-        nfc->cb->m_collisionObject = NULL;
-        bt_engine_dynamicsWorld->rayTest(from, to, *nfc->cb);
-        if(!nfc->cb->hasHit() || nfc->cb->m_hitNormalWorld.m_floats[2] < 0.1)
-        {
-            return ret;
-        }
-    }
+    from.m_floats[0] = pos[0] - ent->transform[4 + 0] * ent->character->climb_r * 2.0;
+    from.m_floats[1] = pos[1] - ent->transform[4 + 1] * ent->character->climb_r * 2.0;
+    from.m_floats[2] = tmp.m_floats[2];
+    to = tmp;
     
-    nfc->floor_hit = 0x01;
-    nfc->floor_point.setInterpolate3(from, to, nfc->cb->m_closestHitFraction);
-    nfc->floor_normale = nfc->cb->m_hitNormalWorld;
-    nfc->floor_obj = (engine_container_p)nfc->cb->m_collisionObject->getUserPointer();
-    vec3_copy(n0, nfc->floor_normale.m_floats);
-    n0[3] = -vec3_dot(n0, nfc->floor_point.m_floats);
-    
-    from = nfc->floor_point;
-    from.m_floats[0] -= ent->transform[4 + 0] * ent->character->climb_r * 2.0;
-    from.m_floats[1] -= ent->transform[4 + 1] * ent->character->climb_r * 2.0;
-    to = from;
-    to.m_floats[0] += ent->transform[4 + 0] * ent->character->climb_r * 2.0;
-    to.m_floats[1] += ent->transform[4 + 1] * ent->character->climb_r * 2.0;
+    //vec3_copy(cast_ray, from.m_floats);
+    //vec3_copy(cast_ray+3, to.m_floats);
     
     t1.setIdentity();
     t2.setIdentity();
-    
+    up_founded = 0;
+    d = ((ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point.m_floats[2] + ent->character->climb_r + 1.0):(pos[2] - ent->character->max_step_up_height));
     do
     {
         t1.setOrigin(from);
@@ -515,32 +484,76 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
         bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor, t1, t2, *nfc->ccb);
         if(nfc->ccb->hasHit())
         {
-            vec3_copy(n1, nfc->ccb->m_hitNormalWorld.m_floats);
-            n1[3] = -vec3_dot(n1, nfc->ccb->m_hitPointWorld.m_floats);
+            if(nfc->ccb->m_hitNormalWorld.m_floats[2] >= 0.05)
+            {
+                up_founded = 1;
+                vec3_copy(n0, nfc->ccb->m_hitNormalWorld.m_floats);
+                n0[3] = -vec3_dot(n0, nfc->ccb->m_hitPointWorld.m_floats);
+            }
+            if(up_founded && (nfc->ccb->m_hitNormalWorld.m_floats[2] < 0.001))
+            {
+                vec3_copy(n1, nfc->ccb->m_hitNormalWorld.m_floats);
+                n1[3] = -vec3_dot(n1, nfc->ccb->m_hitPointWorld.m_floats);
+                up_founded = 2;
+                break;
+            }
         }
         else
         {
-            return ret;
+            tmp.m_floats[0] = to.m_floats[0];
+            tmp.m_floats[1] = to.m_floats[1];
+            tmp.m_floats[2] = d;
+            t1.setOrigin(to);
+            t2.setOrigin(tmp);
+            //vec3_copy(cast_ray, to.m_floats);
+            //vec3_copy(cast_ray+3, tmp.m_floats);
+            nfc->ccb->m_closestHitFraction = 1.0;
+            nfc->ccb->m_hitCollisionObject = NULL;
+            bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor, t1, t2, *nfc->ccb);
+            if(nfc->ccb->hasHit())
+            {
+                up_founded = 1;
+                vec3_copy(n0, nfc->ccb->m_hitNormalWorld.m_floats);
+                n0[3] = -vec3_dot(n0, nfc->ccb->m_hitPointWorld.m_floats);
+            }
+            else
+            {
+                return ret;
+            }
         }
-
-        // get the character plane equation
-        vec3_copy(n2, ent->transform + 0);
-        n2[3] = -vec3_dot(n2, pos);
-
-        /*
-         * Solve system of the linear equations by Kramer method!
-         * I know - It may be slow, but it has a good precision!
-         * The root is point of 3 planes intersection.
-         */
-        d =-n0[0] * (n1[1] * n2[2] - n1[2] * n2[1]) + 
-            n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) - 
-            n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
-
-        from.m_floats[2] -= ent->character->climb_r;
-        to.m_floats[2] -= ent->character->climb_r;
+        
+        // mult 0.66 is magick, but it must be less than 1.0 and greater than 0.0; 
+        // close to 1.0 - bad precision, good speed; 
+        // close to 0.0 - bad speed, bad precision; 
+        // close to 0.5 - middle speed, good precision
+        from.m_floats[2] -= 0.66 * ent->character->climb_r;
+        to.m_floats[2] -= 0.66 * ent->character->climb_r;
     }
-    while(fabs(d) < 0.001);
+    while(to.m_floats[2] >= d);                                                 // we can't climb under floor!
     
+    if(up_founded != 2)
+    {
+        return ret;
+    }
+    
+    // get the character plane equation
+    vec3_copy(n2, ent->transform + 0);
+    n2[3] = -vec3_dot(n2, pos);
+
+    /*
+     * Solve system of the linear equations by Kramer method!
+     * I know - It may be slow, but it has a good precision!
+     * The root is point of 3 planes intersection.
+     */
+    d =-n0[0] * (n1[1] * n2[2] - n1[2] * n2[1]) + 
+        n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) - 
+        n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
+        
+    if(fabs(d) < 0.001)
+    {
+        return ret;
+    }
+        
     nfc->edge_point.m_floats[0] = n0[3] * (n1[1] * n2[2] - n1[2] * n2[1]) - 
                                   n1[3] * (n0[1] * n2[2] - n0[2] * n2[1]) + 
                                   n2[3] * (n0[1] * n1[2] - n0[2] * n1[1]);
@@ -554,25 +567,8 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     nfc->edge_point.m_floats[2] = n0[0] * (n1[1] * n2[3] - n1[3] * n2[1]) - 
                                   n1[0] * (n0[1] * n2[3] - n0[3] * n2[1]) + 
                                   n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
-    nfc->edge_point.m_floats[2] /= d;    
-    /*
-     * let us filter phantom climbing!
-     */
-#if 0
-    from.m_floats[0] = pos[0];
-    from.m_floats[1] = pos[1];
-    from.m_floats[2] = ((nfc->edge_point.m_floats[2] > nfc->floor_point.m_floats[2])?(nfc->edge_point.m_floats[2]):(nfc->floor_point.m_floats[2])) + 1.0;
-    to = nfc->floor_point;
-    to.m_floats[2] = from.m_floats[2];
-    nfc->cb->m_closestHitFraction = 1.0;
-    nfc->cb->m_collisionObject = NULL;
-    bt_engine_dynamicsWorld->rayTest(from, to, *nfc->cb);
-    if(nfc->cb->hasHit() && (nfc->cb->m_closestHitFraction < 0.99))
-    {
-        nfc->floor_hit = 0x00;
-        return ret;
-    }
-#endif
+    nfc->edge_point.m_floats[2] /= d;
+    
     /*
      * Now, let us calculate z_angle
      */
