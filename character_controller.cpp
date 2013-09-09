@@ -58,7 +58,7 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->fall_down_height = DEFAULT_FALL_DAWN_HEIGHT;
     ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
-    ret->climb_r = DEFAULT_CHARACTER_CLIMB_R;
+    ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * r)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * r);
 
     vec3_set_zero(ret->speed.m_floats);
 
@@ -279,7 +279,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     to.m_floats[2] -= 4096.0;
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = NULL;
-    cb->m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
+    cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
     fc->floor_hit = (int)cb->hasHit();
     if(fc->floor_hit)
@@ -298,7 +298,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     to.m_floats[2] += 4096.0;
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = NULL;
-    cb->m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
+    cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
     fc->ceiling_hit = (int)cb->hasHit();
     if(fc->ceiling_hit)
@@ -316,7 +316,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
         to.m_floats[2] -= 4096.0;
         cb->m_closestHitFraction = 1.0;
         cb->m_collisionObject = NULL;
-        cb->m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
+        cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
         bt_engine_dynamicsWorld->rayTest(from, to, *cb);
         fc->floor_hit = (int)cb->hasHit();
         if(fc->floor_hit)
@@ -450,8 +450,11 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     nfc->cb = ent->character->ray_cb;
     nfc->ccb = ent->character->convex_cb;
     vec3_add(tmp.m_floats, pos, offset);                                        // tmp = native offset point
+    offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
     ret.height_info = Character_CheckNextStep(ent, offset, nfc);
+    offset[2] -= 128.0;
     ret.climb_flag = CLIMB_ABSENT;
+    nfc->edge_hit = 0x00;
     /*
      * check max height
      */   
@@ -484,7 +487,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
         bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor, t1, t2, *nfc->ccb);
         if(nfc->ccb->hasHit())
         {
-            if(nfc->ccb->m_hitNormalWorld.m_floats[2] >= 0.05)
+            if(nfc->ccb->m_hitNormalWorld.m_floats[2] >= 0.1)
             {
                 up_founded = 1;
                 vec3_copy(n0, nfc->ccb->m_hitNormalWorld.m_floats);
@@ -549,7 +552,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
         n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) - 
         n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
         
-    if(fabs(d) < 0.001)
+    if(fabs(d) < 0.005)
     {
         return ret;
     }
@@ -570,11 +573,6 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     nfc->edge_point.m_floats[2] /= d;
     
     /*
-     * Now, let us calculate z_angle
-     */
-    nfc->edge_hit = 0x01;
-    
-    /*
      * unclimbable edge slant %)
      */
     vec3_cross(n2, n0, n1);
@@ -582,9 +580,13 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     d *= d * (n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
     if(n2[2] * n2[2] > d)
     {
-        nfc->edge_hit = 0x00;
         return ret;
     }
+    
+    /*
+     * Now, let us calculate z_angle
+     */
+    nfc->edge_hit = 0x01;
     
     n2[2] = n2[0];
     n2[0] = n2[1];
@@ -603,13 +605,16 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     nfc->edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
     
     ret.climb_flag = CLIMB_HANG_ONLY;
-    if(!nfc->ceiling_hit || (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= ent->character->Height))
+    if(nfc->floor_hit)
     {
-        ret.climb_flag = CLIMB_FULL_HEIGHT;
-    }
-    else if((test_height > 0.0) && (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= test_height))
-    {
-        ret.climb_flag = CLIMB_ALT_HEIGHT;
+        if(!nfc->ceiling_hit || (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= ent->character->Height))
+        {
+            ret.climb_flag = CLIMB_FULL_HEIGHT;
+        }
+        else if((test_height > 0.0) && (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= test_height))
+        {
+            ret.climb_flag = CLIMB_ALT_HEIGHT;
+        }
     }
     
     return ret;

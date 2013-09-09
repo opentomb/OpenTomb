@@ -117,8 +117,8 @@
 #define RUN_FORWARD_STEP_UP (320.0)             // by bone frame bb
 #define CRAWL_FORWARD_OFFSET (256.0)
 #define LARA_HANG_WALL_DISTANCE (128.0 - 24.0)
-#define LARA_HANG_VERTICAL_EPSILON (16.0)
-#define LARA_HANG_VERTICAL_OFFSET (12.0)        // in original is 0, in real life hands are little more higher than edhe
+#define LARA_HANG_VERTICAL_EPSILON (64.0)
+#define LARA_HANG_VERTICAL_OFFSET (12.0)        // in original is 0, in real life hands are little more higher than edge
 #define LARA_TRY_HANG_WALL_OFFSET (48.0)        // It works more stable than 32 or 128
 #define LARA_HANG_SENSOR_Z (800.0)              // It works more stable than 1024 (after collision critical fix, of course)
 
@@ -513,7 +513,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 if(cmd->action)                                                 // try to climb
-                {//fff;
+                {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_SOLID, 0);
                     t = LARA_TRY_HANG_WALL_OFFSET + ent->bf.bb_max[1];
                     vec3_mul_scalar(offset, ent->transform + 4, t);
@@ -1069,67 +1069,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             break;
 
-        /*case TR_ANIMATION_LARA_STAY_TO_RUN:
-            vec3_mul_scalar(offset, ent->transform + 4, RUN_FORWARD_OFFSET);
-            offset[2] += 512.0;
-            vec3_add(offset, offset, pos);
-            Character_GetHeightInfo(offset, &next_fc);
-            climb = (next_fc.floor_hit && (!next_fc.ceiling_hit || next_fc.ceiling_point[2] - next_fc.floor_point[2] >= ent->character->Height))?0x03:0x00;
-            ent->dir_flag = ENT_MOVE_FORWARD;
-
-            if(ent->move_type == MOVE_FREE_FALLING)
-            {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
-            }
-            else if((climb & 0x03) && (next_fc.floor_point[2] > pos[2]) && next_fc.floor_normale.m_floats[2] < ent->character->critical_slant_z_component)
-            {
-                ent->current_speed = 0.0;
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_STAY_IDLE, 0);       ///@FIXME: maybe RUN_TO_STAY
-            }
-            else if((cmd->move[0] == 1) && (climb & 0x02) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) &&
-                    (next_fc.floor_point.m_floats[2] > pos[2] + ent->character->min_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height))  // trying to climb
-            {
-                ent->dir_flag = ENT_STAY;
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
-                i = Entity_GetAnimDispatchCase(ent, 2);                          ///@XXX: xxx
-                if(i >= 0)
-                {
-                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_UP_STEP_RIGHT, 0);
-                    vec3_copy(cmd->climb_pos, next_fc.floor_point);
-                    pos[2] += RUN_FORWARD_STEP_UP;                              ///@FIXME: may be it is anim command!
-                    ent->move_type = MOVE_CLIMBING;
-                    ent->dir_flag = ENT_MOVE_FORWARD;
-                }
-            }
-            else if(cmd->move[0] == 1 && cmd->crouch == 0 && cmd->shift == 0)   // start run
-            {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);                       // walk next
-            }
-            else if(cmd->roll == 1)
-            {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_ROLL_BEGIN, 0);        // fast roll
-            }
-            else if(cmd->crouch == 1)
-            {
-                if(CVAR_get_val_d("engine_version") > 4)
-                {
-                    i = Entity_GetAnimDispatchCase(ent, 2);
-                    if(i == 0)
-                    {
-                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_TO_CROUCH_LEFT_BEGIN, 0);
-                    }
-                    else if(i == 1)
-                    {
-                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_TO_CROUCH_RIGHT_BEGIN, 0);
-                    }
-                }
-            }
-            else
-            {
-                Entity_Frame(ent, engine_frame_time, 2);                        // stop
-            }
-            break;
-*/
             /*
              * Run and walk stop animations
              */
@@ -1592,11 +1531,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
             }
 
-            if(cmd->action == 1 && cmd->move[0] == 1)
+            if(cmd->action == 1 && cmd->move[0] == 1 && next_fc.floor_hit)
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
-                vec3_mul_scalar(offset, ent->transform + 4, t);
-                offset[2] += ent->bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
                 if((climb.climb_flag == CLIMB_ALT_HEIGHT) || ((cmd->crouch == 1) && (climb.climb_flag == CLIMB_FULL_HEIGHT)))
                 {
                     vec3_copy(cmd->climb_pos, next_fc.floor_point.m_floats);
@@ -1788,8 +1724,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_ANIMATION_LARA_CLIMB_OUT_OF_WATER:
             ent->character->no_fix = 0x01;
             ent->current_speed = 0.0;
-            vec3_copy(pos, cmd->climb_pos);
-            //vec3_set_zero(ent->character->speed.m_floats);
         case TR_ANIMATION_LARA_CLIMB_2CLICK:
         case TR_ANIMATION_LARA_CLIMB_3CLICK:
             cmd->rot[0] = 0.0;
@@ -2451,10 +2385,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += ent->character->max_step_up_height + LARA_HANG_VERTICAL_EPSILON;                // inc for water_surf.z
-                t = ent->character->max_step_up_height;
-                ent->character->max_step_up_height *= -1.0;
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                ent->character->max_step_up_height = t;
                 if((climb.climb_flag == CLIMB_FULL_HEIGHT) && (next_fc.edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))
                 {
                     ent->dir_flag = ENT_STAY;
@@ -2517,10 +2448,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += ent->character->max_step_up_height + LARA_HANG_VERTICAL_EPSILON;   // inc for water_surf.z
-                t = ent->character->max_step_up_height;
-                ent->character->max_step_up_height *= -1.0;
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                ent->character->max_step_up_height = t;
                 if((climb.climb_flag == CLIMB_FULL_HEIGHT) && (next_fc.edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))
                 {
                     ent->dir_flag = ENT_STAY;

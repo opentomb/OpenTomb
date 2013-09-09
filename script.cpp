@@ -372,7 +372,7 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
     sc->bpp = lua_GetScalarField(lua, "bpp");
     if(sc->bpp != 16 || sc->bpp != 24 || sc->bpp != 32)
     {
-        sc->bpp = 32;
+        sc->bpp = 16;
     }
     sc->FS_flag = lua_GetScalarField(lua, "fullscreen");
     sc->fov = lua_GetScalarField(lua, "fov");

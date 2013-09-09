@@ -493,7 +493,9 @@ void Engine_Display()
         Cam_RecalcClipPlanes(&engine_camera);
         Cam_Apply(&engine_camera);
 #if !SKELETAL_TEST
+        glDisable(GL_LIGHTING);
         Render_SkyBox();
+        glEnable(GL_LIGHTING);
         Render_GenWorldList();
         Render_DrawList();
 #else

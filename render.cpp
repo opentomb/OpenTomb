@@ -129,7 +129,6 @@ void Render_SkyBox()
     
     if(renderer.world != NULL && renderer.world->sky_box != NULL)
     {
-        //glDisable(GL_LIGHTING);
         glDepthMask(GL_FALSE);
         glPushMatrix();
         tr[15] = 1.0;
@@ -141,7 +140,6 @@ void Render_SkyBox()
         Render_Mesh(renderer.world->sky_box->mesh_offset, NULL, NULL);
         glPopMatrix();
         glDepthMask(GL_TRUE);
-        //glEnable(GL_LIGHTING);
     }
 }
 

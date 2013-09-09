@@ -22,7 +22,7 @@
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (0.707)                         ///@FIXME: cos(alpha = 45 deg)
 #define DEFAULT_CHARACTER_SPEED_MULT            (32.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
-#define DEFAULT_CHARACTER_CLIMB_R               (72.0)
+#define DEFAULT_CHARACTER_CLIMB_R               (48.0)
 
 #define CHARACTER_SLIDE_FRONT                   (0x02)
 #define CHARACTER_SLIDE_BACK                    (0x01)
