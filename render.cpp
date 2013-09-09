@@ -19,21 +19,20 @@
 #include "bounding_volume.h"
 
 render_t renderer;
-render_settings_t render_settings;
 
 int R_List_Less(const void *v1, const void *v2);
 int R_List_Great(const void *v1, const void *v2);
 
 void Render_InitGlobals()
 {
-    render_settings.anisotropy = 0;
-    render_settings.lod_bias = 0;
-    render_settings.antialias = 0;
-    render_settings.antialias_samples = 0;
-    render_settings.mipmaps = 3;
-    render_settings.mipmap_mode = 3;
-    render_settings.texture_border = 8;
-    render_settings.z_depth = 16;
+    renderer.settings.anisotropy = 0;
+    renderer.settings.lod_bias = 0;
+    renderer.settings.antialias = 0;
+    renderer.settings.antialias_samples = 0;
+    renderer.settings.mipmaps = 3;
+    renderer.settings.mipmap_mode = 3;
+    renderer.settings.texture_border = 8;
+    renderer.settings.z_depth = 16;
 }
 
 

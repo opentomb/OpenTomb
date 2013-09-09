@@ -39,7 +39,6 @@ void Sys_Init()
     screen_info.y = 20;
     screen_info.w = 800;
     screen_info.h = 600;
-    screen_info.bpp = 32;
     screen_info.FS_flag = 0;
     screen_info.fov = 75.0;
     

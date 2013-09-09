@@ -298,6 +298,10 @@ void Engine_PrepareOpenGL()
     {
         glEnable(GL_MULTISAMPLE);
     }
+    else
+    {
+        glDisable(GL_MULTISAMPLE);
+    }
     
     //glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
     //glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
@@ -413,7 +417,6 @@ void Engine_InitSDLVideo()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
 
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
 
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
