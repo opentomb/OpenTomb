@@ -368,12 +368,6 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
     sc->y = lua_GetScalarField(lua, "y");
     sc->w = lua_GetScalarField(lua, "width");
     sc->h = lua_GetScalarField(lua, "height");
-
-    sc->bpp = lua_GetScalarField(lua, "bpp");
-    if(sc->bpp != 16 || sc->bpp != 24 || sc->bpp != 32)
-    {
-        sc->bpp = 16;
-    }
     sc->FS_flag = lua_GetScalarField(lua, "fullscreen");
     sc->fov = lua_GetScalarField(lua, "fov");
     lua_settop(lua, top);
@@ -398,6 +392,12 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
     rs->antialias_samples = lua_GetScalarField(lua, "antialias_samples");
     rs->texture_border = lua_GetScalarField(lua, "texture_border");
     rs->z_depth = lua_GetScalarField(lua, "z_depth");
+
+    if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
+    {
+        rs->z_depth = 16;
+    }
+
     lua_settop(lua, top);
 
     return 1;

@@ -13,7 +13,6 @@ typedef struct screen_info_s
     int16_t     y;
     int16_t     w;
     int16_t     h;
-    int8_t      bpp;
     int8_t      FS_flag;
     float       fps;
     float       fov;
