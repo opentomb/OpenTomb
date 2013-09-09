@@ -1,0 +1,7 @@
+tr1engine\.xcodeproj/project\.xcworkspace
+tr1engine\.xcodeproj/xcuserdata
+syntax: glob
+*.a
+*.txt
+*.htm
+*.html
