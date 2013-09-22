@@ -480,7 +480,7 @@ void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
     }
 }
 
-void BorderedTextureAtlas_GetSpriteCoordinates(bordered_texture_atlas_p atlas, unsigned long sprite_texture, size_t *outPage, GLfloat *coordinates)
+void BorderedTextureAtlas_GetSpriteCoordinates(bordered_texture_atlas_p atlas, unsigned long sprite_texture, uint32_t *outPage, GLfloat *coordinates)
 {
     if (!atlas->data_has_been_laid_out)
         borderedTextureAtlas_LayOutTextures(atlas);

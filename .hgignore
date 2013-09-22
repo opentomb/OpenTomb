@@ -1,5 +1,6 @@
-tr1engine\.xcodeproj/project\.xcworkspace
-tr1engine\.xcodeproj/xcuserdata
+OpenTomb\.xcodeproj/project\.xcworkspace
+OpenTomb\.xcodeproj/xcuserdata
+.DS_Store
 syntax: glob
 *.a
 *.txt
