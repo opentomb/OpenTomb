@@ -105,7 +105,7 @@ void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
 /*!
  * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
  */
-void BorderedTextureAtlas_GetSpriteCoordinates(bordered_texture_atlas_p atlas, unsigned long sprite_texture, size_t *outPage, GLfloat *coordinates);
+void BorderedTextureAtlas_GetSpriteCoordinates(bordered_texture_atlas_p atlas, unsigned long sprite_texture, uint32_t *outPage, GLfloat *coordinates);
 
 /*!
  * Returns the number of texture atlas pages that have been created. Triggers a

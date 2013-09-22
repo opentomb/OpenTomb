@@ -406,10 +406,10 @@ void Gui_SwitchConGLMode(char is_gui)
 void Gui_DrawCrosshair()
 {
     GLfloat crosshairCoords[] = {
-            screen_info.w/2.0-5, screen_info.h/2.0,
-            screen_info.w/2.0+5, screen_info.h/2.0,
-            screen_info.w/2.0, screen_info.h/2.0-5,
-            screen_info.w/2.0, screen_info.h/2.0+5
+            (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f),
+            (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f),
+            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f),
+            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f)
     };
     
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
