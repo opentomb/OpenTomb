@@ -53,7 +53,8 @@ class btPairCachingGhostObject;
 typedef struct climb_info_s
 {
     int8_t      height_info;
-    int8_t      climb_flag;
+    int8_t      climb_on_flag;
+    int8_t      can_hang;
 }climb_info_t, *climb_info_p;
 
 typedef struct height_info_s
@@ -131,6 +132,8 @@ typedef struct character_s
     btPairCachingGhostObject    *ghostObject;            // like Bullet character controller for penetration resolving.
     btManifoldArray             *manifoldArray;          // keep track of the contact manifolds
     
+    btCollisionObject           *platform;
+    btScalar                     local_platform[16];
     struct height_info_s         height_info;
     
     bt_engine_ClosestRayResultCallback                  *ray_cb;

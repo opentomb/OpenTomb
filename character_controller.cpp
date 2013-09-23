@@ -33,9 +33,10 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     }
 
     ret = (character_p)malloc(sizeof(character_t));
-
+    ret->platform = NULL;
     ret->ent = ent;
     ent->character = ret;
+    Mat4_E_macro(ret->local_platform);
 
     ret->cmd.action = 0x00;
     ret->cmd.vertical_collide = 0x00;
@@ -453,7 +454,8 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
     ret.height_info = Character_CheckNextStep(ent, offset, nfc);
     offset[2] -= 128.0;
-    ret.climb_flag = CLIMB_ABSENT;
+    ret.climb_on_flag = CLIMB_ABSENT;
+    ret.can_hang = 0;
     nfc->edge_hit = 0x00;
     /*
      * check max height
@@ -604,16 +606,22 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     nfc->edge_tan_xy.m_floats[2] = 0.0;
     nfc->edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
     
-    ret.climb_flag = CLIMB_HANG_ONLY;
+    ret.climb_on_flag = CLIMB_HANG_ONLY;
+    
+    if(!ent->character->height_info.floor_hit || (nfc->edge_point.m_floats[2] - ent->character->height_info.floor_point.m_floats[2] >= ent->character->Height))
+    {
+        ret.can_hang = 1;
+    }
+    
     if(nfc->floor_hit)
     {
         if(!nfc->ceiling_hit || (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= ent->character->Height))
         {
-            ret.climb_flag = CLIMB_FULL_HEIGHT;
+            ret.climb_on_flag = CLIMB_FULL_HEIGHT;
         }
         else if((test_height > 0.0) && (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= test_height))
         {
-            ret.climb_flag = CLIMB_ALT_HEIGHT;
+            ret.climb_on_flag = CLIMB_ALT_HEIGHT;
         }
     }
     
