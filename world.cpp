@@ -299,7 +299,10 @@ void World_Empty(world_p world)
     int32_t i;
     entity_p ent_next;
     engine_container_p cont;
-
+    extern entity_p last_rmb;
+    
+    last_rmb = NULL;
+    
     for(i=0;i<world->room_count;i++)
     {
         Room_Empty(world->rooms+i);

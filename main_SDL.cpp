@@ -58,7 +58,7 @@ static int sprite = 0;
 static GLUquadricObj   *dbgSphere;
 static GLUquadricObj   *dbgCyl;
 static btScalar         dbgR = 128.0;
-static entity_p         last_rmb = NULL;
+entity_p                last_rmb = NULL;
 
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
 /*

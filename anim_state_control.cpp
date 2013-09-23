@@ -186,7 +186,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 offset[2] += 1024.0;
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
             }
-            if((climb.climb_flag == CLIMB_ABSENT) && (ent->move_type == MOVE_CLIMBING))
+            if((climb.climb_on_flag == CLIMB_ABSENT) && (ent->move_type == MOVE_CLIMBING))
             {
                 ent->move_type = MOVE_ON_FLOOR;
             }
@@ -219,7 +219,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WADE_FORWARD);
             }
-            else if((ent->move_type == MOVE_CLIMBING) || ((cmd->move[0] == 1) && (climb.climb_flag == CLIMB_FULL_HEIGHT) && (cmd->action) &&
+            else if((ent->move_type == MOVE_CLIMBING) || ((cmd->move[0] == 1) && (climb.climb_on_flag == CLIMB_FULL_HEIGHT) && (cmd->action) &&
                     (pos[2] + ent->character->max_step_up_height < next_fc.floor_point[2]) && (pos[2] + 2048.0 >= next_fc.floor_point[2]) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component)))  // trying to climb on
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
@@ -520,7 +520,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     offset[2] += ent->character->max_step_up_height;
                     climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
 
-                    if(climb.climb_flag >= CLIMB_HANG_ONLY)
+                    if(climb.climb_on_flag && climb.can_hang)
                     {
                         ent->character->speed.m_floats[0] = 0.0;
                         ent->character->speed.m_floats[1] = 0.0;
@@ -1212,7 +1212,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
                     ent->character->max_step_up_height = t;
 
-                    if(climb.climb_flag >= CLIMB_HANG_ONLY)
+                    if(climb.climb_on_flag && climb.can_hang)
                     {
                         ent->character->speed.m_floats[0] = 0.0;
                         ent->character->speed.m_floats[1] = 0.0;
@@ -1381,7 +1381,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += ent->bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON + engine_frame_time * ent->character->speed.m_floats[2];
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                if(climb.climb_flag && next_fc.edge_hit)
+                if(climb.climb_on_flag && climb.can_hang && next_fc.edge_hit)
                 {
                     vec3_copy(cmd->climb_pos, next_fc.edge_point.m_floats);
                     ent->angles[0] = next_fc.edge_z_ang;
@@ -1439,7 +1439,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += ent->bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                if(climb.climb_flag && next_fc.edge_hit)
+                if(climb.climb_on_flag && climb.can_hang && next_fc.edge_hit)
                 {
                     vec3_copy(cmd->climb_pos, next_fc.edge_point.m_floats);
                     ent->angles[0] = next_fc.edge_z_ang;
@@ -1515,30 +1515,35 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             
         case TR_ANIMATION_LARA_HANG_IDLE:
             cmd->rot[0] = 0.0;
-            climb.climb_flag = 0x00;
             if(cmd->action == 1)
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += ent->bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 512.0);
-                if(climb.climb_flag && next_fc.edge_hit)
+                if(climb.climb_on_flag && climb.can_hang && next_fc.edge_hit)
                 {
                     vec3_copy(cmd->climb_pos, next_fc.edge_point.m_floats);
                     ent->angles[0] = next_fc.edge_z_ang;
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
                 }
+                else
+                {
+                    ent->move_type = MOVE_FREE_FALLING;
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                    break;
+                }
             }
 
             if(cmd->action == 1 && cmd->move[0] == 1 && next_fc.floor_hit)
             {
-                if((climb.climb_flag == CLIMB_ALT_HEIGHT) || ((cmd->crouch == 1) && (climb.climb_flag == CLIMB_FULL_HEIGHT)))
+                if((climb.climb_on_flag == CLIMB_ALT_HEIGHT) || ((cmd->crouch == 1) && (climb.climb_on_flag == CLIMB_FULL_HEIGHT)))
                 {
                     vec3_copy(cmd->climb_pos, next_fc.floor_point.m_floats);
                     Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CLIMB_TO_CRAWL);               // crawlspace climb
                 }
-                else if(climb.climb_flag == CLIMB_FULL_HEIGHT)
+                else if(climb.climb_on_flag == CLIMB_FULL_HEIGHT)
                 {
                     vec3_copy(cmd->climb_pos, next_fc.floor_point.m_floats);
                     Entity_Frame(ent, engine_frame_time, (cmd->shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_GRABBING));               // climb up
@@ -1608,7 +1613,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += LARA_HANG_SENSOR_Z + LARA_HANG_VERTICAL_EPSILON;
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                if(climb.climb_flag && next_fc.edge_hit)
+                if(climb.climb_on_flag && climb.can_hang && next_fc.edge_hit)
                 {
                     vec3_copy(cmd->climb_pos, next_fc.edge_point.m_floats);
                     ent->angles[0] = next_fc.edge_z_ang;
@@ -1669,7 +1674,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += LARA_HANG_SENSOR_Z + LARA_HANG_VERTICAL_EPSILON;
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                if(climb.climb_flag && next_fc.edge_hit)
+                if(climb.climb_on_flag && climb.can_hang && next_fc.edge_hit)
                 {
                     vec3_copy(cmd->climb_pos, next_fc.edge_point.m_floats);
                     ent->angles[0] = next_fc.edge_z_ang;
@@ -2118,7 +2123,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += ent->bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON;
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                if(climb.climb_flag && next_fc.edge_hit)
+                if(climb.climb_on_flag && climb.can_hang && next_fc.edge_hit)
                 {
                     vec3_copy(cmd->climb_pos, next_fc.edge_point.m_floats);
                     ent->angles[0] = next_fc.edge_z_ang;
@@ -2386,7 +2391,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += ent->character->max_step_up_height + LARA_HANG_VERTICAL_EPSILON;                // inc for water_surf.z
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                if((climb.climb_flag == CLIMB_FULL_HEIGHT) && (next_fc.edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))
+                if((climb.climb_on_flag == CLIMB_FULL_HEIGHT) && (next_fc.edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))
                 {
                     ent->dir_flag = ENT_STAY;
                     ent->move_type = MOVE_CLIMBING;
@@ -2449,7 +2454,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += ent->character->max_step_up_height + LARA_HANG_VERTICAL_EPSILON;   // inc for water_surf.z
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                if((climb.climb_flag == CLIMB_FULL_HEIGHT) && (next_fc.edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))
+                if((climb.climb_on_flag == CLIMB_FULL_HEIGHT) && (next_fc.edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))
                 {
                     ent->dir_flag = ENT_STAY;
                     ent->move_type = MOVE_CLIMBING;
