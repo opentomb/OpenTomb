@@ -888,6 +888,58 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             break;
 
+        case TR_ANIMATION_LARA_WADE:
+            cmd->rot[0] *= 0.4;
+            ent->dir_flag = ENT_MOVE_FORWARD;
+
+            if(!curr_fc->floor_hit || ent->move_type == MOVE_FREE_FALLING)      // free fall, next swim
+            {
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+            }
+            else if(curr_fc->water)
+            {    
+                if((curr_fc->water_level - curr_fc->floor_point.m_floats[2] <= ent->character->max_step_up_height))     
+                {                                                               
+                    // run / walk case
+                    if(cmd->move[0] == 1)
+                    {
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_RUN_FORWARD);
+                    }
+                    else
+                    {
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);
+                    }
+                }
+                else if(curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->Height)               
+                {
+                    // swim case
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);                                     // depth water - swim
+                }            
+                else if(curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->max_step_up_height)   // wade case
+                {
+                    if(cmd->move[0] == 1)
+                    {
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
+                    }
+                    else
+                    {
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);
+                    }
+                }
+            }
+            else                                                                // no water, stay or run / walk
+            {
+                if(cmd->move[0] == 1)
+                {
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_RUN_FORWARD);
+                }
+                else
+                {
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);
+                }
+            }
+            break;
+            
         case TR_ANIMATION_LARA_WALK_FORWARD_BEGIN:
             cmd->rot[0] *= 0.4;
             vec3_mul_scalar(offset, ent->transform + 4, WALK_FORWARD_OFFSET);
