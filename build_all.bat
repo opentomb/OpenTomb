@@ -1,5 +1,5 @@
 rm -rf *.exe
-rm -rf *.a
+rm -rf lib/*.a
 rm -rf *.o
 CALL build_vt.bat 
 CALL build_lua.bat 
