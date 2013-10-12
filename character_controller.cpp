@@ -326,7 +326,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
             fc->floor_point.setInterpolate3(from, to, cb->m_closestHitFraction);
             fc->floor_obj = (engine_container_p)cb->m_collisionObject->getUserPointer();
         }
-    }    
+    }
 }
 
 /**
