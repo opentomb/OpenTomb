@@ -23,7 +23,7 @@
 #define DEFAULT_CHARACTER_SPEED_MULT            (32.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_CLIMB_R               (48.0)
-
+#define DEFAUL_CHARACTER_WADE_DEPTH             (128.0)
 #define CHARACTER_SLIDE_FRONT                   (0x02)
 #define CHARACTER_SLIDE_BACK                    (0x01)
 
@@ -49,6 +49,7 @@ struct entity_s;
 class bt_engine_ClosestConvexResultCallback;
 class bt_engine_ClosestRayResultCallback;
 class btPairCachingGhostObject;
+class btCollisionObject;
 
 typedef struct climb_info_s
 {
@@ -65,18 +66,19 @@ typedef struct height_info_s
     btVector3                                   floor_normale;
     btVector3                                   floor_point;
     int16_t                                     floor_hit;
-    struct engine_container_s                  *floor_obj;
+    btCollisionObject                          *floor_obj;
     
     btVector3                                   ceiling_normale;
     btVector3                                   ceiling_point;
     int16_t                                     ceiling_hit;
-    struct engine_container_s                  *ceiling_obj;
+    btCollisionObject                          *ceiling_obj;
     
     int16_t                                     edge_hit;
     btVector3                                   edge_point;
     btVector3                                   edge_normale;
     btVector3                                   edge_tan_xy;
     btScalar                                    edge_z_ang;
+    btCollisionObject                          *edge_obj;
     
     btScalar                                    water_level;
     int16_t                                     water;
@@ -123,7 +125,7 @@ typedef struct character_s
     btScalar                     climb_r;                // climbing sensor radius
     btScalar                     Radius;                 // base character radius 
     btScalar                     Height;                 // base character height
-    
+    btScalar                     wade_depth;             // water depth that enable wade walk
     btCapsuleShapeZ             *shapeZ;                 // running / jumping
     btCapsuleShape              *shapeY;                 // swimming / crocodile
     btBoxShape                  *shapeBox;               // simple (128, 128, 128) sized box shape
@@ -154,6 +156,8 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz);
 int Character_SetToJump(struct entity_s *ent, character_command_p cmd, btScalar vz);
 void Character_UpdateCurrentRoom(struct entity_s *ent);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
+void Character_UpdatePlatformPreStep(struct entity_s *ent);
+void Character_UpdatePlatformPostStep(struct entity_s *ent);
 void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor);
 
 int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd);
@@ -161,5 +165,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd);
 int Character_Climbing(struct entity_s *ent, character_command_p cmd);
 int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);
+
+void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd, int(*state_func)(struct entity_s *ent, struct character_command_s *cmd));
 
 #endif  // CHARACTER_CONTROLLER_H

@@ -1757,7 +1757,7 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         model->animations->next_frame = 0;
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
-        model->animations->frame_rate = 0;
+        model->animations->frame_rate = 1;
 
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
