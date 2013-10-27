@@ -146,7 +146,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     next_fc.ccb->m_closestHitFraction = 1.0;
     next_fc.ccb->m_hitCollisionObject = NULL;
     ent->anim_flags = ANIM_NORMAL_CONTROL;
-    Character_UpdateCurrentHeight(ent);
+    Character_UpdateCurrentHeight(ent);    
 /*
  * - On floor animations
  * - Climbing animations
@@ -215,7 +215,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CROUCH_IDLE);
             }
-            else if(curr_fc->water && curr_fc->floor_hit && (cmd->move[0] == 1) && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->max_step_up_height))
+            else if(curr_fc->water && curr_fc->floor_hit && (cmd->move[0] == 1) && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->wade_depth))
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WADE_FORWARD);
             }
@@ -691,7 +691,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CROUCH_IDLE);
                 }
-                else if(curr_fc->water && curr_fc->floor_hit && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->max_step_up_height))
+                else if(curr_fc->water && curr_fc->floor_hit && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->wade_depth))
                 {
                     Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WADE_FORWARD);
                 }
@@ -870,7 +870,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->dir_flag = ENT_STAY;
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);
             }
-            else if(curr_fc->water && curr_fc->floor_hit && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->max_step_up_height))
+            else if(curr_fc->water && curr_fc->floor_hit && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->wade_depth))
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WADE_FORWARD);
             }
@@ -898,7 +898,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if(curr_fc->water)
             {    
-                if((curr_fc->water_level - curr_fc->floor_point.m_floats[2] <= ent->character->max_step_up_height))     
+                if((curr_fc->water_level - curr_fc->floor_point.m_floats[2] <= ent->character->wade_depth))     
                 {                                                               
                     // run / walk case
                     if(cmd->move[0] == 1)
@@ -924,7 +924,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         pos[2] = curr_fc->water_level;
                     }
                 }            
-                else if(curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->max_step_up_height)   // wade case
+                else if(curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->wade_depth)              // wade case
                 {
                     if(cmd->move[0] == 1)
                     {

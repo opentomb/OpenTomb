@@ -60,7 +60,8 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
     ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * r)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * r);
-
+    ret->wade_depth = DEFAUL_CHARACTER_WADE_DEPTH;
+    
     vec3_set_zero(ret->speed.m_floats);
 
     ret->Radius = r;
@@ -224,6 +225,83 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     Character_GetHeightInfo(pos, &ent->character->height_info); 
 }
 
+/*
+ * Move character to the point where to platfom mowes
+ */
+void Character_UpdatePlatformPreStep(struct entity_s *ent)
+{   
+    switch(ent->move_type)
+    {
+        case MOVE_ON_FLOOR:
+            if(ent->character->height_info.floor_hit)
+            {
+                ent->character->platform = ent->character->height_info.floor_obj;
+            }
+            break;
+            
+        case MOVE_CLIMBING:
+            if(ent->character->height_info.edge_hit)
+            {
+                ent->character->platform = ent->character->height_info.edge_obj;
+            }
+            break;
+    };
+    
+    
+    if(ent->character->platform)
+    {
+        engine_container_p cont = (engine_container_p)ent->character->platform->getUserPointer();
+        if(cont && (cont->object_type == OBJECT_ENTITY/* || cont->object_type == OBJECT_BULLET_MISC*/))
+        {
+            btScalar trpl[16], new_tr[16];
+            ent->character->platform->getWorldTransform().getOpenGLMatrix(trpl);
+#if 0
+            Mat4_Mat4_mul(new_tr, trpl, ent->character->local_platform);
+            vec3_copy(ent->transform + 12, new_tr + 12);
+#else
+            ///make something with platform rotation
+            Mat4_Mat4_mul(ent->transform, trpl, ent->character->local_platform);
+#endif
+        }
+    }
+}
+
+/*
+ * Get local character transform relative platfom
+ */
+void Character_UpdatePlatformPostStep(struct entity_s *ent)
+{
+    switch(ent->move_type)
+    {
+        case MOVE_ON_FLOOR:
+            if(ent->character->height_info.floor_hit)
+            {
+                ent->character->platform = ent->character->height_info.floor_obj;
+            }
+            break;
+            
+        case MOVE_CLIMBING:
+            if(ent->character->height_info.edge_hit)
+            {
+                ent->character->platform = ent->character->height_info.edge_obj;
+            }
+            break;
+    };
+    
+    if(ent->character->platform)
+    {
+        engine_container_p cont = (engine_container_p)ent->character->platform->getUserPointer();
+        if(cont && (cont->object_type == OBJECT_ENTITY/* || cont->object_type == OBJECT_BULLET_MISC*/))
+        {
+            btScalar trpl[16];
+            ent->character->platform->getWorldTransform().getOpenGLMatrix(trpl);
+            /* local_platform = (global_platform ^ -1) x (global_entity); */
+            Mat4_inv_Mat4_mul(ent->character->local_platform, trpl, ent->transform);
+        }
+    }
+}
+
+
 /**
  * Start position are taken from ent->transform
  */
@@ -287,7 +365,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     {
         fc->floor_normale = cb->m_hitNormalWorld;
         fc->floor_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        fc->floor_obj = (engine_container_p)cb->m_collisionObject->getUserPointer();
+        fc->floor_obj = (btCollisionObject*)cb->m_collisionObject;
     }
     
     if(fc->floor_hit)
@@ -306,7 +384,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     {
         fc->ceiling_normale = cb->m_hitNormalWorld;
         fc->ceiling_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        fc->ceiling_obj = (engine_container_p)cb->m_collisionObject->getUserPointer();
+        fc->ceiling_obj = (btCollisionObject*)cb->m_collisionObject;
     }
     
     if(!fc->floor_hit && fc->ceiling_hit)
@@ -324,7 +402,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
         {
             fc->floor_normale = cb->m_hitNormalWorld;
             fc->floor_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-            fc->floor_obj = (engine_container_p)cb->m_collisionObject->getUserPointer();
+            fc->floor_obj = (btCollisionObject*)cb->m_collisionObject;
         }
     }
 }
@@ -499,6 +577,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
             {
                 vec3_copy(n1, nfc->ccb->m_hitNormalWorld.m_floats);
                 n1[3] = -vec3_dot(n1, nfc->ccb->m_hitPointWorld.m_floats);
+                ent->character->height_info.edge_obj = (btCollisionObject*)nfc->ccb->m_hitCollisionObject;
                 up_founded = 2;
                 break;
             }
@@ -1441,4 +1520,45 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     return 1;
 }
 
+/**
+ * Main character frame function
+ */
+void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd, int(*state_func)(struct entity_s *ent, struct character_command_s *cmd))
+{
+    Character_UpdatePlatformPreStep(ent);
+    
+    if(state_func)
+    {
+        state_func(ent, cmd);
+    }
+    
+    switch(ent->move_type)
+    {
+        case MOVE_ON_FLOOR:
+            Character_MoveOnFloor(ent, cmd);
+            break;
 
+        case MOVE_FREE_FALLING:
+            Character_FreeFalling(ent, cmd);
+            break;
+
+        case MOVE_CLIMBING:
+            Character_Climbing(ent, cmd);
+            break;
+
+        case MOVE_UNDER_WATER:
+            Character_MoveUnderWater(ent, cmd);
+            break;
+
+        case MOVE_ON_WATER:
+            Character_MoveOnWater(ent, cmd);
+            break;
+
+        default:
+            ent->move_type = MOVE_ON_FLOOR;
+            break;
+    };
+    
+    Entity_RebuildBV(ent);
+    Character_UpdatePlatformPostStep(ent);
+}
