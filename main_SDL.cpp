@@ -93,7 +93,7 @@ entity_p                last_rmb = NULL;
  *      - loading TR's sounds format
  */
 
-void TempDrawFrame();
+void SkeletalModelTestDraw();
 void ShowDebugInfo();
 
 
@@ -128,7 +128,7 @@ void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans)
 // MAIN
 // =======================================================================
 
-void TempDrawFrame()
+void SkeletalModelTestDraw()
 {
     bone_frame_p bframe;
     static btScalar time = 0.0;
@@ -184,12 +184,12 @@ void TempDrawFrame()
     bframe = smodel->animations[anim].frames + frame;
 
     glColor3b(0, 0, 0);
-    Gui_OutTextXY(screen_info.w-480, 120, "sprite ID = %d;  mesh ID = %d", bsprite->ID, mesh);
-    Gui_OutTextXY(screen_info.w-480, 96, "model ID = %d, anim = %d of %d, frame = %d of %d", smodel->ID, anim, smodel->animation_count, frame, smodel->animations[anim].frames_count);
-    Gui_OutTextXY(screen_info.w-480, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->ID):-1, af->next_frame, af->state_change_count);
-    Gui_OutTextXY(screen_info.w-480, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
-    Gui_OutTextXY(screen_info.w-480, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
-    Gui_OutTextXY(screen_info.w-480, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
+    Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->ID, mesh);
+    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->ID, anim, smodel->animation_count, smodel->animations[anim].frame_rate, frame, smodel->animations[anim].frames_count);
+    Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->ID):-1, af->next_frame, af->state_change_count);
+    Gui_OutTextXY(screen_info.w-632, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
+    Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
+    Gui_OutTextXY(screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
 
     y = screen_info.h - 24;
     for(i=0;i<af->state_change_count;i++)
@@ -502,7 +502,7 @@ void Engine_Display()
         Render_GenWorldList();
         Render_DrawList();
 #else
-        TempDrawFrame();
+        SkeletalModelTestDraw();
 #endif
         glPopClientAttrib();
         Render_DrawList_DebugLines();

@@ -6,11 +6,6 @@
 #include <stdint.h>
 #include "bullet/LinearMath/btScalar.h"
 
-#define OBJECT_STATIC_MESH 0x0001
-#define OBJECT_ROOM_BASE 0x0002
-#define OBJECT_ENTITY 0x0003
-#define OBJECT_BULLET_MISC 0x0004
-
 class btCollisionShape;
 class btRigidBody;
 

@@ -12,6 +12,11 @@
 #define LEVEL_NAME_MAX_LEN                      (64)
 #define MAX_ENGINE_PATCH                        (255)
 
+#define OBJECT_STATIC_MESH                      (0x0001)
+#define OBJECT_ROOM_BASE                        (0x0002)
+#define OBJECT_ENTITY                           (0x0003)
+#define OBJECT_BULLET_MISC                      (0x0004)
+
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;

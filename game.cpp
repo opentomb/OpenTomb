@@ -318,7 +318,6 @@ void Game_ApplyControls()
         if(control_mapper.joy_look_x != 0)
         {
             cam_angles[0] -=engine_frame_time * control_mapper.joy_look_x;
-            
         }
         if(control_mapper.joy_look_y != 0)
         {
@@ -369,7 +368,7 @@ void Game_ApplyControls()
         Lara->character->cmd.sprint = control_states.state_sprint;              // New commands only for TR3 and above
         Lara->character->cmd.crouch = control_states.state_crouch;
         
-        if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ) )
+        if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ))
         {
             Lara->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
         }
@@ -389,35 +388,7 @@ void Game_ApplyControls()
 
         vec3_copy(Lara->character->cmd.move, move_logic);
 
-        State_Control_Lara(Lara, &Lara->character->cmd);
-        //Character_FixPenetrations(Lara);
-        switch(Lara->move_type)
-        {
-            case MOVE_ON_FLOOR:
-                Character_MoveOnFloor(Lara, &Lara->character->cmd);
-                break;
-
-            case MOVE_FREE_FALLING:
-                Character_FreeFalling(Lara, &Lara->character->cmd);
-                break;
-
-            case MOVE_CLIMBING:
-                Character_Climbing(Lara, &Lara->character->cmd);
-                break;
-                
-            case MOVE_UNDER_WATER:
-                Character_MoveUnderWater(Lara, &Lara->character->cmd);
-                break;
-                
-            case MOVE_ON_WATER:
-                Character_MoveOnWater(Lara, &Lara->character->cmd);
-                break;
-                
-            default:
-                Lara->move_type = MOVE_ON_FLOOR;
-                break;
-        };
-        Entity_RebuildBV(Lara);
+        Character_ApplyCommands(Lara, &Lara->character->cmd, State_Control_Lara);
         Cam_FollowEntity(renderer.cam, Lara, 128.0, 400.0);
     }
 }
