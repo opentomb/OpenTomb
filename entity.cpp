@@ -7,6 +7,8 @@
 #include "entity.h"
 #include "render.h"
 #include "world.h"
+#include "gui.h"
+#include "system.h"
 #include "engine.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
@@ -17,6 +19,7 @@
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
 
 
+extern uint16_t                sounds_played;
 
 entity_p Entity_Create()
 {
@@ -324,9 +327,10 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
 }
 
 
-void Entity_MakeAnimCommands(entity_p entity)
+void Entity_MakeAnimCommands(entity_p entity, int changing)
 {
     int16_t *ch;
+    uint32_t target_frame;
     uint32_t i, count;
     animation_frame_p af = entity->model->animations + entity->current_animation;
     
@@ -340,7 +344,125 @@ void Entity_MakeAnimCommands(entity_p entity)
     
     for(i=0;i<count;i++,ch++)
     {
-        
+        switch(*ch)
+        {
+            case TR_ANIMCOMMAND_SETPOSITION:
+                if(changing == 2)
+                {
+                    entity->transform[12] += btScalar(*(++ch));
+                    entity->transform[14] -= btScalar(*(++ch));
+                    entity->transform[13] += btScalar(*(++ch));
+                }
+                else
+                {
+                    ch += 3;
+                }
+                break;
+                
+            case TR_ANIMCOMMAND_JUMPDISTANCE:
+                if(changing == 2)
+                {
+                    ch += 2;
+                    //Character_SetToJump(ent, cmd, btScalar(*(++ch)));
+                }
+                else
+                {
+                    ch += 2;
+                }
+                break;
+                
+            case TR_ANIMCOMMAND_INTERACT:
+                ///@FIXME: Behaviour is yet to be discovered.
+                break;
+                
+            case TR_ANIMCOMMAND_KILL:
+                if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
+                {
+                    ///@FIXME: This code should make object non-interactable
+                }
+                
+                break;
+                
+            case TR_ANIMCOMMAND_PLAYSOUND:
+                ///@FIXME: This command should play desired sound effect.
+                bool surface_flag[2];
+                int16_t sound_index;
+                
+                ch++;
+                target_frame = (entity->model->animations[entity->current_animation].frame_end + 1) - (*ch);
+                
+                if(entity->current_animation == 1)
+                {
+                    Sys_DebugLog("ac.txt","address TF %08X, TF %03d, NAC = %d, CAC = %d, ROAC",ch,target_frame,count,i,af->anim_command);
+                }
+                
+                if(entity->current_frame == target_frame)
+                {                        
+                    Sys_DebugLog("ac.txt","address TF %08X, TF %03d",ch,target_frame);
+                    sounds_played--;
+                    sounds_played = (sounds_played <= 0)?(100):(sounds_played);
+                
+                    ch++;
+                    sound_index     =  *ch &  0x3FFF;
+                    Sys_DebugLog("ac.txt","address SI %08X, SI %03d",ch,sound_index);
+                    surface_flag[0] = (*ch && 0x4000)?(true):(false);
+                    surface_flag[1] = (*ch && 0x8000)?(true):(false);
+                    //entity->model->hide = 1;
+                    //Sound_PlayEffect(*(++ch));
+                }
+                else
+                {
+                    ch++;
+                }
+                break;
+                
+            case TR_ANIMCOMMAND_PLAYEFFECT:
+                ch++;
+                target_frame = (entity->model->animations[entity->current_animation].frame_end + 1) - (*ch);
+                
+                if(entity->current_animation == 147)
+                {
+                    Sys_DebugLog("ac.txt","FLOP: TF = %d, CF = %d",target_frame,entity->current_frame);
+                }
+                
+                if(entity->current_frame == target_frame)
+                {
+                    ch++;
+                    
+                    switch(*ch & 0x3FFF)
+                    {
+                        case TR_EFFECT_CHANGEDIRECTION:
+                            entity->angles[0] += 180.0;
+                            break;
+                        case TR_EFFECT_HIDEOBJECT:
+                            entity->model->hide = 1;
+                            break;
+                        case TR_EFFECT_SHOWOBJECT:
+                            entity->model->hide = 0;
+                            break;
+                        case TR_EFFECT_PLAYSTEPSOUND:
+                            if(*ch && 0x4000)
+                            {
+                                Sys_DebugLog("ac.txt","LAND STEP SOUND PLAYED AT FRAME %03d",target_frame);
+                                sounds_played--;
+                            }
+                            else if(*ch && 0x8000)
+                            {
+                                Sys_DebugLog("ac.txt","WATER STEP SOUND PLAYED AT FRAME %03d",target_frame);
+                                sounds_played--;
+                            }
+                            break;
+                        default:
+                            ///@FIXME: TODO ALL OTHER EFFECTS!
+                            break;
+                    }
+                }
+                else
+                {
+                    ch++;
+                }
+                break;
+        }
     }
 }
 
@@ -377,8 +499,6 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     entity->frame_time = (btScalar)frame * entity->period + dt;
     
     Entity_UpdateCurrentBoneFrame(entity);
-    
-    Entity_MakeAnimCommands(entity);
 }
 
 
@@ -555,7 +675,11 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
     {
         ret = 1;
         entity->current_frame = frame;
-        Entity_MakeAnimCommands(entity);
+    }
+    
+    if(ret > 0)
+    {
+        Entity_MakeAnimCommands(entity, ret);
     }
     
     af = entity->model->animations + entity->current_animation;

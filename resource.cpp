@@ -1694,7 +1694,7 @@ long int GetOriginalAnimationFrameOffset(long int offset, long int anim, class V
 }
 
 
-void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT_Level *tr)
+void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_model_s *model, class VT_Level *tr)
 {
     int i, j, k, l, l_start;
     tr_moveable_t *tr_moveable;
@@ -1814,6 +1814,8 @@ void GenSkeletalModel(size_t model_num, struct skeletal_model_s *model, class VT
         anim->ID = i;
         anim->next_anim = NULL;
         anim->next_frame = 0;
+        anim->frame_start = tr_animation->frame_start;
+        anim->frame_end = tr_animation->frame_end;
         anim->frame_rate = tr_animation->frame_rate;
         anim->accel_hi = tr_animation->accel_hi;
         anim->accel_hi2 = tr_animation->accel_hi2;
@@ -2177,7 +2179,7 @@ void GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         smodel->mesh_count = tr_moveable->num_meshes;
         m_offset = tr->mesh_indices[tr_moveable->starting_mesh];
         smodel->mesh_offset = world->meshes + m_offset;                         // base mesh offset
-        GenSkeletalModel(i, smodel, tr);
+        GenSkeletalModel(world, i, smodel, tr);
         SkeletonModel_FillTransparancy(smodel);
     }
 }

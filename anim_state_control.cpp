@@ -207,101 +207,35 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
             }
-            else if(cmd->roll == 1)
+            
+            // MOVEMENT BLOCK
+            
+            if(curr_fc->water && curr_fc->floor_hit && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->max_step_up_height))
             {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_ROLL_BEGIN, 0);
-            }
-            else if(cmd->crouch == 1)
-            {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CROUCH_IDLE);
-            }
-            else if(curr_fc->water && curr_fc->floor_hit && (cmd->move[0] == 1) && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->max_step_up_height))
-            {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WADE_FORWARD);
-            }
-            else if((ent->move_type == MOVE_CLIMBING) || ((cmd->move[0] == 1) && (climb.climb_on_flag == CLIMB_FULL_HEIGHT) && (cmd->action) &&
-                    (pos[2] + ent->character->max_step_up_height < next_fc.floor_point[2]) && (pos[2] + 2048.0 >= next_fc.floor_point[2]) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component)))  // trying to climb on
-            {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
-                if(pos[2] + 640.0 >= next_fc.floor_point[2])
+                if(cmd->move[0] == 1)
                 {
-                    ent->angles[0] = next_fc.edge_z_ang;
-                    ent->move_type = MOVE_CLIMBING;
-                    pos[2] = next_fc.floor_point[2] - 512.0;
-                    vec3_copy(cmd->climb_pos, next_fc.floor_point);
-                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_2CLICK, 0);
+                    vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
+                    Character_CheckNextPenetration(ent, cmd, move);
+                    vec3_mul_scalar(offset, ent->transform + 4, WALK_FORWARD_OFFSET);
+                    offset[2] += 512.0;
+                    vec3_add(offset, offset, pos);
+                    Character_GetHeightInfo(offset, &next_fc);
+                    if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
+                    {
+                        ent->dir_flag = ENT_MOVE_FORWARD;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WADE_FORWARD);
+                    }
                 }
-                else if(pos[2] + 1024.0 >= next_fc.floor_point[2])
+                else if(cmd->move[0] == -1)
                 {
-                    ent->angles[0] = next_fc.edge_z_ang;
-                    ent->move_type = MOVE_CLIMBING;
-                    pos[2] = next_fc.floor_point[2] - 768.0;
-                    vec3_copy(cmd->climb_pos, next_fc.floor_point);
-                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_3CLICK, 0);
-                }
-            }
-            else if(cmd->move[0] == 1 && cmd->jump == 0 && cmd->shift == 1)     // walk forward
-            {
-                vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
-                Character_CheckNextPenetration(ent, cmd, move);
-                vec3_mul_scalar(offset, ent->transform + 4, WALK_FORWARD_OFFSET);
-                offset[2] += 512.0;
-                vec3_add(offset, offset, pos);
-                Character_GetHeightInfo(offset, &next_fc);
-                if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
-                {
-                    ent->dir_flag = ENT_MOVE_FORWARD;
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WALK_FORWARD);
-                }
-                else
-                {
-                    ent->dir_flag = ENT_STAY;
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
-                }
-            }
-            else if(cmd->move[0] == 1 && cmd->jump == 0 && cmd->shift == 0)     // run forward
-            {
-                vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
-                Character_CheckNextPenetration(ent, cmd, move);
-                if(cmd->horizontal_collide == 0)
-                {
-                    ent->dir_flag = ENT_MOVE_FORWARD;
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_RUN_FORWARD);
-                }
-                else
-                {
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
-                }
-            }
-            else if(cmd->move[0] ==-1 && cmd->jump == 0 && cmd->shift == 0)     // run back
-            {
-                vec3_mul_scalar(move, ent->transform + 4, - PENETRATION_TEST_OFFSET);
-                Character_CheckNextPenetration(ent, cmd, move);
-                if(cmd->horizontal_collide == 0)
-                {
-                    ent->dir_flag = ENT_MOVE_BACKWARD;
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_RUN_BACK);
-                }
-                else
-                {
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
-                }
-            }
-            else if(cmd->move[0] == 0 && cmd->move[1] == 1 && cmd->jump == 0 && cmd->shift == 0)
-            {
-                ent->dir_flag = ENT_MOVE_RIGHT;
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_TURN_RIGHT_SLOW);
-            }
-            else if(cmd->move[0] == 0 && cmd->move[1] ==-1 && cmd->jump == 0 && cmd->shift == 0)
-            {
-                ent->dir_flag = ENT_MOVE_LEFT;
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_TURN_LEFT_SLOW);
-            }
-            else if((cmd->move[0] != 0 || cmd->move[1] != 0 || cmd->slide) && cmd->jump == 1)
-            {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_PREPARE);       // jump sideways
-            }
-            else if(cmd->move[0] ==-1 && cmd->move[1] == 0 && cmd->jump == 0 && cmd->shift == 1)
+                    vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
+                    Character_CheckNextPenetration(ent, cmd, move);
+                    vec3_mul_scalar(offset, ent->transform + 4, -WALK_FORWARD_OFFSET);
+                    offset[2] += 512.0;
+                    vec3_add(offset, offset, pos);
+                    Character_GetHeightInfo(offset, &next_fc);
+                    if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
+            if(cmd->move[0] ==-1 && cmd->move[1] == 0 && cmd->jump == 0 && cmd->shift == 1)
             {
                 vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
@@ -357,6 +291,162 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->dir_flag  = ENT_STAY;
                     Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
                 }
+            }        {
+                        ent->dir_flag = ENT_MOVE_BACKWARD;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WALK_BACK);
+                    }
+                }
+            }
+            else
+            {
+                if((ent->move_type == MOVE_CLIMBING) || ((cmd->move[0] == 1) && (climb.climb_on_flag == CLIMB_FULL_HEIGHT) && (cmd->action) &&
+                    (pos[2] + ent->character->max_step_up_height < next_fc.floor_point[2]) && (pos[2] + 2048.0 >= next_fc.floor_point[2]) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component)))  // trying to climb on
+                {
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);
+                    if(pos[2] + 640.0 >= next_fc.floor_point[2])
+                    {
+                        ent->angles[0] = next_fc.edge_z_ang;
+                        ent->move_type = MOVE_CLIMBING;
+                        pos[2] = next_fc.floor_point[2] - 512.0;
+                        vec3_copy(cmd->climb_pos, next_fc.floor_point);
+                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_2CLICK, 0);
+                    }
+                    else if(pos[2] + 1024.0 >= next_fc.floor_point[2])
+                    {
+                        ent->angles[0] = next_fc.edge_z_ang;
+                        ent->move_type = MOVE_CLIMBING;
+                        pos[2] = next_fc.floor_point[2] - 768.0;
+                        vec3_copy(cmd->climb_pos, next_fc.floor_point);
+                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_3CLICK, 0);
+                    }
+                }
+                else if(cmd->move[0] == 1 && cmd->jump == 0 && cmd->shift == 1)     // walk forward
+                {
+                    vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
+                    Character_CheckNextPenetration(ent, cmd, move);
+                    vec3_mul_scalar(offset, ent->transform + 4, WALK_FORWARD_OFFSET);
+                    offset[2] += 512.0;
+                    vec3_add(offset, offset, pos);
+                    Character_GetHeightInfo(offset, &next_fc);
+                    if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
+                    {
+                        ent->dir_flag = ENT_MOVE_FORWARD;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WALK_FORWARD);
+                    }
+                    else
+                    {
+                        ent->dir_flag = ENT_STAY;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
+                    }
+                }
+                else if(cmd->move[0] == 1 && cmd->jump == 0 && cmd->shift == 0)     // run forward
+                {
+                    vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
+                    Character_CheckNextPenetration(ent, cmd, move);
+                    if(cmd->horizontal_collide == 0)
+                    {
+                        ent->dir_flag = ENT_MOVE_FORWARD;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_RUN_FORWARD);
+                    }
+                    else
+                    {
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
+                    }
+                }
+                else if(cmd->move[0] ==-1 && cmd->jump == 0 && cmd->shift == 0)     // run back
+                {
+                    vec3_mul_scalar(move, ent->transform + 4, - PENETRATION_TEST_OFFSET);
+                    Character_CheckNextPenetration(ent, cmd, move);
+                    if(cmd->horizontal_collide == 0)
+                    {
+                        ent->dir_flag = ENT_MOVE_BACKWARD;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_RUN_BACK);
+                    }
+                    else
+                    {
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
+                    }
+                }
+                else if(cmd->move[0] ==-1 && cmd->move[1] == 0 && cmd->jump == 0 && cmd->shift == 1)
+                {
+                    vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
+                    Character_CheckNextPenetration(ent, cmd, move);
+                    vec3_mul_scalar(offset, ent->transform + 4, -WALK_FORWARD_OFFSET);
+                    offset[2] += 512.0;
+                    vec3_add(offset, offset, pos);
+                    Character_GetHeightInfo(offset, &next_fc);
+                    if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
+                    {
+                        ent->dir_flag = ENT_MOVE_BACKWARD;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WALK_BACK);
+                    }
+                    else
+                    {
+                        ent->dir_flag  = ENT_STAY;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
+                    }
+                }
+                else if(cmd->move[0] == 0 && cmd->move[1] == 1 && cmd->jump == 0 && cmd->shift == 1)
+                {
+                    vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
+                    Character_CheckNextPenetration(ent, cmd, move);
+                    vec3_mul_scalar(offset, ent->transform + 0, RUN_FORWARD_OFFSET);
+                    offset[2] += 512.0;
+                    i = Character_CheckNextStep(ent, offset, &next_fc);
+                    if((cmd->horizontal_collide == 0) && (i >= CHARACTER_STEP_DOWN_LITTLE && i <= CHARACTER_STEP_UP_LITTLE))
+                    {
+                        cmd->rot[0] = 0.0;
+                        ent->dir_flag = ENT_MOVE_RIGHT;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WALK_RIGHT);
+                    }
+                    else
+                    {
+                        ent->dir_flag  = ENT_STAY;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
+                    }
+                }
+                else if(cmd->move[0] == 0 && cmd->move[1] ==-1 && cmd->jump == 0 && cmd->shift == 1)
+                {
+                    vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
+                    Character_CheckNextPenetration(ent, cmd, move);
+                    vec3_mul_scalar(offset, ent->transform + 0, -RUN_FORWARD_OFFSET);
+                    offset[2] += 512.0;
+                    i = Character_CheckNextStep(ent, offset, &next_fc);
+                    if((cmd->horizontal_collide == 0) && (i >= CHARACTER_STEP_DOWN_LITTLE && i <= CHARACTER_STEP_UP_LITTLE))
+                    {
+                        cmd->rot[0] = 0.0;
+                        ent->dir_flag = ENT_MOVE_LEFT;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WALK_LEFT);
+                    }
+                    else
+                    {
+                        ent->dir_flag  = ENT_STAY;
+                        Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT);// continue standing still
+                    }
+                }
+                else if(cmd->roll == 1)
+                {
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_ROLL_BEGIN, 0);
+                }
+                else if(cmd->crouch == 1)
+                {
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CROUCH_IDLE);
+                }
+            }            
+            
+            if(cmd->move[0] == 0 && cmd->move[1] == 1 && cmd->jump == 0 && cmd->shift == 0)
+            {
+                ent->dir_flag = ENT_MOVE_RIGHT;
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_TURN_RIGHT_SLOW);
+            }
+            else if(cmd->move[0] == 0 && cmd->move[1] ==-1 && cmd->jump == 0 && cmd->shift == 0)
+            {
+                ent->dir_flag = ENT_MOVE_LEFT;
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_TURN_LEFT_SLOW);
+            }
+            else if((cmd->move[0] != 0 || cmd->move[1] != 0 || cmd->slide) && cmd->jump == 1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_PREPARE);       // jump sideways
             }
             else if(cmd->move[0] == 0 && cmd->move[1] == 0 && cmd->jump == 1)
             {
@@ -1389,16 +1479,16 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_ANIMATION_LARA_RUNNING_JUMP_ROLL_BEGIN:
             if(2 <= Entity_Frame(ent, engine_frame_time, -1))                   // continue roll
             {
-                ent->dir_flag = ENT_MOVE_BACKWARD;
-                ent->angles[0] += 180.0;
+                //ent->dir_flag = ENT_MOVE_BACKWARD;
+                //ent->angles[0] += 180.0;
             }
             break;
 
         case TR_ANIMATION_LARA_BACKWARDS_JUMP_ROLL_BEGIN:
             if(2 <= Entity_Frame(ent, engine_frame_time, -1))                   // continue roll
             {
-                ent->dir_flag = ENT_MOVE_FORWARD;
-                ent->angles[0] += 180.0;
+                //ent->dir_flag = ENT_MOVE_FORWARD;
+                //ent->angles[0] += 180.0;
             }
             break;
 
@@ -1412,8 +1502,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(2 <= Entity_Frame(ent, engine_frame_time, -1))               // continue roll
                 {
-                    ent->dir_flag = ENT_MOVE_BACKWARD;
-                    ent->angles[0] += 180.0;
+                    //ent->dir_flag = ENT_MOVE_BACKWARD;
+                    //ent->angles[0] += 180.0;
                 }
             }
             break;
@@ -2457,7 +2547,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_ANIMATION_LARA_UNDERWATER_ROLL_BEGIN:
             if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT))
             {
-                ent->angles[0] += 180.0;
+                //ent->angles[0] += 180.0;
             }
             break;
 
@@ -2585,6 +2675,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     // to wade
                     pos[2] = curr_fc->floor_point.m_floats[2];
                     ent->move_type = MOVE_ON_FLOOR;
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_ONWATER_TO_WADE, 0);
                 }
             }
             else

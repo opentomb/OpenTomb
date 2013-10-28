@@ -84,7 +84,7 @@ void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateRotation(entity_p entity);
 
 void Entity_UpdateCurrentBoneFrame(entity_p entity);
-void Entity_MakeAnimCommands(entity_p entity);
+void Entity_MakeAnimCommands(entity_p entity, int changing);
 void Entity_SetAnimation(entity_p entity, int animation, int frame);
 void Entity_MoveForward(struct entity_s *ent, btScalar dist);
 void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);

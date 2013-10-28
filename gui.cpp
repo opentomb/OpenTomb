@@ -18,6 +18,8 @@ gui_text_line_p         gui_base_lines = NULL;
 gui_text_line_t         gui_temp_lines[MAX_TEMP_LINES];
 uint16_t                temp_lines_used = 0;
 
+uint16_t                sounds_played = 100;
+
 ProgressBar Bar[BAR_LASTINDEX];
 
 void Gui_Init()
@@ -124,7 +126,7 @@ void Gui_Init()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(450, 100);
+                    Bar[i].SetValues(100, 20);
                     Bar[i].SetBlink(200);
                     Bar[i].SetExtrude(true, 60);
                     Bar[i].SetAutoshow(true, 500, true, 300);
@@ -427,12 +429,7 @@ void Gui_DrawCrosshair()
 
 void Gui_DrawBars()
 {
-    for(int i = 0; i < BAR_LASTINDEX; i++)
-    {
-        Bar[i].Show(1000);
-    }
-
-    //Bar[BAR_HEALTH].Show(1000); ///@FIXME: TEST VALUE!!!
+    Bar[BAR_FREEZE].Show(sounds_played); ///@FIXME: TEST VALUE!!!
 }
 
 /**
