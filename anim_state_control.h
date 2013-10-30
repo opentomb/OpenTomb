@@ -708,6 +708,11 @@ struct character_command_s;
 #define TR_ANIMCOMMAND_PLAYSOUND 5
 #define TR_ANIMCOMMAND_PLAYEFFECT 6
 
+//   ====== ANIMATION EFFECTS FLAGS ======
+
+#define TR_ANIMCOMMAND_CONDITION_LAND  0x4000
+#define TR_ANIMCOMMAND_CONDITION_WATER 0X8000
+
 //   ====== ANIMATION EFFECTS / FLIPEFFECTS ======
 
 #define TR_EFFECT_CHANGEDIRECTION 0
@@ -719,6 +724,7 @@ struct character_command_s;
 #define TR_EFFECT_ACTIVATETRIGGERS 6
 #define TR_EFFECT_ENABLEEARTHQUAKES 7
 #define TR_EFFECT_GETCROWBAR 8
+// Effect 9 is empty in TR4.
 #define TR_EFFECT_PLAYSOUND_TIMERFIELD 10
 #define TR_EFFECT_PLAYEXPLOSIONSOUND 11
 #define TR_EFFECT_DISABLEGUNS 12
@@ -730,15 +736,22 @@ struct character_command_s;
 #define TR_EFFECT_MESHSWAP1 18
 #define TR_EFFECT_MESHSWAP2 19
 #define TR_EFFECT_MESHSWAP3 20
+// Effect 21 is unknown at offset 4376F0.
+// Effect 22 is unknown at offset 437700.
 #define TR_EFFECT_HIDEOBJECT 23
 #define TR_EFFECT_SHOWOBJECT 24
+// Effect 25 is empty in TR4.
 #define TR_EFFECT_REMOVEHAIR 26
+// Effect 27 is empty in TR4.
 #define TR_EFFECT_SETFOGCOLOUR 28
+// Effect 29 is unknown at offset 4372F0
 #define TR_EFFECT_GUIDEPROGRESS 30
 #define TR_EFFECT_KILLSCARABS 31
 #define TR_EFFECT_PLAYSTEPSOUND 32
+// Effects 33 - 42 are empty in TR4.
 #define TR_EFFECT_GETWATERSKIN 43
 #define TR_EFFECT_REMOVEWATERSKIN 44
+#define TR_EFFECT_VONCROYPROGRESS 45
 #define TR_EFFECT_KILLALLENEMIES 46
 
 int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd);

@@ -327,47 +327,45 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
 }
 
 
-void Entity_MakeAnimCommands(entity_p entity, int changing)
+void Entity_DoAnimCommands(entity_p entity, int changing)
 {
-    int16_t *ch;
-    uint32_t target_frame;
-    uint32_t i, count;
-    animation_frame_p af = entity->model->animations + entity->current_animation;
-    
-    if(engine_world.anim_commands_count == 0)
+    if((engine_world.anim_commands_count == 0) || 
+       (entity->model->animations[entity->current_animation].num_anim_commands > 255))
     {
-        return;
+        return;  // If no anim commands or current anim has more than 255.
     }
+        
+    animation_frame_p af = entity->model->animations + entity->current_animation;
+    uint32_t count       = af->num_anim_commands;
+    int16_t *pointer     = engine_world.anim_commands + af->anim_command;
     
-    count = af->num_anim_commands;
-    ch = engine_world.anim_commands + af->anim_command;
-    
-    for(i=0;i<count;i++,ch++)
+    for(int i = 0; i < count; i++, pointer++)
     {
-        switch(*ch)
+        switch(*pointer)
         {
             case TR_ANIMCOMMAND_SETPOSITION:
-                if(changing == 2)
+                // This command executes ONLY at the end of animation. 
+                if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    entity->transform[12] += btScalar(*(++ch));
-                    entity->transform[14] -= btScalar(*(++ch));
-                    entity->transform[13] += btScalar(*(++ch));
+                    entity->transform[12] += btScalar(*++pointer);
+                    entity->transform[14] -= btScalar(*++pointer); // Y is inverted in OpenGL coordinates.
+                    entity->transform[13] += btScalar(*++pointer);
                 }
                 else
                 {
-                    ch += 3;
+                    pointer += 3; // Parse through 3 operands.
                 }
                 break;
                 
             case TR_ANIMCOMMAND_JUMPDISTANCE:
-                if(changing == 2)
+                // This command executes ONLY at the end of animation. 
+                if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    ch += 2;
-                    //Character_SetToJump(ent, cmd, btScalar(*(++ch)));
+                    pointer += 2; ///@FIXME: Place SetToJump here with height/length parameters!
                 }
                 else
                 {
-                    ch += 2;
+                    pointer += 2; // Parse through 2 operands.
                 }
                 break;
                 
@@ -376,9 +374,10 @@ void Entity_MakeAnimCommands(entity_p entity, int changing)
                 break;
                 
             case TR_ANIMCOMMAND_KILL:
+                // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    ///@FIXME: This code should make object non-interactable
+                    ///@FIXME: This code should make object non-interactable.
                 }
                 
                 break;
@@ -388,51 +387,51 @@ void Entity_MakeAnimCommands(entity_p entity, int changing)
                 bool surface_flag[2];
                 int16_t sound_index;
                 
-                ch++;
-                target_frame = (entity->model->animations[entity->current_animation].frame_end + 1) - (*ch);
-                
-                if(entity->current_animation == 1)
-                {
-                    Sys_DebugLog("ac.txt","address TF %08X, TF %03d, NAC = %d, CAC = %d, ROAC",ch,target_frame,count,i,af->anim_command);
-                }
-                
-                if(entity->current_frame == target_frame)
+                if(entity->current_frame == *++pointer)
                 {                        
-                    Sys_DebugLog("ac.txt","address TF %08X, TF %03d",ch,target_frame);
                     sounds_played--;
                     sounds_played = (sounds_played <= 0)?(100):(sounds_played);
                 
-                    ch++;
-                    sound_index     =  *ch &  0x3FFF;
-                    Sys_DebugLog("ac.txt","address SI %08X, SI %03d",ch,sound_index);
-                    surface_flag[0] = (*ch && 0x4000)?(true):(false);
-                    surface_flag[1] = (*ch && 0x8000)?(true):(false);
-                    //entity->model->hide = 1;
-                    //Sound_PlayEffect(*(++ch));
+                    sound_index     =  *++pointer &  0x3FFF;
+                    
+                    if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
+                    {
+                        ///@FIXME: Play sound in land condition here.
+                        Sys_DebugLog("ac.txt", "Played sound #%03d at frame %03d anim %03d, LAND", sound_index, entity->current_frame, entity->current_animation);
+                    }
+                    else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
+                    {
+                        ///@FIXME: Play sound in water condition here.
+                        Sys_DebugLog("ac.txt", "Played sound #%03d at frame %03d anim %03d, WATER", sound_index, entity->current_frame, entity->current_animation);
+                    }
+                    else
+                    {
+                        ///@FIXME: Play sound in any condition here.
+                        Sys_DebugLog("ac.txt", "Played sound #%03d at frame %03d anim %03d, ALWAYS", sound_index, entity->current_frame, entity->current_animation);
+                    }
+                                    
                 }
                 else
                 {
-                    ch++;
+                    pointer++;
                 }
                 break;
                 
             case TR_ANIMCOMMAND_PLAYEFFECT:
-                ch++;
-                target_frame = (entity->model->animations[entity->current_animation].frame_end + 1) - (*ch);
-                
-                if(entity->current_animation == 147)
+                if(entity->current_frame == *++pointer)
                 {
-                    Sys_DebugLog("ac.txt","FLOP: TF = %d, CF = %d",target_frame,entity->current_frame);
-                }
-                
-                if(entity->current_frame == target_frame)
-                {
-                    ch++;
-                    
-                    switch(*ch & 0x3FFF)
+                    switch(*++pointer & 0x3FFF)
                     {
                         case TR_EFFECT_CHANGEDIRECTION:
                             entity->angles[0] += 180.0;
+                            if(entity->dir_flag == ENT_MOVE_BACKWARD)
+                            {
+                                entity->dir_flag = ENT_MOVE_FORWARD;
+                            }
+                            else if(entity->dir_flag == ENT_MOVE_FORWARD)
+                            {
+                                entity->dir_flag = ENT_MOVE_BACKWARD;
+                            }
                             break;
                         case TR_EFFECT_HIDEOBJECT:
                             entity->model->hide = 1;
@@ -441,15 +440,17 @@ void Entity_MakeAnimCommands(entity_p entity, int changing)
                             entity->model->hide = 0;
                             break;
                         case TR_EFFECT_PLAYSTEPSOUND:
-                            if(*ch && 0x4000)
+                            if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
                             {
-                                Sys_DebugLog("ac.txt","LAND STEP SOUND PLAYED AT FRAME %03d",target_frame);
                                 sounds_played--;
+                                sounds_played = (sounds_played <= 0)?(100):(sounds_played);
+                                Sys_DebugLog("ac.txt", "Played step LAND at frame %03d anim %03d", entity->current_frame, entity->current_animation);
                             }
-                            else if(*ch && 0x8000)
+                            else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
                             {
-                                Sys_DebugLog("ac.txt","WATER STEP SOUND PLAYED AT FRAME %03d",target_frame);
                                 sounds_played--;
+                                sounds_played = (sounds_played <= 0)?(100):(sounds_played);
+                                Sys_DebugLog("ac.txt", "Played step WATER at frame %03d anim %03d", entity->current_frame, entity->current_animation);
                             }
                             break;
                         default:
@@ -459,7 +460,7 @@ void Entity_MakeAnimCommands(entity_p entity, int changing)
                 }
                 else
                 {
-                    ch++;
+                    pointer++;
                 }
                 break;
         }
@@ -500,7 +501,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     
     Entity_UpdateCurrentBoneFrame(entity);
 }
-
+    
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
 {
@@ -677,9 +678,9 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
         entity->current_frame = frame;
     }
     
-    if(ret > 0)
+    if(ret)
     {
-        Entity_MakeAnimCommands(entity, ret);
+        Entity_DoAnimCommands(entity, ret);
     }
     
     af = entity->model->animations + entity->current_animation;
