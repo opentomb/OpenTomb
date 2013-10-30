@@ -1814,8 +1814,6 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         anim->ID = i;
         anim->next_anim = NULL;
         anim->next_frame = 0;
-        anim->frame_start = tr_animation->frame_start;
-        anim->frame_end = tr_animation->frame_end;
         anim->frame_rate = tr_animation->frame_rate;
         anim->accel_hi = tr_animation->accel_hi;
         anim->accel_hi2 = tr_animation->accel_hi2;
@@ -1830,6 +1828,44 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         anim->unknown2 = tr_animation->unknown2;
         anim->frames_count = GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, GetNumFramesForAnimation(tr, tr_moveable->animation_index));
+
+        // Parse AnimCommands
+        // Max. amount of AnimCommands is 255, larger numbers are considered as 0.
+        // See http://evpopov.com/dl/TR4format.html#Animations for details.
+            
+        if( (anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255) )
+        {
+            // Calculate current animation anim command block offset.
+            int16_t *pointer = world->anim_commands + anim->anim_command;
+
+            for(int count = 0; count < anim->num_anim_commands; count++, pointer++)
+            {
+                switch(*pointer)
+                {
+                    case TR_ANIMCOMMAND_PLAYEFFECT:
+                    case TR_ANIMCOMMAND_PLAYSOUND:
+                        // Recalculate absolute frame number to relative.
+                        *++pointer = *pointer - tr_animation->frame_start;
+                        pointer++;
+                        break;
+                        
+                    case TR_ANIMCOMMAND_SETPOSITION:
+                        // Parse through 3 operands.
+                        pointer += 3;
+                        break;
+                            
+                    case TR_ANIMCOMMAND_JUMPDISTANCE:
+                        // Parse through 2 operands.
+                        pointer += 2;
+                        break;
+                        
+                    default:
+                        // All other commands have no operands.
+                        break;
+                }
+            }
+        }
+
 
         if(anim->frames_count <= 0)
         {

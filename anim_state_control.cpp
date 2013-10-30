@@ -1385,23 +1385,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }*/
             break;
 
-        case TR_ANIMATION_LARA_STANDING_JUMP_ROLL_BEGIN:
-        case TR_ANIMATION_LARA_RUNNING_JUMP_ROLL_BEGIN:
-            if(2 <= Entity_Frame(ent, engine_frame_time, -1))                   // continue roll
-            {
-                ent->dir_flag = ENT_MOVE_BACKWARD;
-                ent->angles[0] += 180.0;
-            }
-            break;
-
-        case TR_ANIMATION_LARA_BACKWARDS_JUMP_ROLL_BEGIN:
-            if(2 <= Entity_Frame(ent, engine_frame_time, -1))                   // continue roll
-            {
-                ent->dir_flag = ENT_MOVE_FORWARD;
-                ent->angles[0] += 180.0;
-            }
-            break;
-
         case TR_ANIMATION_LARA_ROLL_BEGIN:
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(ent->move_type == MOVE_FREE_FALLING)
@@ -1410,11 +1393,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                if(2 <= Entity_Frame(ent, engine_frame_time, -1))               // continue roll
-                {
-                    ent->dir_flag = ENT_MOVE_BACKWARD;
-                    ent->angles[0] += 180.0;
-                }
+                Entity_Frame(ent, engine_frame_time, -1);               // continue roll
             }
             break;
 
@@ -2451,13 +2430,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_UNDERWATER_STOP);
-            }
-            break;
-
-        case TR_ANIMATION_LARA_UNDERWATER_ROLL_BEGIN:
-            if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT))
-            {
-                ent->angles[0] += 180.0;
             }
             break;
 

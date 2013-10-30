@@ -186,8 +186,6 @@ typedef struct animation_frame_s
 {
     uint32_t                    ID;
     uint8_t                     frame_rate;
-    uint32_t                    frame_start;
-    uint32_t                    frame_end;
     int                         accel_hi;
     int                         accel_hi2;
     int                         accel_lo;
