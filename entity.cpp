@@ -7,8 +7,6 @@
 #include "entity.h"
 #include "render.h"
 #include "world.h"
-#include "gui.h"
-#include "system.h"
 #include "engine.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
@@ -397,17 +395,14 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
                     {
                         ///@FIXME: Play sound in land condition here.
-                        Sys_DebugLog("ac.txt", "Played sound #%03d at frame %03d anim %03d, LAND", sound_index, entity->current_frame, entity->current_animation);
                     }
                     else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
                     {
                         ///@FIXME: Play sound in water condition here.
-                        Sys_DebugLog("ac.txt", "Played sound #%03d at frame %03d anim %03d, WATER", sound_index, entity->current_frame, entity->current_animation);
                     }
                     else
                     {
                         ///@FIXME: Play sound in any condition here.
-                        Sys_DebugLog("ac.txt", "Played sound #%03d at frame %03d anim %03d, ALWAYS", sound_index, entity->current_frame, entity->current_animation);
                     }
                                     
                 }
@@ -444,13 +439,11 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             {
                                 sounds_played--;
                                 sounds_played = (sounds_played <= 0)?(100):(sounds_played);
-                                Sys_DebugLog("ac.txt", "Played step LAND at frame %03d anim %03d", entity->current_frame, entity->current_animation);
                             }
                             else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
                             {
                                 sounds_played--;
                                 sounds_played = (sounds_played <= 0)?(100):(sounds_played);
-                                Sys_DebugLog("ac.txt", "Played step WATER at frame %03d anim %03d", entity->current_frame, entity->current_animation);
                             }
                             break;
                         default:
