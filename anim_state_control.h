@@ -707,6 +707,7 @@ struct character_command_s;
 #define TR_ANIMCOMMAND_KILL 4
 #define TR_ANIMCOMMAND_PLAYSOUND 5
 #define TR_ANIMCOMMAND_PLAYEFFECT 6
+#define TR_ANIMCOMMAND_INTERACT 7
 
 //   ====== ANIMATION EFFECTS FLAGS ======
 
