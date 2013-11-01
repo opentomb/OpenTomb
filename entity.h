@@ -41,6 +41,7 @@ typedef struct entity_s
     uint8_t                             was_rendered;                           // render once per frame trigger
     uint8_t                             was_rendered_lines;                     // same for debug lines
     uint8_t                             smooth_anim;
+    uint8_t                             hide;
     
     btScalar                            current_speed;                          // current linear speed from animation info
     struct ss_bone_frame_s              bf;                                     // current boneframe with full frame information 

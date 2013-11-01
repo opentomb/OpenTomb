@@ -345,9 +345,9 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    entity->transform[12] += btScalar(*++pointer);
-                    entity->transform[14] -= btScalar(*++pointer); // Y is inverted in OpenGL coordinates.
-                    entity->transform[13] += btScalar(*++pointer);
+                    entity->transform[12] += (btScalar)(*++pointer);
+                    entity->transform[14] -= (btScalar)(*++pointer); // Y is inverted in OpenGL coordinates.
+                    entity->transform[13] += (btScalar)(*++pointer);
                 }
                 else
                 {
@@ -359,7 +359,10 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    pointer += 2; ///@FIXME: Place SetToJump here with height/length parameters!
+                    int16_t v_Vertical   = *++pointer;
+                    int16_t v_Horizontal = *++pointer;
+                    
+                    Character_SetToJump(entity, -v_Vertical, v_Horizontal);
                 }
                 else
                 {
@@ -367,7 +370,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 }
                 break;
                 
-            case TR_ANIMCOMMAND_INTERACT:
+            case TR_ANIMCOMMAND_EMPTYHANDS:
                 ///@FIXME: Behaviour is yet to be discovered.
                 break;
                 
@@ -375,6 +378,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
+                    entity->hide = 1;
                     ///@FIXME: This code should make object non-interactable.
                 }
                 
@@ -429,10 +433,10 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             }
                             break;
                         case TR_EFFECT_HIDEOBJECT:
-                            entity->model->hide = 1;
+                            entity->hide = 1;
                             break;
                         case TR_EFFECT_SHOWOBJECT:
-                            entity->model->hide = 0;
+                            entity->hide = 0;
                             break;
                         case TR_EFFECT_PLAYSTEPSOUND:
                             if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)

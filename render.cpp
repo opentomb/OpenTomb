@@ -332,7 +332,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
 
 void Render_Entity(struct entity_s *entity)
 {
-    if(entity->was_rendered || (entity->model->hide == 1) && !(renderer.style & R_DRAW_NULLMESHES))
+    if(entity->was_rendered || entity->hide || (entity->model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -940,7 +940,7 @@ void Render_Entity_DebugLines(struct entity_s *entity)
         return;
     }
 
-    if((entity->model->hide == 1) && !(renderer.style & R_DRAW_NULLMESHES))
+    if(entity->hide || (entity->model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
