@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <math.h>
 
@@ -345,9 +344,9 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    entity->transform[12] += btScalar(*++pointer);
-                    entity->transform[14] -= btScalar(*++pointer);              // Y is inverted in OpenGL coordinates. In original TR OY is a wertical axis.
-                    entity->transform[13] += btScalar(*++pointer);
+                    entity->transform[12] += (btScalar)(*++pointer);
+                    entity->transform[14] -= (btScalar)(*++pointer); // Y is inverted in OpenGL coordinates.
+                    entity->transform[13] += (btScalar)(*++pointer);
                 }
                 else
                 {
@@ -359,7 +358,10 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    pointer += 2; ///@FIXME: Place SetToJump here with height/length parameters!
+                    int16_t v_Vertical   = *++pointer;
+                    int16_t v_Horizontal = *++pointer;
+                    
+                    Character_SetToJump(entity, -v_Vertical, v_Horizontal);
                 }
                 else
                 {
@@ -367,7 +369,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 }
                 break;
                 
-            case TR_ANIMCOMMAND_INTERACT:
+            case TR_ANIMCOMMAND_EMPTYHANDS:
                 ///@FIXME: Behaviour is yet to be discovered.
                 break;
                 
@@ -375,6 +377,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
+                    entity->hide = 1;
                     ///@FIXME: This code should make object non-interactable.
                 }
                 
@@ -428,15 +431,12 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 entity->dir_flag = ENT_MOVE_BACKWARD;
                             }
                             break;
-                            
                         case TR_EFFECT_HIDEOBJECT:
-                            entity->model->hide = 1;
+                            entity->hide = 1;
                             break;
-                            
                         case TR_EFFECT_SHOWOBJECT:
-                            entity->model->hide = 0;
+                            entity->hide = 0;
                             break;
-                            
                         case TR_EFFECT_PLAYSTEPSOUND:
                             if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
                             {
@@ -449,7 +449,6 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 sounds_played = (sounds_played <= 0)?(100):(sounds_played);
                             }
                             break;
-                            
                         default:
                             ///@FIXME: TODO ALL OTHER EFFECTS!
                             break;
@@ -566,7 +565,8 @@ int Entity_GetAnimDispatchCase(struct entity_s *ent, int id)
             disp = stc->anim_dispath;
             for(j=0;j<stc->anim_dispath_count;j++,disp++)
             {
-                if((disp->frame_high >= disp->frame_low) && (ent->current_frame >= disp->frame_low) && (ent->current_frame <= disp->frame_high))
+                if((disp->frame_high >= disp->frame_low) && (ent->current_frame >= disp->frame_low) && (ent->current_frame <= disp->frame_high))// ||
+                   //(disp->frame_high <  disp->frame_low) && ((ent->current_frame >= disp->frame_low) || (ent->current_frame <= disp->frame_high)))
                 {
                     return j;
                 }
@@ -629,10 +629,12 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
         disp = stc->anim_dispath;
         for(i=0;i<stc->anim_dispath_count;i++,disp++)
         {
-            if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
+            if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))// ||
+               //(disp->frame_high <  disp->frame_low) && ((*frame >= disp->frame_low) || (*frame <= disp->frame_high)))
             {
                 *anim = disp->next_anim;
                 *frame = disp->next_frame;
+                //*frame = (disp->next_frame + (*frame - disp->frame_low)) % entity->model->animations[disp->next_anim].frames_count;
                 return;                                                         // anim was changed
             }
         }
