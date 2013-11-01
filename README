@@ -27,9 +27,10 @@ Used here:
     2) OpenGL http://www.opengl.org/
     3) zlib http://www.zlib.net/
     4) LUA v5.1.4. http://www.lua.org/
-    5) Vera Mono font http://www.dafont.com/
-    6) EasterEgg ASCII art http://www.chris.com/ascii/index.php
-    7) Code from or integrated lib:
+    5) OpenAL v1.15.1 http://kcat.strangesoft.net/openal.html
+    6) Vera Mono font http://www.dafont.com/
+    7) EasterEgg ASCII art http://www.chris.com/ascii/index.php
+    8) Code from or integrated lib:
         - openraider project https://sourceforge.net/projects/openraider/
         - quaketenebrae (parser and mem manager) http://tenebrae.sourceforge.net/
         - vt project http://icculus.org/vt/vt/website/

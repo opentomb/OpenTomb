@@ -19,6 +19,7 @@ void Engine_Display();
 
 void Engine_InitSDLControls();
 void Engine_InitSDLVideo();
+void Engine_InitALAudio();
 
 // nominal values are used e.g. to set the size for the console.
 // pixel values are used for glViewport. Both will be the same on
