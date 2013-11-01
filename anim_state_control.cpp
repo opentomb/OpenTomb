@@ -389,10 +389,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     goto vertical;
                 }
-                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_FORWARD))       // jump forward
-                {
-                    Character_SetToJump(ent, cmd, 3000.0);
-                }
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_FORWARD);       // jump forward
             }
             else if(cmd->move[0] ==-1)
             {
@@ -403,10 +400,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     goto vertical;
                 }
-                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_BACK))               // jump backward
-                {
-                    Character_SetToJump(ent, cmd, 3000.0);
-                }
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_BACK);               // jump backward
             }
             else if(cmd->move[1] == 1)
             {
@@ -417,10 +411,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     goto vertical;
                 }
-                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_LEFT))               // jump right
-                {
-                    Character_SetToJump(ent, cmd, 3000.0);
-                }
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_LEFT);               // jump right
             }
             else if(cmd->move[1] ==-1)
             {
@@ -431,10 +422,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     goto vertical;
                 }
-                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_RIGHT))               // jump left
-                {
-                    Character_SetToJump(ent, cmd, 3000.0);
-                }
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_RIGHT);               // jump left
             }
             else
             {
@@ -443,7 +431,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT))               // jump vertical
                 {
                     Character_UpdateCurrentSpeed(ent, 0);
-                    Character_SetToJump(ent, cmd, 3000.0);
                 }
             }
             break;
@@ -1310,7 +1297,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 if(2 == Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_BACK))
                 {
                     cmd->slide = 0x00;
-                    Character_SetToJump(ent, cmd, 3000.0);
                 }
             }
             else
@@ -1340,10 +1326,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if(cmd->slide != 0 && cmd->jump == 1)
             {
-                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_FORWARD))       // jump
-                {
-                    Character_SetToJump(ent, cmd, 3000.0);
-                }
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_FORWARD);       // jump
             }
             else
             {
@@ -1860,10 +1843,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else                                                                // jump forward
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                if((ent->current_frame == 1) & (1 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_CURRENT)))
-                {
-                    Character_SetToJump(ent, cmd, 3000.0);                      // activated on frame 2 starting
-                }
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_FORWARD);
             }
             break;
 

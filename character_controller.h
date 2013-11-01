@@ -20,7 +20,7 @@
 #define DEFAULT_CLIMB_UP_HEIGHT                 (4096.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (0.707)                         ///@FIXME: cos(alpha = 45 deg)
-#define DEFAULT_CHARACTER_SPEED_MULT            (32.0)                          ///@FIXME: magic - not like in original
+#define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_CLIMB_R               (48.0)
 #define DEFAUL_CHARACTER_WADE_DEPTH             (128.0)
@@ -153,7 +153,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, /*
 void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz);
-int Character_SetToJump(struct entity_s *ent, character_command_p cmd, btScalar vz);
+int Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
 void Character_UpdateCurrentRoom(struct entity_s *ent);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);

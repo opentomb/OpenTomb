@@ -911,7 +911,7 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
     ent->character->speed.m_floats[2] = vz;
 }
 
-int Character_SetToJump(struct entity_s *ent, character_command_p cmd, btScalar vz)
+int Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal)
 {
     btScalar t;
     btVector3 spd(0.0, 0.0, 0.0);
@@ -920,37 +920,41 @@ int Character_SetToJump(struct entity_s *ent, character_command_p cmd, btScalar 
     {
         return 0;
     }
+    
+    // Jump length is a speed value multiplied by global speed coefficient.
+    t = v_horizontal * ent->character->speed_mult;
 
-    //ent->angles[0] += cmd->rot[0];
-    //Entity_UpdateRotation(ent);
-    t = ent->current_speed * ent->character->speed_mult;
-
+    // Calculate the direction of jump by vector multiplication.
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(spd.m_floats, ent->transform+4, t);
+        vec3_mul_scalar(spd.m_floats, ent->transform+4,  t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(spd.m_floats, ent->transform+4,-t);
+        vec3_mul_scalar(spd.m_floats, ent->transform+4, -t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(spd.m_floats, ent->transform+0,-t);
+        vec3_mul_scalar(spd.m_floats, ent->transform+0, -t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(spd.m_floats, ent->transform+0, t);
+        vec3_mul_scalar(spd.m_floats, ent->transform+0,  t);
     }
     else
     {
         ent->dir_flag = ENT_MOVE_FORWARD;
     }
-
-    cmd->vertical_collide = 0x00;
-    cmd->slide = 0x00;
     
-    ent->character->speed += spd;
-    ent->character->speed.m_floats[2] = vz;
+    ent->character->cmd.vertical_collide = 0x00;
+    ent->character->cmd.slide = 0x00;
+    
+    // Jump speed should NOT be added to current speed, as native engine
+    // fully replaces current speed with jump speed by anim command.
+    ent->character->speed = spd;
+    
+    // Apply vertical speed.
+    ent->character->speed.m_floats[2] = v_vertical * ent->character->speed_mult;
     ent->move_type = MOVE_FREE_FALLING;
 
     return 0;
