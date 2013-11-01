@@ -245,6 +245,10 @@ void Character_UpdatePlatformPreStep(struct entity_s *ent)
                 ent->character->platform = ent->character->height_info.edge_obj;
             }
             break;
+            
+        default:
+            ent->character->platform = NULL;
+            break;
     };
     
     
@@ -285,6 +289,10 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
             {
                 ent->character->platform = ent->character->height_info.edge_obj;
             }
+            break;
+            
+        default:
+            ent->character->platform = NULL;
             break;
     };
     

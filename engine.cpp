@@ -15,6 +15,8 @@ extern "C" {
 #include "lua/lualib.h"
 #include "lua/lauxlib.h"
 #include "lua/lstate.h"
+#include "al/AL/al.h"
+#include "al/AL/alc.h"
 }
 
 #include "vt/vt_level.h"
@@ -43,6 +45,7 @@ extern SDL_GLContext           sdl_gl_context;
 extern SDL_GameController     *sdl_controller;
 extern SDL_Joystick           *sdl_joystick;
 extern SDL_Haptic             *sdl_haptic;
+extern ALCdevice              *al_device;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -368,14 +371,25 @@ void Engine_Shutdown(int val)
     SDL_DestroyWindow(sdl_window);
 
     if(sdl_joystick)
+    {
         SDL_JoystickClose(sdl_joystick);
-
+    }
+    
     if(sdl_controller)
+    {
         SDL_GameControllerClose(sdl_controller);
-
+    }
+    
     if(sdl_haptic)
+    {
         SDL_HapticClose(sdl_haptic);
-
+    }
+    
+    if(al_device)
+    {
+        alcCloseDevice(al_device);
+    }
+    
     SDL_Quit();
     //printf("\nSDL_Quit...");
     exit(val);

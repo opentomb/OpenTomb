@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
+#include <SDL2/SDL_audio.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
@@ -28,19 +29,28 @@
 #include "game.h"
 #include "resource.h"
 #include "entity.h"
+#include "audio.h"
 
 #include "vt/vt_level.h"
 #include "bounding_volume.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 
-#define SKELETAL_TEST 0
+extern "C" {
+#include "al/AL/al.h"
+#include "al/AL/alc.h"
+}
+
+#define SKELETAL_TEST   0
+#define TEST_SOUND      0
 
 SDL_Window             *sdl_window     = NULL;
 SDL_Joystick           *sdl_joystick   = NULL;
 SDL_GameController     *sdl_controller = NULL;
 SDL_Haptic             *sdl_haptic     = NULL;
 SDL_GLContext           sdl_gl_context = 0;
+ALCdevice              *al_device      = NULL;
+ALCcontext             *al_context     = NULL;
 
 static int done = 0;
 GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
@@ -337,7 +347,7 @@ void Engine_PrepareOpenGL()
 void Engine_InitSDLControls()
 {
     int    NumJoysticks;
-    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_EVENTS;                    // These flags are used in any case.
+    Uint32 init_flags    = SDL_INIT_VIDEO | /*SDL_INIT_AUDIO |*/ SDL_INIT_EVENTS;                    // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
     {
@@ -406,7 +416,7 @@ void Engine_InitSDLControls()
     }
     else
     {
-        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS /*| SDL_INIT_AUDIO*/);
     }
 }
 
@@ -427,11 +437,40 @@ void Engine_InitSDLVideo()
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 }
 
+void Engine_InitALAudio()
+{
+    al_device = alcOpenDevice(NULL);
+    if (!al_device)
+    {
+        Con_Printf("We have no audio devices");
+    }
+    al_context = alcCreateContext(al_device, NULL);
+    
+    if(!alcMakeContextCurrent(al_context))
+    {
+        Con_Printf("AL context is not current!");
+    }
+}
+
 int SDL_main(int argc, char **argv)
 {
     btScalar      time, newtime;
     static btScalar oldtime = 0.0;
 
+#if TEST_SOUND
+    ALuint al_buffer, al_source;
+    ALfloat al_pos[] = {0.0, 0.0, 0.0};
+    ALfloat al_speed[] = {0.0, 0.0, 0.0};
+    
+
+    // Position of the listener.
+    ALfloat ListenerPos[] = { 0.0, 0.0, 0.0 };
+    // Velocity of the listener.
+    ALfloat ListenerVel[] = { 0.0, 0.0, 0.0 };
+    // Orientation of the listener. (first 3 elements are "at", second 3 are "up")
+    ALfloat ListenerOri[] = { 0.0, 0.0, -1.0,  0.0, 1.0, 0.0 };
+#endif
+    
     Engine_Init();
     Engine_InitGlobals();
     Engine_LoadConfig();
@@ -442,21 +481,38 @@ int SDL_main(int argc, char **argv)
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
     Engine_PrepareOpenGL();
+    Engine_InitALAudio();
+    
     World_Prepare(&engine_world);
     TestGenScene();
 
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
 
+#if TEST_SOUND
+    alGenBuffers(1, &al_buffer);
+    //Audio_LoadALbufferFromWAV(al_buffer, "012_VonCroy11b.wav");
+    Audio_LoadALbufferFromWAV(al_buffer, "012_VonCroy11b.wav");
+    
+    alGenSources(1, &al_source);
+    alSourcei(al_source, AL_BUFFER, al_buffer);
+    alSourcef(al_source, AL_PITCH, 1.0f);
+    alSourcef(al_source, AL_GAIN, 1.0f);
+    alSourcefv(al_source, AL_POSITION, al_pos);
+    alSourcefv(al_source, AL_VELOCITY, al_speed);
+    alSourcei(al_source, AL_LOOPING, 1);
+    
+    alListenerfv(AL_POSITION,    ListenerPos);
+    alListenerfv(AL_VELOCITY,    ListenerVel);
+    alListenerfv(AL_ORIENTATION, ListenerOri);
+    
+    alSourcePlay(al_source);
+#endif
+    
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
-
-    //Con_Printf("LShift = %X, RShift = %X", SDLK_LSHIFT , SDLK_RSHIFT);
-    //Con_Printf("LCTRL = %X, RCTRL = %X", SDLK_LCTRL , SDLK_RCTRL);
-    //Con_Printf("LAlt = %X, RAlt = %X", SDLK_LALT , SDLK_RALT);
-    //Con_Printf("LGui = %X, RGui = %X", SDLK_LGUI , SDLK_RGUI);
-    
+   
     while(!done)
     {
         newtime = Sys_FloatTime();
@@ -464,10 +520,15 @@ int SDL_main(int argc, char **argv)
         oldtime = newtime;
         Engine_Frame(time);
     }
-
+#if TEST_SOUND
+    alDeleteSources(1, &al_source);
+    alDeleteBuffers(1, &al_buffer);
+#endif
+    
     Engine_Shutdown(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
 }
+
 
 void Engine_Display()
 {
