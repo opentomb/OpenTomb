@@ -12,13 +12,14 @@
 #define align(x) //aligned(x)
 #endif
 
-#define AL_ALEXT_PROTOTYPES 1
-#define AL_LIBTYPE_STATIC
-
 //#define HAVE_NANOSLEEP
 #define HAVE_TIME_H 1
 #define HAVE_USLEEP 1 
 #define HAVE_UNISTD_H 1
+
+/* Define if we have the Windows Multimedia backend */
+#define HAVE_SDL 1
+#define HAVE_WINMM 1
 
 /* Define if we have the C11 aligned_alloc function */
 //#cmakedefine HAVE_ALIGNED_ALLOC
@@ -55,9 +56,6 @@
 
 /* Define if we have the DSound backend */
 //#cmakedefine HAVE_DSOUND
-
-/* Define if we have the Windows Multimedia backend */
-#define HAVE_WINMM 1
 
 /* Define if we have the PortAudio backend */
 //#cmakedefine HAVE_PORTAUDIO
