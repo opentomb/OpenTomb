@@ -347,7 +347,7 @@ void Engine_PrepareOpenGL()
 void Engine_InitSDLControls()
 {
     int    NumJoysticks;
-    Uint32 init_flags    = SDL_INIT_VIDEO | /*SDL_INIT_AUDIO |*/ SDL_INIT_EVENTS;                    // These flags are used in any case.
+    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS;                    // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
     {
@@ -416,7 +416,7 @@ void Engine_InitSDLControls()
     }
     else
     {
-        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS /*| SDL_INIT_AUDIO*/);
+        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO);
     }
 }
 

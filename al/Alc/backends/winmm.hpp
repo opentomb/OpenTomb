@@ -33,7 +33,7 @@
 #ifndef WAVE_FORMAT_IEEE_FLOAT
 #define WAVE_FORMAT_IEEE_FLOAT  0x0003
 #endif
-
+ 
 
 typedef struct {
     // MMSYSTEM Device

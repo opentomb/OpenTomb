@@ -81,14 +81,16 @@ static struct BackendInfo BackendList[] = {
 #ifdef HAVE_OPENSL
     { "opensl", alc_opensl_init, alc_opensl_deinit, alc_opensl_probe, EmptyFuncs },
 #endif
-
+#ifdef HAVE_SDL
+    { "SDL", alc_sdl_init, alc_sdl_deinit, alc_sdl_probe, EmptyFuncs },
+#endif
     { "null", alc_null_init, alc_null_deinit, alc_null_probe, EmptyFuncs },
 #ifdef HAVE_WAVE
     { "wave", alc_wave_init, alc_wave_deinit, alc_wave_probe, EmptyFuncs },
 #endif
-
     { NULL, NULL, NULL, NULL, EmptyFuncs }
 };
+
 static struct BackendInfo BackendLoopback = {
     "loopback", alc_loopback_init, alc_loopback_deinit, alc_loopback_probe, EmptyFuncs
 };

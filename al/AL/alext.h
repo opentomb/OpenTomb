@@ -123,9 +123,8 @@ extern "C" {
 #ifndef AL_EXT_STATIC_BUFFER
 #define AL_EXT_STATIC_BUFFER 1
 typedef ALvoid (AL_APIENTRY*PFNALBUFFERDATASTATICPROC)(const ALint,ALenum,ALvoid*,ALsizei,ALsizei);
-#ifdef AL_ALEXT_PROTOTYPES
+
 AL_API ALvoid AL_APIENTRY alBufferDataStatic(const ALint buffer, ALenum format, ALvoid *data, ALsizei len, ALsizei freq);
-#endif
 #endif
 
 #ifndef ALC_EXT_EFX
@@ -142,10 +141,9 @@ AL_API ALvoid AL_APIENTRY alBufferDataStatic(const ALint buffer, ALenum format, 
 #define ALC_EXT_thread_local_context 1
 typedef ALCboolean  (ALC_APIENTRY*PFNALCSETTHREADCONTEXTPROC)(ALCcontext *context);
 typedef ALCcontext* (ALC_APIENTRY*PFNALCGETTHREADCONTEXTPROC)(void);
-#ifdef AL_ALEXT_PROTOTYPES
+
 ALC_API ALCboolean  ALC_APIENTRY alcSetThreadContext(ALCcontext *context);
 ALC_API ALCcontext* ALC_APIENTRY alcGetThreadContext(void);
-#endif
 #endif
 
 #ifndef AL_EXT_source_distance_model
@@ -158,9 +156,8 @@ ALC_API ALCcontext* ALC_APIENTRY alcGetThreadContext(void);
 #define AL_BYTE_RW_OFFSETS_SOFT                  0x1031
 #define AL_SAMPLE_RW_OFFSETS_SOFT                0x1032
 typedef ALvoid (AL_APIENTRY*PFNALBUFFERSUBDATASOFTPROC)(ALuint,ALenum,const ALvoid*,ALsizei,ALsizei);
-#ifdef AL_ALEXT_PROTOTYPES
+
 AL_API ALvoid AL_APIENTRY alBufferSubDataSOFT(ALuint buffer,ALenum format,const ALvoid *data,ALsizei offset,ALsizei length);
-#endif
 #endif
 
 #ifndef AL_SOFT_loop_points
@@ -179,10 +176,9 @@ AL_API ALvoid AL_APIENTRY alBufferSubDataSOFT(ALuint buffer,ALenum format,const 
 typedef void (AL_APIENTRY*LPALFOLDBACKCALLBACK)(ALenum,ALsizei);
 typedef void (AL_APIENTRY*LPALREQUESTFOLDBACKSTART)(ALenum,ALsizei,ALsizei,ALfloat*,LPALFOLDBACKCALLBACK);
 typedef void (AL_APIENTRY*LPALREQUESTFOLDBACKSTOP)(void);
-#ifdef AL_ALEXT_PROTOTYPES
+
 AL_API void AL_APIENTRY alRequestFoldbackStart(ALenum mode,ALsizei count,ALsizei length,ALfloat *mem,LPALFOLDBACKCALLBACK callback);
 AL_API void AL_APIENTRY alRequestFoldbackStop(void);
-#endif
 #endif
 
 #ifndef ALC_EXT_DEDICATED
@@ -248,12 +244,11 @@ typedef void (AL_APIENTRY*LPALBUFFERSAMPLESSOFT)(ALuint,ALuint,ALenum,ALsizei,AL
 typedef void (AL_APIENTRY*LPALBUFFERSUBSAMPLESSOFT)(ALuint,ALsizei,ALsizei,ALenum,ALenum,const ALvoid*);
 typedef void (AL_APIENTRY*LPALGETBUFFERSAMPLESSOFT)(ALuint,ALsizei,ALsizei,ALenum,ALenum,ALvoid*);
 typedef ALboolean (AL_APIENTRY*LPALISBUFFERFORMATSUPPORTEDSOFT)(ALenum);
-#ifdef AL_ALEXT_PROTOTYPES
+
 AL_API void AL_APIENTRY alBufferSamplesSOFT(ALuint buffer, ALuint samplerate, ALenum internalformat, ALsizei samples, ALenum channels, ALenum type, const ALvoid *data);
 AL_API void AL_APIENTRY alBufferSubSamplesSOFT(ALuint buffer, ALsizei offset, ALsizei samples, ALenum channels, ALenum type, const ALvoid *data);
 AL_API void AL_APIENTRY alGetBufferSamplesSOFT(ALuint buffer, ALsizei offset, ALsizei samples, ALenum channels, ALenum type, ALvoid *data);
 AL_API ALboolean AL_APIENTRY alIsBufferFormatSupportedSOFT(ALenum format);
-#endif
 #endif
 
 #ifndef AL_SOFT_direct_channels
@@ -286,11 +281,10 @@ AL_API ALboolean AL_APIENTRY alIsBufferFormatSupportedSOFT(ALenum format);
 typedef ALCdevice* (ALC_APIENTRY*LPALCLOOPBACKOPENDEVICESOFT)(const ALCchar*);
 typedef ALCboolean (ALC_APIENTRY*LPALCISRENDERFORMATSUPPORTEDSOFT)(ALCdevice*,ALCsizei,ALCenum,ALCenum);
 typedef void (ALC_APIENTRY*LPALCRENDERSAMPLESSOFT)(ALCdevice*,ALCvoid*,ALCsizei);
-#ifdef AL_ALEXT_PROTOTYPES
+
 ALC_API ALCdevice* ALC_APIENTRY alcLoopbackOpenDeviceSOFT(const ALCchar *deviceName);
 ALC_API ALCboolean ALC_APIENTRY alcIsRenderFormatSupportedSOFT(ALCdevice *device, ALCsizei freq, ALCenum channels, ALCenum type);
 ALC_API void ALC_APIENTRY alcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples);
-#endif
 #endif
 
 #ifndef AL_EXT_STEREO_ANGLES
@@ -321,7 +315,7 @@ typedef void (AL_APIENTRY*LPALSOURCEI64VSOFT)(ALuint,ALenum,const ALint64SOFT*);
 typedef void (AL_APIENTRY*LPALGETSOURCEI64SOFT)(ALuint,ALenum,ALint64SOFT*);
 typedef void (AL_APIENTRY*LPALGETSOURCE3I64SOFT)(ALuint,ALenum,ALint64SOFT*,ALint64SOFT*,ALint64SOFT*);
 typedef void (AL_APIENTRY*LPALGETSOURCEI64VSOFT)(ALuint,ALenum,ALint64SOFT*);
-#ifdef AL_ALEXT_PROTOTYPES
+
 AL_API void AL_APIENTRY alSourcedSOFT(ALuint source, ALenum param, ALdouble value);
 AL_API void AL_APIENTRY alSource3dSOFT(ALuint source, ALenum param, ALdouble value1, ALdouble value2, ALdouble value3);
 AL_API void AL_APIENTRY alSourcedvSOFT(ALuint source, ALenum param, const ALdouble *values);
@@ -334,7 +328,6 @@ AL_API void AL_APIENTRY alSourcei64vSOFT(ALuint source, ALenum param, const ALin
 AL_API void AL_APIENTRY alGetSourcei64SOFT(ALuint source, ALenum param, ALint64SOFT *value);
 AL_API void AL_APIENTRY alGetSource3i64SOFT(ALuint source, ALenum param, ALint64SOFT *value1, ALint64SOFT *value2, ALint64SOFT *value3);
 AL_API void AL_APIENTRY alGetSourcei64vSOFT(ALuint source, ALenum param, ALint64SOFT *values);
-#endif
 #endif
 
 #ifdef __cplusplus

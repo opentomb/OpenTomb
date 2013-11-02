@@ -241,7 +241,6 @@ typedef void (AL_APIENTRY *LPALGETAUXILIARYEFFECTSLOTIV)(ALuint, ALenum, ALint*)
 typedef void (AL_APIENTRY *LPALGETAUXILIARYEFFECTSLOTF)(ALuint, ALenum, ALfloat*);
 typedef void (AL_APIENTRY *LPALGETAUXILIARYEFFECTSLOTFV)(ALuint, ALenum, ALfloat*);
 
-#ifdef AL_ALEXT_PROTOTYPES
 AL_API ALvoid AL_APIENTRY alGenEffects(ALsizei n, ALuint *effects);
 AL_API ALvoid AL_APIENTRY alDeleteEffects(ALsizei n, const ALuint *effects);
 AL_API ALboolean AL_APIENTRY alIsEffect(ALuint effect);
@@ -277,7 +276,6 @@ AL_API ALvoid AL_APIENTRY alGetAuxiliaryEffectSloti(ALuint effectslot, ALenum pa
 AL_API ALvoid AL_APIENTRY alGetAuxiliaryEffectSlotiv(ALuint effectslot, ALenum param, ALint *piValues);
 AL_API ALvoid AL_APIENTRY alGetAuxiliaryEffectSlotf(ALuint effectslot, ALenum param, ALfloat *pflValue);
 AL_API ALvoid AL_APIENTRY alGetAuxiliaryEffectSlotfv(ALuint effectslot, ALenum param, ALfloat *pflValues);
-#endif
 
 /* Filter ranges and defaults. */
 

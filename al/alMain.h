@@ -20,10 +20,9 @@
 #define AL_DEFERRED_UPDATES_SOFT                 0xC002
 typedef ALvoid (AL_APIENTRY*LPALDEFERUPDATESSOFT)(void);
 typedef ALvoid (AL_APIENTRY*LPALPROCESSUPDATESSOFT)(void);
-#ifdef AL_ALEXT_PROTOTYPES
+
 AL_API ALvoid AL_APIENTRY alDeferUpdatesSOFT(void);
 AL_API ALvoid AL_APIENTRY alProcessUpdatesSOFT(void);
-#endif
 #endif
 
 
@@ -327,45 +326,15 @@ struct BackendInfo {
     BackendFuncs Funcs;
 };
 
-ALCboolean alc_alsa_init(BackendFuncs *func_list);
-void alc_alsa_deinit(void);
-void alc_alsa_probe(enum DevProbe type);
-ALCboolean alc_oss_init(BackendFuncs *func_list);
-void alc_oss_deinit(void);
-void alc_oss_probe(enum DevProbe type);
-ALCboolean alc_solaris_init(BackendFuncs *func_list);
-void alc_solaris_deinit(void);
-void alc_solaris_probe(enum DevProbe type);
-ALCboolean alc_sndio_init(BackendFuncs *func_list);
-void alc_sndio_deinit(void);
-void alc_sndio_probe(enum DevProbe type);
-ALCboolean alcMMDevApiInit(BackendFuncs *func_list);
-void alcMMDevApiDeinit(void);
-void alcMMDevApiProbe(enum DevProbe type);
-ALCboolean alcDSoundInit(BackendFuncs *func_list);
-void alcDSoundDeinit(void);
-void alcDSoundProbe(enum DevProbe type);
+ALCboolean alc_sdl_init(BackendFuncs *func_list);
+void alc_sdl_deinit(void);
+void alc_sdl_probe(enum DevProbe type);
 ALCboolean alcWinMMInit(BackendFuncs *FuncList);
 void alcWinMMDeinit(void);
 void alcWinMMProbe(enum DevProbe type);
-ALCboolean alc_pa_init(BackendFuncs *func_list);
-void alc_pa_deinit(void);
-void alc_pa_probe(enum DevProbe type);
 ALCboolean alc_wave_init(BackendFuncs *func_list);
 void alc_wave_deinit(void);
 void alc_wave_probe(enum DevProbe type);
-ALCboolean alc_pulse_init(BackendFuncs *func_list);
-void alc_pulse_deinit(void);
-void alc_pulse_probe(enum DevProbe type);
-ALCboolean alc_ca_init(BackendFuncs *func_list);
-void alc_ca_deinit(void);
-void alc_ca_probe(enum DevProbe type);
-ALCboolean alc_opensl_init(BackendFuncs *func_list);
-void alc_opensl_deinit(void);
-void alc_opensl_probe(enum DevProbe type);
-ALCboolean alc_qsa_init(BackendFuncs *func_list);
-void alc_qsa_deinit(void);
-void alc_qsa_probe(enum DevProbe type);
 ALCboolean alc_null_init(BackendFuncs *func_list);
 void alc_null_deinit(void);
 void alc_null_probe(enum DevProbe type);
