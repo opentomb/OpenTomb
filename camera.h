@@ -10,14 +10,15 @@ struct frustum_s;
 
 typedef struct camera_s
 {
-    btScalar                    pos[3];                                         // положение камеры
-    btScalar                    view_dir[4];                                    // вектор направления камеры
-    btScalar                    up_dir[4];                                      // вектор направления вверх
-    btScalar                    right_dir[4];                                   // вектор направления вбок
-    btScalar                    ang[3];                                         // ориентация камеры
+    btScalar                    pos[3];                                         // camera position
+    btScalar                    prev_pos[3];                                    // previous camera position
+    btScalar                    view_dir[4];                                    // view cameradirection
+    btScalar                    up_dir[4];                                      // up vector
+    btScalar                    right_dir[4];                                   // strafe vector
+    btScalar                    ang[3];                                         // camera orientation
     
-    btScalar                    clip_planes[16];                                // плоскости отсечения фрустума
-    struct frustum_s            *frustum;                                       // указатель
+    btScalar                    clip_planes[16];                                // frustum side clip planes
+    struct frustum_s            *frustum;                                       // camera frustum structure
     
     btScalar                    dist_near;
     btScalar                    dist_far;
@@ -30,14 +31,14 @@ typedef struct camera_s
     struct room_s               *current_room;
 }camera_t, *camera_p;
 
-void Cam_Init(camera_p cam);                                                    // сброс параметров + пересчет клиппланов
-void Cam_Apply(camera_p cam);                                                   // применение камеры к пространству OpenGL
+void Cam_Init(camera_p cam);                                                    // set default camera parameters + frustum initialization
+void Cam_Apply(camera_p cam);                                                   // set OpenGL projection matrix + model wiev matrix
 void Cam_SetFovAspect(camera_p cam, btScalar fov, btScalar aspect);
 void Cam_MoveAlong(camera_p cam, btScalar dist);
 void Cam_MoveStrafe(camera_p cam, btScalar dist);
 void Cam_MoveVertical(camera_p cam, btScalar dist);
-void Cam_DeltaRotation(camera_p cam, btScalar angles[3]);                         // поворот из текущего состояния на углы из массива angles
-void Cam_SetRotation(camera_p cam, btScalar angles[3]);                           // задание начальной ориентации
-void Cam_RecalcClipPlanes(camera_p cam);                                        // пересчет плоскостей отсечения
+void Cam_DeltaRotation(camera_p cam, btScalar angles[3]);                       // rotate camera around current camera coordinate system
+void Cam_SetRotation(camera_p cam, btScalar angles[3]);                         // set orientation by angles
+void Cam_RecalcClipPlanes(camera_p cam);                                        // recalculation of camera frustum clipplanes 
 
 #endif
