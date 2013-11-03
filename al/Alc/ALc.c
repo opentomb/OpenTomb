@@ -45,44 +45,8 @@
  ************************************************/
 #define EmptyFuncs { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 static struct BackendInfo BackendList[] = {
-#ifdef HAVE_PULSEAUDIO
-    { "pulse", alc_pulse_init, alc_pulse_deinit, alc_pulse_probe, EmptyFuncs },
-#endif
-#ifdef HAVE_ALSA
-    { "alsa", alc_alsa_init, alc_alsa_deinit, alc_alsa_probe, EmptyFuncs },
-#endif
-#ifdef HAVE_COREAUDIO
-    { "core", alc_ca_init, alc_ca_deinit, alc_ca_probe, EmptyFuncs },
-#endif
-#ifdef HAVE_OSS
-    { "oss", alc_oss_init, alc_oss_deinit, alc_oss_probe, EmptyFuncs },
-#endif
-#ifdef HAVE_SOLARIS
-    { "solaris", alc_solaris_init, alc_solaris_deinit, alc_solaris_probe, EmptyFuncs },
-#endif
-#ifdef HAVE_SNDIO
-    { "sndio", alc_sndio_init, alc_sndio_deinit, alc_sndio_probe, EmptyFuncs },
-#endif
-#ifdef HAVE_QSA
-    { "qsa", alc_qsa_init, alc_qsa_deinit, alc_qsa_probe, EmptyFuncs },
-#endif
-#ifdef HAVE_MMDEVAPI
-    { "mmdevapi", alcMMDevApiInit, alcMMDevApiDeinit, alcMMDevApiProbe, EmptyFuncs },
-#endif
-#ifdef HAVE_DSOUND
-    { "dsound", alcDSoundInit, alcDSoundDeinit, alcDSoundProbe, EmptyFuncs },
-#endif
-#ifdef HAVE_WINMM
-    { "winmm", alcWinMMInit, alcWinMMDeinit, alcWinMMProbe, EmptyFuncs },
-#endif
-#ifdef HAVE_PORTAUDIO
-    { "port", alc_pa_init, alc_pa_deinit, alc_pa_probe, EmptyFuncs },
-#endif
-#ifdef HAVE_OPENSL
-    { "opensl", alc_opensl_init, alc_opensl_deinit, alc_opensl_probe, EmptyFuncs },
-#endif
 #ifdef HAVE_SDL
-    { "SDL", alc_sdl_init, alc_sdl_deinit, alc_sdl_probe, EmptyFuncs },
+    { "sdl", alc_sdl_init, alc_sdl_deinit, alc_sdl_probe, EmptyFuncs },
 #endif
     { "null", alc_null_init, alc_null_deinit, alc_null_probe, EmptyFuncs },
 #ifdef HAVE_WAVE
@@ -945,6 +909,7 @@ static void alc_initconfig(void)
         }
     }
 
+    // take the first working backend...
     for(i = 0;BackendList[i].Init && (!PlaybackBackend.name || !CaptureBackend.name);i++)
     {
         if(!BackendList[i].Init(&BackendList[i].Funcs))
@@ -2651,8 +2616,10 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     }
 
     if(deviceName && (!deviceName[0] || strcasecmp(deviceName, alcDefaultName) == 0 || strcasecmp(deviceName, "openal-soft") == 0))
+    {
         deviceName = NULL;
-
+    }
+    
     device = al_calloc(16, sizeof(ALCdevice)+15+sizeof(ALeffectslot));
     if(!device)
     {

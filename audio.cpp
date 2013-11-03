@@ -8,7 +8,12 @@ extern "C" {
 
 #include "audio.h"
 #include "console.h"
+#include "camera.h"
+#include "vmath.h"
+#include "entity.h"
+#include "character_controller.h"
 
+#define DISTANCE_COEFFICIENT (0.005)                                            ///@FIXME: tune it!!!
 
 int Audio_LoadALbufferFromWAV(ALuint buf, const char *fname)
 {
@@ -67,4 +72,36 @@ int Audio_LoadALbufferFromWAV(ALuint buf, const char *fname)
     return ret;
 }
 
+void Audio_UpdateListenerByCamera(struct camera_s *cam)
+{
+    ALfloat v[6];       // vec3 - forvard, vec3 - up
+    
+    vec3_mul_scalar(v+0, cam->view_dir, DISTANCE_COEFFICIENT);
+    vec3_mul_scalar(v+3, cam->up_dir, DISTANCE_COEFFICIENT);
+    alListenerfv(AL_ORIENTATION, v);
+    
+    vec3_mul_scalar(v, cam->pos, DISTANCE_COEFFICIENT);
+    alListenerfv(AL_POSITION, v);
+    //alListenerfv(AL_VELOCITY, v);
+}
 
+void Audio_UpdateSource(audio_source_p src)
+{
+    ALfloat v[3];
+    alSourcef(src->al_source, AL_PITCH, src->al_pitch);
+    alSourcef(src->al_source, AL_GAIN, src->al_gain);
+    vec3_mul_scalar(v, src->position, DISTANCE_COEFFICIENT);
+    alSourcefv(src->al_source, AL_POSITION, v);
+    vec3_mul_scalar(v, src->velocity, DISTANCE_COEFFICIENT);
+    alSourcefv(src->al_source, AL_VELOCITY, v);
+    alSourcei(src->al_source, AL_LOOPING, src->al_loop);
+}
+
+void Audio_FillSourceByEntity(audio_source_p src, struct entity_s *ent)
+{
+    vec3_copy(src->position, ent->transform + 12);
+    if(ent->character)
+    {
+        vec3_copy(src->velocity, ent->character->speed.m_floats);
+    }
+}

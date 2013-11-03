@@ -42,7 +42,7 @@ extern "C" {
 }
 
 #define SKELETAL_TEST   0
-#define TEST_SOUND      0
+#define TEST_SOUND      1
 
 SDL_Window             *sdl_window     = NULL;
 SDL_Joystick           *sdl_joystick   = NULL;
@@ -57,6 +57,8 @@ GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 GLfloat hang_offset_point[3] = {0.0, 0.0, 0.0};
+
+audio_source_s  snd_test;
 
 static int model = 0;
 static int mesh = 0;
@@ -282,7 +284,7 @@ void TestGenScene()
 {
     if(!Engine_LoadMap(CVAR_get_val_s("game_level")))
     {
-        CVAR_set_val_d("free_look", 1.0);
+        control_states.free_look = 1;
     }
 
     dbgSphere = gluNewQuadric();
@@ -456,19 +458,12 @@ int SDL_main(int argc, char **argv)
 {
     btScalar      time, newtime;
     static btScalar oldtime = 0.0;
-
 #if TEST_SOUND
-    ALuint al_buffer, al_source;
-    ALfloat al_pos[] = {0.0, 0.0, 0.0};
-    ALfloat al_speed[] = {0.0, 0.0, 0.0};
-    
-
-    // Position of the listener.
-    ALfloat ListenerPos[] = { 0.0, 0.0, 0.0 };
-    // Velocity of the listener.
-    ALfloat ListenerVel[] = { 0.0, 0.0, 0.0 };
-    // Orientation of the listener. (first 3 elements are "at", second 3 are "up")
-    ALfloat ListenerOri[] = { 0.0, 0.0, -1.0,  0.0, 1.0, 0.0 };
+    snd_test.al_gain = 1.0f;                                                    // volume level
+    snd_test.al_pitch = 1.0f;                                                   // playing speed
+    vec3_set_zero(snd_test.velocity);
+    vec3_set_zero(snd_test.position);
+    snd_test.al_loop = 1;
 #endif
     
     Engine_Init();
@@ -489,24 +484,15 @@ int SDL_main(int argc, char **argv)
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
 
-#if TEST_SOUND
-    alGenBuffers(1, &al_buffer);
+#if TEST_SOUND    
+    alGenBuffers(1, &snd_test.al_buf);
     //Audio_LoadALbufferFromWAV(al_buffer, "012_VonCroy11b.wav");
-    Audio_LoadALbufferFromWAV(al_buffer, "012_VonCroy11b.wav");
+    Audio_LoadALbufferFromWAV(snd_test.al_buf, "sample.wav");                   // for working effects audio must be mono (1 channel).
     
-    alGenSources(1, &al_source);
-    alSourcei(al_source, AL_BUFFER, al_buffer);
-    alSourcef(al_source, AL_PITCH, 1.0f);
-    alSourcef(al_source, AL_GAIN, 1.0f);
-    alSourcefv(al_source, AL_POSITION, al_pos);
-    alSourcefv(al_source, AL_VELOCITY, al_speed);
-    alSourcei(al_source, AL_LOOPING, 1);
-    
-    alListenerfv(AL_POSITION,    ListenerPos);
-    alListenerfv(AL_VELOCITY,    ListenerVel);
-    alListenerfv(AL_ORIENTATION, ListenerOri);
-    
-    alSourcePlay(al_source);
+    alGenSources(1, &snd_test.al_source);
+    alSourcei(snd_test.al_source, AL_BUFFER, snd_test.al_buf);    
+
+    alSourcePlay(snd_test.al_source);
 #endif
     
 #if SKELETAL_TEST
@@ -519,10 +505,17 @@ int SDL_main(int argc, char **argv)
         time = newtime - oldtime;
         oldtime = newtime;
         Engine_Frame(time);
+        
+        Audio_UpdateListenerByCamera(renderer.cam);
+        if(engine_world.Lara)
+        {
+            Audio_FillSourceByEntity(&snd_test, engine_world.Lara);
+            Audio_UpdateSource(&snd_test);
+        }
     }
 #if TEST_SOUND
-    alDeleteSources(1, &al_source);
-    alDeleteBuffers(1, &al_buffer);
+    alDeleteSources(1, &snd_test.al_source);
+    alDeleteBuffers(1, &snd_test.al_buf);
 #endif
     
     Engine_Shutdown(EXIT_SUCCESS);

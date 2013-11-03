@@ -30,10 +30,6 @@ extern "C" {
 #include "character_controller.h"
 
 
-//static cvar_t free_look_speed;
-//static cvar_t fly_rotate_speed_mult;
-//static cvar_t fly_move_speed_mult;
-
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
 extern lua_State *engine_lua;
 

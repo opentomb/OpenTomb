@@ -710,7 +710,7 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "goto"))
         {
-            CVAR_set_val_d("free_look", 1.0);
+            control_states.free_look = 1;
             renderer.cam->pos[0] = SC_ParseFloat(&ch);
             renderer.cam->pos[1] = SC_ParseFloat(&ch);
             renderer.cam->pos[2] = SC_ParseFloat(&ch);
