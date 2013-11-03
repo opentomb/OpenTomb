@@ -19,7 +19,7 @@
 
 /* Define if we have the Windows Multimedia backend */
 #define HAVE_SDL 1
-#define HAVE_WINMM 1
+#define HAVE_WINMM 0
 
 /* Define if we have the C11 aligned_alloc function */
 //#cmakedefine HAVE_ALIGNED_ALLOC
@@ -35,39 +35,6 @@
 
 /* Define if we have ARM Neon CPU extensions */
 //#cmakedefine HAVE_NEON
-
-/* Define if we have the ALSA backend */
-//#cmakedefine HAVE_ALSA
-
-/* Define if we have the OSS backend */
-//#cmakedefine HAVE_OSS
-
-/* Define if we have the Solaris backend */
-//#cmakedefine HAVE_SOLARIS
-
-/* Define if we have the SndIO backend */
-//#cmakedefine HAVE_SNDIO
-
-/* Define if we have the QSA backend */
-//#cmakedefine HAVE_QSA
-
-/* Define if we have the MMDevApi backend */
-//#cmakedefine HAVE_MMDEVAPI
-
-/* Define if we have the DSound backend */
-//#cmakedefine HAVE_DSOUND
-
-/* Define if we have the PortAudio backend */
-//#cmakedefine HAVE_PORTAUDIO
-
-/* Define if we have the PulseAudio backend */
-//#cmakedefine HAVE_PULSEAUDIO
-
-/* Define if we have the CoreAudio backend */
-//#cmakedefine HAVE_COREAUDIO
-
-/* Define if we have the OpenSL backend */
-//#cmakedefine HAVE_OPENSL
 
 /* Define if we have the Wave Writer backend */
 #define HAVE_WAVE 1
