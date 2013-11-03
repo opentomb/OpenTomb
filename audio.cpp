@@ -4,6 +4,7 @@
 extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
+#include "al/AL/alext.h"
 }
 
 #include "audio.h"
@@ -13,21 +14,29 @@ extern "C" {
 #include "entity.h"
 #include "character_controller.h"
 
-#define DISTANCE_COEFFICIENT (0.005)                                            ///@FIXME: tune it!!!
 
 int Audio_LoadALbufferFromWAV(ALuint buf, const char *fname)
 {
     SDL_AudioSpec wav_spec;
+    SDL_RWops *file;
     Uint8 *wav_buffer;
     Uint32 wav_length;
     int ret = 0;
     
-    if(SDL_LoadWAV_RW(SDL_RWFromFile(fname, "rb"), 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
+    file = SDL_RWFromFile(fname, "rb");
+    if(!file)
     {
         Con_Printf("Error: can not open \"%s\"", fname);
         return -1;
     }
-
+    if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
+    {
+        Con_Printf("Error: bad file format \"%s\"", fname);
+        SDL_FreeRW(file);
+        return -1;
+    }
+    SDL_FreeRW(file);
+    
     switch(wav_spec.format & 0x00FF)
     {
         case 8:
@@ -72,17 +81,27 @@ int Audio_LoadALbufferFromWAV(ALuint buf, const char *fname)
     return ret;
 }
 
+/**
+ * Updates listener parameters by camera structure. Forcorrect speed calculation
+ * that function have to be called every game frame.
+ * @param cam - pointer to the camera structure.
+ */
 void Audio_UpdateListenerByCamera(struct camera_s *cam)
 {
     ALfloat v[6];       // vec3 - forvard, vec3 - up
     
-    vec3_mul_scalar(v+0, cam->view_dir, DISTANCE_COEFFICIENT);
-    vec3_mul_scalar(v+3, cam->up_dir, DISTANCE_COEFFICIENT);
+    vec3_copy(v+0, cam->view_dir);
+    vec3_copy(v+3, cam->up_dir);
     alListenerfv(AL_ORIENTATION, v);
     
-    vec3_mul_scalar(v, cam->pos, DISTANCE_COEFFICIENT);
+    vec3_copy(v, cam->pos);
     alListenerfv(AL_POSITION, v);
-    //alListenerfv(AL_VELOCITY, v);
+    
+    vec3_sub(v, cam->pos, cam->prev_pos);
+    v[3] = 1.0 / engine_frame_time;
+    vec3_mul_scalar(v, v, v[3]);
+    alListenerfv(AL_VELOCITY, v);
+    vec3_copy(cam->prev_pos, cam->pos);
 }
 
 void Audio_UpdateSource(audio_source_p src)
@@ -90,9 +109,9 @@ void Audio_UpdateSource(audio_source_p src)
     ALfloat v[3];
     alSourcef(src->al_source, AL_PITCH, src->al_pitch);
     alSourcef(src->al_source, AL_GAIN, src->al_gain);
-    vec3_mul_scalar(v, src->position, DISTANCE_COEFFICIENT);
+    vec3_copy(v, src->position);
     alSourcefv(src->al_source, AL_POSITION, v);
-    vec3_mul_scalar(v, src->velocity, DISTANCE_COEFFICIENT);
+    vec3_copy(v, src->velocity);
     alSourcefv(src->al_source, AL_VELOCITY, v);
     alSourcei(src->al_source, AL_LOOPING, src->al_loop);
 }

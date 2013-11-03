@@ -39,6 +39,7 @@
 extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
+#include "al/AL/alext.h"
 }
 
 #define SKELETAL_TEST   0
@@ -101,7 +102,6 @@ entity_p                last_rmb = NULL;
  *      - enemies AI
  *      - end level -> next level
  * 42) sound
- *      - add OpenAL lib
  *      - loading TR's sounds format
  */
 
@@ -452,6 +452,10 @@ void Engine_InitALAudio()
     {
         Con_Printf("AL context is not current!");
     }
+    
+    //alListenerf(AL_METERS_PER_UNIT, 1.0 / 512.0);
+    alSpeedOfSound(330.0 * 512.0);
+    alDopplerVelocity(330.0 * 510.0);
 }
 
 int SDL_main(int argc, char **argv)
@@ -459,7 +463,7 @@ int SDL_main(int argc, char **argv)
     btScalar      time, newtime;
     static btScalar oldtime = 0.0;
 #if TEST_SOUND
-    snd_test.al_gain = 1.0f;                                                    // volume level
+    snd_test.al_gain = 0.6f;                                                    // volume attenuation parameter
     snd_test.al_pitch = 1.0f;                                                   // playing speed
     vec3_set_zero(snd_test.velocity);
     vec3_set_zero(snd_test.position);
@@ -486,12 +490,12 @@ int SDL_main(int argc, char **argv)
 
 #if TEST_SOUND    
     alGenBuffers(1, &snd_test.al_buf);
-    //Audio_LoadALbufferFromWAV(al_buffer, "012_VonCroy11b.wav");
+    //Audio_LoadALbufferFromWAV(snd_test.al_buf, "012_VonCroy11b.wav");
     Audio_LoadALbufferFromWAV(snd_test.al_buf, "sample.wav");                   // for working effects audio must be mono (1 channel).
     
     alGenSources(1, &snd_test.al_source);
     alSourcei(snd_test.al_source, AL_BUFFER, snd_test.al_buf);    
-
+    alSourcei(snd_test.al_source, AL_REFERENCE_DISTANCE, 64.0);                 // distance, where sound amplitude *= 0.5
     alSourcePlay(snd_test.al_source);
 #endif
     

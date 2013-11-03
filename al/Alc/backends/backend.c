@@ -17,10 +17,10 @@
 #include <SDL2/SDL_audio.h>
 #include <SDL2/SDL_platform.h>
  /**
-  * Great thanks for SDL backend code!!! Taken from that page:
+  * Great thanks for base SDL backend code!!! Taken from that page:
   * http://openal.996291.n3.nabble.com/PATCH-SDL-1-2-backend-for-OpenAL-Soft-td5390.html
-  * But it does not works with current OpenAL version 1.15.1
-  * @FIXME: fix that backend!!!
+  * Code was modificated for OpenAL version 1.15.1
+  * @FIXME: add capture functions implementation
   */
             
 static const ALCchar sdl_device[] = "Simple Directmedia Layer";
@@ -51,8 +51,6 @@ static void sdl_close_playback(ALCdevice *device)
 
 static ALCboolean sdl_reset_playback(ALCdevice *device)
 {
-    //memset(&sdl_audio_spec, 0x00, sizeof(SDL_AudioSpec));
-
     if(SDL_WasInit(SDL_INIT_AUDIO))
     {
         SDL_PauseAudio(1);
@@ -91,7 +89,7 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
             sdl_audio_spec.format = AUDIO_S32LSB;
             break;
             
-        case DevFmtUInt:
+        case DevFmtUInt:                                                        ///@FIXME: that format not used?
             sdl_audio_spec.format = AUDIO_S32LSB;
             break;
 
@@ -127,6 +125,7 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
 
 ALCboolean sdl_start_playback(ALCdevice *device)
 {
+    (void) device;
     SDL_PauseAudio(0);
     return ALC_TRUE;
 }
@@ -137,40 +136,26 @@ static void sdl_stop_playback(ALCdevice *device)
     SDL_PauseAudio(1);
 }
 
-static void sdl_warn_nocapture(void)
-{
-    static int warned = 0;
-    if(!warned)
-    {
-        //AL_PRINT("No OpenAL capture support in the SDL backend at this time.\n");
-        warned = 1;
-    }
-}
-
 static ALCenum sdl_open_capture(ALCdevice *device, const ALCchar *deviceName)
 {
     (void) device;
     (void) deviceName;
-    sdl_warn_nocapture();
     return ALC_FALSE;
 }
 
 static void sdl_close_capture(ALCdevice *device)
 {
     (void) device;
-    sdl_warn_nocapture();
 }
 
 static void sdl_start_capture(ALCdevice *pDevice)
 {
     (void) pDevice;
-    sdl_warn_nocapture();
 }
 
 static void sdl_stop_capture(ALCdevice *pDevice)
 {
     (void) pDevice;
-    sdl_warn_nocapture();
 }
 
 static ALCenum sdl_capture_samples(ALCdevice *pDevice, ALCvoid *pBuffer, ALCuint lSamples)
@@ -178,14 +163,14 @@ static ALCenum sdl_capture_samples(ALCdevice *pDevice, ALCvoid *pBuffer, ALCuint
     (void) pDevice;
     (void) pBuffer;
     (void) lSamples;
-    sdl_warn_nocapture();
+
     return ALC_NO_ERROR;
 }
 
 static ALCuint sdl_available_samples(ALCdevice *pDevice)
 {
     (void) pDevice;
-    sdl_warn_nocapture();
+    //sdl_warn_nocapture();
     return 0;
 }
 

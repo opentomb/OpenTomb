@@ -35,6 +35,10 @@ void Cam_Init(camera_p cam)
     cam->pos[1] = 0.0;
     cam->pos[2] = 0.0;
     
+    cam->prev_pos[0] = 0.0;
+    cam->prev_pos[1] = 0.0;
+    cam->prev_pos[2] = 0.0;
+    
     cam->view_dir[0] = 0.0;                                                     // OZ - view
     cam->view_dir[1] = 0.0;
     cam->view_dir[2] = 1.0;
