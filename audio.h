@@ -9,6 +9,13 @@ extern "C" {
 struct camera_s;
 struct entity_s;
 
+typedef struct audio_sample_s
+{
+    int32_t     id;
+    ALuint      al_buf;
+    ///********
+}audio_sample_t, *audio_sample_p;
+
 typedef struct audio_source_s
 {
     ALfloat     position[3];

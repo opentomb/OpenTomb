@@ -20,6 +20,7 @@ struct static_mesh_s;
 struct entity_s;
 struct skeletal_model_s;
 struct render_object_list_s;
+struct audio_sample_s;
 
 typedef struct room_box_s
 {
@@ -37,14 +38,14 @@ typedef struct room_sector_s
     int32_t                     floor;
     int32_t                     ceiling;   
     
-    uint16_t                    fd_index;
-    int8_t                      fd_kill;
-    int8_t                      fd_secret;
-    int16_t                     fd_end_level;
+    uint16_t                    fd_index;                                       // offset to the floor data
+    int8_t                      fd_kill;                                        ///@FIXME: temp, delete this field
+    int8_t                      fd_secret;                                      ///@FIXME: temp, delete this field
+    int16_t                     fd_end_level;                                   ///@FIXME: temp, delete this field
 
-    struct room_sector_s        *sector_below;                                  // сектор снизу
-    struct room_sector_s        *sector_above;                                  // сектор сверху
-    struct room_s               *owner_room;                                    // комната с этой ячейкой
+    struct room_sector_s        *sector_below;
+    struct room_sector_s        *sector_above;
+    struct room_s               *owner_room;                                    // room htat contain this sector
 
     int16_t                     index_x;
     int16_t                     index_y;
@@ -65,7 +66,7 @@ typedef struct room_s
 {
     uint32_t                    ID;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
-    int8_t                      is_in_r_list;                                   // находится ли комната в рендер листе
+    int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      hide;                                           // do not render
     struct base_mesh_s         *mesh;                                           // room's base mesh
     
@@ -74,27 +75,27 @@ typedef struct room_s
     uint32_t                    sprites_count;
     struct room_sprite_s       *sprites;
     
-    struct engine_container_s  *containers;                                     // контейнеры с "перемещаемыми" оъектами
+    struct engine_container_s  *containers;                                     // engine containers with moveables objects
     
-    btScalar                    bb_min[3];                                      // Ограничивающий объем
-    btScalar                    bb_max[3];                                      // Ограничивающий объем
+    btScalar                    bb_min[3];                                      // room's bounding box
+    btScalar                    bb_max[3];                                      // room's bounding box
     btScalar                    transform[16];                                  // 
     
-    uint16_t                    portal_count;                                   // количество порталов
-    struct portal_s            *portals;                                        // соединительные порталы
+    uint16_t                    portal_count;                                   // number of room portals
+    struct portal_s            *portals;                                        // room portals array
        
-    int8_t                      use_alternate;                                  // определяет - использовать ли альтернативную комнату
-    struct room_s              *alternate_room;                                 // указатель на альтернативную комнату.
+    int8_t                      use_alternate;                                  // flag: alternative room switch control
+    struct room_s              *alternate_room;                                 // alternative room pointer
     
     uint32_t                    sectors_count;
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;
     struct room_sector_s       *sectors;
     
-    uint16_t                    active_frustums;                                // количество активных фрустумовдля данной комнаты
-    struct frustum_s           *frustum;                                        // структура фрустума изначально содержится в комнате
+    uint16_t                    active_frustums;                                // current number of this room active frustums
+    struct frustum_s           *frustum;
     struct frustum_s           *last_frustum; 
-    uint16_t                    max_path;                                       // максимальная удаленность комнаты от камеры по количеству пересеченных порталов
+    uint16_t                    max_path;                                       // maximum number of portals from camera to this room
     
     uint16_t                    near_room_list_size;
     struct room_s               *near_room_list[64];
@@ -114,25 +115,25 @@ typedef struct world_s
     uint32_t                    room_box_count;
     struct room_box_s          *room_boxes;
     
-    uint32_t                    tex_count;                                      // количество текстур
-    GLuint                     *textures;                                       // индексы текстур GL
-    uint32_t                    special_tex_count;                              // количество спец текстур
-    GLuint                     *special_textures;                               // индексы спец текстур GL
+    uint32_t                    tex_count;                                      // cumber of textures
+    GLuint                     *textures;                                       // OpenGL textures indexes
+    uint32_t                    special_tex_count;                              // numberofspecial textures -- not used?
+    GLuint                     *special_textures;                               // OpenGL textures indexes
     
-    uint32_t                    meshs_count;                                    // количество базовых мешей
-    struct base_mesh_s         *meshes;                                         // массив базовых мешей
+    uint32_t                    meshs_count;                                    // Base meshs count
+    struct base_mesh_s         *meshes;                                         // Base meshs data
     
-    uint32_t                    sprites_count;                                  // количество базовых спрайтов
-    struct sprite_s            *sprites;                                        // базовые спрайты
+    uint32_t                    sprites_count;                                  // Base sprites count
+    struct sprite_s            *sprites;                                        // Base sprites data
     
-    uint32_t                    skeletal_model_count;                           // количество базовых скелетных моделей
-    struct skeletal_model_s    *skeletal_models;                                // массив базовых скелетных моделей
+    uint32_t                    skeletal_model_count;                           // number of base skeletal models
+    struct skeletal_model_s    *skeletal_models;                                // base skeletal models data
     
-    struct entity_s            *Lara;                                           // это Лара. она не принадлежит ни одному руму.  
-    struct skeletal_model_s    *sky_box;                                        // это глобальный скайбокс %)
+    struct entity_s            *Lara;                                           // this is an unical Lara pointer =)  
+    struct skeletal_model_s    *sky_box;                                        // global skybox
     
     uint32_t                    entity_count;
-    struct entity_s            *entity_list;                                    // список активных моделей мира
+    struct entity_s            *entity_list;                                    // list of world active objects
     
     uint32_t                    type; 
     
@@ -141,6 +142,10 @@ typedef struct world_s
     
     int16_t                    *anim_commands;
     uint32_t                    anim_commands_count;
+    
+    struct audio_sample_s      *samples;                                        // TR samples ID's <=> OpenAL buffers indexes table
+    int16_t                     samples_count;
+    ///@FIXME: add code to the world_prepare + world destroy methods
 }world_t, *world_p;
 
 void World_Prepare(world_p world);

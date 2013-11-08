@@ -34,9 +34,6 @@
 #ifdef HAVE_FLOAT_H
 #include <float.h>
 #endif
-#ifdef HAVE_IEEEFP_H
-#include <ieeefp.h>
-#endif
 
 #include "../alMain.h"
 

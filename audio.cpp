@@ -37,7 +37,7 @@ int Audio_LoadALbufferFromWAV(ALuint buf, const char *fname)
     }
     SDL_FreeRW(file);
     
-    switch(wav_spec.format & 0x00FF)
+    switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
     {
         case 8:
             if(wav_spec.channels == 1)                                          // mono
