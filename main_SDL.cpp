@@ -441,16 +441,21 @@ void Engine_InitSDLVideo()
 
 void Engine_InitALAudio()
 {
+    const char *drv = SDL_GetCurrentAudioDriver();
+    
+    Con_Printf("Current audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
-        Con_Printf("We have no audio devices");
+        Con_Printf("We have no AL audio devices");
+        return;
     }
     al_context = alcCreateContext(al_device, NULL);
     
     if(!alcMakeContextCurrent(al_context))
     {
         Con_Printf("AL context is not current!");
+        return;
     }
     
     //alListenerf(AL_METERS_PER_UNIT, 1.0 / 512.0);
@@ -491,7 +496,7 @@ int SDL_main(int argc, char **argv)
 #if TEST_SOUND    
     alGenBuffers(1, &snd_test.al_buf);
     //Audio_LoadALbufferFromWAV(snd_test.al_buf, "012_VonCroy11b.wav");
-    Audio_LoadALbufferFromWAV(snd_test.al_buf, "sample.wav");                   // for working effects audio must be mono (1 channel).
+    Audio_LoadALbufferFromWAV(snd_test.al_buf, "snd/sample.wav");         // for working effects audio must be mono (1 channel).
     
     alGenSources(1, &snd_test.al_source);
     alSourcei(snd_test.al_source, AL_BUFFER, snd_test.al_buf);    
