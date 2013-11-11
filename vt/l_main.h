@@ -74,12 +74,13 @@ class TR_Level {
             
             this->demo_data_count = 0;          // destroyed
             this->demo_data = NULL;             // destroyed
+            this->soundmap = NULL;              // destroyed
             this->sound_details_count = 0;      // destroyed
             this->sound_details = NULL;         // destroyed
-            this->samples_count = 0;            // destroyed
-            this->samples = NULL;               // destroyed
             this->sample_indices_count = 0;     // destroyed
             this->sample_indices = NULL;        // destroyed
+            this->samples_count = 0;            // destroyed
+            this->samples = NULL;               // destroyed
 
             this->frame_data_size = 0;          // destroyed
             this->frame_data = NULL;            // destroyed
@@ -281,6 +282,12 @@ class TR_Level {
                 this->demo_data_count = 0; 
                 free(this->demo_data); 
                 this->demo_data = NULL; 
+            }
+            
+            if(this->soundmap)
+            {
+                free(this->soundmap);
+                this->soundmap = NULL;
             }
 
             if(this->sound_details_count)
@@ -507,7 +514,7 @@ class TR_Level {
         tr_cinematic_frame_t *cinematic_frames;	///< \brief cinematic frames (TR1-3).
         uint32_t demo_data_count;
 	uint8_t *demo_data;	///< \brief demo data.
-	int16_t soundmap[450];	///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
+	int16_t *soundmap;	///< \brief soundmap (TR: 256 values TR2-4: 370 values TR5: 450 values).
 	uint32_t sound_details_count;
         tr_sound_details_t *sound_details;	///< \brief sound details.
 	uint32_t samples_count;

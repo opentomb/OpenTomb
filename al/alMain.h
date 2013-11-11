@@ -329,9 +329,6 @@ struct BackendInfo {
 ALCboolean alc_sdl_init(BackendFuncs *func_list);
 void alc_sdl_deinit(void);
 void alc_sdl_probe(enum DevProbe type);
-ALCboolean alcWinMMInit(BackendFuncs *FuncList);
-void alcWinMMDeinit(void);
-void alcWinMMProbe(enum DevProbe type);
 ALCboolean alc_wave_init(BackendFuncs *func_list);
 void alc_wave_deinit(void);
 void alc_wave_probe(enum DevProbe type);

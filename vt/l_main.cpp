@@ -188,9 +188,8 @@ void TR_Level::read_level(SDL_RWops * const src, int32_t game_version)
 		break;
 	default:
                 Sys_extError("Invalid game version");
-
 		break;
 	}
-
+        
 	SDL_RWclose(src);
 }

@@ -14,6 +14,7 @@ extern "C" {
 #include "bullet/btBulletDynamicsCommon.h"
 
 #include "vt/vt_level.h"
+#include "audio.h"
 #include "world.h"
 #include "mesh.h"
 #include "entity.h"
@@ -527,7 +528,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     world->entity_count = 0;
     world->entity_list = NULL;
-    world->Lara = NULL;
+    world->Character = NULL;
     world->meshes = NULL;
     world->meshs_count = 0;
     world->room_count = 0;
@@ -737,6 +738,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
      * build all moveables
      */
     GenEntitys(world, tr);
+    
+    // Initialize audio.
+    
+    Audio_Init(MAX_CHANNELS, world, tr);
 
     switch(tr->game_version)
     {
@@ -2321,7 +2326,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             skeletal_model_p tmp, LM;                                           // LM - Lara Model
 
             entity->move_type = MOVE_ON_FLOOR;
-            world->Lara = entity;
+            world->Character = entity;
             entity->self->collide_flag = ENTITY_ACTOR_COLLISION;
             entity->model->hide = 0;
             LM = (skeletal_model_p)entity->model;
@@ -2367,7 +2372,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
                 entity->bf.bone_tags[j].mesh = entity->model->mesh_tree[j].mesh;
                 entity->bf.bone_tags[j].mesh2 = entity->model->mesh_tree[j].mesh2;
             }
-            Entity_SetAnimation(world->Lara, TR_ANIMATION_LARA_STAY_IDLE, 0);
+            Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Gen_EntityRigidBody(entity);
             Character_Create(entity, 72.0, 640.0);
             continue;

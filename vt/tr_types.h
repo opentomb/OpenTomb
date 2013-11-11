@@ -511,15 +511,25 @@ typedef struct {
 //typedef prtl::array < tr_sound_source_t > tr_sound_source_array_t;
 
 /** \brief SoundDetails.
+ *
+ * SoundDetails (also called SampleInfos in native TR sources) are properties
+ * for each sound index from SoundMap. It contains all crucial information
+ * that is needed to play certain sample, except offset to raw wave buffer,
+ * which is unnecessary, as it is managed internally by DirectSound. 
  */
+ 
 typedef struct {		// 8 bytes
-	int16_t sample;		// (index into SampleIndices)
-	int16_t volume;
-	int16_t sound_range;	// sound range? (distance at which this sound can be heard?)
-	int16_t flags;		// Bits 8-15: priority?, Bits 2-7: number of sound
-	// samples in this group, Bits 0-1: channel number?
+	uint16_t sample;                     // Index into SampleIndices -- NOT USED IN TR4-5!!!
+	uint16_t volume;                     // Global sample value
+	uint16_t sound_range;                // Sound range
+	uint16_t chance;                     // Chance to play
+	 int16_t pitch;                      // Pitch shift
+	 uint8_t num_samples_and_flags_1;    // Bits 0-1: Looped flag, bits 2-5: num samples, bits 6-7: UNUSED
+	 uint8_t flags_2;                    // Bit 4: UNKNOWN, bit 5: Randomize pitch, bit 6: randomize volume
+                                         // All other bits in flags_2 are unused.
 } tr_sound_details_t;
 //typedef prtl::array < tr_sound_details_t > tr_sound_detail_array_t;
+
 
 /** \brief Object Texture Vertex.
   *

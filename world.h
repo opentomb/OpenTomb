@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
+#include "audio.h"
 #include "bullet/LinearMath/btScalar.h"
 
 class btCollisionShape;
@@ -20,7 +21,6 @@ struct static_mesh_s;
 struct entity_s;
 struct skeletal_model_s;
 struct render_object_list_s;
-struct audio_sample_s;
 
 typedef struct room_box_s
 {
@@ -79,7 +79,7 @@ typedef struct room_s
     
     btScalar                    bb_min[3];                                      // room's bounding box
     btScalar                    bb_max[3];                                      // room's bounding box
-    btScalar                    transform[16];                                  // 
+    btScalar                    transform[16];                                  // GL transformation matrix
     
     uint16_t                    portal_count;                                   // number of room portals
     struct portal_s            *portals;                                        // room portals array
@@ -129,7 +129,7 @@ typedef struct world_s
     uint32_t                    skeletal_model_count;                           // number of base skeletal models
     struct skeletal_model_s    *skeletal_models;                                // base skeletal models data
     
-    struct entity_s            *Lara;                                           // this is an unical Lara pointer =)  
+    struct entity_s            *Character;                                      // this is an unical Lara pointer =)  
     struct skeletal_model_s    *sky_box;                                        // global skybox
     
     uint32_t                    entity_count;
@@ -137,19 +137,26 @@ typedef struct world_s
     
     uint32_t                    type; 
     
-    uint16_t                   *floor_data;
     uint32_t                    floor_data_size;
+    uint16_t                   *floor_data;
     
-    int16_t                    *anim_commands;
     uint32_t                    anim_commands_count;
+    int16_t                    *anim_commands;
     
-    struct audio_sample_s      *samples;                                        // TR samples ID's <=> OpenAL buffers indexes table
-    int16_t                     samples_count;
-    ///@FIXME: add code to the world_prepare + world destroy methods
+    uint32_t                    audio_map_count;                                // Amount of overall effects in engine.
+    int16_t                    *audio_map;                                      // Effect indexes.
+    uint32_t                    audio_effects_count;                            // Amount of available effects in level.
+    struct audio_effect_s      *audio_effects;                                  // Effects and their parameters.
+    
+    uint32_t                    audio_buffers_count;                            // Amount of samples.
+    ALuint                     *audio_buffers;                                  // Samples.
+    //uint32_t                    audio_sources_count;                            // Amount of runtime channels.
+    //AudioSource                *audio_sources;                                  // Channels.
 }world_t, *world_p;
 
 void World_Prepare(world_p world);
 void World_Empty(world_p world);
+struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
 
 void Room_Empty(room_p room);
 void Room_AddEntity(room_p room, struct entity_s *entity);

@@ -22,7 +22,9 @@
 #include <SDL2/SDL_endian.h>
 #include <zlib.h>
 #include "l_main.h"
+#include "tr_versions.h"
 #include "../system.h"
+#include "../audio.h"
 
 #define RCSID "$Id: l_tr4.cpp,v 1.14 2002/09/20 15:59:02 crow Exp $"
 
@@ -457,7 +459,11 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
                 }
 
                 uncomp_size = read_bitu32(src);
+                if (uncomp_size == 0)
+                        Sys_extError("read_tr4_level: packed geometry uncomp_size == 0");
+                                  
                 comp_size = read_bitu32(src);
+                
                 if (!comp_size)
                         Sys_extError("read_tr4_level: packed geometry");
 
@@ -476,224 +482,228 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
                 delete [] comp_buffer;
 
                 comp_buffer = NULL;
-                if ((src = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+                if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
                         Sys_extError("read_tr4_level: SDL_RWFromMem");
         }
 
         // Unused
-        if (read_bitu32(src) != 0)
+        if (read_bitu32(newsrc) != 0)
                 Sys_extWarn("Bad value for 'unused'");
 
-        this->rooms_count = read_bitu16(src);
+        this->rooms_count = read_bitu16(newsrc);
 	this->rooms = (tr5_room_t*)calloc(this->rooms_count, sizeof(tr5_room_t));
 	for (i = 0; i < this->rooms_count; i++)
-                read_tr4_room(src, this->rooms[i]);
+                read_tr4_room(newsrc, this->rooms[i]);
 
-	this->floor_data_size = read_bitu32(src); 
+	this->floor_data_size = read_bitu32(newsrc); 
         this->floor_data = (uint16_t*)malloc(this->floor_data_size * sizeof(uint16_t));
         for(i = 0; i < this->floor_data_size; i++)
-                this->floor_data[i] = read_bitu16(src); 
+                this->floor_data[i] = read_bitu16(newsrc); 
 
-        read_mesh_data(src);
+        read_mesh_data(newsrc);
 
-        this->animations_count = read_bitu32(src);
+        this->animations_count = read_bitu32(newsrc);
 	this->animations = (tr_animation_t*)malloc(this->animations_count * sizeof(tr_animation_t));
 	for (i = 0; i < this->animations_count; i++)
-                read_tr4_animation(src, this->animations[i]);
+                read_tr4_animation(newsrc, this->animations[i]);
 
-        this->state_changes_count = read_bitu32(src);
+        this->state_changes_count = read_bitu32(newsrc);
 	this->state_changes = (tr_state_change_t*)malloc(this->state_changes_count * sizeof(tr_state_change_t));
         for (i = 0; i < this->state_changes_count; i++)
-                read_tr_state_changes(src, this->state_changes[i]);
+                read_tr_state_changes(newsrc, this->state_changes[i]);
 
-        this->anim_dispatches_count = read_bitu32(src);
+        this->anim_dispatches_count = read_bitu32(newsrc);
 	this->anim_dispatches = (tr_anim_dispatch_t*)malloc(this->anim_dispatches_count * sizeof(tr_anim_dispatch_t));
         for (i = 0; i < this->anim_dispatches_count; i++)
-                read_tr_anim_dispatches(src, this->anim_dispatches[i]);
-	//SDL_RWseek(src, this->anim_dispatches.size() * 8, SEEK_CUR);
+                read_tr_anim_dispatches(newsrc, this->anim_dispatches[i]);
 
-        this->anim_commands_count = read_bitu32(src);
+        this->anim_commands_count = read_bitu32(newsrc);
 	this->anim_commands = (int16_t*)malloc(this->anim_commands_count * sizeof(int16_t));
         for (i = 0; i < this->anim_commands_count; i++)
-                this->anim_commands[i] = read_bit16(src);
-        //SDL_RWseek(src, this->anim_commands.size() * 2, SEEK_CUR);
+                this->anim_commands[i] = read_bit16(newsrc);
 
-        this->mesh_tree_data_size = read_bitu32(src);
+        this->mesh_tree_data_size = read_bitu32(newsrc);
         this->mesh_tree_data = (uint32_t*)malloc(this->mesh_tree_data_size * sizeof(uint32_t));
         for (i = 0; i < this->mesh_tree_data_size; i++)
-                this->mesh_tree_data[i] = read_bitu32(src);                     // 4 bytes
+                this->mesh_tree_data[i] = read_bitu32(newsrc);                     // 4 bytes
         
-        read_frame_moveable_data(src);
+        read_frame_moveable_data(newsrc);
 
-        this->static_meshes_count = read_bitu32(src);
+        this->static_meshes_count = read_bitu32(newsrc);
 	this->static_meshes = (tr_staticmesh_t*)malloc(this->static_meshes_count * sizeof(tr_staticmesh_t));
 	for (i = 0; i < this->static_meshes_count; i++)
-                read_tr_staticmesh(src, this->static_meshes[i]);
+                read_tr_staticmesh(newsrc, this->static_meshes[i]);
 
-        if (read_bit8(src) != 'S')
+        if (read_bit8(newsrc) != 'S')
                 Sys_extError("read_tr4_level: 'SPR' not found");
 
-        if (read_bit8(src) != 'P')
+        if (read_bit8(newsrc) != 'P')
                 Sys_extError("read_tr4_level: 'SPR' not found");
 
-        if (read_bit8(src) != 'R')
+        if (read_bit8(newsrc) != 'R')
                 Sys_extError("read_tr4_level: 'SPR' not found");
 
-        this->sprite_textures_count = read_bitu32(src);
+        this->sprite_textures_count = read_bitu32(newsrc);
 	this->sprite_textures = (tr_sprite_texture_t*)malloc(this->sprite_textures_count * sizeof(tr_sprite_texture_t));
 	for (i = 0; i < this->sprite_textures_count; i++)
-		read_tr4_sprite_texture(src, this->sprite_textures[i]);
+		read_tr4_sprite_texture(newsrc, this->sprite_textures[i]);
 
-        this->sprite_sequences_count = read_bitu32(src);
+        this->sprite_sequences_count = read_bitu32(newsrc);
 	this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));
 	for (i = 0; i < this->sprite_sequences_count; i++)
-		read_tr_sprite_sequence(src, this->sprite_sequences[i]);
+		read_tr_sprite_sequence(newsrc, this->sprite_sequences[i]);
 
-        this->cameras_count = read_bitu32(src);
+        this->cameras_count = read_bitu32(newsrc);
 	this->cameras = (tr_camera_t*)malloc(this->cameras_count * sizeof(tr_camera_t));
         for (i = 0; i < this->cameras_count; i++)
         {
-                this->cameras[i].x = read_bit32(src);
-                this->cameras[i].y = read_bit32(src);
-                this->cameras[i].z = read_bit32(src);
+                this->cameras[i].x = read_bit32(newsrc);
+                this->cameras[i].y = read_bit32(newsrc);
+                this->cameras[i].z = read_bit32(newsrc);
                 
-                this->cameras[i].room = read_bit16(src);
-                this->cameras[i].unknown1 = read_bitu16(src);
+                this->cameras[i].room = read_bit16(newsrc);
+                this->cameras[i].unknown1 = read_bitu16(newsrc);
         }
-	//SDL_RWseek(src, this->cameras.size() * 16, SEEK_CUR);
+	//SDL_RWseek(newsrc, this->cameras.size() * 16, SEEK_CUR);
 
-        this->flyby_cameras_count = read_bitu32(src);
+        this->flyby_cameras_count = read_bitu32(newsrc);
 	this->flyby_cameras = (tr4_flyby_camera_t*)malloc(this->flyby_cameras_count * sizeof(tr4_flyby_camera_t));
         for (i = 0; i < this->flyby_cameras_count; i++)
         {
-                this->flyby_cameras[i].x1 = read_bit32(src);
-                this->flyby_cameras[i].y1 = read_bit32(src);
-                this->flyby_cameras[i].z1 = read_bit32(src);
-                this->flyby_cameras[i].x2 = read_bit32(src);
-                this->flyby_cameras[i].y2 = read_bit32(src);
-                this->flyby_cameras[i].z2 = read_bit32(src);                    // 24
+                this->flyby_cameras[i].x1 = read_bit32(newsrc);
+                this->flyby_cameras[i].y1 = read_bit32(newsrc);
+                this->flyby_cameras[i].z1 = read_bit32(newsrc);
+                this->flyby_cameras[i].x2 = read_bit32(newsrc);
+                this->flyby_cameras[i].y2 = read_bit32(newsrc);
+                this->flyby_cameras[i].z2 = read_bit32(newsrc);                    // 24
                 
-                this->flyby_cameras[i].index1 = read_bit8(src);
-                this->flyby_cameras[i].index2 = read_bit8(src);                 // 26
+                this->flyby_cameras[i].index1 = read_bit8(newsrc);
+                this->flyby_cameras[i].index2 = read_bit8(newsrc);                 // 26
                 
-                this->flyby_cameras[i].unknown[0] = read_bitu16(src);
-                this->flyby_cameras[i].unknown[1] = read_bitu16(src);
-                this->flyby_cameras[i].unknown[2] = read_bitu16(src);
-                this->flyby_cameras[i].unknown[3] = read_bitu16(src);
-                this->flyby_cameras[i].unknown[4] = read_bitu16(src);           // 36
+                this->flyby_cameras[i].unknown[0] = read_bitu16(newsrc);
+                this->flyby_cameras[i].unknown[1] = read_bitu16(newsrc);
+                this->flyby_cameras[i].unknown[2] = read_bitu16(newsrc);
+                this->flyby_cameras[i].unknown[3] = read_bitu16(newsrc);
+                this->flyby_cameras[i].unknown[4] = read_bitu16(newsrc);           // 36
                 
-                this->flyby_cameras[i].id = read_bit32(src);                    // 40
+                this->flyby_cameras[i].id = read_bit32(newsrc);                    // 40
         }
-        //SDL_RWseek(src, this->flyby_cameras.size() * 40, SEEK_CUR);
+        //SDL_RWseek(newsrc, this->flyby_cameras.size() * 40, SEEK_CUR);
 
-        this->sound_sources_count = read_bitu32(src);
+        this->sound_sources_count = read_bitu32(newsrc);
 	this->sound_sources = (tr_sound_source_t*)malloc(this->sound_sources_count * sizeof(tr_sound_source_t));
         for(i = 0; i < this->sound_sources_count; i++)
         {
-            this->sound_sources[i].x = read_bit32(src);
-            this->sound_sources[i].y = read_bit32(src);
-            this->sound_sources[i].z = read_bit32(src);
+            this->sound_sources[i].x = read_bit32(newsrc);
+            this->sound_sources[i].y = read_bit32(newsrc);
+            this->sound_sources[i].z = read_bit32(newsrc);
             
-            this->sound_sources[i].sound_id = read_bitu16(src);
-            this->sound_sources[i].flags = read_bitu16(src);
+            this->sound_sources[i].sound_id = read_bitu16(newsrc);
+            this->sound_sources[i].flags = read_bitu16(newsrc);
         }
 
-        this->boxes_count = read_bitu32(src);
+        this->boxes_count = read_bitu32(newsrc);
 	this->boxes = (tr_box_t*)malloc(this->boxes_count * sizeof(tr_box_t));
 	for (i = 0; i < this->boxes_count; i++)
-		read_tr2_box(src, this->boxes[i]);
+		read_tr2_box(newsrc, this->boxes[i]);
 
-        this->overlaps_count = read_bitu32(src);
+        this->overlaps_count = read_bitu32(newsrc);
 	this->overlaps = (uint16_t*)malloc(this->overlaps_count * sizeof(uint16_t));
         for (i = 0; i < this->overlaps_count; i++)
-                this->overlaps[i] = read_bitu16(src);
+                this->overlaps[i] = read_bitu16(newsrc);
 
         // Zones
-        SDL_RWseek(src, this->boxes_count * 20, SEEK_CUR);
+        SDL_RWseek(newsrc, this->boxes_count * 20, SEEK_CUR);
 
-        this->animated_textures_count = read_bitu32(src);
+        this->animated_textures_count = read_bitu32(newsrc);
 	this->animated_textures = (tr_animated_textures_t*)malloc(this->animated_textures_count * sizeof(tr_animated_textures_t));
         for (i = 0; i < this->animated_textures_count; i++)
         {
                 this->animated_textures[i].texture_ids = NULL;                  // FIXME: complete this section!
-                this->animated_textures[i].texture_ids_count = read_bit16(src); 
+                this->animated_textures[i].texture_ids_count = read_bit16(newsrc); 
         }
-	//SDL_RWseek(src, this->animated_textures.size() * 2, SEEK_CUR);
 
-        int unknown = read_bit8(src);
+        int unknown = read_bit8(newsrc);
 
         if ((unknown != 0) && (unknown != 1) && (unknown != 2) && (unknown != 4) && (unknown != 12))
                 Sys_extError("read_tr4_level: unknown before TEX has bad value");
 
-        if (read_bit8(src) != 'T')
+        if (read_bit8(newsrc) != 'T')
                 Sys_extError("read_tr4_level: '\\0TEX' not found");
 
-        if (read_bit8(src) != 'E')
+        if (read_bit8(newsrc) != 'E')
                 Sys_extError("read_tr4_level: '\\0TEX' not found");
 
-        if (read_bit8(src) != 'X')
+        if (read_bit8(newsrc) != 'X')
                 Sys_extError("read_tr4_level: '\\0TEX' not found");
     
-        this->object_textures_count = read_bitu32(src);
+        this->object_textures_count = read_bitu32(newsrc);
 	this->object_textures = (tr4_object_texture_t*)malloc(this->object_textures_count * sizeof(tr4_object_texture_t));
 	for (i = 0; i < this->object_textures_count; i++)
-		read_tr4_object_texture(src, this->object_textures[i]);
+		read_tr4_object_texture(newsrc, this->object_textures[i]);
 
-        this->items_count = read_bitu32(src);
+        this->items_count = read_bitu32(newsrc);
 	this->items = (tr2_item_t*)malloc(this->items_count * sizeof(tr2_item_t));
 	for (i = 0; i < this->items_count; i++)
-                read_tr3_item(src, this->items[i]);
+                read_tr3_item(newsrc, this->items[i]);
 
-        this->ai_objects_count = read_bitu32(src);
+        this->ai_objects_count = read_bitu32(newsrc);
 	this->ai_objects = (tr4_ai_object_t*)malloc(this->ai_objects_count * sizeof(tr4_ai_object_t));
         for(i=0; i < this->ai_objects_count; i++)
         {
-            this->ai_objects[i].object_id = read_bitu16(src);
-            this->ai_objects[i].room = read_bitu16(src);                        // 4
+            this->ai_objects[i].object_id = read_bitu16(newsrc);
+            this->ai_objects[i].room = read_bitu16(newsrc);                        // 4
             
-            this->ai_objects[i].x = read_bit32(src);
-            this->ai_objects[i].y = read_bit32(src);
-            this->ai_objects[i].z = read_bit32(src);                            // 16
+            this->ai_objects[i].x = read_bit32(newsrc);
+            this->ai_objects[i].y = read_bit32(newsrc);
+            this->ai_objects[i].z = read_bit32(newsrc);                            // 16
             
-            this->ai_objects[i].ocb = read_bitu16(src);
-            this->ai_objects[i].flags = read_bitu16(src);                       // 20
-            this->ai_objects[i].angle = read_bit32(src);                        // 24
+            this->ai_objects[i].ocb = read_bitu16(newsrc);
+            this->ai_objects[i].flags = read_bitu16(newsrc);                       // 20
+            this->ai_objects[i].angle = read_bit32(newsrc);                        // 24
         }
-	//SDL_RWseek(src, this->ai_objects.size() * 24, SEEK_CUR);
 
-        this->demo_data_count = read_bitu16(src);
+        this->demo_data_count = read_bitu16(newsrc);
 	this->demo_data = (uint8_t*)malloc(this->demo_data_count * sizeof(uint8_t));
         for(i=0; i < this->demo_data_count; i++)
-                this->demo_data[i] = read_bitu8(src);
-	//SDL_RWseek(src, this->demo_data.size(), SEEK_CUR);
+                this->demo_data[i] = read_bitu8(newsrc);
 
         // Soundmap
-        SDL_RWseek(src, 2 * 370, SEEK_CUR);
-
+        this->soundmap = (int16_t*)malloc(TR_SOUND_MAP_SIZE_TR4 * sizeof(int16_t));
+        for(i=0; i < TR_SOUND_MAP_SIZE_TR4; i++)
+            this->soundmap[i] = read_bit16(newsrc);
+                
         this->sound_details_count = 0;
-        i = read_bitu32(src);
-        if(i != 0xFFFFFFFF)
+        i = read_bitu32(newsrc);
+        if(i)
         {
             this->sound_details_count = i;
+            Sys_DebugLog("load_sounds.txt", "Num SampleInfos: %d", this->sound_details_count);
+            
             this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
             for(i=0; i < this->sound_details_count; i++)
             {
-                    this->sound_details[i].sample = read_bit16(src);
-                    this->sound_details[i].volume = read_bit16(src);
-                    this->sound_details[i].sound_range = read_bit16(src);
-                    this->sound_details[i].flags = read_bit16(src);
+                this->sound_details[i].sample = read_bitu16(newsrc);
+                this->sound_details[i].volume = (uint16_t)read_bitu8(newsrc);        // n x 2.6
+                this->sound_details[i].sound_range = (uint16_t)read_bitu8(newsrc);   // n as is
+                this->sound_details[i].chance = (uint16_t)read_bitu8(newsrc);        // If n = 99, n = 0 (max. chance)
+                this->sound_details[i].pitch = (int16_t)read_bit8(newsrc);         // n as is
+                this->sound_details[i].num_samples_and_flags_1 = read_bitu8(newsrc);
+                this->sound_details[i].flags_2 = read_bitu8(newsrc);
             }
-            //SDL_RWseek(src, this->sound_details.size() * 8, SEEK_CUR);
         }
         
-        i = read_bitu32(src);
-        if(i != 0xFFFFFFFF)
+        // IMPORTANT NOTE: Sample indices ARE NOT USED in TR4 engine, but are parsed anyway.
+        
+        i = read_bitu32(newsrc);
+        if(i)
         {
-            this->sample_indices_count = read_bitu32(src);
+            this->sample_indices_count = i;
+            Sys_DebugLog("load_sounds.txt", "Num Sample Indexes: %d", this->sample_indices_count);
+            
             this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
             for(i=0; i < this->sample_indices_count; i++)
-                    this->sample_indices[i] = read_bitu32(src);
-            //SDL_RWseek(src, this->sample_indices.size() * 4, SEEK_CUR);
+                    this->sample_indices[i] = read_bitu32(newsrc);
         }
         else
         {
@@ -701,22 +711,27 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             this->sample_indices = NULL;
         }
         
-        uint16_t temp;
-
-        temp = read_bitu16(src);
-        //if ((temp != 0) && (temp != 0xCDCD) && (temp != 0xFFFF) && (temp != 0x0178))
-        //        Sys_extWarn("read_tr4_level: filler1 has wrong value");
-
-        temp = read_bitu16(src);
-        if ((temp != 0) && (temp != 0xCDCD) && (temp != 0xFFFF) && (temp != 0x0178))
-                Sys_extWarn("read_tr4_level: filler2 has wrong value");
-
-        temp = read_bitu16(src);
-        //if ((temp != 0) && (temp != 0xCDCD) && (temp != 0xFFFF) && (temp != 0x0178))
-        //        Sys_extWarn("read_tr4_level: filler3 has wrong value");
-
-        SDL_RWclose(src);
+        SDL_RWclose(newsrc);
+        newsrc = NULL;
+        
         delete [] uncomp_buffer;
-
         uncomp_buffer = NULL;
+        
+        // LOAD SAMPLES
+        
+        i = read_bitu32(src);   // Read num samples
+        if(i)
+        {
+            this->samples_count = i;
+            Sys_DebugLog("load_sounds.txt", "Num Samples: %d", this->samples_count);
+            
+            // Since sample data is the last part, we simply load whole last
+            // block of file as single array.
+            uint32_t samples_size = SDL_RWsize(src) - SDL_RWtell(src);
+            Sys_DebugLog("load_sounds.txt", "Sample data size: %X", samples_size);
+            
+            this->samples = (uint8_t*)malloc(samples_size);
+            for(i = 0; i < samples_size; i++)
+                this->samples[i] = read_bitu8(src);
+        }
 }

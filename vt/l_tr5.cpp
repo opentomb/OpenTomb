@@ -24,6 +24,7 @@
 #include "l_main.h"
 //#include "../zlib/zlib.h" 
 #include "../system.h"
+#include "../audio.h"
 
 #define RCSID "$Id: l_tr5.cpp,v 1.14 2002/09/20 15:59:02 crow Exp $"
 
@@ -778,20 +779,58 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
                 this->demo_data[i] = read_bitu8(src);
 
 	// Soundmap
-	SDL_RWseek(src, 2 * 450, SEEK_CUR);
+	this->soundmap = (int16_t*)malloc(TR_SOUND_MAP_SIZE_TR5 * sizeof(int16_t));
+        for(i=0; i < TR_SOUND_MAP_SIZE_TR5; i++)
+            this->soundmap[i] = read_bit16(src);
 
 	this->sound_details_count = read_bitu32(src);
         this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
+
+        /// correct
         for(i=0; i < this->sound_details_count; i++)
         {
-                this->sound_details[i].sample = read_bit16(src);
-                this->sound_details[i].volume = read_bit16(src);
-                this->sound_details[i].sound_range = read_bit16(src);
-                this->sound_details[i].flags = read_bit16(src);
+            this->sound_details[i].sample = read_bitu16(src);
+            this->sound_details[i].volume = (uint16_t)read_bitu8(src);        // n x 2.6
+            this->sound_details[i].sound_range = (uint16_t)read_bitu8(src);   // n as is
+            this->sound_details[i].chance = (uint16_t)read_bitu8(src);        // If n = 99, n = 0 (max. chance)
+            this->sound_details[i].pitch = (int16_t)read_bit8(src);           // n as is
+            this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
+            this->sound_details[i].flags_2 = read_bitu8(src);
         }
-
+                    
+        ///correct
         this->sample_indices_count = read_bitu32(src);
-	this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
+        this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
         for(i=0; i < this->sample_indices_count; i++)
-                this->sample_indices[i] = read_bitu32(src);
+            this->sample_indices[i] = read_bitu32(src);
+
+        SDL_RWseek(src, 6, SEEK_SET);   // In TR5, sample indices are followed by 6 0xCD bytes. - correct - really 0xCDCDCDCDCDCD
+
+        // LOAD SAMPLES
+        this->samples_count = 0;
+        this->samples = NULL;
+/*
+        i = read_bitu32(src);   // Read num samples
+        i = read_bitu32(src);   // Read num samples
+        i = read_bitu32(src);   // Read num samples
+        if(i)
+        {
+            this->samples_count = i;
+            Sys_DebugLog("load_sounds.txt", "Num Samples: %d", this->samples_count);
+
+            // Since sample data is the last part, we simply load whole last
+            // block of file as single array.
+            uncomp_size = SDL_RWsize(src) - SDL_RWtell(src);
+            Sys_DebugLog("load_sounds.txt", "Sample data size: %X", uncomp_size);
+
+            this->samples = (uint8_t*)malloc(uncomp_size);
+            for(i = 0; i < uncomp_size; i++)
+            {
+                this->samples[i] = read_bitu8(src);
+                if(*((uint32_t*)(this->samples+i)) == 0x46464952)
+                {
+                    break;
+                }
+            }
+        }*/
 }

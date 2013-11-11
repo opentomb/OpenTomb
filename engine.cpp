@@ -303,6 +303,59 @@ int lua_BindKey(lua_State * lua)
     return 0;
 }
 
+/*
+ * Moveables script control section
+ */
+int lua_GetEntityPosition(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (id)");
+        return 0;
+    }
+    ent = World_GetEntityByID(&engine_world, id);
+    
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    lua_pushnumber(lua, ent->transform[12+0]);
+    lua_pushnumber(lua, ent->transform[12+1]);
+    lua_pushnumber(lua, ent->transform[12+2]);
+    return 3;
+}
+
+int lua_SetEntityPosition(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    if(top != 4)
+    {
+        Con_Printf("Wrong arguments count. Must be (id, x, y, z)");
+        return 0;
+    }
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    ent->transform[12+0] = lua_tonumber(lua, 2);
+    ent->transform[12+1] = lua_tonumber(lua, 3);
+    ent->transform[12+2] = lua_tonumber(lua, 4);
+    return 0;
+}
 
 void Engine_LuaRegisterFuncs(lua_State *lua)
 {
@@ -315,6 +368,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     /*
      * register functions
      */
+    lua_register(lua, "getEntityPos", lua_GetEntityPosition);
+    lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
     lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
 }
