@@ -22,6 +22,7 @@
 #include <SDL2/SDL.h>
 #include "l_main.h"
 #include "../system.h"
+#include "../audio.h"
 
 #define RCSID "$Id: l_tr1.cpp,v 1.16 2002/09/20 15:59:02 crow Exp $"
 
@@ -722,25 +723,36 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
                 this->demo_data[i] = read_bitu8(src);
 
 	// Soundmap
-	SDL_RWseek(src, 2 * 256, RW_SEEK_CUR);
+	this->soundmap = (int16_t*)malloc(TR_SOUND_MAP_SIZE_TR1 * sizeof(int16_t));
+        for(i=0; i < TR_SOUND_MAP_SIZE_TR1; i++)
+                this->soundmap[i] = read_bit16(src);
 
 	this->sound_details_count = read_bitu32(src);
         this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
-        for(i=0; i < this->sound_details_count; i++)
+        
+        for(i = 0; i < this->sound_details_count; i++)
         {
-                this->sound_details[i].sample = read_bit16(src);
-                this->sound_details[i].volume = read_bit16(src);
-                this->sound_details[i].sound_range = read_bit16(src);
-                this->sound_details[i].flags = read_bit16(src);
+            this->sound_details[i].sample = read_bitu16(src);
+            this->sound_details[i].volume = read_bitu16(src);
+            this->sound_details[i].chance = read_bitu16(src);
+            this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
+            this->sound_details[i].flags_2 = read_bitu8(src);
+            this->sound_details[i].sound_range = TR_SOUND_DEFAULT_RANGE;
+            this->sound_details[i].pitch = TR_SOUND_DEFAULT_PITCH;
         }
 
-        this->samples_count = read_bitu32(src);
-	this->samples = (uint8_t*)malloc(this->samples_count * sizeof(uint8_t));
-        for(i=0; i < this->samples_count; i++)
-                this->samples[i] = read_bitu8(src);
+    // LOAD SAMPLES
+    
+    // In TR1, samples are embedded into level file as solid block, preceded by
+    // block size in bytes. Sample block is followed by sample indices array.
 
-        this->sample_indices_count = read_bitu32(src);
-	this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
-        for(i=0; i < this->sample_indices_count; i++)
-                this->sample_indices[i] = read_bitu32(src);
+    this->samples_count = read_bitu32(src);
+    this->samples = (uint8_t*)malloc(this->samples_count * sizeof(uint8_t));
+    for(i=0; i < this->samples_count; i++)
+        this->samples[i] = read_bitu8(src);
+
+    this->sample_indices_count = read_bitu32(src);
+    this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
+    for(i=0; i < this->sample_indices_count; i++)
+        this->sample_indices[i] = read_bitu32(src);
 }

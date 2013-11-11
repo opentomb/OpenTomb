@@ -43,7 +43,6 @@ extern "C" {
 }
 
 #define SKELETAL_TEST   0
-#define TEST_SOUND      1
 
 SDL_Window             *sdl_window     = NULL;
 SDL_Joystick           *sdl_joystick   = NULL;
@@ -59,7 +58,9 @@ GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 GLfloat hang_offset_point[3] = {0.0, 0.0, 0.0};
 
-audio_source_s  snd_test;
+ALfloat         al_pos[3];
+ALuint          al_source;
+int             sample = 0;
 
 static int model = 0;
 static int mesh = 0;
@@ -467,13 +468,6 @@ int SDL_main(int argc, char **argv)
 {
     btScalar      time, newtime;
     static btScalar oldtime = 0.0;
-#if TEST_SOUND
-    snd_test.al_gain = 0.6f;                                                    // volume attenuation parameter
-    snd_test.al_pitch = 1.0f;                                                   // playing speed
-    vec3_set_zero(snd_test.velocity);
-    vec3_set_zero(snd_test.position);
-    snd_test.al_loop = 1;
-#endif
     
     Engine_Init();
     Engine_InitGlobals();
@@ -492,17 +486,15 @@ int SDL_main(int argc, char **argv)
 
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
-
-#if TEST_SOUND    
-    alGenBuffers(1, &snd_test.al_buf);
-    //Audio_LoadALbufferFromWAV(snd_test.al_buf, "012_VonCroy11b.wav");
-    Audio_LoadALbufferFromWAV(snd_test.al_buf, "snd/sample.wav");         // for working effects audio must be mono (1 channel).
     
-    alGenSources(1, &snd_test.al_source);
-    alSourcei(snd_test.al_source, AL_BUFFER, snd_test.al_buf);    
-    alSourcei(snd_test.al_source, AL_REFERENCE_DISTANCE, 64.0);                 // distance, where sound amplitude *= 0.5
-    alSourcePlay(snd_test.al_source);
-#endif
+    alGenSources(1, &al_source);
+    alSourcei(al_source, AL_REFERENCE_DISTANCE, 64.0);                          // distance, where sound amplitude *= 0.5
+    
+    if(engine_world.audio_buffers)
+    {
+        alSourcei(al_source, AL_BUFFER, engine_world.audio_buffers[sample]);
+    }
+    alSourcePlay(al_source);
     
 #if SKELETAL_TEST
     control_states.free_look = 1;
@@ -515,17 +507,20 @@ int SDL_main(int argc, char **argv)
         oldtime = newtime;
         Engine_Frame(time);
         
-        Audio_UpdateListenerByCamera(renderer.cam);
-        if(engine_world.Lara)
+        if(sample < 0)
         {
-            Audio_FillSourceByEntity(&snd_test, engine_world.Lara);
-            Audio_UpdateSource(&snd_test);
+            sample = engine_world.audio_buffers_count - 1;
         }
+        if(sample > engine_world.audio_buffers_count - 1)
+        {
+            sample = 0;
+        }
+        
+        Audio_UpdateListenerByCamera(renderer.cam);
+        vec3_copy(al_pos, renderer.cam->pos);
+        alSourcefv(al_source, AL_POSITION, al_pos);
+        Audio_UpdateSources(&engine_world);
     }
-#if TEST_SOUND
-    alDeleteSources(1, &snd_test.al_source);
-    alDeleteBuffers(1, &snd_test.al_buf);
-#endif
     
     Engine_Shutdown(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
@@ -885,7 +880,7 @@ void ShowDebugInfo()
 #if !SKELETAL_TEST
 
     rs = NULL;
-    ent = engine_world.Lara;
+    ent = engine_world.Character;
     if(ent && ent->character && ent->character->ray_cb)
     {
        height_info_t fc;
@@ -954,12 +949,12 @@ void ShowDebugInfo()
         {
             Gui_OutTextXY(screen_info.w-420, 48, "ent_rmb_ID = %d", last_rmb->ID);
         }
-        Gui_OutTextXY(screen_info.w-420, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Lara->character->cmd.rot[0], engine_world.Lara->character->cmd.rot[1], (btScalar)engine_world.Lara->angles[1]);
+        Gui_OutTextXY(screen_info.w-420, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Character->character->cmd.rot[0], engine_world.Character->character->cmd.rot[1], (btScalar)engine_world.Character->angles[1]);
     }
 
-    if(engine_world.Lara && engine_world.Lara->self->room)
+    if(engine_world.Character && engine_world.Character->self->room)
     {
-        Gui_OutTextXY(screen_info.w-420, 28, "room = %d, co = %d", engine_world.Lara->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
+        Gui_OutTextXY(screen_info.w-420, 28, "room = %d, co = %d", engine_world.Character->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
     }
 
     //Gui_OutTextXY(screen_info.w-380, 68, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
@@ -1029,21 +1024,57 @@ void DebugKeys(int button, int state)
                 }
                 break;
 
+            case SDLK_g:
+                sample--;
+                if(sample < 0)
+                {
+                    sample = engine_world.audio_buffers_count-1;
+                }
+                if(engine_world.audio_buffers)
+                {
+                    if(alIsSource(al_source))
+                    {
+                        alDeleteSources(1, &al_source);
+                    }
+                    alGenSources(1, &al_source);
+                    alSourcei(al_source, AL_BUFFER, engine_world.audio_buffers[sample]);
+                    alSourcePlay(al_source);
+                }
+                break;
+
+            case SDLK_h:
+                sample++;
+                if(sample > engine_world.audio_buffers_count-1)
+                {
+                    sample = 0;
+                }
+                if(engine_world.audio_buffers)
+                {
+                    if(alIsSource(al_source))
+                    {
+                        alDeleteSources(1, &al_source);
+                    }
+                    alGenSources(1, &al_source);
+                    alSourcei(al_source, AL_BUFFER, engine_world.audio_buffers[sample]);
+                    alSourcePlay(al_source);
+                }
+                break;  
+                
             case SDLK_z:
                 paused = !paused;
-                if(engine_world.Lara != NULL)
+                if(engine_world.Character != NULL)
                 {
-                    if(engine_world.Lara->move_type == MOVE_UNDER_WATER)
+                    if(engine_world.Character->move_type == MOVE_UNDER_WATER)
                     {
-                        Entity_SetAnimation(engine_world.Lara, 103, 0);
-                        engine_world.Lara->move_type = MOVE_ON_FLOOR;
+                        Entity_SetAnimation(engine_world.Character, 103, 0);
+                        engine_world.Character->move_type = MOVE_ON_FLOOR;
                     }
                     else
                     {
-                        Entity_SetAnimation(engine_world.Lara, 108, 0);
-                        engine_world.Lara->move_type = MOVE_UNDER_WATER;
+                        Entity_SetAnimation(engine_world.Character, 108, 0);
+                        engine_world.Character->move_type = MOVE_UNDER_WATER;
                     }
-                    engine_world.Lara->anim_flags = ANIM_NORMAL_CONTROL;
+                    engine_world.Character->anim_flags = ANIM_NORMAL_CONTROL;
                 }
                 break;
 

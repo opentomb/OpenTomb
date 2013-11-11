@@ -6,6 +6,7 @@
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 
+#include "audio.h"
 #include "vmath.h"
 #include "polygon.h"
 #include "camera.h"
@@ -270,18 +271,28 @@ room_sector_p Sector_CheckAlternate(room_sector_p sector)
 void World_Prepare(world_p world)
 {
     world->ID = 0;
+    world->name = NULL;
+    world->type = 0x00;
     world->meshes = NULL;
     world->meshs_count = 0;
     world->sprites = NULL;
     world->sprites_count = 0;
-    world->name = NULL;
     world->room_count = 0;
     world->rooms = 0;
     world->textures = NULL;
     world->type = 0;
     world->entity_list = NULL;
     world->entity_count = 0;
-    world->Lara = NULL;
+    world->Character = NULL;
+    
+    //world->audio_sources = NULL;
+    //world->audio_sources_count = 0;
+    world->audio_buffers = NULL;
+    world->audio_buffers_count = 0;
+    world->audio_effects = NULL;
+    world->audio_effects_count = 0;
+    world->special_textures = NULL;
+    world->special_tex_count = 0;
     world->tex_count = 0;
     world->textures = 0;
     world->floor_data = NULL;
@@ -291,6 +302,8 @@ void World_Prepare(world_p world)
     world->skeletal_models = NULL;
     world->skeletal_model_count = 0;
     world->sky_box = NULL;
+    world->anim_commands = NULL;
+    world->anim_commands_count = 0;
 }
 
 
@@ -318,7 +331,6 @@ void World_Empty(world_p world)
     }
 
     /*sprite empty*/
-
     if(world->sprites_count)
     {
         free(world->sprites);
@@ -327,7 +339,6 @@ void World_Empty(world_p world)
     }
 
     /*entity empty*/
-
     if(world->entity_count)
     {
         while(world->entity_list)
@@ -339,11 +350,11 @@ void World_Empty(world_p world)
         }
     }
 
-    if(world->Lara)
+    if(world->Character)
     {
-        Entity_Clear(world->Lara);
-        free(world->Lara);
-        world->Lara = NULL;
+        Entity_Clear(world->Character);
+        free(world->Character);
+        world->Character = NULL;
     }
 
     if(world->skeletal_model_count)
@@ -413,8 +424,30 @@ void World_Empty(world_p world)
         free(world->textures);
         world->textures = NULL;
     }
+    
+    // De-initialize and destroy all audio objects.
+    Audio_DeInit(world);
 }
 
+struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
+{
+    entity_p ent = world->Character;
+    
+    if(!ent || ent->ID != id)
+    {
+        ent = engine_world.entity_list;
+        while(ent)
+        {
+            if(ent->ID == id)
+            {
+                return ent;
+            }
+            ent = ent->next;
+        }
+    }
+    
+    return ent;
+}
 
 inline int Room_IsPointIn(room_p room, btScalar dot[3])
 {

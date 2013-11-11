@@ -377,8 +377,14 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    entity->hide = 1;
-                    ///@FIXME: This code should make object non-interactable.
+                    if(entity->character)
+                    {
+                        entity->character->cmd.kill = 1;
+                    }
+                    else
+                    {
+                        
+                    }
                 }
                 
                 break;
@@ -397,15 +403,16 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     
                     if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
                     {
-                        ///@FIXME: Play sound in land condition here.
+                        
+                        Audio_Send(sound_index, entity->ID, TR_SOUND_EMITTER_ENTITY, &engine_world);
                     }
                     else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
                     {
-                        ///@FIXME: Play sound in water condition here.
+                        Audio_Send(sound_index, entity->ID, TR_SOUND_EMITTER_ENTITY, &engine_world);
                     }
                     else
                     {
-                        ///@FIXME: Play sound in any condition here.
+                        Audio_Send(sound_index, entity->ID, TR_SOUND_EMITTER_ENTITY, &engine_world);
                     }
                                     
                 }
@@ -440,6 +447,8 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                         case TR_EFFECT_PLAYSTEPSOUND:
                             if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
                             {
+                                Audio_Send(0, entity->ID, TR_SOUND_EMITTER_ENTITY, &engine_world);
+                                
                                 sounds_played--;
                                 sounds_played = (sounds_played <= 0)?(100):(sounds_played);
                             }

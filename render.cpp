@@ -508,10 +508,10 @@ void Render_CleanList()
     room_p r;
     frustum_p f;
 
-    if(renderer.world->Lara)
+    if(renderer.world->Character)
     {
-        renderer.world->Lara->was_rendered = 0;
-        renderer.world->Lara->was_rendered_lines = 0;
+        renderer.world->Character->was_rendered = 0;
+        renderer.world->Character->was_rendered_lines = 0;
     }
 
     for(i=0;i<renderer.r_list_active_count;i++)
@@ -568,9 +568,9 @@ void Render_DrawList()
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
-    if(renderer.world->Lara)
+    if(renderer.world->Character)
     {
-        Render_Entity(renderer.world->Lara);
+        Render_Entity(renderer.world->Character);
     }
 
     /*
@@ -621,9 +621,9 @@ void Render_DrawList_DebugLines()
 
     glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    if(renderer.world->Lara)
+    if(renderer.world->Character)
     {
-        Render_Entity_DebugLines(renderer.world->Lara);
+        Render_Entity_DebugLines(renderer.world->Character);
     }
 
     /*

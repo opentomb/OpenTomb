@@ -165,7 +165,7 @@ int Game_Load(const char* name)
     {
         if(!strcmp("LARA", token))
         {
-            SC_ParseEntity(&ch, engine_world.Lara);
+            SC_ParseEntity(&ch, engine_world.Character);
         }
     }
 
@@ -243,7 +243,7 @@ int Game_Save(const char* name)
     fprintf(f, "%d\n", (int)CVAR_get_val_d("engine_version"));
     fprintf(f, "\"%s\"\n", CVAR_get_val_s("game_level"));
     fprintf(f, "\nLARA");
-    Save_Entity(&f, engine_world.Lara);
+    Save_Entity(&f, engine_world.Character);
     fclose(f);
 
     return 1;
@@ -307,7 +307,7 @@ void Game_ApplyControls()
 
         return;
     }
-    entity_p Lara = renderer.world->Lara;
+    entity_p Lara = renderer.world->Character;
     
     if(control_mapper.use_joy)
     {
