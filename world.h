@@ -21,6 +21,7 @@ struct static_mesh_s;
 struct entity_s;
 struct skeletal_model_s;
 struct render_object_list_s;
+struct RedBlackHeader_s;
 
 typedef struct room_box_s
 {
@@ -131,9 +132,8 @@ typedef struct world_s
     
     struct entity_s            *Character;                                      // this is an unical Lara pointer =)  
     struct skeletal_model_s    *sky_box;                                        // global skybox
-    
-    uint32_t                    entity_count;
-    struct entity_s            *entity_list;                                    // list of world active objects
+                                   
+    struct RedBlackHeader_s    *entity_tree;                                    // tree of world active objects
     
     uint32_t                    type; 
     
@@ -150,12 +150,15 @@ typedef struct world_s
     
     uint32_t                    audio_buffers_count;                            // Amount of samples.
     ALuint                     *audio_buffers;                                  // Samples.
-    //uint32_t                    audio_sources_count;                            // Amount of runtime channels.
-    //AudioSource                *audio_sources;                                  // Channels.
+    uint32_t                    audio_sources_count;                            // Amount of runtime channels.
+    AudioSource                *audio_sources;                                  // Channels.
 }world_t, *world_p;
 
 void World_Prepare(world_p world);
 void World_Empty(world_p world);
+int compEntityEQ(void *x, void *y);
+int compEntityLT(void *x, void *y);
+void RBEntityFree(void *x);
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
 
 void Room_Empty(room_p room);
@@ -172,7 +175,6 @@ room_p Room_FindPos2d(world_p w, btScalar pos[3]);
 room_p Room_FindPos(world_p w, btScalar pos[3]);
 room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room);
 room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room);
-struct entity_s *Entity_GetByID(unsigned int ID);
 room_p Room_GetByID(world_p w, unsigned int ID);
 room_sector_p Room_GetSector(room_p room, btScalar pos[3]);
 
@@ -181,6 +183,7 @@ int Room_IsOverlapped(room_p r0, room_p r1);
 int Room_IsInNearRoomsList(room_p room, room_p r);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
+int World_DeleteEntity(world_p world, struct entity_s *entity);
 struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world);
 struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id);           // binary search the model by ID
 

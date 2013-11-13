@@ -79,8 +79,9 @@ class TR_Level {
             this->sound_details = NULL;         // destroyed
             this->sample_indices_count = 0;     // destroyed
             this->sample_indices = NULL;        // destroyed
+            this->samples_data_size = 0;
             this->samples_count = 0;            // destroyed
-            this->samples = NULL;               // destroyed
+            this->samples_data = NULL;               // destroyed
 
             this->frame_data_size = 0;          // destroyed
             this->frame_data = NULL;            // destroyed
@@ -297,11 +298,12 @@ class TR_Level {
                 this->sound_details = NULL; 
             }
             
-            if(this->samples_count)
+            if(this->samples_data)
             {
+                this->samples_data_size = 0;
                 this->samples_count = 0; 
-                free(this->samples); 
-                this->samples = NULL; 
+                free(this->samples_data); 
+                this->samples_data = NULL; 
             }
             
             if(this->sample_indices_count)
@@ -518,7 +520,8 @@ class TR_Level {
 	uint32_t sound_details_count;
         tr_sound_details_t *sound_details;	///< \brief sound details.
 	uint32_t samples_count;
-        uint8_t *samples;	///< \brief samples.
+        uint32_t samples_data_size;
+        uint8_t *samples_data;	///< \brief samples.
 	uint32_t sample_indices_count;
         uint32_t *sample_indices;	///< \brief sample indices.
         

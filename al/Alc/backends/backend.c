@@ -1,11 +1,8 @@
 
 #include "../../config.h"
-#include "../../config.h"
 #include "../../alMain.h"
 #include "../../alu.h"
 
-
-//void Sys_DebugLog(const char *file, const char *fmt, ...);
 
 #if HAVE_SDL
 #include <SDL2/SDL.h>

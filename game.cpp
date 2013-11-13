@@ -28,6 +28,7 @@ extern "C" {
 #include "anim_state_control.h"
 #include "bounding_volume.h"
 #include "character_controller.h"
+#include "redblack.h"
 
 
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
@@ -455,24 +456,36 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     Cam_SetRotation(cam, cam_angles);
 }
 
+void Game_UpdateAllEntities(struct RedBlackNode_s *x)
+{
+    entity_p entity = (entity_p)x->data;
+    
+    if(Entity_Frame(entity, engine_frame_time, -1))
+    {
+        Entity_UpdateRigidBody(entity);
+    }
+    
+    if(x->left != NULL)
+    {
+        Game_UpdateAllEntities(x->left);
+    }
+    if(x->right != NULL)
+    {
+        Game_UpdateAllEntities(x->right);
+    }
+}
 
 void GameFrame(btScalar time)
 {
-    entity_p entity;
-    
     if(con_base.show)
     {
         return;
     }
 
     Game_ApplyControls();
-    
-    for(entity=engine_world.entity_list;entity;entity=entity->next)
+    if(engine_world.entity_tree->root)
     {
-        if(Entity_Frame(entity, time, -1))
-        {
-            Entity_UpdateRigidBody(entity);
-        }
+        Game_UpdateAllEntities(engine_world.entity_tree->root);
     }
     
     bt_engine_dynamicsWorld->stepSimulation(time, 8);

@@ -57,7 +57,7 @@ extern "C" {
 // TR1 and TR2 levels, as there is no such parameters in SoundDetails
 // structures.
 
-#define TR_SOUND_DEFAULT_RANGE 10
+#define TR_SOUND_DEFAULT_RANGE 1
 #define TR_SOUND_DEFAULT_PITCH 0
 
 // Entity types are used to identify different sound emitter types. Since
@@ -77,6 +77,7 @@ typedef struct audio_settings_s
     ALuint      sounds_volume;
     ALboolean   use_effects;
     ALboolean   listener_is_player;
+    
 }audio_settings_t, *audio_settings_p;
 
 // Effect structure.
@@ -122,23 +123,25 @@ class AudioSource
 {
 public:
     AudioSource();  // Audio source constructor.
-    ~AudioSource();	// Audio source destructor.
+   ~AudioSource();	// Audio source destructor.
+   
+    void Play();
+    void Pause();
+    void Stop();
+    void Update();
 
+    void SetBuffer(ALint buffer);
+    void SetLooping(ALboolean is_looping);
     void SetPitch(ALfloat pitch_value);
     void SetGain(ALfloat gain_value);
     void SetRange(ALfloat range_value);
-
-    void SetEmitterIndex(const uint32_t index, const uint32_t type);
-
-    void SetPosition(const ALfloat pos_vector[]);
-    void SetVelocity(const ALfloat vel_vector[]);
-
-    void Erase();
+    
+    void LinkEmitter();
 
     ALuint      source_index;   // Source index. Should be unique for each source.
 
     // Runtime sound source parameters
-    int32_t	emitter_ID;		// Entity of origin. -1 means no entity (hence - empty source).
+    int32_t	    emitter_ID;		// Entity of origin. -1 means no entity (hence - empty source).
     uint32_t	emitter_type;	// 0 - ordinary entity, 1 - sound source, 2 - global sound.
     uint32_t	effect_index;	// Effect index. Used to associate effect with entity for R/W flags.
     uint32_t    sample_index;	// OpenAL sample (buffer) index. May be the same for different sources.
@@ -147,21 +150,25 @@ public:
 
     // Playback parameters
     bool    	active;			// Source gets autostopped and destroyed on next frame, if it's not set.
+    
+private:
+    void SetPosition(const ALfloat pos_vector[]);
+    void SetVelocity(const ALfloat vel_vector[]);
 };
 
-int  Audio_Init(const int num_Sources, struct world_s *world, class VT_Level *tr);
-int  Audio_DeInit(struct world_s *world);
+int  Audio_Init(const int num_Sources, class VT_Level *tr);
+int  Audio_DeInit();
 
-int Audio_GetFreeSource(struct world_s *world);
+int Audio_GetFreeSource();
 
-void Audio_UpdateSources(struct world_s *world);    // Main sound loop.
-void Audio_PauseAllSources(struct world_s *world);	// Used to pause all effects currently playing.
-void Audio_ResumeAllSources(struct world_s *world);	// Used to resume all effects currently paused.
+void Audio_UpdateSources();     // Main sound loop.
+void Audio_PauseAllSources();	// Used to pause all effects currently playing.
+void Audio_ResumeAllSources();	// Used to resume all effects currently paused.
 
-int  Audio_Send(int effect_ID, int entity_ID, int entity_type, struct world_s *world);	// Send to play effect with given parameters.
+int  Audio_Send(int effect_ID, int entity_ID, int entity_type);	// Send to play effect with given parameters.
 void Audio_Kill(int effect_ID, int entity_ID, int entity_type);	// If exist, immediately stop and destroy all effects with given parameters.
 
-int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type, struct world_s *world);
+int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type);
 
 // void Audio_SetFX(bool reverb, bool underwater, bool outside);   // Set global effects for all sources.
 

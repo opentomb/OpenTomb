@@ -58,10 +58,6 @@ GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 GLfloat hang_offset_point[3] = {0.0, 0.0, 0.0};
 
-ALfloat         al_pos[3];
-ALuint          al_source;
-int             sample = 0;
-
 static int model = 0;
 static int mesh = 0;
 static int paused = 0;
@@ -487,15 +483,6 @@ int SDL_main(int argc, char **argv)
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
     
-    alGenSources(1, &al_source);
-    alSourcei(al_source, AL_REFERENCE_DISTANCE, 64.0);                          // distance, where sound amplitude *= 0.5
-    
-    if(engine_world.audio_buffers)
-    {
-        alSourcei(al_source, AL_BUFFER, engine_world.audio_buffers[sample]);
-    }
-    alSourcePlay(al_source);
-    
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
@@ -507,19 +494,10 @@ int SDL_main(int argc, char **argv)
         oldtime = newtime;
         Engine_Frame(time);
         
-        if(sample < 0)
-        {
-            sample = engine_world.audio_buffers_count - 1;
-        }
-        if(sample > engine_world.audio_buffers_count - 1)
-        {
-            sample = 0;
-        }
-        
         Audio_UpdateListenerByCamera(renderer.cam);
-        vec3_copy(al_pos, renderer.cam->pos);
-        alSourcefv(al_source, AL_POSITION, al_pos);
-        Audio_UpdateSources(&engine_world);
+        //vec3_copy(al_pos, renderer.cam->pos);
+        //alSourcefv(al_source, AL_POSITION, al_pos);
+        Audio_UpdateSources();
     }
     
     Engine_Shutdown(EXIT_SUCCESS);
@@ -1023,42 +1001,6 @@ void DebugKeys(int button, int state)
                     mesh = 0;
                 }
                 break;
-
-            case SDLK_g:
-                sample--;
-                if(sample < 0)
-                {
-                    sample = engine_world.audio_buffers_count-1;
-                }
-                if(engine_world.audio_buffers)
-                {
-                    if(alIsSource(al_source))
-                    {
-                        alDeleteSources(1, &al_source);
-                    }
-                    alGenSources(1, &al_source);
-                    alSourcei(al_source, AL_BUFFER, engine_world.audio_buffers[sample]);
-                    alSourcePlay(al_source);
-                }
-                break;
-
-            case SDLK_h:
-                sample++;
-                if(sample > engine_world.audio_buffers_count-1)
-                {
-                    sample = 0;
-                }
-                if(engine_world.audio_buffers)
-                {
-                    if(alIsSource(al_source))
-                    {
-                        alDeleteSources(1, &al_source);
-                    }
-                    alGenSources(1, &al_source);
-                    alSourcei(al_source, AL_BUFFER, engine_world.audio_buffers[sample]);
-                    alSourcePlay(al_source);
-                }
-                break;  
                 
             case SDLK_z:
                 paused = !paused;

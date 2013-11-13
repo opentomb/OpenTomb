@@ -60,7 +60,6 @@ typedef struct entity_s
     btScalar                            lerp;
     
     struct skeletal_model_s            *model;                                  // 
-    struct entity_s                    *next;                                   // 
     
     struct engine_container_s          *self;
     

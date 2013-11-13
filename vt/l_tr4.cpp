@@ -723,15 +723,11 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         if(i)
         {
             this->samples_count = i;
-            Sys_DebugLog("load_sounds.txt", "Num Samples: %d", this->samples_count);
-            
             // Since sample data is the last part, we simply load whole last
             // block of file as single array.
-            uint32_t samples_size = SDL_RWsize(src) - SDL_RWtell(src);
-            Sys_DebugLog("load_sounds.txt", "Sample data size: %X", samples_size);
-            
-            this->samples = (uint8_t*)malloc(samples_size);
-            for(i = 0; i < samples_size; i++)
-                this->samples[i] = read_bitu8(src);
+            this->samples_data_size = SDL_RWsize(src) - SDL_RWtell(src);
+            this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
+            for(i = 0; i < this->samples_data_size; i++)
+                this->samples_data[i] = read_bitu8(src);
         }
 }

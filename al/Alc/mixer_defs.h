@@ -1,9 +1,9 @@
 #ifndef MIXER_DEFS_H
 #define MIXER_DEFS_H
 
-#include "AL/alc.h"
-#include "AL/al.h"
-#include "alMain.h"
+#include "../AL/alc.h"
+#include "../AL/al.h"
+#include "../alMain.h"
 
 struct DirectParams;
 struct SendParams;

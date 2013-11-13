@@ -786,7 +786,6 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
 	this->sound_details_count = read_bitu32(src);
         this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
 
-        /// correct
         for(i=0; i < this->sound_details_count; i++)
         {
             this->sound_details[i].sample = read_bitu16(src);
@@ -798,39 +797,23 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
             this->sound_details[i].flags_2 = read_bitu8(src);
         }
                     
-        ///correct
         this->sample_indices_count = read_bitu32(src);
         this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
         for(i=0; i < this->sample_indices_count; i++)
             this->sample_indices[i] = read_bitu32(src);
 
-        SDL_RWseek(src, 6, SEEK_SET);   // In TR5, sample indices are followed by 6 0xCD bytes. - correct - really 0xCDCDCDCDCDCD
+        SDL_RWseek(src, 6, SEEK_CUR);   // In TR5, sample indices are followed by 6 0xCD bytes. - correct - really 0xCDCDCDCDCDCD
 
         // LOAD SAMPLES
-        this->samples_count = 0;
-        this->samples = NULL;
-/*
-        i = read_bitu32(src);   // Read num samples
-        i = read_bitu32(src);   // Read num samples
-        i = read_bitu32(src);   // Read num samples
+        i = read_bitu32(src);                                                   // Read num samples
         if(i)
         {
             this->samples_count = i;
-            Sys_DebugLog("load_sounds.txt", "Num Samples: %d", this->samples_count);
-
             // Since sample data is the last part, we simply load whole last
             // block of file as single array.
-            uncomp_size = SDL_RWsize(src) - SDL_RWtell(src);
-            Sys_DebugLog("load_sounds.txt", "Sample data size: %X", uncomp_size);
-
-            this->samples = (uint8_t*)malloc(uncomp_size);
+            this->samples_data_size = SDL_RWsize(src) - SDL_RWtell(src);
+            this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(int8_t));
             for(i = 0; i < uncomp_size; i++)
-            {
-                this->samples[i] = read_bitu8(src);
-                if(*((uint32_t*)(this->samples+i)) == 0x46464952)
-                {
-                    break;
-                }
-            }
-        }*/
+                this->samples_data[i] = read_bitu8(src);
+        }
 }

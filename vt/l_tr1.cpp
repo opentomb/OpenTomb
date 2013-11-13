@@ -741,18 +741,25 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
             this->sound_details[i].pitch = TR_SOUND_DEFAULT_PITCH;
         }
 
-    // LOAD SAMPLES
-    
-    // In TR1, samples are embedded into level file as solid block, preceded by
-    // block size in bytes. Sample block is followed by sample indices array.
+        // LOAD SAMPLES
 
-    this->samples_count = read_bitu32(src);
-    this->samples = (uint8_t*)malloc(this->samples_count * sizeof(uint8_t));
-    for(i=0; i < this->samples_count; i++)
-        this->samples[i] = read_bitu8(src);
+        // In TR1, samples are embedded into level file as solid block, preceded by
+        // block size in bytes. Sample block is followed by sample indices array.
 
-    this->sample_indices_count = read_bitu32(src);
-    this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
-    for(i=0; i < this->sample_indices_count; i++)
-        this->sample_indices[i] = read_bitu32(src);
+        this->samples_count = 0;
+        this->samples_data_size = read_bitu32(src);
+        this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
+        for(i=0; i < this->samples_data_size; i++)
+        {
+            this->samples_data[i] = read_bitu8(src);
+            if((i >= 4) && (*((uint32_t*)(this->samples_data+i-4)) == 0x46464952))   /// RIFF
+            {
+                this->samples_count++;
+            }
+        }
+
+        this->sample_indices_count = read_bitu32(src);
+        this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
+        for(i=0; i < this->sample_indices_count; i++)
+                this->sample_indices[i] = read_bitu32(src);
 }

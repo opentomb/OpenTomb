@@ -51,9 +51,6 @@ struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
 btScalar                                engine_frame_time = 0.0;
 
-//cvar_t                                  mouse_sensitivity;
-//cvar_t                                  time_scale;
-
 struct camera_s                         engine_camera;
 struct world_s                          engine_world;
 
