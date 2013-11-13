@@ -1,8 +1,8 @@
 #include "../config.h"
-#include "AL/al.h"
-#include "AL/alc.h"
-#include "alMain.h"
-#include "alu.h"
+#include "../AL/al.h"
+#include "../AL/alc.h"
+#include "../alMain.h"
+#include "../alu.h"
 
 #ifdef HAVE_ARM_NEON_H
 #include <arm_neon.h>

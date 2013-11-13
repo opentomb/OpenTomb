@@ -23,7 +23,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "../AL/alMain.h"
+#include "../alMain.h"
 
 
 struct RingBuffer {

@@ -32,6 +32,7 @@ extern "C" {
 #include "engine.h"
 #include "bordered_texture_atlas.h"
 #include "render.h"
+#include "redblack.h"
 
 
 typedef struct uncollision_tex_rect_s
@@ -526,8 +527,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    world->entity_count = 0;
-    world->entity_list = NULL;
     world->Character = NULL;
     world->meshes = NULL;
     world->meshs_count = 0;
@@ -535,7 +534,11 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->rooms = NULL;
     world->sprites_count = 0;
     world->sprites = NULL;
-
+    world->entity_tree = RB_Init();
+    world->entity_tree->rb_compEQ = compEntityEQ;
+    world->entity_tree->rb_compLT = compEntityLT;
+    world->entity_tree->rb_free_data = RBEntityFree;
+    
     uc_rect_count = 0;
     uc_rect_list = NULL;
 
@@ -741,7 +744,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     
     // Initialize audio.
     
-    Audio_Init(MAX_CHANNELS, world, tr);
+    Audio_Init(MAX_CHANNELS, tr);
 
     switch(tr->game_version)
     {

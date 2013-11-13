@@ -2,11 +2,11 @@
 
 #include <stdlib.h>
 
-#include "alMain.h"
-#include "alFilter.h"
-#include "alAuxEffectSlot.h"
-#include "alError.h"
-#include "alu.h"
+#include "../../alMain.h"
+#include "../../alFilter.h"
+#include "../../alAuxEffectSlot.h"
+#include "../../alError.h"
+#include "../../alu.h"
 
 
 typedef struct ALnullStateFactory {

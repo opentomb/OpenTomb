@@ -24,12 +24,12 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "alMain.h"
-#include "alFilter.h"
-#include "alEffect.h"
-#include "alAuxEffectSlot.h"
-#include "alError.h"
-#include "alu.h"
+#include "../../alMain.h"
+#include "../../alFilter.h"
+#include "../../alEffect.h"
+#include "../../alAuxEffectSlot.h"
+#include "../../alError.h"
+#include "../../alu.h"
 
 typedef struct ALreverbStateFactory {
     DERIVE_FROM_TYPE(ALeffectStateFactory);

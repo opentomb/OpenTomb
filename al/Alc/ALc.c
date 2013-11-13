@@ -27,18 +27,18 @@
 #include <ctype.h>
 #include <signal.h>
 
-#include "alMain.h"
-#include "alSource.h"
-#include "alListener.h"
-#include "alThunk.h"
-#include "alSource.h"
-#include "alBuffer.h"
-#include "alAuxEffectSlot.h"
-#include "alError.h"
-#include "bs2b.h"
-#include "alu.h"
-#include "AL/alext.h"
-#include "AL/efx.h"
+#include "../alMain.h"
+#include "../alSource.h"
+#include "../alListener.h"
+#include "../alThunk.h"
+#include "../alSource.h"
+#include "../alBuffer.h"
+#include "../alAuxEffectSlot.h"
+#include "../alError.h"
+#include "../bs2b.h"
+#include "../alu.h"
+#include "../AL/alext.h"
+#include "../AL/efx.h"
 
 /************************************************
  * Backends

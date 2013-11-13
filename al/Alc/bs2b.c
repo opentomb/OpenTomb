@@ -26,7 +26,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "../AL/bs2b.h"
+#include "../bs2b.h"
 
 #ifndef M_PI
 #define M_PI  3.14159265358979323846

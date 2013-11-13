@@ -5,13 +5,13 @@
 #include <xmmintrin.h>
 #endif
 
-#include "AL/al.h"
-#include "AL/alc.h"
-#include "alMain.h"
-#include "alu.h"
+#include "../AL/al.h"
+#include "../AL/alc.h"
+#include "../alMain.h"
+#include "../alu.h"
 
-#include "alSource.h"
-#include "alAuxEffectSlot.h"
+#include "../alSource.h"
+#include "../alAuxEffectSlot.h"
 #include "mixer_defs.h"
 
 

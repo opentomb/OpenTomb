@@ -12,6 +12,8 @@ extern "C" {
 #include "vmath.h"
 #include "entity.h"
 #include "character_controller.h"
+#include "system.h"
+#include "render.h"
 
 struct audio_settings_s     audio_settings = {0};
 
@@ -24,25 +26,86 @@ AudioSource::AudioSource()
     sample_index = 0;
     sample_count = 0;
     is_water     = false;
+    alGenSources(1, &source_index);
+    alSourcei(source_index, AL_REFERENCE_DISTANCE, 64.0);                       // distance, where sound amplitude *= 0.5
 }
+
 
 AudioSource::~AudioSource()
 {
-    ALint val;
-    
-    alGetSourcei(source_index, AL_SOURCE_STATE, &val);
-    if(val == AL_PLAYING)
+    if(alIsSource(source_index))
     {
         alSourceStop(source_index);
         alDeleteSources(1, &source_index);
     }
 }
 
-void AudioSource::SetEmitterIndex(const uint32_t index, const uint32_t type)
+
+void AudioSource::Play()
 {
-    emitter_ID   = index;
-    emitter_type = type;
+    alSourcePlay(source_index);
+    active = true;
 }
+
+
+void AudioSource::Pause()
+{
+    alSourcePause(source_index);
+}
+
+
+void AudioSource::Stop()
+{
+    alSourceStop(source_index);
+    active = false;
+}
+
+
+void AudioSource::Update()
+{
+    ALint   state, looped;
+    //ALfloat vec[3];
+
+    alGetSourcei(source_index, AL_SOURCE_STATE, &state);
+    
+    if(state == AL_PAUSED)
+    {
+        return;
+    }
+    
+    if((!active) && (state == AL_PLAYING))
+    {
+        alSourceStop(source_index);
+        return;
+    }
+    
+    alGetSourcei(source_index, AL_LOOPING, &looped);
+    
+    if((state == AL_STOPPED) || (looped == AL_LOOPING))
+    {
+        active = false;
+    }
+    
+    LinkEmitter();
+}
+
+
+void AudioSource::SetBuffer(ALint buffer)
+{
+    ALint buffer_index = engine_world.audio_buffers[buffer];
+    
+    if(alIsSource(source_index) && alIsBuffer(buffer_index))
+    {
+        alSourcei(source_index, AL_BUFFER, buffer_index);
+    }
+}
+
+
+void AudioSource::SetLooping(ALboolean is_looping)
+{
+    alSourcei(source_index, AL_LOOPING, is_looping);
+}
+
 
 void AudioSource::SetGain(ALfloat gain_value)
 {
@@ -52,152 +115,150 @@ void AudioSource::SetGain(ALfloat gain_value)
     alSourcef(source_index, AL_GAIN, gain_value);
 }
 
+
 void AudioSource::SetPitch(ALfloat pitch_value)
 {
-    pitch_value = (pitch_value > 1.0)?(1.0):(pitch_value);
-    pitch_value = (pitch_value < 0.0)?(0.0):(pitch_value);
-    
     alSourcef(source_index, AL_PITCH, pitch_value);
 }
 
+
 void AudioSource::SetRange(ALfloat range_value)
 {
-    range_value = (range_value > 1.0)?(1.0):(range_value);
-    range_value = (range_value < 0.0)?(0.0):(range_value);
-    
     alSourcef(source_index, AL_MAX_DISTANCE, range_value);
 }
+
 
 void AudioSource::SetPosition(const ALfloat pos_vector[])
 {
     alSourcefv(source_index, AL_POSITION, pos_vector);
 }
 
+
 void AudioSource::SetVelocity(const ALfloat vel_vector[])
 {
     alSourcefv(source_index, AL_VELOCITY, vel_vector);
 }
 
-void AudioSource::Erase()
-{
-    active = false;
-    alSourceStop(source_index);
-}
 
-void Audio_UpdateSources(struct world_s *world)
+void AudioSource::LinkEmitter()
 {
-#if 0
-    ALint val;
-    ALfloat vec[3];
-    
-    if(world->audio_sources_count < 1)
+    if(emitter_ID == -1)
     {
         return;
     }
-        
-    for(int i = 0; i < world->audio_sources_count; i++)
+    
+    ALfloat vec[3];
+    entity_p ent = World_GetEntityByID(&engine_world, emitter_ID);
+    
+    if(ent && (emitter_type == TR_SOUND_EMITTER_ENTITY))
     {
-        alGetSourcei(i, AL_SOURCE_STATE, &val);
-        
-        if(val == AL_STOPPED)
+        ALfloat buf[3], dist; 
+        vec3_copy(buf, ent->transform + 12);
+        dist = vec3_dist_sq(buf, renderer.cam->pos);
+        if(dist < 4096.0 * 4096.0)                                              ///@FIXME: set here good filter!
         {
-            world->audio_sources[i].active = false;
+            SetPosition(buf);
+            if(ent->character)
+            {
+                vec3_copy(buf, ent->character->speed.m_floats);
+                SetVelocity(buf);
+            }
         }
         else
         {
-            entity_p ent = World_GetEntityByID(world, world->audio_sources[i].emitter_ID);
-
-            if(ent && (world->audio_sources[i].emitter_ID == TR_SOUND_EMITTER_ENTITY))
-            {
-                ALfloat buf[3]; 
-                vec3_copy(buf, ent->transform + 12);
-                world->audio_sources[i].SetPosition(buf);
-                if(ent->character)
-                {
-                    vec3_copy(buf, ent->character->speed.m_floats);
-                    world->audio_sources[i].SetVelocity(buf);
-                }
-            }
-            else if(world->audio_sources[i].emitter_ID == TR_SOUND_EMITTER_SOUNDSOURCE)
-            {
-                //world->audio_sources[i].SetPosition(world->sound_sources[world->audio_sources[i].emitter_ID]->position);
-            }
-            
-            if(world->audio_sources[i].emitter_ID != TR_SOUND_EMITTER_GLOBAL)
-            {
-                alGetListenerfv(AL_POSITION, vec);
-                world->audio_sources[i].SetPosition(vec);
-            }
+            Stop();
         }
     }
-#endif
-}
-
-void Audio_PauseAllSources(struct world_s *world)
-{
-    /*for(int i = 0; i < world->audio_sources_count; i++)
+    else if(emitter_type == TR_SOUND_EMITTER_SOUNDSOURCE)
     {
-        alSourcei(i, AL_SOURCE_STATE, AL_PAUSED);
-    }*/
+        //world->audio_sources[i].SetPosition(world->sound_sources[world->audio_sources[i].emitter_ID]->position);
+    }
+    else if(emitter_type == TR_SOUND_EMITTER_GLOBAL)
+    {
+        alGetListenerfv(AL_POSITION, vec);
+        SetPosition(vec);
+    }
 }
 
 
-void Audio_ResumeAllSources(struct world_s *world)
+void Audio_UpdateSources()
+{
+    if(engine_world.audio_sources_count < 1)
+    {
+        return;
+    }
+    
+    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    {
+        engine_world.audio_sources[i].Update();
+    }
+}
+
+
+void Audio_PauseAllSources()
+{
+    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    {
+        if(engine_world.audio_sources[i].active)
+        {
+            engine_world.audio_sources[i].Pause();
+        }
+    }
+}
+
+
+void Audio_ResumeAllSources()
 {
     ALint val;
     
-    /*for(int i = 0; i < world->audio_sources_count; i++)
+    for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
-        alGetSourcei(i, AL_SOURCE_STATE, &val);
-        if(val == AL_PAUSED)
+        if(engine_world.audio_sources[i].active)
         {
-            alSourcei(i, AL_SOURCE_STATE, AL_PLAYING);
+            engine_world.audio_sources[i].Play();
         }
-    }*/
+    }
 }
 
 
-int Audio_GetFreeSource(struct world_s *world)
-{
-    /*uint32_t free_source_number;
-    
-    for(int i = 0; i < world->audio_sources_count; i++)
+int Audio_GetFreeSource()
+{    
+    for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
-        if(!world->audio_sources[i].active)
+        if(!engine_world.audio_sources[i].active)
+        {
+            return i;
+        }
+    }    
+    return -1;
+}
+
+
+int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type)
+{    
+    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    {
+        if((engine_world.audio_sources[i].emitter_type == entity_type) &&
+           (engine_world.audio_sources[i].emitter_ID   == entity_ID)   &&
+           (engine_world.audio_sources[i].effect_index == effect_ID)   &&
+           (engine_world.audio_sources[i].active == true))
         {
             return i;
         }
     }
-    */
+    
     return -1;
 }
 
-int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type, struct world_s *world)
-{
-    /*for(int i = 0; i < world->audio_sources_count; i++)
-    {
-        if((world->audio_sources[i].emitter_type == entity_type) &&
-           (world->audio_sources[i].emitter_ID   == entity_ID)   &&
-           (world->audio_sources[i].effect_index == effect_ID)   &&
-           (world->audio_sources[i].active))
-        {
-            return i;
-        }
-        else
-        {
-            return -1;
-        }
-    }*/
-}
 
-int Audio_Send(int effect_ID, int entity_ID, int entity_type, struct world_s *world)
+int Audio_Send(int effect_ID, int entity_ID, int entity_type)
 {
-    return -1;
-    /*uint32_t source_number, playing_sound;
+    int32_t  source_number, playing_sound;
     uint16_t random_value;
+    ALfloat  random_float;
     
     // Remap global engine effect ID to local effect ID.
-    effect_ID = world->audio_map[effect_ID];
+    effect_ID = (int)engine_world.audio_map[effect_ID];
     
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
     
@@ -209,11 +270,11 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type, struct world_s *wo
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
     // then randomly select if it should be played or not.
     
-    if((world->audio_effects[effect_ID].loop != TR_SOUND_LOOP_LOOPED) && 
-       (world->audio_effects[effect_ID].chance))
+    if((engine_world.audio_effects[effect_ID].loop != TR_SOUND_LOOP_LOOPED) && 
+       (engine_world.audio_effects[effect_ID].chance > 0))
     {
         random_value = rand() % 0x7FFF;
-        if(world->audio_effects[effect_ID].chance < random_value)
+        if(engine_world.audio_effects[effect_ID].chance < random_value)
         {
             // Bypass audio send, if chance is not passed.
             return 0;
@@ -227,19 +288,12 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type, struct world_s *wo
     switch(entity_type)
     {
     case TR_SOUND_EMITTER_ENTITY:
-        // ����� ������ ���� ���, �����������, ������ �� ������ � �������� ����������, �. �
-        // ������������ �� ����� ������� (����������� ���������� audio_effects[effect_ID].range �
-        // ���������� ���������, �. �. entity) �� ������ ��������� (������).
-        
         break;
         
     case TR_SOUND_EMITTER_SOUNDSOURCE:
-        // �� �� �����, ��� � � ���������� ������, �� sound_source - �� entity, � ��������� ���������
-        // �����, ��������������� ��������.
         break;
         
     case TR_SOUND_EMITTER_GLOBAL:
-        // ���������� ����� (����, GUI, � �. �.) ������ ������, ���������� �� ��������� � ���� ����������.
         break;
     }
     
@@ -248,123 +302,114 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type, struct world_s *wo
     // Otherwise, if W (Wait) or L (Looped) flag is set, and same effect is
     // playing for current entity, don't send it and exit function.
     
-    playing_sound = Audio_IsEffectPlaying(effect_ID, entity_ID, entity_type, world);
+    playing_sound = Audio_IsEffectPlaying(effect_ID, entity_ID, entity_type);
     
-    switch(world->audio_effects[effect_ID].loop)
+    if(playing_sound != -1)
     {
-        case TR_SOUND_LOOP_REWIND:
-            if(playing_sound >= 0)
-            {
-                alSourceRewind(playing_sound);
-                return 1;
-            }
-            break;
-            
-        case TR_SOUND_LOOP_WAIT:
-           if(playing_sound >= 0)
-            {
-                return 0;
-            }
-            break;
- 
-        case TR_SOUND_LOOP_LOOPED:
-            if(playing_sound >= 0)
-            {
-                // Looped sample active flag is being resetted every frame, because looped
-                // source constantly sends play requests to engine. When source is active,
-                // flag gets re-activated every frame, so sample continues to play. When
-                // source is deactivated, it stops sending it, hence, sample is immediately
-                // stopped. 
-                
-                world->audio_sources[playing_sound].active = false;
-                return 0;
-            }
-            break;
-            
-        default:
-            break;  // Non-looped or any other case.
+        if(engine_world.audio_effects[effect_ID].loop == TR_SOUND_LOOP_REWIND)
+        {
+            engine_world.audio_sources[playing_sound].Play();
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
     }
     
     // Pre-step 5: Get free source. If we can't get it, bypass audio send.
     
-    source_number = Audio_GetFreeSource(world);
+    source_number = Audio_GetFreeSource();
     
-    if(source_number >= 0)  // Everything is OK, we're sending audio to channel.
+    if(source_number != -1)  // Everything is OK, we're sending audio to channel.
     {
+        int buffer_index;
         // Step 1. Assign buffer to source.
         
-        if(world->audio_effects[effect_ID].sample_count > 1)
+        if(engine_world.audio_effects[effect_ID].sample_count > 1)
         {
             // Select random buffer, if effect info contains more than 1 assigned samples.
             
-            random_value = rand() % (world->audio_effects[effect_ID].sample_count - 1);
-            alSourcei(source_number, AL_BUFFER, random_value + world->audio_effects[effect_ID].sample_index);
+            random_value = rand() % (engine_world.audio_effects[effect_ID].sample_count);
+            buffer_index = random_value + engine_world.audio_effects[effect_ID].sample_index;
         }
         else
         {
             // Just assign buffer to source, if there is only one assigned sample.
-            
-            alSourcei(source_number, AL_BUFFER, world->audio_effects[effect_ID].sample_index);
+            buffer_index = engine_world.audio_effects[effect_ID].sample_index;
         }
+        
+        engine_world.audio_sources[source_number].SetBuffer(buffer_index);
         
         // Step 2. Check looped flag, and if so, set source type to looped.
         
-        if(world->audio_effects[effect_ID].loop == TR_SOUND_LOOP_LOOPED)
+        if(engine_world.audio_effects[effect_ID].loop == TR_SOUND_LOOP_LOOPED)
         {
-            alSourcei(source_number, AL_LOOPING, AL_TRUE);
+            engine_world.audio_sources[source_number].SetLooping(AL_TRUE);
         }
         else
         {
-            alSourcei(source_number, AL_LOOPING, AL_FALSE);
+            engine_world.audio_sources[source_number].SetLooping(AL_FALSE);
         }
-
-        world->audio_sources[source_number].SetEmitterIndex(entity_ID, entity_type);
         
-        world->audio_sources[source_number].active = true;
-        world->audio_sources[source_number].source_index = source_number;
+        engine_world.audio_sources[source_number].emitter_ID = entity_ID;
+        engine_world.audio_sources[source_number].emitter_type = entity_type;
         
-        world->audio_sources[source_number].effect_index = effect_ID;
+        engine_world.audio_sources[source_number].effect_index = effect_ID;
         
-        world->audio_sources[source_number].SetPitch(world->audio_effects[effect_ID].pitch);
-        world->audio_sources[source_number].SetGain(world->audio_effects[effect_ID].gain);
-        world->audio_sources[source_number].SetRange(world->audio_effects[effect_ID].range);
+        if(engine_world.audio_effects[effect_ID].rand_pitch)
+        {
+            random_float = rand() % engine_world.audio_effects[effect_ID].rand_pitch_var;
+            random_float = 1 + ((random_float - 250) / 2000);
+            engine_world.audio_sources[source_number].SetPitch(random_float);
+        }
         
-        alSourcePlay(source_number);
+        if(engine_world.audio_effects[effect_ID].rand_gain)
+        {
+            random_float = rand() % engine_world.audio_effects[effect_ID].rand_gain_var;
+            random_float = 1 + (random_float - 250) / 2000;            
+            engine_world.audio_sources[source_number].SetGain(random_float);
+        }
+        
+        engine_world.audio_sources[source_number].SetRange(engine_world.audio_effects[effect_ID].range);
+        
+        engine_world.audio_sources[source_number].Play();
         
         return 1;
     }
     else
     {
         return -1;
-    }*/
+    }
 }
 
-int Audio_Init(const int num_Sources, struct world_s *world, class VT_Level *tr)
+
+int Audio_Init(const int num_Sources, class VT_Level *tr)
 {
-    uint8_t      *pointer = tr->samples;
+    uint8_t      *pointer = tr->samples_data;
     int8_t        flag;
     uint32_t      ind1, ind2;
     uint32_t      comp_size, uncomp_size;
     uint32_t      i;
     
     // Generate new buffer array.
-    world->audio_buffers_count = tr->sample_indices_count;
-    world->audio_buffers = (ALuint*)malloc(world->audio_buffers_count * sizeof(ALuint));
-    memset(world->audio_buffers, 0, sizeof(ALuint) * world->audio_buffers_count);
-    alGenBuffers(world->audio_buffers_count, world->audio_buffers);
+    engine_world.audio_buffers_count = tr->sample_indices_count;
+    engine_world.audio_buffers = (ALuint*)malloc(engine_world.audio_buffers_count * sizeof(ALuint));
+    memset(engine_world.audio_buffers, 0, sizeof(ALuint) * engine_world.audio_buffers_count);
+    alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
          
     // Generate new source array.
-    /*world->audio_sources_count = num_Sources;
-    world->audio_sources = new AudioSource[num_Sources];*/
+    engine_world.audio_sources_count = num_Sources;
+    engine_world.audio_sources = new AudioSource[num_Sources];
     
     // Generate new audio effects array.
-    world->audio_effects_count = tr->sound_details_count;
-    world->audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
-    memset(world->audio_effects, 0xFF, sizeof(audio_effect_t) * tr->sound_details_count);
+    engine_world.audio_effects_count = tr->sound_details_count;
+    engine_world.audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
+    memset(engine_world.audio_effects, 0xFF, sizeof(audio_effect_t) * tr->sound_details_count);
     
     // Copy sound map.
-    world->audio_map = tr->soundmap;
-    tr->soundmap = NULL;                                                        /// vithout it VT destructor free(tr->soundmap)
+    engine_world.audio_map = tr->soundmap;
+    tr->soundmap = NULL;                                                        /// without it VT destructor free(tr->soundmap)
     
     // Cycle through raw samples block and parse them to OpenAL buffers.
 
@@ -382,29 +427,29 @@ int Audio_Init(const int num_Sources, struct world_s *world, class VT_Level *tr)
             case TR_I:
             case TR_I_DEMO:
             case TR_I_UB:
-                world->audio_map_count = TR_SOUND_MAP_SIZE_TR1;
+                engine_world.audio_map_count = TR_SOUND_MAP_SIZE_TR1;
 
-                for(i = 0; i < world->audio_buffers_count-1; i++)
+                for(i = 0; i < engine_world.audio_buffers_count-1; i++)
                 {
-                    pointer = tr->samples + tr->sample_indices[i];
-                    Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, (tr->sample_indices[(i+1)] - tr->sample_indices[i]));
+                    pointer = tr->samples_data + tr->sample_indices[i];
+                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, (tr->sample_indices[(i+1)] - tr->sample_indices[i]));
                 }
-                i = world->audio_buffers_count-1;
-                Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, (tr->samples_count - tr->sample_indices[i]));
+                i = engine_world.audio_buffers_count-1;
+                Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, (tr->samples_count - tr->sample_indices[i]));
                 break;
 
             case TR_II:
             case TR_II_DEMO:
             case TR_III:
                 {
-                    //world->audio_map_count = (tr->game_version == TR_III)?(TR_SOUND_MAP_SIZE_TR3):(TR_SOUND_MAP_SIZE_TR2);
+                    //engine_world.audio_map_count = (tr->game_version == TR_III)?(TR_SOUND_MAP_SIZE_TR3):(TR_SOUND_MAP_SIZE_TR2);
                     ind1 = 0;
                     ind2 = 0;
                     flag = 0;
-                    while((pointer < tr->samples + tr->samples_count - 4) && (i < world->audio_buffers_count))
+                    while(pointer < tr->samples_data + tr->samples_data_size - 4)
                     {
-                        pointer = tr->samples + ind2;
-                        if(0x46464952 == *((int32_t*)pointer))              // RIFF
+                        pointer = tr->samples_data + ind2;
+                        if(0x46464952 == *((int32_t*)pointer))                  // RIFF
                         {
                             if(flag == 0x00)
                             {
@@ -414,7 +459,7 @@ int Audio_Init(const int num_Sources, struct world_s *world, class VT_Level *tr)
                             else
                             {
                                 uncomp_size = ind2 - ind1;
-                                Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], tr->samples + ind1, uncomp_size);
+                                Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
                                 i++;
                                 ind1 = ind2;
                             }
@@ -422,9 +467,9 @@ int Audio_Init(const int num_Sources, struct world_s *world, class VT_Level *tr)
                         ind2++;
                     }
                     uncomp_size = tr->samples_count - ind1;
-                    if(i < world->audio_buffers_count)
+                    if(i < engine_world.audio_buffers_count)
                     {
-                        Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, uncomp_size); 
+                        Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, uncomp_size); 
                     }                    
                 }
                 break;
@@ -432,7 +477,7 @@ int Audio_Init(const int num_Sources, struct world_s *world, class VT_Level *tr)
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                world->audio_map_count = (tr->game_version == TR_V)?(TR_SOUND_MAP_SIZE_TR5):(TR_SOUND_MAP_SIZE_TR4);
+                engine_world.audio_map_count = (tr->game_version == TR_V)?(TR_SOUND_MAP_SIZE_TR5):(TR_SOUND_MAP_SIZE_TR4);
 
                 for(i = 0; i < tr->samples_count; i++)
                 {
@@ -444,7 +489,7 @@ int Audio_Init(const int num_Sources, struct world_s *world, class VT_Level *tr)
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
-                    Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, comp_size);
+                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, comp_size);
 
                     // Now we can safely move pointer through current sample data.
                     pointer += comp_size;
@@ -452,70 +497,80 @@ int Audio_Init(const int num_Sources, struct world_s *world, class VT_Level *tr)
                 break;
 
             default:
-                world->audio_map_count = TR_SOUND_MAP_SIZE_NONE;
+                engine_world.audio_map_count = TR_SOUND_MAP_SIZE_NONE;
                 break;
         }
+        
+        free(tr->samples_data);
+        tr->samples_data = NULL;
+        tr->samples_data_size = 0;
     }
-
+    
     // Cycle through SoundDetails and parse them into native OpenTomb
     // audio effects structure.
-    
-    for(i = 0; i < world->audio_effects_count; i++)
+    switch(tr->game_version)
     {
-        world->audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch);
-        world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume / 65535);
-        world->audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
-        world->audio_effects[i].chance = tr->sound_details[i].chance;
-        
-        world->audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
-        world->audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_PITCH);
-        world->audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_VOLUME);
-        
-        world->audio_effects[i].sample_index = tr->sound_details[i].sample;
-        world->audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_SOUND_SAMPLE_NUMBER_MASK;
+        case TR_I:
+        case TR_I_DEMO:
+        case TR_I_UB:
+            for(i = 0; i < engine_world.audio_effects_count; i++)
+            {                
+                engine_world.audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch);
+                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1 is 32767.
+                engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
+                engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
+                
+                engine_world.audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
+                engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_PITCH);
+                engine_world.audio_effects[i].rand_pitch_var = 500;
+                engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_VOLUME);
+                engine_world.audio_effects[i].rand_gain_var = 500;
+                
+                engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
+                engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_SOUND_SAMPLE_NUMBER_MASK;
+            }
+            break;
+    }    
+    
+    return 0;
+}
+
+
+int Audio_DeInit()
+{
+    if(engine_world.audio_sources)
+    {
+        delete[] engine_world.audio_sources;
+        engine_world.audio_sources = NULL;
+        engine_world.audio_sources_count = 0;
+    }
+    ///@CRITICAL: You must to delete all sources before buffers deleting!!!
+
+    if(engine_world.audio_buffers)
+    {
+        alDeleteBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
+        free(engine_world.audio_buffers);
+        engine_world.audio_buffers = NULL;
+        engine_world.audio_buffers_count = 0;
+    }
+    
+    if(engine_world.audio_effects)
+    {
+        free(engine_world.audio_effects);
+        engine_world.audio_effects = NULL;
+        engine_world.audio_effects_count = 0;
+    }
+    
+    if(engine_world.audio_map)
+    {
+        free(engine_world.audio_map);
+        engine_world.audio_map = NULL;
+        engine_world.audio_map_count = 0;
     }
     
     return 0;
 }
 
-int Audio_DeInit(struct world_s *world)
-{
-    /*if(world->audio_sources)
-    {
-        delete[] world->audio_sources;
-        world->audio_sources = NULL;
-        world->audio_sources_count = 0;
-    }*/
-    extern ALuint al_source;
-    
-    ///@CRITICAL: You must to delete all sources before buffers deleting!!!
-    alSourcePause(al_source);
-    alDeleteSources(1, &al_source);
-    
-    if(world->audio_buffers)
-    {
-        alDeleteBuffers(world->audio_buffers_count, world->audio_buffers);
-        free(world->audio_buffers);
-        world->audio_buffers = NULL;
-        world->audio_buffers_count = 0;
-    }
-    
-    if(world->audio_effects)
-    {
-        free(world->audio_effects);
-        world->audio_effects = NULL;
-        world->audio_effects_count = 0;
-    }
-    
-    if(world->audio_map)
-    {
-        free(world->audio_map);
-        world->audio_map = NULL;
-        world->audio_map_count = 0;
-    }
-    
-    return 0;
-}
 
 int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size)
 {
@@ -536,7 +591,7 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     }
     SDL_FreeRW(src);
     // Find out sample format and load it correspondingly.
-    // Note that with OpenAL, we can have samples of different formats 
+    // Note that with OpenAL, we can have samples of different formats in same level 
     switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
     {
         case 8:
@@ -547,7 +602,6 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
             else if(wav_spec.channels == 2)                                     // stereo
             {
                 alBufferData(buf_number, AL_FORMAT_STEREO8, wav_buffer, wav_length, wav_spec.freq);
-                //Sys_DebugLog(LOG_FILENAME, "Warning: sample %03d is not mono - no 3D audio!", buf_number);
             }
             else                                                                // unsupported
             {
@@ -564,7 +618,6 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
             else if(wav_spec.channels == 2)                                     // stereo
             {
                 alBufferData(buf_number, AL_FORMAT_STEREO16, wav_buffer, wav_length, wav_spec.freq);
-                //Sys_DebugLog(LOG_FILENAME, "Warning: sample %03d is not mono - no 3D audio!", buf_number);
             }
             else                                                                // unsupported
             {

@@ -19,6 +19,7 @@
 #include "engine.h"
 #include "script.h"
 #include "bounding_volume.h"
+#include "redblack.h"
 
 void Room_Empty(room_p room)
 {
@@ -281,12 +282,11 @@ void World_Prepare(world_p world)
     world->rooms = 0;
     world->textures = NULL;
     world->type = 0;
-    world->entity_list = NULL;
-    world->entity_count = 0;
+    world->entity_tree = NULL;
     world->Character = NULL;
     
-    //world->audio_sources = NULL;
-    //world->audio_sources_count = 0;
+    world->audio_sources = NULL;
+    world->audio_sources_count = 0;
     world->audio_buffers = NULL;
     world->audio_buffers_count = 0;
     world->audio_effects = NULL;
@@ -310,7 +310,6 @@ void World_Prepare(world_p world)
 void World_Empty(world_p world)
 {
     int32_t i;
-    entity_p ent_next;
     engine_container_p cont;
     extern entity_p last_rmb;
     
@@ -339,17 +338,9 @@ void World_Empty(world_p world)
     }
 
     /*entity empty*/
-    if(world->entity_count)
-    {
-        while(world->entity_list)
-        {
-            ent_next = world->entity_list->next;
-            Entity_Clear(world->entity_list);
-            free(world->entity_list);
-            world->entity_list = ent_next;
-        }
-    }
-
+    RB_Free(world->entity_tree);
+    world->entity_tree = NULL;
+    
     if(world->Character)
     {
         Entity_Clear(world->Character);
@@ -426,24 +417,41 @@ void World_Empty(world_p world)
     }
     
     // De-initialize and destroy all audio objects.
-    Audio_DeInit(world);
+    Audio_DeInit();
+}
+
+int compEntityEQ(void *x, void *y)
+{
+    return ((entity_p)x)->ID == ((entity_p)y)->ID;
+}
+
+int compEntityLT(void *x, void *y)
+{
+    return ((entity_p)x)->ID < ((entity_p)y)->ID;
+}
+
+void RBEntityFree(void *x)
+{
+    Entity_Clear((entity_p)x);
+    free(x);
 }
 
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
 {
-    entity_p ent = world->Character;
+    entity_p ent = NULL;
+    entity_t search;
+    RedBlackNode_p node;
     
-    if(!ent || ent->ID != id)
+    if(world->Character && (world->Character->ID == id))
     {
-        ent = engine_world.entity_list;
-        while(ent)
-        {
-            if(ent->ID == id)
-            {
-                return ent;
-            }
-            ent = ent->next;
-        }
+        return world->Character;
+    }
+       
+    search.ID = id;
+    node = RB_SearchNode(&search, world->entity_tree);
+    if(node)
+    {
+        ent = (entity_p)node->data;
     }
     
     return ent;
@@ -550,22 +558,6 @@ room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room)
     return Room_FindPos2d(w, pos);
 }
 
-
-struct entity_s *Entity_GetByID(unsigned int ID)
-{
-    entity_p ent = engine_world.entity_list;
-    for(;ent;ent=ent->next)
-    {
-        if(ent->ID == ID)
-        {
-            return ent;
-        }
-    }
-
-    return NULL;
-}
-
-
 room_p Room_GetByID(world_p w, unsigned int ID)
 {
     unsigned int i;
@@ -604,15 +596,15 @@ room_sector_p Room_GetSector(room_p room, btScalar pos[3])
 
 int World_AddEntity(world_p world, struct entity_s *entity)
 {
-    entity_p next;
-
-    next = world->entity_list;
-    world->entity_list = entity;
-    world->entity_list->next = next;
-    world->entity_count ++;
+    RB_InsertIgnore(entity, world->entity_tree);
     return 1;
 }
 
+int World_DeleteEntity(world_p world, struct entity_s *entity)
+{
+    RB_Delete(world->entity_tree, RB_SearchNode(entity, world->entity_tree));
+    return 1;
+}
 
 struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id)
 {
