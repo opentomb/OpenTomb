@@ -48,6 +48,12 @@ AudioSource::~AudioSource()
 }
 
 
+bool AudioSource::IsActive()
+{
+    return active;
+}
+
+
 void AudioSource::Play()
 {
     alSourcePlay(source_index);
@@ -71,29 +77,40 @@ void AudioSource::Stop()
 void AudioSource::Update()
 {
     ALint   state, looped;
-    //ALfloat vec[3];
+    ALfloat gain;
 
     alGetSourcei(source_index, AL_SOURCE_STATE, &state);
+    
+    if(active && (state == AL_STOPPED))
+    {
+        active = false;
+        return;
+    }
+    
+    if((!active) && (state == AL_PLAYING))
+    {
+        Stop();
+        return;
+    }
     
     if(state == AL_PAUSED)
     {
         return;
     }
     
-    if((!active) && (state == AL_PLAYING))
+    alGetSourcef(source_index, AL_GAIN, &gain);
+    
+    if(Audio_IsInRange(emitter_type, emitter_ID, gain))
     {
-        alSourceStop(source_index);
-        return;
+        LinkEmitter();
     }
     
     alGetSourcei(source_index, AL_LOOPING, &looped);
     
-    if((state == AL_STOPPED) || (looped == AL_LOOPING))
+    if(looped == AL_LOOPING)
     {
         active = false;
     }
-    
-    LinkEmitter();
 }
 
 
@@ -125,6 +142,9 @@ void AudioSource::SetGain(ALfloat gain_value)
 
 void AudioSource::SetPitch(ALfloat pitch_value)
 {
+    pitch_value = (pitch_value < 0.1)?(0.1):(pitch_value);
+    pitch_value = (pitch_value > 2.0)?(2.0):(pitch_value);
+    
     alSourcef(source_index, AL_PITCH, pitch_value);
 }
 
@@ -149,41 +169,25 @@ void AudioSource::SetVelocity(const ALfloat vel_vector[])
 
 void AudioSource::LinkEmitter()
 {
+    ALfloat vec[3];
+    
     if(emitter_ID == -1)
     {
         return;
     }
     
-    ALfloat vec[3];
     entity_p ent = World_GetEntityByID(&engine_world, emitter_ID);
-    
+         
     if(ent && (emitter_type == TR_SOUND_EMITTER_ENTITY))
     {
-        ALfloat buf[3], dist, pitch; 
+        ALfloat buf[3];
         vec3_copy(buf, ent->transform + 12);
-        dist = vec3_dist_sq(listener_position, buf);
+        SetPosition(buf);
         
-        if(dist < AUDIO_MAX_DISTANCE * AUDIO_MAX_DISTANCE)                      ///@FIXME: set here good filter!
+        if(ent->character)
         {
-            alGetSourcef(source_index, AL_PITCH, &pitch);
-            dist /= (pitch + 1.0);
-            if(dist < AUDIO_MAX_DISTANCE * AUDIO_MAX_DISTANCE)
-            {
-                SetPosition(buf);
-                if(ent->character)
-                {
-                    vec3_copy(buf, ent->character->speed.m_floats);
-                    SetVelocity(buf);
-                }
-            }
-            else
-            {
-                Stop();
-            }
-        }
-        else
-        {
-            Stop();
+            vec3_copy(buf, ent->character->speed.m_floats);
+            SetVelocity(buf);
         }
     }
     else if(emitter_type == TR_SOUND_EMITTER_SOUNDSOURCE)
@@ -198,19 +202,58 @@ void AudioSource::LinkEmitter()
 }
 
 
+bool Audio_IsInRange(int emitter_type, int emitter_ID, float gain)
+{
+    ALfloat vec[3];
+    
+    entity_p ent = World_GetEntityByID(&engine_world, emitter_ID);
+    
+    if(ent && (emitter_type == TR_SOUND_EMITTER_ENTITY))
+    {
+        ALfloat buf[3], dist, gain; 
+        vec3_copy(buf, ent->transform + 12);
+        dist = vec3_dist_sq(listener_position, buf);
+        
+        if(dist < AUDIO_MAX_DISTANCE * AUDIO_MAX_DISTANCE)
+        {
+            dist /= (gain + 1.0);
+            if(dist < AUDIO_MAX_DISTANCE * AUDIO_MAX_DISTANCE)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
+
 void Audio_UpdateSources()
 {
+    int ActiveSourceCount = 0;
+    
     if(engine_world.audio_sources_count < 1)
     {
         return;
     }
     
+    for(int i = 0; i < MAX_CHANNELS; i++)
+    {
+        if(engine_world.audio_sources[i].IsActive() == true)
+            ActiveSourceCount++;
+    }
+    
     alGetListenerfv(AL_POSITION, listener_position);
-    /*
     for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
         engine_world.audio_sources[i].Update();
-    }*/
+    }
 }
 
 
@@ -218,7 +261,7 @@ void Audio_PauseAllSources()
 {
     for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
-        if(engine_world.audio_sources[i].active)
+        if(engine_world.audio_sources[i].IsActive())
         {
             engine_world.audio_sources[i].Pause();
         }
@@ -230,7 +273,7 @@ void Audio_ResumeAllSources()
 {
     for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
-        if(engine_world.audio_sources[i].active)
+        if(engine_world.audio_sources[i].IsActive())
         {
             engine_world.audio_sources[i].Play();
         }
@@ -240,7 +283,17 @@ void Audio_ResumeAllSources()
 
 int Audio_GetFreeSource()
 {    
-    ALfloat src_pos[3], dist, max_dist, pitch; 
+    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    {
+        if(engine_world.audio_sources[i].IsActive() == false)
+        {
+            return i;
+        }
+    }
+    
+    return -1;
+    
+    /*ALfloat src_pos[3], dist, max_dist, pitch; 
     int curr, i = 0;
     
     if(!engine_world.audio_sources[i].active)
@@ -253,7 +306,7 @@ int Audio_GetFreeSource()
     max_dist = vec3_dist_sq(listener_position, src_pos);
     max_dist /= (pitch + 1.0);
     curr = 0;
-    for(int i = 1; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 1; i < engine_world.audio_sources_count; i++)
     {
         if(!engine_world.audio_sources[i].active)
         {
@@ -272,7 +325,7 @@ int Audio_GetFreeSource()
     ///@FIXME: add condition (compare max_dist with new source dist)
     engine_world.audio_sources[curr].Stop();
     
-    return curr;
+    return curr;*/
 }
 
 
@@ -280,10 +333,10 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type)
 {    
     for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
-        if((engine_world.audio_sources[i].emitter_type == entity_type) &&
-           (engine_world.audio_sources[i].emitter_ID   == entity_ID)   &&
-           (engine_world.audio_sources[i].effect_index == effect_ID)   &&
-           (engine_world.audio_sources[i].active == true))
+        if( (engine_world.audio_sources[i].emitter_type == entity_type) &&
+            (engine_world.audio_sources[i].emitter_ID   == entity_ID)   &&
+            (engine_world.audio_sources[i].effect_index == effect_ID)   &&
+            (engine_world.audio_sources[i].IsActive() == true)             )
         {
             return i;
         }
@@ -299,7 +352,6 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
     uint16_t random_value;
     ALfloat  random_float;
     
-    return 0;
     // Remap global engine effect ID to local effect ID.
     effect_ID = (int)engine_world.audio_map[effect_ID];
     
@@ -319,7 +371,7 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
         random_value = rand() % 0x7FFF;
         if(engine_world.audio_effects[effect_ID].chance < random_value)
         {
-            // Bypass audio send, if chance is not passed.
+            // Bypass audio send, if chance test is not passed.
             return 0;
         }
     }
@@ -328,16 +380,9 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
     // If it's not, bypass audio send (cause we don't want it to occupy channel, if it's not
     // heard).
     
-    switch(entity_type)
+    if(Audio_IsInRange(entity_type, entity_ID, engine_world.audio_effects[effect_ID].gain) == false)
     {
-    case TR_SOUND_EMITTER_ENTITY:
-        break;
-        
-    case TR_SOUND_EMITTER_SOUNDSOURCE:
-        break;
-        
-    case TR_SOUND_EMITTER_GLOBAL:
-        break;
+        return 0;
     }
     
     // Pre-step 4: check if R (Rewind) flag is set for this effect, if so,
@@ -354,7 +399,7 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
             engine_world.audio_sources[playing_sound].Play();
             return 1;
         }
-        else
+        else if(engine_world.audio_effects[effect_ID].loop) // Any other looping case (Wait / Loop).
         {
             return 0;
         }
@@ -367,6 +412,7 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
     if(source_number != -1)  // Everything is OK, we're sending audio to channel.
     {
         int buffer_index;
+        
         // Step 1. Assign buffer to source.
         
         if(engine_world.audio_effects[effect_ID].sample_count > 1)
@@ -395,23 +441,30 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
             engine_world.audio_sources[source_number].SetLooping(AL_FALSE);
         }
         
-        engine_world.audio_sources[source_number].emitter_ID = entity_ID;
+        engine_world.audio_sources[source_number].emitter_ID   = entity_ID;
         engine_world.audio_sources[source_number].emitter_type = entity_type;
-        
         engine_world.audio_sources[source_number].effect_index = effect_ID;
         
         if(engine_world.audio_effects[effect_ID].rand_pitch)
         {
             random_float = rand() % engine_world.audio_effects[effect_ID].rand_pitch_var;
-            random_float = 1 + ((random_float - 250.0) / 2000.0);
+            random_float = engine_world.audio_effects[effect_ID].pitch + ((random_float - 25.0) / 200.0);
             engine_world.audio_sources[source_number].SetPitch(random_float);
+        }
+        else
+        {
+            engine_world.audio_sources[source_number].SetPitch(engine_world.audio_effects[effect_ID].pitch);
         }
         
         if(engine_world.audio_effects[effect_ID].rand_gain)
         {
             random_float = rand() % engine_world.audio_effects[effect_ID].rand_gain_var;
-            random_float = 1 + (random_float - 250.0) / 2000.0;            
+            random_float = engine_world.audio_effects[effect_ID].gain + (random_float - 25.0) / 200.0;            
             engine_world.audio_sources[source_number].SetGain(random_float);
+        }
+        else
+        {
+            engine_world.audio_sources[source_number].SetGain(engine_world.audio_effects[effect_ID].gain);
         }
         
         engine_world.audio_sources[source_number].SetRange(engine_world.audio_effects[effect_ID].range);
@@ -423,6 +476,17 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
     else
     {
         return -1;
+    }
+}
+
+
+void Audio_Kill(int effect_ID, int entity_ID, int entity_type)
+{
+    int playing_sound = Audio_IsEffectPlaying(effect_ID, entity_ID, entity_type);
+    
+    if(playing_sound != -1)
+    {
+        engine_world.audio_sources[playing_sound].Stop();
     }
 }
 
@@ -547,7 +611,10 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
 
             default:
                 engine_world.audio_map_count = TR_SOUND_MAP_SIZE_NONE;
-                break;
+                free(tr->samples_data);
+                tr->samples_data = NULL;
+                tr->samples_data_size = 0;
+                return 0;
         }
         
         free(tr->samples_data);
@@ -557,50 +624,73 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     
     // Cycle through SoundDetails and parse them into native OpenTomb
     // audio effects structure.
-    switch(tr->game_version)
+    for(i = 0; i < engine_world.audio_effects_count; i++)
     {
-        case TR_I:
-        case TR_I_DEMO:
-        case TR_I_UB:
-            for(i = 0; i < engine_world.audio_effects_count; i++)
-            {                
+        switch(tr->game_version)
+        {
+            case TR_I:
+            case TR_I_DEMO:
+            case TR_I_UB:            
                 engine_world.audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch);
-                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1 is 32767.
+                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1/TR2 is 32767.
                 engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
                 engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
                 
-                engine_world.audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
-                engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_PITCH);
-                engine_world.audio_effects[i].rand_pitch_var = 500;
-                engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_VOLUME);
-                engine_world.audio_effects[i].rand_gain_var = 500;
+                ind1 = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
                 
-                engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
-                engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_SOUND_SAMPLE_NUMBER_MASK;
-            }
-            break;
-            
-        default:
-            /*for(i = 0; i < engine_world.audio_effects_count; i++)
-            {                
+                if(ind1 == TR_SOUND_LOOP_WAIT)
+                {
+                    ind1 = TR_SOUND_LOOP_REWIND;
+                }
+                else if(ind1 == TR_SOUND_LOOP_REWIND)
+                {
+                    ind1 = TR_SOUND_LOOP_WAIT;
+                }
+                engine_world.audio_effects[i].loop = ind1;
+                break;
+                
+            case TR_II:
+            case TR_II_DEMO:              
                 engine_world.audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch);
-                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1 is 32767.
+                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1/TR2 is 32767.
                 engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
                 engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
                 
-                engine_world.audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
-                engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_PITCH);
-                engine_world.audio_effects[i].rand_pitch_var = 500;
-                engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_VOLUME);
-                engine_world.audio_effects[i].rand_gain_var = 500;
+                engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED);
+                break;
                 
-                engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
-                engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_SOUND_SAMPLE_NUMBER_MASK;
-            }*/
-            break;
-    }    
+            case TR_III:
+                engine_world.audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch) / 127;
+                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255; // Max. volume in TR3 is 255.
+                engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
+                engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 127;
+                
+                engine_world.audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
+                break;
+                
+            case TR_IV:
+            case TR_IV_DEMO:
+            case TR_V:
+                engine_world.audio_effects[i].pitch  = (float)tr->sound_details[i].pitch / 127 + 1;
+                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255; // Max. volume in TR3 is 255.
+                engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
+                engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 255;
+                
+                engine_world.audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
+                break;
+        }
+                    
+        engine_world.audio_effects[i].rand_gain_var  = 50;
+        engine_world.audio_effects[i].rand_pitch_var = 50;
+        
+        engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_PITCH);
+        engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_VOLUME);
+        
+        engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
+        engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_SOUND_SAMPLE_NUMBER_MASK;
+    }
     
-    return 0;
+    return 1;
 }
 
 

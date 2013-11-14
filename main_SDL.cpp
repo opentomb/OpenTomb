@@ -495,8 +495,6 @@ int SDL_main(int argc, char **argv)
         Engine_Frame(time);
         
         Audio_UpdateListenerByCamera(renderer.cam);
-        //vec3_copy(al_pos, renderer.cam->pos);
-        //alSourcefv(al_source, AL_POSITION, al_pos);
         Audio_UpdateSources();
     }
     

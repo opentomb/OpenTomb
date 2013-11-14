@@ -58,7 +58,7 @@ extern "C" {
 // structures.
 
 #define TR_SOUND_DEFAULT_RANGE 1
-#define TR_SOUND_DEFAULT_PITCH 0
+#define TR_SOUND_DEFAULT_PITCH 1
 
 // Entity types are used to identify different sound emitter types. Since
 // sounds in TR games could be emitted either by entities, sound sources
@@ -136,31 +136,28 @@ public:
     void SetGain(ALfloat gain_value);
     void SetRange(ALfloat range_value);
     
+    bool IsActive();
     void LinkEmitter();
-
-    ALuint      source_index;   // Source index. Should be unique for each source.
-
-    // Runtime sound source parameters
-    int32_t	emitter_ID;		// Entity of origin. -1 means no entity (hence - empty source).
-    uint32_t	emitter_type;	// 0 - ordinary entity, 1 - sound source, 2 - global sound.
-    uint32_t	effect_index;	// Effect index. Used to associate effect with entity for R/W flags.
-    uint32_t    sample_index;	// OpenAL sample (buffer) index. May be the same for different sources.
-    uint32_t    sample_count;	// How many buffers to use, beginning with sample_index.
-    bool        is_water;       // Environmental flag; if source/listener flags aren't equal, sample will damp.
-
-    // Playback parameters
-    bool    	active;			// Source gets autostopped and destroyed on next frame, if it's not set.
-    
     void SetPosition(const ALfloat pos_vector[]);
     void SetVelocity(const ALfloat vel_vector[]);
-
+    
+    int32_t     emitter_ID;     // Entity of origin. -1 means no entity (hence - empty source).
+    uint32_t    emitter_type;   // 0 - ordinary entity, 1 - sound source, 2 - global sound.
+    uint32_t    effect_index;   // Effect index. Used to associate effect with entity for R/W flags.
+    uint32_t    sample_index;   // OpenAL sample (buffer) index. May be the same for different sources.
+    uint32_t    sample_count;   // How many buffers to use, beginning with sample_index.
+    bool        is_water;       // Environmental flag; if source/listener flags aren't equal, sample will damp.
+    
 private:
+    bool        active;         // Source gets autostopped and destroyed on next frame, if it's not set.
+    ALuint      source_index;   // Source index. Should be unique for each source.
 };
 
 int  Audio_Init(const int num_Sources, class VT_Level *tr);
 int  Audio_DeInit();
 
-int Audio_GetFreeSource();
+int  Audio_GetFreeSource();
+bool Audio_IsInRange(int emitter_type, int emitter_ID, float gain);
 
 void Audio_UpdateSources();     // Main sound loop.
 void Audio_PauseAllSources();	// Used to pause all effects currently playing.
