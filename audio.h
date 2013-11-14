@@ -141,7 +141,7 @@ public:
     ALuint      source_index;   // Source index. Should be unique for each source.
 
     // Runtime sound source parameters
-    int32_t	    emitter_ID;		// Entity of origin. -1 means no entity (hence - empty source).
+    int32_t	emitter_ID;		// Entity of origin. -1 means no entity (hence - empty source).
     uint32_t	emitter_type;	// 0 - ordinary entity, 1 - sound source, 2 - global sound.
     uint32_t	effect_index;	// Effect index. Used to associate effect with entity for R/W flags.
     uint32_t    sample_index;	// OpenAL sample (buffer) index. May be the same for different sources.
@@ -151,9 +151,10 @@ public:
     // Playback parameters
     bool    	active;			// Source gets autostopped and destroyed on next frame, if it's not set.
     
-private:
     void SetPosition(const ALfloat pos_vector[]);
     void SetVelocity(const ALfloat vel_vector[]);
+
+private:
 };
 
 int  Audio_Init(const int num_Sources, class VT_Level *tr);
@@ -177,8 +178,6 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname);
 
 // DEPRECATED
 
-//void Audio_UpdateSource(audio_source_p src);
-//void Audio_FillSourceByEntity(audio_source_p src, struct entity_s *ent);
 void Audio_UpdateListenerByCamera(struct camera_s *cam);
 
 #endif // AUDIO_H

@@ -354,6 +354,52 @@ int lua_SetEntityPosition(lua_State * lua)
     return 0;
 }
 
+int lua_PlaySample(lua_State *lua)
+{
+    extern ALfloat         listener_position[3];
+    int id, top, src_id;
+    AudioSource *src;
+    
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    if((top != 1) && (top != 4))
+    {
+        Con_Printf("Wrong arguments count. Must be (id) or (id, x, y, z)");
+        return 0;
+    }
+    
+    if((id < 0) || (id >= engine_world.audio_buffers_count))
+    {
+        Con_Printf("Wrong sample ID. Must be in interval 0..%d", engine_world.audio_buffers_count-1);
+        return 0;
+    }
+    
+    src_id = Audio_GetFreeSource();
+    if(src_id < 0)
+    {
+        Con_Printf("There is no free audio sources, try later");
+        return 0;
+    }
+    src = engine_world.audio_sources + src_id;
+    src->SetLooping(false);
+    src->SetBuffer(engine_world.audio_buffers[id]);
+    if(top == 1)
+    {
+        src->SetPosition(listener_position);
+    }
+    else
+    {
+        ALfloat buf[3];
+        buf[0] = lua_tonumber(lua, 2);
+        buf[1] = lua_tonumber(lua, 3);
+        buf[2] = lua_tonumber(lua, 4);
+        src->SetPosition(buf);
+    }
+    src->Play();
+    
+    return 0;
+}
+
 void Engine_LuaRegisterFuncs(lua_State *lua)
 {
     /*
@@ -365,6 +411,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     /*
      * register functions
      */
+    lua_register(lua, "PlaySample", lua_PlaySample);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
@@ -726,7 +773,6 @@ int Engine_ExecCmd(char *ch)
     char buf[con_base.line_size + 32];
     char *pch;
     int val;
-    //cvar_p p;
     room_p r;
     room_sector_p sect;
     FILE *f;
@@ -750,6 +796,7 @@ int Engine_ExecCmd(char *ch)
             Con_AddLine("free_look - switch camera mode\0");
             Con_AddLine("cam_distance - camera distance to actor\0");
             Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0");
+            Con_AddLine("PlaySample(id) - play audio sample\0");  
         }
         else if(!strcmp(token, "map"))
         {
