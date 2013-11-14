@@ -4,6 +4,7 @@
 extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
+#include "al/AL/alext.h"
 }
 
 #include "audio.h"
@@ -15,7 +16,11 @@ extern "C" {
 #include "system.h"
 #include "render.h"
 
+#define AUDIO_MAX_DISTANCE (4096.0)
+
 struct audio_settings_s     audio_settings = {0};
+
+ALfloat         listener_position[3];
 
 AudioSource::AudioSource()
 {
@@ -28,6 +33,8 @@ AudioSource::AudioSource()
     is_water     = false;
     alGenSources(1, &source_index);
     alSourcei(source_index, AL_REFERENCE_DISTANCE, 64.0);                       // distance, where sound amplitude *= 0.5
+    //alSourcef(source_index, AL_MAX_DISTANCE, 65536.0f);
+    //alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0f);
 }
 
 
@@ -152,16 +159,26 @@ void AudioSource::LinkEmitter()
     
     if(ent && (emitter_type == TR_SOUND_EMITTER_ENTITY))
     {
-        ALfloat buf[3], dist; 
+        ALfloat buf[3], dist, pitch; 
         vec3_copy(buf, ent->transform + 12);
-        dist = vec3_dist_sq(buf, renderer.cam->pos);
-        if(dist < 4096.0 * 4096.0)                                              ///@FIXME: set here good filter!
+        dist = vec3_dist_sq(listener_position, buf);
+        
+        if(dist < AUDIO_MAX_DISTANCE * AUDIO_MAX_DISTANCE)                      ///@FIXME: set here good filter!
         {
-            SetPosition(buf);
-            if(ent->character)
+            alGetSourcef(source_index, AL_PITCH, &pitch);
+            dist /= (pitch + 1.0);
+            if(dist < AUDIO_MAX_DISTANCE * AUDIO_MAX_DISTANCE)
             {
-                vec3_copy(buf, ent->character->speed.m_floats);
-                SetVelocity(buf);
+                SetPosition(buf);
+                if(ent->character)
+                {
+                    vec3_copy(buf, ent->character->speed.m_floats);
+                    SetVelocity(buf);
+                }
+            }
+            else
+            {
+                Stop();
             }
         }
         else
@@ -188,10 +205,12 @@ void Audio_UpdateSources()
         return;
     }
     
+    alGetListenerfv(AL_POSITION, listener_position);
+    /*
     for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
         engine_world.audio_sources[i].Update();
-    }
+    }*/
 }
 
 
@@ -209,8 +228,6 @@ void Audio_PauseAllSources()
 
 void Audio_ResumeAllSources()
 {
-    ALint val;
-    
     for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
         if(engine_world.audio_sources[i].active)
@@ -223,14 +240,39 @@ void Audio_ResumeAllSources()
 
 int Audio_GetFreeSource()
 {    
-    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    ALfloat src_pos[3], dist, max_dist, pitch; 
+    int curr, i = 0;
+    
+    if(!engine_world.audio_sources[i].active)
+    {
+        return i;
+    }
+    
+    alGetSourcefv(engine_world.audio_sources[i].source_index, AL_PITCH, &pitch);
+    alGetSourcefv(engine_world.audio_sources[i].source_index, AL_POSITION, src_pos);
+    max_dist = vec3_dist_sq(listener_position, src_pos);
+    max_dist /= (pitch + 1.0);
+    curr = 0;
+    for(int i = 1; i < engine_world.audio_sources_count; i++)
     {
         if(!engine_world.audio_sources[i].active)
         {
             return i;
         }
+        alGetSourcefv(engine_world.audio_sources[i].source_index, AL_PITCH, &pitch);
+        alGetSourcefv(engine_world.audio_sources[i].source_index, AL_POSITION, src_pos);
+        dist = vec3_dist_sq(listener_position, src_pos);
+        dist /= (pitch + 1.0);
+        if(dist > max_dist)
+        {
+            max_dist = dist;
+            curr = i;
+        }
     }    
-    return -1;
+    ///@FIXME: add condition (compare max_dist with new source dist)
+    engine_world.audio_sources[curr].Stop();
+    
+    return curr;
 }
 
 
@@ -257,6 +299,7 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
     uint16_t random_value;
     ALfloat  random_float;
     
+    return 0;
     // Remap global engine effect ID to local effect ID.
     effect_ID = (int)engine_world.audio_map[effect_ID];
     
@@ -360,14 +403,14 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
         if(engine_world.audio_effects[effect_ID].rand_pitch)
         {
             random_float = rand() % engine_world.audio_effects[effect_ID].rand_pitch_var;
-            random_float = 1 + ((random_float - 250) / 2000);
+            random_float = 1 + ((random_float - 250.0) / 2000.0);
             engine_world.audio_sources[source_number].SetPitch(random_float);
         }
         
         if(engine_world.audio_effects[effect_ID].rand_gain)
         {
             random_float = rand() % engine_world.audio_effects[effect_ID].rand_gain_var;
-            random_float = 1 + (random_float - 250) / 2000;            
+            random_float = 1 + (random_float - 250.0) / 2000.0;            
             engine_world.audio_sources[source_number].SetGain(random_float);
         }
         
@@ -446,6 +489,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                     ind1 = 0;
                     ind2 = 0;
                     flag = 0;
+                    i = 0;
                     while(pointer < tr->samples_data + tr->samples_data_size - 4)
                     {
                         pointer = tr->samples_data + ind2;
@@ -461,12 +505,17 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                                 uncomp_size = ind2 - ind1;
                                 Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
                                 i++;
+                                if(i > engine_world.audio_buffers_count - 1)
+                                {
+                                    break;
+                                }
                                 ind1 = ind2;
                             }
                         }
                         ind2++;
                     }
-                    uncomp_size = tr->samples_count - ind1;
+                    uncomp_size = tr->samples_data_size - ind1;
+                    pointer = tr->samples_data + ind1;
                     if(i < engine_world.audio_buffers_count)
                     {
                         Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, uncomp_size); 
@@ -529,6 +578,25 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                 engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
                 engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_SOUND_SAMPLE_NUMBER_MASK;
             }
+            break;
+            
+        default:
+            /*for(i = 0; i < engine_world.audio_effects_count; i++)
+            {                
+                engine_world.audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch);
+                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1 is 32767.
+                engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
+                engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
+                
+                engine_world.audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
+                engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_PITCH);
+                engine_world.audio_effects[i].rand_pitch_var = 500;
+                engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_VOLUME);
+                engine_world.audio_effects[i].rand_gain_var = 500;
+                
+                engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
+                engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_SOUND_SAMPLE_NUMBER_MASK;
+            }*/
             break;
     }    
     
@@ -721,23 +789,4 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
     vec3_copy(cam->prev_pos, cam->pos);
 }
 
-//void Audio_UpdateSource(audio_source_p src)
-//{
-//    ALfloat v[3];
-//    alSourcef(src->al_source, AL_PITCH, src->al_pitch);
-//    alSourcef(src->al_source, AL_GAIN, src->al_gain);
-//    vec3_mul_scalar(v, src->position, DISTANCE_COEFFICIENT);
-//    alSourcefv(src->al_source, AL_POSITION, v);
-//    vec3_mul_scalar(v, src->velocity, DISTANCE_COEFFICIENT);
-//    alSourcefv(src->al_source, AL_VELOCITY, v);
-//    alSourcei(src->al_source, AL_LOOPING, src->al_loop);
-//}
 
-//void Audio_FillSourceByEntity(audio_source_p src, struct entity_s *ent)
-//{
-//    vec3_copy(src->position, ent->transform + 12);
-//    if(ent->character)
-//    {
-//        vec3_copy(src->velocity, ent->character->speed.m_floats);
-//    }
-//}
