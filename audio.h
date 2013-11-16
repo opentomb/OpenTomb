@@ -65,7 +65,7 @@ extern "C" {
 // TR1 and TR2 levels, as there is no such parameters in SoundDetails
 // structures.
 
-#define TR_AUDIO_DEFAULT_RANGE 13
+#define TR_AUDIO_DEFAULT_RANGE 8
 #define TR_AUDIO_DEFAULT_PITCH 0
 
 // Entity types are used to identify different sound emitter types. Since
