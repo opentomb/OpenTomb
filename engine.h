@@ -96,6 +96,7 @@ typedef struct engine_control_state_s
 extern struct engine_control_state_s            control_states;
 extern struct control_settings_s                control_mapper;
 
+extern struct audio_settings_s                  audio_settings;
 
 extern btScalar                                 engine_frame_time;
 extern struct camera_s                          engine_camera;

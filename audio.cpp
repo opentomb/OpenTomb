@@ -10,15 +10,12 @@ extern "C" {
 #include "audio.h"
 #include "console.h"
 #include "camera.h"
+#include "engine.h"
 #include "vmath.h"
 #include "entity.h"
 #include "character_controller.h"
 #include "system.h"
 #include "render.h"
-
-#define AUDIO_MAX_DISTANCE (4096.0)
-
-struct audio_settings_s     audio_settings = {0};
 
 ALfloat         listener_position[3];
 
@@ -26,15 +23,15 @@ AudioSource::AudioSource()
 {
     active = false;
     emitter_ID =  -1;
-    emitter_type = TR_SOUND_EMITTER_ENTITY;
+    emitter_type = TR_AUDIO_EMITTER_ENTITY;
     effect_index = 0;
     sample_index = 0;
     sample_count = 0;
     is_water     = false;
     alGenSources(1, &source_index);
-    alSourcei(source_index, AL_REFERENCE_DISTANCE, 64.0);                       // distance, where sound amplitude *= 0.5
-    //alSourcef(source_index, AL_MAX_DISTANCE, 65536.0f);
-    //alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0f);
+    alSourcef(source_index, AL_MIN_GAIN, 0.0);
+    alSourcef(source_index, AL_MAX_GAIN, 1.0);
+    alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0);
 }
 
 
@@ -77,39 +74,42 @@ void AudioSource::Stop()
 void AudioSource::Update()
 {
     ALint   state, looped;
-    ALfloat gain;
+    ALfloat range, gain;
 
     alGetSourcei(source_index, AL_SOURCE_STATE, &state);
     
+    // Disable source, if it is completed.
     if(active && (state == AL_STOPPED))
     {
         active = false;
         return;
     }
     
+    // Stop source, if it is disabled.
     if((!active) && (state == AL_PLAYING))
     {
         Stop();
         return;
     }
     
+    // Bypass source, if it is paused.
     if(state == AL_PAUSED)
     {
         return;
     }
     
     alGetSourcef(source_index, AL_GAIN, &gain);
+    alGetSourcef(source_index, AL_MAX_DISTANCE, &range);
     
-    if(Audio_IsInRange(emitter_type, emitter_ID, gain))
+    // Check if source is in listener's range, and if so, update position,
+    // else stop and disable it.
+    if(Audio_IsInRange(emitter_type, emitter_ID, range, gain))
     {
         LinkEmitter();
     }
-    
-    alGetSourcei(source_index, AL_LOOPING, &looped);
-    
-    if(looped == AL_LOOPING)
+    else
     {
-        active = false;
+        Stop();
     }
 }
 
@@ -133,15 +133,17 @@ void AudioSource::SetLooping(ALboolean is_looping)
 
 void AudioSource::SetGain(ALfloat gain_value)
 {
+    // Clamp gain value.
     gain_value = (gain_value > 1.0)?(1.0):(gain_value);
     gain_value = (gain_value < 0.0)?(0.0):(gain_value);
     
-    alSourcef(source_index, AL_GAIN, gain_value);
+    alSourcef(source_index, AL_GAIN, gain_value * audio_settings.sound_volume);
 }
 
 
 void AudioSource::SetPitch(ALfloat pitch_value)
 {
+    // Clamp pitch value, as OpenAL tends to hang with incorrect ones.
     pitch_value = (pitch_value < 0.1)?(0.1):(pitch_value);
     pitch_value = (pitch_value > 2.0)?(2.0):(pitch_value);
     
@@ -150,7 +152,9 @@ void AudioSource::SetPitch(ALfloat pitch_value)
 
 
 void AudioSource::SetRange(ALfloat range_value)
-{
+{    
+    // Source will become fully audible on 1/6 of overall position.
+    alSourcef(source_index, AL_REFERENCE_DISTANCE, range_value / 6);
     alSourcef(source_index, AL_MAX_DISTANCE, range_value);
 }
 
@@ -169,88 +173,98 @@ void AudioSource::SetVelocity(const ALfloat vel_vector[])
 
 void AudioSource::LinkEmitter()
 {
-    ALfloat vec[3];
+    ALfloat  vec[3];
+    entity_p ent;
     
     if(emitter_ID == -1)
     {
         return;
     }
-    
-    entity_p ent = World_GetEntityByID(&engine_world, emitter_ID);
          
-    if(ent && (emitter_type == TR_SOUND_EMITTER_ENTITY))
+    if(emitter_type == TR_AUDIO_EMITTER_ENTITY)
     {
-        ALfloat buf[3];
-        vec3_copy(buf, ent->transform + 12);
-        SetPosition(buf);
+        ent = World_GetEntityByID(&engine_world, emitter_ID);
         
-        if(ent->character)
+        if(ent)
         {
-            vec3_copy(buf, ent->character->speed.m_floats);
-            SetVelocity(buf);
+            vec3_copy(vec, ent->transform + 12);
+            SetPosition(vec);
+            
+            if(ent->character)
+            {
+                vec3_copy(vec, ent->character->speed.m_floats);
+                SetVelocity(vec);
+            }
         }
     }
-    else if(emitter_type == TR_SOUND_EMITTER_SOUNDSOURCE)
+    else if(emitter_type == TR_AUDIO_EMITTER_SOUNDSOURCE)
     {
-        //world->audio_sources[i].SetPosition(world->sound_sources[world->audio_sources[i].emitter_ID]->position);
+        SetPosition(engine_world.audio_emitters[emitter_ID].position);
     }
-    else if(emitter_type == TR_SOUND_EMITTER_GLOBAL)
+    else if(emitter_type == TR_AUDIO_EMITTER_GLOBAL)
     {
-        alGetListenerfv(AL_POSITION, vec);
-        SetPosition(vec);
+        SetPosition(listener_position);
     }
 }
 
 
-bool Audio_IsInRange(int emitter_type, int emitter_ID, float gain)
+bool Audio_IsInRange(int emitter_type, int emitter_ID, float range, float gain)
 {
-    ALfloat vec[3];
+    ALfloat  vec[3], dist;
+    entity_p ent;
     
-    entity_p ent = World_GetEntityByID(&engine_world, emitter_ID);
-    
-    if(ent && (emitter_type == TR_SOUND_EMITTER_ENTITY))
+    if(emitter_type == TR_AUDIO_EMITTER_ENTITY)
     {
-        ALfloat buf[3], dist, gain; 
-        vec3_copy(buf, ent->transform + 12);
-        dist = vec3_dist_sq(listener_position, buf);
+        ent = World_GetEntityByID(&engine_world, emitter_ID);
         
-        if(dist < AUDIO_MAX_DISTANCE * AUDIO_MAX_DISTANCE)
-        {
-            dist /= (gain + 1.0);
-            if(dist < AUDIO_MAX_DISTANCE * AUDIO_MAX_DISTANCE)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
+        if(!ent)
         {
             return false;
         }
+        
+        vec3_copy(vec, ent->transform + 12);
     }
+    else if(emitter_type == TR_AUDIO_EMITTER_SOUNDSOURCE)
+    {
+        if(emitter_ID > engine_world.audio_emitters_count - 1)
+        {
+            return false;
+        }
+        vec3_copy(vec, engine_world.audio_emitters[emitter_ID].position);
+    }
+    else if(emitter_type == TR_AUDIO_EMITTER_GLOBAL)
+    {
+        return true;
+    }
+        
+    dist = vec3_dist_sq(listener_position, vec);
+    
+    // We add 1/4 of overall distance to fix up some issues with
+    // pseudo-looped sounds that are called at certain frames in animations.
+    
+    dist /= (gain + 1.25);
+    
+    return dist < range * range;
 }
 
 
 void Audio_UpdateSources()
 {
-    int ActiveSourceCount = 0;
+    uint32_t i;
     
     if(engine_world.audio_sources_count < 1)
     {
         return;
     }
     
-    for(int i = 0; i < MAX_CHANNELS; i++)
+    alGetListenerfv(AL_POSITION, listener_position);
+    
+    for(i = 0; i < engine_world.audio_emitters_count; i++)
     {
-        if(engine_world.audio_sources[i].IsActive() == true)
-            ActiveSourceCount++;
+        Audio_Send(engine_world.audio_emitters[i].sound_index, TR_AUDIO_EMITTER_SOUNDSOURCE, i);
     }
     
-    alGetListenerfv(AL_POSITION, listener_position);
-    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    for(i = 0; i < engine_world.audio_sources_count; i++)
     {
         engine_world.audio_sources[i].Update();
     }
@@ -330,15 +344,21 @@ int Audio_GetFreeSource()
 
 
 int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type)
-{    
+{
+    int state;
+    
     for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
         if( (engine_world.audio_sources[i].emitter_type == entity_type) &&
-            (engine_world.audio_sources[i].emitter_ID   == entity_ID)   &&
-            (engine_world.audio_sources[i].effect_index == effect_ID)   &&
-            (engine_world.audio_sources[i].IsActive() == true)             )
+            (engine_world.audio_sources[i].emitter_ID   == entity_ID  ) &&
+            (engine_world.audio_sources[i].effect_index == effect_ID  ) )
         {
-            return i;
+            alGetSourcei(engine_world.audio_sources[i].source_index, AL_SOURCE_STATE, &state);
+            
+            if(state == AL_PLAYING)
+            {
+                return i;
+            }
         }
     }
     
@@ -346,30 +366,34 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type)
 }
 
 
-int Audio_Send(int effect_ID, int entity_ID, int entity_type)
+int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 {
-    int32_t  source_number, playing_sound;
-    uint16_t random_value;
-    ALfloat  random_float;
+    int32_t         source_number, playing_sound;
+    uint16_t        random_value;
+    ALfloat         random_float;
+    audio_effect_p  effect = NULL;
+    AudioSource    *source = NULL;
+    
     
     // Remap global engine effect ID to local effect ID.
+    
     effect_ID = (int)engine_world.audio_map[effect_ID];
     
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
     
     if(effect_ID == -1)
     {
-        return 0;
+        return -1;
     }
-    
+    effect = engine_world.audio_effects + effect_ID;
+            
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
     // then randomly select if it should be played or not.
     
-    if((engine_world.audio_effects[effect_ID].loop != TR_SOUND_LOOP_LOOPED) && 
-       (engine_world.audio_effects[effect_ID].chance > 0))
+    if((effect->loop != TR_AUDIO_LOOP_LOOPED) && (effect->chance > 0))
     {
         random_value = rand() % 0x7FFF;
-        if(engine_world.audio_effects[effect_ID].chance < random_value)
+        if(effect->chance < random_value)
         {
             // Bypass audio send, if chance test is not passed.
             return 0;
@@ -380,7 +404,7 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
     // If it's not, bypass audio send (cause we don't want it to occupy channel, if it's not
     // heard).
     
-    if(Audio_IsInRange(entity_type, entity_ID, engine_world.audio_effects[effect_ID].gain) == false)
+    if(Audio_IsInRange(entity_type, entity_ID, effect->range, effect->gain ) == false)
     {
         return 0;
     }
@@ -394,12 +418,12 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
     
     if(playing_sound != -1)
     {
-        if(engine_world.audio_effects[effect_ID].loop == TR_SOUND_LOOP_REWIND)
+        if(effect->loop == TR_AUDIO_LOOP_REWIND)
         {
             engine_world.audio_sources[playing_sound].Play();
             return 1;
         }
-        else if(engine_world.audio_effects[effect_ID].loop) // Any other looping case (Wait / Loop).
+        else if(effect->loop) // Any other looping case (Wait / Loop).
         {
             return 0;
         }
@@ -415,61 +439,62 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
         
         // Step 1. Assign buffer to source.
         
-        if(engine_world.audio_effects[effect_ID].sample_count > 1)
+        if(effect->sample_count > 1)
         {
             // Select random buffer, if effect info contains more than 1 assigned samples.
-            
-            random_value = rand() % (engine_world.audio_effects[effect_ID].sample_count);
-            buffer_index = random_value + engine_world.audio_effects[effect_ID].sample_index;
+            random_value = rand() % (effect->sample_count);
+            buffer_index = random_value + effect->sample_index;
         }
         else
         {
             // Just assign buffer to source, if there is only one assigned sample.
-            buffer_index = engine_world.audio_effects[effect_ID].sample_index;
+            buffer_index = effect->sample_index;
         }
         
-        engine_world.audio_sources[source_number].SetBuffer(buffer_index);
+        source = &engine_world.audio_sources[source_number];
+        
+        source->SetBuffer(buffer_index);
         
         // Step 2. Check looped flag, and if so, set source type to looped.
         
-        if(engine_world.audio_effects[effect_ID].loop == TR_SOUND_LOOP_LOOPED)
+        if(effect->loop == TR_AUDIO_LOOP_LOOPED)
         {
-            engine_world.audio_sources[source_number].SetLooping(AL_TRUE);
+            source->SetLooping(AL_TRUE);
         }
         else
         {
-            engine_world.audio_sources[source_number].SetLooping(AL_FALSE);
+            source->SetLooping(AL_FALSE);
         }
         
-        engine_world.audio_sources[source_number].emitter_ID   = entity_ID;
-        engine_world.audio_sources[source_number].emitter_type = entity_type;
-        engine_world.audio_sources[source_number].effect_index = effect_ID;
+        source->emitter_ID   = entity_ID;
+        source->emitter_type = entity_type;
+        source->effect_index = effect_ID;
         
-        if(engine_world.audio_effects[effect_ID].rand_pitch)
+        if(effect->rand_pitch)
         {
-            random_float = rand() % engine_world.audio_effects[effect_ID].rand_pitch_var;
-            random_float = engine_world.audio_effects[effect_ID].pitch + ((random_float - 25.0) / 200.0);
-            engine_world.audio_sources[source_number].SetPitch(random_float);
+            random_float = rand() % effect->rand_pitch_var;
+            random_float = effect->pitch + ((random_float - 25.0) / 200.0);
+            source->SetPitch(random_float);
         }
         else
         {
-            engine_world.audio_sources[source_number].SetPitch(engine_world.audio_effects[effect_ID].pitch);
+            source->SetPitch(effect->pitch);
         }
         
-        if(engine_world.audio_effects[effect_ID].rand_gain)
+        if(effect->rand_gain)
         {
-            random_float = rand() % engine_world.audio_effects[effect_ID].rand_gain_var;
-            random_float = engine_world.audio_effects[effect_ID].gain + (random_float - 25.0) / 200.0;            
-            engine_world.audio_sources[source_number].SetGain(random_float);
+            random_float = rand() % effect->rand_gain_var;
+            random_float = effect->gain + (random_float - 25.0) / 200.0;            
+            source->SetGain(random_float);
         }
         else
         {
-            engine_world.audio_sources[source_number].SetGain(engine_world.audio_effects[effect_ID].gain);
+            source->SetGain(effect->gain);
         }
         
-        engine_world.audio_sources[source_number].SetRange(engine_world.audio_effects[effect_ID].range);
+        source->SetRange(effect->range);
         
-        engine_world.audio_sources[source_number].Play();
+        source->Play();
         
         return 1;
     }
@@ -480,14 +505,19 @@ int Audio_Send(int effect_ID, int entity_ID, int entity_type)
 }
 
 
-void Audio_Kill(int effect_ID, int entity_ID, int entity_type)
+int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
 {
+    effect_ID = (int)engine_world.audio_map[effect_ID];
+    
     int playing_sound = Audio_IsEffectPlaying(effect_ID, entity_ID, entity_type);
     
     if(playing_sound != -1)
     {
         engine_world.audio_sources[playing_sound].Stop();
+        return 1;
     }
+    
+    return 0;
 }
 
 
@@ -497,7 +527,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     int8_t        flag;
     uint32_t      ind1, ind2;
     uint32_t      comp_size, uncomp_size;
-    uint32_t      i;
+    uint32_t      i, j;
     
     // Generate new buffer array.
     engine_world.audio_buffers_count = tr->sample_indices_count;
@@ -513,6 +543,11 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     engine_world.audio_effects_count = tr->sound_details_count;
     engine_world.audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
     memset(engine_world.audio_effects, 0xFF, sizeof(audio_effect_t) * tr->sound_details_count);
+
+    // Generate new audio emitters array.
+    engine_world.audio_emitters_count = tr->sound_sources_count;
+    engine_world.audio_emitters = (audio_emitter_t*)malloc(tr->sound_sources_count * sizeof(audio_emitter_t));
+    memset(engine_world.audio_emitters, 0, sizeof(audio_emitter_t) * tr->sound_sources_count);
     
     // Copy sound map.
     engine_world.audio_map = tr->soundmap;
@@ -534,7 +569,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
             case TR_I:
             case TR_I_DEMO:
             case TR_I_UB:
-                engine_world.audio_map_count = TR_SOUND_MAP_SIZE_TR1;
+                engine_world.audio_map_count = TR_AUDIO_MAP_SIZE_TR1;
 
                 for(i = 0; i < engine_world.audio_buffers_count-1; i++)
                 {
@@ -548,61 +583,64 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
             case TR_II:
             case TR_II_DEMO:
             case TR_III:
+                engine_world.audio_map_count = (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2);
+                ind1 = 0;
+                ind2 = 0;
+                flag = 0;
+                i = 0;
+                j = 0;
+                while(pointer < tr->samples_data + tr->samples_data_size - 4)
                 {
-                    //engine_world.audio_map_count = (tr->game_version == TR_III)?(TR_SOUND_MAP_SIZE_TR3):(TR_SOUND_MAP_SIZE_TR2);
-                    ind1 = 0;
-                    ind2 = 0;
-                    flag = 0;
-                    i = 0;
-                    while(pointer < tr->samples_data + tr->samples_data_size - 4)
+                    pointer = tr->samples_data + ind2;
+                    if(0x46464952 == *((int32_t*)pointer))  // RIFF
                     {
-                        pointer = tr->samples_data + ind2;
-                        if(0x46464952 == *((int32_t*)pointer))                  // RIFF
+                        if(flag == 0x00)
                         {
-                            if(flag == 0x00)
+                            ind1 = ind2;
+                            flag = 0x01;
+                        }
+                        else
+                        {
+                            uncomp_size = ind2 - ind1;
+                            if(tr->sample_indices[i] == j)
                             {
-                                ind1 = ind2;
-                                flag = 0x01;
-                            }
-                            else
-                            {
-                                uncomp_size = ind2 - ind1;
                                 Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
                                 i++;
-                                if(i > engine_world.audio_buffers_count - 1)
-                                {
-                                    break;
-                                }
-                                ind1 = ind2;
                             }
+                            j++;
+                            if(i > engine_world.audio_buffers_count - 1)
+                            {
+                                break;
+                            }
+                            ind1 = ind2;
                         }
-                        ind2++;
                     }
-                    uncomp_size = tr->samples_data_size - ind1;
-                    pointer = tr->samples_data + ind1;
-                    if(i < engine_world.audio_buffers_count)
-                    {
-                        Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, uncomp_size); 
-                    }                    
+                    ind2++;
+                }
+                uncomp_size = tr->samples_data_size - ind1;
+                pointer = tr->samples_data + ind1;
+                if(i < engine_world.audio_buffers_count)
+                {
+                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, uncomp_size); 
                 }
                 break;
                 
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                engine_world.audio_map_count = (tr->game_version == TR_V)?(TR_SOUND_MAP_SIZE_TR5):(TR_SOUND_MAP_SIZE_TR4);
+                engine_world.audio_map_count = (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4);
 
                 for(i = 0; i < tr->samples_count; i++)
                 {
                     // Parse sample sizes.
-                    // Always use comp_size as block length, as uncomp_size is useless.
+                    // Always use comp_size as block length, as uncomp_size is used to cut raw sample data.
                     uncomp_size = *((uint32_t*)pointer);
                     pointer += 4;
                     comp_size   = *((uint32_t*)pointer);
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
-                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, comp_size);
+                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, comp_size, uncomp_size);
 
                     // Now we can safely move pointer through current sample data.
                     pointer += comp_size;
@@ -610,7 +648,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                 break;
 
             default:
-                engine_world.audio_map_count = TR_SOUND_MAP_SIZE_NONE;
+                engine_world.audio_map_count = TR_AUDIO_MAP_SIZE_NONE;
                 free(tr->samples_data);
                 tr->samples_data = NULL;
                 tr->samples_data_size = 0;
@@ -626,73 +664,98 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     // audio effects structure.
     for(i = 0; i < engine_world.audio_effects_count; i++)
     {
-        switch(tr->game_version)
+        if(tr->game_version < TR_III)
         {
-            case TR_I:
-            case TR_I_DEMO:
-            case TR_I_UB:            
-                engine_world.audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch);
-                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1/TR2 is 32767.
-                engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
-                engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
-                
-                ind1 = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
-                
-                if(ind1 == TR_SOUND_LOOP_WAIT)
-                {
-                    ind1 = TR_SOUND_LOOP_REWIND;
-                }
-                else if(ind1 == TR_SOUND_LOOP_REWIND)
-                {
-                    ind1 = TR_SOUND_LOOP_WAIT;
-                }
-                engine_world.audio_effects[i].loop = ind1;
-                break;
-                
-            case TR_II:
-            case TR_II_DEMO:              
-                engine_world.audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch);
-                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1/TR2 is 32767.
-                engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
-                engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
-                
-                engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED);
-                break;
-                
-            case TR_III:
-                engine_world.audio_effects[i].pitch  = (float)(tr->sound_details[i].pitch) / 127;
-                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255; // Max. volume in TR3 is 255.
-                engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
-                engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 127;
-                
-                engine_world.audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
-                break;
-                
-            case TR_IV:
-            case TR_IV_DEMO:
-            case TR_V:
-                engine_world.audio_effects[i].pitch  = (float)tr->sound_details[i].pitch / 127 + 1;
-                engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255; // Max. volume in TR3 is 255.
-                engine_world.audio_effects[i].range  = (float)(tr->sound_details[i].sound_range);
-                engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 255;
-                
-                engine_world.audio_effects[i].loop = tr->sound_details[i].num_samples_and_flags_1 & TR_SOUND_LOOP_LOOPED;
-                break;
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1/TR2 is 32767.
+            engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
+        }
+        else if(tr->game_version > TR_III)
+        {
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255; // Max. volume in TR3 is 255.
+            engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 255;
+        }
+        else
+        {
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255; // Max. volume in TR3 is 255.
+            engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 127;
         }
                     
         engine_world.audio_effects[i].rand_gain_var  = 50;
         engine_world.audio_effects[i].rand_pitch_var = 50;
         
-        engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_PITCH);
-        engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_SOUND_FLAG_RAND_VOLUME);
+        engine_world.audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127 + 1;
+        engine_world.audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0;
+        
+        engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
+        engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
+        
+        switch(tr->game_version)
+        {
+            case TR_I:
+            case TR_I_DEMO:
+            case TR_I_UB:
+                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
+                {
+                    case 0x02:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                        break;
+                    case 0x01:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        break;
+                    default:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+                }
+                break;
+                
+            case TR_II:
+            case TR_II_DEMO:
+                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
+                {
+                    case 0x02:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
+                        break;
+                    case 0x01:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        break;
+                    case 0x03:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                        break;
+                    default:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+                }
+                break;
+                
+            default:
+                engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
+        }
         
         engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
-        engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_SOUND_SAMPLE_NUMBER_MASK;
+        engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
+    }
+    
+    // Cycle through sound emitters and 
+    // parse them to native OpenTomb sound emitters structure.
+    
+    for(i = 0; i < engine_world.audio_emitters_count; i++)
+    {
+        engine_world.audio_emitters[i].emitter_index = i;
+        engine_world.audio_emitters[i].sound_index   =  tr->sound_sources[i].sound_id;
+        engine_world.audio_emitters[i].position[0]   =  tr->sound_sources[i].x;
+        engine_world.audio_emitters[i].position[1]   =  tr->sound_sources[i].z;
+        engine_world.audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
+        engine_world.audio_emitters[i].flags         =  tr->sound_sources[i].flags;
     }
     
     return 1;
 }
 
+void Audio_InitGlobals()
+{
+    audio_settings.music_volume = 0.7;
+    audio_settings.sound_volume = 0.8;
+    audio_settings.use_effects  = true;
+    audio_settings.listener_is_player = false;
+}
 
 int Audio_DeInit()
 {
@@ -702,7 +765,8 @@ int Audio_DeInit()
         engine_world.audio_sources = NULL;
         engine_world.audio_sources_count = 0;
     }
-    ///@CRITICAL: You must to delete all sources before buffers deleting!!!
+    
+    ///@CRITICAL: You must delete all sources before buffers deleting!!!
 
     if(engine_world.audio_buffers)
     {
@@ -719,6 +783,13 @@ int Audio_DeInit()
         engine_world.audio_effects_count = 0;
     }
     
+    if(engine_world.audio_sources)
+    {
+        free(engine_world.audio_sources);
+        engine_world.audio_sources = NULL;
+        engine_world.audio_effects_count = 0;
+    }
+    
     if(engine_world.audio_map)
     {
         free(engine_world.audio_map);
@@ -730,7 +801,7 @@ int Audio_DeInit()
 }
 
 
-int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size)
+int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
 {
     SDL_AudioSpec wav_spec;
     Uint8 *wav_buffer;
@@ -741,6 +812,7 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     // Decode WAV structure with SDL methods.
     // SDL automatically defines file format (PCM/ADPCM), so we shouldn't bother
     // about if it is TR4 compressed samples or TRLE uncompressed samples.
+    
     if(SDL_LoadWAV_RW(src, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
@@ -748,18 +820,34 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
         return -1;
     }
     SDL_FreeRW(src);
+    
+    // Uncomp_sample_size explicitly specifies amount of raw sample data
+    // to load into buffer. It is only used in TR4/5 with ADPCM samples,
+    // because full-sized ADPCM sample contains a bit of silence at the end,
+    // which should be removed. That's where uncomp_sample_size comes into
+    // business.
+    // Note that we also need to compare if uncomp_sample_size is smaller
+    // than native wav length, because for some reason many TR5 uncomp sizes
+    // are messed up and actually more than actual sample size.
+    
+    if((uncomp_sample_size == 0) || (wav_length < uncomp_sample_size))
+    {
+        uncomp_sample_size = wav_length;
+    }
+         
     // Find out sample format and load it correspondingly.
-    // Note that with OpenAL, we can have samples of different formats in same level 
+    // Note that with OpenAL, we can have samples of different formats in same level.
+    
     switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
     {
         case 8:
             if(wav_spec.channels == 1)                                          // mono
             {
-                alBufferData(buf_number, AL_FORMAT_MONO8, wav_buffer, wav_length, wav_spec.freq);
+                alBufferData(buf_number, AL_FORMAT_MONO8, wav_buffer, uncomp_sample_size, wav_spec.freq);
             }
             else if(wav_spec.channels == 2)                                     // stereo
             {
-                alBufferData(buf_number, AL_FORMAT_STEREO8, wav_buffer, wav_length, wav_spec.freq);
+                alBufferData(buf_number, AL_FORMAT_STEREO8, wav_buffer, uncomp_sample_size, wav_spec.freq);
             }
             else                                                                // unsupported
             {
@@ -771,11 +859,11 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
         case 16:
             if(wav_spec.channels == 1)                                          // mono
             {
-                alBufferData(buf_number, AL_FORMAT_MONO16, wav_buffer, wav_length, wav_spec.freq);
+                alBufferData(buf_number, AL_FORMAT_MONO16, wav_buffer, uncomp_sample_size, wav_spec.freq);
             }
             else if(wav_spec.channels == 2)                                     // stereo
             {
-                alBufferData(buf_number, AL_FORMAT_STEREO16, wav_buffer, wav_length, wav_spec.freq);
+                alBufferData(buf_number, AL_FORMAT_STEREO16, wav_buffer, uncomp_sample_size, wav_spec.freq);
             }
             else                                                                // unsupported
             {

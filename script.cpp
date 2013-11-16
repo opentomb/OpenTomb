@@ -403,6 +403,26 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
     return 1;
 }
 
+int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
+{
+    if(!lua)
+    {
+        return -1;
+    }
+
+    int top = lua_gettop(lua);
+    lua_getglobal(lua, "audio");
+
+    as->music_volume = lua_GetScalarField(lua, "music_volume");
+    as->sound_volume = lua_GetScalarField(lua, "sound_volume");
+    as->use_effects  = lua_GetScalarField(lua, "use_effects");
+    as->listener_is_player = lua_GetScalarField(lua, "listener_is_player");
+
+    lua_settop(lua, top);
+
+    return 1;
+}
+
 int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
 {
     const char *patch;

@@ -455,9 +455,9 @@ void Engine_InitALAudio()
         return;
     }
     
-    //alListenerf(AL_METERS_PER_UNIT, 1.0 / 512.0);
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
+    alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 }
 
 int SDL_main(int argc, char **argv)
