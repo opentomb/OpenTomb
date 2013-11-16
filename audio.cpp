@@ -368,7 +368,7 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type)
 
 int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 {
-    int32_t         source_number, playing_sound;
+    int32_t         source_number;
     uint16_t        random_value;
     ALfloat         random_float;
     audio_effect_p  effect = NULL;
@@ -410,28 +410,29 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     }
     
     // Pre-step 4: check if R (Rewind) flag is set for this effect, if so,
-    // find any effect with similar ID playing for this entity, and rewind it.
+    // find any effect with similar ID playing for this entity, and stop it.
     // Otherwise, if W (Wait) or L (Looped) flag is set, and same effect is
     // playing for current entity, don't send it and exit function.
     
-    playing_sound = Audio_IsEffectPlaying(effect_ID, entity_ID, entity_type);
+    source_number = Audio_IsEffectPlaying(effect_ID, entity_ID, entity_type);
     
-    if(playing_sound != -1)
+    if(source_number != -1)
     {
         if(effect->loop == TR_AUDIO_LOOP_REWIND)
         {
-            engine_world.audio_sources[playing_sound].Play();
-            return 1;
+            engine_world.audio_sources[source_number].Stop();
         }
         else if(effect->loop) // Any other looping case (Wait / Loop).
         {
             return 0;
         }
     }
+    else
+    {
+        source_number = Audio_GetFreeSource();  // Get free source. 
+    }
     
-    // Pre-step 5: Get free source. If we can't get it, bypass audio send.
-    
-    source_number = Audio_GetFreeSource();
+
     
     if(source_number != -1)  // Everything is OK, we're sending audio to channel.
     {

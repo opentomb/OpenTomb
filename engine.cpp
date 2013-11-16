@@ -432,8 +432,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     /*
      * register functions
      */
-    lua_register(lua, "playSound", lua_PlaySound);
-    lua_register(lua, "stopSound", lua_StopSound);
+    lua_register(lua, "playsound", lua_PlaySound);
+    lua_register(lua, "stopsound", lua_StopSound);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
@@ -818,8 +818,8 @@ int Engine_ExecCmd(char *ch)
             Con_AddLine("free_look - switch camera mode\0");
             Con_AddLine("cam_distance - camera distance to actor\0");
             Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0");
-            Con_AddLine("playSound(id) - play specified sound\0");  
-            Con_AddLine("stopSound(id) - stop specified sound\0");  
+            Con_AddLine("playsound(id) - play specified sound\0");  
+            Con_AddLine("stopsound(id) - stop specified sound\0");  
         }
         else if(!strcmp(token, "map"))
         {
