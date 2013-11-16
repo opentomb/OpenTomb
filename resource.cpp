@@ -744,7 +744,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     
     // Initialize audio.
     
-    Audio_Init(MAX_CHANNELS, tr);
+    Audio_Init(TR_AUDIO_MAX_CHANNELS, tr);
 
     switch(tr->game_version)
     {

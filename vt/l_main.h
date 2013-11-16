@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL_rwops.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "tr_types.h"
 #include "tr_versions.h"
 
@@ -18,6 +19,7 @@ class TR_Level {
         TR_Level()
         {
             this->game_version = TR_UNKNOWN;
+            snprintf(this->sfx_path, 256, "MAIN.SFX");                          ///@PARANOID: sprintf is absolutely correct
             
             this->textile8_count = 0;
             this->textile16_count = 0;
@@ -529,6 +531,8 @@ class TR_Level {
         uint16_t *frame_data;           ///< \brief frame data array
         uint32_t mesh_tree_data_size;
         uint32_t *mesh_tree_data;
+        
+        char     sfx_path[256];
         
 	void read_level(const char *filename, int32_t game_version);
 	void read_level(SDL_RWops * const src, int32_t game_version);

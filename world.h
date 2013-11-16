@@ -143,6 +143,9 @@ typedef struct world_s
     uint32_t                    anim_commands_count;
     int16_t                    *anim_commands;
     
+    uint32_t                    audio_emitters_count;                           // Amount of audio emitters in level.
+    struct audio_emitter_s     *audio_emitters;                                 // Audio emitters.
+    
     uint32_t                    audio_map_count;                                // Amount of overall effects in engine.
     int16_t                    *audio_map;                                      // Effect indexes.
     uint32_t                    audio_effects_count;                            // Amount of available effects in level.

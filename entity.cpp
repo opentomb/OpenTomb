@@ -395,12 +395,11 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 int16_t sound_index;
                 
                 if(entity->current_frame == *++pointer)
-                {                        
-                    sounds_played--;
-                    sounds_played = (sounds_played <= 0)?(100):(sounds_played);
-                
+                {               
                     sound_index     =  *++pointer &  0x3FFF;
-                    Audio_Send(sound_index, entity->ID, TR_SOUND_EMITTER_ENTITY);
+                    
+                    if(!(*pointer & TR_ANIMCOMMAND_CONDITION_WATER))
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                 }
                 else
                 {
@@ -433,15 +432,11 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                         case TR_EFFECT_PLAYSTEPSOUND:
                             if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
                             {
-                                //Audio_Send(0, entity->ID, TR_SOUND_EMITTER_ENTITY);
-                                
-                                sounds_played--;
-                                sounds_played = (sounds_played <= 0)?(100):(sounds_played);
+                                //Audio_Send(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                             }
                             else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
                             {
-                                sounds_played--;
-                                sounds_played = (sounds_played <= 0)?(100):(sounds_played);
+                                //Audio_Send(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                             }
                             break;
                         default:

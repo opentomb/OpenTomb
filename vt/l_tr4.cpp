@@ -669,8 +669,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
                 this->demo_data[i] = read_bitu8(newsrc);
 
         // Soundmap
-        this->soundmap = (int16_t*)malloc(TR_SOUND_MAP_SIZE_TR4 * sizeof(int16_t));
-        for(i=0; i < TR_SOUND_MAP_SIZE_TR4; i++)
+        this->soundmap = (int16_t*)malloc(TR_AUDIO_MAP_SIZE_TR4 * sizeof(int16_t));
+        for(i=0; i < TR_AUDIO_MAP_SIZE_TR4; i++)
             this->soundmap[i] = read_bit16(newsrc);
                 
         this->sound_details_count = 0;
@@ -678,7 +678,6 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         if(i)
         {
             this->sound_details_count = i;
-            Sys_DebugLog("load_sounds.txt", "Num SampleInfos: %d", this->sound_details_count);
             
             this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
             for(i=0; i < this->sound_details_count; i++)
@@ -699,7 +698,6 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         if(i)
         {
             this->sample_indices_count = i;
-            Sys_DebugLog("load_sounds.txt", "Num Sample Indexes: %d", this->sample_indices_count);
             
             this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
             for(i=0; i < this->sample_indices_count; i++)

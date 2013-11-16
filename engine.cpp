@@ -37,6 +37,7 @@ extern "C" {
 #include "resource.h"
 #include "anim_state_control.h"
 #include "gui.h"
+#include "audio.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
@@ -49,6 +50,7 @@ extern ALCdevice              *al_device;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
+struct audio_settings_s                 audio_settings = {0};
 btScalar                                engine_frame_time = 0.0;
 
 struct camera_s                         engine_camera;
@@ -174,6 +176,7 @@ void Engine_InitGlobals()
     Controls_InitGlobals();
     Game_InitGlobals();
     Render_InitGlobals();
+    Audio_InitGlobals();
     Portal_InitGlobals();
 }
 
@@ -354,48 +357,66 @@ int lua_SetEntityPosition(lua_State * lua)
     return 0;
 }
 
-int lua_PlaySample(lua_State *lua)
+int lua_PlaySound(lua_State *lua)
 {
-    extern ALfloat         listener_position[3];
-    int id, top, src_id;
-    AudioSource *src;
+    int id, top;
     
     top = lua_gettop(lua);
-    id = lua_tointeger(lua, 1);
-    if((top != 1) && (top != 4))
+    id  = lua_tointeger(lua, 1);
+    
+    if(top != 1)
     {
-        Con_Printf("Wrong arguments count. Must be (id) or (id, x, y, z)");
+        Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
     
-    if((id < 0) || (id >= engine_world.audio_buffers_count))
+    if((id < 0) || (id >= engine_world.audio_map_count))
     {
-        Con_Printf("Wrong sample ID. Must be in interval 0..%d", engine_world.audio_buffers_count-1);
+        Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
         return 0;
     }
     
-    src_id = Audio_GetFreeSource();
-    if(src_id < 0)
+    
+    switch(Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL))
     {
-        Con_Printf("There is no free audio sources, try later");
+        case TR_AUDIO_SEND_ERROR:
+            Con_Printf("Audio_Send error: no such sample / free channel.", id);
+            break;
+            
+        case TR_AUDIO_SEND_NOTPLAYED:
+            Con_Printf("Audio_Send: sample skipped - conditions are not met.", id);
+            break;
+            
+        default:
+            break;
+    }
+    
+    return 0;
+}
+
+int lua_StopSound(lua_State *lua)
+{
+    int id, top;
+    
+    top = lua_gettop(lua);
+    id  = lua_tointeger(lua, 1);
+    
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
-    src = engine_world.audio_sources + src_id;
-    src->SetLooping(false);
-    src->SetBuffer(engine_world.audio_buffers[id]);
-    if(top == 1)
+    
+    if((id < 0) || (id >= engine_world.audio_map_count))
     {
-        src->SetPosition(listener_position);
+        Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
+        return 0;
     }
-    else
+    
+    if(Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL) == 0)
     {
-        ALfloat buf[3];
-        buf[0] = lua_tonumber(lua, 2);
-        buf[1] = lua_tonumber(lua, 3);
-        buf[2] = lua_tonumber(lua, 4);
-        src->SetPosition(buf);
+        Con_Printf("Audio_Kill: sample %d isn't playing.", id);
     }
-    src->Play();
     
     return 0;
 }
@@ -411,7 +432,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     /*
      * register functions
      */
-    lua_register(lua, "PlaySample", lua_PlaySample);
+    lua_register(lua, "playSound", lua_PlaySound);
+    lua_register(lua, "stopSound", lua_StopSound);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
@@ -796,7 +818,8 @@ int Engine_ExecCmd(char *ch)
             Con_AddLine("free_look - switch camera mode\0");
             Con_AddLine("cam_distance - camera distance to actor\0");
             Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0");
-            Con_AddLine("PlaySample(id) - play audio sample\0");  
+            Con_AddLine("playSound(id) - play specified sound\0");  
+            Con_AddLine("stopSound(id) - stop specified sound\0");  
         }
         else if(!strcmp(token, "map"))
         {
@@ -1052,6 +1075,7 @@ void Engine_LoadConfig()
 
     lua_ParseScreen(engine_lua, &screen_info);
     lua_ParseRender(engine_lua, &renderer.settings);
+    lua_ParseAudio(engine_lua, &audio_settings);
     lua_ParseConsole(engine_lua, &con_base);
     lua_ParseControlSettings(engine_lua, &control_mapper);
 }

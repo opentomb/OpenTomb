@@ -354,11 +354,11 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
         this->demo_data_count = read_bitu16(src);
 	this->demo_data = (uint8_t*)malloc(this->demo_data_count * sizeof(uint8_t));
         for(i=0; i < this->demo_data_count; i++)
-                this->demo_data[i] = read_bitu8(src);
+                this->demo_data[i] = read_bitu8(src);                
 
 	// Soundmap
-	this->soundmap = (int16_t*)malloc(TR_SOUND_MAP_SIZE_TR2 * sizeof(int16_t));
-        for(i=0; i < TR_SOUND_MAP_SIZE_TR2; i++)
+	this->soundmap = (int16_t*)malloc(TR_AUDIO_MAP_SIZE_TR2 * sizeof(int16_t));
+        for(i=0; i < TR_AUDIO_MAP_SIZE_TR2; i++)
                 this->soundmap[i] = read_bit16(src);
                 
 	this->sound_details_count = read_bitu32(src);
@@ -371,8 +371,8 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
             this->sound_details[i].chance = read_bitu16(src);
             this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
             this->sound_details[i].flags_2 = read_bitu8(src);
-            this->sound_details[i].sound_range = TR_SOUND_DEFAULT_RANGE;
-            this->sound_details[i].pitch = TR_SOUND_DEFAULT_PITCH;
+            this->sound_details[i].sound_range = TR_AUDIO_DEFAULT_RANGE;
+            this->sound_details[i].pitch = TR_AUDIO_DEFAULT_PITCH;
         }
 
     this->sample_indices_count = read_bitu32(src);
@@ -385,10 +385,10 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     // In TR2, samples are stored in separate file called MAIN.SFX.
     // If there is no such files, no samples are loaded.
     
-    SDL_RWops *newsrc = SDL_RWFromFile("MAIN.SFX", "rb");
+    SDL_RWops *newsrc = SDL_RWFromFile(this->sfx_path, "rb");
     if (newsrc == NULL)
     {
-        Sys_extWarn("read_tr2_level: failed to open MAIN.SFX! No samples loaded.");
+        Sys_extWarn("read_tr2_level: failed to open \"%s\"! No samples loaded.", this->sfx_path);
     }
     else
     {

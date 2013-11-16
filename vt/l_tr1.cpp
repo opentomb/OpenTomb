@@ -723,8 +723,8 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
                 this->demo_data[i] = read_bitu8(src);
 
 	// Soundmap
-	this->soundmap = (int16_t*)malloc(TR_SOUND_MAP_SIZE_TR1 * sizeof(int16_t));
-        for(i=0; i < TR_SOUND_MAP_SIZE_TR1; i++)
+	this->soundmap = (int16_t*)malloc(TR_AUDIO_MAP_SIZE_TR1 * sizeof(int16_t));
+        for(i=0; i < TR_AUDIO_MAP_SIZE_TR1; i++)
                 this->soundmap[i] = read_bit16(src);
 
 	this->sound_details_count = read_bitu32(src);
@@ -737,8 +737,8 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
             this->sound_details[i].chance = read_bitu16(src);
             this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
             this->sound_details[i].flags_2 = read_bitu8(src);
-            this->sound_details[i].sound_range = TR_SOUND_DEFAULT_RANGE;
-            this->sound_details[i].pitch = TR_SOUND_DEFAULT_PITCH;
+            this->sound_details[i].sound_range = TR_AUDIO_DEFAULT_RANGE;
+            this->sound_details[i].pitch = TR_AUDIO_DEFAULT_PITCH;
         }
 
         // LOAD SAMPLES
