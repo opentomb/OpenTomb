@@ -28,7 +28,7 @@ extern "C" {
 // Normally, audio map size is a constant for each TR game version and
 // won't change from level to level.
 
-#define TR_AUDIO_MAP_SIZE_NONE -1
+#define TR_AUDIO_MAP_SIZE_NONE (-1)
 #define TR_AUDIO_MAP_SIZE_TR1 256
 #define TR_AUDIO_MAP_SIZE_TR2 370
 #define TR_AUDIO_MAP_SIZE_TR3 370
@@ -78,8 +78,8 @@ extern "C" {
 
 // Possible types of errors returned by Audio_Send / Audio_Kill functions.
 
-#define TR_AUDIO_SEND_NOSAMPLE  -2
-#define TR_AUDIO_SEND_NOCHANNEL -1
+#define TR_AUDIO_SEND_NOSAMPLE   (-2)
+#define TR_AUDIO_SEND_NOCHANNEL  (-1)
 #define TR_AUDIO_SEND_IGNORED    0
 #define TR_AUDIO_SEND_PROCESSED  1
 
@@ -112,20 +112,19 @@ typedef struct audio_effect_s
     ALboolean   rand_pitch;     // Similar to flag 0x200000 (P) in native TRs.
     ALboolean   rand_gain;      // Similar to flag 0x400000 (V) in native TRs.
 	
-	// Additional sound source parameters.
-	// These are not natively in TR engines, but can be later assigned by
-	// external script.
+    // Additional sound source parameters.
+    // These are not natively in TR engines, but can be later assigned by
+    // external script.
 	
     ALboolean   rand_freq;          // Slightly randomize frequency.
-	ALuint		rand_pitch_var;     // Pitch randomizer bounds.
-	ALuint		rand_gain_var;      // Gain  randomizer bounds.
-	ALuint		rand_freq_var;      // Frequency randomizer bounds.
+    ALuint      rand_pitch_var;     // Pitch randomizer bounds.
+    ALuint      rand_gain_var;      // Gain  randomizer bounds.
+    ALuint      rand_freq_var;      // Frequency randomizer bounds.
 
     // Sample reference parameters.
     
     ALuint      sample_index;       // First (or only) sample (buffer) index.
     ALuint      sample_count;       // Sample amount to randomly select from.
-    
 }audio_effect_t, *audio_effect_p;
 
 // Audio emitter (aka SoundSource) structure.
@@ -136,7 +135,6 @@ typedef struct audio_emitter_s
     ALuint      sound_index;    // Sound index.
     btScalar    position[3];    // Vector coordinate.    
     uint16_t    flags;          // Flags - MEANING UNKNOWN!!!
-    
 }audio_emitter_t, *audio_emitter_p;
 
 

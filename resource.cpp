@@ -849,9 +849,9 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, s
     room->sprites = NULL;
     room->flags = tr->rooms[room_index].flags;
     Mat4_E_macro(room->transform);
-    room->transform[12] = tr->rooms[room_index].offset.x;
-    room->transform[13] =-tr->rooms[room_index].offset.z;
-    room->transform[14] = tr->rooms[room_index].offset.y;
+    room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
+    room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
+    room->transform[14] = tr->rooms[room_index].offset.y;                       // z = y;
     room->self = (engine_container_p)malloc(sizeof(engine_container_t));
     room->self->room = room;
     room->self->next = NULL;

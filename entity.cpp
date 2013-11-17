@@ -344,9 +344,13 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // This command executes ONLY at the end of animation. 
                 if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
                 {
-                    entity->transform[12] += (btScalar)(*++pointer);
-                    entity->transform[14] -= (btScalar)(*++pointer); // Y is inverted in OpenGL coordinates.
-                    entity->transform[13] += (btScalar)(*++pointer);
+                    btScalar delta[3];                                          // delta in entity local coordinate system!
+                    delta[0] = (btScalar)(*++pointer);                          // x = x;
+                    delta[2] =-(btScalar)(*++pointer);                          // z =-y
+                    delta[1] = (btScalar)(*++pointer);                          // y = z
+                    entity->transform[12] += entity->transform[0 + 0] * delta[0] + entity->transform[4 + 0] * delta[1] + entity->transform[8 + 0] * delta[2];
+                    entity->transform[13] += entity->transform[0 + 1] * delta[0] + entity->transform[4 + 1] * delta[1] + entity->transform[8 + 1] * delta[2];
+                    entity->transform[14] += entity->transform[0 + 2] * delta[0] + entity->transform[4 + 2] * delta[1] + entity->transform[8 + 2] * delta[2];
                 }
                 else
                 {

@@ -391,7 +391,7 @@ int lua_PlaySound(lua_State *lua)
             Con_Printf("Audio_Send: sample skipped - please retry!", id);
             break;
     }
-    
+
     return 0;
 }
 
@@ -663,14 +663,14 @@ int Engine_GetLevelVersion(const char *name)
                     check[2] == 0x34 &&                                         // 4
                     check[3] == 0x63)                                           //
             {
-                ret = TR_IV;                                                    // TRLE, does not work, decompression error...
+                ret = TR_IV;                                                    // TRLE
             }
             else if(check[0] == 0xF0 &&                                         // T
                     check[1] == 0xFF &&                                         // R
                     check[2] == 0xFF &&                                         // 4
                     check[3] == 0xFF)
             {
-                ret = TR_IV;                                                    // BOGUS (Openraider =))
+                ret = TR_IV;                                                    // BOGUS (OpenRaider =))
             }
             else
             {
@@ -735,10 +735,7 @@ int Engine_LoadMap(const char *name)
     int trv;
     VT_Level tr_level;
     char buf[LEVEL_NAME_MAX_LEN];
-    //char time[64];
 
-    //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog(LOG_FILENAME, "Start Load Map: %s", time);
     if(!Engine_FileFound(name))
     {
         Con_Printf("File not found - \"%s\"", name);
@@ -754,11 +751,7 @@ int Engine_LoadMap(const char *name)
 
     renderer.world = NULL;
 
-    //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog(LOG_FILENAME, "Begin Level Reading: %s", time);
     tr_level.read_level(name, trv);
-    //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog(LOG_FILENAME, "Begin level prepare: %s", time);
     tr_level.prepare_level();
 
 #if 0
@@ -773,20 +766,14 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
 
-    //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog(LOG_FILENAME, "Start world generation: %s", time);
     World_Empty(&engine_world);
     World_Prepare(&engine_world);
     TR_GenWorld(&engine_world, &tr_level);
-    //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog(LOG_FILENAME, "End world gen: %s", time);
     engine_world.ID = 0;
     engine_world.name = 0;
     engine_world.type = 0;
 
     Render_SetWorld(&engine_world);
-    //Sys_StrRunSec(time, 64);
-    //Sys_DebugLog(LOG_FILENAME, "End level loading: %s", time);
     return 1;
 }
 
@@ -1008,28 +995,6 @@ int Engine_ExecCmd(char *ch)
             }
             return 1;
         }
-        /*else if(NULL != (p=CVAR_find(token)))
-        {
-            ch = parse_token(ch, token);
-            if(NULL == ch)
-            {
-                snprintf(buf, con_base.line_size + 32, "%s = \"%s\"", p->name, p->val_s);
-                Con_AddLine(buf);
-                return 1;
-            }
-            else
-            {
-                p->val_d = atof(token);
-                strncpy(p->val_s, token, CVAR_VALUE_SIZE);
-                if(p->callback)
-                {
-                    p->callback(p);
-                }
-                snprintf(buf, con_base.line_size + 32, "%s = \"%s\"", p->name, p->val_s);
-                Con_AddLine(buf);
-                return 1;
-            }
-        }*/
         else if(token[0])
         {
             if(engine_lua)
