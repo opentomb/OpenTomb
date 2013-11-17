@@ -29,11 +29,11 @@ extern "C" {
 // won't change from level to level.
 
 #define TR_AUDIO_MAP_SIZE_NONE (-1)
-#define TR_AUDIO_MAP_SIZE_TR1 256
-#define TR_AUDIO_MAP_SIZE_TR2 370
-#define TR_AUDIO_MAP_SIZE_TR3 370
-#define TR_AUDIO_MAP_SIZE_TR4 370
-#define TR_AUDIO_MAP_SIZE_TR5 450
+#define TR_AUDIO_MAP_SIZE_TR1  256
+#define TR_AUDIO_MAP_SIZE_TR2  370
+#define TR_AUDIO_MAP_SIZE_TR3  370
+#define TR_AUDIO_MAP_SIZE_TR4  370
+#define TR_AUDIO_MAP_SIZE_TR5  450
 
 // Sound flags are found at offset 7 of SoundDetail unit and specify
 // certain sound modifications.
@@ -72,16 +72,16 @@ extern "C" {
 // sounds in TR games could be emitted either by entities, sound sources
 // or global events, we have defined these three types of emitters.
 
-#define TR_AUDIO_EMITTER_ENTITY 0        // Entity (movable)
+#define TR_AUDIO_EMITTER_ENTITY      0   // Entity (movable)
 #define TR_AUDIO_EMITTER_SOUNDSOURCE 1   // Sound source (static)
-#define TR_AUDIO_EMITTER_GLOBAL 2        // Global sound (menus, secret, etc.)
+#define TR_AUDIO_EMITTER_GLOBAL      2   // Global sound (menus, secret, etc.)
 
 // Possible types of errors returned by Audio_Send / Audio_Kill functions.
 
-#define TR_AUDIO_SEND_NOSAMPLE   (-2)
-#define TR_AUDIO_SEND_NOCHANNEL  (-1)
-#define TR_AUDIO_SEND_IGNORED    0
-#define TR_AUDIO_SEND_PROCESSED  1
+#define TR_AUDIO_SEND_NOSAMPLE  (-2)
+#define TR_AUDIO_SEND_NOCHANNEL (-1)
+#define TR_AUDIO_SEND_IGNORED     0
+#define TR_AUDIO_SEND_PROCESSED   1
 
 struct camera_s;
 struct entity_s;
