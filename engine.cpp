@@ -379,15 +379,16 @@ int lua_PlaySound(lua_State *lua)
     
     switch(Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL))
     {
-        case TR_AUDIO_SEND_ERROR:
-            Con_Printf("Audio_Send error: no such sample / free channel.", id);
+        case TR_AUDIO_SEND_NOCHANNEL:
+            Con_Printf("Audio_Send error: no free channel.", id);
             break;
             
-        case TR_AUDIO_SEND_NOTPLAYED:
-            Con_Printf("Audio_Send: sample skipped - conditions are not met.", id);
+        case TR_AUDIO_SEND_NOSAMPLE:
+            Con_Printf("Audio_Send error: no such sample.", id);
             break;
             
-        default:
+        case TR_AUDIO_SEND_IGNORED:
+            Con_Printf("Audio_Send: sample skipped - please retry!", id);
             break;
     }
     

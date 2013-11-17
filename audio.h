@@ -78,9 +78,10 @@ extern "C" {
 
 // Possible types of errors returned by Audio_Send / Audio_Kill functions.
 
-#define TR_AUDIO_SEND_ERROR     -1
-#define TR_AUDIO_SEND_NOTPLAYED  0
-#define TR_AUDIO_SEND_PLAYED     1
+#define TR_AUDIO_SEND_NOSAMPLE  -2
+#define TR_AUDIO_SEND_NOCHANNEL -1
+#define TR_AUDIO_SEND_IGNORED    0
+#define TR_AUDIO_SEND_PROCESSED  1
 
 struct camera_s;
 struct entity_s;
