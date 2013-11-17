@@ -384,7 +384,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     
     if(effect_ID == -1)
     {
-        return -1;
+        return TR_AUDIO_SEND_NOSAMPLE;
     }
     effect = engine_world.audio_effects + effect_ID;
             
@@ -397,7 +397,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
         if(effect->chance < random_value)
         {
             // Bypass audio send, if chance test is not passed.
-            return 0;
+            return TR_AUDIO_SEND_IGNORED;
         }
     }
     
@@ -407,7 +407,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     
     if(Audio_IsInRange(entity_type, entity_ID, effect->range, effect->gain ) == false)
     {
-        return 0;
+        return TR_AUDIO_SEND_IGNORED;
     }
     
     // Pre-step 4: check if R (Rewind) flag is set for this effect, if so,
@@ -425,15 +425,13 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
         }
         else if(effect->loop) // Any other looping case (Wait / Loop).
         {
-            return 0;
+            return TR_AUDIO_SEND_IGNORED;
         }
     }
     else
     {
         source_number = Audio_GetFreeSource();  // Get free source. 
     }
-    
-
     
     if(source_number != -1)  // Everything is OK, we're sending audio to channel.
     {
@@ -498,11 +496,11 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
         
         source->Play();
         
-        return 1;
+        return TR_AUDIO_SEND_PROCESSED;
     }
     else
     {
-        return -1;
+        return TR_AUDIO_SEND_NOCHANNEL;
     }
 }
 
@@ -516,10 +514,10 @@ int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
     if(playing_sound != -1)
     {
         engine_world.audio_sources[playing_sound].Stop();
-        return 1;
+        return TR_AUDIO_SEND_PROCESSED;
     }
     
-    return 0;
+    return TR_AUDIO_SEND_IGNORED;
 }
 
 
