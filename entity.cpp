@@ -658,6 +658,7 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
     Entity_GetNextFrame(entity, time, stc, &frame, &anim);
     if(anim != entity->current_animation)
     {
+        Entity_DoAnimCommands(entity, ret);
         Entity_SetAnimation(entity, anim, frame);
         stc = NULL;
         ret = 2;
@@ -665,12 +666,8 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
     else if(entity->current_frame != frame)
     {
         ret = 1;
-        entity->current_frame = frame;
-    }
-    
-    if(ret)
-    {
         Entity_DoAnimCommands(entity, ret);
+        entity->current_frame = frame;
     }
     
     af = entity->model->animations + entity->current_animation;
