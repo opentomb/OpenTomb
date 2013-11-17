@@ -559,7 +559,7 @@ struct character_command_s;
 
 //   ====== LARA'S STATES ======
 
-#define TR_STATE_LARA_CURRENT (-1)
+#define TR_STATE_CURRENT (-1)
 #define TR_STATE_LARA_WALK_FORWARD 0
 #define TR_STATE_LARA_RUN_FORWARD 1
 #define TR_STATE_LARA_STOP 2

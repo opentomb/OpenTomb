@@ -29,9 +29,12 @@ AudioSource::AudioSource()
     sample_count = 0;
     is_water     = false;
     alGenSources(1, &source_index);
-    alSourcef(source_index, AL_MIN_GAIN, 0.0);
-    alSourcef(source_index, AL_MAX_GAIN, 1.0);
-    alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0);
+    if(alIsSource(source_index))
+    {
+        alSourcef(source_index, AL_MIN_GAIN, 0.0);
+        alSourcef(source_index, AL_MAX_GAIN, 1.0);
+        alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0);
+    }
 }
 
 
@@ -74,7 +77,7 @@ void AudioSource::Stop()
 
 void AudioSource::Update()
 {
-    ALint   state, looped;
+    ALint   state;
     ALfloat range, gain;
 
     alGetSourcei(source_index, AL_SOURCE_STATE, &state);
@@ -155,7 +158,7 @@ void AudioSource::SetPitch(ALfloat pitch_value)
 void AudioSource::SetRange(ALfloat range_value)
 {    
     // Source will become fully audible on 1/6 of overall position.
-    alSourcef(source_index, AL_REFERENCE_DISTANCE, range_value / 6);
+    alSourcef(source_index, AL_REFERENCE_DISTANCE, range_value / 6.0);
     alSourcef(source_index, AL_MAX_DISTANCE, range_value);
 }
 
@@ -181,30 +184,31 @@ void AudioSource::LinkEmitter()
     {
         return;
     }
-         
-    if(emitter_type == TR_AUDIO_EMITTER_ENTITY)
+    
+    switch(emitter_type)
     {
-        ent = World_GetEntityByID(&engine_world, emitter_ID);
-        
-        if(ent)
-        {
-            vec3_copy(vec, ent->transform + 12);
-            SetPosition(vec);
-            
-            if(ent->character)
+        case TR_AUDIO_EMITTER_ENTITY:
+            ent = World_GetEntityByID(&engine_world, emitter_ID);
+            if(ent)
             {
-                vec3_copy(vec, ent->character->speed.m_floats);
-                SetVelocity(vec);
+                vec3_copy(vec, ent->transform + 12);
+                SetPosition(vec);
+
+                if(ent->character)
+                {
+                    vec3_copy(vec, ent->character->speed.m_floats);
+                    SetVelocity(vec);
+                }
             }
-        }
-    }
-    else if(emitter_type == TR_AUDIO_EMITTER_SOUNDSOURCE)
-    {
-        SetPosition(engine_world.audio_emitters[emitter_ID].position);
-    }
-    else if(emitter_type == TR_AUDIO_EMITTER_GLOBAL)
-    {
-        SetPosition(listener_position);
+            break;
+            
+        case TR_AUDIO_EMITTER_SOUNDSOURCE:
+            SetPosition(engine_world.audio_emitters[emitter_ID].position);
+            break;
+            
+        case TR_AUDIO_EMITTER_GLOBAL:
+            SetPosition(listener_position);
+            break;
     }
 }
 
@@ -214,28 +218,27 @@ bool Audio_IsInRange(int emitter_type, int emitter_ID, float range, float gain)
     ALfloat  vec[3], dist;
     entity_p ent;
     
-    if(emitter_type == TR_AUDIO_EMITTER_ENTITY)
+    switch(emitter_type)
     {
-        ent = World_GetEntityByID(&engine_world, emitter_ID);
-        
-        if(!ent)
-        {
-            return false;
-        }
-        
-        vec3_copy(vec, ent->transform + 12);
-    }
-    else if(emitter_type == TR_AUDIO_EMITTER_SOUNDSOURCE)
-    {
-        if(emitter_ID > engine_world.audio_emitters_count - 1)
-        {
-            return false;
-        }
-        vec3_copy(vec, engine_world.audio_emitters[emitter_ID].position);
-    }
-    else if(emitter_type == TR_AUDIO_EMITTER_GLOBAL)
-    {
-        return true;
+        case TR_AUDIO_EMITTER_ENTITY:
+            ent = World_GetEntityByID(&engine_world, emitter_ID);
+            if(!ent)
+            {
+                return false;
+            }
+            vec3_copy(vec, ent->transform + 12);
+            break;
+            
+        case TR_AUDIO_EMITTER_SOUNDSOURCE:
+            if(emitter_ID > engine_world.audio_emitters_count - 1)
+            {
+                return false;
+            }
+            vec3_copy(vec, engine_world.audio_emitters[emitter_ID].position);
+            break;
+            
+        case TR_AUDIO_EMITTER_GLOBAL:
+            return true;
     }
         
     dist = vec3_dist_sq(listener_position, vec);
@@ -296,6 +299,7 @@ void Audio_ResumeAllSources()
 }
 
 
+///@FIXME: add condition (compare max_dist with new source dist)
 int Audio_GetFreeSource()
 {    
     for(int i = 0; i < engine_world.audio_sources_count; i++)
@@ -307,40 +311,6 @@ int Audio_GetFreeSource()
     }
     
     return -1;
-    
-    /*ALfloat src_pos[3], dist, max_dist, pitch; 
-    int curr, i = 0;
-    
-    if(!engine_world.audio_sources[i].active)
-    {
-        return i;
-    }
-    
-    alGetSourcefv(engine_world.audio_sources[i].source_index, AL_PITCH, &pitch);
-    alGetSourcefv(engine_world.audio_sources[i].source_index, AL_POSITION, src_pos);
-    max_dist = vec3_dist_sq(listener_position, src_pos);
-    max_dist /= (pitch + 1.0);
-    curr = 0;
-    for(uint32_t i = 1; i < engine_world.audio_sources_count; i++)
-    {
-        if(!engine_world.audio_sources[i].active)
-        {
-            return i;
-        }
-        alGetSourcefv(engine_world.audio_sources[i].source_index, AL_PITCH, &pitch);
-        alGetSourcefv(engine_world.audio_sources[i].source_index, AL_POSITION, src_pos);
-        dist = vec3_dist_sq(listener_position, src_pos);
-        dist /= (pitch + 1.0);
-        if(dist > max_dist)
-        {
-            max_dist = dist;
-            curr = i;
-        }
-    }    
-    ///@FIXME: add condition (compare max_dist with new source dist)
-    engine_world.audio_sources[curr].Stop();
-    
-    return curr;*/
 }
 
 
@@ -666,24 +636,24 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     {
         if(tr->game_version < TR_III)
         {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767; // Max. volume in TR1/TR2 is 32767.
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
             engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
         }
         else if(tr->game_version > TR_III)
         {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255; // Max. volume in TR3 is 255.
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
             engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 255;
         }
         else
         {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255; // Max. volume in TR3 is 255.
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
             engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 127;
         }
                     
         engine_world.audio_effects[i].rand_gain_var  = 50;
         engine_world.audio_effects[i].rand_pitch_var = 50;
         
-        engine_world.audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127 + 1;
+        engine_world.audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127.0 + 1.0;
         engine_world.audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0;
         
         engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
