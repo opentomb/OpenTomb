@@ -53,6 +53,7 @@ bool AudioSource::IsActive()
 
 void AudioSource::Play()
 {
+    LinkEmitter();
     alSourcePlay(source_index);
     active = true;
 }
