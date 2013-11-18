@@ -2789,18 +2789,20 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_ANIMATION_LARA_CRAWL_TO_HANG_BEGIN:       
             ent->character->no_fix = 1;
-            pos[2] = curr_fc->floor_point.m_floats[2];
             if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT))     // to the climb
             {
-                vec3_copy(pos, cmd->climb_pos);
-                pos[0] -= ent->transform[4 + 0] * LARA_HANG_WALL_DISTANCE;
-                pos[1] -= ent->transform[4 + 1] * LARA_HANG_WALL_DISTANCE;
                 if(!cmd->action)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
-                    pos[2] -= ent->bf.bb_max[2];
                     ent->move_type = MOVE_FREE_FALLING;
                 }
+                else
+                {
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_HANG_IDLE, -1);
+                }
+                pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
+                pos[1] = cmd->climb_pos[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
+                pos[2] = cmd->climb_pos[2] - ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
                 ent->character->no_fix = 0;
             }
             break;

@@ -477,6 +477,8 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     entity->next_bf == NULL;
     entity->lerp = 0.0;
     anim = &entity->model->animations[animation];
+    frame %= anim->frames_count;
+    frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->period = (anim->frame_rate < 1)?(1.0 / 30.0):((btScalar)anim->frame_rate / 30.0);
     
     entity->current_stateID = anim->state_id;

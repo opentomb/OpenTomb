@@ -1,12 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "RedBlack.h"
-
+#include "redblack.h"
+#include "system.h"
 
 void findHeight(RedBlackHeader_p header, RedBlackNode_p t, int curr);
 void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null);
-
-//#define DBG printf
 
 // This method search the tree for a node with key 'key', and
 // return the node on success otherwise treeNULL.
@@ -177,9 +175,11 @@ void RB_EmptyTree(RedBlackNode_p n, RedBlackHeader_p p)
     {
         RB_EmptyTree(n->right, p);
     }
-    p->rb_free_data(n->data);
+    if(p->rb_free_data)
+    {
+        p->rb_free_data(n->data);
+    }
     p->node_count--;
-    free(n);
 }
 
 void RB_MakeEmpty(RedBlackHeader_p header)
@@ -284,9 +284,7 @@ RedBlackNode_p RB_InsertIgnore(void *data, RedBlackHeader_p header)
     x = (RedBlackNode_p)malloc(sizeof(struct RedBlackNode_s));
     if(x == NULL)
     {
-        printf ("insufficient memory (insertNode)\n");
-        fflush(stdout);
-        exit(1);
+        Sys_extError("insufficient memory (insertNode)\n");
     }
     x->data = data;
     x->parent = parent;
@@ -333,7 +331,10 @@ RedBlackNode_p RB_InsertReplace(void *data, RedBlackHeader_p header)
         {
             void *old_data = current->data;
             current->data = data;
-            header->rb_free_data(old_data);
+            if(header->rb_free_data)
+            {
+                header->rb_free_data(old_data);
+            }
             return NULL;
         }
         parent = current;
@@ -344,9 +345,7 @@ RedBlackNode_p RB_InsertReplace(void *data, RedBlackHeader_p header)
     x = (RedBlackNode_p)malloc(sizeof(struct RedBlackNode_s));
     if(x == NULL)
     {
-        printf ("insufficient memory (insertNode)\n");
-        fflush(stdout);
-        exit(1);
+        Sys_extError("insufficient memory (insertNode)\n");
     }
     x->data = data;
     x->parent = parent;
@@ -477,8 +476,10 @@ void RB_Delete(RedBlackHeader_p header, RedBlackNode_p z)
     if(header->node_count == 1 && z == header->root)
     {
         header->node_count --;
-        header->rb_free_data(data);
-        free (z);
+        if(header->rb_free_data)
+        {
+            header->rb_free_data(data);
+        }
         header->root = NULL;
         return;
     }
@@ -553,6 +554,8 @@ void RB_Delete(RedBlackHeader_p header, RedBlackNode_p z)
     }
 
     header->node_count--;
-    header->rb_free_data(data);
-    free (y);
+    if(header->rb_free_data)
+    {
+        header->rb_free_data(data);
+    }
 }
