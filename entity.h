@@ -54,7 +54,7 @@ typedef struct entity_s
     uint16_t                            current_stateID;
     int16_t                             current_animation;                      // 
     int16_t                             current_frame;                          // 
-    
+    struct room_sector_s               *current_sector;
     btScalar                            period;                                 // one frame change period
     btScalar                            frame_time;                             // current time 
     btScalar                            lerp;
@@ -85,6 +85,7 @@ void Entity_UpdateRotation(entity_p entity);
 
 void Entity_UpdateCurrentBoneFrame(entity_p entity);
 void Entity_DoAnimCommands(entity_p entity, int changing);
+int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world);
 void Entity_SetAnimation(entity_p entity, int animation, int frame);
 void Entity_MoveForward(struct entity_s *ent, btScalar dist);
 void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);
