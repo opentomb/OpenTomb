@@ -843,15 +843,6 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
         {
             Render_Mesh_DebugLines(room->mesh, NULL, NULL);
         }
-        s = room->sectors;
-        for(i=0;i<room->sectors_count;i++,s++)
-        {
-            //if(s->fd_portal_room != -1)
-            if(s->fd_end_level != 0)
-            {
-                Render_SectorBorders(s);
-            }
-        }
         glPopMatrix();
     }
 

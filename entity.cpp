@@ -14,6 +14,7 @@
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "console.h"
 
 
 extern uint16_t                sounds_played;
@@ -36,6 +37,7 @@ entity_p Entity_Create()
     ret->bt_body = NULL;
     ret->character = NULL;
     ret->smooth_anim = 1;
+    ret->current_sector = NULL;
     
     ret->lerp = 0.0;
     ret->next_bf = NULL;
@@ -115,6 +117,7 @@ void Entity_UpdateRigidBody(entity_p ent)
     btScalar tr[16], pos[3], c[3];
     btTransform	bt_tr;
     room_p new_room;
+    room_sector_p new_sector;
     
     if(!ent->model || !ent->bt_body || ((ent->model->animations->frames_count == 1) && (ent->model->animation_count == 1)))
     {
@@ -143,6 +146,25 @@ void Entity_UpdateRigidBody(entity_p ent)
                     Room_AddEntity(new_room, ent);
                 }
                 ent->self->room = new_room;
+            }
+        }
+    }
+    else
+    {
+        c[0] = ent->transform[12 + 0];
+        c[1] = ent->transform[12 + 1];
+        c[2] = ent->transform[12 + 2] + 0.5 * (ent->bf.bb_min[2] + ent->bf.bb_max[2]);
+        new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
+        if(ent->self->room)
+        {
+            new_sector = Room_GetSector(ent->self->room, c);
+        }
+        if(ent->current_sector != new_sector)
+        {
+            ent->current_sector = new_sector;
+            if(ent->current_sector)
+            {
+                Entity_ParseFloorData(ent, &engine_world);
             }
         }
     }
@@ -427,12 +449,15 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 entity->dir_flag = ENT_MOVE_BACKWARD;
                             }
                             break;
+                            
                         case TR_EFFECT_HIDEOBJECT:
                             entity->hide = 1;
                             break;
+                            
                         case TR_EFFECT_SHOWOBJECT:
                             entity->hide = 0;
                             break;
+                            
                         case TR_EFFECT_PLAYSTEPSOUND:
                             if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
                             {
@@ -443,6 +468,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 //Audio_Send(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                             }
                             break;
+                            
                         default:
                             ///@FIXME: TODO ALL OTHER EFFECTS!
                             break;
@@ -455,6 +481,211 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 break;
         }
     }
+}
+
+
+int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
+{
+    uint16_t function, sub_function, b3, FD_function, operands;
+    uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;
+    int16_t slope_t01, slope_t00;
+    int i, ret = 0;
+    uint16_t *entry, *end_p, end_bit, cont_bit;
+    btScalar pos[3];
+    room_sector_p sector = ent->current_sector;
+
+    if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size))
+    {
+        return 0;
+    }
+    
+    //sector->fd_end_level = 0;
+    //pos[0] = sector->pos_x;
+    //pos[1] = sector->pos_y;
+    //pos[2] = (btScalar)(sector->floor + sector->ceiling) / 2.0;
+
+    //sector->fd_end_level = 0;
+    //sector->fd_kill = 0;
+    //sector->fd_secret = 0;
+
+    /*
+     * PARSE FUNCTIONS
+     */
+    end_p = world->floor_data + world->floor_data_size - 1;
+    entry = world->floor_data + sector->fd_index;
+
+    do
+    {
+        end_bit = ((*entry) & 0x8000) >> 15;            // 0b10000000 00000000
+        // TR_I - TR_II
+        //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
+        //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
+        //TR_III+, but works with TR_I - TR_II
+        function = (*entry) & 0x001F;                   // 0b00000000 00011111
+        sub_function = ((*entry) & 0x3FF0) >> 8;        // 0b01111111 11100000
+        b3 = ((*entry) & 0x00E0) >> 5;                  // 0b00000000 11100000  TR_III+
+        entry++;
+
+        switch(function)
+        {
+            case 0x01:          // PORTAL DATA
+                if(sub_function == 0x00)
+                {
+                    i = *(entry++);
+
+                }
+                break;
+
+            case 0x02:          // FLOOR SLANT
+                if(sub_function == 0x00)
+                {
+
+                    entry++;
+                }
+                break;
+
+            case 0x03:          // CEILING SLANT
+                if(sub_function == 0x00)
+                {
+
+                    entry++;
+                }
+                break;
+
+            case 0x04:          // TRIGGER
+                entry++;        // go to the first trigger function
+                do
+                {
+                    cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
+                    FD_function = (((*entry) & 0x7C00)) >> 10;                  // 0b01111100 00000000
+                    operands = (*entry) & 0x03FF;                               // 0b00000011 11111111
+                    entry++;
+
+                    switch(FD_function)
+                    {
+                        case 0x00:          // ACTIVATE / DEACTIVATE item
+
+                            break;
+
+                        case 0x01:          // CAMERA SWITCH
+                            //sector->fd_end_level = 1;
+                            entry++;
+                            break;
+
+                        case 0x02:          // UNDERWATER CURRENT
+
+                            break;
+
+                        case 0x03:          // SET ALTERNATE ROOM
+
+                            break;
+
+                        case 0x04:          // ALTER ROOM FLAGS (paired with 0x05)
+
+                            break;
+
+                        case 0x05:          // ALTER ROOM FLAGS (paired with 0x04)
+
+                            break;
+
+                        case 0x06:          // LOOK AT ITEM
+                            //sector->fd_end_level = 1;
+                            break;
+
+                        case 0x07:          // END LEVEL
+                            Con_AddLine("End of level!");
+                            //sector->fd_end_level = (operands)?operands:1;       // IT WORKS!!!
+                            // sub_function - where to we go...
+                            // but it wrongly activated in complex tr4 trigger case (hub.tr4 - 2 skeleton
+                            // activation + camera look near big rock on the rope)
+                            break;
+
+                        case 0x08:          // PLAY CD TRACK
+                            Con_Printf("Play sound id = %d", operands);
+                            // operands - track number
+                            break;
+
+                        case 0x09:          // Assault course clock control
+
+                            break;
+
+                        case 0x0a:          // PLAYSOUND SECRET_FOUND
+                            Con_AddLine("Play SECRET FOUND!");
+                            break;
+
+                        case 0x0b:          // UNKNOWN
+
+                            break;
+
+                        case 0x0c:          // UNKNOWN
+
+                            break;
+
+                        case 0x0d:          // UNKNOWN
+
+                            break;
+
+                        case 0x0e:          // UNKNOWN
+
+                            break;
+
+                        case 0x0f:          // UNKNOWN
+
+                            break;
+                    };
+                }
+                while(cont_bit && entry < end_p);
+                break;
+
+            case 0x05:          // KILL LARA
+                //sector->fd_kill = 1;                                       //
+                break;
+
+            case 0x06:          // CLIMBABLE WALLS
+
+                break;
+
+            case 0x07:          // TR3 SLANT
+            case 0x08:          // TR3 SLANT
+            case 0x09:          // TR3 SLANT
+            case 0x0A:          // TR3 SLANT
+            case 0x0B:          // TR3 SLANT
+            case 0x0C:          // TR3 SLANT
+            case 0x0D:          // TR3 SLANT
+            case 0x0E:          // TR3 SLANT
+            case 0x0F:          // TR3 SLANT
+            case 0x10:          // TR3 SLANT
+            case 0x11:          // TR3 SLANT
+            case 0x12:          // TR3 SLANT
+                entry++;
+                do
+                {
+                    cont_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
+                    slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
+                    slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
+                    slope_func = ((*entry) & 0x001F);           // 0b00000000 00011111
+                    entry++;
+                    slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
+                    slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
+                    slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
+                    slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
+                    entry++;
+                }
+                while(cont_bit && entry<end_p-1);
+                break;
+
+            case 0x13:          // MONKEY TR3 ???
+                if(sub_function == 0x00)
+                {
+
+                }
+                break;
+        };
+        ret++;
+    }
+    while(!end_bit && entry < end_p);
+
+    return ret;
 }
 
 
