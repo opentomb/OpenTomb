@@ -358,7 +358,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
     uint32_t count       = af->num_anim_commands;
     int16_t *pointer     = engine_world.anim_commands + af->anim_command;
     
-    for(int i = 0; i < count; i++, pointer++)
+    for(uint32_t i = 0; i < count; i++, pointer++)
     {
         switch(*pointer)
         {
@@ -373,6 +373,11 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     entity->transform[12] += entity->transform[0 + 0] * delta[0] + entity->transform[4 + 0] * delta[1] + entity->transform[8 + 0] * delta[2];
                     entity->transform[13] += entity->transform[0 + 1] * delta[0] + entity->transform[4 + 1] * delta[1] + entity->transform[8 + 1] * delta[2];
                     entity->transform[14] += entity->transform[0 + 2] * delta[0] + entity->transform[4 + 2] * delta[1] + entity->transform[8 + 2] * delta[2];
+ /*                 
+                    delta[0] = entity->transform[12 + 0];
+                    delta[1] = entity->transform[12 + 1];
+                    delta[2] = entity->transform[12 + 2] + 0.5 * (entity->bf.bb_min[2] + entity->bf.bb_max[2]);
+                    entity->self->room = Room_FindPosCogerrence(&engine_world, delta, entity->self->room);*/  
                 }
                 else
                 {
@@ -491,22 +496,12 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     int16_t slope_t01, slope_t00;
     int i, ret = 0;
     uint16_t *entry, *end_p, end_bit, cont_bit;
-    btScalar pos[3];
     room_sector_p sector = ent->current_sector;
 
     if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size))
     {
         return 0;
     }
-    
-    //sector->fd_end_level = 0;
-    //pos[0] = sector->pos_x;
-    //pos[1] = sector->pos_y;
-    //pos[2] = (btScalar)(sector->floor + sector->ceiling) / 2.0;
-
-    //sector->fd_end_level = 0;
-    //sector->fd_kill = 0;
-    //sector->fd_secret = 0;
 
     /*
      * PARSE FUNCTIONS
@@ -532,7 +527,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 if(sub_function == 0x00)
                 {
                     i = *(entry++);
-
+                    
                 }
                 break;
 
@@ -564,36 +559,36 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     switch(FD_function)
                     {
                         case 0x00:          // ACTIVATE / DEACTIVATE item
-
+                            Con_Printf("Activate %d item", operands);
                             break;
 
                         case 0x01:          // CAMERA SWITCH
-                            //sector->fd_end_level = 1;
-                            entry++;
+                            Con_Printf("CAMERA SWITCH! OP = %d", operands);
+                            entry++;                                            ///@FIXME: check is entry++ correct, or it must be in all other cases 
                             break;
 
                         case 0x02:          // UNDERWATER CURRENT
-
+                            Con_Printf("UNDERWATER CURRENT! OP = %d", operands);
                             break;
 
                         case 0x03:          // SET ALTERNATE ROOM
-
+                            Con_Printf("SET ALTERNATE ROOM! OP = %d", operands);
                             break;
 
                         case 0x04:          // ALTER ROOM FLAGS (paired with 0x05)
-
+                            Con_Printf("ALTER ROOM FLAGS 0x04! OP = %d", operands);
                             break;
 
                         case 0x05:          // ALTER ROOM FLAGS (paired with 0x04)
-
+                            Con_Printf("ALTER ROOM FLAGS 0x05! OP = %d", operands);
                             break;
 
                         case 0x06:          // LOOK AT ITEM
-                            //sector->fd_end_level = 1;
+                            Con_Printf("Look at %d item", operands);
                             break;
 
                         case 0x07:          // END LEVEL
-                            Con_AddLine("End of level!");
+                            Con_Printf("End of level! id = %d", operands);
                             //sector->fd_end_level = (operands)?operands:1;       // IT WORKS!!!
                             // sub_function - where to we go...
                             // but it wrongly activated in complex tr4 trigger case (hub.tr4 - 2 skeleton
@@ -606,43 +601,43 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             break;
 
                         case 0x09:          // Assault course clock control
-
+                            Con_Printf("Time control id = %d", operands);
                             break;
 
                         case 0x0a:          // PLAYSOUND SECRET_FOUND
-                            Con_AddLine("Play SECRET FOUND!");
+                            Con_Printf("Play SECRET[%d] FOUND", operands);
                             break;
 
                         case 0x0b:          // UNKNOWN
-
+                            Con_Printf("TRIGGER: unknown 0x0b, OP = %d", operands);
                             break;
 
                         case 0x0c:          // UNKNOWN
-
+                            Con_Printf("TRIGGER: unknown 0x0c, OP = %d", operands);
                             break;
 
                         case 0x0d:          // UNKNOWN
-
+                            Con_Printf("TRIGGER: unknown 0x0d, OP = %d", operands);
                             break;
 
                         case 0x0e:          // UNKNOWN
-
+                            Con_Printf("TRIGGER: unknown 0x0e, OP = %d", operands);
                             break;
 
                         case 0x0f:          // UNKNOWN
-
+                            Con_Printf("TRIGGER: unknown 0x0f, OP = %d", operands);
                             break;
                     };
                 }
-                while(cont_bit && entry < end_p);
+                while(!cont_bit && entry < end_p);
                 break;
 
             case 0x05:          // KILL LARA
-                //sector->fd_kill = 1;                                       //
+                Con_Printf("KILL! sub = %d, b3 = %d", sub_function, b3);
                 break;
 
             case 0x06:          // CLIMBABLE WALLS
-
+                Con_Printf("Climbable walls! sub = %d, b3 = %d", sub_function, b3);
                 break;
 
             case 0x07:          // TR3 SLANT
@@ -675,10 +670,15 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 break;
 
             case 0x13:          // MONKEY TR3 ???
+                Con_Printf("Monkey TR3?! sub = %d, b3 = %d", sub_function, b3);
                 if(sub_function == 0x00)
                 {
 
                 }
+                break;
+                
+            default:
+                Con_Printf("UNKNOWN function id = %d, sub = %d, b3 = %d", function, sub_function, b3);
                 break;
         };
         ret++;
