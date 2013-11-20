@@ -199,19 +199,32 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
         ent->character->shapeY->setLocalScaling(tv);
         ent->character->ghostObject->setCollisionShape(ent->character->shapeY);
         
+#if 1
+        tv.m_floats[0] = 0.0;
+        tv.m_floats[1] = 0.0;
+        tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
+        ent->collision_offset = tv;
+#else
         tv.m_floats[0] = 0.0;
         tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] + ent->bf.bb_min[1]);
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
         //ent->character->collision_offset = tv;
         Mat4_vec3_rot_macro(ent->collision_offset.m_floats, ent->transform, tv.m_floats);
+#endif
     }
 }
 
 void Character_UpdateCurrentRoom(struct entity_s *ent)
 {
     btScalar pos[3];
+    room_p new_room;
+    
     vec3_add(pos, ent->transform + 12, ent->collision_offset.m_floats);
-    ent->self->room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
+    new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
+    if(new_room)
+    {
+        ent->self->room = new_room;
+    }
 }
 
 /**
