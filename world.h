@@ -40,9 +40,6 @@ typedef struct room_sector_s
     int32_t                     ceiling;   
     
     uint16_t                    fd_index;                                       // offset to the floor data
-    int8_t                      fd_kill;                                        ///@FIXME: temp, delete this field
-    int8_t                      fd_secret;                                      ///@FIXME: temp, delete this field
-    int16_t                     fd_end_level;                                   ///@FIXME: temp, delete this field
 
     struct room_sector_s        *sector_below;
     struct room_sector_s        *sector_above;
