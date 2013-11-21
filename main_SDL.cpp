@@ -458,6 +458,11 @@ void Engine_InitALAudio()
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+    
+    //if(audio_settings.use_effects)
+    //{
+        
+    //}
 }
 
 int SDL_main(int argc, char **argv)
@@ -870,6 +875,9 @@ void ShowDebugInfo()
        if(ent->self->room)
        {
             Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc.water, fc.water_level);
+            if(engine_camera.current_room)
+                Gui_OutTextXY(10, 10, "reverb = %d", engine_camera.current_room->reverb_info);
+            
        }
 
        /*

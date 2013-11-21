@@ -67,6 +67,41 @@ typedef struct room_s
 {
     uint32_t                    ID;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
+    uint8_t                     reverb_info;                                    // room reverb type
+    uint8_t                     extra_param;
+    
+    uint8_t unk1;
+    uint8_t unk2;
+    uint8_t unk3;    
+    uint8_t unk4; 
+    uint8_t unkA;
+    uint8_t unkB;
+    uint8_t unkC;
+    uint8_t unkD;
+    uint8_t unkE;
+    uint8_t unkF;
+    uint8_t unkG;
+    uint8_t unkH;
+    uint8_t unkI;
+    uint8_t unkJ;
+    uint8_t unkK;
+    uint8_t unkL;
+    uint8_t unkM;
+    uint8_t unkN;
+    uint8_t unkO;
+    uint8_t unkP;
+    uint8_t unkQ;
+    uint8_t unkR;
+    uint8_t unkS;
+    uint8_t unkT;
+    uint8_t unkU;
+    uint8_t unkV;
+    uint8_t unkW;
+    uint8_t unkX;
+    uint8_t unkY;
+    uint8_t unkZ;
+    
+    
     int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      hide;                                           // do not render
     struct base_mesh_s         *mesh;                                           // room's base mesh

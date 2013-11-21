@@ -116,28 +116,28 @@ typedef struct {
 /** \brief Room light.
   */
 typedef struct {
-	tr5_vertex_t pos;	// world coords
-	tr2_colour_t color;	// three bytes rgb values 
+	tr5_vertex_t pos;	    // world coords
+	tr2_colour_t color;	    // three bytes rgb values 
 	uint16_t intensity1;	// Light intensity
 	uint16_t intensity2;	// Almost always equal to Intensity1 [absent from TR1 data files]
-	uint32_t fade1;		// Falloff value 1
-	uint32_t fade2;		// Falloff value 2 [absent from TR1 data files]
-	uint8_t light_type;	// same as D3D (i.e. 2 is for spotlight) 
+	uint32_t fade1;		    // Falloff value 1
+	uint32_t fade2;		    // Falloff value 2 [absent from TR1 data files]
+	uint8_t light_type;	    // same as D3D (i.e. 2 is for spotlight) 
 	uint8_t unknown;		// always 0xff? 
 	float r_inner;
 	float r_outer;
 	float length;
 	float cutoff;
-	tr5_vertex_t dir;	// direction
-	tr5_vertex_t pos2;	// world coords
-	tr5_vertex_t dir2;	// direction
+	tr5_vertex_t dir;	    // direction
+	tr5_vertex_t pos2;	    // world coords
+	tr5_vertex_t dir2;	    // direction
 } tr5_room_light_t;
 //typedef prtl::array < tr5_room_light_t > tr5_room_light_array_t;
 
 /** \brief Room sprite.
   */
 typedef struct {
-	int16_t vertex;		// offset into vertex list
+	int16_t vertex;		    // offset into vertex list
 	int16_t texture;		// offset into sprite texture list
 } tr_room_sprite_t;
 //typedef prtl::array < tr_room_sprite_t > tr_room_sprite_array_t;
@@ -145,11 +145,11 @@ typedef struct {
 /** \brief Room layer (TR5).
   */
 typedef struct {
-	uint16_t num_vertices;	// number of vertices in this layer (4 bytes)
+	uint16_t num_vertices;	    // number of vertices in this layer (4 bytes)
 	uint16_t unknown_l1;
 	uint16_t unknown_l2;
-	uint16_t num_rectangles;	// number of rectangles in this layer (2 bytes)
-	uint16_t num_triangles;	// number of triangles in this layer (2 bytes)
+	uint16_t num_rectangles;    // number of rectangles in this layer (2 bytes)
+	uint16_t num_triangles;	    // number of triangles in this layer (2 bytes)
 	uint16_t unknown_l3;
 	uint16_t unknown_l4;
 	//  The following 6 floats (4 bytes each) define the bounding box for the layer
@@ -174,12 +174,12 @@ typedef struct {
 	tr5_vertex_t vertex;	// where this vertex lies (relative to tr2_room_info::x/z)
 	int16_t lighting1;
 	uint16_t attributes;	// A set of flags for special rendering effects [absent from TR1 data files]
-	// 0x8000 something to do with water surface
-	// 0x4000 under water lighting modulation and
-	// movement if viewed from above water surface
-	// 0x2000 water/quicksand surface movement
-	// 0x0010 "normal"
-	int16_t lighting2;	// Almost always equal to Lighting1 [absent from TR1 data files]
+                            // 0x8000 something to do with water surface
+                            // 0x4000 under water lighting modulation and
+                            // movement if viewed from above water surface
+                            // 0x2000 water/quicksand surface movement
+                            // 0x0010 "normal"
+	int16_t lighting2;	    // Almost always equal to Lighting1 [absent from TR1 data files]
 	// TR5 -->
 	tr5_vertex_t normal;
 	tr5_colour_t colour;	// vertex color ARGB format (4 bytes)
@@ -190,7 +190,7 @@ typedef struct {
 typedef struct {
 	tr5_vertex_t pos;	// world coords
 	float rotation;		// high two bits (0xC000) indicate steps of
-	// 90 degrees (e.g. (Rotation >> 14) * 90)
+                        // 90 degrees (e.g. (Rotation >> 14) * 90)
 	int16_t intensity1;	// Constant lighting; -1 means use mesh lighting
 	int16_t intensity2;	// Like Intensity 1, and almost always the same value [absent from TR1 data files]
 	uint16_t object_id;	// which StaticMesh item to draw
@@ -200,49 +200,58 @@ typedef struct {
 /** \brief Room.
   */
 typedef struct {
-	tr5_vertex_t offset;	///< \brief offset of room (world coordinates).
-	float y_bottom;		///< \brief indicates lowest point in room.
-	float y_top;		///< \brief indicates highest point in room.
-	uint32_t num_layers;	// number of layers (pieces) this room (4 bytes)
-	tr5_room_layer_t *layers;	// [NumStaticMeshes]list of static meshes
-	uint32_t num_vertices;	// number of vertices in the following list
+	tr5_vertex_t offset;            ///< \brief offset of room (world coordinates).
+	float y_bottom;                 ///< \brief indicates lowest point in room.
+	float y_top;		            ///< \brief indicates highest point in room.
+	uint32_t num_layers;	        // number of layers (pieces) this room (4 bytes)
+	tr5_room_layer_t *layers;	    // [NumStaticMeshes]list of static meshes
+	uint32_t num_vertices;	        // number of vertices in the following list
 	tr5_room_vertex_t *vertices;	// [NumVertices] list of vertices (relative coordinates)
-	uint32_t num_rectangles;	// number of textured rectangles
-	tr4_face4_t *rectangles;	// [NumRectangles] list of textured rectangles
-	uint32_t num_triangles;	// number of textured triangles
-	tr4_face3_t *triangles;	// [NumTriangles] list of textured triangles
-	uint32_t num_sprites;	// number of sprites
-	tr_room_sprite_t *sprites;	// [NumSprites] list of sprites
-	uint16_t num_portals;	// number of visibility portals to other rooms
-	tr_room_portal_t *portals;	// [NumPortals] list of visibility portals
-	uint16_t num_zsectors;	// "width" of sector list
-	uint16_t num_xsectors;	// "height" of sector list
+	uint32_t num_rectangles;	    // number of textured rectangles
+	tr4_face4_t *rectangles;	    // [NumRectangles] list of textured rectangles
+	uint32_t num_triangles;	        // number of textured triangles
+	tr4_face3_t *triangles;	        // [NumTriangles] list of textured triangles
+	uint32_t num_sprites;	        // number of sprites
+	tr_room_sprite_t *sprites;	    // [NumSprites] list of sprites
+	uint16_t num_portals;	        // number of visibility portals to other rooms
+	tr_room_portal_t *portals;	    // [NumPortals] list of visibility portals
+	uint16_t num_zsectors;	        // "width" of sector list
+	uint16_t num_xsectors;	        // "height" of sector list
 	tr_room_sector_t *sector_list;	// [NumXsectors * NumZsectors] list of sectors
-	// in this room
-	int16_t intensity1;	// This and the next one only affect externally-lit objects
-	int16_t intensity2;	// Almost always the same value as AmbientIntensity1 [absent from TR1 data files]
-	int16_t light_mode;	// (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
-	uint16_t num_lights;	// number of point lights in this room
-	tr5_room_light_t *lights;	// [NumLights] list of point lights
-	uint16_t num_static_meshes;	// number of static meshes
+                                    // in this room
+	int16_t intensity1;	            // This and the next one only affect externally-lit objects
+	int16_t intensity2;	            // Almost always the same value as AmbientIntensity1 [absent from TR1 data files]
+	int16_t light_mode;	            // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
+	uint16_t num_lights;	        // number of point lights in this room
+	tr5_room_light_t *lights;	    // [NumLights] list of point lights
+	uint16_t num_static_meshes;	    // number of static meshes
 	tr2_room_staticmesh_t *static_meshes;	// [NumStaticMeshes]list of static meshes
-	int16_t alternate_room;	// number of the room that this room can alternate
+	int16_t alternate_room;	        // number of the room that this room can alternate
 	// with (e.g. empty/filled with water is implemented as an empty room that alternates with a full room)
+	
 	uint16_t flags;
-	// flag bits: 0x0001 - room is filled with water,
-	// 0x0020 - Lara's ponytail gets blown
-	// by the wind;
-	// TR1 has only the water flag and the extra
-	// unknown flag 0x0100.
+	// Flag bits:
+	// 0x0001 - room is filled with water,
+	// 0x0020 - Lara's ponytail gets blown by the wind;
+	// TR1 has only the water flag and the extra unknown flag 0x0100.
 	// TR3 most likely has flags for "is raining", "is snowing", "water is cold", and "is
 	// filled by quicksand", among others.
-	tr2_colour_t fog_colour;	// Present in TR3-TR4 only
+	
+	uint8_t extra_param;
+	// Extra parameter is used with various room options, for example, R and M room flags in TRLE.
+	// Also, it specifies lighting scheme, when 0x4000 vertex attribute is set.
+
+	uint8_t reverb_info;
+    
+	// Reverb info is used in TR3-5 and contains index that specifies reverb type.
+	// 0 - Outside, 1 - Small room, 2 - Medium room, 3 - Large room, 4 - Pipe.
+	
 	tr5_colour_t light_colour;	// Present in TR5 only
 
 	// TR5 only -->
 	uint16_t unknown_r1;
 	uint16_t unknown_r2;
-	int16_t unknown_r3;
+	int16_t  unknown_r3;
 	uint32_t unknown_r4;
 	uint32_t unknown_r5;
 	uint32_t unknown_r6;
