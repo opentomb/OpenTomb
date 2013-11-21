@@ -249,8 +249,6 @@ int  Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname);
 
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 
-int  Audio_SetCurrentRoomType(int fx_index);
-
 void Audio_LogALError(int proc_index);
 
 #endif // AUDIO_H

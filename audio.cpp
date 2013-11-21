@@ -450,12 +450,6 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
     return -1;
 }
 
-int Audio_SetCurrentRoomType(int fx_index)
-{
-    fx_index = (fx_index >= TR_AUDIO_FX_LASTINDEX)?(0):(fx_index);
-    fxManager.current_room_type = fx_index;
-}
-
 
 int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 {
