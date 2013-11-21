@@ -91,6 +91,7 @@ void AudioSource::Play()
             if(audio_settings.use_effects)
             {
                 SetFX();
+                SetUnderwater();
             }
         }
 
@@ -154,7 +155,11 @@ void AudioSource::Update()
     if(Audio_IsInRange(emitter_type, emitter_ID, range, gain))
     {
         LinkEmitter();
-        SetUnderwater();
+        
+        if(is_water != fxManager.water_state)
+        {
+            SetUnderwater();
+        }
     }
     else
     {
@@ -277,23 +282,15 @@ void AudioSource::UnsetFX()
 
 void AudioSource::SetUnderwater()
 {
-    if(!audio_settings.use_effects)
+    if(fxManager.water_state)
     {
-        return;
+        alSourcei(source_index, AL_DIRECT_FILTER, fxManager.al_filter);
+        is_water = true;
     }
-    
-    if(is_water != fxManager.water_state)
+    else
     {
-        if(fxManager.water_state)
-        {
-            alSourcei(source_index, AL_DIRECT_FILTER, fxManager.al_filter);
-            is_water = true;
-        }
-        else
-        {
-            alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
-            is_water = false;
-        }
+        alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
+        is_water = false;
     }
 }
 
@@ -860,7 +857,7 @@ void Audio_InitFX()
     alGenFilters(1, &fxManager.al_filter);
     
     alFilteri(fxManager.al_filter, AL_FILTER_TYPE, AL_FILTER_LOWPASS);
-    alFilterf(fxManager.al_filter, AL_LOWPASS_GAIN, 1.0f);      // Low frequencies gain.
+    alFilterf(fxManager.al_filter, AL_LOWPASS_GAIN, 0.7f);      // Low frequencies gain.
     alFilterf(fxManager.al_filter, AL_LOWPASS_GAINHF, 0.0f);    // High frequencies gain.
     
     // Fill up effects with reverb presets.

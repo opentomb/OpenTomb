@@ -456,7 +456,7 @@ void Engine_InitALAudio()
     }
     
     alSpeedOfSound(330.0 * 512.0);
-    alDopplerVelocity(1);
+    alDopplerVelocity(330.0 * 510.0);
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 }
 
