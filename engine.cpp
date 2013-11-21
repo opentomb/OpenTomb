@@ -422,29 +422,6 @@ int lua_StopSound(lua_State *lua)
     return 0;
 }
 
-int lua_SetFX(lua_State *lua)
-{
-    int id, top;
-    
-    top = lua_gettop(lua);
-    id  = lua_tointeger(lua, 1);
-    
-    if(top != 1)
-    {
-        Con_Printf("Wrong arguments count. Must be (id).");
-        return 0;
-    }
-    
-    if((id < 0) || (id >= TR_AUDIO_FX_LASTINDEX))
-    {
-        Con_Printf("Wrong FX ID. Must be in interval 0..%d.", TR_AUDIO_FX_LASTINDEX-1);
-        return 0;
-    }
-    
-    Audio_SetCurrentRoomType(id);
-    
-    return 1;
-}
 
 void Engine_LuaRegisterFuncs(lua_State *lua)
 {
@@ -459,7 +436,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      */
     lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "stopsound", lua_StopSound);
-    lua_register(lua, "setfx", lua_SetFX);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
