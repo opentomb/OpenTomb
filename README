@@ -19,7 +19,7 @@ How to use model_view
 	1) You need GCC compiler, use -O2 optimization, -O3 prevents to crash (bullet).
 	2) You need libraryes: SDL library (do not forget to enable GL support in this library), OpenGL library, zlib.
 	3) In "vt" folder is modyfied vt project.
-    4) In src folder there is *.bat files for manual engine building. Use build_all to rebuild engine fully or see inside to know other script running order.
+	4) In src folder there is *.bat files for manual engine building. Use build_all to rebuild engine fully or see inside to know other script running order.
 	*) It is my own engine, not a branch of OpenRaider, but I use some useful code from it.
 
 Used here:

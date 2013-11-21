@@ -962,7 +962,6 @@ int Engine_ExecCmd(char *ch)
                 {
                     Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
                                (int)(sect->ceiling == 32512 || sect->floor == 32512), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
-                    Con_Printf("secret = %d, end = %d, kill = %d", sect->fd_secret, sect->fd_end_level, sect->fd_kill);
                     for(int i=0;i<sect->owner_room->static_mesh_count;i++)
                     {
                         Con_Printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i].object_id);
