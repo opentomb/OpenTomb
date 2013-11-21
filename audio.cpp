@@ -789,7 +789,6 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
         SDL_FreeRW(src);
         return -1;
     }
-    SDL_FreeRW(src);
     
     // Uncomp_sample_size explicitly specifies amount of raw sample data
     // to load into buffer. It is only used in TR4/5 with ADPCM samples,
@@ -868,7 +867,6 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname)
         SDL_FreeRW(file);
         return -2;
     }
-    SDL_FreeRW(file);
 
     switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
     {

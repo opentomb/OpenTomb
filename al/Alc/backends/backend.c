@@ -27,7 +27,7 @@ static void SDLCALL sdl_callback(void *userdata, Uint8 *stream, int len)
 
 static ALCenum sdl_open_playback(ALCdevice *device, const ALCchar *deviceName)
 {
-    device->DeviceName = strdup(deviceName);
+    device->DeviceName =  deviceName ? strdup(deviceName) : NULL;
     device->ExtraData = &sdl_audio_spec;
     sdl_audio_spec.callback = sdl_callback;
     
