@@ -98,7 +98,7 @@ int IsInUCRectFace4(tr4_object_texture_t *tex)
     int32_t i;
     uncollision_tex_rect_p uc = uc_rect_list;
     GLint v0[2], v1[2], v2[2], v3[2], tile = (tex->tile_and_flag & 0x7FFF);
-    //return 0;
+
     v0[0] = tex->vertices[0].xpixel + tex->vertices[0].xcoordinate * 0.5;
     v0[1] = tex->vertices[0].ypixel + tex->vertices[0].ycoordinate * 0.5;
 
@@ -236,7 +236,7 @@ void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v)
 
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
-    long int i;
+    int32_t i;
     int lua_err, top;
     room_p r;
     base_mesh_p base_mesh;
@@ -380,11 +380,11 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
                 lua_pushinteger(level_script, i);                               // add to stack first argument
                 lua_pcall(level_script, 1, 5, 0);                               // call that function
 
-                uc_rect_list[i].tile = lua_tointeger(level_script, -5);                      // get 1st argument
-                uc_rect_list[i].min_xy[0] = lua_tointeger(level_script, -4);                    // get 2nd argument
-                uc_rect_list[i].min_xy[1] = lua_tointeger(level_script, -3);                    // get 3rd argument
-                uc_rect_list[i].max_xy[0] = lua_tointeger(level_script, -2);                    // get 4th argument
-                uc_rect_list[i].max_xy[1] = lua_tointeger(level_script, -1);                    // get 5th argument
+                uc_rect_list[i].tile = lua_tointeger(level_script, -5);         // get 1st argument
+                uc_rect_list[i].min_xy[0] = lua_tointeger(level_script, -4);    // get 2nd argument
+                uc_rect_list[i].min_xy[1] = lua_tointeger(level_script, -3);    // get 3rd argument
+                uc_rect_list[i].max_xy[0] = lua_tointeger(level_script, -2);    // get 4th argument
+                uc_rect_list[i].max_xy[1] = lua_tointeger(level_script, -1);    // get 5th argument
                 lua_settop(level_script, top);                                  // restore LUA stack
             }
         }
@@ -398,8 +398,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     BorderedTextureAtlas_CreateTextures(bordered_texture_atlas, world->textures, 1);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
-
-    long int tmpLuaValue;   // Temporary value for reading Lua parameters.
 
     // Select mipmap mode
     switch(renderer.settings.mipmap_mode)
@@ -645,9 +643,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, s
     room->sprites_count = 0;
     room->sprites = NULL;
     room->flags = tr->rooms[room_index].flags;
-    room->reverb_info = tr->rooms[room_index].reverb_info;
-    room->extra_param = tr->rooms[room_index].extra_param;
-    
     Mat4_E_macro(room->transform);
     room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
     room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
@@ -981,12 +976,12 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
     {
         if(mesh->polygons[i].transparency > 1)
         {
-            Polygon_Copy(buf+j, mesh->polygons+i);
+            Polygon_Copy(buf+j, mesh->polygons + i);
             j++;
         }
         else
         {
-            Polygon_Clear(mesh->polygons+i);
+            Polygon_Clear(mesh->polygons + i);
         }
     }
 
@@ -1565,7 +1560,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         model->animations->next_frame = 0;
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
-        model->animations->frame_rate = 1;
+        model->animations->original_frame_rate = 1;
 
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
@@ -1622,7 +1617,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         anim->ID = i;
         anim->next_anim = NULL;
         anim->next_frame = 0;
-        anim->frame_rate = tr_animation->frame_rate;
+        anim->original_frame_rate = tr_animation->frame_rate;
         anim->accel_hi = tr_animation->accel_hi;
         anim->accel_hi2 = tr_animation->accel_hi2;
         anim->accel_lo = tr_animation->accel_lo;
@@ -1646,15 +1641,16 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
             // Calculate current animation anim command block offset.
             int16_t *pointer = world->anim_commands + anim->anim_command;
 
-            for(int count = 0; count < anim->num_anim_commands; count++, pointer++)
+            for(uint32_t count = 0; count < anim->num_anim_commands; count++, pointer++)
             {
                 switch(*pointer)
                 {
                     case TR_ANIMCOMMAND_PLAYEFFECT:
                     case TR_ANIMCOMMAND_PLAYSOUND:
                         // Recalculate absolute frame number to relative.
-                        *++pointer = *pointer - tr_animation->frame_start;
-                        pointer++;
+                        ///@FIXED: was unpredictable behavior.
+                        *(pointer + 1) -= tr_animation->frame_start;
+                        pointer += 2;
                         break;
                         
                     case TR_ANIMCOMMAND_SETPOSITION:
@@ -1864,7 +1860,6 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
                         sch_p->anim_dispath = (anim_dispath_p)realloc(sch_p->anim_dispath, sch_p->anim_dispath_count * sizeof(anim_dispath_t));
 
                         anim_dispath_p adsp = sch_p->anim_dispath + sch_p->anim_dispath_count - 1;
-                        int next_rate;
                         int next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames_count;
                         int next_frame = tr_adisp->next_frame - tr->animations[next_anim].frame_start;
                         int high, low;
@@ -1874,7 +1869,6 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
                         adsp->frame_low = low % anim->frames_count;
                         adsp->frame_high = (high - 1) % anim->frames_count;
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
-                        next_rate = model->animations[adsp->next_anim].frame_rate;
                         adsp->next_frame = next_frame % next_frames_count;
 
                         //Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], %d : [%d, %d], next_anim = %d, %d : [%d]", l,
@@ -1938,17 +1932,13 @@ int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
 int GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
 {
     tr_animation_t *curr_anim, *next_anim;
-    int ret, rate;
+    int ret;
 
     curr_anim = &tr->animations[animation_ind];
     if(curr_anim->frame_size <= 0)
     {
         return 1;                                                               // impossible!
     }
-
-    //rate = (curr_anim->frame_rate > 0)?(curr_anim->frame_rate):(1);
-    //ret = curr_anim->frame_end - curr_anim->frame_start + 1;
-    //return 1 + (ret - 1) / rate;                                              // strange, but that is not correct!
     
     if(animation_ind == tr->animations_count - 1)
     {
@@ -2009,7 +1999,7 @@ void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_
 
 void GenSkeletalModels(struct world_s *world, class VT_Level *tr)
 {
-    int i, m_offset;
+    uint32_t i, m_offset;
     skeletal_model_p smodel;
     tr_moveable_t *tr_moveable;
 
@@ -2031,7 +2021,7 @@ void GenSkeletalModels(struct world_s *world, class VT_Level *tr)
 
 void GenEntitys(struct world_s *world, class VT_Level *tr)
 {
-    int i, j, flag, top;
+    int i, j, top;
 
     tr2_item_t *tr_item;
     entity_p entity;
@@ -2229,7 +2219,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
 
 btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag)
 {
-    int i, j, cnt = 0;
+    uint32_t i, j, cnt = 0;
     polygon_p p;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;

@@ -66,7 +66,7 @@ typedef struct room_s
     uint32_t                    flags;                                          // room's type + water, wind info
     uint8_t                     reverb_info;                                    // room reverb type
     uint8_t                     extra_param;
-
+    
     int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      hide;                                           // do not render
     struct base_mesh_s         *mesh;                                           // room's base mesh

@@ -111,7 +111,6 @@ void RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& di
     }
 }
 
-
 /**
  * update current room of object
  */
@@ -169,6 +168,7 @@ void ResetTempbtScalar()
 {
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
 }
+
 
 void Engine_InitGlobals()
 {
@@ -275,6 +275,7 @@ int lua_SetGravity(lua_State * lua)                                             
     return 0;                                                                   // we returned two vaues
 }
 
+
 int lua_BindKey(lua_State * lua)
 {
     int act, top;
@@ -331,6 +332,7 @@ int lua_GetEntityPosition(lua_State * lua)
     return 3;
 }
 
+
 int lua_SetEntityPosition(lua_State * lua)
 {
     int id, top;
@@ -356,6 +358,7 @@ int lua_SetEntityPosition(lua_State * lua)
     ent->transform[12+2] = lua_tonumber(lua, 4);
     return 0;
 }
+
 
 int lua_PlaySound(lua_State *lua)
 {
@@ -394,6 +397,7 @@ int lua_PlaySound(lua_State *lua)
 
     return 0;
 }
+
 
 int lua_StopSound(lua_State *lua)
 {
@@ -476,6 +480,7 @@ void Engine_Destroy()
     Gui_Destroy();
 }
 
+
 void Engine_Shutdown(int val)
 {
     Render_Empty(&renderer);
@@ -524,6 +529,7 @@ int engine_lua_fputs(const char *str, FILE *f)
     Con_AddText(str);
     return strlen(str);
 }
+
 
 int engine_lua_fprintf(FILE *f, const char *fmt, ...)
 {
@@ -576,6 +582,7 @@ bool Engine_FileFound(const char *name, bool Write)
         return true;
     }
 }
+
 
 int Engine_GetLevelVersion(const char *name)
 {
@@ -731,6 +738,7 @@ void GetLevelName(char *name, const char *path)
     name[i-start] = 0;
 }
 
+
 int Engine_LoadMap(const char *name)
 {
     int trv;
@@ -777,6 +785,7 @@ int Engine_LoadMap(const char *name)
     Render_SetWorld(&engine_world);
     return 1;
 }
+
 
 int Engine_ExecCmd(char *ch)
 {
@@ -1014,6 +1023,7 @@ int Engine_ExecCmd(char *ch)
     return 0;
 }
 
+
 void Engine_LoadConfig()
 {
     if(!engine_lua)
@@ -1045,6 +1055,7 @@ void Engine_LoadConfig()
     lua_ParseConsole(engine_lua, &con_base);
     lua_ParseControlSettings(engine_lua, &control_mapper);
 }
+
 
 void Engine_SaveConfig()
 {
