@@ -127,14 +127,14 @@ void AudioSource::Update()
 
     alGetSourcei(source_index, AL_SOURCE_STATE, &state);
     
-    // Disable source, if it is completed.
-    if(active && (state == AL_STOPPED))
+    // Disable and bypass source, if it is stopped.
+    if(state == AL_STOPPED)
     {
         active = false;
         return;
     }
     
-    // Stop source, if it is disabled.
+    // Stop source, if it is disabled, but still playing.
     if((!active) && (state == AL_PLAYING))
     {
         Stop();
@@ -156,7 +156,7 @@ void AudioSource::Update()
     {
         LinkEmitter();
         
-        if(is_water != fxManager.water_state)
+        if( (audio_settings.use_effects) && (is_water != fxManager.water_state) )
         {
             SetUnderwater();
         }
@@ -253,19 +253,6 @@ void AudioSource::SetFX()
         slot = fxManager.al_slot[fxManager.current_slot];
     }
     
-    // Water low-pass filter is applied when source's is_water flag is set.
-    // Note that it is applied directly to channel, i. e. all sources that
-    // are underwater will damp, despite of global reverb setting.
-    
-    if(fxManager.water_state)
-    {
-        alSourcei(source_index, AL_DIRECT_FILTER, fxManager.al_filter);
-    }
-    else
-    {
-        alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
-    }
-    
     // Assign global reverb FX to channel.
     
     alSource3i(source_index, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
@@ -282,6 +269,10 @@ void AudioSource::UnsetFX()
 
 void AudioSource::SetUnderwater()
 {
+    // Water low-pass filter is applied when source's is_water flag is set.
+    // Note that it is applied directly to channel, i. e. all sources that
+    // are underwater will damp, despite of global reverb setting.
+    
     if(fxManager.water_state)
     {
         alSourcei(source_index, AL_DIRECT_FILTER, fxManager.al_filter);

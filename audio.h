@@ -216,8 +216,8 @@ public:
     friend int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID);
     
 private:
-    bool        is_water;       // Marker to define if sample is in underwater state or not.
     bool        active;         // Source gets autostopped and destroyed on next frame, if it's not set.
+    bool        is_water;       // Marker to define if sample is in underwater state or not.
     ALuint      source_index;   // Source index. Should be unique for each source.
     
     void LinkEmitter();                             // Link source to parent emitter.
@@ -227,7 +227,6 @@ private:
 
 void Audio_InitGlobals();
 void Audio_InitFX();
-void Audio_InitBuffers();
 
 int  Audio_Init(const int num_Sources, class VT_Level *tr);
 int  Audio_DeInit();
