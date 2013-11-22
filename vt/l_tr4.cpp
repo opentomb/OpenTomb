@@ -169,13 +169,13 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
 	room.alternate_room = read_bit16(src);
 	room.flags = read_bitu16(src);
 
-    // Only in TR3-5
-    
-    room.extra_param = read_bitu8(src);
-    room.reverb_info = read_bitu8(src);
-    
-    SDL_RWseek(src, 1, SEEK_CUR);
-    
+        // Only in TR3-5
+
+        room.extra_param = read_bitu8(src);
+        room.reverb_info = read_bitu8(src);
+
+        SDL_RWseek(src, 1, SEEK_CUR);
+
 	room.light_colour.r = room.intensity1 / 32767.0f;
 	room.light_colour.g = room.intensity1 / 32767.0f;
 	room.light_colour.b = room.intensity1 / 32767.0f;
@@ -366,7 +366,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
                         if (size != uncomp_size)
                                 Sys_extError("read_tr4_level: uncompress size mismatch");
                         delete [] comp_buffer;
-                        
+
                         comp_buffer = NULL;
                         if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
                                 Sys_extError("read_tr4_level: SDL_RWFromMem");

@@ -276,9 +276,9 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
     
     for(i=0;i<model->animation_count;i++,anim++)
     {
-        if(anim->frames_count > 1 && anim->frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
+        if(anim->frames_count > 1 && anim->original_frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
         {
-            new_frames_count = (uint16_t)anim->frame_rate * (anim->frames_count - 1) + 1;
+            new_frames_count = (uint16_t)anim->original_frame_rate * (anim->frames_count - 1) + 1;
             bf = new_bone_frames = (bone_frame_p)malloc(new_frames_count * sizeof(bone_frame_t));
             
             /*
@@ -299,9 +299,9 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
             
             for(j=1;j<anim->frames_count;j++)
             {
-                for(l=1;l<=anim->frame_rate;l++)
+                for(l=1;l<=anim->original_frame_rate;l++)
                 {
-                    lerp = ((btScalar)l) / (btScalar)anim->frame_rate;
+                    lerp = ((btScalar)l) / (btScalar)anim->original_frame_rate;
                     t = 1.0 - lerp;
                     
                     bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
@@ -351,7 +351,6 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
             free(anim->frames);
             anim->frames = new_bone_frames;
             anim->frames_count = new_frames_count;
-            anim->frame_rate = 1;
         }
     }
 }

@@ -90,7 +90,7 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
             break;
             
         default:
-            //Sys_DebugLog("d_log.txt", "AL: Uncnown audio format in \"%s\", str = %d", __FILE__, __LINE__);
+            //Sys_extWarn("AL: Uncnown audio format = %X", device->FmtType);
             ;
     }
     
@@ -99,13 +99,13 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
     
     if(SDL_InitSubSystem(SDL_INIT_AUDIO) == -1)
     {
-        //Sys_DebugLog("d_log.txt", "AL: Failed to init SDL_InitSubSystem(SDL_INIT_AUDIO) in \"%s\", str = %d", __FILE__, __LINE__);
+        //Sys_extWarn("AL: Failed to init SDL_InitSubSystem(SDL_INIT_AUDIO): %s", SDL_GetError());
         return ALC_FALSE;
     }
 
     if(SDL_OpenAudio(&sdl_audio_spec, NULL) == -1)
     {
-        //Sys_DebugLog("d_log.txt", "AL: Failed to open audio in \"%s\", str = %d. ERR = %s", __FILE__, __LINE__, SDL_GetError());
+        //Sys_extWarn("AL: Failed to open audio: %s", SDL_GetError());
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
         return ALC_FALSE;
     }

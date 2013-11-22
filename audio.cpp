@@ -447,7 +447,6 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     audio_effect_p  effect = NULL;
     AudioSource    *source = NULL;
     
-    
     // Remap global engine effect ID to local effect ID.
     
     effect_ID = (int)engine_world.audio_map[effect_ID];
@@ -599,7 +598,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     int8_t        flag;
     uint32_t      ind1, ind2;
     uint32_t      comp_size, uncomp_size;
-    uint32_t      i, j;
+    uint32_t      i;
     
     // FX should be inited first, as source constructor checks for FX slot to be created.
     
@@ -609,7 +608,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     }
     
     // Generate new buffer array.
-    engine_world.audio_buffers_count = tr->sample_indices_count;
+    engine_world.audio_buffers_count = tr->samples_count;
     engine_world.audio_buffers = (ALuint*)malloc(engine_world.audio_buffers_count * sizeof(ALuint));
     memset(engine_world.audio_buffers, 0, sizeof(ALuint) * engine_world.audio_buffers_count);
     alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
@@ -667,7 +666,6 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                 ind2 = 0;
                 flag = 0;
                 i = 0;
-                j = 0;
                 while(pointer < tr->samples_data + tr->samples_data_size - 4)
                 {
                     pointer = tr->samples_data + ind2;
@@ -681,12 +679,8 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                         else
                         {
                             uncomp_size = ind2 - ind1;
-                            if(tr->sample_indices[i] == j)
-                            {
-                                Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
-                                i++;
-                            }
-                            j++;
+                            Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
+                            i++;
                             if(i > engine_world.audio_buffers_count - 1)
                             {
                                 break;

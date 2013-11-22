@@ -93,7 +93,7 @@ enum TR_AUDIO_FX {
 // structures.
 
 #define TR_AUDIO_DEFAULT_RANGE 8
-#define TR_AUDIO_DEFAULT_PITCH 0
+#define TR_AUDIO_DEFAULT_PITCH 1.0      // 0.0 - only noise
 
 // Entity types are used to identify different sound emitter types. Since
 // sounds in TR games could be emitted either by entities, sound sources

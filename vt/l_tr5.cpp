@@ -182,10 +182,10 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 
         room.reverb_info = read_bitu8(newsrc);
         room.extra_param = 0;                   ///@FIXME: FIND IT LATER!
-        
+
         room.unknown_r1  = read_bitu8(newsrc);
         room.unknown_r2  = read_bitu16(newsrc);
-
+        
         if (read_bitu32(newsrc) != 0x00007FFF)
                 Sys_extWarn("read_tr5_room: filler1 has wrong value");
 

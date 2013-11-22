@@ -173,8 +173,8 @@ void TR_Level::read_tr2_room(SDL_RWops * const src, tr5_room_t & room)
 
 	room.alternate_room = read_bit16(src);
 	room.flags = read_bitu16(src);
-	room.reverb_info = 1;
-
+        room.reverb_info = 1;
+        
 	// only in TR3-TR4
 	room.light_colour.r = room.intensity1 / 32767.0f;
 	room.light_colour.g = room.intensity1 / 32767.0f;
@@ -376,36 +376,45 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
             this->sound_details[i].pitch = TR_AUDIO_DEFAULT_PITCH;
         }
 
-    this->sample_indices_count = read_bitu32(src);
-    this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
-    for(i=0; i < this->sample_indices_count; i++)
-        this->sample_indices[i] = read_bitu32(src);
-                
-    // LOAD SAMPLES
-    
-    // In TR2, samples are stored in separate file called MAIN.SFX.
-    // If there is no such files, no samples are loaded.
-    
-    SDL_RWops *newsrc = SDL_RWFromFile(this->sfx_path, "rb");
-    if (newsrc == NULL)
-    {
-        Sys_extWarn("read_tr2_level: failed to open \"%s\"! No samples loaded.", this->sfx_path);
-    }
-    else
-    {
-        this->samples_data_size = SDL_RWsize(newsrc);
-        this->samples_count = 0;
-        this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
-        for(i = 0; i < this->samples_data_size; i++)
+        this->sample_indices_count = read_bitu32(src);
+        this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
+        for(i=0; i < this->sample_indices_count; i++)
+            this->sample_indices[i] = read_bitu32(src);
+
+        // remap all sample indices here
+        for(i = 0; i < this->sound_details_count; i++)
         {
-            this->samples_data[i] = read_bitu8(newsrc);
-            if((i >= 4) && (*((uint32_t*)(this->samples_data+i-4)) == 0x46464952))   /// RIFF
+            if((this->sound_details[i].sample >= 0) && (this->sound_details[i].sample < this->sample_indices_count))
             {
-                this->samples_count++;
+                this->sound_details[i].sample = this->sample_indices[this->sound_details[i].sample];
             }
         }
-        
-        SDL_RWclose(newsrc);
-        newsrc = NULL;
-    }
+
+        // LOAD SAMPLES
+
+        // In TR2, samples are stored in separate file called MAIN.SFX.
+        // If there is no such files, no samples are loaded.
+
+        SDL_RWops *newsrc = SDL_RWFromFile(this->sfx_path, "rb");
+        if (newsrc == NULL)
+        {
+            Sys_extWarn("read_tr2_level: failed to open \"%s\"! No samples loaded.", this->sfx_path);
+        }
+        else
+        {
+            this->samples_data_size = SDL_RWsize(newsrc);
+            this->samples_count = 0;
+            this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
+            for(i = 0; i < this->samples_data_size; i++)
+            {
+                this->samples_data[i] = read_bitu8(newsrc);
+                if((i >= 4) && (*((uint32_t*)(this->samples_data+i-4)) == 0x46464952))   /// RIFF
+                {
+                    this->samples_count++;
+                }
+            }
+
+            SDL_RWclose(newsrc);
+            newsrc = NULL;
+        }
 }
