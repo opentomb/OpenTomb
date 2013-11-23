@@ -18,8 +18,9 @@ extern "C" {
 #include "system.h"
 #include "render.h"
 
-ALfloat listener_position[3];
-struct audio_fxmanager_s fxManager;
+ALfloat                         listener_position[3];
+struct audio_fxmanager_s        fxManager;
+static uint8_t                  audio_blocked = 1;
 
 
 AudioSource::AudioSource()
@@ -358,7 +359,7 @@ void Audio_UpdateSources()
 {
     uint32_t i;
     
-    if(engine_world.audio_sources_count < 1)
+    if(audio_blocked || (engine_world.audio_sources_count < 1))
     {
         return;
     }
@@ -388,6 +389,13 @@ void Audio_PauseAllSources()
     }
 }
 
+void Audio_StopAllSources()
+{
+    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    {
+        engine_world.audio_sources[i].Stop();
+    }
+}
 
 void Audio_ResumeAllSources()
 {
@@ -453,7 +461,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
     
-    if(effect_ID == -1)
+    if((effect_ID == -1) || audio_blocked)
     {
         return TR_AUDIO_SEND_NOSAMPLE;
     }
@@ -818,6 +826,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
         engine_world.audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
         engine_world.audio_emitters[i].flags         =  tr->sound_sources[i].flags;
     }
+    audio_blocked = 0;
     
     return 1;
 }
@@ -900,6 +909,9 @@ int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *r
 
 int Audio_DeInit()
 {
+    audio_blocked = 1;
+    Audio_StopAllSources();
+   
     if(engine_world.audio_sources)
     {
         delete[] engine_world.audio_sources;
