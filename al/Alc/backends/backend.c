@@ -93,8 +93,7 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
             //Sys_extWarn("AL: Uncnown audio format = %X", device->FmtType);
             ;
     }
-    
-    
+   
     device->NumUpdates = 2;
     
     if(SDL_InitSubSystem(SDL_INIT_AUDIO) == -1)
