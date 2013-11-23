@@ -542,6 +542,7 @@ void Engine_Display()
         Render_DrawList_DebugLines();
         ShowDebugInfo();
 
+        glPolygonMode(GL_FRONT, GL_FILL);
         glBindTexture(GL_TEXTURE_2D, 0);
         Render_DrawAxis(10000.0);
         Gui_Render();
