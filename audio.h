@@ -239,6 +239,7 @@ int  Audio_Send(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int en
 int  Audio_Kill(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);	// If exist, immediately stop and destroy all effects with given parameters.
 
 void Audio_PauseAllSources();	// Used to pause all effects currently playing.
+void Audio_StopAllSources();    // Used in audio deinit.
 void Audio_ResumeAllSources();	// Used to resume all effects currently paused.
 void Audio_UpdateSources();     // Main sound loop.
 void Audio_UpdateListenerByCamera(struct camera_s *cam);

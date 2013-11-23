@@ -442,6 +442,11 @@ void FillSkinnedMeshMap(skeletal_model_p model)
         mesh = tree_tag->mesh;
         mesh2 = tree_tag->mesh2;
 
+        if(!mesh2)
+        {
+            return;
+        }
+        
         ch = mesh2->skin_map = (int8_t*)malloc(mesh2->vertex_count * sizeof(int8_t));
         v = mesh2->vertices;
         for(k=0;k<mesh2->vertex_count;k++,v++,ch++)

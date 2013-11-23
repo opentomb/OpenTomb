@@ -804,7 +804,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
         for(i=0; i < this->sample_indices_count; i++)
             this->sample_indices[i] = read_bitu32(src);
-
+        
         SDL_RWseek(src, 6, SEEK_CUR);   // In TR5, sample indices are followed by 6 0xCD bytes. - correct - really 0xCDCDCDCDCDCD
 
         // LOAD SAMPLES
@@ -815,8 +815,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
             // Since sample data is the last part, we simply load whole last
             // block of file as single array.
             this->samples_data_size = SDL_RWsize(src) - SDL_RWtell(src);
-            this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(int8_t));
-            for(i = 0; i < uncomp_size; i++)
+            this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
+            for(i = 0; i < this->samples_data_size; i++)
                 this->samples_data[i] = read_bitu8(src);
         }
 }
