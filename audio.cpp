@@ -991,7 +991,6 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     if(SDL_LoadWAV_RW(src, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
-        SDL_FreeRW(src);
         return -1;
     }
     
@@ -1069,7 +1068,6 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname)
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Con_Printf("Error: bad file format \"%s\"", fname);
-        SDL_FreeRW(file);
         return -2;
     }
 
