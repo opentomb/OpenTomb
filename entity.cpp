@@ -364,7 +364,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
         {
             case TR_ANIMCOMMAND_SETPOSITION:
                 // This command executes ONLY at the end of animation. 
-                if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
+                if(entity->current_frame == af->frames_count - 1)
                 {
                     btScalar delta[3];                                          // delta in entity local coordinate system!
                     delta[0] = (btScalar)(*++pointer);                          // x = x;
@@ -387,7 +387,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 
             case TR_ANIMCOMMAND_JUMPDISTANCE:
                 // This command executes ONLY at the end of animation. 
-                if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
+                if(entity->current_frame == af->frames_count - 1)
                 {
                     int16_t v_Vertical   = *++pointer;
                     int16_t v_Horizontal = *++pointer;
@@ -406,7 +406,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 
             case TR_ANIMCOMMAND_KILL:
                 // This command executes ONLY at the end of animation. 
-                if(entity->current_frame == entity->model->animations[entity->current_animation].frames_count - 1)
+                if(entity->current_frame == af->frames_count - 1)
                 {
                     if(entity->character)
                     {
@@ -426,8 +426,8 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 int16_t sound_index;
                 
                 if(entity->current_frame == *++pointer)
-                {               
-                    sound_index     =  *++pointer &  0x3FFF;
+                {           
+                    sound_index = *++pointer & 0x3FFF;
                     
                     if(!(*pointer & TR_ANIMCOMMAND_CONDITION_WATER))
                         Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
@@ -497,7 +497,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     int i, ret = 0;
     uint16_t *entry, *end_p, end_bit, cont_bit;
     room_sector_p sector = ent->current_sector;
-
+    
     if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size))
     {
         return 0;
@@ -669,8 +669,8 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 while(cont_bit && entry<end_p-1);
                 break;
 
-            case 0x13:          // MONKEY TR3 ???
-                Con_Printf("Monkey TR3?! sub = %d, b3 = %d", sub_function, b3);
+            case 0x13:          // Climbable ceiling
+                Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
                 if(sub_function == 0x00)
                 {
 
@@ -710,7 +710,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     anim = &entity->model->animations[animation];
     frame %= anim->frames_count;
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
-    entity->period = (anim->frame_rate < 1)?(1.0 / 30.0):((btScalar)anim->frame_rate / 30.0);
+    entity->period = 1.0 / 30.0;
     
     entity->current_stateID = anim->state_id;
     entity->current_animation = animation;
@@ -804,7 +804,6 @@ int Entity_GetAnimDispatchCase(struct entity_s *ent, int id)
     return -1;
 }
 
-
 /*
  * Next frame and next anim calculation function. 
  */
@@ -891,10 +890,10 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
     Entity_GetNextFrame(entity, time, stc, &frame, &anim);
     if(anim != entity->current_animation)
     {
+        ret = 2;
         Entity_DoAnimCommands(entity, ret);
         Entity_SetAnimation(entity, anim, frame);
         stc = NULL;
-        ret = 2;
     }
     else if(entity->current_frame != frame)
     {
@@ -977,12 +976,14 @@ void Entity_MoveForward(struct entity_s *ent, btScalar dist)
     ent->transform[14] += ent->transform[6] * dist;
 }
 
+
 void Entity_MoveStrafe(struct entity_s *ent, btScalar dist)
 {
     ent->transform[12] += ent->transform[0] * dist;
     ent->transform[13] += ent->transform[1] * dist;
     ent->transform[14] += ent->transform[2] * dist;
 }
+
 
 void Entity_MoveVertical(struct entity_s *ent, btScalar dist)
 {

@@ -5,6 +5,7 @@ extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
 #include "al/AL/alext.h"
+#include "al/AL/efx-presets.h"
 }
 
 #include "audio.h"
@@ -17,7 +18,10 @@ extern "C" {
 #include "system.h"
 #include "render.h"
 
-ALfloat         listener_position[3];
+ALfloat                         listener_position[3];
+struct audio_fxmanager_s        fxManager;
+static uint8_t                  audio_blocked = 1;
+
 
 AudioSource::AudioSource()
 {
@@ -27,13 +31,24 @@ AudioSource::AudioSource()
     effect_index = 0;
     sample_index = 0;
     sample_count = 0;
-    is_water     = false;
     alGenSources(1, &source_index);
+    
     if(alIsSource(source_index))
     {
         alSourcef(source_index, AL_MIN_GAIN, 0.0);
         alSourcef(source_index, AL_MAX_GAIN, 1.0);
-        alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0);
+        
+        if(audio_settings.use_effects)
+        {
+            alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
+            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0);
+            alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO,   AL_TRUE);
+            alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
+        }
+        else
+        {
+            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0);
+        }
     }
 }
 
@@ -56,22 +71,53 @@ bool AudioSource::IsActive()
 
 void AudioSource::Play()
 {
-    LinkEmitter();
-    alSourcePlay(source_index);
-    active = true;
+    if(alIsSource(source_index))
+    {
+        if(emitter_type == TR_AUDIO_EMITTER_GLOBAL)
+        {
+            alSourcei(source_index, AL_SOURCE_RELATIVE, AL_TRUE);
+            alSource3f(source_index, AL_POSITION, 0.0f, 0.0f, 0.0f);
+            alSource3f(source_index, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+            
+            if(audio_settings.use_effects)
+            {
+                UnsetFX();
+            }
+        }
+        else
+        {
+            alSourcei(source_index, AL_SOURCE_RELATIVE, AL_FALSE);
+            LinkEmitter();
+
+            if(audio_settings.use_effects)
+            {
+                SetFX();
+                SetUnderwater();
+            }
+        }
+
+        alSourcePlay(source_index);
+        active = true;
+    }
 }
 
 
 void AudioSource::Pause()
 {
-    alSourcePause(source_index);
+    if(alIsSource(source_index))
+    {
+        alSourcePause(source_index);
+    }
 }
 
 
 void AudioSource::Stop()
 {
-    alSourceStop(source_index);
-    active = false;
+    if(alIsSource(source_index))
+    {
+        alSourceStop(source_index);
+        active = false;
+    }
 }
 
 
@@ -82,22 +128,22 @@ void AudioSource::Update()
 
     alGetSourcei(source_index, AL_SOURCE_STATE, &state);
     
-    // Disable source, if it is completed.
-    if(active && (state == AL_STOPPED))
+    // Disable and bypass source, if it is stopped.
+    if(state == AL_STOPPED)
     {
         active = false;
         return;
     }
     
-    // Stop source, if it is disabled.
+    // Stop source, if it is disabled, but still playing.
     if((!active) && (state == AL_PLAYING))
     {
         Stop();
         return;
     }
     
-    // Bypass source, if it is paused.
-    if(state == AL_PAUSED)
+    // Bypass source, if it is paused or global.
+    if( (state == AL_PAUSED) || (emitter_type == TR_AUDIO_EMITTER_GLOBAL) )
     {
         return;
     }
@@ -110,6 +156,11 @@ void AudioSource::Update()
     if(Audio_IsInRange(emitter_type, emitter_ID, range, gain))
     {
         LinkEmitter();
+        
+        if( (audio_settings.use_effects) && (is_water != fxManager.water_state) )
+        {
+            SetUnderwater();
+        }
     }
     else
     {
@@ -175,15 +226,71 @@ void AudioSource::SetVelocity(const ALfloat vel_vector[])
 }
 
 
+void AudioSource::SetFX()
+{    
+    ALuint effect;
+    ALuint slot;
+    
+    // Reverb FX is applied globally through audio send. Since player can 
+    // jump between adjacent rooms with different reverb info, we assign
+    // several (2 by default) interchangeable audio sends, which are switched
+    // every time current room reverb is changed.
+    
+    if(fxManager.current_room_type != fxManager.last_room_type)  // Switch audio send.
+    {
+        fxManager.last_room_type = fxManager.current_room_type;
+        fxManager.current_slot   = (++fxManager.current_slot > (TR_AUDIO_MAX_SLOTS-1))?(0):(fxManager.current_slot);
+        
+        effect = fxManager.al_effect[fxManager.current_room_type];
+        slot   = fxManager.al_slot[fxManager.current_slot];
+        
+        if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
+        {
+            alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
+        }
+    }
+    else    // Do not switch audio send.
+    {
+        slot = fxManager.al_slot[fxManager.current_slot];
+    }
+    
+    // Assign global reverb FX to channel.
+    
+    alSource3i(source_index, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
+}
+
+
+void AudioSource::UnsetFX()
+{
+    // Remove any audio sends and direct filters from channel.
+    
+    alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
+    alSource3i(source_index, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+}
+
+void AudioSource::SetUnderwater()
+{
+    // Water low-pass filter is applied when source's is_water flag is set.
+    // Note that it is applied directly to channel, i. e. all sources that
+    // are underwater will damp, despite of global reverb setting.
+    
+    if(fxManager.water_state)
+    {
+        alSourcei(source_index, AL_DIRECT_FILTER, fxManager.al_filter);
+        is_water = true;
+    }
+    else
+    {
+        alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
+        is_water = false;
+    }
+}
+
+
 void AudioSource::LinkEmitter()
 {
     ALfloat  vec[3];
     entity_p ent;
-    
-    if(emitter_ID == -1)
-    {
-        return;
-    }
     
     switch(emitter_type)
     {
@@ -200,28 +307,24 @@ void AudioSource::LinkEmitter()
                     SetVelocity(vec);
                 }
             }
-            break;
+            return;
             
         case TR_AUDIO_EMITTER_SOUNDSOURCE:
             SetPosition(engine_world.audio_emitters[emitter_ID].position);
-            break;
-            
-        case TR_AUDIO_EMITTER_GLOBAL:
-            SetPosition(listener_position);
-            break;
+            return;
     }
 }
 
 
-bool Audio_IsInRange(int emitter_type, int emitter_ID, float range, float gain)
+bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 {
     ALfloat  vec[3], dist;
     entity_p ent;
     
-    switch(emitter_type)
+    switch(entity_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            ent = World_GetEntityByID(&engine_world, emitter_ID);
+            ent = World_GetEntityByID(&engine_world, entity_ID);
             if(!ent)
             {
                 return false;
@@ -230,11 +333,11 @@ bool Audio_IsInRange(int emitter_type, int emitter_ID, float range, float gain)
             break;
             
         case TR_AUDIO_EMITTER_SOUNDSOURCE:
-            if(emitter_ID > engine_world.audio_emitters_count - 1)
+            if(entity_ID > engine_world.audio_emitters_count - 1)
             {
                 return false;
             }
-            vec3_copy(vec, engine_world.audio_emitters[emitter_ID].position);
+            vec3_copy(vec, engine_world.audio_emitters[entity_ID].position);
             break;
             
         case TR_AUDIO_EMITTER_GLOBAL:
@@ -256,7 +359,7 @@ void Audio_UpdateSources()
 {
     uint32_t i;
     
-    if(engine_world.audio_sources_count < 1)
+    if(audio_blocked || (engine_world.audio_sources_count < 1))
     {
         return;
     }
@@ -286,6 +389,13 @@ void Audio_PauseAllSources()
     }
 }
 
+void Audio_StopAllSources()
+{
+    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    {
+        engine_world.audio_sources[i].Stop();
+    }
+}
 
 void Audio_ResumeAllSources()
 {
@@ -314,7 +424,7 @@ int Audio_GetFreeSource()
 }
 
 
-int Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type)
+int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
 {
     int state;
     
@@ -345,14 +455,13 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     audio_effect_p  effect = NULL;
     AudioSource    *source = NULL;
     
-    
     // Remap global engine effect ID to local effect ID.
     
     effect_ID = (int)engine_world.audio_map[effect_ID];
     
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
     
-    if(effect_ID == -1)
+    if((effect_ID == -1) || audio_blocked)
     {
         return TR_AUDIO_SEND_NOSAMPLE;
     }
@@ -385,7 +494,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     // Otherwise, if W (Wait) or L (Looped) flag is set, and same effect is
     // playing for current entity, don't send it and exit function.
     
-    source_number = Audio_IsEffectPlaying(effect_ID, entity_ID, entity_type);
+    source_number = Audio_IsEffectPlaying(effect_ID, entity_type, entity_ID);
     
     if(source_number != -1)
     {
@@ -479,7 +588,7 @@ int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
 {
     effect_ID = (int)engine_world.audio_map[effect_ID];
     
-    int playing_sound = Audio_IsEffectPlaying(effect_ID, entity_ID, entity_type);
+    int playing_sound = Audio_IsEffectPlaying(effect_ID, entity_type, entity_ID);
     
     if(playing_sound != -1)
     {
@@ -488,7 +597,7 @@ int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
     }
     
     return TR_AUDIO_SEND_IGNORED;
-}
+}   
 
 
 int Audio_Init(const int num_Sources, class VT_Level *tr)
@@ -497,10 +606,17 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     int8_t        flag;
     uint32_t      ind1, ind2;
     uint32_t      comp_size, uncomp_size;
-    uint32_t      i, j;
+    uint32_t      i;
+    
+    // FX should be inited first, as source constructor checks for FX slot to be created.
+    
+    if(audio_settings.use_effects)
+    {
+        Audio_InitFX();
+    }
     
     // Generate new buffer array.
-    engine_world.audio_buffers_count = tr->sample_indices_count;
+    engine_world.audio_buffers_count = tr->samples_count;
     engine_world.audio_buffers = (ALuint*)malloc(engine_world.audio_buffers_count * sizeof(ALuint));
     memset(engine_world.audio_buffers, 0, sizeof(ALuint) * engine_world.audio_buffers_count);
     alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
@@ -521,7 +637,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     
     // Copy sound map.
     engine_world.audio_map = tr->soundmap;
-    tr->soundmap = NULL;                                                        /// without it VT destructor free(tr->soundmap)
+    tr->soundmap = NULL;                   /// without it VT destructor free(tr->soundmap)
     
     // Cycle through raw samples block and parse them to OpenAL buffers.
 
@@ -558,7 +674,6 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                 ind2 = 0;
                 flag = 0;
                 i = 0;
-                j = 0;
                 while(pointer < tr->samples_data + tr->samples_data_size - 4)
                 {
                     pointer = tr->samples_data + ind2;
@@ -572,12 +687,8 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                         else
                         {
                             uncomp_size = ind2 - ind1;
-                            if(tr->sample_indices[i] == j)
-                            {
-                                Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
-                                i++;
-                            }
-                            j++;
+                            Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
+                            i++;
                             if(i > engine_world.audio_buffers_count - 1)
                             {
                                 break;
@@ -715,6 +826,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
         engine_world.audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
         engine_world.audio_emitters[i].flags         =  tr->sound_sources[i].flags;
     }
+    audio_blocked = 0;
     
     return 1;
 }
@@ -727,8 +839,79 @@ void Audio_InitGlobals()
     audio_settings.listener_is_player = false;
 }
 
+void Audio_InitFX()
+{
+    EFXEAXREVERBPROPERTIES reverb = {0};
+    memset(&fxManager, 0, sizeof(audio_fxmanager_s));
+    
+    // Set up effect slots, effects and filters.
+    
+    alGenAuxiliaryEffectSlots(TR_AUDIO_MAX_SLOTS, fxManager.al_slot);
+    alGenEffects(TR_AUDIO_FX_LASTINDEX, fxManager.al_effect);
+    alGenFilters(1, &fxManager.al_filter);
+    
+    alFilteri(fxManager.al_filter, AL_FILTER_TYPE, AL_FILTER_LOWPASS);
+    alFilterf(fxManager.al_filter, AL_LOWPASS_GAIN, 0.7f);      // Low frequencies gain.
+    alFilterf(fxManager.al_filter, AL_LOWPASS_GAINHF, 0.0f);    // High frequencies gain.
+    
+    // Fill up effects with reverb presets.
+    
+    reverb = EFX_REVERB_PRESET_CITY;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_OUTSIDE, &reverb);
+
+    reverb = EFX_REVERB_PRESET_LIVINGROOM;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_SMALLROOM, &reverb);
+    
+    reverb = EFX_REVERB_PRESET_WOODEN_LONGPASSAGE;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_MEDIUMROOM, &reverb);
+    
+    reverb = EFX_REVERB_PRESET_DOME_TOMB;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_LARGEROOM, &reverb);
+
+    reverb = EFX_REVERB_PRESET_PIPE_LARGE;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_PIPE, &reverb);
+
+    reverb = EFX_REVERB_PRESET_UNDERWATER;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_WATER, &reverb);
+}
+
+int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
+{
+    ALenum err;
+    ALuint effect = fxManager.al_effect[effect_index];
+    
+    if(alIsEffect(effect))
+    {
+        alEffecti(effect, AL_EFFECT_TYPE, AL_EFFECT_REVERB);
+
+        alEffectf(effect, AL_REVERB_DENSITY, reverb->flDensity);
+        alEffectf(effect, AL_REVERB_DIFFUSION, reverb->flDiffusion);
+        alEffectf(effect, AL_REVERB_GAIN, reverb->flGain);
+        alEffectf(effect, AL_REVERB_GAINHF, reverb->flGainHF);
+        alEffectf(effect, AL_REVERB_DECAY_TIME, reverb->flDecayTime);
+        alEffectf(effect, AL_REVERB_DECAY_HFRATIO, reverb->flDecayHFRatio);
+        alEffectf(effect, AL_REVERB_REFLECTIONS_GAIN, reverb->flReflectionsGain);
+        alEffectf(effect, AL_REVERB_REFLECTIONS_DELAY, reverb->flReflectionsDelay);
+        alEffectf(effect, AL_REVERB_LATE_REVERB_GAIN, reverb->flLateReverbGain);
+        alEffectf(effect, AL_REVERB_LATE_REVERB_DELAY, reverb->flLateReverbDelay);
+        alEffectf(effect, AL_REVERB_AIR_ABSORPTION_GAINHF, reverb->flAirAbsorptionGainHF);
+        alEffectf(effect, AL_REVERB_ROOM_ROLLOFF_FACTOR, reverb->flRoomRolloffFactor);
+        alEffecti(effect, AL_REVERB_DECAY_HFLIMIT, reverb->iDecayHFLimit);
+    }
+    else
+    {
+        Sys_DebugLog(LOG_FILENAME, "OpenAL error: no effect %d", effect);
+        return 0;
+    }
+    
+    return 1;
+}
+
 int Audio_DeInit()
 {
+    audio_blocked = 1;
+    Audio_StopAllSources();
+   
     if(engine_world.audio_sources)
     {
         delete[] engine_world.audio_sources;
@@ -767,7 +950,29 @@ int Audio_DeInit()
         engine_world.audio_map_count = 0;
     }
     
-    return 0;
+    if(audio_settings.use_effects)
+    {
+        for(int i = 0; i < TR_AUDIO_MAX_SLOTS; i++)
+        {
+            alAuxiliaryEffectSloti(fxManager.al_slot[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
+            alDeleteAuxiliaryEffectSlots(1, &fxManager.al_slot[i]);
+        }
+        
+        alDeleteFilters(1, &fxManager.al_filter);
+        alDeleteEffects(TR_AUDIO_FX_LASTINDEX, fxManager.al_effect);
+    }
+    
+    return 1;
+}
+
+
+void Audio_LogALError(int proc_index)
+{
+    ALenum err = alGetError();
+    if(err != AL_NO_ERROR)
+    {
+        Sys_DebugLog(LOG_FILENAME, "OpenAL error: %s [INDEX %d]", alGetString(err), proc_index);
+    }
 }
 
 
@@ -920,6 +1125,7 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname)
 void Audio_UpdateListenerByCamera(struct camera_s *cam)
 {
     ALfloat v[6];       // vec3 - forvard, vec3 - up
+    int room_type = 0;
     
     vec3_copy(v+0, cam->view_dir);
     vec3_copy(v+3, cam->up_dir);
@@ -933,6 +1139,32 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
     vec3_mul_scalar(v, v, v[3]);
     alListenerfv(AL_VELOCITY, v);
     vec3_copy(cam->prev_pos, cam->pos);
+    
+    if(cam->current_room)
+    {
+        if(cam->current_room->flags & 0x01)
+        {
+            fxManager.current_room_type = TR_AUDIO_FX_WATER;
+        }
+        else
+        {
+            fxManager.current_room_type = cam->current_room->reverb_info;
+        }
+        
+        if(fxManager.water_state != (cam->current_room->flags & 0x01))
+        {
+            fxManager.water_state = cam->current_room->flags & 0x01;
+            
+            if(fxManager.water_state)
+            {
+                Audio_Send(60);
+            }
+            else
+            {
+                Audio_Kill(60);
+            }
+        }
+    }
 }
 
 

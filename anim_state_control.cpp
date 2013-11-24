@@ -119,7 +119,7 @@
 #define LARA_HANG_WALL_DISTANCE (128.0 - 24.0)
 #define LARA_HANG_VERTICAL_EPSILON (64.0)
 #define LARA_HANG_VERTICAL_OFFSET (12.0)        // in original is 0, in real life hands are little more higher than edge
-#define LARA_TRY_HANG_WALL_OFFSET (48.0)        // It works more stable than 32 or 128
+#define LARA_TRY_HANG_WALL_OFFSET (64.0)        // It works more stable than 32 or 128
 #define LARA_HANG_SENSOR_Z (800.0)              // It works more stable than 1024 (after collision critical fix, of course)
 
 #define OSCILLATE_HANG_USE 0
@@ -137,7 +137,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     btScalar offset[3], move[3];
     height_info_t next_fc, *curr_fc;
     climb_info_t climb;
-    
+
     curr_fc = &ent->character->height_info;
     next_fc.cb = ent->character->ray_cb;
     next_fc.cb->m_closestHitFraction = 1.0;
@@ -1272,7 +1272,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->move_type = MOVE_ON_FLOOR;
             }
-
             break;
 
         case TR_ANIMATION_LARA_CLIMB_2CLICK_END:
@@ -1282,7 +1281,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);    // stop
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // stop
             }
             break;
 
@@ -1527,6 +1526,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_set_zero(ent->character->speed.m_floats);
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_HANG))
                 {
+                    cmd->action = 1;
+                    ent->character->no_fix = 1;
 #if OSCILLATE_HANG_USE
                     vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                     ent->collision_offset.m_floats[2] -= ent->character->max_step_up_height;
@@ -1545,7 +1546,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if((cmd->action == 1) && (ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_2))
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);                       // continue trying to hang
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // continue trying to hang
             }
             else
             {
@@ -1567,7 +1568,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if(2 == Entity_Frame(ent, engine_frame_time, -1))
             {
                 ent->move_type = MOVE_ON_FLOOR;
-                vec3_copy(pos, cmd->climb_pos);
+                pos[2] = cmd->climb_pos[2];                                     // other offset is AnimCommand's work
             }
             break;
 

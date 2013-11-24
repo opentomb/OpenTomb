@@ -167,6 +167,7 @@ void Character_Clean(struct entity_s *ent)
     ent->character = NULL;
 }
 
+
 void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
 {
     btVector3 tv;
@@ -213,6 +214,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
 #endif
     }
 }
+
 
 void Character_UpdateCurrentRoom(struct entity_s *ent)
 {
@@ -931,6 +933,7 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
     
     ent->character->speed.m_floats[2] = vz;
 }
+
 
 int Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal)
 {

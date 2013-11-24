@@ -31,6 +31,6 @@ echo "(7/8)    'bullet' lib building complete"
 "gcc" -c "*.c"
 "g++" -c "*.cpp" -I"freetype2" -I"bullet" -s -O2 -march=prescott
 echo "(8/8)    'engine' object files building complete, next linking..."
-"g++" -o "engine.exe" -static -lmingw32 -lSDL2main -lSDL2 -Llib/. -lvte -lluae "*.o" -lopenale -lSDL2main -lSDL2 -lvte -lftgle -lfreetype2e -lluae -lbullete -lglu32 -lopengl32 -limm32 -lole32 -loleaut32 -luuid -lversion -lwinmm -lgdi32 -lz -lpthread
+"g++" -o "engine.exe" -static -lmingw32 -lSDL2main -lSDL2.dll -Llib/. -lvte -lluae "*.o" -lopenale -lSDL2main -lSDL2.dll -lvte -lftgle -lfreetype2e -lluae -lbullete -lglu32 -lopengl32 -lz -lpthread
 rm -rf *.o
 echo "'engine' building complete. end."

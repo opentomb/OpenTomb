@@ -169,8 +169,13 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
 	room.alternate_room = read_bit16(src);
 	room.flags = read_bitu16(src);
 
-	// only in TR3-TR4
-	read_tr_colour(src, room.fog_colour);
+        // Only in TR3-5
+
+        room.extra_param = read_bitu8(src);
+        room.reverb_info = read_bitu8(src);
+
+        SDL_RWseek(src, 1, SEEK_CUR);
+
 	room.light_colour.r = room.intensity1 / 32767.0f;
 	room.light_colour.g = room.intensity1 / 32767.0f;
 	room.light_colour.b = room.intensity1 / 32767.0f;

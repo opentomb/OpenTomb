@@ -194,7 +194,7 @@ void SkeletalModelTestDraw()
 
     glColor3b(0, 0, 0);
     Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->ID, mesh);
-    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->ID, anim, smodel->animation_count, smodel->animations[anim].frame_rate, frame, smodel->animations[anim].frames_count);
+    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->ID, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
     Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->ID):-1, af->next_frame, af->state_change_count);
     Gui_OutTextXY(screen_info.w-632, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
     Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
@@ -542,6 +542,7 @@ void Engine_Display()
         Render_DrawList_DebugLines();
         ShowDebugInfo();
 
+        glPolygonMode(GL_FRONT, GL_FILL);
         glBindTexture(GL_TEXTURE_2D, 0);
         Render_DrawAxis(10000.0);
         Gui_Render();
@@ -870,6 +871,9 @@ void ShowDebugInfo()
        if(ent->self->room)
        {
             Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc.water, fc.water_level);
+            if(engine_camera.current_room)
+                Gui_OutTextXY(10, 10, "reverb = %d", engine_camera.current_room->reverb_info);
+            
        }
 
        /*
