@@ -4,6 +4,7 @@
 
 extern "C" {
 #include "al/AL/al.h"
+#include "al/AL/efx-presets.h"
 }
 
 #include "vt/vt_level.h"
@@ -21,6 +22,32 @@ extern "C" {
 // reasons.
 
 #define TR_AUDIO_MAX_CHANNELS 32
+
+// MAX_SLOTS specifies amount of FX slots used to apply environmental
+// effects to sounds. We need at least two of them to prevent glitches
+// at environment transition (slots are cyclically changed, leaving
+// previously played samples at old slot). Maximum amount is 4, but
+// it's not recommended to set it more than 2.
+
+#define TR_AUDIO_MAX_SLOTS 2
+
+// In TR3-5, there were 5 reverb / echo effect flags for each
+// room, but they were never used in PC versions - however, level
+// files still contain this info, so we now can re-use these flags
+// to assign reverb/echo presets to each room.
+// Also, underwater environment can be considered as additional
+// reverb flag, so overall amount is 6.
+
+enum TR_AUDIO_FX {
+
+    TR_AUDIO_FX_OUTSIDE,         // EFX_REVERB_PRESET_CITY
+    TR_AUDIO_FX_SMALLROOM,       // EFX_REVERB_PRESET_LIVINGROOM
+    TR_AUDIO_FX_MEDIUMROOM,      // EFX_REVERB_PRESET_WOODEN_LONGPASSAGE
+    TR_AUDIO_FX_LARGEROOM,       // EFX_REVERB_PRESET_DOME_TOMB
+    TR_AUDIO_FX_PIPE,            // EFX_REVERB_PRESET_PIPE_LARGE
+    TR_AUDIO_FX_WATER,           // EFX_REVERB_PRESET_UNDERWATER
+    TR_AUDIO_FX_LASTINDEX
+};
 
 // Audio map size is a size of effect ID array, which is used to translate
 // global effect IDs to level effect IDs. If effect ID in audio map is -1
@@ -66,7 +93,7 @@ extern "C" {
 // structures.
 
 #define TR_AUDIO_DEFAULT_RANGE 8
-#define TR_AUDIO_DEFAULT_PITCH 0
+#define TR_AUDIO_DEFAULT_PITCH 1.0      // 0.0 - only noise
 
 // Entity types are used to identify different sound emitter types. Since
 // sounds in TR games could be emitted either by entities, sound sources
@@ -96,6 +123,19 @@ typedef struct audio_settings_s
     ALboolean   listener_is_player; // RESERVED FOR FUTURE USE
     
 }audio_settings_t, *audio_settings_p;
+
+// FX manager structure.
+
+typedef struct audio_fxmanager_s
+{
+    ALuint      al_filter;
+    ALuint      al_effect[TR_AUDIO_FX_LASTINDEX];
+    ALuint      al_slot[TR_AUDIO_MAX_SLOTS];
+    ALuint      current_slot;
+    ALuint      current_room_type;
+    ALuint      last_room_type;
+    int8_t      water_state;    // If listener is underwater, all samples will damp.
+}audio_fxmanager_t, *audio_fxmanager_p;
 
 // Effect structure.
 // Contains all global effect parameters.
@@ -161,6 +201,9 @@ public:
     void SetPitch(ALfloat pitch_value);     // Set pitch shift.
     void SetGain(ALfloat gain_value);       // Set gain (volume).
     void SetRange(ALfloat range_value);     // Set max. audible distance.
+    void SetFX();                           // Set reverb FX, according to room flag.
+    void UnsetFX();                         // Remove any reverb FX from source.
+    void SetUnderwater();                   // Apply low-pass underwater filter.
     
     bool IsActive();            // Check if source is active.
     
@@ -169,12 +212,12 @@ public:
     uint32_t    effect_index;   // Effect index. Used to associate effect with entity for R/W flags.
     uint32_t    sample_index;   // OpenAL sample (buffer) index. May be the same for different sources.
     uint32_t    sample_count;   // How many buffers to use, beginning with sample_index.
-    bool        is_water;       // Environmental flag; if source/listener flags aren't equal, sample will damp.
 
-    friend int Audio_IsEffectPlaying(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);
+    friend int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID);
     
 private:
     bool        active;         // Source gets autostopped and destroyed on next frame, if it's not set.
+    bool        is_water;       // Marker to define if sample is in underwater state or not.
     ALuint      source_index;   // Source index. Should be unique for each source.
     
     void LinkEmitter();                             // Link source to parent emitter.
@@ -183,23 +226,29 @@ private:
 };
 
 void Audio_InitGlobals();
+void Audio_InitFX();
 
 int  Audio_Init(const int num_Sources, class VT_Level *tr);
 int  Audio_DeInit();
 
 int  Audio_GetFreeSource();
-bool Audio_IsInRange(int emitter_type, int emitter_ID, float range, float gain);
-int  Audio_IsEffectPlaying(int effect_ID, int entity_ID, int entity_type);
+bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain);
+int  Audio_IsEffectPlaying(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);
 
 int  Audio_Send(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);	// Send to play effect with given parameters.
 int  Audio_Kill(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);	// If exist, immediately stop and destroy all effects with given parameters.
 
 void Audio_PauseAllSources();	// Used to pause all effects currently playing.
+void Audio_StopAllSources();    // Used in audio deinit.
 void Audio_ResumeAllSources();	// Used to resume all effects currently paused.
 void Audio_UpdateSources();     // Main sound loop.
 void Audio_UpdateListenerByCamera(struct camera_s *cam);
 
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname);
+
+int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
+
+void Audio_LogALError(int proc_index);
 
 #endif // AUDIO_H

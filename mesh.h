@@ -185,7 +185,7 @@ typedef struct state_change_s
 typedef struct animation_frame_s                                                
 {
     uint32_t                    ID;
-    uint8_t                     frame_rate;
+    uint8_t                     original_frame_rate;
     int                         accel_hi;
     int                         accel_hi2;
     int                         accel_lo;

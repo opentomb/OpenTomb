@@ -84,21 +84,6 @@ void FillCPUCaps(ALuint capfilter)
 #endif
         }
     }
-#elif defined(HAVE_WINDOWS_H)
-    HMODULE k32 = GetModuleHandleA("kernel32.dll");
-    BOOL (WINAPI*IsProcessorFeaturePresent)(DWORD ProcessorFeature);
-    IsProcessorFeaturePresent = (BOOL(WINAPI*)(DWORD))GetProcAddress(k32, "IsProcessorFeaturePresent");
-    if(!IsProcessorFeaturePresent)
-        ERR("IsProcessorFeaturePresent not available; CPU caps not detected\n");
-    else
-    {
-        if(IsProcessorFeaturePresent(PF_XMMI_INSTRUCTIONS_AVAILABLE))
-        {
-            caps |= CPU_CAP_SSE;
-            if(IsProcessorFeaturePresent(PF_XMMI64_INSTRUCTIONS_AVAILABLE))
-                caps |= CPU_CAP_SSE2;
-        }
-    }
 #endif
 #ifdef HAVE_NEON
     /* Assume Neon support if compiled with it */
@@ -309,7 +294,7 @@ void ALSleep(ALuint t)
         usleep (1000000);
         seconds--;
     }
-    usleep((unsigned int) (rest * 1000000));
+    usleep((unsigned int) (rest * 1000));
 }
 
 void al_print(const char *type, const char *func, const char *fmt, ...)

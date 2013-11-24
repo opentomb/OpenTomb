@@ -180,9 +180,12 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
         if (room.num_static_meshes > 512)
                 Sys_extWarn("read_tr5_room: num_static_meshes > 512");
 
-        room.unknown_r1 = read_bitu16(newsrc);
-        room.unknown_r2 = read_bitu16(newsrc);
+        room.reverb_info = read_bitu8(newsrc);
+        room.extra_param = 0;                   ///@FIXME: FIND IT LATER!
 
+        room.unknown_r1  = read_bitu8(newsrc);
+        room.unknown_r2  = read_bitu16(newsrc);
+        
         if (read_bitu32(newsrc) != 0x00007FFF)
                 Sys_extWarn("read_tr5_room: filler1 has wrong value");
 
@@ -801,7 +804,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
         for(i=0; i < this->sample_indices_count; i++)
             this->sample_indices[i] = read_bitu32(src);
-
+        
         SDL_RWseek(src, 6, SEEK_CUR);   // In TR5, sample indices are followed by 6 0xCD bytes. - correct - really 0xCDCDCDCDCDCD
 
         // LOAD SAMPLES
@@ -812,8 +815,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
             // Since sample data is the last part, we simply load whole last
             // block of file as single array.
             this->samples_data_size = SDL_RWsize(src) - SDL_RWtell(src);
-            this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(int8_t));
-            for(i = 0; i < uncomp_size; i++)
+            this->samples_data = (uint8_t*)malloc(this->samples_data_size * sizeof(uint8_t));
+            for(i = 0; i < this->samples_data_size; i++)
                 this->samples_data[i] = read_bitu8(src);
         }
 }

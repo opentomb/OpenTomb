@@ -98,7 +98,7 @@ class TR_Level {
         
         ~TR_Level()
         {
-            int i;
+            uint32_t i;
             
             /**destroy all textiles**/
             if(this->textile8_count)

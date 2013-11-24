@@ -344,6 +344,12 @@ int Controls_KeyConsoleFilter(int32_t key, int kmod_states)
 {
     switch(key)
     {
+        case SDLK_SEMICOLON:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return ':';
+        
         case SDLK_BACKSLASH:
             if( !(kmod_states & KMOD_SHIFT) )
                 return key;
