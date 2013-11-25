@@ -16,7 +16,7 @@
   */
             
 static const ALCchar sdl_device[] = "Simple Directmedia Layer";
-static SDL_AudioSpec sdl_audio_spec;
+static SDL_AudioSpec sdl_audio_desired, sdl_audio_obtained;
 
 static void SDLCALL sdl_callback(void *userdata, Uint8 *stream, int len)
 {
@@ -27,9 +27,9 @@ static void SDLCALL sdl_callback(void *userdata, Uint8 *stream, int len)
 
 static ALCenum sdl_open_playback(ALCdevice *device, const ALCchar *deviceName)
 {
-    device->DeviceName = strdup(deviceName);
-    device->ExtraData = &sdl_audio_spec;
-    sdl_audio_spec.callback = sdl_callback;
+    device->DeviceName = (deviceName)?(strdup(deviceName)):(NULL);
+    device->ExtraData = &sdl_audio_desired;
+    sdl_audio_desired.callback = sdl_callback;
     
     return ALC_NO_ERROR;
 }
@@ -50,43 +50,43 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
     }
     
-    device->ExtraData = &sdl_audio_spec;
+    device->ExtraData = &sdl_audio_desired;
     
-    sdl_audio_spec.freq = device->Frequency;
-    sdl_audio_spec.channels = ChannelsFromDevFmt(device->FmtChans);
-    sdl_audio_spec.samples = device->UpdateSize * sdl_audio_spec.channels;
-    sdl_audio_spec.callback = sdl_callback;
-    sdl_audio_spec.userdata = device;
-    sdl_audio_spec.padding;                                                     ///@FIXME: what I need to do with that?
+    sdl_audio_desired.freq = device->Frequency;
+    sdl_audio_desired.channels = ChannelsFromDevFmt(device->FmtChans);
+    sdl_audio_desired.samples = device->UpdateSize * sdl_audio_desired.channels;
+    sdl_audio_desired.callback = sdl_callback;
+    sdl_audio_desired.userdata = device;
+    sdl_audio_desired.padding = 0;                                              ///@FIXME: what I need to do with that?
     
     switch(device->FmtType)
     {
         case DevFmtByte:
-            sdl_audio_spec.format = AUDIO_S8;
+            sdl_audio_desired.format = AUDIO_S8;
             break;
             
         case DevFmtUByte:
-            sdl_audio_spec.format = AUDIO_U8;;
+            sdl_audio_desired.format = AUDIO_U8;;
             break;
             
         case DevFmtShort:
-            sdl_audio_spec.format = AUDIO_S16LSB;
+            sdl_audio_desired.format = AUDIO_S16LSB;
             break;
             
         case DevFmtUShort:
-            sdl_audio_spec.format = AUDIO_U16LSB;
+            sdl_audio_desired.format = AUDIO_U16LSB;
             break;
 
         case DevFmtInt:
-            sdl_audio_spec.format = AUDIO_S32LSB;
+            sdl_audio_desired.format = AUDIO_S32LSB;
             break;
             
         case DevFmtUInt:                                                        ///@FIXME: that format not used?
-            sdl_audio_spec.format = AUDIO_S32LSB;
+            sdl_audio_desired.format = AUDIO_S32LSB;
             break;
 
         case DevFmtFloat:
-            sdl_audio_spec.format = AUDIO_F32LSB;
+            sdl_audio_desired.format = AUDIO_F32LSB;
             break;
             
         default:
@@ -96,13 +96,14 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
    
     device->NumUpdates = 2;
     
-    if(SDL_InitSubSystem(SDL_INIT_AUDIO) == -1)
+    if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
     {
         //Sys_extWarn("AL: Failed to init SDL_InitSubSystem(SDL_INIT_AUDIO): %s", SDL_GetError());
         return ALC_FALSE;
     }
 
-    if(SDL_OpenAudio(&sdl_audio_spec, NULL) == -1)
+    if(SDL_OpenAudio(&sdl_audio_desired, &sdl_audio_obtained) < 0)
+    //if(SDL_OpenAudioDevice(NULL, 0, &sdl_audio_spec, &sdl_audio_have, SDL_AUDIO_ALLOW_FORMAT_CHANGE) == -1)
     {
         //Sys_extWarn("AL: Failed to open audio: %s", SDL_GetError());
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
