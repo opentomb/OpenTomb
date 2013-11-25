@@ -230,7 +230,7 @@ void AudioSource::SetFX()
 {    
     ALuint effect;
     ALuint slot;
-    
+
     // Reverb FX is applied globally through audio send. Since player can 
     // jump between adjacent rooms with different reverb info, we assign
     // several (2 by default) interchangeable audio sends, which are switched
@@ -456,7 +456,10 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     AudioSource    *source = NULL;
     
     // Remap global engine effect ID to local effect ID.
-    
+    if((effect_ID < 0) || (effect_ID > engine_world.audio_map_count - 1))
+    {
+        return TR_AUDIO_SEND_NOSAMPLE;
+    }
     effect_ID = (int)engine_world.audio_map[effect_ID];
     
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
@@ -991,10 +994,10 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     if(SDL_LoadWAV_RW(src, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
-        SDL_FreeRW(src);
+        //SDL_FreeRW(src);
         return -1;
     }
-    SDL_FreeRW(src);
+    //SDL_FreeRW(src);
     
     // Uncomp_sample_size explicitly specifies amount of raw sample data
     // to load into buffer. It is only used in TR4/5 with ADPCM samples,
@@ -1070,10 +1073,10 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname)
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Con_Printf("Error: bad file format \"%s\"", fname);
-        SDL_FreeRW(file);
+        //SDL_FreeRW(file);
         return -2;
     }
-    SDL_FreeRW(file);
+    //SDL_FreeRW(file);
 
     switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
     {

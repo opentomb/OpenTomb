@@ -460,11 +460,11 @@ void Engine_InitALAudio()
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 }
 
-int SDL_main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-    btScalar      time, newtime;
+    btScalar time, newtime;
     static btScalar oldtime = 0.0;
-    
+
     Engine_Init();
     Engine_InitGlobals();
     Engine_LoadConfig();
