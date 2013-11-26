@@ -979,7 +979,7 @@ void Audio_LogALError(int proc_index)
 }
 
 
-int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size, int tr_version)
+int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
 {
     SDL_AudioSpec wav_spec;
     Uint8 *wav_buffer;
