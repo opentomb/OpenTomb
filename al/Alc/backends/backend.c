@@ -14,9 +14,16 @@
   * Code was modificated for OpenAL version 1.15.1
   * @FIXME: add capture functions implementation
   */
-            
+      
+#define DEFAULT_AL_FX_SLOTS_COUNT               (16)
+#define DEFAULT_AL_UPDATE_SIZE                  (1024*64)                           // dafault = 1024
+#define DEFAULT_SDL_AUDIO_BUFFER_SIZE           (65536)                         // default = 32768
+
+
 static const ALCchar sdl_device[] = "Simple Directmedia Layer";
 static SDL_AudioSpec sdl_audio_desired, sdl_audio_obtained;
+static SDL_AudioDeviceID sdl_dev_id = -1;
+
 
 static void SDLCALL sdl_callback(void *userdata, Uint8 *stream, int len)
 {
@@ -42,76 +49,159 @@ static void sdl_close_playback(ALCdevice *device)
 }
 
 static ALCboolean sdl_reset_playback(ALCdevice *device)
-{
+{   
     if(SDL_WasInit(SDL_INIT_AUDIO))
     {
         SDL_PauseAudio(1);
         SDL_CloseAudio();
+        if(sdl_dev_id > 0)
+        {
+            SDL_PauseAudioDevice(sdl_dev_id, 1);
+            SDL_LockAudioDevice(sdl_dev_id);
+            SDL_CloseAudioDevice(sdl_dev_id);
+        }
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
     }
     
-    device->ExtraData = &sdl_audio_desired;
+    device->ExtraData = &sdl_audio_obtained;
+    device->UpdateSize = DEFAULT_AL_UPDATE_SIZE;                                // little UpdateSize - often updates - no play delays
+    device->AuxiliaryEffectSlotMax = DEFAULT_AL_FX_SLOTS_COUNT;
     
-    sdl_audio_desired.freq = device->Frequency;
-    sdl_audio_desired.channels = ChannelsFromDevFmt(device->FmtChans);
-    sdl_audio_desired.samples = device->UpdateSize * sdl_audio_desired.channels;
+    sdl_audio_desired.freq = device->Frequency;                                 // by default is 44100 Hz - ok
     sdl_audio_desired.callback = sdl_callback;
     sdl_audio_desired.userdata = device;
-    sdl_audio_desired.padding = 0;                                              ///@FIXME: what I need to do with that?
+    sdl_audio_desired.padding = 0;                                              ///@FIXME: magick + what I need to do with that?
+    sdl_audio_desired.format = AUDIO_F32SYS;                                    // try float 32 format
+    sdl_audio_desired.samples = 0;                                              // zero it (only for obtained)
+    sdl_audio_desired.size = DEFAULT_SDL_AUDIO_BUFFER_SIZE;
+    sdl_audio_desired.silence = 0;                                              // zero it
+    sdl_audio_desired.channels = 0;                                             // zero it (only for obtained)
     
-    switch(device->FmtType)
-    {
-        case DevFmtByte:
-            sdl_audio_desired.format = AUDIO_S8;
-            break;
-            
-        case DevFmtUByte:
-            sdl_audio_desired.format = AUDIO_U8;;
-            break;
-            
-        case DevFmtShort:
-            sdl_audio_desired.format = AUDIO_S16LSB;
-            break;
-            
-        case DevFmtUShort:
-            sdl_audio_desired.format = AUDIO_U16LSB;
-            break;
-
-        case DevFmtInt:
-            sdl_audio_desired.format = AUDIO_S32LSB;
-            break;
-            
-        case DevFmtUInt:                                                        ///@FIXME: that format not used?
-            sdl_audio_desired.format = AUDIO_S32LSB;
-            break;
-
-        case DevFmtFloat:
-            sdl_audio_desired.format = AUDIO_F32LSB;
-            break;
-            
-        default:
-            //Sys_extWarn("AL: Uncnown audio format = %X", device->FmtType);
-            ;
-    }
-   
-    device->NumUpdates = 2;
+    sdl_audio_obtained = sdl_audio_desired;
     
     if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
     {
         //Sys_extWarn("AL: Failed to init SDL_InitSubSystem(SDL_INIT_AUDIO): %s", SDL_GetError());
         return ALC_FALSE;
     }
-
-    if(SDL_OpenAudio(&sdl_audio_desired, &sdl_audio_obtained) < 0)
-    //if(SDL_OpenAudioDevice(NULL, 0, &sdl_audio_spec, &sdl_audio_have, SDL_AUDIO_ALLOW_FORMAT_CHANGE) == -1)
+ 
+    /*
+     * try to open SDL audio device vith maximum number of channels
+     */
+    sdl_audio_desired.channels = 8;                                             // try X7.1
+    sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
+    sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+    if(sdl_dev_id < 2)                                                          // SDL: valid ID >= 2
     {
-        //Sys_extWarn("AL: Failed to open audio: %s", SDL_GetError());
-        SDL_QuitSubSystem(SDL_INIT_AUDIO);
-        return ALC_FALSE;
+        sdl_audio_desired.channels = 7;                                         // try X6.1
+        sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
+        sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+        if(sdl_dev_id < 2)  
+        {
+            sdl_audio_desired.channels = 4;                                     // try QUAD
+            sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
+            sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+            if(sdl_dev_id < 2)  
+            {
+                sdl_audio_desired.channels = 2;                                 // try stereo
+                sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
+                sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+                if(sdl_dev_id < 2)  
+                {
+                    sdl_audio_desired.channels = 1;                             // try mono
+                    sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
+                    sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+                    if(sdl_dev_id < 2)  
+                    {
+                        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+                        return ALC_FALSE;
+                    }
+                }
+            }
+        }
     }
 
+    device->NumUpdates = 2;                                                     ///@FIXME: magick
+    // set AL channels mode
+    switch(sdl_audio_obtained.channels)
+    {
+        case 1:
+            device->FmtChans = DevFmtMono;
+            break;
+            
+        case 2:
+            device->FmtChans = DevFmtStereo;
+            break;
+            
+        case 4:
+            device->FmtChans = DevFmtQuad;
+            break;
+            
+         case 6:
+            device->FmtChans = DevFmtX51;
+            break;
+            
+         case 7:
+            device->FmtChans = DevFmtX61;
+            break;
+            
+         case 8:
+            device->FmtChans = DevFmtX71;
+            break;
+            
+        default:
+            SDL_CloseAudioDevice(sdl_dev_id);
+            SDL_QuitSubSystem(SDL_INIT_AUDIO);
+            return ALC_FALSE;                                                   // wrong channels number
+    };
+
+    // set AL format
+    switch(sdl_audio_obtained.format)
+    {
+        case AUDIO_S8:
+            device->FmtType = DevFmtByte;
+            break;
+        
+        case AUDIO_U8:
+            device->FmtType = DevFmtUByte;
+            break;
+            
+        case AUDIO_S16LSB:
+        case AUDIO_S16MSB:
+            device->FmtType = DevFmtShort;
+            break;
+            
+        case AUDIO_U16LSB:
+        case AUDIO_U16MSB:
+            device->FmtType = DevFmtUShort;
+            break;
+            
+        case AUDIO_S32LSB:
+        case AUDIO_S32MSB:
+            device->FmtType = DevFmtInt;
+            break;
+            
+        // case AUDIO_U32LSB:                                                   // not exists in SDL
+        // case AUDIO_U32MSB:
+        //    device->FmtType = DevFmtUInt;
+        //    break;
+            
+        case AUDIO_F32LSB:
+        case AUDIO_F32MSB:
+            device->FmtType = DevFmtFloat;
+            break; 
+            
+        default:
+            SDL_CloseAudioDevice(sdl_dev_id);
+            SDL_QuitSubSystem(SDL_INIT_AUDIO);
+            return ALC_FALSE;
+    };
+    
     SetDefaultWFXChannelOrder(device);
+    SDL_UnlockAudioDevice(sdl_dev_id);
+    SDL_PauseAudioDevice(sdl_dev_id, 0);
     SDL_PauseAudio(0);
+    
     return ALC_TRUE;
 }
 
@@ -173,12 +263,12 @@ BackendFuncs sdl_funcs = {
     sdl_start_playback,                 // ALCboolean (*StartPlayback)(ALCdevice*);
     sdl_stop_playback,                  // void (*StopPlayback)(ALCdevice*);
     
-    sdl_open_capture,                   // ALCenum (*OpenCapture)(ALCdevice*, const ALCchar*);
-    sdl_close_capture,                  // void (*CloseCapture)(ALCdevice*);
-    sdl_start_capture,                  // void (*StartCapture)(ALCdevice*);
-    sdl_stop_capture,                   // void (*StopCapture)(ALCdevice*);
-    sdl_capture_samples,                // ALCenum (*CaptureSamples)(ALCdevice*, void*, ALCuint);
-    sdl_available_samples,              // ALCuint (*AvailableSamples)(ALCdevice*);
+    NULL,//sdl_open_capture,                   // ALCenum (*OpenCapture)(ALCdevice*, const ALCchar*);
+    NULL,//sdl_close_capture,                  // void (*CloseCapture)(ALCdevice*);
+    NULL,//sdl_start_capture,                  // void (*StartCapture)(ALCdevice*);
+    NULL,//sdl_stop_capture,                   // void (*StopCapture)(ALCdevice*);
+    NULL,//sdl_capture_samples,                // ALCenum (*CaptureSamples)(ALCdevice*, void*, ALCuint);
+    NULL,//sdl_available_samples,              // ALCuint (*AvailableSamples)(ALCdevice*);
             
     ALCdevice_LockDefault,
     ALCdevice_UnlockDefault,
@@ -193,7 +283,13 @@ ALCboolean alc_sdl_init(BackendFuncs *func_list)
 
 void alc_sdl_deinit(void)
 {
-    // no-op.
+    if(sdl_dev_id > 0)
+    {
+        SDL_PauseAudio(0);
+        SDL_PauseAudioDevice(sdl_dev_id, 1);
+        SDL_LockAudioDevice(sdl_dev_id);
+        SDL_CloseAudioDevice(sdl_dev_id);
+    }
 }
 
  void alc_sdl_probe(enum DevProbe type)

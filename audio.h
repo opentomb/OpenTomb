@@ -121,7 +121,6 @@ typedef struct audio_settings_s
     ALfloat     sound_volume;
     ALboolean   use_effects;        // RESERVED FOR FUTURE USE
     ALboolean   listener_is_player; // RESERVED FOR FUTURE USE
-    
 }audio_settings_t, *audio_settings_p;
 
 // FX manager structure.
@@ -244,8 +243,8 @@ void Audio_ResumeAllSources();	// Used to resume all effects currently paused.
 void Audio_UpdateSources();     // Main sound loop.
 void Audio_UpdateListenerByCamera(struct camera_s *cam);
 
-int  Audio_LoadALbufferFromWAV_Mem(ALuint buf, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
-int  Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname);
+int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
+int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
 
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 
