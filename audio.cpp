@@ -57,7 +57,6 @@ AudioSource::AudioSource()
         if(audio_settings.use_effects)
         {
             alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0);
             alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO,   AL_TRUE);
             alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
         }
@@ -209,6 +208,7 @@ void AudioSource::SetGain(ALfloat gain_value)
     gain_value = (gain_value < 0.0)?(0.0):(gain_value);
     
     alSourcef(source_index, AL_GAIN, gain_value * audio_settings.sound_volume);
+    alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.05 - gain_value);
 }
 
 
