@@ -54,6 +54,7 @@ struct character_s;
 #define TR_FD_FUNC_TRIGGERER_MARK       0x14    // In TR4 only.
 #define TR_FD_FUNC_BEETLE_MARK          0x15    // In TR4 only.
 
+// Trigger (TR_FD_FUNC_TRIGGER) types.
 
 #define TR_FD_TRIGTYPE_TRIGGER          0x00    // If Lara is in sector, run (any case).
 #define TR_FD_TRIGTYPE_PAD              0x01    // If Lara is in sector, run (land case).
@@ -73,6 +74,7 @@ struct character_s;
 #define TR_FD_TRIGTYPE_CRAWLDUCK        0x0F    // TR5 only: If Lara is crawling, run.
 #define TR_FD_TRIGTYPE_CLIMB            0x10    // TR5 only: If Lara is climbing, run.
 
+// Trigger function types.
 
 #define TR_FD_TRIGFUNC_OBJECT           0x00
 #define TR_FD_TRIGFUNC_CAMERATARGET     0x01
