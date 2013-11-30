@@ -639,7 +639,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                         case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH
                             {                                
                                 uint8_t cam_index = (*entry) & 0x007F;
-                                entry++;                                            ///@FIXME: check is entry++ correct, or it must be in all other cases 
+                                entry++;
                                 uint8_t cam_timer = (*entry) & 0x00FF;
                                 uint8_t cam_once  = (*entry) & 0x0100 >> 8;
                                 uint8_t cam_zoom  = (*entry) & 0x1000 >> 12;
@@ -681,7 +681,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             // operands - track number
                             break;
 
-                        case TR_FD_TRIGFUNC_FLIPEFFECT:          // Assault course clock control
+                        case TR_FD_TRIGFUNC_FLIPEFFECT:          // Various in-game actions.
                             Con_Printf("Flipeffect id = %d", operands);
                             break;
 
@@ -697,7 +697,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             Con_Printf("Flyby camera = %d", operands);
                             break;
 
-                        case TR_FD_TRIGFUNC_CUTSCENE:          // UNKNOWN
+                        case TR_FD_TRIGFUNC_CUTSCENE:          // USED IN TR4-5
                             Con_Printf("CUTSCENE id = %d", operands);
                             break;
 
@@ -753,7 +753,11 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 break;
                 
             case TR_FD_FUNC_TRIGGERER_MARK:
-                Con_Printf("Trigger Triggerer / MINECART LEFT, OP = %d", operands);
+                Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
+                break;
+                
+            case TR_FD_FUNC_BEETLE_MARK:
+                Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
                 break;
                 
             default:
