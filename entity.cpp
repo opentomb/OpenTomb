@@ -640,9 +640,10 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             {                                
                                 uint8_t cam_index = (*entry) & 0x007F;
                                 entry++;
-                                uint8_t cam_timer = (*entry) & 0x00FF;
-                                uint8_t cam_once  = (*entry) & 0x0100 >> 8;
-                                uint8_t cam_zoom  = (*entry) & 0x1000 >> 12;
+                                uint8_t cam_timer = ((*entry) & 0x00FF);
+                                uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
+                                uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
+                                        cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
                                 
                                 Con_Printf("CAMERA: index = %d, timer = %d, once = %d, zoom = %d", cam_index, cam_timer, cam_once, cam_zoom);
                             }
@@ -670,10 +671,6 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                         case TR_FD_TRIGFUNC_ENDLEVEL:          // END LEVEL
                             Con_Printf("End of level! id = %d", operands);
-                            //sector->fd_end_level = (operands)?operands:1;       // IT WORKS!!!
-                            // sub_function - where to we go...
-                            // but it wrongly activated in complex tr4 trigger case (hub.tr4 - 2 skeleton
-                            // activation + camera look near big rock on the rope)
                             break;
 
                         case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
