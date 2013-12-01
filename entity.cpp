@@ -354,9 +354,10 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
         return;  // If no anim commands or current anim has more than 255.
     }
         
-    animation_frame_p af = entity->model->animations + entity->current_animation;
-    uint32_t count       = af->num_anim_commands;
-    int16_t *pointer     = engine_world.anim_commands + af->anim_command;
+    animation_frame_p af  = entity->model->animations + entity->current_animation;
+    uint32_t count        = af->num_anim_commands;
+    int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+    int8_t   random_value = 0;
     
     for(uint32_t i = 0; i < count; i++, pointer++)
     {
@@ -490,7 +491,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 
                                 // Play step sound only in 60% of cases to achieve diversity.
                                 
-                                int8_t random_value = rand() % 100;
+                                random_value = rand() % 100;
                                 if(random_value > 40)
                                 {
                                     int16_t sample_index = audio_step_map[(entity->current_sector->box_index & 0x0F)];
@@ -505,6 +506,14 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
                             {
                                 ///@FIXME: Add water condition here!
+                            }
+                            break;
+                            
+                        case TR_EFFECT_BUBBLE:
+                            random_value = rand() % 100;
+                            if(random_value > 60)
+                            {
+                                Audio_Send(37, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                             }
                             break;
                             
