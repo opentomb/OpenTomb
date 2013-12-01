@@ -829,8 +829,15 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                 engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
         }
         
-        engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
+        engine_world.audio_effects[i].sample_index =  tr->sound_details[i].sample;
         engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
+    }
+    
+    // Quick TR1 fix for underwater looped sound.
+    
+    if(CVAR_get_val_d("engine_version") < TR_II)
+    {
+        engine_world.audio_effects[(engine_world.audio_map[60])].loop = TR_AUDIO_LOOP_LOOPED;
     }
     
     // Cycle through sound emitters and 
