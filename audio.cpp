@@ -842,7 +842,7 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     
     // Reset last room type used for assigning reverb.
     
-    fxManager.last_room_type = 255;
+    fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;
     
     // Cycle through sound emitters and 
     // parse them to native OpenTomb sound emitters structure.
