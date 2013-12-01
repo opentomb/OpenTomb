@@ -18,6 +18,7 @@ extern "C" {
 #include "system.h"
 #include "render.h"
 #include <math.h>
+
 ALfloat                         listener_position[3];
 struct audio_fxmanager_s        fxManager;
 static uint8_t                  audio_blocked = 1;
@@ -62,7 +63,7 @@ AudioSource::AudioSource()
         }
         else
         {
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0);
+            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.5);
         }
     }
 }
@@ -208,7 +209,6 @@ void AudioSource::SetGain(ALfloat gain_value)
     gain_value = (gain_value < 0.0)?(0.0):(gain_value);
     
     alSourcef(source_index, AL_GAIN, gain_value * audio_settings.sound_volume);
-    alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.05 - gain_value);
 }
 
 
