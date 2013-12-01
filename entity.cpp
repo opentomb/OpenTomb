@@ -465,12 +465,46 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             
                         case TR_EFFECT_PLAYSTEPSOUND:
                             if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
-                            {
-                                //Audio_Send(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                            {                                
+                                // TR3-5 footstep map.
+                                // We define it here as a magic numbers array, because TR3-5 versions
+                                // fortunately have no differences in footstep sounds order.
+                                // Also note that some footstep types mutually share same sound IDs
+                                // across different TR versions.
+
+                                static uint16_t audio_step_map[14] = 
+                                {288,   // Mud
+                                 293,   // Snow - TR3 & TR5 only
+                                 291,   // Sand - same as grass
+                                 290,   // Gravel
+                                 289,   // Ice - TR3 & TR5 only
+                                 17,    // Water
+                                 0,     // Stone - DEFAULT SOUND!
+                                 292,   // Wood
+                                 294,   // Metal
+                                 293,   // Marble - TR4 only
+                                 291,   // Grass - same as sand
+                                 0,     // Concrete - same as stone
+                                 292,   // Old wood - same as wood
+                                 294};  // Old metal - same as metal
+                                
+                                // Play step sound only in 60% of cases to achieve diversity.
+                                
+                                int8_t random_value = rand() % 100;
+                                if(random_value > 40)
+                                {
+                                    int16_t sample_index = audio_step_map[(entity->current_sector->box_index & 0x0F)];
+ 
+                                    if(sample_index && // Do not override default "rock" step sound (ID 0).
+                                       (Audio_Send(sample_index, TR_AUDIO_EMITTER_ENTITY, entity->ID) > 0))
+                                    {
+                                        Audio_Kill(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                    }
+                                }
                             }
                             else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
                             {
-                                //Audio_Send(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                ///@FIXME: Add water condition here!
                             }
                             break;
                             
