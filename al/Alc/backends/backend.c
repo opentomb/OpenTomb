@@ -16,7 +16,7 @@
   */
       
 #define DEFAULT_AL_FX_SLOTS_COUNT               (16)
-#define DEFAULT_AL_UPDATE_SIZE                  (1024*64)                           // dafault = 1024
+#define DEFAULT_AL_UPDATE_SIZE                  (1024*64)                       // dafault = 1024
 #define DEFAULT_SDL_AUDIO_BUFFER_SIZE           (65536)                         // default = 32768
 
 
@@ -44,6 +44,12 @@ static ALCenum sdl_open_playback(ALCdevice *device, const ALCchar *deviceName)
 static void sdl_close_playback(ALCdevice *device)
 {
     SDL_PauseAudio(1);
+    if(sdl_dev_id > 0)
+    {
+        SDL_PauseAudioDevice(sdl_dev_id, 1);
+        SDL_LockAudioDevice(sdl_dev_id);
+        SDL_CloseAudioDevice(sdl_dev_id);
+    }
     SDL_CloseAudio();
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
@@ -53,13 +59,13 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
     if(SDL_WasInit(SDL_INIT_AUDIO))
     {
         SDL_PauseAudio(1);
-        SDL_CloseAudio();
         if(sdl_dev_id > 0)
         {
             SDL_PauseAudioDevice(sdl_dev_id, 1);
             SDL_LockAudioDevice(sdl_dev_id);
             SDL_CloseAudioDevice(sdl_dev_id);
         }
+        SDL_CloseAudio();
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
     }
     
@@ -208,14 +214,14 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
 ALCboolean sdl_start_playback(ALCdevice *device)
 {
     (void) device;
-    SDL_PauseAudio(0);
+    SDL_PauseAudioDevice(sdl_dev_id, 0);//SDL_PauseAudio(0);
     return ALC_TRUE;
 }
 
 static void sdl_stop_playback(ALCdevice *device)
 {
     (void) device;
-    SDL_PauseAudio(1);
+    SDL_PauseAudioDevice(sdl_dev_id, 1);//SDL_PauseAudio(1);
 }
 
 static ALCenum sdl_open_capture(ALCdevice *device, const ALCchar *deviceName)
@@ -283,13 +289,14 @@ ALCboolean alc_sdl_init(BackendFuncs *func_list)
 
 void alc_sdl_deinit(void)
 {
+    SDL_PauseAudio(0);
     if(sdl_dev_id > 0)
     {
-        SDL_PauseAudio(0);
         SDL_PauseAudioDevice(sdl_dev_id, 1);
         SDL_LockAudioDevice(sdl_dev_id);
         SDL_CloseAudioDevice(sdl_dev_id);
     }
+    SDL_CloseAudio();
 }
 
  void alc_sdl_probe(enum DevProbe type)

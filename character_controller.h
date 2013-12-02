@@ -154,7 +154,6 @@ void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cm
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz);
 int Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
-void Character_UpdateCurrentRoom(struct entity_s *ent);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
 void Character_UpdatePlatformPostStep(struct entity_s *ent);

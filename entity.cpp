@@ -111,63 +111,69 @@ void Entity_Clear(entity_p entity)
 }
 
 
+void Entity_UpdateRoomPos(entity_p ent)
+{
+    btScalar pos[3], *v;
+    room_p new_room;
+    room_sector_p new_sector;
+    
+    v = ent->collision_offset.m_floats;
+    Mat4_vec3_mul_macro(pos, ent->transform, v);
+    new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
+    if(new_room)
+    {
+        ent->self->room = new_room;
+        new_sector = Room_GetSector(new_room, pos);
+        if(ent->current_sector != new_sector)
+        {
+            ent->current_sector = new_sector;
+            if(new_sector && (ent->flags & ENTITY_IS_ACTIVE) && (ent->flags & ENTITY_CAN_TRIGGER))
+            {
+                Entity_ParseFloorData(ent, &engine_world);
+            }
+        }
+    }
+}
+
+
 void Entity_UpdateRigidBody(entity_p ent)
 {
     int i;
-    btScalar tr[16], pos[3], c[3];
+    btScalar tr[16];
     btTransform	bt_tr;
-    room_p new_room;
-    room_sector_p new_sector;
+    room_p old_room;
     
     if(!ent->model || !ent->bt_body || ((ent->model->animations->frames_count == 1) && (ent->model->animation_count == 1)))
     {
         return;
     }
 
+    old_room = ent->self->room;
     if(!ent->character)
     {
-        vec3_add(c, ent->bf.bb_min, ent->bf.bb_max);
-        c[0] /= 2.0;
-        c[1] /= 2.0;
-        c[2] /= 2.0;
-        
-        Mat4_vec3_mul_macro(pos, ent->transform, c);
-        new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
-        if(ent->self->room != new_room)
-        {
-            if(new_room != NULL && !Room_IsOverlapped(ent->self->room, new_room))
-            {
-                if(ent->self->room && new_room)
-                {
-                    Room_RemoveEntity(ent->self->room, ent);
-                }
-                if(new_room)
-                {
-                    Room_AddEntity(new_room, ent);
-                }
-                ent->self->room = new_room;
-            }
-        }
+        vec3_add(ent->collision_offset.m_floats, ent->bf.bb_min, ent->bf.bb_max);
+        ent->collision_offset.m_floats[0] /= 2.0;
+        ent->collision_offset.m_floats[1] /= 2.0;
+        ent->collision_offset.m_floats[2] /= 2.0;
     }
-    else
+    Entity_UpdateRoomPos(ent);
+
+#if 1
+    if(!ent->character && (ent->self->room != old_room))
     {
-        c[0] = ent->transform[12 + 0];
-        c[1] = ent->transform[12 + 1];
-        c[2] = ent->transform[12 + 2] + 0.5 * (ent->bf.bb_min[2] + ent->bf.bb_max[2]);
-        new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
-        if(ent->self->room)
+        if((ent->self->room != NULL) && !Room_IsOverlapped(ent->self->room, old_room))
         {
-            new_sector = Room_GetSector(ent->self->room, c);
-        }
-        if(ent->current_sector != new_sector)
-        {
-            ent->current_sector = new_sector;
-            if(ent->current_sector)
+            if(ent->self->room && old_room)
             {
-                Entity_ParseFloorData(ent, &engine_world);
+                Room_RemoveEntity(old_room, ent);
+            }
+            if(ent->self->room)
+            {
+                Room_AddEntity(ent->self->room, ent);
             }
         }
     }
+#endif
     
     for(i=0;i<ent->model->mesh_count;i++)
     {
