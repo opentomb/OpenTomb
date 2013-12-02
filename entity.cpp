@@ -354,9 +354,10 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
         return;  // If no anim commands or current anim has more than 255.
     }
         
-    animation_frame_p af = entity->model->animations + entity->current_animation;
-    uint32_t count       = af->num_anim_commands;
-    int16_t *pointer     = engine_world.anim_commands + af->anim_command;
+    animation_frame_p af  = entity->model->animations + entity->current_animation;
+    uint32_t count        = af->num_anim_commands;
+    int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+    int8_t   random_value = 0;
     
     for(uint32_t i = 0; i < count; i++, pointer++)
     {
@@ -465,12 +466,54 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             
                         case TR_EFFECT_PLAYSTEPSOUND:
                             if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
-                            {
-                                //Audio_Send(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                            {                                
+                                // TR3-5 footstep map.
+                                // We define it here as a magic numbers array, because TR3-5 versions
+                                // fortunately have no differences in footstep sounds order.
+                                // Also note that some footstep types mutually share same sound IDs
+                                // across different TR versions.
+
+                                static uint16_t audio_step_map[14] = 
+                                {288,   // Mud
+                                 293,   // Snow - TR3 & TR5 only
+                                 291,   // Sand - same as grass
+                                 290,   // Gravel
+                                 289,   // Ice - TR3 & TR5 only
+                                 17,    // Water
+                                 0,     // Stone - DEFAULT SOUND!
+                                 292,   // Wood
+                                 294,   // Metal
+                                 293,   // Marble - TR4 only
+                                 291,   // Grass - same as sand
+                                 0,     // Concrete - same as stone
+                                 292,   // Old wood - same as wood
+                                 294};  // Old metal - same as metal
+                                
+                                // Play step sound only in 60% of cases to achieve diversity.
+                                
+                                random_value = rand() % 100;
+                                if(random_value > 40)
+                                {
+                                    int16_t sample_index = audio_step_map[(entity->current_sector->box_index & 0x0F)];
+ 
+                                    if(sample_index && // Do not override default "rock" step sound (ID 0).
+                                       (Audio_Send(sample_index, TR_AUDIO_EMITTER_ENTITY, entity->ID) > 0))
+                                    {
+                                        Audio_Kill(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                    }
+                                }
                             }
                             else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
                             {
-                                //Audio_Send(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                ///@FIXME: Add water condition here!
+                            }
+                            break;
+                            
+                        case TR_EFFECT_BUBBLE:
+                            random_value = rand() % 100;
+                            if(random_value > 60)
+                            {
+                                Audio_Send(37, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                             }
                             break;
                             
@@ -498,6 +541,13 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     uint16_t *entry, *end_p, end_bit, cont_bit;
     room_sector_p sector = ent->current_sector;
     
+    // Trigger options.
+    
+    bool   only_once;
+    bool   trigger_mask[5];
+    int8_t timer_field;
+    
+    
     if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size))
     {
         return 0;
@@ -512,18 +562,21 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     do
     {
         end_bit = ((*entry) & 0x8000) >> 15;            // 0b10000000 00000000
+        
         // TR_I - TR_II
         //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
         //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
+        
         //TR_III+, but works with TR_I - TR_II
         function = (*entry) & 0x001F;                   // 0b00000000 00011111
         sub_function = ((*entry) & 0x3FF0) >> 8;        // 0b01111111 11100000
         b3 = ((*entry) & 0x00E0) >> 5;                  // 0b00000000 11100000  TR_III+
+        
         entry++;
 
         switch(function)
         {
-            case 0x01:          // PORTAL DATA
+            case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
                     i = *(entry++);
@@ -531,7 +584,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 }
                 break;
 
-            case 0x02:          // FLOOR SLANT
+            case TR_FD_FUNC_FLOORSLANT:          // FLOOR SLANT
                 if(sub_function == 0x00)
                 {
 
@@ -539,7 +592,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 }
                 break;
 
-            case 0x03:          // CEILING SLANT
+            case TR_FD_FUNC_CEILINGSLANT:          // CEILING SLANT
                 if(sub_function == 0x00)
                 {
 
@@ -547,77 +600,145 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 }
                 break;
 
-            case 0x04:          // TRIGGER
-                entry++;        // go to the first trigger function
+            case TR_FD_FUNC_TRIGGER:          // TRIGGER
+                timer_field     = (*entry) & 0x00FF;
+                only_once       = (*entry) & 0x0100;
+                trigger_mask[0] = (*entry) & 0x0200;
+                trigger_mask[1] = (*entry) & 0x0400;
+                trigger_mask[2] = (*entry) & 0x0800;
+                trigger_mask[3] = (*entry) & 0x1000;
+                trigger_mask[4] = (*entry) & 0x2000;
+                
+                Con_Printf("TRIGGER: timer - %d, once - %d, mask - %d%d%d%d%d", timer_field, only_once, trigger_mask[0], trigger_mask[1], trigger_mask[2], trigger_mask[3], trigger_mask[4]);
+                
+                switch(sub_function)
+                {
+                    case TR_FD_TRIGTYPE_TRIGGER:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_TRIGGER");
+                        break;
+                    case TR_FD_TRIGTYPE_PAD:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PAD");
+                        break;
+                    case TR_FD_TRIGTYPE_SWITCH:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SWITCH");
+                        break;
+                    case TR_FD_TRIGTYPE_KEY:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_KEY");
+                        break;
+                    case TR_FD_TRIGTYPE_PICKUP:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PICKUP");
+                        break;
+                    case TR_FD_TRIGTYPE_HEAVY:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVY");
+                        break;
+                    case TR_FD_TRIGTYPE_ANTIPAD:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTIPAD");
+                        break;
+                    case TR_FD_TRIGTYPE_COMBAT:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_COMBAT");
+                        break;
+                    case TR_FD_TRIGTYPE_DUMMY:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_DUMMY");
+                        break;
+                    case TR_FD_TRIGTYPE_ANTITRIGGER:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTITRIGGER");
+                        break;
+                    case TR_FD_TRIGTYPE_HEAVYTRIGGER:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYTRIGGER");
+                        break;
+                    case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYANTITRIGGER");
+                        break;
+                    case TR_FD_TRIGTYPE_MONKEY:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_MONKEY");
+                        break;
+                    case TR_FD_TRIGTYPE_SKELETON:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SKELETON");
+                        break;
+                    case TR_FD_TRIGTYPE_TIGHTROPE:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_TIGHTROPE");
+                        break;
+                    case TR_FD_TRIGTYPE_CRAWLDUCK:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CRAWLDUCK");
+                        break;
+                    case TR_FD_TRIGTYPE_CLIMB:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CLIMB");
+                        break;
+                }
+                
                 do
                 {
+                    entry++;
                     cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
                     FD_function = (((*entry) & 0x7C00)) >> 10;                  // 0b01111100 00000000
                     operands = (*entry) & 0x03FF;                               // 0b00000011 11111111
-                    entry++;
 
                     switch(FD_function)
                     {
-                        case 0x00:          // ACTIVATE / DEACTIVATE item
+                        case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
                             Con_Printf("Activate %d item", operands);
                             break;
 
-                        case 0x01:          // CAMERA SWITCH
-                            Con_Printf("CAMERA SWITCH! OP = %d", operands);
-                            entry++;                                            ///@FIXME: check is entry++ correct, or it must be in all other cases 
+                        case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH
+                            {                                
+                                uint8_t cam_index = (*entry) & 0x007F;
+                                entry++;
+                                uint8_t cam_timer = ((*entry) & 0x00FF);
+                                uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
+                                uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
+                                        cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
+                                
+                                Con_Printf("CAMERA: index = %d, timer = %d, once = %d, zoom = %d", cam_index, cam_timer, cam_once, cam_zoom);
+                            }
                             break;
 
-                        case 0x02:          // UNDERWATER CURRENT
+                        case TR_FD_TRIGFUNC_UWCURRENT:          // UNDERWATER CURRENT
                             Con_Printf("UNDERWATER CURRENT! OP = %d", operands);
                             break;
 
-                        case 0x03:          // SET ALTERNATE ROOM
+                        case TR_FD_TRIGFUNC_FLIPMAP:          // SET ALTERNATE ROOM
                             Con_Printf("SET ALTERNATE ROOM! OP = %d", operands);
                             break;
 
-                        case 0x04:          // ALTER ROOM FLAGS (paired with 0x05)
+                        case TR_FD_TRIGFUNC_FLIPON:          // ALTER ROOM FLAGS (paired with 0x05)
                             Con_Printf("ALTER ROOM FLAGS 0x04! OP = %d", operands);
                             break;
 
-                        case 0x05:          // ALTER ROOM FLAGS (paired with 0x04)
+                        case TR_FD_TRIGFUNC_FLIPOFF:          // ALTER ROOM FLAGS (paired with 0x04)
                             Con_Printf("ALTER ROOM FLAGS 0x05! OP = %d", operands);
                             break;
 
-                        case 0x06:          // LOOK AT ITEM
+                        case TR_FD_TRIGFUNC_LOOKAT:          // LOOK AT ITEM
                             Con_Printf("Look at %d item", operands);
                             break;
 
-                        case 0x07:          // END LEVEL
+                        case TR_FD_TRIGFUNC_ENDLEVEL:          // END LEVEL
                             Con_Printf("End of level! id = %d", operands);
-                            //sector->fd_end_level = (operands)?operands:1;       // IT WORKS!!!
-                            // sub_function - where to we go...
-                            // but it wrongly activated in complex tr4 trigger case (hub.tr4 - 2 skeleton
-                            // activation + camera look near big rock on the rope)
                             break;
 
-                        case 0x08:          // PLAY CD TRACK
-                            Con_Printf("Play sound id = %d", operands);
+                        case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
+                            Con_Printf("Play audiotrack id = %d", operands);
                             // operands - track number
                             break;
 
-                        case 0x09:          // Assault course clock control
-                            Con_Printf("Time control id = %d", operands);
+                        case TR_FD_TRIGFUNC_FLIPEFFECT:          // Various in-game actions.
+                            Con_Printf("Flipeffect id = %d", operands);
                             break;
 
-                        case 0x0a:          // PLAYSOUND SECRET_FOUND
+                        case TR_FD_TRIGFUNC_SECRET:          // PLAYSOUND SECRET_FOUND
                             Con_Printf("Play SECRET[%d] FOUND", operands);
                             break;
 
-                        case 0x0b:          // UNKNOWN
-                            Con_Printf("TRIGGER: unknown 0x0b, OP = %d", operands);
+                        case TR_FD_TRIGFUNC_BODYBAG:          // UNKNOWN
+                            Con_Printf("BODYBAG id = %d", operands);
                             break;
 
-                        case 0x0c:          // UNKNOWN
-                            Con_Printf("TRIGGER: unknown 0x0c, OP = %d", operands);
+                        case TR_FD_TRIGFUNC_FLYBY:          // TR4-5: FLYBY CAMERA
+                            Con_Printf("Flyby camera = %d", operands);
                             break;
 
-                        case 0x0d:          // UNKNOWN
-                            Con_Printf("TRIGGER: unknown 0x0d, OP = %d", operands);
+                        case TR_FD_TRIGFUNC_CUTSCENE:          // USED IN TR4-5
+                            Con_Printf("CUTSCENE id = %d", operands);
                             break;
 
                         case 0x0e:          // UNKNOWN
@@ -632,49 +753,51 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 while(!cont_bit && entry < end_p);
                 break;
 
-            case 0x05:          // KILL LARA
+            case TR_FD_FUNC_DEATH:          // KILL LARA
                 Con_Printf("KILL! sub = %d, b3 = %d", sub_function, b3);
                 break;
 
-            case 0x06:          // CLIMBABLE WALLS
+            case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
                 Con_Printf("Climbable walls! sub = %d, b3 = %d", sub_function, b3);
                 break;
 
-            case 0x07:          // TR3 SLANT
-            case 0x08:          // TR3 SLANT
-            case 0x09:          // TR3 SLANT
-            case 0x0A:          // TR3 SLANT
-            case 0x0B:          // TR3 SLANT
-            case 0x0C:          // TR3 SLANT
-            case 0x0D:          // TR3 SLANT
-            case 0x0E:          // TR3 SLANT
-            case 0x0F:          // TR3 SLANT
-            case 0x10:          // TR3 SLANT
-            case 0x11:          // TR3 SLANT
-            case 0x12:          // TR3 SLANT
+            case TR_FD_FUNC_SLOPE1:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE2:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE3:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE4:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE5:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE6:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE7:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE8:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE9:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE10:          // TR3 SLANT
+            case TR_FD_FUNC_SLOPE11:          // TR3 SLANT
+            case TR_FD_FUNC_SLOPE12:          // TR3 SLANT
+                cont_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
+                slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
+                slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
+                slope_func = ((*entry) & 0x001F);           // 0b00000000 00011111
                 entry++;
-                do
-                {
-                    cont_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
-                    slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
-                    slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
-                    slope_func = ((*entry) & 0x001F);           // 0b00000000 00011111
-                    entry++;
-                    slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
-                    slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
-                    slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
-                    slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
-                    entry++;
-                }
-                while(cont_bit && entry<end_p-1);
+                slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
+                slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
+                slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
+                slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
                 break;
 
-            case 0x13:          // Climbable ceiling
+            case TR_FD_FUNC_MONKEY:          // Climbable ceiling
                 Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
                 if(sub_function == 0x00)
                 {
 
                 }
+                break;
+                
+            case TR_FD_FUNC_TRIGGERER_MARK:
+                Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
+                break;
+                
+            case TR_FD_FUNC_BEETLE_MARK:
+                Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
                 break;
                 
             default:

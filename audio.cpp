@@ -17,11 +17,28 @@ extern "C" {
 #include "character_controller.h"
 #include "system.h"
 #include "render.h"
+#include <math.h>
 
 ALfloat                         listener_position[3];
 struct audio_fxmanager_s        fxManager;
 static uint8_t                  audio_blocked = 1;
 
+/*
+ * NextPowerOf2 are taken from OpenAL
+ */
+static __inline uint32_t NextPowerOf2(uint32_t value)
+{
+    if(value > 0)
+    {
+        value--;
+        value |= value>>1;
+        value |= value>>2;
+        value |= value>>4;
+        value |= value>>8;
+        value |= value>>16;
+    }
+    return value+1;
+}
 
 AudioSource::AudioSource()
 {
@@ -41,13 +58,12 @@ AudioSource::AudioSource()
         if(audio_settings.use_effects)
         {
             alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 1.0);
             alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO,   AL_TRUE);
             alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
         }
         else
         {
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0);
+            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.5);
         }
     }
 }
@@ -230,7 +246,7 @@ void AudioSource::SetFX()
 {    
     ALuint effect;
     ALuint slot;
-    
+
     // Reverb FX is applied globally through audio send. Since player can 
     // jump between adjacent rooms with different reverb info, we assign
     // several (2 by default) interchangeable audio sends, which are switched
@@ -456,7 +472,10 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     AudioSource    *source = NULL;
     
     // Remap global engine effect ID to local effect ID.
-    
+    if((effect_ID < 0) || (effect_ID > engine_world.audio_map_count - 1))
+    {
+        return TR_AUDIO_SEND_NOSAMPLE;
+    }
     effect_ID = (int)engine_world.audio_map[effect_ID];
     
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
@@ -810,9 +829,20 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
                 engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
         }
         
-        engine_world.audio_effects[i].sample_index = tr->sound_details[i].sample;
+        engine_world.audio_effects[i].sample_index =  tr->sound_details[i].sample;
         engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
     }
+    
+    // Quick TR1 fix for underwater looped sound.
+    
+    if(CVAR_get_val_d("engine_version") < TR_II)
+    {
+        engine_world.audio_effects[(engine_world.audio_map[60])].loop = TR_AUDIO_LOOP_LOOPED;
+    }
+    
+    // Reset last room type used for assigning reverb.
+    
+    fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;
     
     // Cycle through sound emitters and 
     // parse them to native OpenTomb sound emitters structure.
@@ -979,8 +1009,9 @@ void Audio_LogALError(int proc_index)
 int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
 {
     SDL_AudioSpec wav_spec;
+    SDL_AudioCVT cvt;
     Uint8 *wav_buffer;
-    Uint32 wav_length;
+    Uint32 wav_length, new_len;
     int ret = 0;
     SDL_RWops *src = SDL_RWFromMem(sample_pointer, sample_size);
     
@@ -991,8 +1022,10 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     if(SDL_LoadWAV_RW(src, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
+        //SDL_FreeRW(src);
         return -1;
     }
+    //SDL_FreeRW(src);
     
     // Uncomp_sample_size explicitly specifies amount of raw sample data
     // to load into buffer. It is only used in TR4/5 with ADPCM samples,
@@ -1007,10 +1040,48 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     {
         uncomp_sample_size = wav_length;
     }
-         
+    
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
-    
+#if 1
+    int FrameSize = wav_spec.channels * 4;                                      // channels * sizeof(float32)
+    if(wav_spec.channels == 1)                                                  // mono
+    {
+        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, 1, 44100);
+        cvt.len = uncomp_sample_size;
+        new_len = cvt.len * cvt.len_mult;
+        if(new_len % FrameSize)
+        {
+            new_len += FrameSize - (new_len % FrameSize);                       // make align
+        }
+        cvt.buf = (Uint8*)calloc(new_len, 1);
+        memcpy(cvt.buf, wav_buffer, cvt.len);
+        if(cvt.needed)
+        {
+            SDL_ConvertAudio(&cvt);
+        }
+        alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, cvt.buf, new_len, 44100);
+        free(cvt.buf);
+    }
+    else if(wav_spec.channels == 2)                                             // stereo
+    {
+        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, 2, 44100);
+        cvt.len = uncomp_sample_size;
+        new_len = cvt.len * cvt.len_mult;
+        if(new_len % FrameSize)
+        {
+            new_len += FrameSize - (new_len % FrameSize);                       // make align
+        }
+        cvt.buf = (Uint8*)calloc(new_len, 1);
+        memcpy(cvt.buf, wav_buffer, cvt.len);
+        if(cvt.needed)
+        {
+            SDL_ConvertAudio(&cvt);
+        }
+        alBufferData(buf_number, AL_FORMAT_STEREO_FLOAT32, cvt.buf, new_len, 44100);
+        free(cvt.buf);
+    }
+#else
     switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
     {
         case 8:
@@ -1044,17 +1115,19 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
                 ret = -3;
             }
     }
+#endif
     
     SDL_FreeWAV(wav_buffer);
     return ret;
 }
 
 
-int Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname)
+int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 {
     SDL_AudioSpec wav_spec;
+    SDL_AudioCVT cvt;
     Uint8 *wav_buffer;
-    Uint32 wav_length;
+    Uint32 wav_length, new_len;
     int ret = 0;
     SDL_RWops *file;
     
@@ -1068,23 +1141,64 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname)
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Con_Printf("Error: bad file format \"%s\"", fname);
+        //SDL_FreeRW(file);
         return -2;
     }
+    //SDL_FreeRW(file);
 
+#if 1
+    int FrameSize = wav_spec.channels * 4;                                      // channels * sizeof(float32)
+    if(wav_spec.channels == 1)                                                  // mono
+    {
+        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, 1, 44100);
+        cvt.len = wav_length;
+        new_len = cvt.len * cvt.len_mult;
+        if(new_len % FrameSize)
+        {
+            new_len += FrameSize - (new_len % FrameSize);                       // make align
+        }
+        cvt.buf = (Uint8*)calloc(new_len, 1);
+        memcpy(cvt.buf, wav_buffer, cvt.len);
+        if(cvt.needed)
+        {
+            SDL_ConvertAudio(&cvt);
+        }
+        alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, cvt.buf, new_len, 44100);
+        free(cvt.buf);
+    }
+    else if(wav_spec.channels == 2)                                             // stereo
+    {
+        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, 2, 44100);
+        cvt.len = wav_length;
+        new_len = cvt.len * cvt.len_mult;
+        if(new_len % FrameSize)
+        {
+            new_len += FrameSize - (new_len % FrameSize);                       // make align
+        }
+        cvt.buf = (Uint8*)calloc(new_len, 1);
+        memcpy(cvt.buf, wav_buffer, cvt.len);
+        if(cvt.needed)
+        {
+            SDL_ConvertAudio(&cvt);
+        }
+        alBufferData(buf_number, AL_FORMAT_STEREO_FLOAT32, cvt.buf, new_len, 44100);
+        free(cvt.buf);
+    }
+#else
     switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
     {
         case 8:
             if(wav_spec.channels == 1)                                          // mono
             {
-                alBufferData(buf, AL_FORMAT_MONO8, wav_buffer, wav_length, wav_spec.freq);
+                alBufferData(buf_number, AL_FORMAT_MONO8, wav_buffer, wav_length, wav_spec.freq);
             }
             else if(wav_spec.channels == 2)                                     // stereo
             {
-                alBufferData(buf, AL_FORMAT_STEREO8, wav_buffer, wav_length, wav_spec.freq);
+                alBufferData(buf_number, AL_FORMAT_STEREO8, wav_buffer, wav_length, wav_spec.freq);
             }
             else                                                                // unsupported
             {
-                //Con_Printf("Error: \"%s\" - unsupported channels count", fname);
+                //Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
                 ret = -3;
             }
             break;
@@ -1092,24 +1206,19 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf, const char *fname)
         case 16:
             if(wav_spec.channels == 1)                                          // mono
             {
-                alBufferData(buf, AL_FORMAT_MONO16, wav_buffer, wav_length, wav_spec.freq);
+                alBufferData(buf_number, AL_FORMAT_MONO16, wav_buffer, wav_length, wav_spec.freq);
             }
             else if(wav_spec.channels == 2)                                     // stereo
             {
-                alBufferData(buf, AL_FORMAT_STEREO16, wav_buffer, wav_length, wav_spec.freq);
+                alBufferData(buf_number, AL_FORMAT_STEREO16, wav_buffer, wav_length, wav_spec.freq);
             }
             else                                                                // unsupported
             {
-                //Con_Printf("Error: \"%s\" - unsupported channels count", fname);
+                //Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
                 ret = -3;
             }
-            break;
-            
-        default:
-            //Con_Printf("Error: \"%s\" - unsupported bit count", fname);
-            ret = -4;
-            break;
-    };
+    }
+#endif
     
     SDL_FreeWAV(wav_buffer);
     return ret;

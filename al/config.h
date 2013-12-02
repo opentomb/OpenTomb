@@ -4,7 +4,6 @@
 
 /* Define to the library version */
 #define ALSOFT_VERSION "1.15.1.TRE"
-#define restrict __restrict__
 
 /* Define any available alignment declaration */
 #define ALIGN(x)

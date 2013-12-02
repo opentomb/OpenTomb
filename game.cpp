@@ -483,7 +483,7 @@ void GameFrame(btScalar time)
     }
 
     Game_ApplyControls();
-    if(engine_world.entity_tree->root)
+    if(engine_world.entity_tree && engine_world.entity_tree->root)
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
     }
