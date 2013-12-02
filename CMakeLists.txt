@@ -21,9 +21,6 @@ ADD_DEFINITIONS(
 # disable glext prototypes under Linux.
 ADD_DEFINITIONS(-DGL_GLEXT_PROTOTYPES)
 
-# Ugly hack to enable compilation on Linux. Should be fixed in main_SDL.cpp
-ADD_DEFINITIONS(-DSDL_main=main)
-
 SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
 
 SET(OPENAL_DIR al)
