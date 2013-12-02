@@ -2051,6 +2051,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
 
         entity->self->collide_flag = 0x0000;
         entity->anim_flags = 0x0000;
+        entity->flags = 0x00000000;
         entity->move_type = 0x0000;
         entity->current_animation = 0;
         entity->current_frame = 0;
@@ -2124,6 +2125,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             world->Character = entity;
             entity->self->collide_flag = ENTITY_ACTOR_COLLISION;
             entity->model->hide = 0;
+            entity->flags = ENTITY_IS_ACTIVE | ENTITY_CAN_TRIGGER;
             LM = (skeletal_model_p)entity->model;
             BV_InitBox(entity->bv, NULL, NULL);
 
@@ -2137,7 +2139,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
                     if(LM)
                     {
                         SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
-                        tmp = World_FindModelByID(world, 11);                    // moto / quadro cycle animations
+                        tmp = World_FindModelByID(world, 11);                   // moto / quadro cycle animations
                         if(tmp)
                         {
                             SkeletonCopyMeshes(tmp->mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
