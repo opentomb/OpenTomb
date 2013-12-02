@@ -119,7 +119,7 @@
 #define LARA_HANG_WALL_DISTANCE (128.0 - 24.0)
 #define LARA_HANG_VERTICAL_EPSILON (64.0)
 #define LARA_HANG_VERTICAL_OFFSET (12.0)        // in original is 0, in real life hands are little more higher than edge
-#define LARA_TRY_HANG_WALL_OFFSET (64.0)        // It works more stable than 32 or 128
+#define LARA_TRY_HANG_WALL_OFFSET (72.0)        // It works more stable than 32 or 128
 #define LARA_HANG_SENSOR_Z (800.0)              // It works more stable than 1024 (after collision critical fix, of course)
 
 #define OSCILLATE_HANG_USE 0
@@ -1457,6 +1457,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->angles[0] = next_fc.edge_z_ang;
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
+                    ent->character->speed.m_floats[0] = 0.0;
+                    ent->character->speed.m_floats[1] = 0.0;
+                    ent->character->speed.m_floats[2] = 0.0;
                 }
             }
 
@@ -1515,6 +1518,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->angles[0] = next_fc.edge_z_ang;
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
+                    ent->character->speed.m_floats[0] = 0.0;
+                    ent->character->speed.m_floats[1] = 0.0;
+                    ent->character->speed.m_floats[2] = 0.0;
                 }
             }
 
@@ -2199,6 +2205,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->angles[0] = next_fc.edge_z_ang;
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
+                    ent->character->speed.m_floats[0] = 0.0;
+                    ent->character->speed.m_floats[1] = 0.0;
+                    ent->character->speed.m_floats[2] = 0.0;
                 }
             }
 
@@ -2460,6 +2469,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->move_type = MOVE_CLIMBING;
                     ent->angles[0] = next_fc.edge_z_ang;
                     ent->current_speed = 0.0;
+                    ent->character->speed.m_floats[0] = 0.0;
+                    ent->character->speed.m_floats[1] = 0.0;
+                    ent->character->speed.m_floats[2] = 0.0;
                     Entity_UpdateRotation(ent);
                     vec3_copy(cmd->climb_pos, next_fc.edge_point.m_floats);
                 }
