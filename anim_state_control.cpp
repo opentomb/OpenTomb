@@ -2883,7 +2883,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_ANIMATION_LARA_CRAWL_TURN_LEFT:
             ent->dir_flag = ENT_MOVE_FORWARD;
-            cmd->rot[0] *= ((ent->current_frame > 1) && (ent->current_frame < 7))?(0.6):(0.0);
+            cmd->rot[0] *= ((ent->current_frame > 3) && (ent->current_frame < 14))?(1.0):(0.0);
 
             if(cmd->move[1] == -1)
             {
@@ -2897,7 +2897,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_ANIMATION_LARA_CRAWL_TURN_RIGHT:
             ent->dir_flag = ENT_MOVE_FORWARD;
-            cmd->rot[0] *= ((ent->current_frame > 1) && (ent->current_frame < 7))?(0.6):(0.0);
+            cmd->rot[0] *= ((ent->current_frame > 3) && (ent->current_frame < 14))?(1.0):(0.0);
 
             if(cmd->move[1] == 1)
             {

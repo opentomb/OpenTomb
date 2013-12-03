@@ -60,10 +60,11 @@ AudioSource::AudioSource()
             alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
             alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO,   AL_TRUE);
             alSourcei(source_index, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
+            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.1);
         }
         else
         {
-            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.5);
+            alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0);
         }
     }
 }

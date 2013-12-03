@@ -870,10 +870,7 @@ void ShowDebugInfo()
 
        if(ent->self->room)
        {
-            Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc.water, fc.water_level);
-            if(engine_camera.current_room)
-                Gui_OutTextXY(10, 10, "reverb = %d", engine_camera.current_room->reverb_info);
-            
+            Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc.water, fc.water_level);            
        }
 
        /*
