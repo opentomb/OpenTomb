@@ -16,6 +16,9 @@ struct room_sector_s;
 struct bounding_volume_s;
 struct character_s;
 
+#define ENTITY_IS_ACTIVE                          (0x00000001)
+#define ENTITY_CAN_TRIGGER                        (0x00000002)                      
+
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction
 #define ENTITY_CINEMATIC_COLLISION                2                             // doors and other moveable statics
@@ -98,6 +101,7 @@ struct character_s;
 typedef struct entity_s
 {
     uint32_t                            ID;                                     // ID
+    uint32_t                            flags;
     uint8_t                             dir_flag;                               // (move direction)
     uint8_t                             state_flag;                             // I.E. must climb, climb action, ..., trigger action, crouch
     uint16_t                            anim_flags;                             // additional animation control param
@@ -136,6 +140,7 @@ typedef struct entity_s
 entity_p Entity_Create();
 void Entity_Clear(entity_p entity);
 
+void Entity_UpdateRoomPos(entity_p ent);
 void Entity_UpdateRigidBody(entity_p ent);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);

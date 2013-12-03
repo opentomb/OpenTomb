@@ -6,3 +6,4 @@ syntax: glob
 *.txt
 *.htm
 *.html
+CMakeLists.txt.user

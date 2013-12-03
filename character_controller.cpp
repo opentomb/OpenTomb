@@ -216,19 +216,6 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
 }
 
 
-void Character_UpdateCurrentRoom(struct entity_s *ent)
-{
-    btScalar pos[3];
-    room_p new_room;
-    
-    vec3_add(pos, ent->transform + 12, ent->collision_offset.m_floats);
-    new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
-    if(new_room)
-    {
-        ent->self->room = new_room;
-    }
-}
-
 /**
  * Calculates next height info and information about next step
  * @param ent
@@ -236,7 +223,7 @@ void Character_UpdateCurrentRoom(struct entity_s *ent)
 void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
     btScalar pos[3];
-    vec3_add(pos, ent->transform + 12, ent->collision_offset.m_floats);
+    Mat4_vec3_mul_macro(pos, ent->transform, ent->collision_offset.m_floats);
     Character_GetHeightInfo(pos, &ent->character->height_info); 
 }
 
@@ -811,12 +798,13 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
 void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, btScalar move[3])
 {
     int numPenetrationLoops = 0;
-    btVector3 pos;
+    btVector3 pos, delta;
     btScalar t1, t2, reaction[3], tmp[3];
     
     vec3_set_zero(reaction);
     ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(ent->transform);
-    ent->character->ghostObject->getWorldTransform().getOrigin() += ent->collision_offset;
+    Mat4_vec3_rot_macro(delta.m_floats, ent->transform, ent->collision_offset);
+    ent->character->ghostObject->getWorldTransform().getOrigin() += delta;
     cmd->horizontal_collide = 0x00;
     
     while(Character_RecoverFromPenetration(ent->character->ghostObject, ent->character->manifoldArray, tmp))
@@ -857,7 +845,8 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
         ent->character->cmd.vertical_collide |= 0x02;
     }
 
-    pos -= ent->collision_offset;
+    Mat4_vec3_rot_macro(delta.m_floats, ent->transform, ent->collision_offset.m_floats);
+    pos -= delta;
     if(ent->character->height_info.floor_hit && pos.m_floats[2] < ent->character->height_info.floor_point.m_floats[2])
     {
         pos.m_floats[2] = ent->character->height_info.floor_point.m_floats[2];
@@ -876,10 +865,11 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
  */
 void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cmd, btScalar move[3])
 {
-    btVector3 pos;
+    btVector3 pos, delta;
     btScalar t1, t2, reaction[3];
     
-    vec3_add(pos.m_floats, ent->collision_offset.m_floats, move);
+    Mat4_vec3_rot_macro(delta.m_floats, ent->transform, ent->collision_offset.m_floats);
+    vec3_add(pos.m_floats, delta.m_floats, move);
     ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(ent->transform);
     ent->character->ghostObject->getWorldTransform().getOrigin() += pos;
     cmd->horizontal_collide = 0x00;
@@ -1016,8 +1006,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
     cmd->horizontal_collide = 0x00;
     cmd->vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
-    vec3_copy(fc_pos, pos);
-    fc_pos[2] += ent->collision_offset.m_floats[2];
+    Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
     Character_GetHeightInfo(fc_pos, &ent->character->height_info);
 
     /*
@@ -1127,8 +1116,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
     
     for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
-        vec3_copy(fc_pos, pos);
-        fc_pos[2] += ent->collision_offset.m_floats[2];
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
@@ -1146,8 +1134,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
             {
                 ent->move_type = MOVE_FREE_FALLING;
                 ent->character->speed.m_floats[2] = 0.0;
-                vec3_copy(tv.m_floats, pos);
-                tv += ent->collision_offset;
+                Mat4_vec3_mul_macro(tv.m_floats, ent->transform, ent->collision_offset.m_floats);
                 ent->self->room = Room_FindPosCogerrence(&engine_world, tv.m_floats, ent->self->room);
                 return 2;
             }            
@@ -1161,11 +1148,11 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         {
             ent->move_type = MOVE_FREE_FALLING;
             ent->character->speed.m_floats[2] = 0.0;
-            Character_UpdateCurrentRoom(ent);
+            Entity_UpdateRoomPos(ent);
             return 2;
         }
 
-        Character_UpdateCurrentRoom(ent);
+        Entity_UpdateRoomPos(ent);
     }
 
     return iter;
@@ -1213,8 +1200,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     }
     move /= (btScalar)iter;
     
-    vec3_copy(fc_pos, pos);
-    fc_pos[2] += ent->collision_offset.m_floats[2];
+    Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
     Character_GetHeightInfo(fc_pos, &ent->character->height_info);
     
     if(ent->self->room && (ent->self->room->flags & 0x01))
@@ -1240,8 +1226,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
             pos[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->bf.bb_max[2];
             ent->character->speed.m_floats[2] = 0.0;
             cmd->vertical_collide |= 0x02;
-            vec3_copy(fc_pos, pos);
-            fc_pos[2] += ent->collision_offset.m_floats[2];
+            Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
             Character_GetHeightInfo(fc_pos, &ent->character->height_info);
             Character_FixPenetrations(ent, cmd, move);
         }
@@ -1254,9 +1239,8 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
             //ent->character->speed.m_floats[2] = 0.0;
             ent->move_type = MOVE_ON_FLOOR;
             cmd->vertical_collide |= 0x01;
-            Character_UpdateCurrentRoom(ent);
-            vec3_copy(fc_pos, pos);
-            fc_pos[2] += ent->collision_offset.m_floats[2];
+            Entity_UpdateRoomPos(ent);
+            Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
             Character_GetHeightInfo(fc_pos, &ent->character->height_info);
             Character_FixPenetrations(ent, cmd, move);
             return 2;
@@ -1265,8 +1249,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
 
     for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
-        vec3_copy(fc_pos, pos);
-        fc_pos[2] += ent->collision_offset.m_floats[2];
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                // get horizontal collide
@@ -1288,16 +1271,15 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
                 //ent->character->speed.m_floats[2] = 0.0;
                 ent->move_type = MOVE_ON_FLOOR;
                 cmd->vertical_collide |= 0x01;
-                Character_UpdateCurrentRoom(ent);
-                vec3_copy(fc_pos, pos);
-                fc_pos[2] += ent->collision_offset.m_floats[2];
+                Entity_UpdateRoomPos(ent);
+                Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
                 Character_GetHeightInfo(fc_pos, &ent->character->height_info);
                 Character_FixPenetrations(ent, cmd, move);
                 return 2;
             }
         }
         
-        Character_UpdateCurrentRoom(ent);
+        Entity_UpdateRoomPos(ent);
     }
 
     return iter;
@@ -1364,8 +1346,7 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
             
     for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
-        vec3_copy(fc_pos, pos);
-        fc_pos[2] += ent->collision_offset.m_floats[2];
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
         if(ent->character->no_fix == 0)
@@ -1373,7 +1354,7 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
             Character_FixPenetrations(ent, cmd, move.m_floats);                 // get horizontal collide
         }
 
-        Character_UpdateCurrentRoom(ent);
+        Entity_UpdateRoomPos(ent);
     }
     
     pos[2] = z;
@@ -1439,13 +1420,12 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
             
     for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
-        vec3_copy(fc_pos, pos);
-        fc_pos[2] += ent->collision_offset.m_floats[2];
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
 
-        Character_UpdateCurrentRoom(ent);
+        Entity_UpdateRoomPos(ent);
         if(ent->character->height_info.water && (pos[2] + ent->bf.bb_max[2] >= ent->character->height_info.water_level))
         {
             if(/*(spd.m_floats[2] > 0.0)*/ent->transform[4 + 2] > 0.67)         ///@FIXME: magick!
@@ -1527,13 +1507,12 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
             
     for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
-        vec3_copy(fc_pos, pos);
-        fc_pos[2] += ent->collision_offset.m_floats[2];
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
 
-        Character_UpdateCurrentRoom(ent);
+        Entity_UpdateRoomPos(ent);
         if(ent->character->height_info.water)
         {
             pos[2] = ent->character->height_info.water_level;
