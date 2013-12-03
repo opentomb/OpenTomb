@@ -107,8 +107,8 @@
  * 2            184, 185
  */
 
-#define FREE_FALL_SPEED_1 (3600)
-#define FREE_FALL_SPEED_2 (4500)
+#define FREE_FALL_SPEED_1 (4200)
+#define FREE_FALL_SPEED_2 (6400)
 
 #define PENETRATION_TEST_OFFSET (0.16 * ent->character->Radius)
 #define WALK_FORWARD_OFFSET (96.0)              ///@FIXME: find real offset
