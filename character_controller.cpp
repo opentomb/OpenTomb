@@ -60,7 +60,7 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
     ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * r)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * r);
-    ret->wade_depth = DEFAUL_CHARACTER_WADE_DEPTH;
+    ret->wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;
     
     vec3_set_zero(ret->speed.m_floats);
 

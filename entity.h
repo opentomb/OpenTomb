@@ -26,6 +26,11 @@ struct character_s;
 #define ENTITY_ACTOR_COLLISION                    4                             // actor, enemies, NPC, animals
 #define ENTITY_VEHICLE_COLLISION                  5                             // car, moto, bike
 
+#define ENTITY_WATER_NONE                         0
+#define ENTITY_WATER_SHALLOW                      1
+#define ENTITY_WATER_WADE                         2
+#define ENTITY_WATER_SWIM                         3
+
 #define COLLISION_NONE                            (0x00000000)
 #define COLLISION_TRIMESH                         (0x00000001)
 #define COLLISION_BOX                             (0x00000002)
@@ -145,16 +150,18 @@ void Entity_UpdateRigidBody(entity_p ent);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, int id);
-int Entity_GetAnimDispatchCase(struct entity_s *ent, int id);
+int  Entity_GetAnimDispatchCase(struct entity_s *ent, int id);
 void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int *frame, int *anim);
-int Entity_Frame(entity_p entity, btScalar time, int state_id);                 // frame + trying to chabge state
+int  Entity_Frame(entity_p entity, btScalar time, int state_id);                 // frame + trying to chabge state
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateRotation(entity_p entity);
 
+int  Entity_GetWaterState(entity_p entity);
+
 void Entity_UpdateCurrentBoneFrame(entity_p entity);
 void Entity_DoAnimCommands(entity_p entity, int changing);
-int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world);
+int  Entity_ParseFloorData(struct entity_s *ent, struct world_s *world);
 void Entity_SetAnimation(entity_p entity, int animation, int frame);
 void Entity_MoveForward(struct entity_s *ent, btScalar dist);
 void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);

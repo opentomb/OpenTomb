@@ -352,6 +352,34 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
 }
 
 
+int  Entity_GetWaterState(entity_p entity)
+{
+    if((!entity) || (!entity->character))
+    {
+        return false;
+    }
+    
+    if(!entity->character->height_info.water)
+    {
+        return ENTITY_WATER_NONE;
+    }
+    else if( entity->character->height_info.water &&
+            (entity->character->height_info.water_level > entity->transform[12 + 2]) && 
+            (entity->character->height_info.water_level < entity->transform[12 + 2] + entity->character->wade_depth) )
+    {
+        return ENTITY_WATER_SHALLOW;
+    }
+    else if( entity->character->height_info.water &&
+            (entity->character->height_info.water_level > entity->transform[12 + 2] + entity->character->wade_depth) )
+    {
+        return ENTITY_WATER_WADE;
+    }
+    else
+    {
+        return ENTITY_WATER_SWIM;
+    }
+}
+
 void Entity_DoAnimCommands(entity_p entity, int changing)
 {
     if((engine_world.anim_commands_count == 0) || 
@@ -428,16 +456,28 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 break;
                 
             case TR_ANIMCOMMAND_PLAYSOUND:
-                ///@FIXME: This command should play desired sound effect.
-                bool surface_flag[2];
+                bool    surface_flag[2];
                 int16_t sound_index;
                 
                 if(entity->current_frame == *++pointer)
-                {           
+                {
                     sound_index = *++pointer & 0x3FFF;
                     
-                    if(!(*pointer & TR_ANIMCOMMAND_CONDITION_WATER))
+                    if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
+                    {
+                        if(Entity_GetWaterState(entity) == ENTITY_WATER_SHALLOW)
+                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                    }
+                    else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
+                    {
+                        if(Entity_GetWaterState(entity) != ENTITY_WATER_SHALLOW)
+                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                    }
+                    else
+                    {
                         Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                    }
+                        
                 }
                 else
                 {
@@ -471,8 +511,11 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             break;
                             
                         case TR_EFFECT_PLAYSTEPSOUND:
-                            if(*pointer && TR_ANIMCOMMAND_CONDITION_LAND)
-                            {                                
+                            // Please note that we bypass land/water mask, as TR3-5 tends to ignore
+                            // this flag and play step sound in any case on land, ignoring it
+                            // completely in water rooms.
+                            if(!Entity_GetWaterState(entity))
+                            {
                                 // TR3-5 footstep map.
                                 // We define it here as a magic numbers array, because TR3-5 versions
                                 // fortunately have no differences in footstep sounds order.
@@ -486,32 +529,19 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                  290,   // Gravel
                                  289,   // Ice - TR3 & TR5 only
                                  17,    // Water
-                                 0,     // Stone - DEFAULT SOUND!
+                                 -1,    // Stone - DEFAULT SOUND, BYPASS!
                                  292,   // Wood
                                  294,   // Metal
                                  293,   // Marble - TR4 only
                                  291,   // Grass - same as sand
-                                 0,     // Concrete - same as stone
+                                 -1,    // Concrete - DEFAULT SOUND, BYPASS!
                                  292,   // Old wood - same as wood
                                  294};  // Old metal - same as metal
                                 
-                                // Play step sound only in 60% of cases to achieve diversity.
-                                
-                                random_value = rand() % 100;
-                                if(random_value > 40)
-                                {
-                                    int16_t sample_index = audio_step_map[(entity->current_sector->box_index & 0x0F)];
- 
-                                    if(sample_index && // Do not override default "rock" step sound (ID 0).
-                                       (Audio_Send(sample_index, TR_AUDIO_EMITTER_ENTITY, entity->ID) > 0))
-                                    {
-                                        Audio_Kill(0, TR_AUDIO_EMITTER_ENTITY, entity->ID);
-                                    }
-                                }
-                            }
-                            else if(*pointer && TR_ANIMCOMMAND_CONDITION_WATER)
-                            {
-                                ///@FIXME: Add water condition here!
+                                // Play step sound.
+                                Audio_Send(audio_step_map[(entity->current_sector->box_index & 0x0F)],
+                                           TR_AUDIO_EMITTER_ENTITY,
+                                           entity->ID);
                             }
                             break;
                             
@@ -794,7 +824,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
                 if(sub_function == 0x00)
                 {
-
+                
                 }
                 break;
                 
