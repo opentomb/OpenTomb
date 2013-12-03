@@ -23,7 +23,7 @@
 #define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_CLIMB_R               (48.0)
-#define DEFAUL_CHARACTER_WADE_DEPTH             (128.0)
+#define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
 #define CHARACTER_SLIDE_FRONT                   (0x02)
 #define CHARACTER_SLIDE_BACK                    (0x01)
 
