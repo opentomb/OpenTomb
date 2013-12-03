@@ -1,0 +1,8 @@
+OpenTomb\.xcodeproj/project\.xcworkspace
+OpenTomb\.xcodeproj/xcuserdata
+.DS_Store
+syntax: glob
+*.a
+*.txt
+*.htm
+*.html
