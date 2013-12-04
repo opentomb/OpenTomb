@@ -12,6 +12,7 @@
 #include "bullet/BulletCollision/CollisionShapes/btBoxShape.h"
 #include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 #include "engine.h"
+#include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
 
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
@@ -62,6 +63,10 @@ typedef struct height_info_s
 {
     bt_engine_ClosestRayResultCallback         *cb;
     bt_engine_ClosestConvexResultCallback      *ccb;
+    
+    int8_t                                      ceiling_climb;
+    int8_t                                      walls_climb;
+    int8_t                                      walls_climb_dir;
     
     btVector3                                   floor_normale;
     btVector3                                   floor_point;
@@ -128,6 +133,7 @@ typedef struct character_s
     btScalar                     wade_depth;             // water depth that enable wade walk
     btCapsuleShapeZ             *shapeZ;                 // running / jumping
     btCapsuleShape              *shapeY;                 // swimming / crocodile
+    btMultiSphereShape          *shapeXYZ;               // scaled sphere
     btBoxShape                  *shapeBox;               // simple (128, 128, 128) sized box shape
     btSphereShape               *sphere;                 // needs to height calculation
     btSphereShape               *climb_sensor;
