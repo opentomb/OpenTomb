@@ -288,20 +288,16 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
     }
 
     t = 1.0 - entity->lerp;
-    vec3_copy(entity->bf.bb_max, bf->bb_max);
-    vec3_copy(entity->bf.bb_min, bf->bb_min);
-    vec3_copy(entity->bf.centre, bf->centre);
-    entity->bf.pos[0] = t * bf->pos[0] + entity->lerp * entity->next_bf->pos[0];
-    entity->bf.pos[1] = t * bf->pos[1] + entity->lerp * entity->next_bf->pos[1];
-    entity->bf.pos[2] = t * bf->pos[2] + entity->lerp * entity->next_bf->pos[2];
+    vec3_interpolate_macro(entity->bf.bb_max, bf->bb_max, entity->next_bf->bb_max, entity->lerp, t);
+    vec3_interpolate_macro(entity->bf.bb_min, bf->bb_min, entity->next_bf->bb_min, entity->lerp, t);
+    vec3_interpolate_macro(entity->bf.centre, bf->centre, entity->next_bf->centre, entity->lerp, t);
     
+    vec3_interpolate_macro(entity->bf.pos, bf->pos, entity->next_bf->pos, entity->lerp, t);
     next_btag = entity->next_bf->bone_tags;
     src_btag = bf->bone_tags;
     for(k=0;k<bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
     {
-        btag->offset[0] = t * src_btag->offset[0] + entity->lerp * next_btag->offset[0];
-        btag->offset[1] = t * src_btag->offset[1] + entity->lerp * next_btag->offset[1];
-        btag->offset[2] = t * src_btag->offset[2] + entity->lerp * next_btag->offset[2];
+        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, entity->lerp, t);      
         vec3_copy(btag->transform+12, btag->offset);
         btag->transform[15] = 1.0;
         if(k == 0)
@@ -583,6 +579,12 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     bool   trigger_mask[5];
     int8_t timer_field;
     
+    if(ent->character)
+    {
+        ent->character->height_info.walls_climb = 0;
+        ent->character->height_info.walls_climb_dir = 0;
+        ent->character->height_info.ceiling_climb = 0;
+    }
     
     if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size))
     {
@@ -795,6 +797,11 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
             case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
                 Con_Printf("Climbable walls! sub = %d, b3 = %d", sub_function, b3);
+                if(ent->character)
+                {
+                    ent->character->height_info.walls_climb = 1;
+                    ent->character->height_info.walls_climb_dir = sub_function;
+                }
                 break;
 
             case TR_FD_FUNC_SLOPE1:           // TR3 SLANT
@@ -822,6 +829,10 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
             case TR_FD_FUNC_MONKEY:          // Climbable ceiling
                 Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
+                if(ent->character)
+                {
+                    ent->character->height_info.ceiling_climb = 1;
+                }
                 if(sub_function == 0x00)
                 {
                 

@@ -5,11 +5,15 @@
 #include <math.h>
 #include "bullet/LinearMath/btScalar.h"
 
+#ifndef M_PI
+#define M_PI		3.14159265358979323846
+#endif
+
 #define PLANE_X        1
 #define PLANE_Y        2
 #define PLANE_Z        3
 
-#define ABS(x) ((x)>0?(x):(-(x)))
+#define ABS(x) (((x)>0)?(x):(-(x)))
 #define SWAPT(a, b, t) {(t) = (a); (a) = (b); (b) = (t);}
 
 #define vec3_set_one(x) {(x)[0] = 1.0; (x)[1] = 1.0; (x)[2] = 1.0;}
@@ -20,27 +24,36 @@
 #define vec3_sub(r, x, y) {(r)[0] = (x)[0] - (y)[0]; (r)[1] = (x)[1] - (y)[1]; (r)[2] = (x)[2] - (y)[2];}
 #define vec3_inv(x) {(x)[0] = -(x)[0]; (x)[1] = -(x)[1]; (x)[2] = -(x)[2];}
 
+#define vec3_dot(x, y) ((x)[0]*(y)[0] + (x)[1]*(y)[1] + (x)[2]*(y)[2])
 #define vec3_norm(x, t) {(t) = vec3_abs(x); (x)[0] /= (t); (x)[1] /= (t); (x)[2] /= (t);}
 #define vec3_sqabs(x) ((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2])
 #define vec3_abs(x) (sqrt((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2]))
 #define vec3_dist(x, y) sqrt(((x)[0] - (y)[0]) * ((x)[0] - (y)[0]) + ((x)[1] - (y)[1]) * ((x)[1] - (y)[1]) + ((x)[2] - (y)[2]) * ((x)[2] - (y)[2]))
 #define vec3_dist_sq(x, y) (((x)[0] - (y)[0]) * ((x)[0] - (y)[0]) + ((x)[1] - (y)[1]) * ((x)[1] - (y)[1]) + ((x)[2] - (y)[2]) * ((x)[2] - (y)[2]))
+
 #define vec3_mul_scalar(res, x, t) {\
                    (res)[0] = (x)[0] * (t);\
                    (res)[1] = (x)[1] * (t);\
                    (res)[2] = (x)[2] * (t);}
-#define vec3_dot(x, y) ((x)[0]*(y)[0] + (x)[1]*(y)[1] + (x)[2]*(y)[2])
+
 #define vec3_cross(res, x, y) {\
                    (res)[0] = (x)[1]*(y)[2] - (x)[2]*(y)[1]; \
                    (res)[1] = (x)[2]*(y)[0] - (x)[0]*(y)[2]; \
                    (res)[2] = (x)[0]*(y)[1] - (x)[1]*(y)[0]; }
+
 #define vec3_cross_safe(res, x, y, tmp) {\
                    (tmp)[0] = (x)[1]*(y)[2] - (x)[2]*(y)[1]; \
                    (tmp)[1] = (x)[2]*(y)[0] - (x)[0]*(y)[2]; \
                    (tmp)[2] = (x)[0]*(y)[1] - (x)[1]*(y)[0]; \
                    vec3_copy(res, tmp)} 
 
+#define vec3_interpolate_macro(res, x, y, lerp, t) {\
+                   (res)[0] = (x)[0] * (t) + (y)[0] * (lerp);\
+                   (res)[1] = (x)[1] * (t) + (y)[1] * (lerp);\
+                   (res)[2] = (x)[2] * (t) + (y)[2] * (lerp);}
+
 #define vec3_plane_dist(p, dot) ((p)[3] + (p)[0]*(dot)[0] + (p)[1]*(dot)[1] + (p)[2]*(dot)[2])
+
 #define vec3_norm_plane(p, dot, a) {(p)[0] /= (a); (p)[1] /= (a); (p)[2] /= (a); \
                                     (p)[3] = -((p)[0]*(dot)[0] + (p)[1]*(dot)[1] + (p)[2]*(dot)[2]);}
 /**
@@ -75,11 +88,13 @@ void vec3_RotateZ(btScalar res[3], btScalar src[3], btScalar ang);
 
 #define vec4_norm(x) ((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2] + (x)[3]*(x)[3])
 #define vec4_abs(x) (sqrt((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2] + (x)[3]*(x)[3]))
+
 #define vec4_mul(res, x, y) {\
                    (res)[0] = (x)[3]*(y)[0] + (x)[0]*(y)[3] + (x)[1]*(y)[2] - (x)[2]*(y)[1]; \
                    (res)[1] = (x)[3]*(y)[1] + (x)[1]*(y)[3] + (x)[2]*(y)[0] - (x)[0]*(y)[2]; \
                    (res)[2] = (x)[3]*(y)[2] + (x)[2]*(y)[3] + (x)[0]*(y)[1] - (x)[1]*(y)[0]; \
                    (res)[3] = (x)[3]*(y)[3] - (x)[0]*(y)[0] - (x)[1]*(y)[1] - (x)[2]*(y)[2];} 
+
 #define vec4_mul_safe(res, x, y, tmp) {\
                    (tmp)[0] = (x)[3]*(y)[0] + (x)[0]*(y)[3] + (x)[1]*(y)[2] - (x)[2]*(y)[1]; \
                    (tmp)[1] = (x)[3]*(y)[1] + (x)[1]*(y)[3] + (x)[2]*(y)[0] - (x)[0]*(y)[2]; \
@@ -106,6 +121,7 @@ void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
     (ret)[1] = (tr)[1] * (src)[0] + (tr)[5] * (src)[1] + (tr)[9]  * (src)[2] + (tr)[13];\
     (ret)[2] = (tr)[2] * (src)[0] + (tr)[6] * (src)[1] + (tr)[10] * (src)[2] + (tr)[14];\
 }
+
 #define Mat4_vec3_mul_inv_macro(ret, tr, src)\
 { \
     (ret)[0]  = (tr)[0] * (src)[0] + (tr)[1] * (src)[1] + (tr)[2]  * (src)[2];  /* (M^-1 * src).x*/\
@@ -115,12 +131,14 @@ void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
     (ret)[2]  = (tr)[8] * (src)[0] + (tr)[9] * (src)[1] + (tr)[10] * (src)[2];  /* (M^-1 * src).z*/\
     (ret)[2] -= (tr)[8] * (tr)[12]+ (tr)[9] * (tr)[13]+ (tr)[10] * (tr)[14];    /* -= (M^-1 * mov).z*/\
 }
+
 #define Mat4_vec3_rot_macro(ret, tr, src)\
 { \
     (ret)[0] = (tr)[0] * (src)[0] + (tr)[4] * (src)[1] + (tr)[8]  * (src)[2];\
     (ret)[1] = (tr)[1] * (src)[0] + (tr)[5] * (src)[1] + (tr)[9]  * (src)[2];\
     (ret)[2] = (tr)[2] * (src)[0] + (tr)[6] * (src)[1] + (tr)[10] * (src)[2];\
 }
+
 #define Mat4_Mat4_mul_macro(result, src1, src2)\
 {\
     (result)[0] = (src1)[0] * (src2)[0] + (src1)[4] * (src2)[1] + (src1)[8] * (src2)[2];\
@@ -147,6 +165,7 @@ void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
  * That macro does not touch mat transformation
  * @param mat
  */
+
 #define Mat4_set_qrotation(mat, q)\
 {\
     (mat)[0] = 1.0 - 2.0 * ((q)[1] * (q)[1] + (q)[2] * (q)[2]);\
