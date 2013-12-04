@@ -381,7 +381,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
     if((engine_world.anim_commands_count == 0) || 
        (entity->model->animations[entity->current_animation].num_anim_commands > 255))
     {
-        return;  // If no anim commands or current anim has more than 255.
+        return;  // If no anim commands or current anim has more than 255 (according to TRosettaStone).
     }
         
     animation_frame_p af  = entity->model->animations + entity->current_animation;
@@ -443,10 +443,6 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     {
                         entity->character->cmd.kill = 1;
                     }
-                    else
-                    {
-                        
-                    }
                 }
                 
                 break;
@@ -482,6 +478,9 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 break;
                 
             case TR_ANIMCOMMAND_PLAYEFFECT:
+                // Effects (flipeffects) are various non-typical actions which vary
+                // across different TR game engine versions. There are common ones,
+                // however, and currently only these are supported.
                 if(entity->current_frame == *++pointer)
                 {
                     switch(*++pointer & 0x3FFF)
@@ -542,6 +541,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             break;
                             
                         case TR_EFFECT_BUBBLE:
+                            ///@FIXME: Spawn bubble particle here, when particle system is developed.
                             random_value = rand() % 100;
                             if(random_value > 60)
                             {
