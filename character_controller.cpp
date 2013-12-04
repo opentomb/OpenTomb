@@ -26,6 +26,7 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
 {
     character_p ret;
     btTransform tr;
+    btVector3 tmp;
 
     if(ent == NULL || ent->character != NULL)
     {
@@ -50,6 +51,7 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->cmd.slide = 0x00;
     vec3_set_zero(ret->cmd.move);
     vec3_set_zero(ret->cmd.rot);
+    vec3_set_zero(tmp.m_floats);
 
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->max_move_iterations = DEFAULT_MAX_MOVE_ITERATIONS;
@@ -70,6 +72,8 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->shapeBox = new btBoxShape(btVector3(CHARACTER_BOX_HALF_SIZE, CHARACTER_BOX_HALF_SIZE, CHARACTER_BOX_HALF_SIZE));
     ret->shapeZ = new btCapsuleShapeZ(CHARACTER_BASE_RADIUS, CHARACTER_BASE_HEIGHT - 2.0 * CHARACTER_BASE_RADIUS);
     ret->shapeY = new btCapsuleShape(CHARACTER_BASE_RADIUS, CHARACTER_BASE_HEIGHT - 2.0 * CHARACTER_BASE_RADIUS);
+    r = CHARACTER_BASE_RADIUS;
+    ret->shapeXYZ = new btMultiSphereShape(&tmp, &r, 1);
     ret->sphere = new btSphereShape(CHARACTER_BASE_RADIUS);
     ret->climb_sensor = new btSphereShape(ent->character->climb_r);
 
@@ -128,6 +132,12 @@ void Character_Clean(struct entity_s *ent)
         actor->shapeY = NULL;
     }
 
+    if(actor->shapeXYZ)
+    {
+        delete actor->shapeXYZ;
+        actor->shapeXYZ = NULL;
+    }
+    
     if(actor->climb_sensor)
     {
         delete actor->climb_sensor;
@@ -171,13 +181,19 @@ void Character_Clean(struct entity_s *ent)
 void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
 {
     btVector3 tv;
+    btScalar t;
+    
+    /*
+     **@TODO: add real collision model, based on skeletal model!
+     */
     
     tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] - ent->bf.bb_min[0]) / CHARACTER_BOX_HALF_SIZE;
     tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] - ent->bf.bb_min[1]) / CHARACTER_BOX_HALF_SIZE;
     tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2] - z_factor) / CHARACTER_BOX_HALF_SIZE;
     ent->character->shapeBox->setLocalScaling(tv); 
     
-    if(ent->bf.bb_max[2] - ent->bf.bb_min[2] >= ent->bf.bb_max[1] - ent->bf.bb_min[1])
+    t = (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / (ent->bf.bb_max[1] - ent->bf.bb_min[1]);
+    if((t >= 1.6) || ((ent->move_type == MOVE_ON_FLOOR || ent->move_type == MOVE_CLIMBING) && (t > 1.0)))
     {
         //Z_CAPSULE
         tv.m_floats[0] = ent->character->Radius / CHARACTER_BASE_RADIUS;
@@ -191,7 +207,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2] - z_factor) + z_factor;
         ent->collision_offset = tv;
     }
-    else
+    else if((t <= 1.0 / 1.6) || (ent->move_type != MOVE_CLIMBING))
     {
         //Y_CAPSULE
         tv.m_floats[0] = ent->character->Radius / CHARACTER_BASE_RADIUS;
@@ -212,6 +228,18 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
         //ent->character->collision_offset = tv;
         Mat4_vec3_rot_macro(ent->collision_offset.m_floats, ent->transform, tv.m_floats);
 #endif
+    }
+    else
+    {
+        tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] - ent->bf.bb_min[0]) / CHARACTER_BASE_RADIUS;
+        tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] - ent->bf.bb_min[1]) / CHARACTER_BASE_RADIUS;
+        tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / CHARACTER_BASE_RADIUS;
+        ent->character->shapeXYZ->setLocalScaling(tv);
+        ent->character->ghostObject->setCollisionShape(ent->character->shapeXYZ);
+        tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] + ent->bf.bb_min[0]);
+        tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] + ent->bf.bb_min[1]);
+        tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
+        ent->collision_offset = tv;
     }
 }
 
