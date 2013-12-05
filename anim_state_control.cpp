@@ -1580,6 +1580,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_ANIMATION_LARA_LADDER_TO_CROUCH:
         case TR_ANIMATION_LARA_HANG_TO_CROUCH_END:
             cmd->rot[0] = 0;
+            ent->character->no_fix = 1;
             if(2 == Entity_Frame(ent, engine_frame_time, -1))
             {
                 ent->move_type = MOVE_ON_FLOOR;
