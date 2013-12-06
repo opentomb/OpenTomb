@@ -971,7 +971,7 @@ void TR_GenAnimTextures(struct bordered_texture_atlas_s *atlas, struct world_s *
     
     world->anim_sequences_count = num_sequences;
     world->anim_sequences = (anim_seq_p)malloc(num_sequences * sizeof(anim_seq_t));
-    memset(world->anim_sequences, 0, sizeof(anim_tex_t) * num_sequences);   // Reset all structure.
+    memset(world->anim_sequences, 0, sizeof(anim_seq_t) * num_sequences);   // Reset all structure.
     
     for(i = 0; i < num_sequences; i++)
     {
