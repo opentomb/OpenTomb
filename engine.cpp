@@ -965,7 +965,7 @@ int Engine_ExecCmd(char *ch)
             r = renderer.cam->current_room;
             if(r)
             {
-                sect = Room_GetSector(r, renderer.cam->pos);
+                sect = Room_GetSectorXYZ(r, renderer.cam->pos);
                 Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->ID, r->sectors_x, r->sectors_y);
                 if(sect)
                 {
