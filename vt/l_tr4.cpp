@@ -621,11 +621,10 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         SDL_RWseek(newsrc, this->boxes_count * 20, SEEK_CUR);
 
         this->animated_textures_count = read_bitu32(newsrc);
-	this->animated_textures = (tr_animated_textures_t*)malloc(this->animated_textures_count * sizeof(tr_animated_textures_t));
+	this->animated_textures = (uint16_t*)malloc(this->animated_textures_count * sizeof(uint16_t));
         for (i = 0; i < this->animated_textures_count; i++)
         {
-                this->animated_textures[i].texture_ids = NULL;                  // FIXME: complete this section!
-                this->animated_textures[i].texture_ids_count = read_bit16(newsrc); 
+            this->animated_textures[i] = read_bitu16(newsrc);
         }
 
         int unknown = read_bit8(newsrc);

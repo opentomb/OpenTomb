@@ -15,6 +15,7 @@ void GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class VT_
 void GenSkeletalModels(struct world_s *world, class VT_Level *tr);
 void GenEntitys(struct world_s *world, class VT_Level *tr);
 void TR_GenSprites(struct world_s *world, struct bordered_texture_atlas_s *atlas, class VT_Level *tr);
+void TR_GenAnimTextures(struct bordered_texture_atlas_s *atlas, struct world_s *world, class VT_Level *tr);
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, struct bordered_texture_atlas_s *atlas, class VT_Level *tr);
 void TR_GenWorld(struct world_s *world, class VT_Level *tr);
 

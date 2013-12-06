@@ -188,17 +188,7 @@ class TR_Level {
             
             if(this->animated_textures_count)
             {
-                this->animated_textures_count = 0; 
-                for(i = 0; i < this->animated_textures_count; i++)
-                {
-                    if(this->animated_textures[i].texture_ids_count)
-                    {
-                        free(this->animated_textures[i].texture_ids); 
-                        this->animated_textures[i].texture_ids = NULL; 
-                        this->animated_textures[i].texture_ids_count = 0;
-                        //this->animated_textures[i].num_texture_ids = 0;
-                    }
-                }
+                this->animated_textures_count = 0;
                 free(this->animated_textures); 
                 this->animated_textures = NULL; 
             }
@@ -490,7 +480,7 @@ class TR_Level {
         uint32_t object_textures_count;
 	tr4_object_texture_t *object_textures;	///< \brief object texture definitions.
 	uint32_t animated_textures_count;
-        tr_animated_textures_t *animated_textures;	///< \brief animated textures.
+        uint16_t *animated_textures;	///< \brief animated textures.
 	uint32_t sprite_textures_count;
         tr_sprite_texture_t *sprite_textures;	///< \brief sprite texture definitions.
 	uint32_t sprite_sequences_count;
