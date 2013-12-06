@@ -397,51 +397,69 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     btSphereShape cameraSphere(16.0);
     btTransform cameraFrom, cameraTo;
     btVector3 cam_pos, old_pos;
+    bt_engine_ClosestConvexResultCallback *cb;
     
     vec3_copy(old_pos.m_floats, cam->pos);
+#if 0
     cam_pos.m_floats[0] = ent->transform[12];
     cam_pos.m_floats[1] = ent->transform[13];
     cam_pos.m_floats[2] = ent->transform[14] + 256.0;
-
+#else
+    cam_pos.m_floats[0] = ent->transform[12] - 32.0 * ent->transform[4 + 0];
+    cam_pos.m_floats[1] = ent->transform[13] - 32.0 * ent->transform[4 + 1];
+    cam_pos.m_floats[2] = ent->transform[14] + 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
+#endif
     cameraFrom.setIdentity();
     cameraFrom.setOrigin(cam_pos);
     cam_pos.m_floats[2] += dz;
     cameraTo.setIdentity();
     cameraTo.setOrigin(cam_pos);
     
-    bt_engine_ClosestConvexResultCallback cb(ent->self);
-    cb.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, cb);
-    if(cb.hasHit())
+    if(ent->character)
     {
-        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb.m_closestHitFraction);
-        cam_pos += cb.m_hitNormalWorld * 2.0;
+        cb = ent->character->convex_cb;
+    }
+    else
+    {
+        cb = new bt_engine_ClosestConvexResultCallback(ent->self);
+        cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     }
     
-    cb.m_closestHitFraction = 1.0;
+    cb->m_closestHitFraction = 1.0;
+    cb->m_hitCollisionObject = NULL;
+    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+    if(cb->hasHit())
+    {
+        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
+        cam_pos += cb->m_hitNormalWorld * 2.0;
+    }
+    
     cameraFrom.setOrigin(cam_pos);
     cam_pos.m_floats[0] += dx * cam->right_dir[0];
     cam_pos.m_floats[1] += dx * cam->right_dir[1];
     cam_pos.m_floats[2] += dx * cam->right_dir[2];
     cameraTo.setOrigin(cam_pos);
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, cb);
-    if(cb.hasHit())
+    cb->m_closestHitFraction = 1.0;
+    cb->m_hitCollisionObject = NULL;
+    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+    if(cb->hasHit())
     {
-        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb.m_closestHitFraction);
-        cam_pos += cb.m_hitNormalWorld * 2.0;
+        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
+        cam_pos += cb->m_hitNormalWorld * 2.0;
     }
     
-    cb.m_closestHitFraction = 1.0;
     cameraSphere.setLocalScaling(btVector3(0.8, 0.8, 0.8));
     cameraFrom.setOrigin(cam_pos);
     cam_pos.m_floats[0] += sin(alpha) * control_states.cam_distance;
     cam_pos.m_floats[1] -= cos(alpha) * control_states.cam_distance;
     cameraTo.setOrigin(cam_pos);
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, cb);
-    if(cb.hasHit())
+    cb->m_closestHitFraction = 1.0;
+    cb->m_hitCollisionObject = NULL;
+    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+    if(cb->hasHit())
     {
-        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb.m_closestHitFraction);
-        cam_pos += cb.m_hitNormalWorld * 2.0;
+        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
+        cam_pos += cb->m_hitNormalWorld * 2.0;
     }
     
     alpha = cam_pos.distance2(old_pos);
@@ -454,6 +472,11 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     
     vec3_copy(cam->pos, cam_pos.m_floats);
     Cam_SetRotation(cam, cam_angles);
+
+    if(!ent->character)
+    {
+        delete[] cb;
+    }
 }
 
 void Game_UpdateAllEntities(struct RedBlackNode_s *x)
