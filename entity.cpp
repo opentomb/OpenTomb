@@ -516,27 +516,64 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 // fortunately have no differences in footstep sounds order.
                                 // Also note that some footstep types mutually share same sound IDs
                                 // across different TR versions.
-
-                                static uint16_t audio_step_map[14] = 
-                                {288,   // Mud
-                                 293,   // Snow - TR3 & TR5 only
-                                 291,   // Sand - same as grass
-                                 290,   // Gravel
-                                 289,   // Ice - TR3 & TR5 only
-                                 17,    // Water
-                                 -1,    // Stone - DEFAULT SOUND, BYPASS!
-                                 292,   // Wood
-                                 294,   // Metal
-                                 293,   // Marble - TR4 only
-                                 291,   // Grass - same as sand
-                                 -1,    // Concrete - DEFAULT SOUND, BYPASS!
-                                 292,   // Old wood - same as wood
-                                 294};  // Old metal - same as metal
-                                
-                                // Play step sound.
-                                Audio_Send(audio_step_map[(entity->current_sector->box_index & 0x0F)],
-                                           TR_AUDIO_EMITTER_ENTITY,
-                                           entity->ID);
+                                switch(entity->current_sector->box_index & 0x0F)
+                                {
+                                    case 0:                                     // Mud
+                                        Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 1:                                     // Snow - TR3 & TR5 only
+                                        Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 2:                                     // Sand - same as grass
+                                        Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 3:                                     // Gravel
+                                        Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 4:                                     // Ice - TR3 & TR5 only
+                                        Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 5:                                     // Water
+                                        Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 6:                                     // Stone - DEFAULT SOUND, BYPASS!
+                                        Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 7:                                     // Wood
+                                        Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 8:                                     // Metal
+                                        Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 9:                                     // Marble - TR4 only
+                                        Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 10:                                    // Grass - same as sand
+                                        Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 11:                                    // Concrete - DEFAULT SOUND, BYPASS!
+                                        Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 12:                                    // Old wood - same as wood 
+                                        Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                        
+                                    case 13:                                    // Old metal - same as metal
+                                        Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        break;
+                                }
                             }
                             break;
                             
