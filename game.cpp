@@ -400,15 +400,10 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     bt_engine_ClosestConvexResultCallback *cb;
     
     vec3_copy(old_pos.m_floats, cam->pos);
-#if 0
-    cam_pos.m_floats[0] = ent->transform[12];
-    cam_pos.m_floats[1] = ent->transform[13];
-    cam_pos.m_floats[2] = ent->transform[14] + 256.0;
-#else
     cam_pos.m_floats[0] = ent->transform[12] - 32.0 * ent->transform[4 + 0];
     cam_pos.m_floats[1] = ent->transform[13] - 32.0 * ent->transform[4 + 1];
-    cam_pos.m_floats[2] = ent->transform[14] + 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
-#endif
+    cam_pos.m_floats[2] = ent->transform[14] + 0.5 * (ent->bf.bb_max[2] /*+ ent->bf.bb_min[2]*/);
+
     cameraFrom.setIdentity();
     cameraFrom.setOrigin(cam_pos);
     cam_pos.m_floats[2] += dz;

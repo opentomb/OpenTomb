@@ -359,7 +359,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     r = Room_FindPosCogerrence(&engine_world, pos, r);
     if(r)
     {
-        rs = Room_GetSector(r, pos);                                            // if r != NULL then rs can not been NULL!!!
+        rs = Room_GetSectorXYZ(r, pos);                                         // if r != NULL then rs can not been NULL!!!
         if(r->flags & 0x01)                                                     // in water - go up
         {
             while(rs->sector_above)
@@ -396,7 +396,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     to.m_floats[2] -= 4096.0;
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = NULL;
-    cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
+    cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
     fc->floor_hit = (int)cb->hasHit();
     if(fc->floor_hit)
@@ -406,16 +406,11 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
         fc->floor_obj = (btCollisionObject*)cb->m_collisionObject;
     }
     
-    if(fc->floor_hit)
-    {
-        from = fc->floor_point;
-        from.m_floats[2] += 64.0;
-    }
     to = from;
     to.m_floats[2] += 4096.0;
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = NULL;
-    cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
+    cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
     bt_engine_dynamicsWorld->rayTest(from, to, *cb);
     fc->ceiling_hit = (int)cb->hasHit();
     if(fc->ceiling_hit)
@@ -560,7 +555,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     btScalar n0[4], n1[4], n2[4];                                               // planes equations
     btTransform t1, t2;
     char up_founded;
-    //extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
+    extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
     /*
      * init callbacks functions
      */
@@ -596,6 +591,9 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     t2.setIdentity();
     up_founded = 0;
     d = ((ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point.m_floats[2] + ent->character->climb_r + 1.0):(pos[2] - ent->character->max_step_up_height));
+    vec3_copy(cast_ray, to.m_floats);
+    vec3_copy(cast_ray+3, cast_ray);
+    cast_ray[5] -= d;
     do
     {
         t1.setOrigin(from);
@@ -1313,6 +1311,86 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     return iter;
 }
 
+/*
+ * Monkey CLIMBING - MOVE NO Z LANDING
+ */
+int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
+{
+    int i, iter;
+    btVector3 move, spd(0.0, 0.0, 0.0);
+    btScalar fc_pos[3], t, *pos = ent->transform + 12;
+    
+    /*
+     * resize collision model
+     */
+    Character_UpdateCollisionObject(ent, 0.0);
+
+    cmd->slide = 0x00;
+    cmd->horizontal_collide = 0x00;
+    cmd->vertical_collide = 0x00;
+    
+    t = ent->current_speed * ent->character->speed_mult;
+    cmd->vertical_collide |= 0x01;
+    ent->angles[0] += cmd->rot[0];
+    ent->angles[1] = 0.0;
+    ent->angles[2] = 0.0;
+    Entity_UpdateRotation(ent);                                                 // apply rotations
+
+    if(ent->dir_flag & ENT_MOVE_FORWARD)
+    {
+        vec3_mul_scalar(spd.m_floats, ent->transform+4, t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
+    {
+        vec3_mul_scalar(spd.m_floats, ent->transform+4,-t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_LEFT)
+    {
+        vec3_mul_scalar(spd.m_floats, ent->transform+0,-t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_RIGHT)
+    {
+        vec3_mul_scalar(spd.m_floats, ent->transform+0, t);
+    }
+    else
+    {
+        //ent->dir_flag = ENT_MOVE_FORWARD;
+    }
+    cmd->slide = 0x00;
+    
+    ent->character->speed = spd;
+    move = spd * engine_frame_time;
+    t = move.length();
+    iter = 2.0 * t / ent->character->Radius + 1;
+    if(iter < 1)
+    {
+        iter = 1;
+    }
+    move /= (btScalar)iter;
+            
+    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    {
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
+        Character_GetHeightInfo(fc_pos, &ent->character->height_info);
+        vec3_add(pos, pos, move.m_floats);
+        Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
+        Character_UpdateCurrentHeight(ent);
+        if(ent->character->height_info.ceiling_hit && ent->character->height_info.ceiling_climb)
+        {
+            pos[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->bf.bb_max[2];
+        }
+        else
+        {
+            ent->move_type = MOVE_FREE_FALLING;
+            return 2;
+        }
+        
+        Entity_UpdateRoomPos(ent);
+    }
+    
+    return 1;
+}
+
 
 /*
  * CLIMBING - MOVE NO Z LANDING
@@ -1581,6 +1659,10 @@ void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *c
             Character_Climbing(ent, cmd);
             break;
 
+        case MOVE_CEILING_CLMB:
+            Character_MonkeyClimbing(ent, cmd);
+            break;
+            
         case MOVE_UNDER_WATER:
             Character_MoveUnderWater(ent, cmd);
             break;
