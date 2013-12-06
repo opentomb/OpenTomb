@@ -119,7 +119,7 @@
 #define LARA_HANG_WALL_DISTANCE (128.0 - 24.0)
 #define LARA_HANG_VERTICAL_EPSILON (64.0)
 #define LARA_HANG_VERTICAL_OFFSET (12.0)        // in original is 0, in real life hands are little more higher than edge
-#define LARA_TRY_HANG_WALL_OFFSET (72.0)        // It works more stable than 32 or 128
+#define LARA_TRY_HANG_WALL_OFFSET (48.0)        // It works more stable than 32 or 128
 #define LARA_HANG_SENSOR_Z (800.0)              // It works more stable than 1024 (after collision critical fix, of course)
 
 #define OSCILLATE_HANG_USE 0
@@ -147,7 +147,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     next_fc.ccb->m_closestHitFraction = 1.0;
     next_fc.ccb->m_hitCollisionObject = NULL;
     ent->anim_flags = ANIM_NORMAL_CONTROL;
-    Character_UpdateCurrentHeight(ent);    
+    Character_UpdateCurrentHeight(ent);
     low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height));
 
     /*
@@ -1447,11 +1447,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
          * Climbing section
          */
         case TR_ANIMATION_LARA_TRY_HANG_VERTICAL:
-            /* 94           318     // TR_ANIMATION_LARA_CEILING_TRAPDOOR_OPEN
-             * 75           233     // TR_ANIMATION_LARA_MONKEY_GRAB
-             * 10           29      // TR_ANIMATION_LARA_BEGIN_HANGING_VERTICAL
-             * 9            30      // TR_ANIMATION_LARA_STOP_HANG_VERTICAL
-             * 2            31      // TR_ANIMATION_LARA_LANDING_LIGHT*/
+            /* 94           318     // TR_ANIMATION_LARA_CEILING_TRAPDOOR_OPEN*/
         case TR_ANIMATION_LARA_STOP_HANG_VERTICAL:
             cmd->rot[0] = 0.0;
             if((ent->move_type != MOVE_CLIMBING) && (cmd->action == 1))
@@ -1478,9 +1474,17 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 cmd->rot[1] = 0.0;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
+            else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (cmd->vertical_collide & 0x02))
+            {
+                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_IDLE))
+                {
+                    ent->move_type = MOVE_CEILING_CLMB;
+                    pos[2] = curr_fc->ceiling_point.m_floats[2] - ent->bf.bb_max[2];
+                }
+            }
             else if((cmd->action == 1) && (ent->move_type == MOVE_CLIMBING))
             {
-                if(2 <= Entity_Frame(ent, engine_frame_time, 10))
+                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_HANG))
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_HANG_IDLE, ent->model->animations[TR_ANIMATION_LARA_HANG_IDLE].frames_count - 1);
                     pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
@@ -1489,7 +1493,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_set_zero(ent->character->speed.m_floats);
                 }
             }
-            else if(cmd->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
+            else if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);       // landing immidiatly
             }
@@ -1553,6 +1557,14 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_OSCILLATE_HANG_ON, 0);
                     }
 #endif
+                }
+            }
+            else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 64.0))
+            {
+                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_IDLE))
+                {
+                    ent->move_type = MOVE_CEILING_CLMB;
+                    pos[2] = curr_fc->ceiling_point.m_floats[2] - ent->bf.bb_max[2];
                 }
             }
             else if(cmd->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
@@ -2966,12 +2978,116 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     Controls_JoyRumble(1, 150);
             cmd->rot[0] = 0;
             break;			
-			
+		
+            /*
+             * CLIMB MONKEY
+             */
+        case TR_ANIMATION_LARA_MONKEY_IDLE:
+            /*
+             * ID                                       ANIM
+             * 19       TR_ANIMATION_LARA_CLIMB_ON
+             * 30       TR_ANIMATION_LARA_CLIMB_LEFT
+             * 31       TR_ANIMATION_LARA_CLIMB_RIGHT
+             * 54       TR_ANIMATION_LARA_CLIMB_ON2
+             * TR_STATE_LARA_MONKEYSWING_LEFT           TR_ANIMATION_LARA_MONKEY_STRAFE_LEFT
+             * TR_STATE_LARA_MONKEYSWING_RIGHT          TR_ANIMATION_LARA_MONKEY_STRAFE_RIGHT
+             * !!! TR_STATE_LARA_CLIMB_TO_CRAWL             TR_ANIMATION_LARA_HANG_TO_CROUCH_BEGIN
+             */
+            if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_ROPE_TO_FALL);
+                ent->move_type = MOVE_FREE_FALLING;
+            }
+            else if(cmd->shift && (cmd->move[1] ==-1))
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_LEFT);
+            }
+            else if(cmd->shift && (cmd->move[1] == 1))
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_RIGHT);
+            }
+            else if(cmd->move[0] == 1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_FORWARD);
+            }
+            else if(cmd->move[1] ==-1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_TURN_LEFT);
+            }
+            else if(cmd->move[1] == 1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_TURN_RIGHT);
+            }
+            else
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
+            }
+            break;
+            
+        case TR_ANIMATION_LARA_MONKEY_TURN_LEFT:
+            cmd->rot[0] *= 0.5;
+            if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
+            {
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                ent->move_type = MOVE_FREE_FALLING;
+            }
+            else if(cmd->move[1] ==-1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
+            }
+            else
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_IDLE);
+            }
+            break;
+            
+        case TR_ANIMATION_LARA_MONKEY_TURN_RIGHT:
+            cmd->rot[0] *= 0.5;
+            if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
+            {
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                ent->move_type = MOVE_FREE_FALLING;
+            }
+            else if(cmd->move[1] == 1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
+            }
+            else
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_IDLE);
+            }
+            break;
+            
+        case TR_ANIMATION_LARA_MONKEY_FORWARD:
+            cmd->rot[0] *= 0.45;
+            if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
+            {
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                ent->move_type = MOVE_FREE_FALLING;
+            }
+            else if(cmd->move[0] == 1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
+            }
+            else
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_IDLE);
+            }
+            break;
+            
             /*
              * intermediate animations are processed automatically.
              */
         default:
             cmd->rot[0] = 0;
+            if(ent->move_type == MOVE_CEILING_CLMB)
+            {
+                if(cmd->action == 0 || curr_fc->ceiling_hit == 0)
+                {
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                    ent->move_type = MOVE_FREE_FALLING;
+                }
+            }
             Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
             break;
     };
