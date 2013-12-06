@@ -181,6 +181,7 @@ room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room);
 room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room);
 room_p Room_GetByID(world_p w, unsigned int ID);
 room_sector_p Room_GetSector(room_p room, btScalar pos[3]);
+room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3]);
 
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);

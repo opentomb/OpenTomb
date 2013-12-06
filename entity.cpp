@@ -122,8 +122,12 @@ void Entity_UpdateRoomPos(entity_p ent)
     new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
     if(new_room)
     {
+        new_sector = Room_GetSectorXYZ(new_room, pos);
+        if(new_room != new_sector->owner_room)
+        {
+            new_room = new_sector->owner_room;
+        }
         ent->self->room = new_room;
-        new_sector = Room_GetSector(new_room, pos);
         if(ent->current_sector != new_sector)
         {
             ent->current_sector = new_sector;

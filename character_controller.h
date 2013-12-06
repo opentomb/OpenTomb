@@ -11,8 +11,8 @@
 #include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
 #include "bullet/BulletCollision/CollisionShapes/btBoxShape.h"
 #include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
-#include "engine.h"
 #include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
+#include "engine.h"
 
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
@@ -167,6 +167,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor);
 
 int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd);
 int Character_FreeFalling(struct entity_s *ent, character_command_p cmd);
+int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd);
 int Character_Climbing(struct entity_s *ent, character_command_p cmd);
 int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);

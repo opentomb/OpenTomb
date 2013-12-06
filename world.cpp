@@ -604,7 +604,38 @@ room_sector_p Room_GetSector(room_p room, btScalar pos[3])
      * column index system
      * X - column number, Y - string number
      */
+    ret = room->sectors + x * room->sectors_y + y;    
+    return ret;
+}
+
+
+room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
+{
+    int x, y;
+    room_sector_p ret = NULL;
+
+    room = Room_CheckAlternate(room);
+
+    x = (int)(pos[0] - room->transform[12]) / 1024;
+    y = (int)(pos[1] - room->transform[13]) / 1024;
+    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
+    {
+        return NULL;
+    }
+    /*
+     * column index system
+     * X - column number, Y - string number
+     */
     ret = room->sectors + x * room->sectors_y + y;
+    
+    /*
+     * resolve Z overlapped neighboard rooms. room below has more priority.
+     */
+    if(ret->sector_below && (ret->sector_below->ceiling >= pos[2]))
+    {
+        return ret->sector_below;
+    }
+    
     return ret;
 }
 
