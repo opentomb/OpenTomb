@@ -65,6 +65,21 @@ typedef struct sprite_s
     btScalar            bottom;
 }sprite_t, *sprite_p;
 
+
+/*
+ *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
+ */
+typedef struct anim_seq_s
+{
+    int8_t      type;           // 0 = normal, 1 = forward-back, 2 = UVRotate (to be done later).
+    bool        blend;          // Types 0-1 blending between frames.
+    btScalar    blend_interval; // Blend interval. If 0 and blend is true, it is set to 0.2.
+    btScalar    frame_rate;     // For types 0-1, specifies framerate, for type 2, specifies rotation speed.
+    uint32_t    frame_count;    // Overall frames to use. If type is 2, it should be 1, else behaviour is undetermined.
+    uint32_t*   frame_list;     // Offset into anim textures frame list.
+}anim_seq_t, *anim_seq_p;
+
+
 /*
  * room static mesh.
  */
@@ -97,7 +112,7 @@ typedef struct static_mesh_s
  */
 
 /*
- * SMOOTCHED ANIMATIONS STRUCTURES
+ * SMOOTHED ANIMATIONS STRUCTURES
  * stack matrices are needed for skinned mesh transformations.
  */
 typedef struct ss_bone_tag_s

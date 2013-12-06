@@ -291,8 +291,8 @@ void World_Prepare(world_p world)
     world->audio_buffers_count = 0;
     world->audio_effects = NULL;
     world->audio_effects_count = 0;
-    world->special_textures = NULL;
-    world->special_tex_count = 0;
+    world->anim_sequences = NULL;
+    world->anim_sequences_count = 0;
     world->tex_count = 0;
     world->textures = 0;
     world->floor_data = NULL;
@@ -414,6 +414,20 @@ void World_Empty(world_p world)
         world->tex_count = 0;
         free(world->textures);
         world->textures = NULL;
+    }
+    
+    if(world->anim_sequences_count)
+    {
+        for(i = 0; i < world->anim_sequences_count; i++)
+        {
+            if(world->anim_sequences[i]->frame_count)
+            {
+                free(world->anim_sequences[i]->frame_list);
+                world->anim_sequences->frame_list = NULL;
+            }
+        }
+        free(world->anim_sequences);
+        world->anim_sequences = NULL;
     }
     
     // De-initialize and destroy all audio objects.

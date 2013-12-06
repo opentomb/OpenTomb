@@ -451,6 +451,11 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->anim_commands = tr->anim_commands;
     tr->anim_commands = NULL;
     tr->anim_commands_count = 0;
+    
+    /*
+     * Generate anim textures
+     */
+    TR_GenAnimTextures(bordered_texture_atlas, world, tr);
 
     /*
      * generate all meshes
@@ -581,8 +586,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_close(level_script);
         level_script = NULL;
     }
-    world->special_tex_count = 0;
-    world->special_textures = NULL;
+    world->anim_sequences_count = 0;
+    world->anim_sequences = NULL;
 
     for(i=0;i<world->meshs_count;i++)
     {
@@ -949,6 +954,38 @@ void TR_GenSprites(struct world_s *world, struct bordered_texture_atlas_s *atlas
         }
     }
 }
+
+/**   Animated textures loading.
+  *   Natively, animated textures stored as a stream of bitu16s, which
+  *   is then parsed on the fly. What we do is parse this stream to the
+  *   proper structures to be used later within renderer.
+  */
+void TR_GenAnimTextures(struct bordered_texture_atlas_s *atlas, struct world_s *world, class VT_Level *tr)
+{
+    uint16_t *pointer;
+    uint16_t  i, j, num_sequences;
+    uint16_t  block_size = tr->animated_textures_count; // This is actually whole anim textures block size.
+    
+    pointer       = tr->animated_textures;
+    num_sequences = *(pointer++);   // First word in a stream is sequence count.
+    
+    world->anim_sequences_count = num_sequences;
+    world->anim_sequences = (anim_seq_p)malloc(num_sequences * sizeof(anim_seq_t));
+    memset(world->anim_sequences, 0, sizeof(anim_tex_t) * num_sequences);   // Reset all structure.
+    
+    for(i = 0; i < num_sequences; i++)
+    {
+        // Fill up new sequence with frame list.
+        world->anim_sequences[i].frame_count = *(pointer++) + 1;
+        world->anim_sequences[i].frame_list  =  (uint32_t*)malloc(world->anim_sequences[i].frame_count * sizeof(uint32_t));
+        
+        for(int j = 0; j < world->anim_sequences[i].frame_count; j++)
+        {
+            world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
+        }
+    }
+}
+
 
 void SortPolygonsInMesh(struct base_mesh_s *mesh)
 {

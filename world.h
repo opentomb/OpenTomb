@@ -118,8 +118,9 @@ typedef struct world_s
     
     uint32_t                    tex_count;                                      // cumber of textures
     GLuint                     *textures;                                       // OpenGL textures indexes
-    uint32_t                    special_tex_count;                              // numberofspecial textures -- not used?
-    GLuint                     *special_textures;                               // OpenGL textures indexes
+    
+    uint32_t                    anim_sequences_count;                            // Animated texture sequence count
+    struct anim_seq_s          *anim_sequences;                                 // Animated textures
     
     uint32_t                    meshs_count;                                    // Base meshs count
     struct base_mesh_s         *meshes;                                         // Base meshs data
