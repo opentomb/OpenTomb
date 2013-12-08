@@ -5,6 +5,7 @@
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 #include "audio.h"
+#include "bordered_texture_atlas.h"
 #include "bullet/LinearMath/btScalar.h"
 
 class btCollisionShape;
@@ -116,6 +117,8 @@ typedef struct world_s
     uint32_t                    room_box_count;
     struct room_box_s          *room_boxes;
     
+    
+    bordered_texture_atlas_p    tex_atlas;
     uint32_t                    tex_count;                                      // cumber of textures
     GLuint                     *textures;                                       // OpenGL textures indexes
     

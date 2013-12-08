@@ -245,7 +245,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     btVector3 localInertia(0, 0, 0);
     btTransform	startTransform;
     char buf[256], map[LEVEL_NAME_MAX_LEN];
-    bordered_texture_atlas_p bordered_texture_atlas;
     /// white texture data for coloured polygons and debug lines.
     GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -349,20 +348,20 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     lua_settop(engine_lua, top);
     i = (i < 0)?(0):(i);
     i = (i > 128)?(128):(i);
-    bordered_texture_atlas = BorderedTextureAtlas_Create(i);                    // here is border size
+    world->tex_atlas = BorderedTextureAtlas_Create(i);                    // here is border size
     for (i = 0; i < tr->textile32_count; i++)
     {
-        BorderedTextureAtlas_AddPage(bordered_texture_atlas, tr->textile32[i].pixels);
+        BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
     }
 
     for (i = 0; i < tr->sprite_textures_count; i++)
     {
-        BorderedTextureAtlas_AddSpriteTexture(bordered_texture_atlas, tr->sprite_textures + i);
+        BorderedTextureAtlas_AddSpriteTexture(world->tex_atlas, tr->sprite_textures + i);
     }
 
     for (i = 0; i < tr->object_textures_count; i++)
     {
-        BorderedTextureAtlas_AddObjectTexture(bordered_texture_atlas, tr->object_textures + i);
+        BorderedTextureAtlas_AddObjectTexture(world->tex_atlas, tr->object_textures + i);
     }
 
     if(level_script)
@@ -390,12 +389,12 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    world->tex_count = (uint32_t) BorderedTextureAtlas_GetNumAtlasPages(bordered_texture_atlas) + 1;
+    world->tex_count = (uint32_t) BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
     world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelZoom(1, 1);
-    BorderedTextureAtlas_CreateTextures(bordered_texture_atlas, world->textures, 1);
+    BorderedTextureAtlas_CreateTextures(world->tex_atlas, world->textures, 1);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
 
@@ -455,7 +454,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     /*
      * Generate anim textures
      */
-    TR_GenAnimTextures(bordered_texture_atlas, world, tr);
+    TR_GenAnimTextures(world, tr);
 
     /*
      * generate all meshes
@@ -464,13 +463,13 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     base_mesh = world->meshes = (base_mesh_p)malloc(world->meshs_count * sizeof(base_mesh_t));
     for(i=0;i<world->meshs_count;i++,base_mesh++)
     {
-        TR_GenMesh(i, base_mesh, bordered_texture_atlas, tr);
+        TR_GenMesh(world, i, base_mesh, tr);
     }
 
     /*
      * generate sprites
      */
-    TR_GenSprites(world, bordered_texture_atlas, tr);
+    TR_GenSprites(world, tr);
 
     /*
      * generate boxes
@@ -498,7 +497,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     r = world->rooms = (room_p)realloc(world->rooms, world->room_count * sizeof(room_t));
     for(i=0;i<world->room_count;i++,r++)
     {
-        TR_GenRoom(i, r, world, bordered_texture_atlas, tr);
+        TR_GenRoom(i, r, world, tr);
         r->frustum = Frustum_Create();
     }
 
@@ -586,8 +585,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_close(level_script);
         level_script = NULL;
     }
-    world->anim_sequences_count = 0;
-    world->anim_sequences = NULL;
 
     for(i=0;i<world->meshs_count;i++)
     {
@@ -619,7 +616,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 }
 
 
-void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, struct bordered_texture_atlas_s *atlas, class VT_Level *tr)
+void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr)
 {
     int i, j, top;
     portal_p p;
@@ -660,7 +657,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, s
     room->self->object = NULL;
     room->self->object_type = OBJECT_ROOM_BASE;
 
-    TR_GenRoomMesh(room_index, room, atlas, tr);
+    TR_GenRoomMesh(world, room_index, room, tr);
     if(room->mesh && room->flags & 0x01)
     {
         Mesh_MullColors(room->mesh, vater_color);
@@ -915,7 +912,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, s
 /**
  * sprites loading, works correct in TR1 - TR5
  */
-void TR_GenSprites(struct world_s *world, struct bordered_texture_atlas_s *atlas, class VT_Level *tr)
+void TR_GenSprites(struct world_s *world, class VT_Level *tr)
 {
     int i, id;
     sprite_p s;
@@ -940,7 +937,7 @@ void TR_GenSprites(struct world_s *world, struct bordered_texture_atlas_s *atlas
         s->top = tr_st->top_side;
         s->bottom = tr_st->bottom_side;
 
-        BorderedTextureAtlas_GetSpriteCoordinates(atlas, i, &s->texture, s->tex_coord);
+        BorderedTextureAtlas_GetSpriteCoordinates(world->tex_atlas, i, &s->texture, s->tex_coord);
         s->flag = 0x00;
         s->ID = 0;
     }
@@ -960,7 +957,7 @@ void TR_GenSprites(struct world_s *world, struct bordered_texture_atlas_s *atlas
   *   is then parsed on the fly. What we do is parse this stream to the
   *   proper structures to be used later within renderer.
   */
-void TR_GenAnimTextures(struct bordered_texture_atlas_s *atlas, struct world_s *world, class VT_Level *tr)
+void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 {
     uint16_t *pointer;
     uint16_t  i, j, num_sequences;
@@ -976,6 +973,12 @@ void TR_GenAnimTextures(struct bordered_texture_atlas_s *atlas, struct world_s *
     for(i = 0; i < num_sequences; i++)
     {
         // Fill up new sequence with frame list.
+        world->anim_sequences[i].type          = TR_ANIMTEXTURE_FORWARD;
+        world->anim_sequences[i].type_flag     = 0;     // Needed for proper reverse-type start-up.
+        world->anim_sequences[i].frame_rate    = 0.05;  // Should be passed as 1 / FPS.
+        world->anim_sequences[i].frame_time    = 0.0;   // Reset frame time to initial state.
+        world->anim_sequences[i].current_frame = 0;     // Reset current frame to zero.
+        
         world->anim_sequences[i].frame_count = *(pointer++) + 1;
         world->anim_sequences[i].frame_list  =  (uint32_t*)malloc(world->anim_sequences[i].frame_count * sizeof(uint32_t));
         
@@ -984,6 +987,39 @@ void TR_GenAnimTextures(struct bordered_texture_atlas_s *atlas, struct world_s *
             world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
         }
     }
+}
+
+/**   Assign animated texture to a polygon.
+  *   While in original TRs we had TexInfo abstraction layer to refer texture,
+  *   in OpenTomb we need to re-think animated texture concept to work on a
+  *   per-polygon basis. For this, we scan all animated texture lists for
+  *   same TexInfo index that is applied to polygon, and if corresponding
+  *   animation list is found, we assign it to polygon.
+  */
+bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world)
+{
+    int i, j;
+    
+    polygon->anim_id = 0;                           // Reset to 0 by default.
+    tex_index = tex_index & TR_TEXTURE_INDEX_MASK;  ///@FIXME: Is it really needed?
+                
+    for(i = 0; i < world->anim_sequences_count; i++)
+    {
+        for(j = 0; j < world->anim_sequences[i].frame_count; j++)
+        {  
+            if(world->anim_sequences[i].frame_list[j] == tex_index)
+            {
+                // If we have found assigned texture ID in animation texture lists,
+                // we assign corresponding animation sequence to this polygon,
+                // additionally specifying frame offset.
+                polygon->anim_id      = i + 1;  // Animation sequence ID.
+                polygon->anim_offset  = j;      // Animation frame offset.
+                return true;
+            }
+        }
+    }
+    
+    return false;   // No such TexInfo found in animation textures lists.
 }
 
 
@@ -1029,7 +1065,7 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
     mesh->polygons = buf;
 }
 
-void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_texture_atlas_s *atlas, class VT_Level *tr)
+void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr)
 {
     int i, col;
     tr4_mesh_t *tr_mesh;
@@ -1064,7 +1100,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
     mesh->transparancy_flags = 0;
     mesh->transparancy_count = 0;
     mesh->skin_map = NULL;
-    mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(atlas) + 1;
+    mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
     mesh->elements = NULL;
     mesh->element_count_per_texture = NULL;
     mesh->vbo_index_array = 0;
@@ -1096,6 +1132,8 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         Polygon_Resize(p, 3);
         p->transparency = tex->transparency_flags;
         p->type = !IsInUCRectFace3(tex);
+        
+        SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[2]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face3->vertices[1]]);
@@ -1109,7 +1147,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         vec4_set_one(p->vertices[1].base_color);         vec4_set_one(p->vertices[1].color);
         vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
 
-        BorderedTextureAtlas_GetCoordinates(atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 1, p);
+        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 1, p);
     }
 
     /*
@@ -1120,9 +1158,10 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         face3 = &tr_mesh->coloured_triangles[i];
         col = face3->texture & 0xff;
         Polygon_Resize(p, 3);
-        p->tex_index = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(atlas);
+        p->tex_index = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas);
         p->transparency = 0;
         p->type = 0x0001;
+        p->anim_id = 0;
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[2]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face3->vertices[1]]);
@@ -1173,6 +1212,8 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         Polygon_Resize(p, 4);
         p->transparency = tex->transparency_flags;
         p->type = !IsInUCRectFace4(tex);
+        
+        SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face4->vertices[3]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face4->vertices[2]]);
@@ -1189,7 +1230,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
         vec4_set_one(p->vertices[3].base_color);         vec4_set_one(p->vertices[3].color);
 
-        BorderedTextureAtlas_GetCoordinates(atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 1, p);
+        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 1, p);
     }
 
     /*
@@ -1200,9 +1241,10 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
         face4 = &tr_mesh->coloured_rectangles[i];
         col = face4->texture & 0xff;
         Polygon_Resize(p, 4);
-        p->tex_index = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(atlas);
+        p->tex_index = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas);
         p->transparency = 0;
         p->type = 0x0001;
+        p->anim_id = 0;
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face4->vertices[3]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face4->vertices[2]]);
@@ -1320,7 +1362,7 @@ void TR_GenMesh(size_t mesh_index, struct base_mesh_s *mesh, struct bordered_tex
 }
 
 
-void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_texture_atlas_s *atlas, class VT_Level *tr)
+void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr)
 {
     int i;
     tr5_room_t *tr_room;
@@ -1343,7 +1385,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
 
     mesh = room->mesh = (base_mesh_p)malloc(sizeof(base_mesh_t));
     mesh->ID = room_index;
-    mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(atlas) + 1;
+    mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
     mesh->elements = NULL;
     mesh->element_count_per_texture = NULL;
     mesh->centre[0] = 0.0;
@@ -1379,6 +1421,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
             mesh->transparancy_count++;
         }
         Polygon_Resize(p, 3);
+        SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
         p->transparency = tex->transparency_flags;
         if(p->transparency < 0x0002)
         {
@@ -1404,7 +1447,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
         vec4_set_one(p->vertices[1].base_color);         vec4_set_one(p->vertices[1].color);
         vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
 
-        BorderedTextureAtlas_GetCoordinates(atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 1, p);
+        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 1, p);
     }
 
     /*
@@ -1423,6 +1466,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
             mesh->transparancy_count++;
         }
         Polygon_Resize(p, 4);
+        SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
         p->transparency = tex->transparency_flags;
         if(p->transparency < 0x0002)
         {
@@ -1452,7 +1496,7 @@ void TR_GenRoomMesh(size_t room_index, struct room_s *room, struct bordered_text
         vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
         vec4_set_one(p->vertices[3].base_color);         vec4_set_one(p->vertices[3].color);
 
-        BorderedTextureAtlas_GetCoordinates(atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 1, p);
+        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 1, p);
     }
 
     /*

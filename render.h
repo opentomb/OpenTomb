@@ -26,6 +26,9 @@
     #define GL_BT_SCALAR GL_FLOAT
 #endif
 
+
+// Native TR blending modes.
+
 enum BlendingMode
 {
     BM_OPAQUE,
@@ -40,6 +43,13 @@ enum BlendingMode
     BM_SCREEN,
     BM_HIDE
 };
+
+// Animated texture types
+
+#define TR_ANIMTEXTURE_FORWARD     0
+#define TR_ANIMTEXTURE_BACKWARD    1
+#define TR_ANIMTEXTURE_REVERSE     2
+#define TR_ANIMTEXTURE_UVROTATE    3
 
 struct portal_s;
 struct world_s;
@@ -101,6 +111,8 @@ void Render_SkyBox();
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
 void Render_MeshTransparency(struct base_mesh_s *mesh);
 void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16]);
+void Render_AnimTexture(struct polygon_s *polygon);
+void Render_UpdateAnimTextures();
 void Render_CleanList();
 
 

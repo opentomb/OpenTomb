@@ -32,6 +32,8 @@ typedef struct polygon_s
     uint16_t            vertex_count;                                           // number of vertices
     struct vertex_s    *vertices;                                               // vertices data
     uint32_t            tex_index;                                              // texture index
+    uint32_t            anim_id;                                                // anim texture ID
+    uint32_t            anim_offset;                                            // anim texture frame offset
     uint16_t            type;                                                   // polygon type
     uint16_t            transparency;                                           // transparency information
     btScalar            plane[4];                                               // polygon plane equation

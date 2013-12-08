@@ -416,6 +416,12 @@ void World_Empty(world_p world)
         world->textures = NULL;
     }
     
+    if(world->tex_atlas)
+    {
+        BorderedTextureAtlas_Destroy(world->tex_atlas);
+        world->tex_atlas = NULL;
+    }
+                
     if(world->anim_sequences_count)
     {
         for(i = 0; i < world->anim_sequences_count; i++)

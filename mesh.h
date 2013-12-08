@@ -71,11 +71,17 @@ typedef struct sprite_s
  */
 typedef struct anim_seq_s
 {
-    int8_t      type;           // 0 = normal, 1 = forward-back, 2 = UVRotate (to be done later).
-    bool        blend;          // Types 0-1 blending between frames.
-    btScalar    blend_interval; // Blend interval. If 0 and blend is true, it is set to 0.2.
-    btScalar    frame_rate;     // For types 0-1, specifies framerate, for type 2, specifies rotation speed.
-    uint32_t    frame_count;    // Overall frames to use. If type is 2, it should be 1, else behaviour is undetermined.
+    int8_t      type;           // 0 = normal, 1 = back, 2 = reverse, 3 = UVRotate (to be done later).
+    bool        type_flag;      // Used only with type 3 to identify current animation direction.
+    
+    bool        blend;          // Types 0-2 blending between frames. Reserved for future use.
+    btScalar    blend_rate;     // Blend rate. Reserved for future use.
+    btScalar    blend_time;     // Transition value. Reserved for future use.
+    
+    uint32_t    current_frame;  // Current frame for this sequence.
+    btScalar    frame_rate;     // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
+    btScalar    frame_time;     // Time passed since last update.
+    uint32_t    frame_count;    // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
     uint32_t*   frame_list;     // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;
 
