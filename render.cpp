@@ -147,6 +147,14 @@ void Render_SkyBox()
  */
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
 {
+    polygon_p p = mesh->polygons;
+    
+    for(int i = 0; i < mesh->poly_count; i++)
+    {
+        Render_AnimTexture(p);
+        p++;
+    }
+    
     if(mesh->vbo_vertex_array)
     {
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
@@ -243,6 +251,127 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
         glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
         glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
         glDrawArrays(GL_POLYGON, 0, p->vertex_count);
+    }
+}
+
+
+void Render_UpdateAnimTextures()    // This function is used for updating global animated sequences.
+{
+    anim_seq_p current_sequence;
+    
+    for(int i = 0; i < engine_world.anim_sequences_count; i++)
+    {
+        current_sequence = engine_world.anim_sequences + i;
+        
+        if(current_sequence->frame_time >= current_sequence->frame_rate)    // If it's time to update...
+        {
+            current_sequence->frame_time     = 0;   // Reset interval counter.
+            
+            // We have different ways of animating textures, depending on type.
+            // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
+            // However, in TRNG it is possible to animate textures back and reverse, so we
+            // also implement this type in OpenTomb.
+            // UVRotate way of animating is more complicated and left as a placeholder.
+            
+            switch(current_sequence->type)
+            {
+                case TR_ANIMTEXTURE_FORWARD:
+                    if(current_sequence->current_frame < (current_sequence->frame_count-1))
+                    {
+                        // Increase animation frame.
+                        current_sequence->current_frame++;
+                    }
+                    else
+                    {
+                        // Restart animation, if end is reached.
+                        current_sequence->current_frame = 0;
+                    }
+                    break;
+                    
+                case TR_ANIMTEXTURE_BACKWARD:
+                    if(current_sequence->current_frame > 0)
+                    {
+                        // Decrease animation frame.
+                        current_sequence->current_frame--;
+                    }
+                    else
+                    {
+                        // Restart animation, if beginning is reached.
+                        current_sequence->current_frame = current_sequence->frame_count - 1;
+                    }
+                    break;
+                    
+                case TR_ANIMTEXTURE_REVERSE:
+                    if(!current_sequence->type_flag)    // Take action, depending on direction flag.
+                    {
+                        // FORWARD CASE:
+                        if(current_sequence->current_frame < (current_sequence->frame_count-1))
+                        {
+                            current_sequence->current_frame++;   // As in TR_ANIMTEXTURE_FORWARD.
+                        }
+                        else
+                        {
+                            current_sequence->type_flag = true;  // Reverse animation direction.
+                            current_sequence->current_frame--;   // Eat up duplicate frame.
+                        }
+                    }
+                    else
+                    {
+                        // BACKWARD CASE:
+                        if(current_sequence->current_frame > 0)
+                        {
+                            current_sequence->current_frame--;
+                        }
+                        else
+                        {
+                            current_sequence->type_flag = false;  // Reverse animation direction.
+                            current_sequence->current_frame++;    // Eat up duplicate frame.
+                        }
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            current_sequence->frame_time += engine_frame_time;   // Simply increase interval timer.
+        }
+    }
+}
+
+void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys themselves.
+{
+    uint32_t    tex_id;
+    anim_seq_p  seq = NULL;
+
+    if(polygon->anim_id)    // If animation sequence is assigned to polygon...
+    {
+        seq = engine_world.anim_sequences + (polygon->anim_id - 1); 
+        
+        if(polygon->anim_offset)    // If polygon uses frame offset for animation...
+        {
+            if((polygon->anim_offset + seq->current_frame) > (seq->frame_count - 1))
+            {
+                // If current frame with offset goes beyond frame count, reset it.
+                tex_id = seq->current_frame + polygon->anim_offset - seq->frame_count;
+            }
+            else
+            {
+                // Simply add offset to current frame.
+                tex_id = seq->current_frame + polygon->anim_offset;
+            }
+        }
+        else
+        {
+            tex_id = seq->current_frame;    // Just use current frame, if no offset specified.
+        }
+        
+        tex_id = seq->frame_list[tex_id];   // Extract TexInfo ID from sequence frame list.
+        
+        // Write new texture coordinates to polygon.
+        BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas,
+                                            tex_id,
+                                            1, 
+                                            polygon);
     }
 }
 

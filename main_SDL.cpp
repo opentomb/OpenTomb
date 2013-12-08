@@ -494,6 +494,7 @@ int main(int argc, char **argv)
         oldtime = newtime;
         Engine_Frame(time);
         
+        Render_UpdateAnimTextures();
         Audio_UpdateListenerByCamera(renderer.cam);
         Audio_UpdateSources();
     }

@@ -80,6 +80,8 @@ void Polygon_Copy(polygon_p dst, polygon_p src)
     dst->transparency = src->transparency;
     dst->type = src->type;
     dst->tex_index = src->tex_index;
+    dst->anim_id = src->anim_id;
+    dst->anim_offset = src->anim_offset;
     vec4_copy(dst->plane, src->plane);
 
     dst->vertices = src->vertices;
