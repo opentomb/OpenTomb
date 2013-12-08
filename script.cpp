@@ -596,10 +596,7 @@ int SC_ParseEntity(char **ch, struct entity_s *ent)
             v[0] = SC_ParseFloat(ch);
             v[1] = SC_ParseFloat(ch);
             v[2] = SC_ParseFloat(ch);
-            if(ent->character)
-            {
-                vec3_copy(ent->character->speed.m_floats, v);
-            }
+            vec3_copy(ent->speed.m_floats, v);
         }
         else if(!strcmp(token, "room"))
         {

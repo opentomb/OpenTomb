@@ -179,7 +179,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
  * 38           120     // TR_ANIMATION_LARA_START_OBJECT_MOVING
  * 28           26      // TR_ANIMATION_LARA_STAY_TO_GRAB*/
         case TR_ANIMATION_LARA_CROUCH_TO_STAND:
-        case TR_ANIMATION_LARA_LANDING_MIDDLE:
             ent->dir_flag = ENT_STAY;
             cmd->rot[0] = 0;
             cmd->crouch |= low_vertical_space;
@@ -530,8 +529,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
                     if(climb.climb_on_flag && climb.can_hang)
                     {
-                        ent->character->speed.m_floats[0] = 0.0;
-                        ent->character->speed.m_floats[1] = 0.0;
+                        ent->speed.m_floats[0] = 0.0;
+                        ent->speed.m_floats[1] = 0.0;
                         ent->current_speed = 0.0;
                     }
                 }
@@ -1310,8 +1309,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
                     if(climb.climb_on_flag && climb.can_hang)
                     {
-                        ent->character->speed.m_floats[0] = 0.0;
-                        ent->character->speed.m_floats[1] = 0.0;
+                        ent->speed.m_floats[0] = 0.0;
+                        ent->speed.m_floats[1] = 0.0;
                         ent->current_speed = 0.0;
                     }
                 }
@@ -1454,7 +1453,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
                 vec3_mul_scalar(offset, ent->transform + 4, t);
-                offset[2] += ent->bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON + engine_frame_time * ent->character->speed.m_floats[2];
+                offset[2] += ent->bf.bb_max[2] + LARA_HANG_VERTICAL_EPSILON + engine_frame_time * ent->speed.m_floats[2];
                 climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
                 if(climb.climb_on_flag && climb.can_hang && next_fc.edge_hit)
                 {
@@ -1462,9 +1461,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->angles[0] = next_fc.edge_z_ang;
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
-                    ent->character->speed.m_floats[0] = 0.0;
-                    ent->character->speed.m_floats[1] = 0.0;
-                    ent->character->speed.m_floats[2] = 0.0;
+                    ent->speed.m_floats[0] = 0.0;
+                    ent->speed.m_floats[1] = 0.0;
+                    ent->speed.m_floats[2] = 0.0;
                 }
             }
 
@@ -1474,7 +1473,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 cmd->rot[1] = 0.0;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
-            else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (cmd->vertical_collide & 0x02))
+            else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 64.0))
             {
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_IDLE))
                 {
@@ -1490,7 +1489,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                     pos[1] = cmd->climb_pos[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                     pos[2] = cmd->climb_pos[2] - ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                    vec3_set_zero(ent->character->speed.m_floats);
+                    vec3_set_zero(ent->speed.m_floats);
                 }
             }
             else if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
@@ -1499,7 +1498,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                if(ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_1)      // next free fall stage
+                if(ent->speed.m_floats[2] > -FREE_FALL_SPEED_1)      // next free fall stage
                 {
                     ent->anim_flags = ANIM_LOOP_LAST_FRAME;
                 }
@@ -1531,9 +1530,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->angles[0] = next_fc.edge_z_ang;
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
-                    ent->character->speed.m_floats[0] = 0.0;
-                    ent->character->speed.m_floats[1] = 0.0;
-                    ent->character->speed.m_floats[2] = 0.0;
+                    ent->speed.m_floats[0] = 0.0;
+                    ent->speed.m_floats[1] = 0.0;
+                    ent->speed.m_floats[2] = 0.0;
                 }
             }
 
@@ -1542,7 +1541,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                 pos[1] = cmd->climb_pos[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                 pos[2] = cmd->climb_pos[2] -  ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                vec3_set_zero(ent->character->speed.m_floats);
+                vec3_set_zero(ent->speed.m_floats);
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_HANG))
                 {
                     cmd->action = 1;
@@ -1571,7 +1570,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);       // middle landing
             }
-            else if((cmd->action == 1) && (ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_2))
+            else if((cmd->action == 1) && (ent->speed.m_floats[2] > -FREE_FALL_SPEED_2))
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // continue trying to hang
             }
@@ -1602,14 +1601,31 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_ANIMATION_LARA_OSCILLATE_HANG_ON:                               ///@FIXME: does not works correct in TR3+ versions - ceiling climb IDLE
             cmd->rot[0] = 0;
-            if(cmd->action == 1)
+            if(ent->move_type == MOVE_CLIMBING)
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+                if(cmd->action == 1)
+                {
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+                }
+                else
+                {
+                    ent->move_type = MOVE_FREE_FALLING;
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                    //vec3_set_zero(ent->speed.m_floats);
+                    //ent->current_speed = 0.0;
+                }
             }
-            else
+            else                                                                // CEILING_CLIMB
             {
-                ent->move_type = MOVE_FREE_FALLING;
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                if(cmd->action == 1)
+                {
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+                }
+                else
+                {
+                    ent->move_type = MOVE_FREE_FALLING;
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                }
             }
             break;
             
@@ -1658,7 +1674,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                         pos[1] = cmd->climb_pos[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                         pos[2] = cmd->climb_pos[2] - ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                        vec3_set_zero(ent->character->speed.m_floats);                        
+                        vec3_set_zero(ent->speed.m_floats);                        
                         ent->anim_flags = ANIM_LOOP_LAST_FRAME;                 // disable shake
                         Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); // hang IDLE
                     }
@@ -1704,7 +1720,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                     pos[1] = cmd->climb_pos[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                     pos[2] = cmd->climb_pos[2] - ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                    vec3_set_zero(ent->character->speed.m_floats);
+                    vec3_set_zero(ent->speed.m_floats);
                 }
             }
             else
@@ -1732,7 +1748,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                     pos[1] = cmd->climb_pos[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                     pos[2] = cmd->climb_pos[2] - ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                    vec3_set_zero(ent->character->speed.m_floats);
+                    vec3_set_zero(ent->speed.m_floats);
                 }
                 else
                 {
@@ -1793,7 +1809,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                     pos[1] = cmd->climb_pos[1] - (LARA_HANG_WALL_DISTANCE ) * ent->transform[4 + 1];
                     pos[2] = cmd->climb_pos[2] - ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                    vec3_set_zero(ent->character->speed.m_floats);
+                    vec3_set_zero(ent->speed.m_floats);
                 }
                 else
                 {
@@ -1999,7 +2015,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                if(ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_1)
+                if(ent->speed.m_floats[2] > -FREE_FALL_SPEED_1)
                 {
                     ent->anim_flags = ANIM_LOOP_LAST_FRAME;
                     Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);// continue flying
@@ -2025,7 +2041,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {                                                                   ///@FIXME: check real speed
-                if(ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_1)
+                if(ent->speed.m_floats[2] > -FREE_FALL_SPEED_1)
                 {
                     ent->anim_flags = ANIM_LOOP_LAST_FRAME;
                 }
@@ -2135,7 +2151,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_TRY_HANG_FALL);
             }
-            else if(ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_1)
+            else if(ent->speed.m_floats[2] > -FREE_FALL_SPEED_1)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
             }
@@ -2169,7 +2185,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_TRY_HANG_FALL);
             }
-            else if(ent->character->speed.m_floats[2] < -FREE_FALL_SPEED_2)
+            else if(ent->speed.m_floats[2] < -FREE_FALL_SPEED_2)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_FREEFALL);   // next free fall stage
             }
@@ -2188,7 +2204,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_UNDERWATER_DIVING);
             }
-            else if(ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_2)
+            else if(ent->speed.m_floats[2] > -FREE_FALL_SPEED_2)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
             }
@@ -2236,9 +2252,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->angles[0] = next_fc.edge_z_ang;
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
-                    ent->character->speed.m_floats[0] = 0.0;
-                    ent->character->speed.m_floats[1] = 0.0;
-                    ent->character->speed.m_floats[2] = 0.0;
+                    ent->speed.m_floats[0] = 0.0;
+                    ent->speed.m_floats[1] = 0.0;
+                    ent->speed.m_floats[2] = 0.0;
                 }
             }
 
@@ -2247,7 +2263,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 pos[0] = cmd->climb_pos[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                 pos[1] = cmd->climb_pos[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                 pos[2] = cmd->climb_pos[2] -  ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                vec3_set_zero(ent->character->speed.m_floats);
+                vec3_set_zero(ent->speed.m_floats);
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_HANG))
                 {
 #if OSCILLATE_HANG_USE
@@ -2319,10 +2335,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);    // stay
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // stay
             }
             break;
-         /*
+         
         case TR_ANIMATION_LARA_LANDING_MIDDLE:                                  // It is a side landing too
             if(cmd->kill == 1)
             {
@@ -2342,34 +2358,34 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->move[0] == 1 && cmd->jump == 0 && cmd->crouch == 0)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                Entity_Frame(ent, engine_frame_time, 1);                        // start run
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_RUN_FORWARD);        // start run
             }
             else if(cmd->move[0] == 0 && cmd->move[1] == 1 && cmd->jump == 0 && cmd->crouch == 0)
             {
-                Entity_Frame(ent, engine_frame_time, 6);                        // rotate
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_TURN_RIGHT_SLOW);    // rotate
             }
             else if(cmd->move[0] == 0 && cmd->move[1] ==-1 && cmd->jump == 0 && cmd->crouch == 0)
             {
-                Entity_Frame(ent, engine_frame_time, 7);                        // rotate
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_TURN_LEFT_SLOW);     // rotate
             }
             else if(cmd->jump == 1 && cmd->crouch == 0 && (cmd->move[0] != 0 || cmd->move[1] != 0))
             {
                 cmd->rot[0] = 0.0;
-                Entity_Frame(ent, engine_frame_time, 15);                       // side jumping
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_PREPARE);       // side jumping
             }
             else
             {
                 cmd->rot[0] = 0.0;
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);                       // stay
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);                 // stay
             }
             break;
-            */
+            
         case TR_ANIMATION_LARA_LANDING_HARD:
-            if(ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_1)          // landing light
+            if(ent->speed.m_floats[2] > -FREE_FALL_SPEED_1)          // landing light
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_LIGHT, 0);
             }
-            else if(ent->character->speed.m_floats[2] > -FREE_FALL_SPEED_2)     // landing middle
+            else if(ent->speed.m_floats[2] > -FREE_FALL_SPEED_2)     // landing middle
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_MIDDLE, 0);
             }
@@ -2383,7 +2399,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);    // landing hard
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // landing hard
             }
             break;
 
@@ -2398,7 +2414,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);    // landing hard
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // landing hard
             }
             break;
 
@@ -2429,7 +2445,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);    // underwater IDLE
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // underwater IDLE
             }
             break;
 
@@ -2459,7 +2475,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else
                 {
-                    Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);// continue swimming
+                    Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);     // continue swimming
                 }
             }
             else
@@ -2500,9 +2516,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->move_type = MOVE_CLIMBING;
                     ent->angles[0] = next_fc.edge_z_ang;
                     ent->current_speed = 0.0;
-                    ent->character->speed.m_floats[0] = 0.0;
-                    ent->character->speed.m_floats[1] = 0.0;
-                    ent->character->speed.m_floats[2] = 0.0;
+                    ent->speed.m_floats[0] = 0.0;
+                    ent->speed.m_floats[1] = 0.0;
+                    ent->speed.m_floats[2] = 0.0;
                     Entity_UpdateRotation(ent);
                     vec3_copy(cmd->climb_pos, next_fc.edge_point.m_floats);
                 }
@@ -2510,12 +2526,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if(ent->move_type == MOVE_CLIMBING)
             {
-                vec3_set_zero(ent->character->speed.m_floats);
+                vec3_set_zero(ent->speed.m_floats);
                 cmd->rot[0] = 0.0;
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP))
                 {
                     ent->current_speed = 0.0;
-                    vec3_set_zero(ent->character->speed.m_floats);
+                    vec3_set_zero(ent->speed.m_floats);
                     vec3_copy(pos, cmd->climb_pos);
                     cmd->climb_pos[0] += ent->transform[4 + 0] * 64.0;
                     cmd->climb_pos[1] += ent->transform[4 + 1] * 64.0;
@@ -2581,12 +2597,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if(ent->move_type == MOVE_CLIMBING)
             {
-                vec3_set_zero(ent->character->speed.m_floats);
+                vec3_set_zero(ent->speed.m_floats);
                 cmd->rot[0] = 0.0;
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_ONWATER_STOP))
                 {
                     ent->current_speed = 0.0;
-                    vec3_set_zero(ent->character->speed.m_floats);
+                    vec3_set_zero(ent->speed.m_floats);
                     vec3_copy(pos, cmd->climb_pos);
                     cmd->climb_pos[0] += ent->transform[4 + 0] * 64.0;
                     cmd->climb_pos[1] += ent->transform[4 + 1] * 64.0;
@@ -2995,8 +3011,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
              */
             if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
             {
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_ROPE_TO_FALL);
-                ent->move_type = MOVE_FREE_FALLING;
+                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_ROPE_TO_FALL))
+                {
+                    ent->move_type = MOVE_FREE_FALLING;
+                }
             }
             else if(cmd->shift && (cmd->move[1] ==-1))
             {
@@ -3023,6 +3041,17 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
             }
             break;
+            
+        /*case TR_ANIMATION_LARA_MONKEY_FALL:
+            if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT))
+            {
+                if(cmd->action)
+                {
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
+                    pos[2] = curr_fc->ceiling_point.m_floats[2] - (ent->bf.bb_max[2] + 72.0);
+                }
+            }
+            break;*/
             
         case TR_ANIMATION_LARA_MONKEY_TURN_LEFT:
             cmd->rot[0] *= 0.5;

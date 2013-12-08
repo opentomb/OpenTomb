@@ -117,6 +117,7 @@ typedef struct entity_s
     uint8_t                             hide;
     
     btScalar                            current_speed;                          // current linear speed from animation info
+    btVector3                           speed;                                  // speed of the entity XYZ
     struct ss_bone_frame_s              bf;                                     // current boneframe with full frame information 
     struct bone_frame_s                *next_bf;
     btScalar                            angles[3];

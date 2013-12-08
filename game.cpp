@@ -200,10 +200,7 @@ void Save_Entity(FILE **f, entity_p ent)
     y = 1;
     fprintf(*f, "\n\troom \t%d\t%d\t%d", r, x, y);
     fprintf(*f, "\n\tmove \t%d", ent->move_type);
-    if(ent->character)
-    {
-        fprintf(*f, "\n\tspeed \t%f\t%f\t%f", ent->character->speed.m_floats[0], ent->character->speed.m_floats[1], ent->character->speed.m_floats[2]);
-    }
+    fprintf(*f, "\n\tspeed \t%f\t%f\t%f", ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\n}\n");
 }
 

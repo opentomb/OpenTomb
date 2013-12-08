@@ -49,6 +49,7 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf.centre);  
     vec3_set_zero(ret->bf.pos);  
     vec4_set_zero(ret->collision_offset.m_floats);                              // not an error, really btVector3 has 4 points in array
+    vec4_set_zero(ret->speed.m_floats);
     
     return ret;
 }

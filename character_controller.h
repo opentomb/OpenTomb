@@ -117,8 +117,6 @@ typedef struct character_s
     int16_t                      max_move_iterations;
     int16_t                      no_fix;
     
-    btVector3                    speed;                  // speed of character
-    
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;

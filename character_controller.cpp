@@ -63,8 +63,6 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
     ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * r)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * r);
     ret->wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;
-    
-    vec3_set_zero(ret->speed.m_floats);
 
     ret->Radius = r;
     ret->Height = h;
@@ -555,7 +553,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     btScalar n0[4], n1[4], n2[4];                                               // planes equations
     btTransform t1, t2;
     char up_founded;
-    extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
+    //extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
     /*
      * init callbacks functions
      */
@@ -591,9 +589,9 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     t2.setIdentity();
     up_founded = 0;
     d = ((ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point.m_floats[2] + ent->character->climb_r + 1.0):(pos[2] - ent->character->max_step_up_height));
-    vec3_copy(cast_ray, to.m_floats);
-    vec3_copy(cast_ray+3, cast_ray);
-    cast_ray[5] -= d;
+    //vec3_copy(cast_ray, to.m_floats);
+    //vec3_copy(cast_ray+3, cast_ray);
+    //cast_ray[5] -= d;
     do
     {
         t1.setOrigin(from);
@@ -924,30 +922,30 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
     btScalar t, vz;
 
     t = ent->current_speed * ent->character->speed_mult;
-    vz = (zeroVz)?(0.0):(ent->character->speed.m_floats[2]);
+    vz = (zeroVz)?(0.0):(ent->speed.m_floats[2]);
     
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->character->speed.m_floats, ent->transform+4, t);
+        vec3_mul_scalar(ent->speed.m_floats, ent->transform+4, t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->character->speed.m_floats, ent->transform+4,-t);
+        vec3_mul_scalar(ent->speed.m_floats, ent->transform+4,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->character->speed.m_floats, ent->transform+0,-t);
+        vec3_mul_scalar(ent->speed.m_floats, ent->transform+0,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->character->speed.m_floats, ent->transform+0, t);
+        vec3_mul_scalar(ent->speed.m_floats, ent->transform+0, t);
     }
     else
     {
         //ent->dir_flag = ENT_MOVE_FORWARD;
     }
     
-    ent->character->speed.m_floats[2] = vz;
+    ent->speed.m_floats[2] = vz;
 }
 
 
@@ -991,10 +989,10 @@ int Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_ho
     
     // Jump speed should NOT be added to current speed, as native engine
     // fully replaces current speed with jump speed by anim command.
-    ent->character->speed = spd;
+    ent->speed = spd;
     
     // Apply vertical speed.
-    ent->character->speed.m_floats[2] = v_vertical * ent->character->speed_mult;
+    ent->speed.m_floats[2] = v_vertical * ent->character->speed_mult;
     ent->move_type = MOVE_FREE_FALLING;
 
     return 0;
@@ -1043,7 +1041,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height < pos[2])
         {
             ent->move_type = MOVE_FREE_FALLING;
-            ent->character->speed.m_floats[2] = 0.0;
+            ent->speed.m_floats[2] = 0.0;
             return -1;                                                          // nothing to do here
         }
         else
@@ -1110,14 +1108,14 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         cmd->slide = 0x00;
         cmd->vertical_collide = 0x00;
         ent->move_type = MOVE_FREE_FALLING;
-        ent->character->speed.m_floats[2] = 0.0;
+        ent->speed.m_floats[2] = 0.0;
         return -1;                                                              // nothing to do here
     }
 
     /*
      * now move normally
      */
-    ent->character->speed = spd;
+    ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
     iter = 2.0 * t / ent->character->Radius + 1;
@@ -1146,7 +1144,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
-
+        
         if(ent->character->height_info.floor_hit)
         {
             if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height > pos[2])
@@ -1159,9 +1157,8 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
             else
             {
                 ent->move_type = MOVE_FREE_FALLING;
-                ent->character->speed.m_floats[2] = 0.0;
-                Mat4_vec3_mul_macro(tv.m_floats, ent->transform, ent->collision_offset.m_floats);
-                ent->self->room = Room_FindPosCogerrence(&engine_world, tv.m_floats, ent->self->room);
+                ent->speed.m_floats[2] = 0.0;
+                Entity_UpdateRoomPos(ent);
                 return 2;
             }            
             if(pos[2] < ent->character->height_info.floor_point.m_floats[2])
@@ -1173,7 +1170,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         else
         {
             ent->move_type = MOVE_FREE_FALLING;
-            ent->character->speed.m_floats[2] = 0.0;
+            ent->speed.m_floats[2] = 0.0;
             Entity_UpdateRoomPos(ent);
             return 2;
         }
@@ -1213,10 +1210,10 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     ent->angles[2] = 0.0;
     Entity_UpdateRotation(ent);                                                 // apply rotations
     
-    move = ent->character->speed + bt_engine_dynamicsWorld->getGravity() * engine_frame_time * 0.5;
+    move = ent->speed + bt_engine_dynamicsWorld->getGravity() * engine_frame_time * 0.5;
     move *= engine_frame_time;
-    ent->character->speed += bt_engine_dynamicsWorld->getGravity() * engine_frame_time;
-    vec3_RotateZ(ent->character->speed.m_floats, ent->character->speed.m_floats, cmd->rot[0] * 0.5); ///@FIXME magic const
+    ent->speed += bt_engine_dynamicsWorld->getGravity() * engine_frame_time;
+    vec3_RotateZ(ent->speed.m_floats, ent->speed.m_floats, cmd->rot[0] * 0.5);  ///@FIXME magic const
     
     t = move.length();
     iter = 2.0 * t / ent->character->Radius + 1;
@@ -1231,11 +1228,11 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     
     if(ent->self->room && (ent->self->room->flags & 0x01))
     {
-        if(ent->character->speed.m_floats[2] < 0.0)
+        if(ent->speed.m_floats[2] < 0.0)
         {
             ent->current_speed = 0.0;
-            ent->character->speed.m_floats[0] = 0.0;
-            ent->character->speed.m_floats[1] = 0.0;
+            ent->speed.m_floats[0] = 0.0;
+            ent->speed.m_floats[1] = 0.0;
         } 
         
         if(!ent->character->height_info.water || (pos[2] + ent->character->Height < ent->character->height_info.water_level))
@@ -1245,30 +1242,32 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
         }
     }
     
-    if(ent->character->height_info.ceiling_hit && ent->character->speed.m_floats[2] > 0.0)
+    if(ent->character->height_info.ceiling_hit && ent->speed.m_floats[2] > 0.0)
     {
         if(ent->character->height_info.ceiling_point.m_floats[2] < ent->bf.bb_max[2] + pos[2])
         {
             pos[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->bf.bb_max[2];
-            ent->character->speed.m_floats[2] = 0.0;
+            ent->speed.m_floats[2] = 0.0;
             cmd->vertical_collide |= 0x02;
             Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
             Character_GetHeightInfo(fc_pos, &ent->character->height_info);
             Character_FixPenetrations(ent, cmd, move);
+            Entity_UpdateRoomPos(ent);
         }
     }
-    if(ent->character->height_info.floor_hit && ent->character->speed.m_floats[2] < 0.0)                 // move down
+    if(ent->character->height_info.floor_hit && ent->speed.m_floats[2] < 0.0)                 // move down
     {
         if(ent->character->height_info.floor_point.m_floats[2] >= pos[2] + ent->bf.bb_min[2] + move.m_floats[2])
         {
             pos[2] = ent->character->height_info.floor_point.m_floats[2];
-            //ent->character->speed.m_floats[2] = 0.0;
+            //ent->speed.m_floats[2] = 0.0;
             ent->move_type = MOVE_ON_FLOOR;
             cmd->vertical_collide |= 0x01;
             Entity_UpdateRoomPos(ent);
             Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
             Character_GetHeightInfo(fc_pos, &ent->character->height_info);
             Character_FixPenetrations(ent, cmd, move);
+            Entity_UpdateRoomPos(ent);
             return 2;
         }
     }
@@ -1280,27 +1279,28 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                // get horizontal collide
 
-        if(ent->character->height_info.ceiling_hit && ent->character->speed.m_floats[2] > 0.0)
+        if(ent->character->height_info.ceiling_hit && ent->speed.m_floats[2] > 0.0)
         {
             if(ent->character->height_info.ceiling_point.m_floats[2] < ent->bf.bb_max[2] + pos[2])
             {
                 pos[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->bf.bb_max[2];
-                ent->character->speed.m_floats[2] = 0.0;
+                ent->speed.m_floats[2] = 0.0;
                 cmd->vertical_collide |= 0x02;
             }
         }
-        if(ent->character->height_info.floor_hit && ent->character->speed.m_floats[2] < 0.0)             // move down
+        if(ent->character->height_info.floor_hit && ent->speed.m_floats[2] < 0.0)             // move down
         {
             if(ent->character->height_info.floor_point.m_floats[2] >= pos[2] + ent->bf.bb_min[2] + move.m_floats[2])
             {
                 pos[2] = ent->character->height_info.floor_point.m_floats[2];
-                //ent->character->speed.m_floats[2] = 0.0;
+                //ent->speed.m_floats[2] = 0.0;
                 ent->move_type = MOVE_ON_FLOOR;
                 cmd->vertical_collide |= 0x01;
                 Entity_UpdateRoomPos(ent);
                 Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
                 Character_GetHeightInfo(fc_pos, &ent->character->height_info);
                 Character_FixPenetrations(ent, cmd, move);
+                Entity_UpdateRoomPos(ent);
                 return 2;
             }
         }
@@ -1358,8 +1358,9 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
     }
     cmd->slide = 0x00;
     
-    ent->character->speed = spd;
+    ent->speed = spd;
     move = spd * engine_frame_time;
+    move.m_floats[2] = 0.0;
     t = move.length();
     iter = 2.0 * t / ent->character->Radius + 1;
     if(iter < 1)
@@ -1375,7 +1376,8 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
         Character_UpdateCurrentHeight(ent);
-        if(ent->character->height_info.ceiling_hit && ent->character->height_info.ceiling_climb)
+        Entity_UpdateRoomPos(ent);
+        if(ent->character->height_info.ceiling_hit && (fabs(pos[2] + ent->bf.bb_max[2] - ent->character->height_info.ceiling_point.m_floats[2]) < 0.25 * ent->character->min_step_up_height))
         {
             pos[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->bf.bb_max[2];
         }
@@ -1440,7 +1442,7 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
     }
     cmd->slide = 0x00;
     
-    ent->character->speed = spd;
+    ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
     iter = 2.0 * t / ent->character->Radius + 1;
@@ -1514,7 +1516,7 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
     Entity_UpdateRotation(ent);                                                 // apply rotations
 
     vec3_mul_scalar(spd.m_floats, ent->transform+4, t);
-    ent->character->speed = spd;
+    ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
     iter = 2.0 * t / ent->character->Radius + 1;
@@ -1601,7 +1603,7 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     /*
      * Prepare to moving
      */    
-    ent->character->speed = spd;
+    ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
     iter = 2.0 * t / ent->character->Radius + 1;
