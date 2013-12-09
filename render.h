@@ -46,10 +46,15 @@ enum BlendingMode
 
 // Animated texture types
 
-#define TR_ANIMTEXTURE_FORWARD     0
-#define TR_ANIMTEXTURE_BACKWARD    1
-#define TR_ANIMTEXTURE_REVERSE     2
-#define TR_ANIMTEXTURE_UVROTATE    3
+#define TR_ANIMTEXTURE_FORWARD           0
+#define TR_ANIMTEXTURE_BACKWARD          1
+#define TR_ANIMTEXTURE_REVERSE           2
+
+#define TR_ANIMTEXTURE_UVROTATE_FORWARD  0
+#define TR_ANIMTEXTURE_UVROTATE_BACKWARD 1
+#define TR_ANIMTEXTURE_UVROTATE_REVERSE  2
+
+#define TR_ANIMTEXTURE_UPDATE_INTERVAL   0.02   // 50 FPS
 
 struct portal_s;
 struct world_s;
