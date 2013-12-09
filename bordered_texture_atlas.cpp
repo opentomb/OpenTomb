@@ -430,11 +430,24 @@ void BorderedTextureAtlas_AddSpriteTexture(bordered_texture_atlas_p atlas,
     atlas->number_sprite_textures += 1;
 }
 
+unsigned long BorderedTextureAtlas_GetTextureHeight(bordered_texture_atlas_p atlas,
+                                                    unsigned long texture)
+{
+    assert(texture < atlas->number_file_object_textures);
+    
+    struct file_object_texture_s *file_object_texture = atlas->file_object_textures + texture;
+    struct canonical_object_texture_s *canonical = atlas->canonical_object_textures + file_object_texture->canonical_texture_index;
+    
+    return canonical->width;
+}
+
 ///@FIXME - use polygon_p to replace vertex and numCoordinates (maybe texture in / out))
 void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
                                          unsigned long texture,
                                          int reverse,
-                                         polygon_p poly)
+                                         polygon_p poly,
+                                         signed shift,
+                                         bool split)
 {
     assert(poly->vertex_count <= 4);
 
@@ -455,19 +468,29 @@ void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
         {
             case TOP_LEFT:
                 x_coord = canonical->new_x_with_border + atlas->border_width;
-                y_coord = canonical->new_y_with_border + atlas->border_width;
+                y_coord = canonical->new_y_with_border + atlas->border_width - shift;
+                
+                if(split)
+                {
+                    y_coord += (canonical->height / 2);
+                }
                 break;
             case TOP_RIGHT:
                 x_coord = canonical->new_x_with_border + atlas->border_width + canonical->width;
-                y_coord = canonical->new_y_with_border + atlas->border_width;
+                y_coord = canonical->new_y_with_border + atlas->border_width - shift;
+                
+                if(split)
+                {
+                    y_coord += (canonical->height / 2);
+                }
                 break;
             case BOTTOM_LEFT:
                 x_coord = canonical->new_x_with_border + atlas->border_width;
-                y_coord = canonical->new_y_with_border + atlas->border_width + canonical->height;
+                y_coord = canonical->new_y_with_border + atlas->border_width + canonical->height - shift;
                 break;
             case BOTTOM_RIGHT:
                 x_coord = canonical->new_x_with_border + atlas->border_width + canonical->width;
-                y_coord = canonical->new_y_with_border + atlas->border_width + canonical->height;
+                y_coord = canonical->new_y_with_border + atlas->border_width + canonical->height - shift;
                 break;
             default:
                 assert(0);

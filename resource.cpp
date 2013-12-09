@@ -971,22 +971,46 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     memset(world->anim_sequences, 0, sizeof(anim_seq_t) * num_sequences);   // Reset all structure.
     
     for(i = 0; i < num_sequences; i++)
-    {
-        // Fill up new sequence with frame list.
-        world->anim_sequences[i].type          = TR_ANIMTEXTURE_FORWARD;
-        world->anim_sequences[i].type_flag     = 0;     // Needed for proper reverse-type start-up.
-        world->anim_sequences[i].frame_rate    = 0.05;  // Should be passed as 1 / FPS.
-        world->anim_sequences[i].frame_time    = 0.0;   // Reset frame time to initial state.
-        world->anim_sequences[i].current_frame = 0;     // Reset current frame to zero.
-        
+    {        
         world->anim_sequences[i].frame_count = *(pointer++) + 1;
         world->anim_sequences[i].frame_list  =  (uint32_t*)malloc(world->anim_sequences[i].frame_count * sizeof(uint32_t));
         
+        // Fill up new sequence with frame list.
+        world->anim_sequences[i].type          = TR_ANIMTEXTURE_FORWARD;
+        world->anim_sequences[i].type_flag     = false; // Needed for proper reverse-type start-up.
+        world->anim_sequences[i].frame_rate    = 0.05;  // Should be passed as 1 / FPS.
+        world->anim_sequences[i].frame_time    = 0.0;   // Reset frame time to initial state.
+        world->anim_sequences[i].current_frame = 0;     // Reset current frame to zero.
+
         for(int j = 0; j < world->anim_sequences[i].frame_count; j++)
         {
             world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
         }
-    }
+        
+        // UVRotate textures case.
+        // In TR4-5, it is possible to define special UVRotate animation mode
+        // by creating animation sequence with only one frame. In this case,
+        // this frame will be divided in half and continously scrolled from
+        // one part to another by shifting UV coordinates. In OpenTomb, we can
+        // have BOTH UVRotate and classic frames mode applied to the same sequence,
+        // but there we specify compatibility method for TR4-5.
+        
+        if(world->anim_sequences[i].frame_count == 1)
+        {
+            world->anim_sequences[i].uvrotate         = true;
+            world->anim_sequences[i].uvrotate_flag    = false;
+            world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_FORWARD;
+            world->anim_sequences[i].uvrotate_speed   = 1;  ///@FIXME: Later to be assigned with script!
+            world->anim_sequences[i].uvrotate_time    = 0.0;
+            
+            // Get texture height and divide it in half.
+            // This way, we get a reference value which is used to identify
+            // if scrolling is completed or not.
+            
+            world->anim_sequences[i].uvrotate_max     = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, world->anim_sequences[i].frame_list[0]) / 2);
+        }
+        
+    } // end for(i = 0; i < num_sequences; i++)
 }
 
 /**   Assign animated texture to a polygon.
@@ -1002,13 +1026,14 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
     
     polygon->anim_id = 0;                           // Reset to 0 by default.
     tex_index = tex_index & TR_TEXTURE_INDEX_MASK;  ///@FIXME: Is it really needed?
-                
+    
     for(i = 0; i < world->anim_sequences_count; i++)
     {
         for(j = 0; j < world->anim_sequences[i].frame_count; j++)
         {  
             if(world->anim_sequences[i].frame_list[j] == tex_index)
             {
+                
                 // If we have found assigned texture ID in animation texture lists,
                 // we assign corresponding animation sequence to this polygon,
                 // additionally specifying frame offset.
