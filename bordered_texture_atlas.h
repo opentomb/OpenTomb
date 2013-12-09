@@ -100,7 +100,9 @@ void BorderedTextureAtlas_AddSpriteTexture(bordered_texture_atlas_p atlas,
 void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
                                          unsigned long texture,
                                          int reverse,
-                                         polygon_p poly);
+                                         polygon_p poly,
+                                         signed shift = 0,
+                                         bool split = false);
 
 /*!
  * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
@@ -114,6 +116,12 @@ void BorderedTextureAtlas_GetSpriteCoordinates(bordered_texture_atlas_p atlas, u
 unsigned long BorderedTextureAtlas_GetNumAtlasPages(bordered_texture_atlas_p atlas);
 
 /*!
+ * Returns height of specified file object texture.
+ */
+unsigned long BorderedTextureAtlas_GetTextureHeight(bordered_texture_atlas_p atlas,
+                                                    unsigned long texture);
+
+/*!
  * Uploads the current data to OpenGL, as one or more texture pages.
  * textureNames has to have a length of at least GetNumAtlasPages and will
  * contain the names of the pages on return.
@@ -122,6 +130,12 @@ unsigned long BorderedTextureAtlas_GetNumAtlasPages(bordered_texture_atlas_p atl
  * @param additionalTextureNames How many texture names to create in addition to the needed ones.
  */
 void BorderedTextureAtlas_CreateTextures(bordered_texture_atlas_p atlas, GLuint *textureNames, GLuint additionalTextureNames);
+ 
+/*!
+ * Returns height of desired TexInfo.
+ * layout if none has happened so far.
+ */
+ 
  
 #ifdef __cplusplus
 } // extern "C"

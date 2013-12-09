@@ -71,18 +71,26 @@ typedef struct sprite_s
  */
 typedef struct anim_seq_s
 {
-    int8_t      type;           // 0 = normal, 1 = back, 2 = reverse, 3 = UVRotate (to be done later).
-    bool        type_flag;      // Used only with type 3 to identify current animation direction.
+    int8_t      type;             // 0 = normal, 1 = back, 2 = reverse.
+    bool        type_flag;        // Used only with type 2 to identify current animation direction.
     
-    bool        blend;          // Types 0-2 blending between frames. Reserved for future use.
-    btScalar    blend_rate;     // Blend rate. Reserved for future use.
-    btScalar    blend_time;     // Transition value. Reserved for future use.
+    bool        blend;            // Blend flag.  Reserved for future use!
+    btScalar    blend_rate;       // Blend rate.  Reserved for future use!
+    btScalar    blend_time;       // Blend value. Reserved for future use!
     
-    uint32_t    current_frame;  // Current frame for this sequence.
-    btScalar    frame_rate;     // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
-    btScalar    frame_time;     // Time passed since last update.
-    uint32_t    frame_count;    // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
-    uint32_t*   frame_list;     // Offset into anim textures frame list.
+    bool        uvrotate;         // UVRotate mode flag.
+    int8_t      uvrotate_type;    // 0 = normal, 1 = back, 2 = reverse.
+    bool        uvrotate_flag;    // Used only with type 2 to identify current animation direction.
+    btScalar    uvrotate_speed;   // Speed of UVRotation, in seconds.
+    btScalar    uvrotate_time;    // Time passed since last UVRotate update.
+    btScalar    uvrotate_max;     // Reference value used to restart rotation.
+    btScalar    current_uvrotate; // Current coordinate window position.
+    
+    uint32_t    current_frame;    // Current frame for this sequence.
+    btScalar    frame_rate;       // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
+    btScalar    frame_time;       // Time passed since last update.
+    uint32_t    frame_count;      // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
+    uint32_t*   frame_list;       // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;
 
 
