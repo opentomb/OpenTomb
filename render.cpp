@@ -265,7 +265,7 @@ void Render_UpdateAnimTextures()    // This function is used for updating global
         
         if(current_sequence->frame_time >= current_sequence->frame_rate)    // If it's time to update...
         {
-            current_sequence->frame_time     = 0;   // Reset interval counter.
+            current_sequence->frame_time     = 0.0;   // Reset interval counter.
             
             // We have different ways of animating textures, depending on type.
             // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
@@ -334,8 +334,80 @@ void Render_UpdateAnimTextures()    // This function is used for updating global
         else
         {
             current_sequence->frame_time += engine_frame_time;   // Simply increase interval timer.
-        }
-    }
+        } // end if(current_sequence->frame_time >= current_sequence->frame_rate)
+        
+        
+        if(current_sequence->uvrotate)  // Also apply UVRotate, if option is set.
+        {
+            if(current_sequence->uvrotate_time >= TR_ANIMTEXTURE_UPDATE_INTERVAL)  // If it's time to update...
+            {
+                current_sequence->uvrotate_time = 0.0;  // Reset interval counter.
+                
+                switch(current_sequence->uvrotate_type)
+                {
+                    case TR_ANIMTEXTURE_UVROTATE_FORWARD:
+                        if(current_sequence->current_uvrotate < current_sequence->uvrotate_max)
+                        {
+                            current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
+                        }
+                        else
+                        {
+                            // Restart rotation.
+                            current_sequence->current_uvrotate = current_sequence->uvrotate_speed;
+                        }
+                        break;
+                        
+                    case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
+                        if(current_sequence->current_uvrotate > 0)
+                        {
+                            current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
+                        }
+                        else
+                        {
+                            // Restart rotation.
+                            current_sequence->current_uvrotate = current_sequence->uvrotate_max - current_sequence->uvrotate_speed;
+                        }
+                        break;
+                        
+                    case TR_ANIMTEXTURE_UVROTATE_REVERSE:
+                        if(!current_sequence->uvrotate_flag) // Take action, depending on direction flag.
+                        {
+                            if(current_sequence->current_uvrotate < current_sequence->uvrotate_max)
+                            {
+                                current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
+                            }
+                            else
+                            {
+                                // End is reached, reverse rotation direction.
+                                current_sequence->uvrotate_flag = true;
+                                // Eat up dublicate position.
+                                current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
+                            }
+                        }
+                        else
+                        {
+                            if(current_sequence->current_uvrotate > 0)
+                            {
+                                current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
+                            }
+                            else
+                            {
+                                // End is reached, reverse rotation direction.
+                                current_sequence->uvrotate_flag = false;
+                                // Eat up dublicate position.
+                                current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
+                            }
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                current_sequence->uvrotate_time += engine_frame_time;   // Simply increase interval timer.
+            }
+        } // end if(current_sequence->uvrotate)
+        
+    } // end for(int i = 0; i < engine_world.anim_sequences_count; i++)
 }
 
 void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys themselves.
@@ -368,10 +440,22 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
         tex_id = seq->frame_list[tex_id];   // Extract TexInfo ID from sequence frame list.
         
         // Write new texture coordinates to polygon.
-        BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas,
-                                            tex_id,
-                                            1, 
-                                            polygon);
+        if(seq->uvrotate)
+        {
+            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas,
+                                                tex_id,
+                                                1, 
+                                                polygon,
+                                                seq->current_uvrotate,
+                                                true);
+        }
+        else
+        {
+            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas,
+                                                tex_id,
+                                                1, 
+                                                polygon);
+        }
     }
 }
 
