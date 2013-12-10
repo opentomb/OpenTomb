@@ -54,7 +54,7 @@ enum BlendingMode
 #define TR_ANIMTEXTURE_UVROTATE_BACKWARD 1
 #define TR_ANIMTEXTURE_UVROTATE_REVERSE  2
 
-#define TR_ANIMTEXTURE_UPDATE_INTERVAL   0.02   // 50 FPS
+#define TR_ANIMTEXTURE_UPDATE_INTERVAL   0.0166   // 60 FPS
 
 struct portal_s;
 struct world_s;
