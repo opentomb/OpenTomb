@@ -166,6 +166,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor);
 int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd);
 int Character_FreeFalling(struct entity_s *ent, character_command_p cmd);
 int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd);
+int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd);
 int Character_Climbing(struct entity_s *ent, character_command_p cmd);
 int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);

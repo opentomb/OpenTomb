@@ -130,13 +130,13 @@ unsigned long BorderedTextureAtlas_GetTextureHeight(bordered_texture_atlas_p atl
  * @param additionalTextureNames How many texture names to create in addition to the needed ones.
  */
 void BorderedTextureAtlas_CreateTextures(bordered_texture_atlas_p atlas, GLuint *textureNames, GLuint additionalTextureNames);
- 
+
 /*!
  * Returns height of desired TexInfo.
  * layout if none has happened so far.
  */
- 
- 
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

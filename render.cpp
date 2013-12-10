@@ -242,6 +242,9 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
             case BM_SCREEN:                                      // Screen (smoke, etc.)
                 glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
                 break;
+            case BM_ANIMATED_TEX:
+                glBlendFunc(GL_ONE, GL_ZERO);
+                break;
         };
 
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
@@ -263,9 +266,9 @@ void Render_UpdateAnimTextures()    // This function is used for updating global
     {
         current_sequence = engine_world.anim_sequences + i;
         
-        if(current_sequence->frame_time >= current_sequence->frame_rate)    // If it's time to update...
+        if(current_sequence->frame_time >= current_sequence->frame_rate)        // If it's time to update...
         {
-            current_sequence->frame_time     = 0.0;   // Reset interval counter.
+            current_sequence->frame_time = 0.0;                                 // Reset interval counter.
             
             // We have different ways of animating textures, depending on type.
             // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
@@ -403,13 +406,12 @@ void Render_UpdateAnimTextures()    // This function is used for updating global
             }
             else
             {
-                current_sequence->uvrotate_time += engine_frame_time;   // Simply increase interval timer.
+                current_sequence->uvrotate_time += engine_frame_time;           // Simply increase interval timer.
             }
-        } // end if(current_sequence->uvrotate)
-        
-    } // end for(int i = 0; i < engine_world.anim_sequences_count; i++)
+        }                                                                       // end if(current_sequence->uvrotate)
+    }                                                                           // end for(int i = 0; i < engine_world.anim_sequences_count; i++)
 }
-
+            
 void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys themselves.
 {
     uint32_t    tex_id;
@@ -442,19 +444,12 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
         // Write new texture coordinates to polygon.
         if(seq->uvrotate)
         {
-            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas,
-                                                tex_id,
-                                                1, 
-                                                polygon,
-                                                seq->current_uvrotate,
-                                                true);
+            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 1, 
+                                                polygon, seq->current_uvrotate, true);
         }
         else
         {
-            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas,
-                                                tex_id,
-                                                1, 
-                                                polygon);
+            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 1, polygon);
         }
     }
 }

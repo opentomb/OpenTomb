@@ -41,7 +41,8 @@ enum BlendingMode
     BM_TRANSPARENT_ALPHA,
     BM_INVERT_DEST,
     BM_SCREEN,
-    BM_HIDE
+    BM_HIDE,
+    BM_ANIMATED_TEX
 };
 
 // Animated texture types

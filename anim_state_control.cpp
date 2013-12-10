@@ -197,6 +197,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                ent->dir_flag = ENT_STAY;
             }
             else if(cmd->kill)
             {
@@ -1177,6 +1178,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                ent->dir_flag = ENT_STAY;
             }
             else if(cmd->kill)
             {
@@ -2046,7 +2048,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->anim_flags = ANIM_LOOP_LAST_FRAME;
                 }
                 Character_UpdateCurrentSpeed(ent, 0);
-                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);    // continue falling down
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // continue falling down
             }
             break;
 
@@ -2862,6 +2864,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
                     ent->move_type = MOVE_FREE_FALLING;
+                    ent->dir_flag = ENT_MOVE_BACKWARD;
                 }
                 else
                 {
@@ -3009,6 +3012,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
              * TR_STATE_LARA_MONKEYSWING_RIGHT          TR_ANIMATION_LARA_MONKEY_STRAFE_RIGHT
              * !!! TR_STATE_LARA_CLIMB_TO_CRAWL             TR_ANIMATION_LARA_HANG_TO_CROUCH_BEGIN
              */
+            ent->dir_flag = ENT_STAY;
             if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
             {
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_ROPE_TO_FALL))
@@ -3026,6 +3030,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if(cmd->move[0] == 1)
             {
+                ent->dir_flag = ENT_MOVE_FORWARD;
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_MONKEYSWING_FORWARD);
             }
             else if(cmd->move[1] ==-1)
@@ -3058,6 +3063,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                ent->dir_flag = ENT_STAY;
                 ent->move_type = MOVE_FREE_FALLING;
             }
             else if(cmd->move[1] ==-1)
@@ -3075,6 +3081,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                ent->dir_flag = ENT_STAY;
                 ent->move_type = MOVE_FREE_FALLING;
             }
             else if(cmd->move[1] == 1)
@@ -3089,6 +3096,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             
         case TR_ANIMATION_LARA_MONKEY_FORWARD:
             cmd->rot[0] *= 0.45;
+            ent->dir_flag = ENT_MOVE_FORWARD;
             if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
@@ -3114,6 +3122,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 if(cmd->action == 0 || curr_fc->ceiling_hit == 0)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                    ent->dir_flag = ENT_STAY;
                     ent->move_type = MOVE_FREE_FALLING;
                 }
             }

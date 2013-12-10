@@ -1393,6 +1393,20 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
     return 1;
 }
 
+/*
+ * WALLS CLIMBING - MOVE IN ZT plane
+ */
+int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
+{
+    /*
+     * 1) Get T plane and check sector info;
+     * 2) Check low points and add results to the cmd;
+     * 3) Get cmd move and move in ZT coordinates + fixup position by wall point;
+     * 4) in crash cases go to free fall and retun;
+     */
+    
+    
+}
 
 /*
  * CLIMBING - MOVE NO Z LANDING
@@ -1663,6 +1677,10 @@ void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *c
 
         case MOVE_CEILING_CLMB:
             Character_MonkeyClimbing(ent, cmd);
+            break;
+            
+        case MOVE_WALLS_CLMB:
+            Character_WallsClimbing(ent, cmd);
             break;
             
         case MOVE_UNDER_WATER:

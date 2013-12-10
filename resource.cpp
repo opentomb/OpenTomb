@@ -971,7 +971,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     memset(world->anim_sequences, 0, sizeof(anim_seq_t) * num_sequences);   // Reset all structure.
     
     for(i = 0; i < num_sequences; i++)
-    {        
+    {
         world->anim_sequences[i].frame_count = *(pointer++) + 1;
         world->anim_sequences[i].frame_list  =  (uint32_t*)malloc(world->anim_sequences[i].frame_count * sizeof(uint32_t));
         
@@ -981,7 +981,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         world->anim_sequences[i].frame_rate    = 0.05;  // Should be passed as 1 / FPS.
         world->anim_sequences[i].frame_time    = 0.0;   // Reset frame time to initial state.
         world->anim_sequences[i].current_frame = 0;     // Reset current frame to zero.
-
+        
         for(int j = 0; j < world->anim_sequences[i].frame_count; j++)
         {
             world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
@@ -1011,8 +1011,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             // if scrolling is completed or not.
             
             world->anim_sequences[i].uvrotate_max     = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, world->anim_sequences[i].frame_list[0]) / 2);
-        }
-        
+        } 
     } // end for(i = 0; i < num_sequences; i++)
 }
 
@@ -1029,14 +1028,13 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
     
     polygon->anim_id = 0;                           // Reset to 0 by default.
     tex_index = tex_index & TR_TEXTURE_INDEX_MASK;  ///@FIXME: Is it really needed?
-    
+                
     for(i = 0; i < world->anim_sequences_count; i++)
     {
         for(j = 0; j < world->anim_sequences[i].frame_count; j++)
         {  
             if(world->anim_sequences[i].frame_list[j] == tex_index)
             {
-                
                 // If we have found assigned texture ID in animation texture lists,
                 // we assign corresponding animation sequence to this polygon,
                 // additionally specifying frame offset.
@@ -1152,17 +1150,28 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     {
         face3 = &tr_mesh->textured_triangles[i];
         tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
+
+        Polygon_Resize(p, 3);
+        p->type = !IsInUCRectFace3(tex);
+        
+        SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
+        if(p->anim_id > 0)
+        {
+            if(tex->transparency_flags == 0)
+            {
+                tex->transparency_flags = BM_ANIMATED_TEX;
+            }
+            else if(tex->transparency_flags == 1)
+            {
+                tex->transparency_flags = BM_MULTIPLY;
+            }
+        }
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
         }
-
-        Polygon_Resize(p, 3);
         p->transparency = tex->transparency_flags;
-        p->type = !IsInUCRectFace3(tex);
         
-        SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
-
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[2]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face3->vertices[1]]);
         TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face3->vertices[0]]);
@@ -1233,16 +1242,27 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     {
         face4 = &tr_mesh->textured_rectangles[i];
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
+        Polygon_Resize(p, 4);
+        p->type = !IsInUCRectFace4(tex);
+        
+        SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
+        if(p->anim_id > 0)
+        {
+            if(tex->transparency_flags == 0)
+            {
+                tex->transparency_flags = BM_ANIMATED_TEX;
+            }
+            else if(tex->transparency_flags == 1)
+            {
+                tex->transparency_flags = BM_MULTIPLY;
+            }
+        }
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
         }
-        Polygon_Resize(p, 4);
         p->transparency = tex->transparency_flags;
-        p->type = !IsInUCRectFace4(tex);
         
-        SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
-
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face4->vertices[3]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face4->vertices[2]]);
         TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face4->vertices[1]]);
@@ -1319,7 +1339,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->vertices[3].tex_coord[1] = 1.0;
     }
 
-    //Sys_DebugLog(LOG_FILENAME, "\tcol rects = %d", tr_mesh->coloured_rectangles.size());
     /*
      * let us normalise normales %)
      */
@@ -1444,14 +1463,26 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     {
         face3 = &tr_room->triangles[i];
         tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
+        SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
+        if(p->anim_id > 0)
+        {
+            if(tex->transparency_flags == 0)
+            {
+                tex->transparency_flags = BM_ANIMATED_TEX;
+            }
+            else if(tex->transparency_flags == 1)
+            {
+                tex->transparency_flags = BM_MULTIPLY;
+            }
+        }
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
         }
         Polygon_Resize(p, 3);
-        SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
+        
         p->transparency = tex->transparency_flags;
-        if(p->transparency < 0x0002)
+        if((p->transparency < 0x0002) || (p->transparency == BM_ANIMATED_TEX))
         {
             p->type = !IsInUCRectFace3(tex);
         }
@@ -1483,20 +1514,28 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
      */
     for(i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        /*if(room_index == 25 && i >= 18)
-        {
-            Con_AddLine("AHTUNG");
-        }*/
         face4 = &tr_room->rectangles[i];
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
+        SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
+        if(p->anim_id > 0)
+        {
+            if(tex->transparency_flags == 0)
+            {
+                tex->transparency_flags = BM_ANIMATED_TEX;
+            }
+            else if(tex->transparency_flags == 1)
+            {
+                tex->transparency_flags = BM_MULTIPLY;
+            }
+        }
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
         }
         Polygon_Resize(p, 4);
-        SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
+        
         p->transparency = tex->transparency_flags;
-        if(p->transparency < 0x0002)
+        if((p->transparency < 0x0002) || (p->transparency == BM_ANIMATED_TEX))
         {
             p->type = !IsInUCRectFace4(tex);
         }
