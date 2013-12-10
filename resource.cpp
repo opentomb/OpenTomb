@@ -987,6 +987,9 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
         }
         
+        if(world->anim_sequences[i].frame_count == 2)   // Quick fix for TR4+ UVRotate sequences.
+            world->anim_sequences[i].frame_count = 1;
+        
         // UVRotate textures case.
         // In TR4-5, it is possible to define special UVRotate animation mode
         // by creating animation sequence with only one frame. In this case,

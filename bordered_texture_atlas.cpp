@@ -438,7 +438,7 @@ unsigned long BorderedTextureAtlas_GetTextureHeight(bordered_texture_atlas_p atl
     struct file_object_texture_s *file_object_texture = atlas->file_object_textures + texture;
     struct canonical_object_texture_s *canonical = atlas->canonical_object_textures + file_object_texture->canonical_texture_index;
     
-    return canonical->width;
+    return canonical->height;
 }
 
 ///@FIXME - use polygon_p to replace vertex and numCoordinates (maybe texture in / out))
