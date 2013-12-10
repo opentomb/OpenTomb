@@ -1003,7 +1003,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             world->anim_sequences[i].uvrotate         = true;
             world->anim_sequences[i].uvrotate_flag    = false;
             world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_FORWARD;
-            world->anim_sequences[i].uvrotate_speed   = 1;  ///@FIXME: Later to be assigned with script!
+            world->anim_sequences[i].uvrotate_speed   = 4;  ///@FIXME: Later to be assigned with script!
             world->anim_sequences[i].uvrotate_time    = 0.0;
             
             // Get texture height and divide it in half.
@@ -1011,8 +1011,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             // if scrolling is completed or not.
             
             world->anim_sequences[i].uvrotate_max     = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, world->anim_sequences[i].frame_list[0]) / 2);
-        }
-        
+        }        
     } // end for(i = 0; i < num_sequences; i++)
 }
 
@@ -1036,7 +1035,6 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
         {  
             if(world->anim_sequences[i].frame_list[j] == tex_index)
             {
-                
                 // If we have found assigned texture ID in animation texture lists,
                 // we assign corresponding animation sequence to this polygon,
                 // additionally specifying frame offset.
