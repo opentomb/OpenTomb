@@ -962,7 +962,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     uint16_t *pointer;
     uint16_t  i, j, num_sequences, num_uvrotates;
     uint16_t  block_size = tr->animated_textures_count; // This is actually whole anim textures block size.
-    uint32_t  uvrotate_script;
+    int32_t   uvrotate_script;
     
     pointer       = tr->animated_textures;
     num_uvrotates = tr->animated_textures_uv_count;   
@@ -1007,14 +1007,24 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             lua_settop(level_script, top);      
         }
         
-        if((i < num_uvrotates) && (uvrotate_script))
+        if((i < num_uvrotates) && (uvrotate_script != 0))
         {
             world->anim_sequences[i].frame_lock       = true;
             world->anim_sequences[i].uvrotate         = true;
             world->anim_sequences[i].uvrotate_flag    = false;
-            world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_FORWARD;
-            world->anim_sequences[i].uvrotate_speed   = uvrotate_script;
             world->anim_sequences[i].uvrotate_time    = 0.0;
+            
+            if(uvrotate_script > 0)
+            {
+                world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_FORWARD;
+                world->anim_sequences[i].uvrotate_speed   = (btScalar)(uvrotate_script);
+            }
+            else
+            {
+                world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_BACKWARD;
+                world->anim_sequences[i].uvrotate_speed   = (btScalar)abs(uvrotate_script);
+            }
+            
             
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
