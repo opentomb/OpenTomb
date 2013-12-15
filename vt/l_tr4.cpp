@@ -627,10 +627,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             this->animated_textures[i] = read_bitu16(newsrc);
         }
 
-        int unknown = read_bit8(newsrc);
-
-        if ((unknown != 0) && (unknown != 1) && (unknown != 2) && (unknown != 4) && (unknown != 12))
-                Sys_extError("read_tr4_level: unknown before TEX has bad value");
+        this->animated_textures_uv_count = read_bitu8(newsrc);
 
         if (read_bit8(newsrc) != 'T')
                 Sys_extError("read_tr4_level: '\\0TEX' not found");

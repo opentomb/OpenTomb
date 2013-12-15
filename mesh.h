@@ -90,6 +90,7 @@ typedef struct anim_seq_s
     btScalar    frame_rate;       // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
     btScalar    frame_time;       // Time passed since last update.
     uint32_t    frame_count;      // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
+    bool        frame_lock;       // Single frame mode. Needed for TR4-5 compatible UVRotate.
     uint32_t*   frame_list;       // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;
 

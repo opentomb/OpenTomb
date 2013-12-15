@@ -246,6 +246,15 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
                 glBlendFunc(GL_ONE, GL_ZERO);
                 break;
         };
+        
+        if(p->double_side)
+        {
+            glDisable(GL_CULL_FACE);
+        }
+        else
+        {
+            glEnable(GL_CULL_FACE);
+        }
 
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
         if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
@@ -266,7 +275,8 @@ void Render_UpdateAnimTextures()    // This function is used for updating global
     {
         current_sequence = engine_world.anim_sequences + i;
         
-        if(current_sequence->frame_time >= current_sequence->frame_rate)        // If it's time to update...
+        if( (!current_sequence->frame_lock) &&
+            ( current_sequence->frame_time >= current_sequence->frame_rate) )   // If it's time to update...
         {
             current_sequence->frame_time = 0.0;                                 // Reset interval counter.
             
