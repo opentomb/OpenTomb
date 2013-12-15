@@ -36,6 +36,7 @@ typedef struct polygon_s
     uint32_t            anim_offset;                                            // anim texture frame offset
     uint16_t            type;                                                   // polygon type
     uint16_t            transparency;                                           // transparency information
+    bool                double_side;                                            // double side flag
     btScalar            plane[4];                                               // polygon plane equation
 }polygon_t, *polygon_p;
 

@@ -960,10 +960,13 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
 void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 {
     uint16_t *pointer;
-    uint16_t  i, j, num_sequences;
+    uint16_t  i, j, num_sequences, num_uvrotates;
     uint16_t  block_size = tr->animated_textures_count; // This is actually whole anim textures block size.
+    uint32_t  uvrotate_script;
     
     pointer       = tr->animated_textures;
+    num_uvrotates = tr->animated_textures_uv_count;   
+    
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
     
     world->anim_sequences_count = num_sequences;
@@ -987,23 +990,32 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
         }
         
-        if(world->anim_sequences[i].frame_count == 2)   // Quick fix for TR4+ UVRotate sequences.
-            world->anim_sequences[i].frame_count = 1;
-        
         // UVRotate textures case.
-        // In TR4-5, it is possible to define special UVRotate animation mode
-        // by creating animation sequence with only one frame. In this case,
-        // this frame will be divided in half and continously scrolled from
-        // one part to another by shifting UV coordinates. In OpenTomb, we can
-        // have BOTH UVRotate and classic frames mode applied to the same sequence,
-        // but there we specify compatibility method for TR4-5.
+        // In TR4-5, it is possible to define special UVRotate animation mode.
+        // It is specified by num_uvrotates variable. If sequence belongs to
+        // UVRotate range, each frame will be divided in half and continously
+        // scrolled from one part to another by shifting UV coordinates.
+        // In OpenTomb, we can have BOTH UVRotate and classic frames mode
+        // applied to the same sequence, but there we specify compatibility
+        // method for TR4-5.
         
-        if(world->anim_sequences[i].frame_count == 1)
+        if(level_script)
         {
+            int top = lua_gettop(level_script);
+            lua_getfield(level_script, LUA_GLOBALSINDEX, "UVRotate");
+            uvrotate_script = lua_tointeger(level_script, -1);
+            lua_settop(level_script, top);      
+        }
+        
+        Sys_DebugLog("rot.txt", "Script UVRotate: %d", uvrotate_script);
+        
+        if((i < num_uvrotates) && (uvrotate_script))
+        {
+            world->anim_sequences[i].frame_lock       = true;
             world->anim_sequences[i].uvrotate         = true;
             world->anim_sequences[i].uvrotate_flag    = false;
             world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_FORWARD;
-            world->anim_sequences[i].uvrotate_speed   = 1;  ///@FIXME: Later to be assigned with script!
+            world->anim_sequences[i].uvrotate_speed   = uvrotate_script;
             world->anim_sequences[i].uvrotate_time    = 0.0;
             
             // Get texture height and divide it in half.
@@ -1154,6 +1166,16 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         Polygon_Resize(p, 3);
         p->type = !IsInUCRectFace3(tex);
         
+        //p->double_side = face3->texture >> 15;    // CORRECT, BUT WRONG IN TR3-5
+        if(tr->game_version < TR_III)
+        {
+            p->double_side = false;
+        }
+        else
+        {
+            p->double_side = true;
+        }
+        
         SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
         if(p->anim_id > 0)
         {
@@ -1244,6 +1266,16 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         Polygon_Resize(p, 4);
         p->type = !IsInUCRectFace4(tex);
+        
+        //p->double_side = face3->texture >> 15;    // CORRECT, BUT WRONG IN TR3-5
+        if(tr->game_version < TR_III)
+        {
+            p->double_side = false;
+        }
+        else
+        {
+            p->double_side = true;
+        }
         
         SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
         if(p->anim_id > 0)

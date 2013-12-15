@@ -694,6 +694,7 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
 	SDL_RWseek(src, this->boxes_count * 12, RW_SEEK_CUR);
 
         this->animated_textures_count = read_bitu32(src);
+        this->animated_textures_uv_count = 0; // No UVRotate in TR1
 	this->animated_textures = (uint16_t*)malloc(this->animated_textures_count * sizeof(uint16_t));
         for (i = 0; i < this->animated_textures_count; i++)
         {

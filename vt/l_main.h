@@ -49,6 +49,7 @@ class TR_Level {
             this->object_textures_count = 0;    // destroyed
             this->object_textures = NULL;       // destroyed
             this->animated_textures_count = 0;  // destroyed
+            this->animated_textures_uv_count = 0; // destroyed
             this->animated_textures = NULL;     // destroyed
             this->sprite_textures_count = 0;    // destroyed
             this->sprite_textures = NULL;       // destroyed
@@ -481,6 +482,7 @@ class TR_Level {
 	tr4_object_texture_t *object_textures;	///< \brief object texture definitions.
 	uint32_t animated_textures_count;
         uint16_t *animated_textures;	///< \brief animated textures.
+    uint32_t animated_textures_uv_count;
 	uint32_t sprite_textures_count;
         tr_sprite_texture_t *sprite_textures;	///< \brief sprite texture definitions.
 	uint32_t sprite_sequences_count;
