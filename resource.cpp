@@ -1007,8 +1007,6 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             lua_settop(level_script, top);      
         }
         
-        Sys_DebugLog("rot.txt", "Script UVRotate: %d", uvrotate_script);
-        
         if((i < num_uvrotates) && (uvrotate_script))
         {
             world->anim_sequences[i].frame_lock       = true;
