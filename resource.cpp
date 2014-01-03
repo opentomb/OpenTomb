@@ -34,6 +34,7 @@ extern "C" {
 #include "render.h"
 #include "redblack.h"
 
+#define LOG_ANIM_DISPATCHES 0
 
 typedef struct uncollision_tex_rect_s
 {
@@ -1992,10 +1993,12 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
      * state change's loading
      */
 
-    //if(model->animation_count > 1)
-    //{
-    //    Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d, frames = %d", model_num, model->animation_count, model->all_frames_count);
-    //}
+#if LOG_ANIM_DISPATCHES
+    if(model->animation_count > 1)
+    {
+        Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d", model_num, model->animation_count);
+    }
+#endif
     anim = model->animations;
     for(i=0;i<model->animation_count;i++,anim++)
     {
@@ -2009,12 +2012,14 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         {
             anim->next_anim = model->animations + j;
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
-            //Sys_DebugLog(LOG_FILENAME, "ANIM[%d:%d], next_anim0 = %d, next_anim = %d", i, j, anim->next_frame, anim->next_frame % anim->next_anim->frames_count);
             anim->next_frame %= anim->next_anim->frames_count;
             if(anim->next_frame < 0)
             {
                 anim->next_frame = 0;
             }
+#if LOG_ANIM_DISPATCHES
+            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, anim->next_anim->ID, anim->next_frame);
+#endif
         }
         else
         {
@@ -2028,7 +2033,9 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         if((tr_animation->num_state_changes > 0) && (model->animation_count > 1))
         {
             state_change_p sch_p;
-            //Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?anim->next_anim->ID:-1, anim->next_frame);
+#if LOG_ANIM_DISPATCHES
+            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?(anim->next_anim->ID):(-1), anim->next_frame);
+#endif
             anim->state_change_count = tr_animation->num_state_changes;
             sch_p = anim->state_change = (state_change_p)malloc(tr_animation->num_state_changes * sizeof(state_change_t));
 
@@ -2061,9 +2068,11 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         adsp->next_frame = next_frame % next_frames_count;
 
-                        //Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], %d : [%d, %d], next_anim = %d, %d : [%d]", l,
-                        //            anim->frames_count, adsp->frame_low, adsp->frame_high,
-                        //            adsp->next_anim, next_frames_count, adsp->next_frame);
+#if LOG_ANIM_DISPATCHES
+                        Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], frames_count = %d: interval[%d.. %d], next_anim = %d, next_frame = %d", l,
+                                    anim->frames_count, adsp->frame_low, adsp->frame_high,
+                                    adsp->next_anim, adsp->next_frame);
+#endif
                     }
                 }
             }

@@ -443,12 +443,12 @@ void World_Empty(world_p world)
 
 int compEntityEQ(void *x, void *y)
 {
-    return ((entity_p)x)->ID == ((entity_p)y)->ID;
+    return (*((uint32_t*)x) == *((uint32_t*)y));
 }
 
 int compEntityLT(void *x, void *y)
 {
-    return ((entity_p)x)->ID < ((entity_p)y)->ID;
+    return (*((uint32_t*)x) < *((uint32_t*)y));
 }
 
 void RBEntityFree(void *x)
@@ -460,7 +460,6 @@ void RBEntityFree(void *x)
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
 {
     entity_p ent = NULL;
-    entity_t search;
     RedBlackNode_p node;
     
     if(world->Character && (world->Character->ID == id))
@@ -468,8 +467,7 @@ struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
         return world->Character;
     }
        
-    search.ID = id;
-    node = RB_SearchNode(&search, world->entity_tree);
+    node = RB_SearchNode(&id, world->entity_tree);
     if(node)
     {
         ent = (entity_p)node->data;
@@ -648,13 +646,13 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
 
 int World_AddEntity(world_p world, struct entity_s *entity)
 {
-    RB_InsertIgnore(entity, world->entity_tree);
+    RB_InsertIgnore(&entity->ID, entity, world->entity_tree);
     return 1;
 }
 
 int World_DeleteEntity(world_p world, struct entity_s *entity)
 {
-    RB_Delete(world->entity_tree, RB_SearchNode(entity, world->entity_tree));
+    RB_Delete(world->entity_tree, RB_SearchNode(&entity->ID, world->entity_tree));
     return 1;
 }
 
@@ -696,7 +694,7 @@ struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id)
 
 
 /*
- * Поиск спрайта по ID.
+ * find sprite by ID.
  * not a binary search - sprites may be not sorted by ID
  */
 struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world)
@@ -720,7 +718,6 @@ struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world)
 /*
  * Check for join portals existing
  */
-
 int Room_IsJoined(room_p r1, room_p r2)
 {
     unsigned short int i;
