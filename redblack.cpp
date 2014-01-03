@@ -3,53 +3,23 @@
 #include "redblack.h"
 #include "system.h"
 
-void findHeight(RedBlackHeader_p header, RedBlackNode_p t, int curr);
 void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null);
 
 // This method search the tree for a node with key 'key', and
 // return the node on success otherwise treeNULL.
-RedBlackNode_p RB_SearchNode(void *data, RedBlackHeader_p header)
+RedBlackNode_p RB_SearchNode(void *key, RedBlackHeader_p header)
 {
     RedBlackNode_p current = header->root;
     
     while(current != NULL)
     {
-        if(header->rb_compEQ(data, current->data))                                                       //data1 == data2
+        if(header->rb_compEQ(key, current->key))                                                       //data1 == data2
         {
             return (current);
         }
-        current = (header->rb_compLT(data, current->data)) ? current->left : current->right;           //data1 < data2
+        current = (header->rb_compLT(key, current->key)) ? current->left : current->right;             //data1 < data2
     }
     return NULL;
-}
-
-// This is a recursive method that find a node height.
-void findHeight(RedBlackHeader_p header, RedBlackNode_p t, int curr)
-{
-    if(header->height < curr)
-    {
-        header->height = curr;
-    }
-    if(t->left != NULL)
-    {
-        findHeight(header, t->left, curr+1);
-    }
-    if(t->right != NULL)
-    {
-        findHeight(header, t->right, curr+1);
-    }
-}
-
-
-// This method update the tree height it uses a recursive method
-// findheight.
-void updateHeight(RedBlackHeader_p header)
-{
-    header->height = 0;
-    if (header->root != NULL)
-    {
-        findHeight(header, header->root, 1);
-    }
 }
 
 
@@ -259,7 +229,7 @@ void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
     p->root->color = RBC_BLACK;
 }
 
-RedBlackNode_p RB_InsertIgnore(void *data, RedBlackHeader_p header)
+RedBlackNode_p RB_InsertIgnore(void *key, void *data, RedBlackHeader_p header)
 {
     RedBlackNode_p current, parent, x;
 
@@ -272,12 +242,12 @@ RedBlackNode_p RB_InsertIgnore(void *data, RedBlackHeader_p header)
     parent = NULL;
     while(current != NULL)
     {
-        if (header->rb_compEQ(data, current->data))
+        if (header->rb_compEQ(key, current->key))
         {
             return NULL;
         }
         parent = current;
-        current = (header->rb_compLT(data, current->data)) ? current->left : current->right;
+        current = (header->rb_compLT(key, current->key)) ? current->left : current->right;
     }
 
     /* setup new node */
@@ -287,6 +257,7 @@ RedBlackNode_p RB_InsertIgnore(void *data, RedBlackHeader_p header)
         Sys_extError("insufficient memory (insertNode)\n");
     }
     x->data = data;
+    x->key = key;
     x->parent = parent;
     x->left = NULL;
     x->right = NULL;
@@ -295,7 +266,7 @@ RedBlackNode_p RB_InsertIgnore(void *data, RedBlackHeader_p header)
     /* insert node in tree */
     if(parent)
     {
-        if(header->rb_compLT(data, parent->data))
+        if(header->rb_compLT(key, parent->key))
         {
             parent->left = x;
         }
@@ -314,7 +285,7 @@ RedBlackNode_p RB_InsertIgnore(void *data, RedBlackHeader_p header)
     return(x);
 }
 
-RedBlackNode_p RB_InsertReplace(void *data, RedBlackHeader_p header)
+RedBlackNode_p RB_InsertReplace(void *key, void *data, RedBlackHeader_p header)
 {
     RedBlackNode_p current, parent, x;
 
@@ -327,10 +298,11 @@ RedBlackNode_p RB_InsertReplace(void *data, RedBlackHeader_p header)
     parent = NULL;
     while(current != NULL)
     {
-        if(header->rb_compEQ(data, current->data))
+        if(header->rb_compEQ(key, current->key))
         {
             void *old_data = current->data;
             current->data = data;
+            current->key = key;
             if(header->rb_free_data)
             {
                 header->rb_free_data(old_data);
@@ -338,7 +310,7 @@ RedBlackNode_p RB_InsertReplace(void *data, RedBlackHeader_p header)
             return NULL;
         }
         parent = current;
-        current = (header->rb_compLT(data, current->data)) ? current->left : current->right;
+        current = (header->rb_compLT(key, current->key)) ? current->left : current->right;
     }
 
     /* setup new node */
@@ -348,6 +320,7 @@ RedBlackNode_p RB_InsertReplace(void *data, RedBlackHeader_p header)
         Sys_extError("insufficient memory (insertNode)\n");
     }
     x->data = data;
+    x->key = key;
     x->parent = parent;
     x->left = NULL;
     x->right = NULL;
@@ -356,7 +329,7 @@ RedBlackNode_p RB_InsertReplace(void *data, RedBlackHeader_p header)
     /* insert node in tree */
     if(parent)
     {
-        if(header->rb_compLT(data, parent->data))
+        if(header->rb_compLT(key, parent->key))
         {
             parent->left = x;
         }

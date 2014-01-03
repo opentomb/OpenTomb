@@ -656,7 +656,7 @@ struct character_command_s;
 #define TR_STATE_LARA_ROPE_TURN_RIGHT 91
 #define TR_STATE_LARA_GIANT_BUTTON_PUSH 92
 #define TR_STATE_LARA_TRAPDOOR_FLOOR_OPEN 93
-//#define TR_STATE_LARA_UNUSED11 94
+//#define TR_STATE_LARA_UNUSED11 94 - in anim 28 prevents to free -fall - like 1 frame stay IDLE reset
 #define TR_STATE_LARA_ROUND_HANDLE 95
 #define TR_STATE_LARA_COGWHEEL 96
 #define TR_STATE_LARA_LEVERSWITCH_PUSH 97

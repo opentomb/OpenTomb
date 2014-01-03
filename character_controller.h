@@ -54,9 +54,22 @@ class btCollisionObject;
 
 typedef struct climb_info_s
 {
-    int8_t      height_info;
-    int8_t      climb_on_flag;
-    int8_t      can_hang;
+    int8_t                         height_info;
+    int8_t                         climb_on_flag;
+    int8_t                         can_hang;
+    
+    btScalar                       point[3];
+    btScalar                       n[3];
+    btScalar                       t[3];
+    btScalar                       up[3];
+    
+    int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
+    int8_t                         edge_hit;
+    btVector3                      edge_point;
+    btVector3                      edge_normale;
+    btVector3                      edge_tan_xy;
+    btScalar                       edge_z_ang;
+    btCollisionObject             *edge_obj;
 }climb_info_t, *climb_info_p;
 
 typedef struct height_info_s
@@ -78,13 +91,6 @@ typedef struct height_info_s
     int16_t                                     ceiling_hit;
     btCollisionObject                          *ceiling_obj;
     
-    int16_t                                     edge_hit;
-    btVector3                                   edge_point;
-    btVector3                                   edge_normale;
-    btVector3                                   edge_tan_xy;
-    btScalar                                    edge_z_ang;
-    btCollisionObject                          *edge_obj;
-    
     btScalar                                    water_level;
     int16_t                                     water;
 }height_info_t, *height_info_p;
@@ -92,7 +98,6 @@ typedef struct height_info_s
 typedef struct character_command_s
 {    
     btScalar    rot[3];
-    btScalar    climb_pos[3];
     int8_t      move[3];
     
     int8_t      kill;
@@ -141,6 +146,7 @@ typedef struct character_s
     btCollisionObject           *platform;
     btScalar                     local_platform[16];
     struct height_info_s         height_info;
+    struct climb_info_s          climb;
     
     bt_engine_ClosestRayResultCallback                  *ray_cb;
     bt_engine_ClosestConvexResultCallback               *convex_cb;
@@ -152,8 +158,9 @@ void Character_Clean(struct entity_s *ent);
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc);
 int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc);
 climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
+climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
 int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar react[3]);
-void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, /*struct height_info_s *fc,*/ btScalar move[3]);
+void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz);

@@ -546,6 +546,13 @@ void Engine_Display()
         glPolygonMode(GL_FRONT, GL_FILL);
         glBindTexture(GL_TEXTURE_2D, 0);
         Render_DrawAxis(10000.0);
+        if(engine_world.Character)
+        {
+            glPushMatrix();
+            glTranslatef(engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+            Render_DrawAxis(1000.0);
+            glPopMatrix();
+        }
         Gui_Render();
         SDL_GL_SwapWindow(sdl_window);
     }
@@ -695,7 +702,7 @@ void Engine_Frame(btScalar time)
         time_cycl = 0.0;
     }
 
-    while (SDL_PollEvent(&event))
+    while(SDL_PollEvent(&event))
     {
         switch(event.type)
         {
