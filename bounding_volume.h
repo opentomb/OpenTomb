@@ -12,6 +12,7 @@
 
 struct polygon_s;
 #include "bullet/LinearMath/btScalar.h"
+#include "bullet/btBulletCollisionCommon.h"
 
 /*
  * In base_edges we safe the initial shape polygons
@@ -42,6 +43,8 @@ void BV_InitBox(bounding_volume_p bv, btScalar bb_min[3], btScalar bb_max[3]);
 void BV_RebuildBox(bounding_volume_p bv, btScalar bb_min[3], btScalar bb_max[3]);
 void BV_Transform(bounding_volume_p bv);
 void BV_TransformZZ(bounding_volume_p bv, btScalar z1, btScalar z2);
+
+btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n);
 
 #endif	/* BOUNDING_VOLUME_H */
 

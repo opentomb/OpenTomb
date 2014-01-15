@@ -7,6 +7,8 @@
 #include "polygon.h"
 
 #include "bullet/LinearMath/btScalar.h"
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
 
 bounding_volume_p BV_Create()
 {
@@ -301,4 +303,48 @@ void BV_TransformZZ(bounding_volume_p bv, btScalar z1, btScalar z2)
         bv->base_centre[2] = (z1 + z2) / 2.0;
         Mat4_vec3_mul_macro(bv->centre, bv->transform, bv->base_centre);
     }
+}
+
+/**
+ * Creates Z capsule - convex shape; Uses for full 3d scaling;
+ * @param size = {x/2, y/2, z_cyl/2, z_capsule/2};
+ * @param n = number of segments;
+ * @return btCollisionShape (is convex);
+ */
+btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n)
+{
+    int i;
+    btScalar fi, dfi, *data, *v;
+    btCollisionShape* ret;
+
+    if(n < 3 || n > 64)
+    {
+        return NULL;
+    }
+    
+    fi = 0.0;
+    dfi = M_PI * 2.0 / (btScalar)n;
+    data = (btScalar*)malloc(3*(2*n+2)*sizeof(btScalar));
+    v = data;
+    
+    for(i=0;i<n;i++,fi+=dfi,v+=6)
+    {
+        v[0] = size[0] * cos(fi);
+        v[1] = size[1] * sin(fi);
+        v[2] = size[2];
+        v[3] = v[0];
+        v[4] = v[1];
+        v[5] =-size[2];
+    }
+    
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = size[3];
+    v[3] = 0.0;
+    v[4] = 0.0;
+    v[5] =-size[3];
+    
+    ret = new btConvexHullShape(data, 2*n + 2, 3 * sizeof(btScalar));
+    free(data);
+    return ret;
 }
