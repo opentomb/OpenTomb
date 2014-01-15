@@ -544,15 +544,16 @@ void Engine_Display()
         ShowDebugInfo();
 
         glPolygonMode(GL_FRONT, GL_FILL);
+        //glDisable(GL_CULL_FACE);
         glBindTexture(GL_TEXTURE_2D, 0);
         Render_DrawAxis(10000.0);
-        if(engine_world.Character)
+        /*if(engine_world.Character)
         {
             glPushMatrix();
             glTranslatef(engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
             Render_DrawAxis(1000.0);
             glPopMatrix();
-        }
+        }*/
         Gui_Render();
         SDL_GL_SwapWindow(sdl_window);
     }

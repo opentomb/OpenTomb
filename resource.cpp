@@ -2368,7 +2368,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Gen_EntityRigidBody(entity);
-            Character_Create(entity, 72.0, 640.0);
+            Character_Create(entity, 128.0, 72.0, 640.0);
             continue;
         }
 

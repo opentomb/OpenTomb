@@ -7,6 +7,7 @@
 #include "bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
 #include "character_controller.h"
+#include "bounding_volume.h"
 #include "anim_state_control.h"
 #include "engine.h"
 #include "entity.h"
@@ -22,12 +23,13 @@
 #define NUM_PENETRATION_ITERATIONS      (6)
 #define PENETRATION_PART_KOEF           (0.2)
 
-void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
+void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h)
 {
     character_p ret;
     btTransform tr;
     btVector3 tmp;
-
+    btScalar size[4];
+    
     if(ent == NULL || ent->character != NULL)
     {
         return;
@@ -61,17 +63,21 @@ void Character_Create(struct entity_s *ent, btScalar r, btScalar h)
     ret->fall_down_height = DEFAULT_FALL_DAWN_HEIGHT;
     ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
-    ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * r)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * r);
+    ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * ry)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * ry);
     ret->wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;
 
-    ret->Radius = r;
+    ret->rx = rx;
+    ret->ry = ry;
     ret->Height = h;
 
     ret->shapeBox = new btBoxShape(btVector3(CHARACTER_BOX_HALF_SIZE, CHARACTER_BOX_HALF_SIZE, CHARACTER_BOX_HALF_SIZE));
-    ret->shapeZ = new btCapsuleShapeZ(CHARACTER_BASE_RADIUS, CHARACTER_BASE_HEIGHT - 2.0 * CHARACTER_BASE_RADIUS);
+    size[0] = CHARACTER_BASE_RADIUS;
+    size[1] = CHARACTER_BASE_RADIUS;
+    size[2] = 0.38 * CHARACTER_BASE_HEIGHT;
+    size[3] = 0.5 * CHARACTER_BASE_HEIGHT;
+    ret->shapeZ = BV_CreateBTCapsuleZ(size, 8);
     ret->shapeY = new btCapsuleShape(CHARACTER_BASE_RADIUS, CHARACTER_BASE_HEIGHT - 2.0 * CHARACTER_BASE_RADIUS);
-    r = CHARACTER_BASE_RADIUS;
-    ret->shapeXYZ = new btMultiSphereShape(&tmp, &r, 1);
+
     ret->sphere = new btSphereShape(CHARACTER_BASE_RADIUS);
     ret->climb_sensor = new btSphereShape(ent->character->climb_r);
 
@@ -135,12 +141,6 @@ void Character_Clean(struct entity_s *ent)
         delete actor->shapeY;
         actor->shapeY = NULL;
     }
-
-    if(actor->shapeXYZ)
-    {
-        delete actor->shapeXYZ;
-        actor->shapeXYZ = NULL;
-    }
     
     if(actor->climb_sensor)
     {
@@ -200,8 +200,8 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
     if((t >= 1.6) || ((ent->move_type == MOVE_ON_FLOOR || ent->move_type == MOVE_CLIMBING) && (t > 1.0)))
     {
         //Z_CAPSULE
-        tv.m_floats[0] = ent->character->Radius / CHARACTER_BASE_RADIUS;
-        tv.m_floats[1] = ent->character->Radius / CHARACTER_BASE_RADIUS;
+        tv.m_floats[0] = ent->character->rx / CHARACTER_BASE_RADIUS;
+        tv.m_floats[1] = ent->character->ry / CHARACTER_BASE_RADIUS;
         tv.m_floats[2] = (ent->bf.bb_max[2] - ent->bf.bb_min[2] - z_factor) / CHARACTER_BASE_HEIGHT;
         ent->character->shapeZ->setLocalScaling(tv);
         ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
@@ -214,9 +214,9 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
     else if((t <= 1.0 / 1.6) || (ent->move_type != MOVE_CLIMBING))
     {
         //Y_CAPSULE
-        tv.m_floats[0] = ent->character->Radius / CHARACTER_BASE_RADIUS;
+        tv.m_floats[0] = ent->character->ry / CHARACTER_BASE_RADIUS;
         tv.m_floats[1] = (ent->bf.bb_max[1] - ent->bf.bb_min[1]) / CHARACTER_BASE_HEIGHT;
-        tv.m_floats[2] = ent->character->Radius / CHARACTER_BASE_RADIUS;
+        tv.m_floats[2] = ent->character->ry / CHARACTER_BASE_RADIUS;
         ent->character->shapeY->setLocalScaling(tv);
         ent->character->ghostObject->setCollisionShape(ent->character->shapeY);
         
@@ -237,9 +237,9 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
     {
         tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] - ent->bf.bb_min[0]) / CHARACTER_BASE_RADIUS;
         tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] - ent->bf.bb_min[1]) / CHARACTER_BASE_RADIUS;
-        tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / CHARACTER_BASE_RADIUS;
-        ent->character->shapeXYZ->setLocalScaling(tv);
-        ent->character->ghostObject->setCollisionShape(ent->character->shapeXYZ);
+        tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / CHARACTER_BASE_HEIGHT;
+        ent->character->shapeZ->setLocalScaling(tv);
+        ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
         tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] + ent->bf.bb_min[0]);
         tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] + ent->bf.bb_min[1]);
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
@@ -767,7 +767,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
     ret.edge_obj = NULL;
     vec3_copy(ret.point, ent->character->climb.point);
     
-    //if(ent->character->height_info.walls_climb == 0x00)
+    if(ent->character->height_info.walls_climb == 0x00)
     {
         return ret;
     }
@@ -780,7 +780,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
     from.m_floats[1] = pos[1] + ent->transform[8 + 1] * ent->bf.bb_max[2];
     from.m_floats[2] = pos[2] + ent->transform[8 + 2] * ent->bf.bb_max[2];
     to = from;
-    t = ent->character->Radius + ent->bf.bb_max[1];
+    t = ent->character->ry + ent->bf.bb_max[1];
     to.m_floats[0] += ent->transform[4 + 0] * t;
     to.m_floats[1] += ent->transform[4 + 1] * t;
     to.m_floats[2] += ent->transform[4 + 2] * t;
@@ -832,7 +832,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
         from.m_floats[1] -= ent->transform[8 + 1] * t;
         from.m_floats[2] -= ent->transform[8 + 2] * t;
         to = from;
-        t = ent->character->Radius + ent->bf.bb_max[1];
+        t = ent->character->ry + ent->bf.bb_max[1];
         to.m_floats[0] += ent->transform[4 + 0] * t;
         to.m_floats[1] += ent->transform[4 + 1] * t;
         to.m_floats[2] += ent->transform[4 + 2] * t;
@@ -973,7 +973,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
     pos = ent->character->ghostObject->getWorldTransform().getOrigin();    
     if(ent->character->height_info.ceiling_hit && (pos.m_floats[2] > ent->character->height_info.ceiling_point.m_floats[2]))
     {
-        pos.m_floats[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->character->Radius;
+        pos.m_floats[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->character->ry;
         ent->character->cmd.vertical_collide |= 0x02;
     }
 
@@ -1226,7 +1226,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->Radius + 1;
+    iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1324,7 +1324,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     vec3_RotateZ(ent->speed.m_floats, ent->speed.m_floats, cmd->rot[0] * 0.5);  ///@FIXME magic const
     
     t = move.length();
-    iter = 2.0 * t / ent->character->Radius + 1;
+    iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1470,7 +1470,7 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
     move = spd * engine_frame_time;
     move.m_floats[2] = 0.0;
     t = move.length();
-    iter = 2.0 * t / ent->character->Radius + 1;
+    iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1531,8 +1531,10 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
     t = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
     ent->angles[0] = t;
     Entity_UpdateRotation(ent);
+    pos[0] = climb->point[0] - ent->transform[4 + 0] * ent->bf.bb_max[1];
+    pos[1] = climb->point[1] - ent->transform[4 + 1] * ent->bf.bb_max[1];
     
-    t = ent->current_speed * ent->character->speed_mult;
+    t = /*ent->current_speed **/ ent->character->speed_mult;
     if(cmd->move[0] == 1)
     {
         vec3_add(spd.m_floats, spd.m_floats, climb->up);
@@ -1552,32 +1554,17 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->Radius + 1;
+    iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
     }
     move /= (btScalar)iter;
 
-    for(i=0;i<iter;i++)
-    {
-        vec3_add(pos, pos, move.m_floats);
-        Entity_UpdateRoomPos(ent);
-        Character_UpdateCurrentHeight(ent);
-        Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
-        *climb = Character_CheckWallsClimbability(ent);
-        if(climb->wall_hit)
-        {
-            vec3_copy(p0, pos);
-        }
-        else
-        {
-            vec3_copy(pos, p0);
-            Entity_UpdateRoomPos(ent);
-            break;
-        }
-        Entity_UpdateRoomPos(ent);
-    }
+    vec3_add(pos, pos, move.m_floats);
+    Entity_UpdateRoomPos(ent);
+    Character_UpdateCurrentHeight(ent);
+    Character_FixPenetrations(ent, cmd, move.m_floats);                         // get horizontal collide
     
     *climb = Character_CheckWallsClimbability(ent);
     return 1;
@@ -1634,7 +1621,7 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->Radius + 1;
+    iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1708,7 +1695,7 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->Radius + 1;
+    iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1795,7 +1782,7 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->Radius + 1;
+    iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;

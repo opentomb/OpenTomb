@@ -131,12 +131,13 @@ typedef struct character_s
     btScalar                     critical_wall_component;
 
     btScalar                     climb_r;                // climbing sensor radius
-    btScalar                     Radius;                 // base character radius 
+    btScalar                     rx;                     // base character radius X       
+    btScalar                     ry;                     // base character radius Y
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
-    btCapsuleShapeZ             *shapeZ;                 // running / jumping
+    btCollisionShape            *shapeZ;                 // running / jumping
     btCapsuleShape              *shapeY;                 // swimming / crocodile
-    btMultiSphereShape          *shapeXYZ;               // scaled sphere
+    //btMultiSphereShape          *shapeXYZ;               // scaled sphere
     btBoxShape                  *shapeBox;               // simple (128, 128, 128) sized box shape
     btSphereShape               *sphere;                 // needs to height calculation
     btSphereShape               *climb_sensor;
@@ -152,7 +153,7 @@ typedef struct character_s
     bt_engine_ClosestConvexResultCallback               *convex_cb;
 }character_t, *character_p;
 
-void Character_Create(struct entity_s *ent, btScalar r, btScalar h);
+void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h);
 void Character_Clean(struct entity_s *ent);
 
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc);

@@ -191,19 +191,20 @@ void Con_Draw()
 void Con_DrawBackground()
 {
     /*
-     * Отрисуем фон консоли, чтобы было видно текст на фоне рендерера
+     * Draw console background to see the text
      */
     GLfloat rectCoords[8];
     glColor4fv(con_base.background_color);
     rectCoords[0] = 0.0;                        rectCoords[1] = (GLfloat)screen_info.h;
-    rectCoords[2] = (GLfloat)screen_info.w;     rectCoords[3] = (GLfloat)screen_info.h;
+    rectCoords[2] = 0.0;                        rectCoords[3] = (GLfloat)(con_base.cursor_y + con_base.line_height - 8);
     rectCoords[4] = (GLfloat)screen_info.w;     rectCoords[5] = (GLfloat)(con_base.cursor_y + con_base.line_height - 8);
-    rectCoords[6] = 0.0;                        rectCoords[7] = (GLfloat)(con_base.cursor_y + con_base.line_height - 8);
+    rectCoords[6] = (GLfloat)screen_info.w;     rectCoords[7] = (GLfloat)screen_info.h;
+    
     glVertexPointer(2, GL_FLOAT, 0, rectCoords);
     glDrawArrays(GL_POLYGON, 0, 4);
 
     /*
-     * Отрисуем заключительную линию
+     * Draw finalise line
      */
     glColor4fv(con_base.font_color);
     
@@ -374,19 +375,19 @@ void Con_AddLog(const char *text)
     {
         if(con_base.log_lines_count > 1)
         {
-            last = con_base.log_lines[con_base.log_lines_count-1];              // сохраняем указатель на последнюю строку лога
-            for(i=con_base.log_lines_count-1;i>0;i--)                           // Сдвигаем лог
+            last = con_base.log_lines[con_base.log_lines_count-1];              // save pointer to the last log string
+            for(i=con_base.log_lines_count-1;i>0;i--)                           // shift log
             {
-                con_base.log_lines[i] = con_base.log_lines[i-1];                // лог идет по кругу
+                con_base.log_lines[i] = con_base.log_lines[i-1];                // shift is round
             }
-            con_base.log_lines[0] = last;                                       // зацикливаем сдвиг. Фактически поворот.
+            con_base.log_lines[0] = last;                                       // cycle the shift
             strncpy(con_base.log_lines[0], text, con_base.line_size);
-            con_base.log_lines[0][con_base.line_size-1] = 0;                    // подстраховка от случая переполнения строки
+            con_base.log_lines[0][con_base.line_size-1] = 0;                    // paranoid end of string
         }
         else
         {
             strncpy(con_base.log_lines[0], text, con_base.line_size);
-            con_base.log_lines[0][con_base.line_size-1] = 0;                          // подстраховка от случая переполнения строки
+            con_base.log_lines[0][con_base.line_size-1] = 0;                    // paranoid end of string
         }
 
         con_base.log_pos = 0;
@@ -404,14 +405,14 @@ void Con_AddLine(const char *text)
         do
         {
             len = strlen(text);
-            last = con_base.shown_lines[con_base.shown_lines_count-1];          // сохраняем указатель на последнюю строку лога
-            for(i=con_base.shown_lines_count-1;i>1;i--)                         // Сдвигаем лог
+            last = con_base.shown_lines[con_base.shown_lines_count-1];          // save pointer to the last log string
+            for(i=con_base.shown_lines_count-1;i>1;i--)                         // shift log
             {
-                con_base.shown_lines[i] = con_base.shown_lines[i-1];            // лог идет по кругу
+                con_base.shown_lines[i] = con_base.shown_lines[i-1];            // shift is round
             }
-            con_base.shown_lines[1] = last;                                     // зацикливаем сдвиг. Фактически поворот.
+            con_base.shown_lines[1] = last;                                     // cycle the shift
             strncpy(con_base.shown_lines[1], text, con_base.line_size);
-            con_base.shown_lines[1][con_base.line_size-1] = 0;                  // подстраховка от случая переполнения строки
+            con_base.shown_lines[1][con_base.line_size-1] = 0;                  // paranoid end of string
             text += con_base.line_size-1;
         }
         while(len >= con_base.line_size);

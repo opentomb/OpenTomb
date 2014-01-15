@@ -19,98 +19,16 @@
 #include "character_controller.h"
 #include "vt/tr_versions.h"
 
-/* 65 - WADE
- * 71 - crouch
- * 73 - sprint
- * id           next_anim
- * ROTATE_CONT
- * 0            20
- * 1            6
- * 2            11
- * 20           44L - 69R
- * 65           177 - TR_ANIMATION_LARA_WADE
- * ANIM 65 // strafe
- * 2            66
- * 48           143
- * ANIM 67 // strafe
- * 2            66
- * 49           144
- *
- * ANIM 70      TR_ANIMATION_LARA_SLIDE_FORWARD
- * 1            246 - TR_ANIMATION_LARA_SLIDE_FORWARD_STEEP_STOP
- * 2            71  - TR_ANIMATION_LARA_SLIDE_FORWARD_END
- * 3            76  - TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN
- * 28           91  - TR_ANIMATION_LARA_TRY_HANG_VERTICAL_BEGIN
- *
- * ANIM 77      TR_ANIMATION_LARA_CONTINUE_FLY_FORWARD
- * 1            92  - TR_ANIMATION_LARA_LANDING_FROM_RUN                        ok
- * 2            82  - TR_ANIMATION_LARA_LANDING_MIDDLE                          ok
- * 9            45  - TR_ANIMATION_LARA_UNKNOWN3                                no
- * 11(x4)       94, 100, 248, 249 (diff. int-s)                                 no
- * 52           158 - TR_ANIMATION_LARA_UNKNOWN4                                no
- * 68           210 - TR_ANIMATION_LARA_STANDING_JUMP_ROLL_BEGIN                ok
- *
- * ANIM 96      TR_ANIMATION_LARA_HANG_IDLE
- * 19           97  - TR_ANIMATION_LARA_CLIMB_ON
- * 30           136 - TR_ANIMATION_LARA_CLIMB_LEFT
- * 31           137 - TR_ANIMATION_LARA_CLIMB_RIGHT
- * 54           159 - TR_ANIMATION_LARA_CLIMB_ON2
- * 56           172 - TR_ANIMATION_LARA_LADDER_HANG
- * 87           287 - TR_ANIMATION_LARA_HANG_TO_CROUCH_BEGIN
- * 107          355 - TR_ANIMATION_LARA_HANG_AROUND_LEFT_OUTER_BEGIN
- * 108          357 - TR_ANIMATION_LARA_HANG_AROUND_RIGHT_OUTER_BEGIN
- * 109          359 - TR_ANIMATION_LARA_HANG_AROUND_LEFT_INNER_BEGIN
- * 110          361 - TR_ANIMATION_LARA_HANG_AROUND_RIGHT_INNER_BEGIN
- *
- * SWIMMING!!!
- * ANIM 86
- * 44           124
- * 18           87, 198, 199, 200
- * ANIM 87
- * 13           107
- * 17           86
- * 44           124
- * ANIM 108
- * 17           109
- * 39           130
- * 40           129
- * 44           124
- * ANIM 110
- * 2            111
- * 34           118
- * 44           132
- * 47           140
- * 48           143
- * 49           144
- * 55           190
- * ANIM 116
- * 17           115
- * 33           117
- * 44           132
- * 65           177
- * ANIM 141
- * 33           142
- * ANIM 143 //strafe!
- * 22           65
- * 33           110, 143
- * ANIM 144 //strafe!
- * 21           67
- * 33           110, 144
- * ANIM 150 //UBER MANY STATES
- * ANIM 158
- * 2            24, 151
- * 35           152
- * 53           153
- *
- * ANIM 177 WATER WALK --- WADE
- * 1            180, 181
- * 2            184, 185
+/*
+ * WALL CLIMB:
+ * preframe do {save pos}
+ * postframe do {if(out) {load pos; do command;}}
  */
 
 #define FREE_FALL_SPEED_1 (4200)
 #define FREE_FALL_SPEED_2 (6400)
 
-#define PENETRATION_TEST_OFFSET (0.16 * ent->character->Radius)
+#define PENETRATION_TEST_OFFSET (0.16 * ent->character->ry)
 #define WALK_FORWARD_OFFSET (96.0)              ///@FIXME: find real offset
 #define WALK_FORWARD_STEP_UP (256.0)            // by bone frame bb
 #define RUN_FORWARD_OFFSET (160.0)              ///@FIXME: find real offset
@@ -184,7 +102,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->crouch |= low_vertical_space;
             if(cmd->action)
             {
-                t = ent->character->Radius + LARA_TRY_HANG_WALL_OFFSET;
+                t = ent->character->ry + LARA_TRY_HANG_WALL_OFFSET;
                 vec3_mul_scalar(offset, ent->transform + 4, t);
                 offset[2] += 1024.0;
                 *climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);

@@ -173,7 +173,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
     }
 
     // Bind overriden vertices if they exist
-    if (overrideVertices != NULL)
+    if (overrideVertices)
     {
         // Standard normals are always float. Overridden normals (from skinning)
         // are btScalar.
@@ -230,18 +230,22 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
         switch(p->transparency)
         {
             default:
-            case BM_MULTIPLY:                                 // Classic PC alpha
+            case BM_MULTIPLY:                                    // Classic PC alpha
                 glBlendFunc(GL_ONE, GL_ONE);
                 break;
+                
             case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
                 glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
                 break;
+                
             case BM_INVERT_DEST:                                 // Inversion by dest
                 glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
                 break;
+                
             case BM_SCREEN:                                      // Screen (smoke, etc.)
                 glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
                 break;
+                
             case BM_ANIMATED_TEX:
                 glBlendFunc(GL_ONE, GL_ZERO);
                 break;
@@ -267,7 +271,7 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
 }
 
 
-void Render_UpdateAnimTextures()    // This function is used for updating global animated sequences.
+void Render_UpdateAnimTextures()                                                // This function is used for updating global animated sequences.
 {
     anim_seq_p current_sequence;
     
@@ -854,7 +858,7 @@ void Render_DrawList_DebugLines()
 }
 
 /**
- * The reccursion algorithm прохода по комнатам с отсечкой порталов по фрустумам порталов
+ * The reccursion algorithm: go through the rooms with portal - frustum occlusion test
  * @portal - we entered to the room through that portal
  * @frus - frustum that intersects the portal
  * @return number of added rooms
@@ -1014,7 +1018,6 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
     unsigned int i, flag;
     frustum_p frus;
     engine_container_p cont;
-    room_sector_p s;
     entity_p ent;
 
     if(room->use_alternate && room->alternate_room)
@@ -1293,26 +1296,26 @@ void Render_BBox(btScalar bb_min[3], btScalar bb_max[3])
         2, 6,
         3, 7
         };
-    static int createdVBO = 0;
-    static GLuint indicesVBO;
 
-    if(createdVBO == 0)
+    static GLuint indicesVBO = 0;
+
+    if((indicesVBO == 0) && glGenBuffersARB)
     {
-        if (glGenBuffersARB)
-        {
-            glGenBuffersARB(1, &indicesVBO);
-            glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
-            glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(indices), indices, GL_STATIC_DRAW_ARB);
-        }
-        createdVBO = 0;
+        glGenBuffersARB(1, &indicesVBO);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
+        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(indices), indices, GL_STATIC_DRAW_ARB);
     }
 
     glVertexPointer(3, GL_BT_SCALAR, sizeof(vertices[0]) * 3, vertices);
     if(indicesVBO)
     {
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
+        glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, NULL);
     }
-    glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, NULL);
+    else
+    {
+        glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, indices);
+    }
 }
 
 /**
