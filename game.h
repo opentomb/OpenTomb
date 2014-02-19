@@ -22,8 +22,10 @@ int Game_Load(const char* name);
 int Game_Save(const char* name);
 
 
-void Game_ApplyControls();
+void Game_ApplyControls(struct entity_s *ent);
 void Game_UpdateAllEntities(struct RedBlackNode_s *x);
+void Game_UpdateAI();
+void Game_UpdateCharacters();
 void GameFrame(btScalar time);
 
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz);

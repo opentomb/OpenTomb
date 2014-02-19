@@ -247,7 +247,7 @@ int Game_Save(const char* name)
     return 1;
 }
 
-void Game_ApplyControls()
+void Game_ApplyControls(struct entity_s *ent)
 {
     int8_t move_logic[3];
     int8_t look_logic[3];
@@ -305,7 +305,6 @@ void Game_ApplyControls()
 
         return;
     }
-    entity_p Lara = renderer.world->Character;
     
     if(control_mapper.use_joy)
     {
@@ -343,47 +342,47 @@ void Game_ApplyControls()
         Cam_MoveVertical(renderer.cam, control_states.free_look_speed * move_logic[2] * engine_frame_time);
         renderer.cam->current_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);
 
-        Lara->angles[0] = 180.0 * cam_angles[0] / M_PI;
+        ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
         pos.m_floats[0] = renderer.cam->pos[0] + renderer.cam->view_dir[0] * control_states.cam_distance;
         pos.m_floats[1] = renderer.cam->pos[1] + renderer.cam->view_dir[1] * control_states.cam_distance;
         pos.m_floats[2] = renderer.cam->pos[2] + renderer.cam->view_dir[2] * control_states.cam_distance - 512.0;
-        vec3_copy(Lara->transform+12, pos.m_floats);
-        Entity_UpdateRotation(Lara);
+        vec3_copy(ent->transform+12, pos.m_floats);
+        Entity_UpdateRotation(ent);
     }
     else
     {
         // Apply controls to Lara
-        Lara->character->cmd.kill = 0;
-        Lara->character->cmd.action = control_states.state_action;
-        Lara->character->cmd.jump = control_states.do_jump;
-        Lara->character->cmd.shift = control_states.state_walk;
+        ent->character->cmd.kill = 0;
+        ent->character->cmd.action = control_states.state_action;
+        ent->character->cmd.jump = control_states.do_jump;
+        ent->character->cmd.shift = control_states.state_walk;
         
-        Lara->character->cmd.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);        
-        Lara->character->cmd.sprint = control_states.state_sprint;              // New commands only for TR3 and above
-        Lara->character->cmd.crouch = control_states.state_crouch;
+        ent->character->cmd.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);        
+        ent->character->cmd.sprint = control_states.state_sprint;              // New commands only for TR3 and above
+        ent->character->cmd.crouch = control_states.state_crouch;
         
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ))
         {
-            Lara->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
+            ent->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
         }
         else
         {
-            Lara->character->cmd.rot[0] =-360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
+            ent->character->cmd.rot[0] =-360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
         }
         
         if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
         {
-            Lara->character->cmd.rot[1] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_y;
+            ent->character->cmd.rot[1] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_y;
         }
         else
         {
-            Lara->character->cmd.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
+            ent->character->cmd.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
         }
 
-        vec3_copy(Lara->character->cmd.move, move_logic);
+        vec3_copy(ent->character->cmd.move, move_logic);
 
-        Character_ApplyCommands(Lara, &Lara->character->cmd, State_Control_Lara);
-        Cam_FollowEntity(renderer.cam, Lara, 128.0, 400.0);
+        Character_ApplyCommands(ent, &ent->character->cmd);
+        Cam_FollowEntity(renderer.cam, ent, 128.0, 400.0);
     }
 }
 
@@ -490,6 +489,34 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
     }
 }
 
+
+void Game_UpdateAI()
+{
+    entity_p ent = NULL;
+    //for(ALL CHARACTERS, EXCEPT PLAYER)
+    {
+        if(ent)
+        {
+            // UPDATE AI commands
+        }
+    }
+}
+
+
+void Game_UpdateCharacters()
+{
+    entity_p ent = NULL;
+    //for(ALL CHARACTERS, EXCEPT PLAYER)
+    {
+        if(ent)
+        {
+            Character_ApplyCommands(ent, &ent->character->cmd);
+            // smth. other?
+        }
+    }
+}
+
+
 void GameFrame(btScalar time)
 {
     if(con_base.show)
@@ -497,13 +524,15 @@ void GameFrame(btScalar time)
         return;
     }
 
-    Game_ApplyControls();
     if(engine_world.entity_tree && engine_world.entity_tree->root)
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
     }
+    Game_ApplyControls(engine_world.Character);
+    
+    Game_UpdateAI();
+    Game_UpdateCharacters();
     
     bt_engine_dynamicsWorld->stepSimulation(time, 8);
 }
-
 

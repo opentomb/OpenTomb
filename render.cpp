@@ -579,11 +579,6 @@ void Render_Room(struct room_s *room, struct render_s *render)
     engine_container_p cont;
     entity_p ent;
 
-    if(room->use_alternate && room->alternate_room)
-    {
-        room = room->alternate_room;
-    }
-
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
     {
         glPushMatrix();
@@ -668,7 +663,7 @@ int Render_AddRoom(struct room_s *room)
     engine_container_p cont;
     btScalar dist, centre[3];
 
-    if(room->is_in_r_list)// || (renderer.r_list_active_count && Room_IsOverlapped(room, renderer.r_list->room)))
+    if(room->is_in_r_list || !room->active)
     {
         return 0;
     }
@@ -871,19 +866,16 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     portal_p p;                                                                 // указатель на массив порталов входной ф-ии
     frustum_p gen_frus;                                                         // новый генерируемый фрустум
 
-    if(src_room && src_room->use_alternate && src_room->alternate_room)
+    if((src_room == NULL) || !src_room->active || (room == NULL) || !room->active)
     {
-        src_room = src_room->alternate_room;
+        return 0;
     }
-    if(room && room->use_alternate && room->alternate_room)
-    {
-        room = room->alternate_room;
-    }
+
     p = room->portals;
 
     for(i=0;i<room->portal_count;i++,p++)                                       // перебираем все порталы входной комнаты
     {
-        if(p->dest_room != src_room)                                            // обратно идти даже не пытаемся
+        if((p->dest_room->active) && (p->dest_room != src_room))                // обратно идти даже не пытаемся
         {
             gen_frus = Portal_FrustumIntersect(p, frus, &renderer);             // Главная ф-я портального рендерера. Тут и проверка
             if(NULL != gen_frus)                                                // на пересечение и генерация фрустума по порталу
@@ -904,7 +896,7 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 void Render_GenWorldList()
 {
     uint32_t i;
-    room_p next_room, curr_room;
+    room_p curr_room;
     portal_p p;
     frustum_p last_frus;
 
@@ -916,10 +908,6 @@ void Render_GenWorldList()
     Render_CleanList();                                                         // clear old render list
 
     curr_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);                // ищем комнату с камерой
-    if(curr_room && curr_room->use_alternate && curr_room->alternate_room)
-    {
-        curr_room = curr_room->alternate_room;
-    }
 
     renderer.cam->current_room = curr_room;                                     // устанавливаем камере текущую комнату
     if(curr_room)                                                               // камера в какой то комнате
@@ -934,9 +922,8 @@ void Render_GenWorldList()
         {
             last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
             if(last_frus)
-            {
-                next_room = Room_CheckAlternate(p->dest_room);                  // portal destination room
-                Render_AddRoom(next_room);                                      //
+            {                                   
+                Render_AddRoom(p->dest_room);                                   // portal destination room
                 last_frus->parents_count = 1;                                   // created by camera
                 Render_ProcessRoom(p, last_frus);                               // next start reccursion algorithm
             }
@@ -1020,10 +1007,6 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
     engine_container_p cont;
     entity_p ent;
 
-    if(room->use_alternate && room->alternate_room)
-    {
-        room = room->alternate_room;
-    }
     glPushAttrib(GL_LINE_BIT);
     glLineWidth(4.0);
     flag = render->style & R_DRAW_ROOMBOXES;
@@ -1332,9 +1315,6 @@ void Render_SectorBorders(struct room_sector_s *sector)
 
     bb_min[2] = (btScalar)sector->floor;
     bb_max[2] = (btScalar)sector->ceiling;
-
-    //bb_min[2] = (btScalar)sector->owner_room->bb_min[2];
-    //bb_max[2] = (btScalar)sector->owner_room->bb_max[2];
 
     bb_min[0] = sector->owner_room->transform[12];
     bb_min[0] += 1024.0 * (btScalar) sector->index_x;

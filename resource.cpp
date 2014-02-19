@@ -501,7 +501,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         TR_GenRoom(i, r, world, tr);
         r->frustum = Frustum_Create();
     }
-
+   
     /*
      * sector data parsing
      */
@@ -521,6 +521,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
                 bt_engine_dynamicsWorld->addRigidBody(room->bt_body);
                 room->bt_body->setUserPointer(room->self);
                 room->self->collide_flag = COLLISION_TRIMESH;                   // meshtree
+                if(!room->active)
+                {
+                    Room_Disable(room);
+                }
             }
             SortPolygonsInMesh(room->mesh);
         }
@@ -542,6 +546,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
      */
     GenEntitys(world, tr);
     
+    r = world->rooms;
+    for(i=0;i<world->room_count;i++,r++)
+    {
+        if(r->active && r->alternate_room)
+        {
+            Room_Disable(r->alternate_room);
+        }
+    }
     // Initialize audio.
     
     Audio_Init(TR_AUDIO_MAX_CHANNELS, tr);
@@ -634,6 +646,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     btCollisionShape *cshape;
 
     room->ID = room_index;
+    room->active = 1;
     room->portal_count = 0;
     room->portals = NULL;
     room->frustum = NULL;
@@ -902,7 +915,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     /*
      * alternate room pointer calculation if one exists.
      */
-    room->use_alternate = 0;
     room->alternate_room = NULL;
     if(tr_room->alternate_room >= 0 && tr_room->alternate_room < tr->rooms_count)
     {
@@ -2369,6 +2381,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Gen_EntityRigidBody(entity);
             Character_Create(entity, 128.0, 72.0, 640.0);
+            entity->character->state_func = State_Control_Lara;
             continue;
         }
 

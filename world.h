@@ -68,6 +68,7 @@ typedef struct room_s
     uint8_t                     reverb_info;                                    // room reverb type
     uint8_t                     extra_param;
     
+    int8_t                      active;                                         // flag: is active
     int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      hide;                                           // do not render
     struct base_mesh_s         *mesh;                                           // room's base mesh
@@ -85,8 +86,6 @@ typedef struct room_s
     
     uint16_t                    portal_count;                                   // number of room portals
     struct portal_s            *portals;                                        // room portals array
-       
-    int8_t                      use_alternate;                                  // flag: alternative room switch control
     struct room_s              *alternate_room;                                 // alternative room pointer
     
     uint32_t                    sectors_count;
@@ -173,9 +172,6 @@ void Room_AddEntity(room_p room, struct entity_s *entity);
 int Room_RemoveEntity(room_p room, struct entity_s *entity);
 void Room_AddToNearRoomsList(room_p room, room_p r);
 
-room_p Room_CheckAlternate(room_p room);
-room_sector_p Sector_CheckAlternate(room_sector_p sector);
-
 int Room_IsPointIn(room_p room, btScalar dot[3]);
 room_p Room_FindPos2d(world_p w, btScalar pos[3]);
 
@@ -185,6 +181,10 @@ room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room);
 room_p Room_GetByID(world_p w, unsigned int ID);
 room_sector_p Room_GetSector(room_p room, btScalar pos[3]);
 room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3]);
+
+void Room_Enable(room_p room);
+void Room_Disable(room_p room);
+void Room_SwapAlternate(room_p room);
 
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);

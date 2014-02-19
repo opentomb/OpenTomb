@@ -37,6 +37,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
 
     ret = (character_p)malloc(sizeof(character_t));
     ret->platform = NULL;
+    ret->state_func = NULL;
     ret->ent = ent;
     ent->character = ret;
     Mat4_E_macro(ret->local_platform);
@@ -1506,7 +1507,6 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
  */
 int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
 {
-    int i, iter;
     climb_info_t *climb = &ent->character->climb;
     btVector3 spd, move;
     btScalar t, p0[3], *pos = ent->transform + 12;
@@ -1528,13 +1528,11 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
         return 2;
     }
     
-    t = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
-    ent->angles[0] = t;
+    ent->angles[0] = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
     Entity_UpdateRotation(ent);
     pos[0] = climb->point[0] - ent->transform[4 + 0] * ent->bf.bb_max[1];
     pos[1] = climb->point[1] - ent->transform[4 + 1] * ent->bf.bb_max[1];
     
-    t = /*ent->current_speed **/ ent->character->speed_mult;
     if(cmd->move[0] == 1)
     {
         vec3_add(spd.m_floats, spd.m_floats, climb->up);
@@ -1551,17 +1549,14 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
     {
         vec3_sub(spd.m_floats, spd.m_floats, climb->t);
     }
-    ent->speed = spd;
-    move = spd * engine_frame_time;
-    t = move.length();
-    iter = 2.0 * t / ent->character->ry + 1;
-    if(iter < 1)
+    t = spd.length();
+    if(t > 0.01)
     {
-        iter = 1;
+        spd /= t;
     }
-    move /= (btScalar)iter;
+    ent->speed = spd;
+    move = spd;
 
-    vec3_add(pos, pos, move.m_floats);
     Entity_UpdateRoomPos(ent);
     Character_UpdateCurrentHeight(ent);
     Character_FixPenetrations(ent, cmd, move.m_floats);                         // get horizontal collide
@@ -1814,13 +1809,13 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
 /**
  * Main character frame function
  */
-void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd, int(*state_func)(struct entity_s *ent, struct character_command_s *cmd))
+void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd)
 {
     Character_UpdatePlatformPreStep(ent);
     
-    if(state_func)
+    if(ent->character->state_func)
     {
-        state_func(ent, cmd);
+        ent->character->state_func(ent, cmd);
     }
     
     switch(ent->move_type)

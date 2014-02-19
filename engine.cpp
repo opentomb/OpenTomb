@@ -239,6 +239,48 @@ void Engine_Init()
 }
 
 
+int lua_EnableEntity(lua_State * lua)
+{
+    int num = lua_gettop(lua);                                                  // get # of arguments
+    entity_p ent;
+    
+    if(num < 1)
+    {
+        Con_AddLine("You must to enter entity ID");
+        return 0;
+    }
+    
+    ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    if(ent)
+    {
+        Entity_Enable(ent);
+    }
+    
+    return 0;
+}
+
+
+int lua_DisableEntity(lua_State * lua)
+{
+    int num = lua_gettop(lua);                                                  // get # of arguments
+    entity_p ent;
+    
+    if(num < 1)
+    {
+        Con_AddLine("You must to enter entity ID");
+        return 0;
+    }
+    
+    ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    if(ent)
+    {
+        Entity_Disable(ent);
+    }
+    
+    return 0;
+}
+
+
 int lua_SetGravity(lua_State * lua)                                             // function to be exported to Lua
 {
     int num = lua_gettop(lua);                                                  // get # of arguments
@@ -329,7 +371,10 @@ int lua_GetEntityPosition(lua_State * lua)
     lua_pushnumber(lua, ent->transform[12+0]);
     lua_pushnumber(lua, ent->transform[12+1]);
     lua_pushnumber(lua, ent->transform[12+2]);
-    return 3;
+    lua_pushnumber(lua, ent->angles[0]);
+    lua_pushnumber(lua, ent->angles[1]);
+    lua_pushnumber(lua, ent->angles[2]);
+    return 6;
 }
 
 
@@ -339,12 +384,110 @@ int lua_SetEntityPosition(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    if(top != 4)
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
     {
-        Con_Printf("Wrong arguments count. Must be (id, x, y, z)");
+        Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
     
+    switch(top)
+    {
+        case 4:
+            ent->transform[12+0] = lua_tonumber(lua, 2);
+            ent->transform[12+1] = lua_tonumber(lua, 3);
+            ent->transform[12+2] = lua_tonumber(lua, 4);
+            return 0;  
+        
+        case 7:
+            ent->transform[12+0] = lua_tonumber(lua, 2);
+            ent->transform[12+1] = lua_tonumber(lua, 3);
+            ent->transform[12+2] = lua_tonumber(lua, 4);
+            ent->angles[0] = lua_tonumber(lua, 5);
+            ent->angles[1] = lua_tonumber(lua, 6);
+            ent->angles[2] = lua_tonumber(lua, 7);
+            Entity_UpdateRotation(ent);
+            return 0;  
+            
+        default:
+            Con_Printf("Wrong arguments count. Must be (id, x, y, z) or (id, x, y, z, fi_x, fi_y, fi_z)");
+            return 0;
+    }
+
+    return 0;
+}
+
+
+int lua_MoveEntityGlobal(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    switch(top)
+    {
+        case 4:
+            ent->transform[12+0] += lua_tonumber(lua, 2);
+            ent->transform[12+1] += lua_tonumber(lua, 3);
+            ent->transform[12+2] += lua_tonumber(lua, 4);
+            return 0;  
+            
+        default:
+            Con_Printf("Wrong arguments count. Must be (id, x, y, z)");
+            return 0;
+    }
+
+    return 0;
+}
+
+
+int lua_MoveEntityLocal(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    btScalar dx, dy, dz;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    dx = lua_tonumber(lua, 2);
+    dy = lua_tonumber(lua, 3);
+    dz = lua_tonumber(lua, 4);
+    
+    ent->transform[12+0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
+    ent->transform[12+1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
+    ent->transform[12+2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
+
+    return 0;
+}
+
+
+int lua_GetEntitySpeed(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (id)");
+        return 0;
+    }
     ent = World_GetEntityByID(&engine_world, id);
     
     if(ent == NULL)
@@ -353,9 +496,100 @@ int lua_SetEntityPosition(lua_State * lua)
         return 0;
     }
     
-    ent->transform[12+0] = lua_tonumber(lua, 2);
-    ent->transform[12+1] = lua_tonumber(lua, 3);
-    ent->transform[12+2] = lua_tonumber(lua, 4);
+    lua_pushnumber(lua, ent->speed[0]);
+    lua_pushnumber(lua, ent->speed[1]);
+    lua_pushnumber(lua, ent->speed[2]);
+    return 3;
+}
+
+
+int lua_SetEntitySpeed(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    switch(top)
+    {
+        case 4:
+            ent->speed[0] = lua_tonumber(lua, 2);
+            ent->speed[1] = lua_tonumber(lua, 3);
+            ent->speed[2] = lua_tonumber(lua, 4);
+            return 0;  
+            
+        default:
+            Con_Printf("Wrong arguments count. Must be (id, Vx, Vy, Vz)");
+            return 0;
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityAnim(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+
+    return 0;
+}
+
+
+int lua_SetEntityWisibility(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    ent->hide = !lua_tointeger(lua, 2);
+
+    return 0;
+}
+
+
+int lua_SetEntityActivity(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    ent->active = lua_tointeger(lua, 2);
+
     return 0;
 }
 
@@ -378,7 +612,6 @@ int lua_PlaySound(lua_State *lua)
         Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
         return 0;
     }
-    
     
     switch(Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL))
     {
@@ -440,8 +673,19 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      */
     lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "stopsound", lua_StopSound);
+    
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
+    lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
+    lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
+    lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
+    lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
+    lua_register(lua, "enableEntity", lua_EnableEntity);
+    lua_register(lua, "disableEntity", lua_DisableEntity);
+    lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
+    lua_register(lua, "setEntityWisibility", lua_SetEntityWisibility);
+    lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
+    
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
     lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
 }

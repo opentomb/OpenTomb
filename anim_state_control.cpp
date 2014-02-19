@@ -1561,20 +1561,96 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             break;
             
         case TR_ANIMATION_LARA_LADDER_IDLE:
+            cmd->rot[0] = 0;
+            ent->move_type = MOVE_WALLS_CLMB;
+            if(cmd->action == 0)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_GRABBING/*TR_STATE_LARA_HANG*/); 
+            }
+            else if(cmd->jump)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_JUMP_BACK);
+                ent->dir_flag = ENT_MOVE_BACKWARD;
+            }
+            else if(cmd->move[0] == 1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_LADDER_UP); 
+            }
+            else if(cmd->move[0] == -1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_LADDER_DOWN); 
+            }
+            else if(cmd->move[1] == 1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_LADDER_RIGHT); 
+            }
+            else if(cmd->move[1] == -1)  
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_LADDER_LEFT); 
+            }
+            else{
             /*
              * TR_STATE_LARA_HANG
              * TR_STATE_LARA_GRABBING
-             * TR_STATE_LARA_JUMP_BACK
-             * TR_STATE_LARA_LADDER_UP
-             * TR_STATE_LARA_LADDER_LEFT
-             * TR_STATE_LARA_LADDER_RIGHT
-             * TR_STATE_LARA_LADDER_DOWN
              * TR_STATE_LARA_CLIMB_CORNER_LEFT_OUTER
              * TR_STATE_LARA_CLIMB_CORNER_RIGHT_OUTER
              * TR_STATE_LARA_CLIMB_CORNER_LEFT_INNER
              * TR_STATE_LARA_CLIMB_CORNER_RIGHT_INNER
              */
-            Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+            }
+            break;
+            
+        case TR_ANIMATION_LARA_LADDER_LEFT:
+            if(cmd->action == 0)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_HANG); 
+            }
+            else if(cmd->move[1] ==-1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+            }
+            else
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_LADDER_IDLE); 
+            }
+            break;
+            
+        case TR_ANIMATION_LARA_LADDER_RIGHT:
+            if(cmd->action == 0)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_HANG); 
+            }
+            else if(cmd->move[1] == 1)
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+            }
+            else
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_LADDER_IDLE); 
+            }
+            break;
+            
+        case TR_ANIMATION_LARA_LADDER_UP:
+            if(cmd->action && (cmd->move[1] > 0))
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+            }
+            else
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_LADDER_IDLE); 
+            }
+            break;
+            
+        case TR_ANIMATION_LARA_LADDER_DOWN:
+            if(cmd->action && (cmd->move[1] < 0))
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT); 
+            }
+            else
+            {
+                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_LADDER_IDLE); 
+            }
             break;
             
         case TR_ANIMATION_LARA_HANG_IDLE:
@@ -3122,7 +3198,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->move_type = MOVE_FREE_FALLING;
                 }
             }
+            //Character_WallClimbPreStep(ent, move);
             Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);
+            //Character_WallClimbPostStep(ent, move);
             break;
     };
 
