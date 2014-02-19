@@ -119,6 +119,7 @@ typedef struct character_s
 {
     struct entity_s             *ent;                    // actor entity
     struct character_command_s   cmd;                    // character control commands
+    int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
     int16_t                      max_move_iterations;
     int16_t                      no_fix;
     
@@ -137,7 +138,7 @@ typedef struct character_s
     btScalar                     wade_depth;             // water depth that enable wade walk
     btCollisionShape            *shapeZ;                 // running / jumping
     btCapsuleShape              *shapeY;                 // swimming / crocodile
-    //btMultiSphereShape          *shapeXYZ;               // scaled sphere
+
     btBoxShape                  *shapeBox;               // simple (128, 128, 128) sized box shape
     btSphereShape               *sphere;                 // needs to height calculation
     btSphereShape               *climb_sensor;
@@ -179,6 +180,6 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd);
 int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);
 
-void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd, int(*state_func)(struct entity_s *ent, struct character_command_s *cmd));
+void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd);
 
 #endif  // CHARACTER_CONTROLLER_H

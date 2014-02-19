@@ -25,6 +25,7 @@ entity_p Entity_Create()
     ret->frame_time = 0.0;
     ret->move_type = MOVE_ON_FLOOR;
     Mat4_E(ret->transform);
+    ret->active = 1;
     
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
     ret->self->next = NULL;
@@ -109,6 +110,51 @@ void Entity_Clear(entity_p entity)
             entity->bf.bone_tag_count = 0;
         }
     }
+}
+
+
+void Entity_Enable(entity_p ent)
+{
+    int i;
+    
+    if(ent->active)
+    {
+        return;
+    }
+    
+    for(i=0;i<ent->bf.bone_tag_count;i++)
+    {
+        btRigidBody *b = ent->bt_body[i];
+        if(b)
+        {
+            bt_engine_dynamicsWorld->addRigidBody(b);
+        }
+    }
+    
+    ent->hide = 0;
+    ent->active = 1;
+}
+
+void Entity_Disable(entity_p ent)
+{
+    int i;
+    
+    if(!ent->active)
+    {
+        return;
+    }
+    
+    for(i=0;i<ent->bf.bone_tag_count;i++)
+    {
+        btRigidBody *b = ent->bt_body[i];
+        if(b)
+        {
+            bt_engine_dynamicsWorld->removeRigidBody(b);
+        }
+    }
+    
+    ent->hide = 1;
+    ent->active = 0;
 }
 
 
@@ -277,6 +323,72 @@ void Entity_UpdateRotation(entity_p entity)
 }
 
 
+/**
+ * @FIXME: find rotation command and implement it!!!
+ * Check the entity transformation anim commands and writes one to the tr[4] array. 
+ * @param entity - entity pointer
+ * @param anim - animation number, where we search command
+ * @param frame - frame number for correct condition check
+ * @param tr - x, y, z offset + OZ rotation in deg.
+ */
+void Entity_GetAnimCommandTransform(entity_p entity, int anim, int frame, btScalar tr[4])
+{
+    vec4_set_zero(tr);
+    
+    if((engine_world.anim_commands_count == 0) || 
+       (entity->model->animations[entity->current_animation].num_anim_commands > 255))
+    {
+        return;                                                                 // If no anim commands or current anim has more than 255 (according to TRosettaStone).
+    }
+        
+    animation_frame_p af  = entity->model->animations + anim;
+    uint32_t count        = af->num_anim_commands;
+    int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+    
+    for(uint32_t i = 0; i < count; i++, pointer++)
+    {
+        switch(*pointer)
+        {
+            case TR_ANIMCOMMAND_SETPOSITION:
+                // This command executes ONLY at the end of animation. 
+                if(frame == af->frames_count - 1)
+                {
+                    btScalar delta[3];                                          // delta in entity local coordinate system!
+                    delta[0] = (btScalar)(*++pointer);                          // x = x;
+                    delta[2] =-(btScalar)(*++pointer);                          // z =-y
+                    delta[1] = (btScalar)(*++pointer);                          // y = z
+                    tr[0] = entity->transform[0 + 0] * delta[0] + entity->transform[4 + 0] * delta[1] + entity->transform[8 + 0] * delta[2];
+                    tr[1] = entity->transform[0 + 1] * delta[0] + entity->transform[4 + 1] * delta[1] + entity->transform[8 + 1] * delta[2];
+                    tr[2] = entity->transform[0 + 2] * delta[0] + entity->transform[4 + 2] * delta[1] + entity->transform[8 + 2] * delta[2];
+                }
+                else
+                {
+                    pointer += 3;                                               // Parse through 3 operands.
+                }
+                break;
+                
+            case TR_ANIMCOMMAND_JUMPDISTANCE:
+                pointer += 2;                                                   // Parse through 2 operands.
+                break;
+                
+            case TR_ANIMCOMMAND_EMPTYHANDS:
+                break;
+                
+            case TR_ANIMCOMMAND_KILL:
+                break;
+                
+            case TR_ANIMCOMMAND_PLAYSOUND:
+                ++pointer;
+                break;
+                
+            case TR_ANIMCOMMAND_PLAYEFFECT:
+                pointer += 2;                                                   // Parse through 2 operands.
+                break;
+        }
+    }
+}
+
+
 void Entity_UpdateCurrentBoneFrame(entity_p entity)
 {
     long int k, stack_use;
@@ -308,6 +420,9 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
         if(k == 0)
         {
             vec3_add(btag->transform+12, btag->transform+12, entity->bf.pos);
+            btag->transform[12 + 0] += entity->next_bf_tr[0] * entity->lerp;
+            btag->transform[12 + 1] += entity->next_bf_tr[1] * entity->lerp;
+            btag->transform[12 + 2] += entity->next_bf_tr[2] * entity->lerp;
         }
         
         vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, entity->lerp);
@@ -935,6 +1050,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     entity->frame_time = (btScalar)frame * entity->period + dt;
     
     Entity_UpdateCurrentBoneFrame(entity);
+    Entity_UpdateRigidBody(entity);
 }
     
 
@@ -1046,7 +1162,7 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
      * Check next anim if frame >= frames_count
      */
     if(*frame >= curr_anim->frames_count)
-    {             
+    {            
         if(curr_anim->next_anim)
         {
             *frame = curr_anim->next_frame;
@@ -1091,7 +1207,8 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
     animation_frame_p af;
     state_change_p stc;
     
-    if(!entity || !entity->model || !entity->model->animations || ((entity->model->animations->frames_count == 1) && (entity->model->animation_count == 1)))
+    vec4_set_zero(entity->next_bf_tr);
+    if(!entity || !entity->active || !entity->model || !entity->model->animations || ((entity->model->animations->frames_count == 1) && (entity->model->animation_count == 1)))
     {
         return 0;
     }
@@ -1123,7 +1240,8 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
     entity->lerp = (entity->smooth_anim)?(dt / entity->period):(0.0);
     
     Entity_GetNextFrame(entity, entity->period, stc, &frame, &anim);
-    entity->next_bf = entity->model->animations[anim].frames + frame;   
+    entity->next_bf = entity->model->animations[anim].frames + frame;
+    Entity_GetAnimCommandTransform(entity, entity->current_animation, entity->current_frame, entity->next_bf_tr);
 
     /*
      * Update acceleration

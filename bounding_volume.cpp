@@ -326,7 +326,13 @@ btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n)
     dfi = M_PI * 2.0 / (btScalar)n;
     data = (btScalar*)malloc(3*(2*n+2)*sizeof(btScalar));
     v = data;
-    
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = size[3];
+    v[3] = 0.0;
+    v[4] = 0.0;
+    v[5] =-size[3];
+    v += 6;
     for(i=0;i<n;i++,fi+=dfi,v+=6)
     {
         v[0] = size[0] * cos(fi);
@@ -336,13 +342,6 @@ btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n)
         v[4] = v[1];
         v[5] =-size[2];
     }
-    
-    v[0] = 0.0;
-    v[1] = 0.0;
-    v[2] = size[3];
-    v[3] = 0.0;
-    v[4] = 0.0;
-    v[5] =-size[3];
     
     ret = new btConvexHullShape(data, 2*n + 2, 3 * sizeof(btScalar));
     free(data);

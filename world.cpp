@@ -21,6 +21,7 @@
 #include "bounding_volume.h"
 #include "redblack.h"
 
+
 void Room_Empty(room_p room)
 {
     int i;
@@ -149,6 +150,7 @@ void Room_AddEntity(room_p room, struct entity_s *entity)
     room->containers = curr;
 }
 
+
 int Room_RemoveEntity(room_p room, struct entity_s *entity)
 {
     engine_container_p cont, prev;
@@ -242,32 +244,6 @@ int Room_IsOverlapped(room_p r0, room_p r1)
     return !Room_IsJoined(r0, r1);
 }
 
-
-/*
- * Check room alternate
- */
-room_p Room_CheckAlternate(room_p room)
-{
-    if(room && room->use_alternate && room->alternate_room)
-    {
-        return room->alternate_room;
-    }
-
-    return room;
-}
-
-room_sector_p Sector_CheckAlternate(room_sector_p sector)
-{
-    room_p alt_room;
-
-    if(sector && sector->owner_room->use_alternate && sector->owner_room->alternate_room)
-    {
-        alt_room = sector->owner_room->alternate_room;
-        return alt_room->sectors + sector->index_x * alt_room->sectors_y + sector->index_y;
-    }
-
-    return sector;
-}
 
 void World_Prepare(world_p world)
 {
@@ -441,21 +417,25 @@ void World_Empty(world_p world)
     Audio_DeInit();
 }
 
+
 int compEntityEQ(void *x, void *y)
 {
     return (*((uint32_t*)x) == *((uint32_t*)y));
 }
+
 
 int compEntityLT(void *x, void *y)
 {
     return (*((uint32_t*)x) < *((uint32_t*)y));
 }
 
+
 void RBEntityFree(void *x)
 {
     Entity_Clear((entity_p)x);
     free(x);
 }
+
 
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
 {
@@ -476,6 +456,7 @@ struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
     return ent;
 }
 
+
 inline int Room_IsPointIn(room_p room, btScalar dot[3])
 {
     return (dot[0] >= room->bb_min[0]) && (dot[0] < room->bb_max[0]) &&
@@ -490,7 +471,8 @@ room_p Room_FindPos(world_p w, btScalar pos[3])
     room_p r = w->rooms;
     for(i=0;i<w->room_count;i++,r++)
     {
-        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
+        if(r->active && 
+           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
         {
@@ -521,12 +503,14 @@ room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room)
 {
     unsigned int i;
     room_p r;
+    
     if(room == NULL)
     {
         return Room_FindPos(w, pos);
     }
 
-    if((pos[0] >= room->bb_min[0]) && (pos[0] < room->bb_max[0]) &&
+    if(room->active && 
+       (pos[0] >= room->bb_min[0]) && (pos[0] < room->bb_max[0]) &&
        (pos[1] >= room->bb_min[1]) && (pos[1] < room->bb_max[1]) &&
        (pos[2] >= room->bb_min[2]) && (pos[2] < room->bb_max[2]))
     {
@@ -536,7 +520,8 @@ room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room)
     for(i=0;i<room->near_room_list_size;i++)
     {
         r = room->near_room_list[i];
-        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
+        if(r->active &&
+           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
         {
@@ -577,6 +562,7 @@ room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room)
     return Room_FindPos2d(w, pos);
 }
 
+
 room_p Room_GetByID(world_p w, unsigned int ID)
 {
     unsigned int i;
@@ -591,12 +577,16 @@ room_p Room_GetByID(world_p w, unsigned int ID)
     return NULL;
 }
 
+
 room_sector_p Room_GetSector(room_p room, btScalar pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;
 
-    room = Room_CheckAlternate(room);
+    if(!room->active)
+    {
+        return NULL;
+    }
 
     x = (int)(pos[0] - room->transform[12]) / 1024;
     y = (int)(pos[1] - room->transform[13]) / 1024;
@@ -618,7 +608,10 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
     int x, y;
     room_sector_p ret = NULL;
 
-    room = Room_CheckAlternate(room);
+    if(!room->active)
+    {
+        return NULL;
+    }
 
     x = (int)(pos[0] - room->transform[12]) / 1024;
     y = (int)(pos[1] - room->transform[13]) / 1024;
@@ -640,7 +633,91 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
         return ret->sector_below;
     }
     
+    if(ret->sector_above && (ret->sector_above->floor <= pos[2]))
+    {
+        return ret->sector_above;
+    }
+    
     return ret;
+}
+
+
+void Room_Enable(room_p room)
+{
+    int i;
+    engine_container_p cont;
+    
+    if(room->active)
+    {
+        return;
+    }
+    
+    if(room->bt_body)
+    {
+        bt_engine_dynamicsWorld->addRigidBody(room->bt_body);
+    }
+    for(i=0;i<room->static_mesh_count;i++)
+    {
+        if(room->static_mesh[i].bt_body)
+        {
+            bt_engine_dynamicsWorld->addRigidBody(room->static_mesh[i].bt_body);
+        }
+    }
+    
+    for(cont = room->containers;cont;cont = cont->next)
+    {
+        switch(cont->object_type)
+        {
+            case OBJECT_ENTITY:
+                Entity_Disable((entity_p)cont->object);
+                break;
+        }
+    }
+    
+    room->active = 1;
+}
+
+
+void Room_Disable(room_p room)
+{
+    int i;
+    
+    if(!room->active)
+    {
+        return;
+    }
+    
+    if(room->bt_body)
+    {
+        bt_engine_dynamicsWorld->removeRigidBody(room->bt_body);
+    }
+    for(i=0;i<room->static_mesh_count;i++)
+    {
+        if(room->static_mesh[i].bt_body)
+        {
+            bt_engine_dynamicsWorld->removeRigidBody(room->static_mesh[i].bt_body);
+        }
+    }
+    
+    room->active = 0;
+}
+
+
+void Room_SwapAlternate(room_p room)
+{
+    /*if(room->alternate_room)
+    {
+        if(room->active)
+        {
+            Room_Disable(room);
+            Room_Enable(room->alternate_room);
+        }
+        else
+        {
+            Room_Enable(room);
+            Room_Disable(room->alternate_room);
+        }
+    }*/
 }
 
 
@@ -650,11 +727,13 @@ int World_AddEntity(world_p world, struct entity_s *entity)
     return 1;
 }
 
+
 int World_DeleteEntity(world_p world, struct entity_s *entity)
 {
     RB_Delete(world->entity_tree, RB_SearchNode(&entity->ID, world->entity_tree));
     return 1;
 }
+
 
 struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id)
 {

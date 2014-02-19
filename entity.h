@@ -107,6 +107,7 @@ typedef struct entity_s
 {
     uint32_t                            ID;                                     // ID
     uint32_t                            flags;
+    uint8_t                             active;
     uint8_t                             dir_flag;                               // (move direction)
     uint8_t                             state_flag;                             // I.E. must climb, climb action, ..., trigger action, crouch
     uint16_t                            anim_flags;                             // additional animation control param
@@ -120,6 +121,7 @@ typedef struct entity_s
     btVector3                           speed;                                  // speed of the entity XYZ
     struct ss_bone_frame_s              bf;                                     // current boneframe with full frame information 
     struct bone_frame_s                *next_bf;
+    btScalar                            next_bf_tr[4];                          // next boneframe anim command offset
     btScalar                            angles[3];
     btScalar                            transform[16];                          // GL transformation matrix
     
@@ -145,6 +147,8 @@ typedef struct entity_s
 
 entity_p Entity_Create();
 void Entity_Clear(entity_p entity);
+void Entity_Enable(entity_p ent);
+void Entity_Disable(entity_p ent);
 
 void Entity_UpdateRoomPos(entity_p ent);
 void Entity_UpdateRigidBody(entity_p ent);
@@ -160,6 +164,7 @@ void Entity_UpdateRotation(entity_p entity);
 
 int  Entity_GetWaterState(entity_p entity);
 
+void Entity_GetAnimCommandTransform(entity_p entity, int anim, int frame, btScalar tr[4]);
 void Entity_UpdateCurrentBoneFrame(entity_p entity);
 void Entity_DoAnimCommands(entity_p entity, int changing);
 int  Entity_ParseFloorData(struct entity_s *ent, struct world_s *world);

@@ -1079,9 +1079,9 @@ void DebugKeys(int button, int state)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
-                        if(engine_world.rooms[i].alternate_room)
+                        if(engine_world.rooms[i].alternate_room && engine_world.rooms[i].active)
                         {
-                            engine_world.rooms[i].use_alternate = !engine_world.rooms[i].use_alternate;
+                            Room_SwapAlternate(&engine_world.rooms[i]);
                         }
                     }
                 }
