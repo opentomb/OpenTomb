@@ -392,6 +392,7 @@ void Entity_GetAnimCommandTransform(entity_p entity, int anim, int frame, btScal
 void Entity_UpdateCurrentBoneFrame(entity_p entity)
 {
     long int k, stack_use;
+    btScalar cmd_tr[3];
     ss_bone_tag_p btag = entity->bf.bone_tags;
     bone_tag_p src_btag, next_btag;
     btScalar *stack, *sp, t;
@@ -405,11 +406,17 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
     }
 
     t = 1.0 - entity->lerp;
+    vec3_mul_scalar(cmd_tr, entity->next_bf_tr, entity->lerp);
+
     vec3_interpolate_macro(entity->bf.bb_max, bf->bb_max, entity->next_bf->bb_max, entity->lerp, t);
+    vec3_add(entity->bf.bb_max, entity->bf.bb_max, cmd_tr);
     vec3_interpolate_macro(entity->bf.bb_min, bf->bb_min, entity->next_bf->bb_min, entity->lerp, t);
+    vec3_add(entity->bf.bb_min, entity->bf.bb_min, cmd_tr);
     vec3_interpolate_macro(entity->bf.centre, bf->centre, entity->next_bf->centre, entity->lerp, t);
+    vec3_add(entity->bf.centre, entity->bf.centre, cmd_tr);
     
     vec3_interpolate_macro(entity->bf.pos, bf->pos, entity->next_bf->pos, entity->lerp, t);
+    vec3_add(entity->bf.pos, entity->bf.pos, cmd_tr);
     next_btag = entity->next_bf->bone_tags;
     src_btag = bf->bone_tags;
     for(k=0;k<bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
@@ -420,9 +427,6 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
         if(k == 0)
         {
             vec3_add(btag->transform+12, btag->transform+12, entity->bf.pos);
-            btag->transform[12 + 0] += entity->next_bf_tr[0] * entity->lerp;
-            btag->transform[12 + 1] += entity->next_bf_tr[1] * entity->lerp;
-            btag->transform[12 + 2] += entity->next_bf_tr[2] * entity->lerp;
         }
         
         vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, entity->lerp);

@@ -151,7 +151,7 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_FREE_FALL_VERTICAL 93
 #define TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG 94
 #define TR_ANIMATION_LARA_TRY_HANG_SOLID 95
-#define TR_ANIMATION_LARA_HANG_IDLE 96
+#define TR_ANIMATION_LARA_HANG_IDLE 96                            // main climbing animation... triggers
 #define TR_ANIMATION_LARA_CLIMB_ON 97
 #define TR_ANIMATION_LARA_FREE_FALL_TO_LONG 98
 #define TR_ANIMATION_LARA_FALL_CROUCHING_LANDING 99               // Unused?

@@ -14,6 +14,7 @@
 #include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
 #include "engine.h"
 
+// Lara's character behavior constants
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
 #define DEFAULT_MAX_STEP_UP_HEIGHT              (320.0)                         ///@FIXME: check original
@@ -25,6 +26,8 @@
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_CLIMB_R               (48.0)
 #define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
+
+// flags constants
 #define CHARACTER_SLIDE_FRONT                   (0x02)
 #define CHARACTER_SLIDE_BACK                    (0x01)
 
@@ -62,6 +65,8 @@ typedef struct climb_info_s
     btScalar                       n[3];
     btScalar                       t[3];
     btScalar                       up[3];
+    btScalar                       floor_limit;
+    btScalar                       ceiling_limit;
     
     int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
     int8_t                         edge_hit;
@@ -159,6 +164,7 @@ void Character_Clean(struct entity_s *ent);
 
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc);
 int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc);
+int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
 int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar react[3]);
