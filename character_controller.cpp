@@ -40,6 +40,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->state_func = NULL;
     ret->ent = ent;
     ent->character = ret;
+    ent->dir_flag = ENT_STAY;
     Mat4_E_macro(ret->local_platform);
 
     ret->cmd.action = 0x00;
@@ -546,6 +547,20 @@ int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct hei
 }
 
 /**
+ * 
+ * @param ent - entity
+ * @param next_fc - next step floor / ceiling information
+ * @return 1 if character can't run / walk next; in other cases returns 0
+ */
+int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
+{
+    btScalar *pos = ent->transform + 12, *v1 = ent->transform + 4, *v2 = (btScalar*)next_fc->floor_normale.m_floats;
+    
+    return (next_fc->floor_point[2] > pos[2]) && (next_fc->floor_normale.m_floats[2] < ent->character->critical_slant_z_component) &&
+           (v1[0] * v2[0] + v1[1] * v2[2] < 0.0);
+}
+
+/**
  * @FIXME: MAGICK CONST!
  * @param ent - entity
  * @param offset - offset, when we check height
@@ -573,6 +588,12 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     ret.can_hang = 0;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
+    ret.floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point.m_floats[2]):(-9E10);
+    ret.ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point.m_floats[2]):(9E10);
+    if(nfc->ceiling_hit && (nfc->ceiling_point.m_floats[2] < ret.ceiling_limit))
+    {
+        ret.ceiling_limit = nfc->ceiling_point.m_floats[2];
+    }
     vec3_copy(ret.point, ent->character->climb.point);
     /*
      * check max height
@@ -760,12 +781,16 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
 {
     climb_info_t ret;
     btVector3 from, to, point;
+    btTransform tr1, tr2;
     btScalar wn2[2], t, *pos = ent->transform + 12;
-    bt_engine_ClosestRayResultCallback *cb = ent->character->ray_cb;
+    bt_engine_ClosestConvexResultCallback *ccb = ent->character->convex_cb;
+    
     ret.can_hang = 0x00;
     ret.wall_hit = 0x00;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
+    ret.floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point.m_floats[2]):(-9E10);
+    ret.ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point.m_floats[2]):(9E10);
     vec3_copy(ret.point, ent->character->climb.point);
     
     if(ent->character->height_info.walls_climb == 0x00)
@@ -777,35 +802,37 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
     ret.up[1] = 0.0;
     ret.up[2] = 1.0;
     
-    from.m_floats[0] = pos[0] + ent->transform[8 + 0] * ent->bf.bb_max[2];
-    from.m_floats[1] = pos[1] + ent->transform[8 + 1] * ent->bf.bb_max[2];
-    from.m_floats[2] = pos[2] + ent->transform[8 + 2] * ent->bf.bb_max[2];
+    from.m_floats[0] = pos[0] + ent->transform[8 + 0] * ent->bf.bb_max[2] - ent->transform[4 + 0] * ent->character->climb_r;
+    from.m_floats[1] = pos[1] + ent->transform[8 + 1] * ent->bf.bb_max[2] - ent->transform[4 + 1] * ent->character->climb_r;
+    from.m_floats[2] = pos[2] + ent->transform[8 + 2] * ent->bf.bb_max[2] - ent->transform[4 + 2] * ent->character->climb_r;
     to = from;
     t = ent->character->ry + ent->bf.bb_max[1];
     to.m_floats[0] += ent->transform[4 + 0] * t;
     to.m_floats[1] += ent->transform[4 + 1] * t;
     to.m_floats[2] += ent->transform[4 + 2] * t;
     
-    cb->m_closestHitFraction = 1.0;
-    cb->m_collisionObject = NULL;
-    bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-    if(!(cb->hasHit()))
+    ccb->m_closestHitFraction = 1.0;
+    ccb->m_hitCollisionObject = NULL;
+    tr1.setIdentity();
+    tr1.setOrigin(from);
+    tr2.setIdentity();
+    tr2.setOrigin(to);
+    bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor, tr1, tr2, *ccb);
+    if(!(ccb->hasHit()))
     {
         return ret;
     }
     
-    point.setInterpolate3(from, to, cb->m_closestHitFraction);
-    vec3_copy(ret.point, point.m_floats);
-    vec3_copy(ret.n, cb->m_hitNormalWorld.m_floats);
+    vec3_copy(ret.point, ccb->m_hitPointWorld.m_floats);
+    vec3_copy(ret.n, ccb->m_hitNormalWorld.m_floats);
     wn2[0] = ret.n[0];
     wn2[1] = ret.n[1];
     t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
     wn2[0] /= t;
     wn2[0] /= t;    
     
-    ///@FIXME: check the sign
-    ret.t[0] = wn2[1];
-    ret.t[1] =-wn2[0];
+    ret.t[0] =-wn2[1];
+    ret.t[1] = wn2[0];
     ret.t[2] = 0.0;
     // now we have wall normale in XOY plane. Let us check all flags
     
@@ -838,14 +865,32 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
         to.m_floats[1] += ent->transform[4 + 1] * t;
         to.m_floats[2] += ent->transform[4 + 2] * t;
         
-        cb->m_closestHitFraction = 1.0;
-        cb->m_collisionObject = NULL;
-        bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-        if(cb->hasHit())
+        ccb->m_closestHitFraction = 1.0;
+        ccb->m_hitCollisionObject = NULL;
+        tr1.setIdentity();
+        tr1.setOrigin(from);
+        tr2.setIdentity();
+        tr2.setOrigin(to);
+        bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor, tr1, tr2, *ccb);
+        if(ccb->hasHit())
         {
             ret.wall_hit = 0x02;
         }
     }
+    
+    // now check ceiling limit (and floor too... may be later)
+    /*vec3_add(from.m_floats, point.m_floats, ent->transform+4);
+    to = from;
+    from.m_floats[2] += 520.0;                                                  ///@FIXME: magick;
+    to.m_floats[2] -= 520.0;                                                    ///@FIXME: magick... again...
+    cb->m_closestHitFraction = 1.0;
+    cb->m_collisionObject = NULL;
+    bt_engine_dynamicsWorld->rayTest(from, to, *cb);
+    if(cb->hasHit())
+    {
+        point.setInterpolate3(from, to, cb->m_closestHitFraction);
+        ret.ceiling_limit = (ret.ceiling_limit > point.m_floats[2])?(point.m_floats[2]):(ret.ceiling_limit);
+    }*/
     
     return ret;
 }
@@ -1509,11 +1554,12 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
 {
     climb_info_t *climb = &ent->character->climb;
     btVector3 spd, move;
-    btScalar t, p0[3], *pos = ent->transform + 12;
+    btScalar t, fc_pos[3], *pos = ent->transform + 12;
+    int i, iter;
     /*
      * resize collision model
      */
-    vec3_copy(p0, pos);
+    //vec3_copy(p0, pos);
     Character_UpdateCollisionObject(ent, 0.0);
     cmd->slide = 0x00;
     cmd->horizontal_collide = 0x00;
@@ -1533,19 +1579,19 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
     pos[0] = climb->point[0] - ent->transform[4 + 0] * ent->bf.bb_max[1];
     pos[1] = climb->point[1] - ent->transform[4 + 1] * ent->bf.bb_max[1];
     
-    if(cmd->move[0] == 1)
+    if(ent->dir_flag == ENT_MOVE_FORWARD)
     {
         vec3_add(spd.m_floats, spd.m_floats, climb->up);
     }
-    else if(cmd->move[0] ==-1)
+    else if(ent->dir_flag == ENT_MOVE_BACKWARD)
     {
         vec3_sub(spd.m_floats, spd.m_floats, climb->up);
     }
-    else if(cmd->move[1] == 1)
+    else if(ent->dir_flag == ENT_MOVE_RIGHT)
     {
         vec3_add(spd.m_floats, spd.m_floats, climb->t);
     }
-    else if(cmd->move[1] ==-1)
+    else if(ent->dir_flag == ENT_MOVE_LEFT)
     {
         vec3_sub(spd.m_floats, spd.m_floats, climb->t);
     }
@@ -1554,14 +1600,33 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
     {
         spd /= t;
     }
-    ent->speed = spd;
-    move = spd;
-
-    Entity_UpdateRoomPos(ent);
-    Character_UpdateCurrentHeight(ent);
-    Character_FixPenetrations(ent, cmd, move.m_floats);                         // get horizontal collide
+    ent->speed = spd * ent->current_speed * ent->character->speed_mult;
+    move = ent->speed * engine_frame_time;
     
+    t = move.length();
+    iter = 2.0 * t / ent->character->ry + 1;
+    if(iter < 1)
+    {
+        iter = 1;
+    }
+    move /= (btScalar)iter;
+            
+    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    {
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
+        Character_GetHeightInfo(fc_pos, &ent->character->height_info);
+        vec3_add(pos, pos, move.m_floats);
+        Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
+        Character_UpdateCurrentHeight(ent);
+        Entity_UpdateRoomPos(ent);
+    }
+   
     *climb = Character_CheckWallsClimbability(ent);
+    if(pos[2] + ent->bf.bb_max[2] > climb->ceiling_limit)
+    {
+        pos[2] = climb->ceiling_limit - ent->bf.bb_max[2];
+    }
+    
     return 1;
 }
 
@@ -1686,7 +1751,7 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
     }
     Entity_UpdateRotation(ent);                                                 // apply rotations
 
-    vec3_mul_scalar(spd.m_floats, ent->transform+4, t);
+    vec3_mul_scalar(spd.m_floats, ent->transform+4, t);                         // OY move only!
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
