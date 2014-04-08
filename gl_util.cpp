@@ -116,6 +116,21 @@ PFNGLMAPBUFFERARBPROC                   glMapBufferARB =                        
 PFNGLUNMAPBUFFERARBPROC                 glUnmapBufferARB =                      NULL;
 PFNGLGETBUFFERPARAMETERIVARBPROC        glGetBufferParameterivARB =             NULL;
 PFNGLGETBUFFERPOINTERVARBPROC           glGetBufferPointervARB =                NULL;
+
+PFNGLBINDVERTEXARRAYPROC                glBindVertexArray =                     NULL;
+PFNGLDELETEVERTEXARRAYSPROC             glDeleteVertexArray =                   NULL;
+PFNGLGENVERTEXARRAYSPROC                glGenVertexArray =                      NULL;
+PFNGLISVERTEXARRAYPROC                  glIsVertexArray =                       NULL;
+PFNGLENABLEVERTEXATTRIBARRAYPROC        glEnableVertexAttribArray =             NULL;
+
+PFNGLBINDPROGRAMARBPROC                 glBindProgramARB =                      NULL;
+PFNGLTEXIMAGE3DPROC                     glTexImage3D=                           NULL;
+PFNGLBLENDEQUATIONSEPARATEPROC          glBlendEquationSeparate=                NULL;
+PFNGLBLENDFUNCSEPARATEPROC              glBlendFuncSeparate=                    NULL;
+PFNGLBLENDEQUATIONPROC                  glBlendEquation=                        NULL;
+PFNGLDISABLEVERTEXATTRIBARRAYPROC       glDisableVertexAttribArray=             NULL;
+PFNGLGETVERTEXATTRIBIVPROC              glGetVertexAttribiv=                    NULL;
+PFNGLGETVERTEXATTRIBFVPROC              glGetVertexAttribfv=                    NULL;
 #endif
 
 char *engine_gl_ext_str = NULL;
@@ -228,6 +243,22 @@ void InitGLExtFuncs()
         SAFE_GET_PROC(glGetActiveAttribARB, PFNGLGETACTIVEATTRIBARBPROC, "glGetActiveAttribARB");
         SAFE_GET_PROC(glGetAttribLocationARB, PFNGLGETATTRIBLOCATIONARBPROC, "glGetAttribLocationARB");
     }
+    
+    /*ANT menu library GL funcs*/
+    SAFE_GET_PROC(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
+    SAFE_GET_PROC(glDeleteVertexArray, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArray");
+    SAFE_GET_PROC(glGenVertexArray, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArray");
+    SAFE_GET_PROC(glIsVertexArray, PFNGLISVERTEXARRAYPROC, "glIsVertexArray");
+    SAFE_GET_PROC(glEnableVertexAttribArray, PFNGLENABLEVERTEXATTRIBARRAYPROC, "glEnableVertexAttribArray");        
+    
+    SAFE_GET_PROC(glBindProgramARB, PFNGLBINDPROGRAMARBPROC, "glBindProgramARB");
+    SAFE_GET_PROC(glTexImage3D, PFNGLTEXIMAGE3DPROC, "glTexImage3D");
+    SAFE_GET_PROC(glBlendEquationSeparate, PFNGLBLENDEQUATIONSEPARATEPROC, "glBlendEquationSeparate");
+    SAFE_GET_PROC(glBlendFuncSeparate, PFNGLBLENDFUNCSEPARATEPROC, "glBlendFuncSeparate");
+    SAFE_GET_PROC(glBlendEquation, PFNGLBLENDEQUATIONPROC, "glBlendEquation");
+    SAFE_GET_PROC(glDisableVertexAttribArray, PFNGLDISABLEVERTEXATTRIBARRAYPROC, "glDisableVertexAttribArray");
+    SAFE_GET_PROC(glGetVertexAttribiv, PFNGLGETVERTEXATTRIBIVPROC, "glGetVertexAttribiv");
+    SAFE_GET_PROC(glGetVertexAttribfv, PFNGLGETVERTEXATTRIBFVPROC, "glGetVertexAttribfv");
 #endif
 }
 

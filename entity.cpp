@@ -1036,7 +1036,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
         animation = 0;
     }
     
-    entity->next_bf == NULL;
+    entity->next_bf = NULL;
     entity->lerp = 0.0;
     anim = &entity->model->animations[animation];
     frame %= anim->frames_count;

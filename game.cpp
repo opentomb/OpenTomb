@@ -25,6 +25,7 @@ extern "C" {
 #include "system.h"
 #include "script.h"
 #include "console.h"
+#include "menu_bar.h"
 #include "anim_state_control.h"
 #include "bounding_volume.h"
 #include "character_controller.h"
@@ -519,7 +520,7 @@ void Game_UpdateCharacters()
 
 void GameFrame(btScalar time)
 {
-    if(con_base.show)
+    if(con_base.show || MenuBar_IsVisible())
     {
         return;
     }

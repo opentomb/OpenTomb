@@ -427,7 +427,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->num_bump_textiles = read_bitu16(src);
         this->num_misc_textiles = 3;
         this->num_textiles = this->num_room_textiles + this->num_obj_textiles + this->num_bump_textiles + this->num_misc_textiles;
-
+        
         uncomp_size = read_bitu32(src);
         if (uncomp_size == 0)
                 Sys_extError("read_tr5_level: textiles32 uncomp_size == 0");
@@ -728,7 +728,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
             this->animated_textures[i] = read_bitu16(src);
         }
 
-	this->animated_textures_uv_count = read_bitu8(newsrc);
+	this->animated_textures_uv_count = read_bitu8(src);
 
 	if (read_bit8(src) != 'T')
                 Sys_extError("read_tr5_level: '\\0TEX' not found");

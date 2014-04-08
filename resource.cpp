@@ -547,11 +547,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     GenEntitys(world, tr);
     
     r = world->rooms;
-    for(i=0;i<world->room_count;i++,r++)
+    if(tr->game_version < TR_V)
     {
-        if(r->active && r->alternate_room)
+        for(i=0;i<world->room_count;i++,r++)
         {
-            Room_Disable(r->alternate_room);
+            if(r->active && r->alternate_room)
+            {
+                Room_Disable(r->alternate_room);
+            }
         }
     }
     // Initialize audio.
