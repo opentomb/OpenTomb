@@ -37,6 +37,7 @@ extern "C" {
 #include "resource.h"
 #include "anim_state_control.h"
 #include "gui.h"
+#include "menu_bar.h"
 #include "audio.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
@@ -693,6 +694,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
 void Engine_Destroy()
 {
+    MenuBar_Destroy();
+
     Render_Empty(&renderer);
     Con_Destroy();
     Com_Destroy();
