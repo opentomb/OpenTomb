@@ -106,7 +106,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     
     ret->climb.edge_obj = NULL;
     ret->climb.can_hang = 0x00;
-    ret->climb.climb_on_flag = 0x00;
+    ret->climb.next_z_space = 0.0;
     ret->climb.height_info = 0x00;
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
@@ -584,7 +584,6 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
     ret.height_info = Character_CheckNextStep(ent, offset, nfc);
     offset[2] -= 128.0;
-    ret.climb_on_flag = CLIMB_ABSENT;
     ret.can_hang = 0;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
@@ -617,7 +616,8 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     t1.setIdentity();
     t2.setIdentity();
     up_founded = 0;
-    d = ((ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point.m_floats[2] + ent->character->climb_r + 1.0):(pos[2] - ent->character->max_step_up_height));
+    test_height = (test_height >= ent->character->max_step_up_height)?(test_height):(ent->character->max_step_up_height);
+    d = pos[2] + ent->bf.bb_max[2] - test_height;
     //vec3_copy(cast_ray, to.m_floats);
     //vec3_copy(cast_ray+3, cast_ray);
     //cast_ray[5] -= d;
@@ -754,23 +754,15 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     ret.edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
     vec3_copy(ret.t, ret.edge_tan_xy.m_floats);
     
-    ret.climb_on_flag = CLIMB_HANG_ONLY;
-    
     if(!ent->character->height_info.floor_hit || (ret.edge_point.m_floats[2] - ent->character->height_info.floor_point.m_floats[2] >= ent->character->Height))
     {
         ret.can_hang = 1;
     }
     
-    if(nfc->floor_hit)
+    ret.next_z_space = 2.0 * ent->character->Height;
+    if(nfc->floor_hit && nfc->ceiling_hit)
     {
-        if(!nfc->ceiling_hit || (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= ent->character->Height))
-        {
-            ret.climb_on_flag = CLIMB_FULL_HEIGHT;
-        }
-        else if((test_height > 0.0) && (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= test_height))
-        {
-            ret.climb_on_flag = CLIMB_ALT_HEIGHT;
-        }
+        ret.next_z_space = nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2];
     }
     
     return ret;

@@ -322,6 +322,30 @@ int lua_SetStrField(lua_State *lua, const char *key, const char *val)
 }
 
 /*
+ * Gameplay functions
+ */
+int lua_AclivateEntity(lua_State *lua, int id_object, int id_activator)
+{
+    int top;
+    
+    top = lua_gettop(lua);
+    lua_getfield(lua, LUA_GLOBALSINDEX, "activateEntity");
+    if (!lua_isfunction(lua, -1))
+    {
+        lua_settop(lua, top);
+        //Sys_Warn("Broken \"activateEntity\" script function");
+        return -1;
+    }
+    
+    lua_pushinteger(lua, id_object);
+    lua_pushinteger(lua, id_activator);
+    lua_pcall(lua, 2, 0, 0);
+    lua_settop(lua, top);
+    return 1;
+}
+
+
+/*
  * Game structures parse
  */
 int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs)
