@@ -25,7 +25,6 @@
 #include "render.h"
 #include "vmath.h"
 #include "gui.h"
-#include "menu_bar.h"
 #include "mesh.h"
 #include "game.h"
 #include "resource.h"
@@ -478,15 +477,12 @@ int main(int argc, char **argv)
     Engine_PrepareOpenGL();
     Engine_InitALAudio();
     
-    // the window size must be known for the menu to be created
-    MenuBar_Init(screen_info.w, screen_info.h);
-    
     World_Prepare(&engine_world);
     TestGenScene();
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
-    //SDL_ShowCursor(0);
+    SDL_ShowCursor(0);
     
 #if SKELETAL_TEST
     control_states.free_look = 1;
@@ -560,7 +556,6 @@ void Engine_Display()
             glPopMatrix();
         }*/
         Gui_Render();
-        MenuBar_Render();
         SDL_GL_SwapWindow(sdl_window);
     }
 }
@@ -571,7 +566,6 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.h = nominalH;
 
     Cam_SetFovAspect(&engine_camera, screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
-
     Cam_RecalcClipPlanes(&engine_camera);
 
     glViewport(0, 0, pixelsW, pixelsH);
@@ -711,11 +705,6 @@ void Engine_Frame(btScalar time)
 
     while(SDL_PollEvent(&event))
     {
-        if (MenuBar_Event(event)) 
-        {
-            continue;
-        }
-        
         switch(event.type)
         {
             case SDL_MOUSEMOTION:

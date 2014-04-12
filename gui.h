@@ -135,8 +135,9 @@ void Gui_Destroy();
 
 void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);
+void Gui_RenderStringLine(gui_text_line_p l);
 void Gui_RenderStrings();
-void Gui_RenderStringsRect();
+
 /*
  * Calculates rect coordinates around the text
  */

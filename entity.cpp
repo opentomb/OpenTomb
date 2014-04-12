@@ -7,6 +7,8 @@
 #include "render.h"
 #include "world.h"
 #include "engine.h"
+#include "console.h"
+#include "script.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "bounding_volume.h"
@@ -14,7 +16,7 @@
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
-#include "console.h"
+
 
 
 extern uint16_t                sounds_played;
@@ -876,6 +878,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     {
                         case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
                             Con_Printf("Activate %d item", operands);
+                            lua_AclivateEntity(engine_lua, operands, ent->ID);
                             break;
 
                         case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH

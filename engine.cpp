@@ -37,7 +37,6 @@ extern "C" {
 #include "resource.h"
 #include "anim_state_control.h"
 #include "gui.h"
-#include "menu_bar.h"
 #include "audio.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
@@ -575,6 +574,26 @@ int lua_SetEntityWisibility(lua_State * lua)
 }
 
 
+int lua_GetEntityActivity(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    lua_pushinteger(lua, ent->active);
+
+    return 1;
+}
+
+
 int lua_SetEntityActivity(lua_State * lua)
 {
     int id, top;
@@ -685,6 +704,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "disableEntity", lua_DisableEntity);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
     lua_register(lua, "setEntityWisibility", lua_SetEntityWisibility);
+    lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
     
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
@@ -694,8 +714,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
 void Engine_Destroy()
 {
-    MenuBar_Destroy();
-
     Render_Empty(&renderer);
     Con_Destroy();
     Com_Destroy();
