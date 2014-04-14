@@ -148,6 +148,9 @@ int Game_Load(const char* name)
         Sys_extWarn("Can not read file \"%s\"", name);
         return 0;
     }
+    
+    Engine_LuaClearTasks();
+    
     fseek(f, 0, SEEK_END);
     buf_size = ftell(f) + 1;
     fseek(f, 0, SEEK_SET);
@@ -502,17 +505,42 @@ void Game_UpdateAI()
     }
 }
 
+void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
+{
+    entity_p ent = (entity_p)x->data;
+    
+    if(ent->character && ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+    {
+        Entity_CheckActivators(ent);
+    }
+    if(ent->character)
+    {
+        Character_ApplyCommands(ent, &ent->character->cmd);
+    }
+    
+    if(x->left != NULL)
+    {
+        Game_UpdateCharactersTree(x->left);
+    }
+    if(x->right != NULL)
+    {
+        Game_UpdateCharactersTree(x->right);
+    }
+}
+    
 
 void Game_UpdateCharacters()
 {
-    entity_p ent = NULL;
-    //for(ALL CHARACTERS, EXCEPT PLAYER)
+    entity_p ent = engine_world.Character;
+    
+    if(ent->character && ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
     {
-        if(ent)
-        {
-            Character_ApplyCommands(ent, &ent->character->cmd);
-            // smth. other?
-        }
+        Entity_CheckActivators(ent);
+    }
+    
+    if(engine_world.entity_tree && engine_world.entity_tree->root)
+    {
+        Game_UpdateCharactersTree(engine_world.entity_tree->root);
     }
 }
 
@@ -524,12 +552,18 @@ void GameFrame(btScalar time)
         return;
     }
 
+    int top;
+    top = lua_gettop(engine_lua);
+    lua_getfield(engine_lua, LUA_GLOBALSINDEX, "doTasks");
+    lua_pcall(engine_lua, 0, 0, 0);
+    lua_settop(engine_lua, top);
+    
     if(engine_world.entity_tree && engine_world.entity_tree->root)
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
     }
     Game_ApplyControls(engine_world.Character);
-    
+   
     Game_UpdateAI();
     Game_UpdateCharacters();
     

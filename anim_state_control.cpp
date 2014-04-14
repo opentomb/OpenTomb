@@ -2602,11 +2602,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_UNDERWATER_FORWARD);
             }
-            else if(cmd->action == 1)
-            {
-                //Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_PICKUP);
-                Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_SWITCH_DOWN);
-            }
             else
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_CURRENT);         // underwater IDLE
