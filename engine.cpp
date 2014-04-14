@@ -21,6 +21,7 @@ extern "C" {
 
 #include "vt/vt_level.h"
 #include "engine.h"
+#include "vmath.h"
 #include "controls.h"
 #include "console.h"
 #include "system.h"
@@ -38,6 +39,7 @@ extern "C" {
 #include "anim_state_control.h"
 #include "gui.h"
 #include "audio.h"
+#include "character_controller.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
@@ -554,6 +556,75 @@ int lua_SetEntityAnim(lua_State * lua)
 }
 
 
+int lua_GetEntityAnim(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    lua_pushinteger(lua, ent->current_animation);
+    lua_pushinteger(lua, ent->current_frame);
+    lua_pushinteger(lua, ent->model->animations[ent->current_animation].frames_count);
+
+    return 3;
+}
+
+
+int lua_CanTriggerEntity(lua_State * lua)
+{
+    int id, top;
+    entity_p e1, e2;
+    btScalar pos[3], offset[3], r;
+    top = lua_gettop(lua);
+    
+    if(top < 2)
+    {
+        lua_pushinteger(lua, 0);
+        return 1;
+    }
+    
+    id = lua_tointeger(lua, 1);
+    e1 = World_GetEntityByID(&engine_world, id);
+    if(e1 == NULL || !e1->character || !e1->character->cmd.action)
+    {
+        lua_pushinteger(lua, 0);
+        return 1;
+    }
+    id = lua_tointeger(lua, 2);
+    e2 = World_GetEntityByID(&engine_world, id);
+    if((e2 == NULL) || (e1 == e2))
+    {
+        lua_pushinteger(lua, 0);
+        return 1;
+    }
+    
+    r = lua_tonumber(lua, 3);
+    r *= r;
+    offset[0] = lua_tonumber(lua, 4);
+    offset[1] = lua_tonumber(lua, 5);
+    offset[2] = lua_tonumber(lua, 6);
+    
+    Mat4_vec3_mul_macro(pos, e2->transform, offset);
+    if((vec3_dot(e1->transform+4, e2->transform+4) > 0.75) &&
+       (vec3_dist_sq(e1->transform+12, pos) < r))
+    {
+        lua_pushinteger(lua, 1);
+        return 1;
+    }
+    
+    lua_pushinteger(lua, 0);
+    return 1;
+}
+
+
 int lua_SetEntityWisibility(lua_State * lua)
 {
     int id, top;
@@ -609,6 +680,46 @@ int lua_SetEntityActivity(lua_State * lua)
     }
     
     ent->active = lua_tointeger(lua, 2);
+
+    return 0;
+}
+
+
+int lua_GetEntityFlag(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    lua_pushinteger(lua, ent->flags);
+
+    return 1;
+}
+
+
+int lua_SetEntityFlag(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    ent->flags = lua_tointeger(lua, 2);
 
     return 0;
 }
@@ -680,13 +791,22 @@ int lua_StopSound(lua_State *lua)
 }
 
 
+void Engine_LuaClearTasks()
+{
+    int top = lua_gettop(engine_lua);
+    lua_getfield(engine_lua, LUA_GLOBALSINDEX, "clearTasks");
+    lua_pcall(engine_lua, 0, 0, 0);
+    lua_settop(engine_lua, top);
+}
+
+
 void Engine_LuaRegisterFuncs(lua_State *lua)
 {
     /*
      * register globals
      */
     luaL_dostring(lua, CVAR_LUA_TABLE_NAME" = {};");
-    luaL_dostring(lua, "function show_table(tbl) for k, v in pairs(tbl) do print(k..' = '..v) end end");
+    luaL_dofile(lua, "scripts\\sys_scripts.lua");
 
     /*
      * register functions
@@ -702,10 +822,14 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
     lua_register(lua, "enableEntity", lua_EnableEntity);
     lua_register(lua, "disableEntity", lua_DisableEntity);
+    lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
+    lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "setEntityWisibility", lua_SetEntityWisibility);
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
+    lua_register(lua, "getEntityFlag", lua_GetEntityFlag);
+    lua_register(lua, "setEntityFlag", lua_SetEntityFlag);
     
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
     lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
@@ -748,6 +872,7 @@ void Engine_Destroy()
 
 void Engine_Shutdown(int val)
 {
+    Engine_LuaClearTasks();
     Render_Empty(&renderer);
     World_Empty(&engine_world);
     Engine_Destroy();
@@ -1040,6 +1165,7 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
 
+    Engine_LuaClearTasks();
     World_Empty(&engine_world);
     World_Prepare(&engine_world);
     TR_GenWorld(&engine_world, &tr_level);

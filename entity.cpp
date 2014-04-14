@@ -877,7 +877,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     switch(FD_function)
                     {
                         case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
-                            Con_Printf("Activate %d item", operands);
+                            //Con_Printf("Activate %d, %d", operands, ent->ID);
                             lua_AclivateEntity(engine_lua, operands, ent->ID);
                             break;
 
@@ -1303,6 +1303,37 @@ void Entity_RebuildBV(entity_p ent)
         default:
             return;
     };
+}
+
+
+void Entity_CheckActivators(struct entity_s *ent)
+{
+    entity_p e;
+    engine_container_p cont;
+    btScalar pos[3], r;
+    btScalar offset[3] = {0.0, 256.0, 0.0};
+    
+    if(!ent->self->room)
+    {
+        return;
+    }
+    
+    r = (ent->character && (ent->character->rx >= 256.0))?(ent->character->rx):(256.0);
+    r *= r;
+    cont = ent->self->room->containers; 
+    for(;cont;cont=cont->next)
+    {
+        if((cont->object_type == OBJECT_ENTITY) && (cont->object))
+        {
+            e = (entity_p)cont->object;
+            Mat4_vec3_mul_macro(pos, e->transform, offset);
+            if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
+               (vec3_dist_sq(ent->transform+12, pos) < r))
+            {
+                lua_AclivateEntity(engine_lua, e->ID, ent->ID);
+            }
+        }
+    }
 }
 
 
