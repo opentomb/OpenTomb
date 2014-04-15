@@ -2673,12 +2673,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     ent->dir_flag = ENT_STAY;
                     ent->move_type = MOVE_CLIMBING;
+                    ent->character->no_fix = 0x01;
                     ent->angles[0] = climb->edge_z_ang;
-                    ent->current_speed = 0.0;
-                    ent->speed.m_floats[0] = 0.0;
-                    ent->speed.m_floats[1] = 0.0;
-                    ent->speed.m_floats[2] = 0.0;
                     Entity_UpdateRotation(ent);
+                    pos[0] = climb->edge_point.m_floats[0] + ent->transform[4 + 0] * 64.0;
+                    pos[1] = climb->edge_point.m_floats[1] + ent->transform[4 + 1] * 64.0;
+                    pos[2] = climb->edge_point.m_floats[2];
                     vec3_copy(climb->point, climb->edge_point.m_floats);
                 }
             }
@@ -2687,13 +2687,11 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 vec3_set_zero(ent->speed.m_floats);
                 cmd->rot[0] = 0.0;
+                ent->character->no_fix = 0x01;
                 if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP))
                 {
                     ent->current_speed = 0.0;
                     vec3_set_zero(ent->speed.m_floats);
-                    vec3_copy(pos, climb->point);
-                    climb->point[0] += ent->transform[4 + 0] * 64.0;
-                    climb->point[1] += ent->transform[4 + 1] * 64.0;
                 }
             }
             else if(cmd->kill)
@@ -2733,39 +2731,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             // 33 - 117 // TR_STATE_LARA_ONWATER_STOP
             // 44 - 132 // TR_STATE_LARA_WATER_DEATH
             // 65 - 177 // TR_STATE_LARA_WADE_FORWARD
-            if((cmd->action == 1) && (cmd->move[0] == 1) && (ent->move_type != MOVE_CLIMBING))
-            {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
-                vec3_mul_scalar(offset, ent->transform + 4, t);
-                offset[2] += ent->character->max_step_up_height + LARA_HANG_VERTICAL_EPSILON;   // inc for water_surf.z
-                *climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
-                if(climb->edge_hit && (climb->next_z_space >= 512.0) && (climb->edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))
-                {
-                    ent->dir_flag = ENT_STAY;
-                    ent->move_type = MOVE_CLIMBING;
-                    ent->angles[0] = climb->edge_z_ang;
-                    ent->current_speed = 0.0;
-                    Entity_UpdateRotation(ent);
-                    vec3_copy(climb->point, climb->edge_point.m_floats);
-                }
-            }
-
             if(cmd->kill)
             {
                 Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_WATER_DEATH);
-            }
-            else if(ent->move_type == MOVE_CLIMBING)
-            {
-                vec3_set_zero(ent->speed.m_floats);
-                cmd->rot[0] = 0.0;
-                if(2 <= Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_ONWATER_STOP))
-                {
-                    ent->current_speed = 0.0;
-                    vec3_set_zero(ent->speed.m_floats);
-                    vec3_copy(pos, climb->point);
-                    climb->point[0] += ent->transform[4 + 0] * 64.0;
-                    climb->point[1] += ent->transform[4 + 1] * 64.0;
-                }
             }
             else if(cmd->jump == 1)
             {
@@ -2778,7 +2746,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->move_type = MOVE_UNDER_WATER;
                 }
             }
-            else if(cmd->move[0] == 1)
+            else if((cmd->move[0] == 1) && (cmd->action == 0))
             {
                 if(!curr_fc->floor_hit || (pos[2] - ent->character->Height > curr_fc->floor_point.m_floats[2]))
                 {

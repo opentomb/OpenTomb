@@ -242,8 +242,8 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / CHARACTER_BASE_HEIGHT;
         ent->character->shapeZ->setLocalScaling(tv);
         ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
-        tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] + ent->bf.bb_min[0]);
-        tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] + ent->bf.bb_min[1]);
+        tv.m_floats[0] = 0.0;//0.5 * (ent->bf.bb_max[0] + ent->bf.bb_min[0]);
+        tv.m_floats[1] = 0.0;//0.5 * (ent->bf.bb_max[1] + ent->bf.bb_min[1]);
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
         ent->collision_offset = tv;
     }
@@ -1825,7 +1825,20 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     }
     else
     {
-        //ent->dir_flag = ENT_MOVE_FORWARD;
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
+        Character_GetHeightInfo(fc_pos, &ent->character->height_info);
+        Character_FixPenetrations(ent, cmd, NULL);
+        Entity_UpdateRoomPos(ent);
+        if(ent->character->height_info.water)
+        {
+            pos[2] = ent->character->height_info.water_level;
+        }
+        else
+        {
+            ent->move_type = MOVE_ON_FLOOR;
+            return 2;
+        }
+        return 1;
     }
     
     /*
