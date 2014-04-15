@@ -554,6 +554,8 @@ void GameFrame(btScalar time)
 
     int top;
     top = lua_gettop(engine_lua);
+    lua_pushnumber(engine_lua, time);
+    lua_setfield(engine_lua, LUA_GLOBALSINDEX, "frame_time");
     lua_getfield(engine_lua, LUA_GLOBALSINDEX, "doTasks");
     lua_pcall(engine_lua, 0, 0, 0);
     lua_settop(engine_lua, top);
