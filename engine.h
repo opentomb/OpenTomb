@@ -216,6 +216,7 @@ void ResetTempbtScalar();
 
 void Engine_InitGlobals();
 void Engine_Init();
+void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);
 void Engine_Destroy();
 

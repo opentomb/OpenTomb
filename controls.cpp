@@ -10,17 +10,11 @@
 #include "common.h"
 #include "game.h"
 #include "main_SDL.h"
-#include "menu_bar.h"
 
 extern SDL_Haptic           *sdl_haptic;
 
 void Controls_Key(int32_t button, int state)
 {
-    if((button == SDLK_ESCAPE) && state)
-    {
-        MenuBar_ToggleVisibility();
-    }
-    
     for(int i = 0; i < ACT_LASTINDEX; i++)                                      // Compare ALL mapped buttons.
     {
         if((button == control_mapper.action_map[i]) ||
@@ -93,10 +87,12 @@ void Controls_Key(int32_t button, int state)
                         if(con_base.show)
                         {
                             SDL_ShowCursor(1);
+                            SDL_SetRelativeMouseMode(SDL_FALSE);
                         }
                         else
                         {
                             SDL_ShowCursor(0);
+                            SDL_SetRelativeMouseMode(SDL_TRUE);
                         }
                     }
                     return;

@@ -267,11 +267,6 @@ void Gui_Render()
     glBindTexture(GL_TEXTURE_2D, 0);                                            // in other case +textured font we lost background in all rects and console
     Gui_DrawCrosshair();
     Gui_DrawBars();
-    Gui_RenderStringsRect();
-    if(con_base.smooth == 0)
-    {
-        glDisable(GL_BLEND);
-    }
     Gui_RenderStrings();
 
     glDepthMask(GL_TRUE);
@@ -281,48 +276,41 @@ void Gui_Render()
     Gui_SwitchConGLMode(0);
 }
 
-void Gui_RenderStringsRect()
+void Gui_RenderStringLine(gui_text_line_p l)
 {
-    gui_text_line_p l = gui_base_lines;
     GLfloat x0, y0, x1, y1;
     GLfloat rectCoords[8];
-
-    while(l)
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+    if(l->show_rect)
     {
-        if(l->show && l->show_rect)
-        {
-            x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0])) - l->rect_border;
-            y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1])) - l->rect_border;
-            x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2])) + l->rect_border;
-            y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3])) + l->rect_border;
-            rectCoords[0] = x0; rectCoords[1] = y0;
-            rectCoords[2] = x1; rectCoords[3] = y0;
-            rectCoords[4] = x1; rectCoords[5] = y1;
-            rectCoords[6] = x0; rectCoords[7] = y1;
-            glColor4fv(l->rect_color);
-            glVertexPointer(2, GL_FLOAT, 0, rectCoords);
-            glDrawArrays(GL_POLYGON, 0, 4);
-        }
-        l = l->next;
+        x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0])) - l->rect_border;
+        y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1])) - l->rect_border;
+        x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2])) + l->rect_border;
+        y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3])) + l->rect_border;
+        rectCoords[0] = x0; rectCoords[1] = y0;
+        rectCoords[2] = x1; rectCoords[3] = y0;
+        rectCoords[4] = x1; rectCoords[5] = y1;
+        rectCoords[6] = x0; rectCoords[7] = y1;
+        glColor4fv(l->rect_color);
+        glVertexPointer(2, GL_FLOAT, 0, rectCoords);
+        glDrawArrays(GL_POLYGON, 0, 4);
     }
     
-    uint16_t i;
-    l = gui_temp_lines;
-    for(i=0;i<temp_lines_used;i++,l++)
-    {
-        if(l->show && l->show_rect)
+    if(l->show)
+    {     
+        glColor4fv(l->font_color);      
+        if(con_base.smooth)
         {
-            x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0])) - l->rect_border;
-            y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1])) - l->rect_border;
-            x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2])) + l->rect_border;
-            y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3])) + l->rect_border;
-            rectCoords[0] = x0; rectCoords[1] = y0;
-            rectCoords[2] = x1; rectCoords[3] = y0;
-            rectCoords[4] = x1; rectCoords[5] = y1;
-            rectCoords[6] = x0; rectCoords[7] = y1;
-            glColor4fv(l->rect_color);
-            glVertexPointer(2, GL_FLOAT, 0, rectCoords);
-            glDrawArrays(GL_POLYGON, 0, 4);
+            glPushMatrix();
+            glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
+            con_base.font_texture->RenderRaw(l->text);
+            glPopMatrix();
+        }
+        else
+        {
+            glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
+            con_base.font_bitmap->RenderRaw(l->text);
         }
     }
 }
@@ -333,22 +321,7 @@ void Gui_RenderStrings()
     
     while(l)
     {
-        if(l->show)
-        {     
-            glColor4fv(l->font_color);      
-            if(con_base.smooth)
-            {
-                glPushMatrix();
-                glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
-                con_base.font_texture->RenderRaw(l->text);
-                glPopMatrix();
-            }
-            else
-            {
-                glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
-                con_base.font_bitmap->RenderRaw(l->text);
-            }
-        }
+        Gui_RenderStringLine(l);
         l = l->next;
     }
     
@@ -358,19 +331,7 @@ void Gui_RenderStrings()
     {
         if(l->show)
         {
-            glColor4fv(l->font_color);
-            if(con_base.smooth)
-            {
-                glPushMatrix();
-                glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
-                con_base.font_texture->RenderRaw(l->text);
-                glPopMatrix();
-            }
-            else
-            {
-                glRasterPos2i(((l->x >= 0)?(l->x):(screen_info.w + l->x)), ((l->y >= 0)?(l->y):(screen_info.h + l->y)));
-                con_base.font_bitmap->RenderRaw(l->text);
-            }
+            Gui_RenderStringLine(l);
             l->show_rect = 0;
             l->show = 0;
         }
