@@ -15,6 +15,7 @@
 #include "character_controller.h"
 #include "vmath.h"
 #include "render.h"
+#include "audio.h"
 
 extern "C" {
 #include "lua/lua.h"
@@ -355,6 +356,56 @@ int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs)
 }
 
 
+bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
+{
+    int     engine_version = CVAR_get_val_d("engine_version");
+    size_t  string_length  = 0;
+    int     track_type     = 0;
+    int     top;
+    
+    const char *real_path;
+        
+    if(lua)
+    {
+        top = lua_gettop(lua);                                             // save LUA stack
+        
+        lua_getfield(lua, LUA_GLOBALSINDEX, "GetTrackInfo");               // add to the up of stack LUA's function
+
+        if(lua_isfunction(lua, -1))                                        // If function exists...
+        {
+            lua_pushinteger(lua, engine_version);                          // add to stack first argument
+            lua_pushinteger(lua, track_index);                             // add to stack second argument
+
+            lua_pcall(lua, 2, 3, 0);                                       // call that function
+            
+            real_path   = lua_tolstring(lua, -3, &string_length);          // get returned value 1
+           *stream_type = lua_tointeger(lua, -2);                          // get returned value 2
+           *load_method = lua_tointeger(lua, -1);                          // get returned value 3
+           
+            // For some reason, Lua returns constant string pointer, which we can't assign to
+            // provided argument; so we need to straightly copy it.
+        
+            strcpy(file_path, real_path);
+            
+            lua_settop(lua, top);                                          // restore LUA stack
+            
+            if(*stream_type != -1)
+                return true;        // Entry extracted, success!
+        }
+        else
+        {
+            lua_settop(lua, top);   // restore LUA stack
+        }
+    }
+    
+    // If Lua wasn't able to extract file path from the script, most likely it means
+    // that entry is broken or missing, or wrong track ID was specified. So we return
+    // FALSE in such cases.
+    
+    return false;
+}
+
+
 int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
 {
     if(!lua)
@@ -417,6 +468,7 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
     as->sound_volume = lua_GetScalarField(lua, "sound_volume");
     as->use_effects  = lua_GetScalarField(lua, "use_effects");
     as->listener_is_player = lua_GetScalarField(lua, "listener_is_player");
+    as->stream_buffer_size = (lua_GetScalarField(lua, "stream_buffer_size")) * 1024;
 
     lua_settop(lua, top);
 

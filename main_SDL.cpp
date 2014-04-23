@@ -439,6 +439,10 @@ void Engine_InitSDLVideo()
 
 void Engine_InitALAudio()
 {
+    ALCint paramList[] = {
+        ALC_STEREO_SOURCES, TR_AUDIO_STREAM_NUMSOURCES,                           0,
+        ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES), 0};
+    
     const char *drv = SDL_GetCurrentAudioDriver();
     
     Con_Printf("Current audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
@@ -448,8 +452,7 @@ void Engine_InitALAudio()
         Con_Printf("We have no AL audio devices");
         return;
     }
-    al_context = alcCreateContext(al_device, NULL);
-    
+    al_context = alcCreateContext(al_device, paramList);
     if(!alcMakeContextCurrent(al_context))
     {
         Con_Printf("AL context is not current!");
@@ -498,10 +501,6 @@ int main(int argc, char **argv)
         time = newtime - oldtime;
         oldtime = newtime;
         Engine_Frame(time);
-        
-        Render_UpdateAnimTextures();
-        Audio_UpdateListenerByCamera(renderer.cam);
-        Audio_UpdateSources();
     }
     
     Engine_Shutdown(EXIT_SUCCESS);
@@ -820,6 +819,8 @@ void Engine_Frame(btScalar time)
             break;
         }
     }
+    
+    Audio_Update();
 
 #if SKELETAL_TEST
     Game_ApplyControls();

@@ -269,6 +269,8 @@ void World_Prepare(world_p world)
     world->audio_effects_count = 0;
     world->anim_sequences = NULL;
     world->anim_sequences_count = 0;
+    world->stream_tracks = NULL;
+    world->stream_tracks_count = 0;
     world->tex_count = 0;
     world->textures = 0;
     world->floor_data = NULL;

@@ -595,6 +595,30 @@ int lua_SetEntityActivity(lua_State * lua)
 }
 
 
+int lua_PlayStream(lua_State *lua)
+{
+        int id, top;
+    
+    top = lua_gettop(lua);
+    id  = lua_tointeger(lua, 1);
+    
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (id).");
+        return 0;
+    }
+    
+    if(id < 0)
+    {
+        Con_Printf("Wrong stream ID. Must be more or equal to 0.");
+        return 0;
+    }
+    
+    Audio_StreamPlay(id);
+
+    return 1;
+}
+
 int lua_PlaySound(lua_State *lua)
 {
     int id, top;
@@ -674,6 +698,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      */
     lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "stopsound", lua_StopSound);
+    
+    lua_register(lua, "playstream", lua_PlayStream);
     
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);

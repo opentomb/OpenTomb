@@ -35,6 +35,8 @@ int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs);
 
 int SC_ParseEntity(char **ch, struct entity_s *ent);
 
+bool lua_GetSoundtrack(lua_State *lua, int track_index, char *track_path, int *load_method, int *stream_type);
+
 btScalar lua_GetScalarField(lua_State *lua, const char *key);
 int lua_SetScalarField(lua_State *lua, const char *key, btScalar val);
 const char *lua_GetStrField(lua_State *lua, const char *key);

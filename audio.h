@@ -4,17 +4,33 @@
 
 extern "C" {
 #include "al/AL/al.h"
+#include "al/AL/alc.h"
+#include "al/AL/alext.h"
 #include "al/AL/efx-presets.h"
+
+#include "ogg/codec.h"
+#include "ogg/ogg.h"
+#include "ogg/os_types.h"
+#include "ogg/vorbisfile.h"
 }
 
 #include "vt/vt_level.h"
+#include "script.h"
 #include "system.h"
+
+#include <stdio.h>
+#include <stdlib.h>
 
 // AL_UNITS constant is used to translate native TR coordinates into
 // OpenAL coordinates. By default, it's the same as geometry grid
 // resolution (1024).
 
 #define TR_AUDIO_AL_UNITS 1024.0
+
+// REFRESH_INTERVAL specifies how frequently audio engine will be
+// updated. 1/60 means that it will be performed 60 times per second.
+
+#define TR_AUDIO_REFRESH_INTERVAL (1.0 / 60.0)
 
 // MAX_CHANNELS defines maximum amount of sound sources (channels)
 // that can play at the same time. Contemporary devices can play
@@ -93,7 +109,7 @@ enum TR_AUDIO_FX {
 // structures.
 
 #define TR_AUDIO_DEFAULT_RANGE 8
-#define TR_AUDIO_DEFAULT_PITCH 1.0      // 0.0 - only noise
+#define TR_AUDIO_DEFAULT_PITCH 1.0       // 0.0 - only noise
 
 // Entity types are used to identify different sound emitter types. Since
 // sounds in TR games could be emitted either by entities, sound sources
@@ -110,6 +126,88 @@ enum TR_AUDIO_FX {
 #define TR_AUDIO_SEND_IGNORED     0
 #define TR_AUDIO_SEND_PROCESSED   1
 
+// NUMBUFFERS is a number of buffers cyclically used for each stream.
+// Double is enough, but we use quad for further stability, because
+// OGG codec seems to be very sensitive to buffering.
+
+#define TR_AUDIO_STREAM_NUMBUFFERS 4
+
+// NUMSOURCES tells the engine how many sources we should reserve for
+// in-game music and BGMs, considering crossfades. By default, it's 6, 
+// as it's more than enough for typical TR audio setup (one BGM track
+// plus one one-shot track or chat track in TR5).
+
+#define TR_AUDIO_STREAM_NUMSOURCES 6
+
+// Stream loading method describes the way audiotracks are loaded.
+// There are either seperate OGG files, single CDAUDIO.WAD file or
+// seperate ADPCM WAV files.
+// You can add extra types with implementation of extra audio codecs,
+// only thing to do is to add corresponding stream and load routines
+// into class' private section.
+
+enum TR_AUDIO_STREAM_METHOD
+{
+    TR_AUDIO_STREAM_METHOD_OGG,    // OGG files. Used in TR1-2 (replaces CD audio).
+    TR_AUDIO_STREAM_METHOD_WAD,    // WAD file.  Used in TR3.
+    TR_AUDIO_STREAM_METHOD_WAV,    // WAV files. Used in TR4-5.
+    TR_AUDIO_STREAM_METHOD_LASTINDEX
+
+};
+
+// Audio stream type defines stream behaviour. While background track
+// loops forever until interrupted by other background track, one-shot
+// and chat tracks doesn't interrupt them, playing in parallel instead.
+// However, all stream types could be interrupted by next pending track
+// with same type.
+
+enum TR_AUDIO_STREAM_TYPE
+{
+    TR_AUDIO_STREAM_TYPE_BACKGROUND,    // BGM tracks.
+    TR_AUDIO_STREAM_TYPE_ONESHOT,       // One-shot music pieces.
+    TR_AUDIO_STREAM_TYPE_CHAT,          // Chat tracks.
+    TR_AUDIO_STREAM_TYPE_LASTINDEX
+
+};
+
+// Secret track index is internally used by OpenTomb when calling
+// soundtrack script. It allows to unify secret track index in all
+// engine versions.
+
+#define TR_AUDIO_STREAM_SECRET_INDEX 999
+
+// Crossfades for different track types are also different,
+// since background ones tend to blend in smoothly, while one-shot
+// tracks should be switched fastly.
+
+#define TR_AUDIO_STREAM_CROSSFADE_ONESHOT (TR_AUDIO_REFRESH_INTERVAL / 0.3f)
+#define TR_AUDIO_STREAM_CROSSFADE_BACKGROUND (TR_AUDIO_REFRESH_INTERVAL / 2.0f)
+#define TR_AUDIO_STREAM_CROSSFADE_CHAT (TR_AUDIO_REFRESH_INTERVAL / 0.1f)
+
+// Damp coefficient specifies target volume level on a tracks
+// that are being silenced (background music). The larger it is, the bigger
+// silencing is.
+
+#define TR_AUDIO_STREAM_DAMP_LEVEL 0.6f
+
+// Damp fade speed is used when dampable track is either being
+// damped or un-damped.
+
+#define TR_AUDIO_STREAM_DAMP_SPEED (TR_AUDIO_REFRESH_INTERVAL / 1.0f)
+
+// Possible errors produced by Audio_StreamPlay / Audio_StreamStop functions.
+
+// Possible types of errors returned by Audio_Send / Audio_Kill functions.
+
+#define TR_AUDIO_STREAMPLAY_PLAYERROR    (-4)
+#define TR_AUDIO_STREAMPLAY_LOADERROR    (-3)
+#define TR_AUDIO_STREAMPLAY_WRONGTRACK   (-2)
+#define TR_AUDIO_STREAMPLAY_NOFREESTREAM (-1)
+#define TR_AUDIO_STREAMPLAY_IGNORED        0
+#define TR_AUDIO_STREAMPLAY_PROCESSED      1
+
+
+
 struct camera_s;
 struct entity_s;
 
@@ -117,13 +215,15 @@ struct entity_s;
 
 typedef struct audio_settings_s
 {
-    ALfloat     music_volume;       // RESERVED FOR FUTURE USE
+    ALfloat     music_volume;
     ALfloat     sound_volume;
-    ALboolean   use_effects;        // RESERVED FOR FUTURE USE
+    ALboolean   use_effects;
     ALboolean   listener_is_player; // RESERVED FOR FUTURE USE
+    int         stream_buffer_size;
 }audio_settings_t, *audio_settings_p;
 
 // FX manager structure.
+// It contains all necessary info to process sample FX (reverb and echo).
 
 typedef struct audio_fxmanager_s
 {
@@ -224,11 +324,77 @@ private:
     void SetVelocity(const ALfloat vel_vector[]);   // Set source velocity (speed).
 };
 
+
+// Main stream track class is used to create multi-channel soundtrack player,
+// which differs from classic TR scheme, where each new soundtrack interrupted
+// previous one. With flexible class handling, we now can implement multitrack
+// player with automatic channel and crossfade management. 
+
+class StreamTrack
+{
+public:
+    StreamTrack();      // Stream track constructor.
+   ~StreamTrack();      // Stream track destructor.
+    
+    // Load routine prepares track for playing. Arguments are track index,
+    // stream type (background, one-shot or chat) and load method, which
+    // differs for TR1-2, TR3 and TR4-5.
+    
+    bool Load(const char *path, const int index, const int type, const int load_method);
+    
+    bool Play(bool fade_in = false);     // Begins to play track.
+    void Pause();                        // Pauses track, preserving position.
+    void End();                          // End track with fade-out.
+    void Stop();                         // Immediately stop track.
+    bool Update();                       // Update track and manage streaming.
+    
+    bool IsTrack(const int track_index); // Checks desired track's index.
+    bool IsType(const int track_type);   // Checks desired track's type.
+    bool IsPlaying();                    // Checks if track is playing.
+    bool IsActive();                     // Checks if track is still active.
+    bool IsDampable();                   // Checks if track is dampable.
+    
+    static bool damp_active;             // Global flag for damping BGM tracks.
+
+private:
+    bool Load_Ogg(const char *path);     // Ogg file loading routine.
+    bool Load_Wad(const char *path);     // Wad file loading routine.
+    bool Load_Wav(const char *path);     // Wav file loading routine.
+    
+    bool Stream(ALuint buffer);          // General stream routine.
+    bool Stream_Ogg(ALuint buffer);      // Ogg-specific streaming routine.
+    bool Stream_Wad(ALuint buffer);      // Wad-specific streaming routine.
+    bool Stream_Wav(ALuint buffer);      // Wav-specific streaming routine.
+
+    FILE*           audio_file;          // General handle for opened audio file.
+    OggVorbis_File  vorbis_Stream;       // Vorbis file reader needs its own handle.
+    
+    // General OpenAL fields 
+    ALbyte         *data;
+    ALuint          source;
+    ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
+    ALenum          format;
+    ALsizei         rate;
+    ALfloat         current_volume;     // Stream volume, considering fades.
+    ALfloat         damped_volume;      // Additional damp volume multiplier.
+    
+    bool            active;             // Used when track is being faded by other one.
+    bool            dampable;           // Specifies if track can be damped by others.
+    int             stream_type;        // Either BACKGROUND, ONESHOT or CHAT.
+    int             current_track;      // Needed to prevent same track sending.
+    int             method;             // OGG (TR1-2), WAD (TR3) or WAV (TR4-5).
+};
+
+// General audio routines.
+
 void Audio_InitGlobals();
 void Audio_InitFX();
 
 int  Audio_Init(const int num_Sources, class VT_Level *tr);
 int  Audio_DeInit();
+void Audio_Update();
+
+// Audio source (samples) routines.
 
 int  Audio_GetFreeSource();
 bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain);
@@ -248,6 +414,23 @@ int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
 
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 
-void Audio_LogALError(int proc_index);
+// Stream tracks (music / BGM) routines.
+
+int  Audio_GetFreeStream();                     // Get free (stopped) stream.
+bool Audio_IsTrackPlaying(int track_index);     // See if track is already playing.
+void Audio_UpdateStreams();                     // Update all streams.
+void Audio_UpdateStreamsDamping();              // See if there any damping tracks playing.
+void Audio_PauseStreams(int stream_type = -1);  // Pause ALL streams (of specified type).
+void Audio_ResumeStreams(int stream_type = -1); // Resume ALL streams.
+bool Audio_EndStreams(int stream_type = -1);    // End ALL streams (with crossfade).
+bool Audio_StopStreams(int stream_type = -1);   // Immediately stop ALL streams.
+
+// Generally, you need only this function to trigger any track.
+int Audio_StreamPlay(const int track_index);
+
+// Error handling routines.
+
+bool Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
+void Audio_LogOGGError(int code);               // Ogg-specific error handler.
 
 #endif // AUDIO_H

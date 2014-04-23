@@ -158,6 +158,9 @@ typedef struct world_s
     ALuint                     *audio_buffers;                                  // Samples.
     uint32_t                    audio_sources_count;                            // Amount of runtime channels.
     AudioSource                *audio_sources;                                  // Channels.
+    
+    uint32_t                    stream_tracks_count;
+    StreamTrack                *stream_tracks;
 }world_t, *world_p;
 
 void World_Prepare(world_p world);

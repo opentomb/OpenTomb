@@ -6,6 +6,11 @@ extern "C" {
 #include "al/AL/alc.h"
 #include "al/AL/alext.h"
 #include "al/AL/efx-presets.h"
+
+#include "ogg/codec.h"
+#include "ogg/ogg.h"
+#include "ogg/os_types.h"
+#include "ogg/vorbisfile.h"
 }
 
 #include "audio.h"
@@ -22,6 +27,9 @@ extern "C" {
 ALfloat                         listener_position[3];
 struct audio_fxmanager_s        fxManager;
 static uint8_t                  audio_blocked = 1;
+static float                    audio_time    = 0;
+
+bool                            StreamTrack::damp_active = false;
 
 /*
  * NextPowerOf2 are taken from OpenAL
@@ -39,6 +47,8 @@ static __inline uint32_t NextPowerOf2(uint32_t value)
     }
     return value+1;
 }
+
+// ======== AUDIOSOURCE CLASS IMPLEMENTATION ========
 
 AudioSource::AudioSource()
 {
@@ -193,6 +203,22 @@ void AudioSource::SetBuffer(ALint buffer)
     if(alIsSource(source_index) && alIsBuffer(buffer_index))
     {
         alSourcei(source_index, AL_BUFFER, buffer_index);
+        
+        // For some reason, OpenAL sometimes produces "Invalid Operation" error here,
+        // so there's extra debug info - maybe it'll help some day.
+        
+        /*
+        if(Audio_LogALError(1))
+        {
+            int channels, bits, freq;
+            
+            alGetBufferi(buffer_index, AL_CHANNELS,  &channels);
+            alGetBufferi(buffer_index, AL_BITS,      &bits);
+            alGetBufferi(buffer_index, AL_FREQUENCY, &freq);
+            
+            Sys_DebugLog(LOG_FILENAME, "Erroneous buffer %d info: CH%d, B%d, F%d", buffer_index, channels, bits, freq);
+        }
+        */
     }
 }
 
@@ -328,6 +354,606 @@ void AudioSource::LinkEmitter()
     }
 }
 
+// ======== STREAMTRACK CLASS IMPLEMENTATION ========
+
+StreamTrack::StreamTrack()
+{
+    alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);              // Generate all buffers at once.
+    alGenSources(1, &source);
+    
+    if(alIsSource(source))
+    {
+        alSource3f(source, AL_POSITION,        0.0f,  0.0f, -1.0f); // OpenAL tut says this.
+        alSource3f(source, AL_VELOCITY,        0.0f,  0.0f,  0.0f);
+        alSource3f(source, AL_DIRECTION,       0.0f,  0.0f,  0.0f);
+        alSourcef (source, AL_ROLLOFF_FACTOR,  0.0f              );
+        alSourcei (source, AL_SOURCE_RELATIVE, AL_TRUE           );
+        alSourcei (source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
+        
+        current_track  = -1;
+        current_volume =  0.0f;
+        damped_volume  =  0.0f;
+        active         =  false;
+        stream_type    =  TR_AUDIO_STREAM_TYPE_ONESHOT;
+    }
+}
+
+
+StreamTrack::~StreamTrack()
+{
+    Stop(); // In case we haven't stopped yet.
+    
+    alDeleteSources(1, &source);
+    alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
+}
+
+bool StreamTrack::Load(const char *path, const int index, const int type, const int load_method)
+{    
+    if( (path        == NULL)                             ||
+        (load_method >= TR_AUDIO_STREAM_METHOD_LASTINDEX) ||
+        (type        >= TR_AUDIO_STREAM_TYPE_LASTINDEX)    )
+    {
+        return false;   // Do not load, if path, type or method are incorrect.
+    }
+    
+    current_track = index;
+    stream_type   = type;
+    method        = load_method;
+    dampable      = (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND);   // Damp only looped (BGM) tracks.
+
+    // Select corresponding stream loading method.
+    // Currently, only OGG streaming is available, everything else is a placeholder.
+    
+    switch(method)
+    {
+        case TR_AUDIO_STREAM_METHOD_OGG:
+            return (Load_Ogg(path));
+            
+        case TR_AUDIO_STREAM_METHOD_WAD:
+            return (Load_Wad(path));
+            
+        case TR_AUDIO_STREAM_METHOD_WAV:
+            return (Load_Wav(path));
+    }
+    
+    return false;   // No success.
+}
+
+bool StreamTrack::Load_Ogg(const char *path)
+{
+    vorbis_info    *vorbis_Info;
+    int             result;
+
+    if(!(audio_file = fopen(path, "rb")))
+    {
+        Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
+        return false;
+    }
+
+    if((result = ov_open(audio_file, &vorbis_Stream, NULL, 0)) < 0)
+    {
+        fclose(audio_file);
+        Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
+        return false;
+    }
+    
+    vorbis_Info = ov_info(&vorbis_Stream, -1);
+    
+    Con_Printf("Ogg stream opened (%s): channels = %d, sample rate = %d, bitrate = %.1f", path, 
+               vorbis_Info->channels, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
+    
+    if(vorbis_Info->channels == 1)
+        format = AL_FORMAT_MONO16;
+    else
+        format = AL_FORMAT_STEREO16;
+        
+    rate = vorbis_Info->rate;
+        
+    return true;    // Success!
+}
+
+bool StreamTrack::Load_Wad(const char *path)
+{
+    return false;   ///@FIXME: PLACEHOLDER!!!
+}
+
+bool StreamTrack::Load_Wav(const char *path)
+{
+    return false;   ///@FIXME: PLACEHOLDER!!!
+}
+
+bool StreamTrack::Play(bool fade_in)
+{
+    int buffers_to_play = 0;
+    
+    // At start-up, we fill all available buffers.    
+    // TR soundtracks contain a lot of short tracks, like Lara speech etc., and
+    // there is high chance that such short tracks won't fill all defined buffers.
+    // For this reason, we count amount of filled buffers, and immediately stop
+    // allocating them as long as Stream() routine returns false. Later, we use
+    // this number for queuing buffers to source.
+    
+    for(int i = 0; i < TR_AUDIO_STREAM_NUMBUFFERS; i++, buffers_to_play++)
+    {
+        if(!Stream(buffers[i]))
+        {
+            if(!i)
+            {
+                Sys_DebugLog(LOG_FILENAME, "StreamTrack: error preparing buffers.");
+                return false;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    if(fade_in)     // If fade-in flag is set, do it.
+    {
+        current_volume = 0.0;
+    }
+    else
+    {
+        current_volume = 1.0;
+    }
+    
+    alSourcef(source, AL_GAIN, current_volume * audio_settings.music_volume);
+    alSourceQueueBuffers(source, buffers_to_play, buffers);
+    alSourcePlay(source);
+    
+    active = true;
+    return   true;
+}
+
+void StreamTrack::Pause()
+{
+    if(alIsSource(source))
+        alSourcePause(source);
+}
+
+void StreamTrack::End()     // Smoothly end track with fadeout.
+{
+    active = false;
+}
+
+void StreamTrack::Stop()    // Immediately stop track.
+{
+    int queued;
+
+    active = false;         // Clear activity flag.
+    
+    if(alIsSource(source))  // Stop and unlink all associated buffers.
+    {
+        alSourceStop(source);
+        alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
+        
+        while(queued--)
+        {
+            ALuint buffer;
+            alSourceUnqueueBuffers(source, 1, &buffer);
+        }
+    }
+    
+    // Format-specific clear-up routines should belong here.
+    
+    switch(method)
+    {
+        case TR_AUDIO_STREAM_METHOD_OGG:
+            ov_clear(&vorbis_Stream);
+            break;
+            
+        case TR_AUDIO_STREAM_METHOD_WAD:
+            break;  ///@FIXME: PLACEHOLDER!!!
+            
+        case TR_AUDIO_STREAM_METHOD_WAV:
+            break;  ///@FIXME: PLACEHOLDER!!!
+    }
+}
+
+bool StreamTrack::Update()
+{
+    int  processed     = 0;
+    bool buffered      = true;
+    bool change_gain   = false;
+    
+    
+    // Update damping, if track supports it.
+    
+    if(dampable)
+    {
+        // We check if damp condition is active, and if so, is it already at low-level or not.
+
+        if(damp_active && (damped_volume < TR_AUDIO_STREAM_DAMP_LEVEL))
+        {
+            damped_volume += TR_AUDIO_STREAM_DAMP_SPEED;
+            
+            // Clamp volume.
+            damped_volume = (damped_volume > TR_AUDIO_STREAM_DAMP_LEVEL)?(TR_AUDIO_STREAM_DAMP_LEVEL):(damped_volume);
+            change_gain   = true;
+        }
+        else if(!damp_active && (damped_volume > 0))    // If damp is not active, but it's still at low, restore it.
+        {
+            damped_volume -= TR_AUDIO_STREAM_DAMP_SPEED;
+            
+            // Clamp volume.
+            damped_volume = (damped_volume < 0.0)?(0.0):(damped_volume);
+            change_gain   = true;
+        }
+    }
+    
+    if(!active)     // If track has ended, crossfade it.
+    {
+        switch(stream_type)
+        {
+            case TR_AUDIO_STREAM_TYPE_BACKGROUND:
+                current_volume -= TR_AUDIO_STREAM_CROSSFADE_BACKGROUND;
+                break;
+                
+            case TR_AUDIO_STREAM_TYPE_ONESHOT:
+                current_volume -= TR_AUDIO_STREAM_CROSSFADE_ONESHOT;
+                break;
+                
+            case TR_AUDIO_STREAM_TYPE_CHAT:
+                current_volume -= TR_AUDIO_STREAM_CROSSFADE_CHAT;
+                break;
+        }
+        
+        // Crossfade has ended, we can now kill the stream.
+        if(current_volume <= 0.0)
+        {
+            Stop(); 
+            return true;    // Stop track, although return success, as everything is normal.
+        }
+        else
+        {
+            change_gain = true;
+        }
+    }
+    else    
+    {        
+        // If track is active and playing, restore it from crossfade.
+        if(current_volume < 1.0) 
+        {
+            switch(stream_type)
+            {
+                case TR_AUDIO_STREAM_TYPE_BACKGROUND:
+                    current_volume += TR_AUDIO_STREAM_CROSSFADE_BACKGROUND;
+                    break;
+                    
+                case TR_AUDIO_STREAM_TYPE_ONESHOT:
+                    current_volume += TR_AUDIO_STREAM_CROSSFADE_ONESHOT;
+                    break;
+                    
+                case TR_AUDIO_STREAM_TYPE_CHAT:
+                    current_volume += TR_AUDIO_STREAM_CROSSFADE_CHAT;
+                    break;
+            }
+            
+            // Clamp volume.
+            current_volume = (current_volume > 1.0)?(1.0):(current_volume);
+            change_gain    = true;
+        }
+    }
+    
+    if(change_gain) // If any condition which modify track gain was met, call AL gain change.
+    {
+        alSourcef(source, AL_GAIN, current_volume              *  // Global track volume.
+                                   (1.0 - damped_volume)       *  // Damp volume.
+                                   audio_settings.music_volume);  // Global music volume setting.
+    }
+
+    // Check if any track buffers were already processed.
+    
+    alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
+
+    while(processed--)  // Manage processed buffers.
+    {
+        ALuint buffer;
+        alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink processed buffer.
+        buffered = Stream(buffer);                      // Refill processed buffer.
+        if(buffered)
+            alSourceQueueBuffers(source, 1, &buffer);   // Relink processed buffer.
+    }
+
+    return buffered;
+}
+
+bool StreamTrack::IsTrack(const int track_index)    // Check if track has specific index.
+{
+    return (current_track == track_index);
+}
+
+bool StreamTrack::IsType(const int track_type)      // Check if track has specific type.
+{
+    return (track_type == stream_type);
+}
+
+bool StreamTrack::IsActive()                         // Check if track is still active.
+{
+    return active;
+}
+
+bool StreamTrack::IsDampable()                      // Check if track is dampable.
+{
+    return dampable;
+}
+
+bool StreamTrack::IsPlaying()                       // Check if track is playing.
+{
+    ALenum state;
+    
+    if(alIsSource(source))
+    {
+       alGetSourcei(source, AL_SOURCE_STATE, &state);
+    }
+    
+    // Paused also counts as playing.
+    return ((state == AL_PLAYING) || (state == AL_PAUSED)); 
+}
+
+bool StreamTrack::Stream(ALuint buffer)             // Update stream process.
+{
+    // This is the global stream update routine. In the next switch, you can
+    // change specific stream method's routine (although only Ogg streaming
+    // has been implemented yet).
+    
+    switch(method)
+    {
+        case TR_AUDIO_STREAM_METHOD_OGG:
+            return (Stream_Ogg(buffer));
+            
+        case TR_AUDIO_STREAM_METHOD_WAD:
+            return (Stream_Wad(buffer));
+            
+        case TR_AUDIO_STREAM_METHOD_WAV:
+            return (Stream_Wav(buffer));
+    }
+}
+
+bool StreamTrack::Stream_Ogg(ALuint buffer)
+{
+    char pcm[audio_settings.stream_buffer_size];
+    int  size = 0;
+    int  section;
+    int  result;
+
+    while(size < audio_settings.stream_buffer_size)
+    {
+        result = ov_read(&vorbis_Stream, pcm + size, audio_settings.stream_buffer_size - size, 0, 2, 1, &section);
+    
+        if(result > 0)
+        {
+            size += result;
+        }
+        else
+        {
+            if(result < 0)
+            {
+                Audio_LogOGGError(result);  
+            }
+            else
+            {
+                if(stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)
+                {
+                   ov_pcm_seek(&vorbis_Stream, 0);
+                }
+                else
+                {
+                   break;   // Stream is ending - do nothing.
+                }
+            }
+        }
+    }
+    
+    if(size == 0)
+        return false;
+        
+    alBufferData(buffer, format, pcm, size, rate);
+    return true;
+}
+
+bool StreamTrack::Stream_Wad(ALuint buffer)
+{
+    ///@FIXME: PLACEHOLDER!!!
+    
+    return false;
+}
+
+bool StreamTrack::Stream_Wav(ALuint buffer)
+{
+    ///@FIXME: PLACEHOLDER!!!
+    
+    return false;
+}
+
+// ======== END STREAMTRACK CLASS IMPLEMENTATION ========
+
+
+// General soundtrack playing routine. All native TR CD triggers and commands should ONLY
+// call this one.
+
+int Audio_StreamPlay(const int track_index)
+{        
+    int    target_stream = -1;
+    bool   do_fade_in    =  false;
+    int    load_method   =  0;
+    int    stream_type   =  0;
+    
+    char   file_path[256];          // Should be enough, and this is not the full path...
+    
+    
+    // Don't play track, if it is already playing.
+    // This should become useless option, once proper one-shot trigger functionality is implemented.
+
+    if(Audio_IsTrackPlaying(track_index))
+    {
+        Con_Printf("StreamPlay: CANCEL, stream already playing.");
+        return TR_AUDIO_STREAMPLAY_IGNORED;
+    }
+    
+    // lua_GetSoundtrack returns stream type, file path and load method in last three
+    // provided arguments. That is, after calling this function we receive stream type
+    // in "stream_type" argument, file path into "file_path" argument and load method into
+    // "load_method" argument. Function itself returns false, if script wasn't found or
+    // request was broken; in this case, we quit.
+    
+    if(!lua_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
+    {
+        Con_Printf("StreamPlay: CANCEL, wrong track index or broken script.");
+        return TR_AUDIO_STREAMPLAY_WRONGTRACK;
+    }
+    
+    // Entry found, now process to actual track loading.
+
+    target_stream = Audio_GetFreeStream();            // At first, we need to get free stream.
+    
+    if(target_stream == -1)
+    {
+        do_fade_in = Audio_StopStreams(stream_type);  // If no free track found, hardly stop all tracks.
+        target_stream = Audio_GetFreeStream();        // Try again to assign free stream.
+        
+        if(target_stream == -1)
+            Con_Printf("StreamPlay: CANCEL, no free stream.");
+            return TR_AUDIO_STREAMPLAY_NOFREESTREAM;                             // No success, exit and don't play anything.
+    }
+    else
+    {
+        do_fade_in = Audio_EndStreams(stream_type);   // End all streams of this type with fadeout.
+        do_fade_in = (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)?(true):(false);
+    }
+    
+    // Finally - load our track.
+    if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
+    {
+        Con_Printf("StreamPlay: CANCEL, stream load error.");
+        return TR_AUDIO_STREAMPLAY_LOADERROR;
+    }
+
+    // Try to play newly assigned and loaded track.
+    if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in))) 
+    {
+        Con_Printf("StreamPlay: CANCEL, stream play error.");
+        return TR_AUDIO_STREAMPLAY_PLAYERROR;
+    }
+    
+    return TR_AUDIO_STREAMPLAY_PROCESSED;
+}
+
+
+// General damping update procedure. Constantly checks if damp condition exists, and
+// if so, it lowers the volume of tracks which are dampable.
+
+void Audio_UpdateStreamsDamping()
+{
+    StreamTrack::damp_active = false;   // Reset damp activity flag.
+    
+    
+    // Scan for any tracks that can provoke damp. Usually it's any tracks that are
+    // NOT background. So we simply check this condition and set damp activity flag
+    // if condition is met.
+    
+    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    {
+        if(engine_world.stream_tracks[i].IsPlaying())
+        {
+            if(!engine_world.stream_tracks[i].IsType(TR_AUDIO_STREAM_TYPE_BACKGROUND))
+            {
+                StreamTrack::damp_active = true;
+                return; // No need to check more, we found at least one condition.
+            }
+        }
+    }
+}
+
+
+// Update routine for all streams. Should be placed into main loop.
+
+void Audio_UpdateStreams()
+{        
+    Audio_UpdateStreamsDamping();
+    
+    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    {
+        if(engine_world.stream_tracks[i].IsPlaying())
+        {
+            engine_world.stream_tracks[i].Update();
+        }
+        else
+        {
+            if(engine_world.stream_tracks[i].IsActive())
+            {
+                engine_world.stream_tracks[i].Stop();
+            }
+        }
+    }
+}
+
+bool Audio_IsTrackPlaying(int track_index)
+{
+    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    {
+        if(engine_world.stream_tracks[i].IsPlaying() &&
+           engine_world.stream_tracks[i].IsTrack(track_index))
+        {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+int Audio_GetFreeStream()
+{
+    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    {
+        if( (!engine_world.stream_tracks[i].IsPlaying()) &&
+            (!engine_world.stream_tracks[i].IsActive())   )
+        {
+            return i;
+        }
+    }
+    
+    return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // If no free source, return error.
+}
+
+bool Audio_StopStreams(int stream_type)
+{
+    bool result = false;
+    
+    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    {
+        if( (stream_type == -1) ||                              // Stop ALL streams at once.
+            ((engine_world.stream_tracks[i].IsPlaying()) && 
+             (engine_world.stream_tracks[i].IsType(stream_type))) )
+        {
+            result = true;
+            engine_world.stream_tracks[i].Stop();
+        }
+    }
+    
+    return result;
+}
+
+bool Audio_EndStreams(int stream_type)
+{
+    bool result = false;
+    
+    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    {
+        if( (stream_type == -1) ||                              // Stop ALL streams at once.
+            ((engine_world.stream_tracks[i].IsPlaying()) && 
+             (engine_world.stream_tracks[i].IsType(stream_type))) )
+        {
+            result = true;
+            engine_world.stream_tracks[i].End();
+        }
+    }
+    
+    return result;
+}
+
+// ======== Audio source global methods ========
 
 bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 {
@@ -616,13 +1242,15 @@ int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
 }   
 
 
-int Audio_Init(const int num_Sources, class VT_Level *tr)
+int Audio_Init(int num_Sources, class VT_Level *tr)
 {
     uint8_t      *pointer = tr->samples_data;
     int8_t        flag;
     uint32_t      ind1, ind2;
     uint32_t      comp_size, uncomp_size;
     uint32_t      i;
+
+    audio_time = 0;     // Reset audio refresh timer.
     
     // FX should be inited first, as source constructor checks for FX slot to be created.
     
@@ -638,8 +1266,13 @@ int Audio_Init(const int num_Sources, class VT_Level *tr)
     alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
          
     // Generate new source array.
+    num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
     engine_world.audio_sources_count = num_Sources;
     engine_world.audio_sources = new AudioSource[num_Sources];
+    
+    // Generate stream tracks array.
+    engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
+    engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
     
     // Generate new audio effects array.
     engine_world.audio_effects_count = tr->sound_details_count;
@@ -864,6 +1497,7 @@ void Audio_InitGlobals()
     audio_settings.sound_volume = 0.8;
     audio_settings.use_effects  = true;
     audio_settings.listener_is_player = false;
+    audio_settings.stream_buffer_size = 32;
 }
 
 void Audio_InitFX()
@@ -938,12 +1572,20 @@ int Audio_DeInit()
 {
     audio_blocked = 1;
     Audio_StopAllSources();
+    Audio_StopStreams();
    
     if(engine_world.audio_sources)
     {
         delete[] engine_world.audio_sources;
         engine_world.audio_sources = NULL;
         engine_world.audio_sources_count = 0;
+    }
+    
+    if(engine_world.stream_tracks)
+    {
+        delete[] engine_world.stream_tracks;
+        engine_world.stream_tracks = NULL;
+        engine_world.stream_tracks_count = 0;
     }
     
     ///@CRITICAL: You must delete all sources before buffers deleting!!!
@@ -981,8 +1623,12 @@ int Audio_DeInit()
     {
         for(int i = 0; i < TR_AUDIO_MAX_SLOTS; i++)
         {
-            alAuxiliaryEffectSloti(fxManager.al_slot[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
-            alDeleteAuxiliaryEffectSlots(1, &fxManager.al_slot[i]);
+            if(fxManager.al_slot[i])
+            {
+                alAuxiliaryEffectSloti(fxManager.al_slot[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
+                alDeleteAuxiliaryEffectSlots(1, &fxManager.al_slot[i]);
+            }
+
         }
         
         alDeleteFilters(1, &fxManager.al_filter);
@@ -993,12 +1639,41 @@ int Audio_DeInit()
 }
 
 
-void Audio_LogALError(int proc_index)
+bool Audio_LogALError(int error_marker)
 {
     ALenum err = alGetError();
     if(err != AL_NO_ERROR)
     {
-        Sys_DebugLog(LOG_FILENAME, "OpenAL error: %s [INDEX %d]", alGetString(err), proc_index);
+        Sys_DebugLog(LOG_FILENAME, "OpenAL error: %s / %d", alGetString(err), error_marker);
+        return true;
+    }
+    
+    return false;
+}
+
+
+void Audio_LogOGGError(int code)
+{
+    switch(code)
+    {
+        case OV_EREAD:
+            Sys_DebugLog(LOG_FILENAME, "OGG error: Read from media.");
+            break;
+        case OV_ENOTVORBIS:
+            Sys_DebugLog(LOG_FILENAME, "OGG error: Not Vorbis data.");
+            break;
+        case OV_EVERSION:
+            Sys_DebugLog(LOG_FILENAME, "OGG error: Vorbis version mismatch.");
+            break;
+        case OV_EBADHEADER:
+            Sys_DebugLog(LOG_FILENAME, "OGG error: Invalid Vorbis header.");
+            break;
+        case OV_EFAULT:
+            Sys_DebugLog(LOG_FILENAME, "OGG error: Internal logic fault (bug or heap/stack corruption.");
+            break;
+        default:
+            //Sys_DebugLog(LOG_FILENAME, "OGG error: Unknown Ogg error.");
+            break;
     }
 }
 
@@ -1271,4 +1946,14 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
     }
 }
 
-
+void Audio_Update()
+{
+    audio_time += engine_frame_time;
+    if(audio_time > TR_AUDIO_REFRESH_INTERVAL)
+    {
+        audio_time = 0;
+        Audio_UpdateSources();
+        Audio_UpdateStreams();
+        Audio_UpdateListenerByCamera(renderer.cam);
+    }
+}

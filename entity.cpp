@@ -7,6 +7,8 @@
 #include "render.h"
 #include "world.h"
 #include "engine.h"
+#include "console.h"
+#include "script.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "bounding_volume.h"
@@ -14,7 +16,7 @@
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
-#include "console.h"
+
 
 
 extern uint16_t                sounds_played;
@@ -917,7 +919,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                         case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
                             Con_Printf("Play audiotrack id = %d", operands);
-                            // operands - track number
+                            Audio_StreamPlay(operands);
                             break;
 
                         case TR_FD_TRIGFUNC_FLIPEFFECT:          // Various in-game actions.
@@ -926,6 +928,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                         case TR_FD_TRIGFUNC_SECRET:          // PLAYSOUND SECRET_FOUND
                             Con_Printf("Play SECRET[%d] FOUND", operands);
+                            Audio_StreamPlay(TR_AUDIO_STREAM_SECRET_INDEX);
                             break;
 
                         case TR_FD_TRIGFUNC_BODYBAG:          // UNKNOWN
@@ -947,6 +950,9 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                         case 0x0f:          // UNKNOWN
                             Con_Printf("TRIGGER: unknown 0x0f, OP = %d", operands);
                             break;
+                            
+                        default:
+                            Con_Printf("UNKNOWN MEANING: %X", *entry);
                     };
                 }
                 while(!cont_bit && entry < end_p);

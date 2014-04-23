@@ -534,6 +534,8 @@ void GameFrame(btScalar time)
     Game_UpdateAI();
     Game_UpdateCharacters();
     
+    Render_UpdateAnimTextures();
+    
     bt_engine_dynamicsWorld->stepSimulation(time, 8);
 }
 

@@ -629,6 +629,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         free(uc_rect_list);
         uc_rect_list = NULL;
     }
+    
+    luaL_dofile(engine_lua, "scripts/soundtrack.lua");
 }
 
 
