@@ -58,7 +58,6 @@ class btCollisionObject;
 typedef struct climb_info_s
 {
     int8_t                         height_info;
-    int8_t                         climb_on_flag;
     int8_t                         can_hang;
     
     btScalar                       point[3];
@@ -67,6 +66,7 @@ typedef struct climb_info_s
     btScalar                       up[3];
     btScalar                       floor_limit;
     btScalar                       ceiling_limit;
+    btScalar                       next_z_space;
     
     int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
     int8_t                         edge_hit;

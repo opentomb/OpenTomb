@@ -631,6 +631,33 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
     
     luaL_dofile(engine_lua, "scripts/soundtrack.lua");
+    
+    strcat(buf, "scripts/");
+    if(tr->game_version < TR_II)
+    {
+        strcat(buf, "tr1/");
+    }
+    else if(tr->game_version < TR_III)
+    {
+        strcat(buf, "tr2/");
+    }
+    else if(tr->game_version < TR_IV)
+    {
+        strcat(buf, "tr3/");
+    }
+    else if(tr->game_version < TR_V)
+    {
+        strcat(buf, "tr4/");
+    }
+    else
+    {
+        strcat(buf, "tr5/");
+    }
+
+    GetLevelName(map, CVAR_get_val_s("game_level"));
+    strcat(buf, map);
+    strcat(buf, "_trigger.lua");
+    luaL_dofile(engine_lua, buf);
 }
 
 

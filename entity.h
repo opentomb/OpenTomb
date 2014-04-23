@@ -18,6 +18,7 @@ struct character_s;
 
 #define ENTITY_IS_ACTIVE                          (0x00000001)
 #define ENTITY_CAN_TRIGGER                        (0x00000002)                      
+#define ENTITY_IS_TRIGGER                         (0x00000004)   
 
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction
@@ -161,6 +162,7 @@ int  Entity_Frame(entity_p entity, btScalar time, int state_id);                
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateRotation(entity_p entity);
+void Entity_CheckActivators(struct entity_s *ent);
 
 int  Entity_GetWaterState(entity_p entity);
 

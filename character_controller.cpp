@@ -106,7 +106,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     
     ret->climb.edge_obj = NULL;
     ret->climb.can_hang = 0x00;
-    ret->climb.climb_on_flag = 0x00;
+    ret->climb.next_z_space = 0.0;
     ret->climb.height_info = 0x00;
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
@@ -242,8 +242,8 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / CHARACTER_BASE_HEIGHT;
         ent->character->shapeZ->setLocalScaling(tv);
         ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
-        tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] + ent->bf.bb_min[0]);
-        tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] + ent->bf.bb_min[1]);
+        tv.m_floats[0] = 0.0;//0.5 * (ent->bf.bb_max[0] + ent->bf.bb_min[0]);
+        tv.m_floats[1] = 0.0;//0.5 * (ent->bf.bb_max[1] + ent->bf.bb_min[1]);
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
         ent->collision_offset = tv;
     }
@@ -584,7 +584,6 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
     ret.height_info = Character_CheckNextStep(ent, offset, nfc);
     offset[2] -= 128.0;
-    ret.climb_on_flag = CLIMB_ABSENT;
     ret.can_hang = 0;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
@@ -617,7 +616,8 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     t1.setIdentity();
     t2.setIdentity();
     up_founded = 0;
-    d = ((ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point.m_floats[2] + ent->character->climb_r + 1.0):(pos[2] - ent->character->max_step_up_height));
+    test_height = (test_height >= ent->character->max_step_up_height)?(test_height):(ent->character->max_step_up_height);
+    d = pos[2] + ent->bf.bb_max[2] - test_height;
     //vec3_copy(cast_ray, to.m_floats);
     //vec3_copy(cast_ray+3, cast_ray);
     //cast_ray[5] -= d;
@@ -754,23 +754,15 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     ret.edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
     vec3_copy(ret.t, ret.edge_tan_xy.m_floats);
     
-    ret.climb_on_flag = CLIMB_HANG_ONLY;
-    
     if(!ent->character->height_info.floor_hit || (ret.edge_point.m_floats[2] - ent->character->height_info.floor_point.m_floats[2] >= ent->character->Height))
     {
         ret.can_hang = 1;
     }
     
-    if(nfc->floor_hit)
+    ret.next_z_space = 2.0 * ent->character->Height;
+    if(nfc->floor_hit && nfc->ceiling_hit)
     {
-        if(!nfc->ceiling_hit || (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= ent->character->Height))
-        {
-            ret.climb_on_flag = CLIMB_FULL_HEIGHT;
-        }
-        else if((test_height > 0.0) && (nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2] >= test_height))
-        {
-            ret.climb_on_flag = CLIMB_ALT_HEIGHT;
-        }
+        ret.next_z_space = nfc->ceiling_point.m_floats[2] - nfc->floor_point.m_floats[2];
     }
     
     return ret;
@@ -1833,7 +1825,20 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     }
     else
     {
-        //ent->dir_flag = ENT_MOVE_FORWARD;
+        Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
+        Character_GetHeightInfo(fc_pos, &ent->character->height_info);
+        Character_FixPenetrations(ent, cmd, NULL);
+        Entity_UpdateRoomPos(ent);
+        if(ent->character->height_info.water)
+        {
+            pos[2] = ent->character->height_info.water_level;
+        }
+        else
+        {
+            ent->move_type = MOVE_ON_FLOOR;
+            return 2;
+        }
+        return 1;
     }
     
     /*
