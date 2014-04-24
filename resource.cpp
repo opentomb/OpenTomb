@@ -630,9 +630,9 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         uc_rect_list = NULL;
     }
     
-    luaL_dofile(engine_lua, "scripts/soundtrack.lua");
-    
-    strcat(buf, "scripts/");
+    buf[0] = 0;
+
+	strcat(buf, "scripts/");
     if(tr->game_version < TR_II)
     {
         strcat(buf, "tr1/");
@@ -658,6 +658,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     strcat(buf, map);
     strcat(buf, "_trigger.lua");
     luaL_dofile(engine_lua, buf);
+
+	luaL_dofile(engine_lua, "scripts/soundtrack.lua");
 }
 
 
