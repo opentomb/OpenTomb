@@ -323,6 +323,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             ent_ID_override = NULL;
         }
     }
+    
+    luaL_dofile(engine_lua, "scripts/soundtrack.lua");
 
     world->Character = NULL;
     world->meshes = NULL;
@@ -658,8 +660,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     strcat(buf, map);
     strcat(buf, "_trigger.lua");
     luaL_dofile(engine_lua, buf);
-
-	luaL_dofile(engine_lua, "scripts/soundtrack.lua");
 }
 
 
