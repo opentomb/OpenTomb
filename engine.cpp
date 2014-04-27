@@ -839,7 +839,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      * register globals
      */
     luaL_dostring(lua, CVAR_LUA_TABLE_NAME" = {};");
-    luaL_dofile(lua, "scripts\\sys_scripts.lua");
+    luaL_dofile(lua, "scripts/sys_scripts.lua");
 
     /*
      * register functions
