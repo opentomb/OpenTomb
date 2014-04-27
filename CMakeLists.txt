@@ -1,7 +1,7 @@
 # Usage (Linux):
 #  MKDIR build folder next to opentomb folder (e.g., opentomb-build)
 #  CD into build folder
-#  cmake -DCMAKE_BUILD_TYPE=Debug ../opentomb
+#  cmake ../opentomb
 #  make
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
@@ -9,36 +9,46 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(OpenTomb)
 
 IF(NOT CMAKE_BUILD_TYPE)
-    MESSAGE(STATUS "No build type selected. Default to Debug")
-    SET(CMAKE_BUILD_TYPE "Debug")
+    MESSAGE(STATUS "No build type selected. Default to Release")
+    SET(CMAKE_BUILD_TYPE "Release")
 ENDIF()
 
-ADD_DEFINITIONS(
-#    -Wall
-#    -Wextra
-)
+IF (MINGW)
+    SET(ZLIB_INCLUDE_DIRS "/include")
+    SET(ZLIB_LIBRARIES "z")
 
-# disable glext prototypes under Linux.
-ADD_DEFINITIONS(-DGL_GLEXT_PROTOTYPES)
+    SET(SDL2_INCLUDE_DIRS "/include/SDL2")
+    SET(SDL2_LIBRARIES SDL2 "pthread")
 
-SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3")
+    ADD_DEFINITIONS("-DSDL_MAIN_HANDLED")
+
+    # flag for AntTweakBar
+    SET(CMAKE_CXX_FLAGS "-D_WINDOWS")
+ELSE()
+    FIND_PACKAGE(ZLIB REQUIRED)
+
+    INCLUDE(FindPkgConfig)
+    PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+
+    # disable glext prototypes
+    ADD_DEFINITIONS("-DGL_GLEXT_PROTOTYPES")
+
+    # flag for AntTweakBar
+    SET(CMAKE_CXX_FLAGS "-D_UNIX")
+ENDIF()
+
+FIND_PACKAGE(OpenGL REQUIRED)
 
 SET(OPENAL_DIR al)
 SET(BULLET_DIR bullet)
 SET(LUA_DIR lua)
-SET(ZLIB_DIR zlib)
-
-INCLUDE(FindPkgConfig)
-PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-
-FIND_PACKAGE(OpenGL REQUIRED)
-FIND_PACKAGE(ZLIB REQUIRED)
+SET(OGG_DIR ogg)
 
 INCLUDE_DIRECTORIES(
     ${OPENAL_DIR}
     ${BULLET_DIR}
     ${LUA_DIR}
-    ${ZLIB_DIR}
+    ${OGG_DIR}
     ${SDL2_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
@@ -73,9 +83,15 @@ FILE(GLOB LUA_FILES
     ${LUA_DIR}/*.c
 )
 
-FILE(GLOB ZLIB_FILES
-    ${ZLIB_DIR}/*.h
-    ${ZLIB_DIR}/*.c
+FILE(GLOB OGG_FILES
+    ${OGG_DIR}/*.h
+    ${OGG_DIR}/*.c
+    ${OGG_DIR}/*/*.h
+    ${OGG_DIR}/*/*.c
+    ${OGG_DIR}/*/*/*.h
+    ${OGG_DIR}/*/*/*.c
+    ${OGG_DIR}/*/*/*/*.h
+    ${OGG_DIR}/*/*/*/*.c
 )
 
 FILE(GLOB PRJ_HDR
@@ -105,13 +121,13 @@ ADD_EXECUTABLE(
     ${OPENAL_FILES}
     ${BULLET_FILES}
     ${LUA_FILES}
-    ${ZLIB_FILES}
+    ${OGG_FILES}
     ${PRJ_HDR} ${PRJ_SRC}
 )
 
 TARGET_LINK_LIBRARIES(
     ${PROJECT_NAME}
-    ${SDL2_LIBRARIES}
     ${OPENGL_LIBRARIES}
+    ${SDL2_LIBRARIES}
     ${ZLIB_LIBRARIES}
 )
