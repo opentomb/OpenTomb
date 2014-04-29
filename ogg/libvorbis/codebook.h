@@ -18,7 +18,7 @@
 #ifndef _V_CODEBOOK_H_
 #define _V_CODEBOOK_H_
 
-#include <ogg/ogg.h>
+#include "../ogg.h"
 
 /* This structure encapsulates huffman and VQ style encoding books; it
    doesn't do anything specific to either.

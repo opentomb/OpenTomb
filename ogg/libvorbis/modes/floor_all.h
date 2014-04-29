@@ -15,7 +15,7 @@
 
  ********************************************************************/
 
-#include "vorbis/codec.h"
+#include "../../codec.h"
 #include "backends.h"
 #include "books/floor/floor_books.h"
 

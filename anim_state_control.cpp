@@ -2034,7 +2034,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
              * Free fall section
              */
         // fall and landing  - test water cases
-        case TR_ANIMATION_LARA_UNKNOWN3:
+        case TR_ANIMATION_LARA_JUMPING_FORWARD_TO_FREEFALL:
         case TR_ANIMATION_LARA_FREE_FALL_LONG_NO_HURT:
         case TR_ANIMATION_LARA_FORWARD_TO_FREE_FALL:
         case TR_ANIMATION_LARA_LEFT_TO_FREE_FALL:
@@ -2047,7 +2047,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_ANIMATION_LARA_SMASH_JUMP_CONTINUE:
             if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
-                if((ent->current_animation != TR_ANIMATION_LARA_UNKNOWN3) && (ent->current_animation != TR_ANIMATION_LARA_SMASH_JUMP_CONTINUE))
+                if((ent->current_animation != TR_ANIMATION_LARA_JUMPING_FORWARD_TO_FREEFALL) && (ent->current_animation != TR_ANIMATION_LARA_SMASH_JUMP_CONTINUE))
                 {
                     Entity_Frame(ent, engine_frame_time, TR_STATE_LARA_STOP);   // landing hard
                 }
