@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <ogg/ogg.h>
-#include "vorbis/codec.h"
+#include "../ogg.h"
+#include "../codec.h"
 #include "codec_internal.h"
 #include "os.h"
 #include "misc.h"

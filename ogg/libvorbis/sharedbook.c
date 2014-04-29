@@ -18,10 +18,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include <ogg/ogg.h>
+#include "../ogg.h"
+#include "../codec.h"
 #include "os.h"
 #include "misc.h"
-#include "vorbis/codec.h"
 #include "codebook.h"
 #include "scales.h"
 

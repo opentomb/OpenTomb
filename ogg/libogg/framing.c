@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
-#include <ogg/ogg.h>
+#include "../ogg.h"
 
 /* A complete description of Ogg framing exists in docs/framing.html */
 
