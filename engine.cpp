@@ -238,6 +238,7 @@ void Engine_Init()
     CVAR_Register("time_scale", "1.0");
 
     Con_AddLine("Engine inited");
+    luaL_dofile(engine_lua, "scripts\\sys_scripts.lua");
 }
 
 
@@ -317,6 +318,81 @@ int lua_SetGravity(lua_State * lua)                                             
     };
 
     return 0;                                                                   // we returned two vaues
+}
+
+
+int lua_GetModelID(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    if(ent->model)
+    {
+        lua_pushinteger(lua, ent->model->ID);
+        return 1;
+    }
+    return 0;
+}
+
+
+int lua_GetActivationOffset(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    lua_pushnumber(lua, ent->activation_offset[0]);
+    lua_pushnumber(lua, ent->activation_offset[1]);
+    lua_pushnumber(lua, ent->activation_offset[2]);
+    lua_pushnumber(lua, ent->activation_offset[3]);
+
+    return 4;    
+}
+
+
+int lua_SetActivationOffset(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    if(top >= 4)
+    {
+        ent->activation_offset[0] = lua_tonumber(lua, 2);
+        ent->activation_offset[1] = lua_tonumber(lua, 3);
+        ent->activation_offset[2] = lua_tonumber(lua, 4);
+    }
+    if(top >= 5)
+    {
+        ent->activation_offset[3] = lua_tonumber(lua, 5);
+    }
+
+    return 0;
 }
 
 
@@ -614,11 +690,19 @@ int lua_CanTriggerEntity(lua_State * lua)
         return 1;
     }
     
-    r = lua_tonumber(lua, 3);
+    r = e2->activation_offset[3];
+    if(top >= 3)
+    {
+        r = lua_tonumber(lua, 3);
+    }
     r *= r;
-    offset[0] = lua_tonumber(lua, 4);
-    offset[1] = lua_tonumber(lua, 5);
-    offset[2] = lua_tonumber(lua, 6);
+    vec3_copy(offset, e2->activation_offset);
+    if(top >= 4)
+    {
+        offset[0] = lua_tonumber(lua, 4);
+        offset[1] = lua_tonumber(lua, 5);
+        offset[2] = lua_tonumber(lua, 6);
+    }
     
     Mat4_vec3_mul_macro(pos, e2->transform, offset);
     if((vec3_dot(e1->transform+4, e2->transform+4) > 0.75) &&
@@ -839,7 +923,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      * register globals
      */
     luaL_dostring(lua, CVAR_LUA_TABLE_NAME" = {};");
-    luaL_dofile(lua, "scripts/sys_scripts.lua");
 
     /*
      * register functions
@@ -859,13 +942,16 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "disableEntity", lua_DisableEntity);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
+    lua_register(lua, "getModelID", lua_GetModelID);
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "setEntityWisibility", lua_SetEntityWisibility);
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
     lua_register(lua, "getEntityFlag", lua_GetEntityFlag);
     lua_register(lua, "setEntityFlag", lua_SetEntityFlag);
-    
+    lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
+    lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
+
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
     lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
 }
@@ -1191,7 +1277,12 @@ int Engine_LoadMap(const char *name)
 #if 0
     tr_level.dump_textures();
 #endif
-
+    World_Empty(&engine_world);
+    World_Prepare(&engine_world);
+    TR_GenWorld(&engine_world, &tr_level);
+    engine_world.ID = 0;
+    engine_world.name = 0;
+    engine_world.type = 0;
     CVAR_set_val_s("game_level", name);
     CVAR_set_val_d("engine_version", (btScalar)trv);
 
@@ -1199,15 +1290,7 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
-
-    Engine_LuaClearTasks();
-    World_Empty(&engine_world);
-    World_Prepare(&engine_world);
-    TR_GenWorld(&engine_world, &tr_level);
-    engine_world.ID = 0;
-    engine_world.name = 0;
-    engine_world.type = 0;
-
+    
     Render_SetWorld(&engine_world);
     return 1;
 }
