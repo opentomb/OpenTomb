@@ -208,7 +208,7 @@ void Save_Entity(FILE **f, entity_p ent)
 }
 
 /**
- * Сохранение текущего состояния игры
+ * Save current game state
  */
 int Game_Save(const char* name)
 {
@@ -533,7 +533,7 @@ void Game_UpdateCharacters()
 {
     entity_p ent = engine_world.Character;
     
-    if(ent->character && ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+    if(ent && ent->character && ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
     {
         Entity_CheckActivators(ent);
     }

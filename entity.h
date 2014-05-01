@@ -18,7 +18,8 @@ struct character_s;
 
 #define ENTITY_IS_ACTIVE                          (0x00000001)
 #define ENTITY_CAN_TRIGGER                        (0x00000002)                      
-#define ENTITY_IS_TRIGGER                         (0x00000004)   
+#define ENTITY_IS_TRIGGER                         (0x00000004)
+#define ENTITY_IS_PICKABLE                        (0x00000008)
 
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction
@@ -140,6 +141,7 @@ typedef struct entity_s
     
     struct engine_container_s          *self;
     
+    btScalar                            activation_offset[4];                   // where we can activate object (dx, dy, dz, r)
     btVector3                           collision_offset;                       // current centre
     btRigidBody                       **bt_body;                                // FIXME - there are more complex objects
     struct character_s                 *character;
