@@ -385,6 +385,7 @@ void Game_ApplyControls(struct entity_s *ent)
         vec3_copy(ent->character->cmd.move, move_logic);
 
         Character_ApplyCommands(ent, &ent->character->cmd);
+        Entity_Frame(ent, engine_frame_time, ent->current_state);
         Cam_FollowEntity(renderer.cam, ent, 128.0, 400.0);
     }
 }
@@ -477,7 +478,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
     
-    if(Entity_Frame(entity, engine_frame_time, -1))
+    if(Entity_Frame(entity, engine_frame_time, entity->current_state))
     {
         Entity_UpdateRigidBody(entity);
     }
@@ -560,15 +561,13 @@ void GameFrame(btScalar time)
     lua_pcall(engine_lua, 0, 0, 0);
     lua_settop(engine_lua, top);
     
+    Game_ApplyControls(engine_world.Character);
+    Game_UpdateAI();
+    Game_UpdateCharacters();
     if(engine_world.entity_tree && engine_world.entity_tree->root)
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
     }
-    Game_ApplyControls(engine_world.Character);
-   
-    Game_UpdateAI();
-    Game_UpdateCharacters();
-    
     Render_UpdateAnimTextures();
     
     bt_engine_dynamicsWorld->stepSimulation(time, 8);

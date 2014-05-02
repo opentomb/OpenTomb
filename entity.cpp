@@ -26,6 +26,7 @@ entity_p Entity_Create()
     entity_p ret = (entity_p)calloc(1, sizeof(entity_t));
     ret->frame_time = 0.0;
     ret->move_type = MOVE_ON_FLOOR;
+    ret->current_state = TR_STATE_CURRENT;
     Mat4_E(ret->transform);
     ret->active = 1;
     
@@ -41,6 +42,7 @@ entity_p Entity_Create()
     ret->character = NULL;
     ret->smooth_anim = 1;
     ret->current_sector = NULL;
+    ret->onAnimChange = NULL;
     
     ret->lerp = 0.0;
     ret->next_bf = NULL;
@@ -1061,7 +1063,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->period = 1.0 / 30.0;
     
-    entity->current_stateID = anim->state_id;
+    //entity->current_state = anim->state_id;
     entity->current_animation = animation;
     entity->current_speed = anim->speed;
     entity->current_frame = frame;
@@ -1279,6 +1281,13 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
     {
         Entity_RebuildBV(entity);
     }
+    
+    if((2 <= ret) && entity->onAnimChange)
+    {
+        entity->onAnimChange(entity);
+        entity->onAnimChange = NULL;
+    }
+    
     return ret;
 }
 
@@ -1320,7 +1329,7 @@ void Entity_RebuildBV(entity_p ent)
     };
 }
 
-
+///@TODO: rewrite it: use only dist or OBB-OBB check;
 void Entity_CheckActivators(struct entity_s *ent)
 {
     entity_p e;

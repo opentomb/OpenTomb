@@ -817,6 +817,46 @@ int lua_SetEntityFlag(lua_State * lua)
 }
 
 
+int lua_GetEntityState(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    lua_pushinteger(lua, ent->current_state);
+
+    return 1;
+}
+
+
+int lua_SetEntityState(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    
+    ent->current_state = lua_tointeger(lua, 2);
+
+    return 0;
+}
+
+
 int lua_PlayStream(lua_State *lua)
 {
         int id, top;
@@ -949,6 +989,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
     lua_register(lua, "getEntityFlag", lua_GetEntityFlag);
     lua_register(lua, "setEntityFlag", lua_SetEntityFlag);
+    lua_register(lua, "getEntityState", lua_GetEntityState);
+    lua_register(lua, "setEntityState", lua_SetEntityState);
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
 
