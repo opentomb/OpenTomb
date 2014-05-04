@@ -65,6 +65,305 @@ lua_State *ent_ID_override;
 lua_State *level_script;
 
 
+int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
+{
+    uint16_t function, sub_function, b3, FD_function, operands;
+    uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;
+    int16_t slope_t01, slope_t00;
+    int i, argn, ret = 0;
+    uint16_t *entry, *end_p, end_bit, cont_bit;
+    char script[4096], buf[64];
+    // Trigger options.
+    
+    bool   only_once;
+    bool   trigger_mask[5];
+    int8_t timer_field;
+    
+    if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size) || !engine_lua)
+    {
+        return 0;
+    }
+    
+    /*
+     * PARSE FUNCTIONS
+     */
+    end_p = world->floor_data + world->floor_data_size - 1;
+    entry = world->floor_data + sector->fd_index;
+    script[0] = 0;
+    argn = 0;
+    do
+    {
+        end_bit = ((*entry) & 0x8000) >> 15;            // 0b10000000 00000000
+        
+        // TR_I - TR_II
+        //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
+        //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
+        
+        //TR_III+, but works with TR_I - TR_II
+        function = (*entry) & 0x001F;                   // 0b00000000 00011111
+        sub_function = ((*entry) & 0x3FF0) >> 8;        // 0b01111111 11100000
+        b3 = ((*entry) & 0x00E0) >> 5;                  // 0b00000000 11100000  TR_III+
+        
+        entry++;
+
+        switch(function)
+        {
+            case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
+                if(sub_function == 0x00)
+                {
+                    i = *(entry++);
+                }
+                break;
+
+            case TR_FD_FUNC_FLOORSLANT:          // FLOOR SLANT
+                if(sub_function == 0x00)
+                {
+                    entry++;
+                }
+                break;
+
+            case TR_FD_FUNC_CEILINGSLANT:          // CEILING SLANT
+                if(sub_function == 0x00)
+                {
+                    entry++;
+                }
+                break;
+
+            case TR_FD_FUNC_TRIGGER:          // TRIGGER
+                timer_field     = (*entry) & 0x00FF;
+                only_once       = (*entry) & 0x0100;
+                trigger_mask[0] = (*entry) & 0x0200;
+                trigger_mask[1] = (*entry) & 0x0400;
+                trigger_mask[2] = (*entry) & 0x0800;
+                trigger_mask[3] = (*entry) & 0x1000;
+                trigger_mask[4] = (*entry) & 0x2000;
+                
+                //Con_Printf("TRIGGER: timer - %d, once - %d, mask - %d%d%d%d%d", timer_field, only_once, trigger_mask[0], trigger_mask[1], trigger_mask[2], trigger_mask[3], trigger_mask[4]);
+                script[0] = 0;
+                argn = 0;
+                switch(sub_function)
+                {
+                    case TR_FD_TRIGTYPE_TRIGGER:
+                        // Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_TRIGGER");
+                        break;
+                    case TR_FD_TRIGTYPE_PAD:
+                        // Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PAD");
+                        break;
+                    case TR_FD_TRIGTYPE_SWITCH:
+                        strcat(script, "create_switch_func(");
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SWITCH");
+                        break;
+                    case TR_FD_TRIGTYPE_KEY:
+                        strcat(script, "create_keyhole_func(");
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_KEY");
+                        break;
+                    case TR_FD_TRIGTYPE_PICKUP:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PICKUP");
+                        break;
+                    case TR_FD_TRIGTYPE_HEAVY:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVY");
+                        break;
+                    case TR_FD_TRIGTYPE_ANTIPAD:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTIPAD");
+                        break;
+                    case TR_FD_TRIGTYPE_COMBAT:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_COMBAT");
+                        break;
+                    case TR_FD_TRIGTYPE_DUMMY:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_DUMMY");
+                        break;
+                    case TR_FD_TRIGTYPE_ANTITRIGGER:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTITRIGGER");
+                        break;
+                    case TR_FD_TRIGTYPE_HEAVYTRIGGER:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYTRIGGER");
+                        break;
+                    case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYANTITRIGGER");
+                        break;
+                    case TR_FD_TRIGTYPE_MONKEY:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_MONKEY");
+                        break;
+                    case TR_FD_TRIGTYPE_SKELETON:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SKELETON");
+                        break;
+                    case TR_FD_TRIGTYPE_TIGHTROPE:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_TIGHTROPE");
+                        break;
+                    case TR_FD_TRIGTYPE_CRAWLDUCK:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CRAWLDUCK");
+                        break;
+                    case TR_FD_TRIGTYPE_CLIMB:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CLIMB");
+                        break;
+                }
+                
+                do
+                {
+                    entry++;
+                    cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
+                    FD_function = (((*entry) & 0x7C00)) >> 10;                  // 0b01111100 00000000
+                    operands = (*entry) & 0x03FF;                               // 0b00000011 11111111
+
+                    switch(FD_function)
+                    {
+                        case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
+                            if(argn == 0)
+                            {
+                                snprintf(buf, 64, "%d, {", operands);           // switch / keyhole
+                            }
+                            else if(argn == 1)
+                            {
+                                snprintf(buf, 64, "%d", operands);
+                            }
+                            else
+                            {
+                                snprintf(buf, 64, ", %d", operands);
+                            }
+                            strcat(script, buf);
+                            argn++;
+                            break;
+
+                        case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH
+                            {                                
+                                uint8_t cam_index = (*entry) & 0x007F;
+                                entry++;
+                                uint8_t cam_timer = ((*entry) & 0x00FF);
+                                uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
+                                uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
+                                        cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
+                                
+                                //Con_Printf("CAMERA: index = %d, timer = %d, once = %d, zoom = %d", cam_index, cam_timer, cam_once, cam_zoom);
+                            }
+                            break;
+
+                        case TR_FD_TRIGFUNC_UWCURRENT:          // UNDERWATER CURRENT
+                            //Con_Printf("UNDERWATER CURRENT! OP = %d", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLIPMAP:          // SET ALTERNATE ROOM
+                            //Con_Printf("SET ALTERNATE ROOM! OP = %d", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLIPON:          // ALTER ROOM FLAGS (paired with 0x05)
+                            //Con_Printf("ALTER ROOM FLAGS 0x04! OP = %d", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLIPOFF:          // ALTER ROOM FLAGS (paired with 0x04)
+                            //Con_Printf("ALTER ROOM FLAGS 0x05! OP = %d", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_LOOKAT:          // LOOK AT ITEM
+                            //Con_Printf("Look at %d item", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_ENDLEVEL:          // END LEVEL
+                            //Con_Printf("End of level! id = %d", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
+                            //Con_Printf("Play audiotrack id = %d", operands);
+                            // operands - track number
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLIPEFFECT:          // Various in-game actions.
+                            //Con_Printf("Flipeffect id = %d", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_SECRET:          // PLAYSOUND SECRET_FOUND
+                            //Con_Printf("Play SECRET[%d] FOUND", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_BODYBAG:          // UNKNOWN
+                            //Con_Printf("BODYBAG id = %d", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_FLYBY:          // TR4-5: FLYBY CAMERA
+                            //Con_Printf("Flyby camera = %d", operands);
+                            break;
+
+                        case TR_FD_TRIGFUNC_CUTSCENE:          // USED IN TR4-5
+                            //Con_Printf("CUTSCENE id = %d", operands);
+                            break;
+
+                        case 0x0e:          // UNKNOWN
+                            //Con_Printf("TRIGGER: unknown 0x0e, OP = %d", operands);
+                            break;
+
+                        case 0x0f:          // UNKNOWN
+                            //Con_Printf("TRIGGER: unknown 0x0f, OP = %d", operands);
+                            break;
+                    };
+                }
+                while(!cont_bit && entry < end_p);
+                if(script[0])
+                {
+                    if((sub_function == TR_FD_TRIGTYPE_SWITCH) || (sub_function == TR_FD_TRIGTYPE_KEY))
+                    {
+                        strcat(script, "}, nil);");
+                        Con_Printf(script);
+                        luaL_dostring(engine_lua, script);
+                    }
+                    script[0] = 0;
+                }
+                
+                break;
+
+            case TR_FD_FUNC_DEATH:          // KILL LARA
+                //Con_Printf("KILL! sub = %d, b3 = %d", sub_function, b3);
+                break;
+
+            case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
+                //Con_Printf("Climbable walls! sub = %d, b3 = %d", sub_function, b3);
+                break;
+
+            case TR_FD_FUNC_SLOPE1:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE2:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE3:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE4:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE5:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE6:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE7:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE8:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE9:           // TR3 SLANT
+            case TR_FD_FUNC_SLOPE10:          // TR3 SLANT
+            case TR_FD_FUNC_SLOPE11:          // TR3 SLANT
+            case TR_FD_FUNC_SLOPE12:          // TR3 SLANT
+                cont_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
+                slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
+                slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
+                slope_func = ((*entry) & 0x001F);           // 0b00000000 00011111
+                entry++;
+                slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
+                slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
+                slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
+                slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
+                break;
+
+            case TR_FD_FUNC_MONKEY:          // Climbable ceiling
+                //Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
+                break;
+                
+            case TR_FD_FUNC_TRIGGERER_MARK:
+                //Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
+                break;
+                
+            case TR_FD_FUNC_BEETLE_MARK:
+                //Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
+                break;
+                
+            default:
+                //Con_Printf("UNKNOWN function id = %d, sub = %d, b3 = %d", function, sub_function, b3);
+                break;
+        };
+        ret++;
+    }
+    while(!end_bit && entry < end_p);
+
+    return ret;
+}
+
+
 int IsInUCRectFace3(tr4_object_texture_t *tex)
 {
     int32_t i;
@@ -144,7 +443,7 @@ void Gen_EntityRigidBody(entity_p ent)
     for(i=0;i<ent->model->mesh_count;i++)
     {
         ent->bt_body[i] = NULL;
-        cshape = MeshToBTCS(ent->model->mesh_tree[i].mesh, true, true, COLLISION_TRIMESH);
+        cshape = MeshToBTCS(ent->model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
         if(cshape)
         {
             Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -614,6 +913,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     for(i=0;i<world->room_count;i++)
     {
+        for(int j=0;j<world->rooms[i].sectors_count;j++)
+        {
+            GenerateFloorDataScript(world->rooms[i].sectors+j, world);
+        }
         if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count))
         {
             Mesh_GenVBO(world->rooms[i].mesh);
