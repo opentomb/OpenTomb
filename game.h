@@ -2,7 +2,16 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
+
 #include <stdint.h>
+
+// This is the global game logic refresh interval.
+// All game logic should be refreshed at this rate, including
+// enemy AI, values processing and audio update.
+
+#define GAME_LOGIC_REFRESH_INTERVAL (1.0 / 60.0)
 
 class VT_Level;
 struct polygon_s;
@@ -22,11 +31,13 @@ int Game_Load(const char* name);
 int Game_Save(const char* name);
 
 
+void Game_Frame(btScalar time);
+
 void Game_ApplyControls(struct entity_s *ent);
+
 void Game_UpdateAllEntities(struct RedBlackNode_s *x);
 void Game_UpdateAI();
 void Game_UpdateCharacters();
-void GameFrame(btScalar time);
 
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz);
 

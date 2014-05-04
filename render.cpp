@@ -253,11 +253,11 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
         
         if(p->double_side)
         {
-            glDisable(GL_CULL_FACE);
+            glEnable(GL_CULL_FACE); ///@FIXME: Check if it is needed at all.
         }
         else
         {
-            glEnable(GL_CULL_FACE);
+            glDisable(GL_CULL_FACE);
         }
 
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);

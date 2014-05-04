@@ -223,17 +223,16 @@ void Engine_Destroy();
 void Engine_Shutdown(int val);
 
 bool Engine_FileFound(const char *name, bool Write = false);
-int Engine_GetLevelVersion(const char *name);
-void GetLevelName(char *name, const char *path);
-int Engine_LoadMap(const char *name);
+int  Engine_GetLevelVersion(const char *name);
+void Engine_GetLevelName(char *name, const char *path);
+int  Engine_LoadMap(const char *name);
 
-int Engine_ExecCmd(char *ch);
+int  Engine_ExecCmd(char *ch);
 
 void Engine_LoadConfig();
 void Engine_SaveConfig();
 
 void Engine_Frame(btScalar time);
 void Engine_Display();
-void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 
 #endif

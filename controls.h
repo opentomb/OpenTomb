@@ -74,6 +74,13 @@ enum AXES {
     AXIS_LASTINDEX
 };
 
+typedef struct control_action_s
+{
+    int      primary;
+    int      secondary;
+    bool     already_pressed;
+}control_action_t, *control_action_p;
+
 typedef struct control_settings_s
 {
     float    mouse_sensitivity;
@@ -100,9 +107,7 @@ typedef struct control_settings_s
 
     int8_t   joy_axis_map[AXIS_LASTINDEX];      // Axis array for action mapper.
 
-    int32_t  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
-    int32_t  action_alt[ACT_LASTINDEX];         // Alternate actions array for alternate controls.
-
+    control_action_s  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
 }control_settings_t, *control_settings_p;
 
 void Controls_Key(int32_t button, int state);

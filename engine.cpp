@@ -334,13 +334,13 @@ int lua_BindKey(lua_State * lua)
 
     else if(top == 2)
     {
-        control_mapper.action_map[act] = lua_tointeger(lua, 2);
+        control_mapper.action_map[act].primary = lua_tointeger(lua, 2);
         return 0;
     }
     else if(top == 3)
     {
-        control_mapper.action_map[act] = lua_tointeger(lua, 2);
-        control_mapper.action_alt[act] = lua_tointeger(lua, 3);
+        control_mapper.action_map[act].primary   = lua_tointeger(lua, 2);
+        control_mapper.action_map[act].secondary = lua_tointeger(lua, 3);
         return 0;
     }
 
@@ -1136,7 +1136,7 @@ int Engine_GetLevelVersion(const char *name)
 }
 
 
-void GetLevelName(char *name, const char *path)
+void Engine_GetLevelName(char *name, const char *path)
 {
     int len, start, ext, i;
 
@@ -1195,7 +1195,7 @@ int Engine_LoadMap(const char *name)
     CVAR_set_val_s("game_level", name);
     CVAR_set_val_d("engine_version", (btScalar)trv);
 
-    GetLevelName(buf, name);
+    Engine_GetLevelName(buf, name);
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
@@ -1207,6 +1207,10 @@ int Engine_LoadMap(const char *name)
     engine_world.ID = 0;
     engine_world.name = 0;
     engine_world.type = 0;
+    
+    Character_SetHealth(engine_world.Character, CHARACTER_OPTION_HEALTH_MAX);
+    Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
+    Character_SetSprint(engine_world.Character, CHARACTER_OPTION_SPRINT_MAX);
 
     Render_SetWorld(&engine_world);
     return 1;

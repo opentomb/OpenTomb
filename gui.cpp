@@ -5,6 +5,7 @@
 #include "ftgl/FTGLTextureFont.h"
 
 #include "gui.h"
+#include "character_controller.h"
 #include "engine.h"
 #include "render.h"
 #include "system.h"
@@ -18,9 +19,7 @@ gui_text_line_p         gui_base_lines = NULL;
 gui_text_line_t         gui_temp_lines[MAX_TEMP_LINES];
 uint16_t                temp_lines_used = 0;
 
-uint16_t                sounds_played = 100;
-
-ProgressBar Bar[BAR_LASTINDEX];
+ProgressBar      Bar[BAR_LASTINDEX];
 
 void Gui_Init()
 {
@@ -67,7 +66,7 @@ void Gui_Init()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(1000, 300);
+                    Bar[i].SetValues(CHARACTER_OPTION_HEALTH_MAX, CHARACTER_OPTION_HEALTH_MAX / 3);
                     Bar[i].SetBlink(300);
                     Bar[i].SetExtrude(true, 100);
                     Bar[i].SetAutoshow(true, 2000, true, 400);
@@ -87,7 +86,7 @@ void Gui_Init()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(1800, 400);
+                    Bar[i].SetValues(CHARACTER_OPTION_AIR_MAX, (CHARACTER_OPTION_AIR_MAX / 3));
                     Bar[i].SetBlink(300);
                     Bar[i].SetExtrude(true, 100);
                     Bar[i].SetAutoshow(true, 2000, true, 400);
@@ -103,8 +102,8 @@ void Gui_Init()
                     Bar[i].SetDimensions(50, 70, 250, 25, 3);
                     Bar[i].SetColor(BASE_MAIN, 255, 100, 50, 200);
                     Bar[i].SetColor(BASE_FADE, 255, 200, 0, 200);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 220);
-                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 220);
+                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
+                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 110, 110, 110, 100);
                     Bar[i].SetColor(BORDER_FADE, 60, 60, 60, 180);
                     Bar[i].SetValues(120, 0);
@@ -126,7 +125,7 @@ void Gui_Init()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(100, 20);
+                    Bar[i].SetValues(CHARACTER_OPTION_FREEZE_MAX, CHARACTER_OPTION_FREEZE_MAX / 3);
                     Bar[i].SetBlink(200);
                     Bar[i].SetExtrude(true, 60);
                     Bar[i].SetAutoshow(true, 500, true, 300);
@@ -390,7 +389,9 @@ void Gui_DrawCrosshair()
 
 void Gui_DrawBars()
 {
-    Bar[BAR_FREEZE].Show(sounds_played); ///@FIXME: TEST VALUE!!!
+    Bar[BAR_AIR].Show(engine_world.Character->character->opt.air);
+    Bar[BAR_SPRINT].Show(engine_world.Character->character->opt.sprint);
+    Bar[BAR_HEALTH].Show(engine_world.Character->character->opt.health);
 }
 
 /**

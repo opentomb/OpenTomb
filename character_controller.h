@@ -17,9 +17,9 @@
 // Lara's character behavior constants
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
-#define DEFAULT_MAX_STEP_UP_HEIGHT              (320.0)                         ///@FIXME: check original
+#define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0)                         ///@FIXME: check original
 #define DEFAULT_FALL_DAWN_HEIGHT                (320.0)                         ///@FIXME: check original
-#define DEFAULT_CLIMB_UP_HEIGHT                 (4096.0)                        ///@FIXME: check original
+#define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (0.707)                         ///@FIXME: cos(alpha = 45 deg)
 #define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
@@ -48,6 +48,14 @@
 #define CLIMB_HANG_ONLY                         (0x01)
 #define CLIMB_ALT_HEIGHT                        (0x02)
 #define CLIMB_FULL_HEIGHT                       (0x03)
+
+
+// CHARACTER PARAMETERS DEFAULTS
+
+#define CHARACTER_OPTION_HEALTH_MAX             (1000.0)      // 30 secs of air
+#define CHARACTER_OPTION_AIR_MAX                (1800.0)      // 30 secs of air
+#define CHARACTER_OPTION_SPRINT_MAX             (120.0)       // 4  secs of sprint
+#define CHARACTER_OPTION_FREEZE_MAX             (240.0)       // 8  secs of freeze
 
 struct entity_s;
 class bt_engine_ClosestConvexResultCallback;
@@ -120,10 +128,20 @@ typedef struct character_command_s
     int8_t      flags;
 }character_command_t, *character_command_p;
 
+typedef struct character_options_s
+{
+    float       health;
+    float       air;
+    float       sprint;
+    float       freeze;
+}character_options_t, *character_options_p;
+
 typedef struct character_s
 {
     struct entity_s             *ent;                    // actor entity
     struct character_command_s   cmd;                    // character control commands
+    struct character_options_s   opt;
+    
     int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
     int16_t                      max_move_iterations;
     int16_t                      no_fix;
@@ -187,5 +205,20 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);
 
 void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd);
+void Character_UpdateValues(struct entity_s *ent);
+
+bool Character_IncreaseAir(struct entity_s *ent, float value);
+bool Character_DecreaseAir(struct entity_s *ent, float value);
+void Character_SetAir(struct entity_s *ent, float value);
+
+bool Character_IncreaseHealth(struct entity_s *ent, float value);
+bool Character_DecreaseHealth(struct entity_s *ent, float value);
+void Character_SetHealth(struct entity_s *ent, float value);
+
+bool Character_IncreaseSprint(struct entity_s *ent, float value);
+bool Character_DecreaseSprint(struct entity_s *ent, float value);
+void Character_SetSprint(struct entity_s *ent, float value);
+
+
 
 #endif  // CHARACTER_CONTROLLER_H

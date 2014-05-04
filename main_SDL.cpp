@@ -439,8 +439,9 @@ void Engine_InitSDLVideo()
 void Engine_InitALAudio()
 {
     ALCint paramList[] = {
-        ALC_STEREO_SOURCES, TR_AUDIO_STREAM_NUMSOURCES,                           0,
-        ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES), 0};
+        ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
+        ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
+        ALC_FREQUENCY,       44100, 0};
     
     const char *drv = SDL_GetCurrentAudioDriver();
     
@@ -530,10 +531,14 @@ void Engine_Display()
 
         Cam_RecalcClipPlanes(&engine_camera);
         Cam_Apply(&engine_camera);
+        
+        Render_UpdateAnimTextures();
+        
 #if !SKELETAL_TEST
         glDisable(GL_LIGHTING);
         Render_SkyBox();
         glEnable(GL_LIGHTING);
+        
         Render_GenWorldList();
         Render_DrawList();
 #else
@@ -672,20 +677,15 @@ void Engine_SecondaryMouseDown()
 
 void Engine_Frame(btScalar time)
 {
-    SDL_Event   event;
     int i;
     static int  cycles = 0;
     static btScalar time_cycl = 0.0;
-    static int mouse_setup = 0;
     extern gui_text_line_t system_fps;
     if(time > 0.1)
     {
         time = 0.1;
     }
-    /*if(time_scale.val_d != 0)
-    {
-        time *= time_scale.val_d;
-    }*/
+
     ResetTempbtScalar();
     engine_frame_time = time;
     if(cycles < 20)
@@ -701,120 +701,13 @@ void Engine_Frame(btScalar time)
         cycles = 0;
         time_cycl = 0.0;
     }
-
-    while(SDL_PollEvent(&event))
-    {
-        switch(event.type)
-        {
-            case SDL_MOUSEMOTION:
-                if(!con_base.show && control_states.mouse_look != 0 &&
-                    ((event.motion.x != (screen_info.w/2)) ||
-                     (event.motion.y != (screen_info.h/2))))
-                {
-                    if(mouse_setup)                                             // it is not perfect way, but cursor
-                    {                                                           // every engine start is in one place
-                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
-                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
-                    }
-                    if((event.motion.x < ((screen_info.w/2)-(screen_info.w/4))) ||
-                       (event.motion.x > ((screen_info.w/2)+(screen_info.w/4))) ||
-                       (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
-                       (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
-                    {
-                        SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
-                    }
-                }
-                mouse_setup = 1;
-                break;
-
-            case SDL_MOUSEBUTTONDOWN:
-                if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
-                {
-                    Engine_PrimaryMouseDown();
-                }
-                else if(event.button.button == 3)
-                {
-                    Engine_SecondaryMouseDown();
-                }
-                break;
-
-            // Controller events are only invoked when joystick is initialized as
-            // game controller, otherwise, generic joystick event will be used.
-            case SDL_CONTROLLERAXISMOTION:
-                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value);
-                break;
-
-            case SDL_CONTROLLERBUTTONDOWN:
-            case SDL_CONTROLLERBUTTONUP:
-                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state);
-                break;
-
-            // Joystick events are still invoked, even if joystick is initialized as game
-            // controller - that's why we need sdl_joystick checking - to filter out
-            // duplicate event calls.
-
-            case SDL_JOYAXISMOTION:
-                if(sdl_joystick)
-                    Controls_JoyAxis(event.jaxis.axis, event.jaxis.value);
-                break;
-
-            case SDL_JOYHATMOTION:
-                if(sdl_joystick)
-                    Controls_JoyHat(event.jhat.value);
-                break;
-
-            case SDL_JOYBUTTONDOWN:
-            case SDL_JOYBUTTONUP:
-                // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
-                if(sdl_joystick)
-                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
-                break;
-
-            case SDL_KEYUP:
-            case SDL_KEYDOWN:
-                if( (event.key.keysym.sym == SDLK_F4) &&
-                    (event.key.state == SDL_PRESSED)  &&
-                    (event.key.keysym.mod & KMOD_ALT) )
-                {
-                    done = 1;
-                    break;
-                }
-                
-                if(con_base.show && event.key.state)
-                {
-                    Con_Edit(Controls_KeyConsoleFilter(event.key.keysym.sym, event.key.keysym.mod));
-                    return;
-                }
-                else
-                {
-                    Controls_Key(event.key.keysym.sym, event.key.state);
-                    // DEBUG KEYBOARD COMMANDS
-                    DebugKeys(event.key.keysym.sym, event.key.state);
-                }
-                break;
-
-            case SDL_QUIT:
-                done = 1;
-                break;
-
-            case SDL_WINDOWEVENT:
-                if(event.window.event == SDL_WINDOWEVENT_RESIZED)
-                {
-                    Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
-                }
-                break;
-
-            default:
-            break;
-        }
-    }
     
-    Audio_Update();
+    Engine_PollSDLInput();
 
 #if SKELETAL_TEST
     Game_ApplyControls();
 #else
-    GameFrame(time);
+    Game_Frame(time);
 #endif
 
     Engine_Display();
@@ -949,6 +842,119 @@ void ShowDebugInfo()
 #endif
 }
 
+void Engine_PollSDLInput()
+{
+    SDL_Event   event;
+    static int mouse_setup = 0;
+    
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_MOUSEMOTION:
+                if(!con_base.show && control_states.mouse_look != 0 &&
+                    ((event.motion.x != (screen_info.w/2)) ||
+                     (event.motion.y != (screen_info.h/2))))
+                {
+                    if(mouse_setup)                                             // it is not perfect way, but cursor
+                    {                                                           // every engine start is in one place
+                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
+                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
+                    }
+                    
+                    if((event.motion.x < ((screen_info.w/2)-(screen_info.w/4))) ||
+                       (event.motion.x > ((screen_info.w/2)+(screen_info.w/4))) ||
+                       (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
+                       (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
+                    {
+                        SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+                    }
+                }
+                mouse_setup = 1;
+                break;
+
+            case SDL_MOUSEBUTTONDOWN:
+                if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
+                {
+                    Engine_PrimaryMouseDown();
+                }
+                else if(event.button.button == 3)
+                {
+                    Engine_SecondaryMouseDown();
+                }
+                break;
+
+            // Controller events are only invoked when joystick is initialized as
+            // game controller, otherwise, generic joystick event will be used.
+            case SDL_CONTROLLERAXISMOTION:
+                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value);
+                break;
+
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state);
+                break;
+
+            // Joystick events are still invoked, even if joystick is initialized as game
+            // controller - that's why we need sdl_joystick checking - to filter out
+            // duplicate event calls.
+
+            case SDL_JOYAXISMOTION:
+                if(sdl_joystick)
+                    Controls_JoyAxis(event.jaxis.axis, event.jaxis.value);
+                break;
+
+            case SDL_JOYHATMOTION:
+                if(sdl_joystick)
+                    Controls_JoyHat(event.jhat.value);
+                break;
+
+            case SDL_JOYBUTTONDOWN:
+            case SDL_JOYBUTTONUP:
+                // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
+                if(sdl_joystick)
+                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
+                break;
+
+            case SDL_KEYUP:
+            case SDL_KEYDOWN:
+                if( (event.key.keysym.sym == SDLK_F4) &&
+                    (event.key.state == SDL_PRESSED)  &&
+                    (event.key.keysym.mod & KMOD_ALT) )
+                {
+                    done = 1;
+                    break;
+                }
+                
+                if(con_base.show && event.key.state)
+                {
+                    Con_Edit(Controls_KeyConsoleFilter(event.key.keysym.sym, event.key.keysym.mod));
+                    return;
+                }
+                else
+                {
+                    Controls_Key(event.key.keysym.sym, event.key.state);
+                    // DEBUG KEYBOARD COMMANDS
+                    DebugKeys(event.key.keysym.sym, event.key.state);
+                }
+                break;
+
+            case SDL_QUIT:
+                done = 1;
+                break;
+
+            case SDL_WINDOWEVENT:
+                if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
+                }
+                break;
+
+            default:
+            break;
+        }
+    }
+}
 
 void DebugKeys(int button, int state)
 {
@@ -1015,6 +1021,8 @@ void DebugKeys(int button, int state)
                 paused = !paused;
                 if(engine_world.Character != NULL)
                 {
+                    engine_world.Character->character->cmd.kill = 0;
+                    
                     if(engine_world.Character->move_type == MOVE_UNDER_WATER)
                     {
                         Entity_SetAnimation(engine_world.Character, 103, 0);

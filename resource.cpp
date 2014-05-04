@@ -275,7 +275,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         strcat(buf, "tr5/");
     }
 
-    GetLevelName(map, CVAR_get_val_s("game_level"));
+    Engine_GetLevelName(map, CVAR_get_val_s("game_level"));
     strcat(buf, map);
     strcat(buf, ".lua");
 
@@ -656,7 +656,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         strcat(buf, "tr5/");
     }
 
-    GetLevelName(map, CVAR_get_val_s("game_level"));
+    Engine_GetLevelName(map, CVAR_get_val_s("game_level"));
     strcat(buf, map);
     strcat(buf, "_trigger.lua");
     luaL_dofile(engine_lua, buf);
@@ -2414,7 +2414,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Gen_EntityRigidBody(entity);
-            Character_Create(entity, 128.0, 72.0, 640.0);
+            Character_Create(entity, 128.0, 72.0, 780.0);
             entity->character->state_func = State_Control_Lara;
             continue;
         }

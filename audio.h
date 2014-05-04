@@ -15,6 +15,7 @@ extern "C" {
 }
 
 #include "vt/vt_level.h"
+#include "game.h"
 #include "script.h"
 #include "system.h"
 
@@ -26,11 +27,6 @@ extern "C" {
 // resolution (1024).
 
 #define TR_AUDIO_AL_UNITS 1024.0
-
-// REFRESH_INTERVAL specifies how frequently audio engine will be
-// updated. 1/60 means that it will be performed 60 times per second.
-
-#define TR_AUDIO_REFRESH_INTERVAL (1.0 / 60.0)
 
 // MAX_CHANNELS defines maximum amount of sound sources (channels)
 // that can play at the same time. Contemporary devices can play
@@ -126,6 +122,14 @@ enum TR_AUDIO_FX {
 #define TR_AUDIO_SEND_IGNORED     0
 #define TR_AUDIO_SEND_PROCESSED   1
 
+// Define some common samples across ALL TR versions.
+
+#define TR_AUDIO_SOUND_LARASCREAM 30
+#define TR_AUDIO_SOUND_BUBBLE     37
+#define TR_AUDIO_SOUND_UNDERWATER 60
+#define TR_AUDIO_SOUND_MEDIPACK   116
+
+
 // NUMBUFFERS is a number of buffers cyclically used for each stream.
 // Double is enough, but we use quad for further stability, because
 // OGG codec seems to be very sensitive to buffering.
@@ -180,9 +184,9 @@ enum TR_AUDIO_STREAM_TYPE
 // since background ones tend to blend in smoothly, while one-shot
 // tracks should be switched fastly.
 
-#define TR_AUDIO_STREAM_CROSSFADE_ONESHOT (TR_AUDIO_REFRESH_INTERVAL / 0.3f)
-#define TR_AUDIO_STREAM_CROSSFADE_BACKGROUND (TR_AUDIO_REFRESH_INTERVAL / 2.0f)
-#define TR_AUDIO_STREAM_CROSSFADE_CHAT (TR_AUDIO_REFRESH_INTERVAL / 0.1f)
+#define TR_AUDIO_STREAM_CROSSFADE_ONESHOT (GAME_LOGIC_REFRESH_INTERVAL / 0.3f)
+#define TR_AUDIO_STREAM_CROSSFADE_BACKGROUND (GAME_LOGIC_REFRESH_INTERVAL / 2.0f)
+#define TR_AUDIO_STREAM_CROSSFADE_CHAT (GAME_LOGIC_REFRESH_INTERVAL / 0.1f)
 
 // Damp coefficient specifies target volume level on a tracks
 // that are being silenced (background music). The larger it is, the bigger
@@ -193,7 +197,7 @@ enum TR_AUDIO_STREAM_TYPE
 // Damp fade speed is used when dampable track is either being
 // damped or un-damped.
 
-#define TR_AUDIO_STREAM_DAMP_SPEED (TR_AUDIO_REFRESH_INTERVAL / 1.0f)
+#define TR_AUDIO_STREAM_DAMP_SPEED (GAME_LOGIC_REFRESH_INTERVAL / 1.0f)
 
 // Possible errors produced by Audio_StreamPlay / Audio_StreamStop functions.
 
@@ -353,6 +357,9 @@ public:
     bool IsPlaying();                    // Checks if track is playing.
     bool IsActive();                     // Checks if track is still active.
     bool IsDampable();                   // Checks if track is dampable.
+    
+    void SetFX();                        // Set reverb FX, according to room flag.
+    void UnsetFX();                      // Remove any reverb FX from source.
     
     static bool damp_active;             // Global flag for damping BGM tracks.
 

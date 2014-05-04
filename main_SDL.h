@@ -25,6 +25,8 @@ void Engine_InitALAudio();
 // pixel values are used for glViewport. Both will be the same on
 // normal displays, but on retina displays or similar, pixels will be twice nominal (or more)
 void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
+
+void Engine_PollSDLInput();
 void Engine_PrimaryMouseDown();
 void Engine_SecondaryMouseDown();
 void DebugKeys(int button, int state);

@@ -17,68 +17,82 @@ void Controls_Key(int32_t button, int state)
 {
     for(int i = 0; i < ACT_LASTINDEX; i++)                                      // Compare ALL mapped buttons.
     {
-        if((button == control_mapper.action_map[i]) ||
-           (button == control_mapper.action_alt[i]))                            // If button = mapped action...
+        if((button == control_mapper.action_map[i].primary) ||
+           (button == control_mapper.action_map[i].secondary))                            // If button = mapped action...
         {
             switch(i)                                                           // ...Choose corresponding action.
             {
                 case ACT_UP:
                     control_states.move_forward = state;
-                    return;
+                    break;
 
                 case ACT_DOWN:
                     control_states.move_backward = state;
-                    return;
+                    break;
 
                 case ACT_LEFT:
                     control_states.move_left = state;
-                    return;
+                    break;
 
                 case ACT_RIGHT:
                     control_states.move_right = state;
-                    return;
+                    break;
 
                 case ACT_ACTION:
                     control_states.state_action = state;
-                    return;
+                    break;
 
                 case ACT_JUMP:
                     control_states.move_up = state;
                     control_states.do_jump = state;
-                    return;
+                    break;
 
                 case ACT_ROLL:
                     control_states.do_roll = state;
-                    return;
+                    break;
 
                 case ACT_WALK:
                     control_states.state_walk = state;
-                    return;
+                    break;
 
                 case ACT_SPRINT:
                     control_states.state_sprint = state;
-                    return;
+                    break;
 
                 case ACT_CROUCH:
                     control_states.move_down = state;
                     control_states.state_crouch = state;
-                    return;
+                    break;
 
                 case ACT_LOOKUP:
                     control_states.look_up = state;
-                    return;
+                    break;
 
                 case ACT_LOOKDOWN:
                     control_states.look_down = state;
-                    return;
+                    break;
 
                 case ACT_LOOKLEFT:
                     control_states.look_left = state;
-                    return;
+                    break;
 
                 case ACT_LOOKRIGHT:
                     control_states.look_right = state;
-                    return;
+                    break;
+                    
+                case ACT_BIGMEDI:
+                    if(!control_mapper.action_map[i].already_pressed)
+                    {
+                        control_states.use_big_medi = state;
+                    }
+                    break;
+                    
+                case ACT_SMALLMEDI:
+                    if(!control_mapper.action_map[i].already_pressed)
+                    {
+                        control_states.use_small_medi = state;
+                    }
+                    break;
 
                 case ACT_CONSOLE:
                     if(!state)
@@ -95,21 +109,21 @@ void Controls_Key(int32_t button, int state)
                             SDL_SetRelativeMouseMode(SDL_TRUE);
                         }
                     }
-                    return;
+                    break;
 
                 case ACT_SCREENSHOT:
                     if(!state)
                     {
                         Com_TakeScreenShot();
                     }
-                    return;
+                    break;
 
                 case ACT_SAVEGAME:
                     if(!state)
                     {
                         Game_Save("qsave.txt");
                     }
-                    return;
+                    break;
 
                 case ACT_LOADGAME:
                     if(!state)
@@ -122,6 +136,8 @@ void Controls_Key(int32_t button, int state)
                     // control_states.move_forward = state;
                     return;
             }
+            
+            control_mapper.action_map[i].already_pressed = state;
         }
     }
 }
@@ -555,28 +571,28 @@ void Controls_InitGlobals()
     control_mapper.joy_look_sensitivity = 1.5;
     control_mapper.joy_move_sensitivity = 1.5;
 
-    control_mapper.action_map[ACT_JUMP]       = SDLK_SPACE;
-    control_mapper.action_map[ACT_ACTION]     = SDLK_LCTRL;
-    control_mapper.action_map[ACT_ROLL]       = SDLK_x;
-    control_mapper.action_map[ACT_SPRINT]     = SDLK_CAPSLOCK;
-    control_mapper.action_map[ACT_CROUCH]     = SDLK_v;
-    control_mapper.action_map[ACT_WALK]       = SDLK_LSHIFT;
+    control_mapper.action_map[ACT_JUMP].primary       = SDLK_SPACE;
+    control_mapper.action_map[ACT_ACTION].primary     = SDLK_LCTRL;
+    control_mapper.action_map[ACT_ROLL].primary       = SDLK_x;
+    control_mapper.action_map[ACT_SPRINT].primary     = SDLK_CAPSLOCK;
+    control_mapper.action_map[ACT_CROUCH].primary     = SDLK_v;
+    control_mapper.action_map[ACT_WALK].primary       = SDLK_LSHIFT;
 
-    control_mapper.action_map[ACT_UP]         = SDLK_w;
-    control_mapper.action_map[ACT_DOWN]       = SDLK_s;
-    control_mapper.action_map[ACT_LEFT]       = SDLK_a;
-    control_mapper.action_map[ACT_RIGHT]      = SDLK_d;
+    control_mapper.action_map[ACT_UP].primary         = SDLK_w;
+    control_mapper.action_map[ACT_DOWN].primary       = SDLK_s;
+    control_mapper.action_map[ACT_LEFT].primary       = SDLK_a;
+    control_mapper.action_map[ACT_RIGHT].primary      = SDLK_d;
 
-    control_mapper.action_map[ACT_STEPLEFT]   = SDLK_h;
-    control_mapper.action_map[ACT_STEPRIGHT]  = SDLK_j;
+    control_mapper.action_map[ACT_STEPLEFT].primary   = SDLK_h;
+    control_mapper.action_map[ACT_STEPRIGHT].primary  = SDLK_j;
 
-    control_mapper.action_map[ACT_LOOKUP]     = SDLK_UP;
-    control_mapper.action_map[ACT_LOOKDOWN]   = SDLK_DOWN;
-    control_mapper.action_map[ACT_LOOKLEFT]   = SDLK_LEFT;
-    control_mapper.action_map[ACT_LOOKRIGHT]  = SDLK_RIGHT;
+    control_mapper.action_map[ACT_LOOKUP].primary     = SDLK_UP;
+    control_mapper.action_map[ACT_LOOKDOWN].primary   = SDLK_DOWN;
+    control_mapper.action_map[ACT_LOOKLEFT].primary   = SDLK_LEFT;
+    control_mapper.action_map[ACT_LOOKRIGHT].primary  = SDLK_RIGHT;
 
-    control_mapper.action_map[ACT_SCREENSHOT] = SDLK_PRINTSCREEN;
-    control_mapper.action_map[ACT_CONSOLE]    = SDLK_BACKQUOTE;
-    control_mapper.action_map[ACT_SAVEGAME]   = SDLK_F5;
-    control_mapper.action_map[ACT_LOADGAME]   = SDLK_F6;
+    control_mapper.action_map[ACT_SCREENSHOT].primary = SDLK_PRINTSCREEN;
+    control_mapper.action_map[ACT_CONSOLE].primary    = SDLK_BACKQUOTE;
+    control_mapper.action_map[ACT_SAVEGAME].primary   = SDLK_F5;
+    control_mapper.action_map[ACT_LOADGAME].primary   = SDLK_F6;
 }

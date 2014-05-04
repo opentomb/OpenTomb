@@ -90,76 +90,51 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
         //Sys_extWarn("AL: Failed to init SDL_InitSubSystem(SDL_INIT_AUDIO): %s", SDL_GetError());
         return ALC_FALSE;
     }
- 
-    /*
-     * try to open SDL audio device vith maximum number of channels
-     */
-    sdl_audio_desired.channels = 8;                                             // try X7.1
-    sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
-    sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
-    if(sdl_dev_id < 2)                                                          // SDL: valid ID >= 2
+    
+    switch(device->FmtChans)
     {
-        sdl_audio_desired.channels = 7;                                         // try X6.1
-        sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
-        sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
-        if(sdl_dev_id < 2)  
-        {
-            sdl_audio_desired.channels = 4;                                     // try QUAD
-            sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
-            sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
-            if(sdl_dev_id < 2)  
-            {
-                sdl_audio_desired.channels = 2;                                 // try stereo
-                sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
-                sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
-                if(sdl_dev_id < 2)  
-                {
-                    sdl_audio_desired.channels = 1;                             // try mono
-                    sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
-                    sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_CHANNELS_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE);
-                    if(sdl_dev_id < 2)  
-                    {
-                        SDL_QuitSubSystem(SDL_INIT_AUDIO);
-                        return ALC_FALSE;
-                    }
-                }
-            }
-        }
-    }
-
-    device->NumUpdates = 2;                                                     ///@FIXME: magick
-    // set AL channels mode
-    switch(sdl_audio_obtained.channels)
-    {
-        case 1:
-            device->FmtChans = DevFmtMono;
+        case DevFmtMono:
+            sdl_audio_desired.channels = 1;
             break;
             
-        case 2:
-            device->FmtChans = DevFmtStereo;
+        case DevFmtStereo:
+            sdl_audio_desired.channels = 2;
             break;
             
-        case 4:
-            device->FmtChans = DevFmtQuad;
+        case DevFmtQuad:
+            sdl_audio_desired.channels = 4;
             break;
             
-         case 6:
-            device->FmtChans = DevFmtX51;
+         case DevFmtX51:
+            sdl_audio_desired.channels = 6;
             break;
             
-         case 7:
-            device->FmtChans = DevFmtX61;
+         case DevFmtX61:
+            sdl_audio_desired.channels = 7;
             break;
             
-         case 8:
-            device->FmtChans = DevFmtX71;
+         case DevFmtX71:
+            sdl_audio_desired.channels = 8;
             break;
             
         default:
-            SDL_CloseAudioDevice(sdl_dev_id);
             SDL_QuitSubSystem(SDL_INIT_AUDIO);
-            return ALC_FALSE;                                                   // wrong channels number
+            return ALC_FALSE;                  // wrong channels number
     };
+ 
+    /*
+     * try to open SDL audio device with device-default amount of channels
+     */
+     
+    sdl_audio_desired.samples = NextPowerOf2(device->UpdateSize * sdl_audio_desired.channels);
+    sdl_dev_id = SDL_OpenAudioDevice(NULL, 0, &sdl_audio_desired, &sdl_audio_obtained, SDL_AUDIO_ALLOW_ANY_CHANGE);
+    if(sdl_dev_id < 2)                                                          // SDL: valid ID >= 2
+    {
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+        return ALC_FALSE;
+    }
+    
+    device->NumUpdates = 2;                                                     ///@FIXME: magick
 
     // set AL format
     switch(sdl_audio_obtained.format)

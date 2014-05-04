@@ -34,7 +34,6 @@ extern "C" {
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
 extern lua_State *engine_lua;
 
-
 void Save_Entity(FILE **f, entity_p ent);
 
 
@@ -355,7 +354,7 @@ void Game_ApplyControls(struct entity_s *ent)
     else
     {
         // Apply controls to Lara
-        ent->character->cmd.kill = 0;
+        
         ent->character->cmd.action = control_states.state_action;
         ent->character->cmd.jump = control_states.do_jump;
         ent->character->cmd.shift = control_states.state_walk;
@@ -363,6 +362,22 @@ void Game_ApplyControls(struct entity_s *ent)
         ent->character->cmd.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);        
         ent->character->cmd.sprint = control_states.state_sprint;              // New commands only for TR3 and above
         ent->character->cmd.crouch = control_states.state_crouch;
+        
+        if(control_states.use_small_medi)
+        {
+            if(Character_IncreaseHealth(ent, 250))
+                Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+                
+            control_states.use_small_medi = !control_states.use_small_medi;
+        }
+            
+        if(control_states.use_big_medi)
+        {
+            if(Character_IncreaseHealth(ent, CHARACTER_OPTION_HEALTH_MAX))
+                Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+                
+            control_states.use_big_medi = !control_states.use_big_medi;
+        }
         
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ))
         {
@@ -533,9 +548,15 @@ void Game_UpdateCharacters()
 {
     entity_p ent = engine_world.Character;
     
-    if(ent->character && ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+    if(ent->character)
     {
-        Entity_CheckActivators(ent);
+        if(ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+            Entity_CheckActivators(ent);
+    
+        if(ent->character->opt.health <= 0.0)
+        {
+            ent->character->cmd.kill = 1;   // Kill, if no HP.
+        }
     }
     
     if(engine_world.entity_tree && engine_world.entity_tree->root)
@@ -545,32 +566,51 @@ void Game_UpdateCharacters()
 }
 
 
-void GameFrame(btScalar time)
-{
+void Game_Frame(btScalar time)
+{   
+    static btScalar game_logic_time  = 0.0;
+                    game_logic_time += time;
+    
+    // If console is active, only thing to update is audio.
+    
     if(con_base.show)
     {
+        if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
+        {
+            Audio_Update();
+            game_logic_time = 0.0;
+        }
         return;
     }
-
-    int top;
-    top = lua_gettop(engine_lua);
-    lua_pushnumber(engine_lua, time);
-    lua_setfield(engine_lua, LUA_GLOBALSINDEX, "frame_time");
-    lua_getfield(engine_lua, LUA_GLOBALSINDEX, "doTasks");
-    lua_pcall(engine_lua, 0, 0, 0);
-    lua_settop(engine_lua, top);
     
+    // We're going to update main logic with a fixed step.
+    // This allows to conserve CPU resources and keep everything in sync!
+    
+    if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
+    {
+        bt_engine_dynamicsWorld->stepSimulation(game_logic_time, 8);
+        int top;
+        top = lua_gettop(engine_lua);
+        lua_pushnumber(engine_lua, time);
+        lua_setfield(engine_lua, LUA_GLOBALSINDEX, "frame_time");
+        lua_getfield(engine_lua, LUA_GLOBALSINDEX, "doTasks");
+        lua_pcall(engine_lua, 0, 0, 0);
+        lua_settop(engine_lua, top);
+       
+        Character_UpdateValues(engine_world.Character);
+        Game_UpdateAI();
+        Audio_Update();
+
+        game_logic_time = 0.0;
+    }
+    
+    // This must be called EVERY frame to max out smoothness.
+    // Includes animations, camera movement, and so on.
+    
+    Game_ApplyControls(engine_world.Character);
+    Game_UpdateCharacters();
     if(engine_world.entity_tree && engine_world.entity_tree->root)
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
     }
-    Game_ApplyControls(engine_world.Character);
-   
-    Game_UpdateAI();
-    Game_UpdateCharacters();
-    
-    Render_UpdateAnimTextures();
-    
-    bt_engine_dynamicsWorld->stepSimulation(time, 8);
 }
-

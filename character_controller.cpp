@@ -1088,7 +1088,7 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
     }
     else
     {
-        //ent->dir_flag = ENT_MOVE_FORWARD;
+        vec3_set_zero(ent->speed.m_floats);
     }
     
     ent->speed.m_floats[2] = vz;
@@ -1925,4 +1925,168 @@ void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *c
     
     Entity_RebuildBV(ent);
     Character_UpdatePlatformPostStep(ent);
+}
+
+void Character_UpdateValues(struct entity_s *ent)
+{
+    switch(ent->move_type)
+    {
+        case MOVE_ON_FLOOR:
+        case MOVE_FREE_FALLING:
+        case MOVE_CLIMBING:
+        case MOVE_CEILING_CLMB:
+        case MOVE_WALLS_CLMB:
+            Character_SetAir(ent, CHARACTER_OPTION_AIR_MAX);
+            if((ent->current_stateID == TR_STATE_LARA_SPRINT) ||
+               (ent->current_stateID == TR_STATE_LARA_SPRINT_ROLL))
+            {
+                Character_DecreaseSprint(ent, 0.5);
+            }
+            else
+            {
+                Character_IncreaseSprint(ent, 0.5);
+            }
+            break;
+            
+        case MOVE_ON_WATER:
+            Character_IncreaseAir(ent, 3.0);
+            break;
+            
+        case MOVE_UNDER_WATER:
+            if(!Character_DecreaseAir(ent, 1.0))
+            {
+                if(!Character_DecreaseHealth(ent, 3.0))
+                {
+                    ent->character->cmd.kill = 1;
+                }
+            }
+            break;
+            
+        default:
+            break;  // Add quicksand later...
+    }
+}
+
+
+bool Character_IncreaseAir(struct entity_s *ent, float value)
+{
+    btScalar *air_val = &ent->character->opt.air;
+    
+    if(*air_val == CHARACTER_OPTION_AIR_MAX)
+    {
+        return false;
+    }
+    else
+    {
+        *air_val += value;
+        *air_val  = (*air_val > CHARACTER_OPTION_AIR_MAX)?(CHARACTER_OPTION_AIR_MAX):(*air_val);
+        return true;
+    }    
+}
+
+bool Character_DecreaseAir(struct entity_s *ent, float value)
+{
+    btScalar *air_val = &ent->character->opt.air;
+    
+    if(*air_val == 0)
+    {
+        return false;
+    }
+    else
+    {
+        *air_val -= value;
+        *air_val  = (*air_val < 0)?(0):(*air_val);
+        return true;
+    }
+}
+
+void Character_SetAir(struct entity_s *ent, float value)
+{
+    btScalar *air_val = &ent->character->opt.air;
+    
+    value = (value < 0)?(0):(value);
+    value = (value > CHARACTER_OPTION_AIR_MAX)?(CHARACTER_OPTION_AIR_MAX):(value);
+    *air_val = value;
+}
+
+bool Character_IncreaseHealth(struct entity_s *ent, float value)
+{
+    btScalar *health_val = &ent->character->opt.health;
+    
+    if(*health_val == CHARACTER_OPTION_HEALTH_MAX)
+    {
+        return false;
+    }
+    else
+    {
+        *health_val += value;
+        *health_val  = (*health_val > CHARACTER_OPTION_HEALTH_MAX)?(CHARACTER_OPTION_HEALTH_MAX):(*health_val);
+        return true;
+    }    
+}
+
+bool Character_DecreaseHealth(struct entity_s *ent, float value)
+{
+    btScalar *health_val = &ent->character->opt.health;
+    
+    if(*health_val == 0)
+    {
+        return false;
+    }
+    else
+    {
+        *health_val -= value;
+        *health_val  = (*health_val < 0)?(0):(*health_val);
+        return true;
+    }
+}
+
+void Character_SetHealth(struct entity_s *ent, float value)
+{
+    btScalar *health_val = &ent->character->opt.health;
+    
+    value = (value < 0)?(0):(value);
+    value = (value > CHARACTER_OPTION_HEALTH_MAX)?(CHARACTER_OPTION_HEALTH_MAX):(value);
+    *health_val = value;
+}
+
+bool Character_IncreaseSprint(struct entity_s *ent, float value)
+{
+    btScalar *sprint_val = &ent->character->opt.sprint;
+    
+    if(*sprint_val == CHARACTER_OPTION_SPRINT_MAX)
+    {
+        return false;
+    }
+    else
+    {
+        *sprint_val += value;
+        *sprint_val  = (*sprint_val > CHARACTER_OPTION_SPRINT_MAX)?(CHARACTER_OPTION_SPRINT_MAX):(*sprint_val);
+        return true;
+    }
+}
+
+bool Character_DecreaseSprint(struct entity_s *ent, float value)
+{
+    btScalar *sprint_val = &ent->character->opt.sprint;
+    
+    if(*sprint_val == 0)
+    {
+        return false;
+    }
+    else
+    {
+        *sprint_val -= value;
+        *sprint_val  = (*sprint_val < 0)?(0):(*sprint_val);
+        return true;
+    }
+}
+
+void Character_SetSprint(struct entity_s *ent, float value)
+{
+    btScalar *sprint_val = &ent->character->opt.sprint;
+    
+    value = (value < 0)?(0):(value);
+    value = (value > CHARACTER_OPTION_SPRINT_MAX)?(CHARACTER_OPTION_SPRINT_MAX):(value);
+    *sprint_val = value;
 }

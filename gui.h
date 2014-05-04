@@ -3,6 +3,9 @@
 #define ENGINE_GUI_H
 
 
+#include "entity.h"
+#include "character_controller.h"
+
 typedef struct gui_text_line_s
 {
     char                       *text;

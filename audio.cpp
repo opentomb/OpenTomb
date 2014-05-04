@@ -27,7 +27,6 @@ extern "C" {
 ALfloat                         listener_position[3];
 struct audio_fxmanager_s        fxManager;
 static uint8_t                  audio_blocked = 1;
-static float                    audio_time    = 0;
 
 bool                            StreamTrack::damp_active = false;
 
@@ -498,6 +497,18 @@ bool StreamTrack::Play(bool fade_in)
         current_volume = 1.0;
     }
     
+    if(audio_settings.use_effects)
+    {
+        if(stream_type == TR_AUDIO_STREAM_TYPE_CHAT)
+        {
+            SetFX();
+        }
+        else
+        {
+            UnsetFX();
+        }
+    }
+    
     alSourcef(source, AL_GAIN, current_volume * audio_settings.music_volume);
     alSourceQueueBuffers(source, buffers_to_play, buffers);
     alSourcePlay(source);
@@ -765,6 +776,48 @@ bool StreamTrack::Stream_Wav(ALuint buffer)
     ///@FIXME: PLACEHOLDER!!!
     
     return false;
+}
+
+void StreamTrack::SetFX()
+{    
+    ALuint effect;
+    ALuint slot;
+
+    // Reverb FX is applied globally through audio send. Since player can 
+    // jump between adjacent rooms with different reverb info, we assign
+    // several (2 by default) interchangeable audio sends, which are switched
+    // every time current room reverb is changed.
+    
+    if(fxManager.current_room_type != fxManager.last_room_type)  // Switch audio send.
+    {
+        fxManager.last_room_type = fxManager.current_room_type;
+        fxManager.current_slot   = (++fxManager.current_slot > (TR_AUDIO_MAX_SLOTS-1))?(0):(fxManager.current_slot);
+        
+        effect = fxManager.al_effect[fxManager.current_room_type];
+        slot   = fxManager.al_slot[fxManager.current_slot];
+        
+        if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
+        {
+            alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
+        }
+    }
+    else    // Do not switch audio send.
+    {
+        slot = fxManager.al_slot[fxManager.current_slot];
+    }
+    
+    // Assign global reverb FX to channel.
+    
+    alSource3i(source, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
+}
+
+
+void StreamTrack::UnsetFX()
+{
+    // Remove any audio sends and direct filters from channel.
+    
+    alSourcei(source, AL_DIRECT_FILTER, AL_FILTER_NULL);
+    alSource3i(source, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
 }
 
 // ======== END STREAMTRACK CLASS IMPLEMENTATION ========
@@ -1249,8 +1302,6 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     uint32_t      ind1, ind2;
     uint32_t      comp_size, uncomp_size;
     uint32_t      i;
-
-    audio_time = 0;     // Reset audio refresh timer.
     
     // FX should be inited first, as source constructor checks for FX slot to be created.
     
@@ -1647,7 +1698,6 @@ bool Audio_LogALError(int error_marker)
         Sys_DebugLog(LOG_FILENAME, "OpenAL error: %s / %d", alGetString(err), error_marker);
         return true;
     }
-    
     return false;
 }
 
@@ -1936,11 +1986,11 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
             
             if(fxManager.water_state)
             {
-                Audio_Send(60);
+                Audio_Send(TR_AUDIO_SOUND_UNDERWATER);
             }
             else
             {
-                Audio_Kill(60);
+                Audio_Kill(TR_AUDIO_SOUND_UNDERWATER);
             }
         }
     }
@@ -1948,12 +1998,7 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
 
 void Audio_Update()
 {
-    audio_time += engine_frame_time;
-    if(audio_time > TR_AUDIO_REFRESH_INTERVAL)
-    {
-        audio_time = 0;
-        Audio_UpdateSources();
-        Audio_UpdateStreams();
-        Audio_UpdateListenerByCamera(renderer.cam);
-    }
+    Audio_UpdateSources();
+    Audio_UpdateStreams();
+    Audio_UpdateListenerByCamera(renderer.cam);
 }

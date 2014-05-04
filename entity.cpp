@@ -18,9 +18,6 @@
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
 
 
-
-extern uint16_t                sounds_played;
-
 entity_p Entity_Create()
 {
     entity_p ret = (entity_p)calloc(1, sizeof(entity_t));
@@ -649,7 +646,10 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                         break;
                                         
                                     case 1:                                     // Snow - TR3 & TR5 only
-                                        Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        if(CVAR_get_val_d("engine_version") != TR_IV)
+                                        {
+                                            Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        }
                                         break;
                                         
                                     case 2:                                     // Sand - same as grass
@@ -661,11 +661,14 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                         break;
                                         
                                     case 4:                                     // Ice - TR3 & TR5 only
-                                        Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        if(CVAR_get_val_d("engine_version") != TR_IV)
+                                        {
+                                            Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        }
                                         break;
                                         
                                     case 5:                                     // Water
-                                        Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
                                         
                                     case 6:                                     // Stone - DEFAULT SOUND, BYPASS!
@@ -681,7 +684,10 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                         break;
                                         
                                     case 9:                                     // Marble - TR4 only
-                                        Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        if(CVAR_get_val_d("engine_version") == TR_IV)
+                                        {
+                                            Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        }
                                         break;
                                         
                                     case 10:                                    // Grass - same as sand
@@ -708,7 +714,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             random_value = rand() % 100;
                             if(random_value > 60)
                             {
-                                Audio_Send(37, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                             }
                             break;
                             
@@ -961,6 +967,10 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
             case TR_FD_FUNC_DEATH:          // KILL LARA
                 Con_Printf("KILL! sub = %d, b3 = %d", sub_function, b3);
+                if(ent->move_type == MOVE_ON_FLOOR)
+                {
+                    ent->character->cmd.kill = 1;
+                }
                 break;
 
             case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
