@@ -292,7 +292,11 @@ void World_Empty(world_p world)
     extern entity_p last_rmb;
     
     last_rmb = NULL;
+    Engine_LuaClearTasks();
+    // De-initialize and destroy all audio objects.
+    Audio_DeInit();
     
+    // Now we can delete all other
     for(i=0;i<world->room_count;i++)
     {
         Room_Empty(world->rooms+i);
@@ -414,9 +418,6 @@ void World_Empty(world_p world)
         free(world->anim_sequences);
         world->anim_sequences = NULL;
     }
-    
-    // De-initialize and destroy all audio objects.
-    Audio_DeInit();
 }
 
 

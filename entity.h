@@ -18,7 +18,8 @@ struct character_s;
 
 #define ENTITY_IS_ACTIVE                          (0x00000001)
 #define ENTITY_CAN_TRIGGER                        (0x00000002)                      
-#define ENTITY_IS_TRIGGER                         (0x00000004)   
+#define ENTITY_IS_TRIGGER                         (0x00000004)
+#define ENTITY_IS_PICKABLE                        (0x00000008)
 
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction
@@ -110,7 +111,6 @@ typedef struct entity_s
     uint32_t                            flags;
     uint8_t                             active;
     uint8_t                             dir_flag;                               // (move direction)
-    uint8_t                             state_flag;                             // I.E. must climb, climb action, ..., trigger action, crouch
     uint16_t                            anim_flags;                             // additional animation control param
     uint16_t                            move_type;                              // on floor / free fall / swim ....
     uint8_t                             was_rendered;                           // render once per frame trigger
@@ -128,7 +128,8 @@ typedef struct entity_s
     
     struct bounding_volume_s           *bv;                                     // oriented bounding volume - only for OCC test
     
-    uint16_t                            current_stateID;
+    void                              (*onAnimChange)(struct entity_s *ent);
+    uint16_t                            current_state;
     int16_t                             current_animation;                      // 
     int16_t                             current_frame;                          // 
     struct room_sector_s               *current_sector;
@@ -140,6 +141,7 @@ typedef struct entity_s
     
     struct engine_container_s          *self;
     
+    btScalar                            activation_offset[4];                   // where we can activate object (dx, dy, dz, r)
     btVector3                           collision_offset;                       // current centre
     btRigidBody                       **bt_body;                                // FIXME - there are more complex objects
     struct character_s                 *character;

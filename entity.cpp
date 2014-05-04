@@ -23,6 +23,7 @@ entity_p Entity_Create()
     entity_p ret = (entity_p)calloc(1, sizeof(entity_t));
     ret->frame_time = 0.0;
     ret->move_type = MOVE_ON_FLOOR;
+    ret->current_state = TR_STATE_CURRENT;
     Mat4_E(ret->transform);
     ret->active = 1;
     
@@ -38,6 +39,7 @@ entity_p Entity_Create()
     ret->character = NULL;
     ret->smooth_anim = 1;
     ret->current_sector = NULL;
+    ret->onAnimChange = NULL;
     
     ret->lerp = 0.0;
     ret->next_bf = NULL;
@@ -48,9 +50,14 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf.bb_min);  
     vec3_set_zero(ret->bf.centre);  
     vec3_set_zero(ret->bf.pos);  
-    vec4_set_zero(ret->collision_offset.m_floats);                              // not an error, really btVector3 has 4 points in array
+    vec4_set_zero(ret->collision_offset.m_floats);                              // not an error, really btVector3 has 4 elements in array
     vec4_set_zero(ret->speed.m_floats);
     
+    ret->activation_offset[0] = 0.0;
+    ret->activation_offset[1] = 256.0;
+    ret->activation_offset[2] = 0.0;
+    ret->activation_offset[3] = 128.0;
+
     return ret;
 }
 
@@ -741,9 +748,9 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     int i, ret = 0;
     uint16_t *entry, *end_p, end_bit, cont_bit;
     room_sector_p sector = ent->current_sector;
+    char skip = 0;
     
     // Trigger options.
-    
     bool   only_once;
     bool   trigger_mask[5];
     int8_t timer_field;
@@ -818,6 +825,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 
                 Con_Printf("TRIGGER: timer - %d, once - %d, mask - %d%d%d%d%d", timer_field, only_once, trigger_mask[0], trigger_mask[1], trigger_mask[2], trigger_mask[3], trigger_mask[4]);
                 
+                skip = 0;
                 switch(sub_function)
                 {
                     case TR_FD_TRIGTYPE_TRIGGER:
@@ -827,10 +835,12 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                         Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PAD");
                         break;
                     case TR_FD_TRIGTYPE_SWITCH:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SWITCH");
+                        skip = 1;
+                        // Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SWITCH");
                         break;
                     case TR_FD_TRIGTYPE_KEY:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_KEY");
+                        skip = 1;
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_KEY");
                         break;
                     case TR_FD_TRIGTYPE_PICKUP:
                         Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PICKUP");
@@ -883,8 +893,11 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     switch(FD_function)
                     {
                         case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
-                            //Con_Printf("Activate %d, %d", operands, ent->ID);
-                            lua_AclivateEntity(engine_lua, operands, ent->ID);
+                            if(skip == 0)
+                            {
+                                Con_Printf("Activate %d, %d", operands, ent->ID);
+                                lua_AclivateEntity(engine_lua, operands, ent->ID);
+                            }
                             break;
 
                         case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH
@@ -1060,7 +1073,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->period = 1.0 / 30.0;
     
-    entity->current_stateID = anim->state_id;
+    //entity->current_state = anim->state_id;
     entity->current_animation = animation;
     entity->current_speed = anim->speed;
     entity->current_frame = frame;
@@ -1278,6 +1291,13 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
     {
         Entity_RebuildBV(entity);
     }
+    
+    if((2 <= ret) && entity->onAnimChange)
+    {
+        entity->onAnimChange(entity);
+        entity->onAnimChange = NULL;
+    }
+    
     return ret;
 }
 
@@ -1319,32 +1339,45 @@ void Entity_RebuildBV(entity_p ent)
     };
 }
 
-
+///@TODO: rewrite it: use only dist or OBB-OBB check;
 void Entity_CheckActivators(struct entity_s *ent)
 {
     entity_p e;
     engine_container_p cont;
-    btScalar pos[3], r;
-    btScalar offset[3] = {0.0, 256.0, 0.0};
+    btScalar *v, ppos[3], pos[3], r;
     
-    if(!ent->self->room)
+    if(!ent || !ent->self->room)
     {
         return;
     }
-    
-    r = (ent->character && (ent->character->rx >= 256.0))?(ent->character->rx):(256.0);
-    r *= r;
-    cont = ent->self->room->containers; 
+    ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf.bb_max[1];
+    ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf.bb_max[1];
+    ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf.bb_max[1];
+    cont = ent->self->room->containers;            
     for(;cont;cont=cont->next)
     {
         if((cont->object_type == OBJECT_ENTITY) && (cont->object))
         {
             e = (entity_p)cont->object;
-            Mat4_vec3_mul_macro(pos, e->transform, offset);
-            if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
-               (vec3_dist_sq(ent->transform+12, pos) < r))
+            r = e->activation_offset[3];
+            r *= r;
+            if(e->flags & ENTITY_IS_TRIGGER)
             {
-                lua_AclivateEntity(engine_lua, e->ID, ent->ID);
+                Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
+                if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
+                   (vec3_dist_sq(ent->transform+12, pos) < r))
+                {
+                    lua_AclivateEntity(engine_lua, e->ID, ent->ID);
+                }
+            }
+            else if(e->flags & ENTITY_IS_PICKABLE)
+            {
+                v = e->transform + 12;
+                if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) && 
+                                 (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
+                {
+                    lua_AclivateEntity(engine_lua, e->ID, ent->ID);
+                }
             }
         }
     }

@@ -43,6 +43,7 @@ extern "C" {
 }
 
 #define SKELETAL_TEST   0
+#define NO_AUDIO        0
 
 SDL_Window             *sdl_window     = NULL;
 SDL_Joystick           *sdl_joystick   = NULL;
@@ -75,9 +76,9 @@ entity_p                last_rmb = NULL;
  * 1) console
  *      - add notify functions
  * 2) LUA enngine global script:
- *      - add base functions for entity manipulation, I.E.: (get / set) - pos,
- *        angles, anim, frame, frame time, speed, health, collision. new, delete.
- * 6) Menu
+ *      - add base functions for entity manipulation, I.E.: health, collision callbacks, 
+ *        spawn, new, delete, inventory manipulation.
+ * 6) Menu (create own menu)
  *      - settings
  *      - map loading list
  *      - saves loading list
@@ -87,19 +88,17 @@ entity_p                last_rmb = NULL;
  *      - shadows
  *      - particles
  *      - GL and renderer optimisations
- *      - animated textures
  * 40) Physics / gameplay
- *      - optimize and fix character controller
+ *      - optimize and fix character controller, bug fixes: permanent task
  *      - health limit
  *      - weapons
  * 41) scripts module
- *      - original TR scripts parser
  *      - cutscenes playing
- *      - triggers
  *      - enemies AI
  *      - end level -> next level
  * 42) sound
- *      - loading TR's sounds format
+ *      - optimise sound system;
+ *      - add OGG and MP3 support + soundtracks playing;
  */
 
 void SkeletalModelTestDraw();
@@ -438,6 +437,7 @@ void Engine_InitSDLVideo()
 
 void Engine_InitALAudio()
 {
+#if !NO_AUDIO
     ALCint paramList[] = {
         ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
         ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
@@ -462,6 +462,7 @@ void Engine_InitALAudio()
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+#endif
 }
 
 int main(int argc, char **argv)
@@ -824,7 +825,7 @@ void ShowDebugInfo()
 
         animation_frame_p animzz = ent->model->animations + ent->current_animation;
 
-        Gui_OutTextXY(screen_info.w-420, 68, "anim = %d, st = %d, ac_offset = %d", ent->current_animation, ent->current_stateID, animzz->anim_command);
+        Gui_OutTextXY(screen_info.w-420, 68, "anim = %d, st = %d, ac_offset = %d", ent->current_animation, ent->current_state, animzz->anim_command);
         if(last_rmb)
         {
             Gui_OutTextXY(screen_info.w-420, 48, "ent_rmb_ID = %d", last_rmb->ID);
