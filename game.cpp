@@ -398,10 +398,6 @@ void Game_ApplyControls(struct entity_s *ent)
         }
 
         vec3_copy(ent->character->cmd.move, move_logic);
-
-        Character_ApplyCommands(ent, &ent->character->cmd);
-        Entity_Frame(ent, engine_frame_time, ent->next_state);
-        Cam_FollowEntity(renderer.cam, ent, 128.0, 400.0);
     }
 }
 
@@ -493,7 +489,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
     
-    if(Entity_Frame(entity, engine_frame_time, entity->next_state))
+    if(Entity_Frame(entity, engine_frame_time))
     {
         Entity_UpdateRigidBody(entity);
     }
@@ -569,6 +565,7 @@ void Game_UpdateCharacters()
 
 void Game_Frame(btScalar time)
 {   
+    int t;
     static btScalar game_logic_time  = 0.0;
                     game_logic_time += time;
     
@@ -590,25 +587,23 @@ void Game_Frame(btScalar time)
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
         bt_engine_dynamicsWorld->stepSimulation(game_logic_time, 8);
-        int top;
-        top = lua_gettop(engine_lua);
-        lua_pushnumber(engine_lua, time);
-        lua_setfield(engine_lua, LUA_GLOBALSINDEX, "frame_time");
-        lua_getfield(engine_lua, LUA_GLOBALSINDEX, "doTasks");
-        lua_pcall(engine_lua, 0, 0, 0);
-        lua_settop(engine_lua, top);
-       
-        Character_UpdateValues(engine_world.Character);
+        lua_DoTasks(engine_lua, game_logic_time);
         Game_UpdateAI();
         Audio_Update();
-
-        game_logic_time = 0.0;
+        Character_UpdateValues(engine_world.Character);
+        
+        t = game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
+        game_logic_time -= (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
     }
     
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
     
     Game_ApplyControls(engine_world.Character);
+    Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
+    Entity_Frame(engine_world.Character, engine_frame_time);
+    Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
+        
     Game_UpdateCharacters();
     if(engine_world.entity_tree && engine_world.entity_tree->root)
     {

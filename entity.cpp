@@ -1234,7 +1234,7 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
 /**
  *
  */
-int Entity_Frame(entity_p entity, btScalar time, int state_id)
+int Entity_Frame(entity_p entity, btScalar time)
 {
     int frame, anim, ret = 0;
     long int t;
@@ -1250,7 +1250,7 @@ int Entity_Frame(entity_p entity, btScalar time, int state_id)
 
     entity->next_bf = NULL;
     entity->lerp = 0.0;
-    stc = Anim_FindStateChangeByID(entity->model->animations + entity->current_animation, state_id);
+    stc = Anim_FindStateChangeByID(entity->model->animations + entity->current_animation, entity->next_state);
     Entity_GetNextFrame(entity, time, stc, &frame, &anim);
     if(anim != entity->current_animation)
     {

@@ -325,6 +325,19 @@ int lua_SetStrField(lua_State *lua, const char *key, const char *val)
 /*
  * Gameplay functions
  */
+ 
+int lua_DoTasks(lua_State *lua, btScalar time)
+{
+    int top;
+
+    top = lua_gettop(lua);
+    lua_pushnumber(lua, time);
+    lua_setfield(lua, LUA_GLOBALSINDEX, "frame_time");
+    lua_getfield(lua, LUA_GLOBALSINDEX, "doTasks");
+    lua_pcall(lua, 0, 0, 0);
+    lua_settop(lua, top);
+}
+ 
 int lua_AclivateEntity(lua_State *lua, int id_object, int id_activator)
 {
     int top;
