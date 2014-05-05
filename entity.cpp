@@ -23,7 +23,7 @@ entity_p Entity_Create()
     entity_p ret = (entity_p)calloc(1, sizeof(entity_t));
     ret->frame_time = 0.0;
     ret->move_type = MOVE_ON_FLOOR;
-    ret->current_state = TR_STATE_CURRENT;
+    ret->next_state = 0;
     Mat4_E(ret->transform);
     ret->active = 1;
     
@@ -1073,7 +1073,8 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->period = 1.0 / 30.0;
     
-    //entity->current_state = anim->state_id;
+    entity->last_state    = anim->state_id;
+    entity->next_state = anim->state_id;
     entity->current_animation = animation;
     entity->current_speed = anim->speed;
     entity->current_frame = frame;
