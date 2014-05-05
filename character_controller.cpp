@@ -1937,8 +1937,8 @@ void Character_UpdateValues(struct entity_s *ent)
         case MOVE_CEILING_CLMB:
         case MOVE_WALLS_CLMB:
             Character_SetAir(ent, CHARACTER_OPTION_AIR_MAX);
-            if((ent->current_stateID == TR_STATE_LARA_SPRINT) ||
-               (ent->current_stateID == TR_STATE_LARA_SPRINT_ROLL))
+            if((ent->last_state == TR_STATE_LARA_SPRINT) ||
+               (ent->last_state == TR_STATE_LARA_SPRINT_ROLL))
             {
                 Character_DecreaseSprint(ent, 0.5);
             }
@@ -1992,6 +1992,11 @@ bool Character_DecreaseAir(struct entity_s *ent, float value)
     {
         return false;
     }
+    else if(value > *air_val)
+    {
+        *air_val = 0;
+        return false;
+    }
     else
     {
         *air_val -= value;
@@ -2033,6 +2038,11 @@ bool Character_DecreaseHealth(struct entity_s *ent, float value)
     {
         return false;
     }
+    else if(value > *health_val)
+    {
+        *health_val = 0;
+        return false;
+    }
     else
     {
         *health_val -= value;
@@ -2072,6 +2082,11 @@ bool Character_DecreaseSprint(struct entity_s *ent, float value)
     
     if(*sprint_val == 0)
     {
+        return false;
+    }
+    else if(value > *sprint_val)
+    {
+        *sprint_val = 0;
         return false;
     }
     else

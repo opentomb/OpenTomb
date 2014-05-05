@@ -400,6 +400,7 @@ void Game_ApplyControls(struct entity_s *ent)
         vec3_copy(ent->character->cmd.move, move_logic);
 
         Character_ApplyCommands(ent, &ent->character->cmd);
+        Entity_Frame(ent, engine_frame_time, ent->next_state);
         Cam_FollowEntity(renderer.cam, ent, 128.0, 400.0);
     }
 }
@@ -492,7 +493,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
     
-    if(Entity_Frame(entity, engine_frame_time, -1))
+    if(Entity_Frame(entity, engine_frame_time, entity->next_state))
     {
         Entity_UpdateRigidBody(entity);
     }

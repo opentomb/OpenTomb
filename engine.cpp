@@ -238,7 +238,7 @@ void Engine_Init()
     CVAR_Register("time_scale", "1.0");
 
     Con_AddLine("Engine inited");
-    luaL_dofile(engine_lua, "scripts\\sys_scripts.lua");
+    luaL_dofile(engine_lua, "scripts/sys_scripts.lua");
 }
 
 
@@ -831,7 +831,7 @@ int lua_GetEntityState(lua_State * lua)
         return 0;
     }
     
-    lua_pushinteger(lua, ent->current_state);
+    lua_pushinteger(lua, ent->next_state);
 
     return 1;
 }
@@ -851,7 +851,7 @@ int lua_SetEntityState(lua_State * lua)
         return 0;
     }
     
-    ent->current_state = lua_tointeger(lua, 2);
+    ent->next_state = lua_tointeger(lua, 2);
 
     return 0;
 }
