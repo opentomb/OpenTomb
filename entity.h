@@ -161,7 +161,7 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, int id);
 int  Entity_GetAnimDispatchCase(struct entity_s *ent, int id);
 void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int *frame, int *anim);
-int  Entity_Frame(entity_p entity, btScalar time, int state_id);                 // frame + trying to chabge state
+int  Entity_Frame(entity_p entity, btScalar time);                 // frame + trying to chabge state
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateRotation(entity_p entity);
