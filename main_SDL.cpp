@@ -823,9 +823,7 @@ void ShowDebugInfo()
             //txt->show_rect = 1;
         }
 
-        animation_frame_p animzz = ent->model->animations + ent->current_animation;
-
-        Gui_OutTextXY(screen_info.w-420, 68, "anim = %d, st = %d, ac_offset = %d", ent->current_animation, ent->next_state, animzz->anim_command);
+        Gui_OutTextXY(screen_info.w-420, 68, "anim = %d, last_st = %d, next_st = %d", ent->current_animation, ent->last_state, ent->next_state);
         if(last_rmb)
         {
             Gui_OutTextXY(screen_info.w-420, 48, "ent_rmb_ID = %d", last_rmb->ID);
