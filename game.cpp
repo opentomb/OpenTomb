@@ -599,12 +599,18 @@ void Game_Frame(btScalar time)
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
     
+    
     Game_ApplyControls(engine_world.Character);
-    Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
-    Entity_Frame(engine_world.Character, engine_frame_time);
-    Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
+    
+    if(!control_states.noclip)
+    {
+        Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
+        Entity_Frame(engine_world.Character, engine_frame_time);
+        Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
+    }
         
     Game_UpdateCharacters();
+    
     if(engine_world.entity_tree && engine_world.entity_tree->root)
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
