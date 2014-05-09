@@ -129,8 +129,8 @@ typedef struct entity_s
     struct bounding_volume_s           *bv;                                     // oriented bounding volume - only for OCC test
     
     void                              (*onAnimChange)(struct entity_s *ent);
-    uint16_t                            last_state;
-    uint16_t                            next_state;
+    int16_t                             last_state;
+    int16_t                             next_state;
     int16_t                             current_animation;                      // 
     int16_t                             current_frame;                          // 
     struct room_sector_s               *current_sector;

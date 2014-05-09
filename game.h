@@ -30,8 +30,8 @@ void Game_InitGlobals();
 int Game_Load(const char* name);
 int Game_Save(const char* name);
 
-
-void Game_Frame(btScalar time);
+btScalar Game_Tick(btScalar *game_logic_time);
+void     Game_Frame(btScalar game);
 
 void Game_ApplyControls(struct entity_s *ent);
 

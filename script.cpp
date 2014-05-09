@@ -506,7 +506,10 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
     as->use_effects  = lua_GetScalarField(lua, "use_effects");
     as->listener_is_player = lua_GetScalarField(lua, "listener_is_player");
     as->stream_buffer_size = (lua_GetScalarField(lua, "stream_buffer_size")) * 1024;
-
+    if(as->stream_buffer_size <= 0)
+    {
+        as->stream_buffer_size = 128 * 1024;
+    }
     lua_settop(lua, top);
 
     return 1;
