@@ -61,7 +61,7 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_RUN_TO_STAY_LEFT 8 
 #define TR_ANIMATION_LARA_RUN_TO_WALK_LEFT 9
 #define TR_ANIMATION_LARA_RUN_TO_STAY_RIGHT 10 
-#define TR_ANIMATION_LARA_STAY_SOLID 11
+#define TR_ANIMATION_LARA_STAY_SOLID 11                         // Intermediate animation used to reset flags and states.
 #define TR_ANIMATION_LARA_TURN_RIGHT_SLOW 12                    // Used once before the fast one if all weapon are in holsters
 #define TR_ANIMATION_LARA_TURN_LEFT_SLOW 13                     // Used once before the fast one if all weapon are in holsters
 #define TR_ANIMATION_LARA_LANDING_FORWARD_BOTH 14               // Original landing animation in the TR1 betas... But removed
@@ -145,12 +145,12 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_RUN_BACK_BEGIN 88
 #define TR_ANIMATION_LARA_RUN_BACK 89
 #define TR_ANIMATION_LARA_RUN_BACK_END 90
-#define TR_ANIMATION_LARA_TRY_HANG_VERTICAL_BEGIN 91            // Native bug: glitchy intermediate animation. 
+#define TR_ANIMATION_LARA_TRY_HANG_VERTICAL_BEGIN 91              // Native bug: glitchy intermediate animation. 
 #define TR_ANIMATION_LARA_LANDING_FROM_RUN 92
 #define TR_ANIMATION_LARA_FREE_FALL_VERTICAL 93
 #define TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG 94
 #define TR_ANIMATION_LARA_TRY_HANG_SOLID 95
-#define TR_ANIMATION_LARA_HANG_IDLE 96                          // Main climbing animation... triggers
+#define TR_ANIMATION_LARA_HANG_IDLE 96                            // Main climbing animation... triggers
 #define TR_ANIMATION_LARA_CLIMB_ON 97
 #define TR_ANIMATION_LARA_FREE_FALL_TO_LONG 98
 #define TR_ANIMATION_LARA_FALL_CROUCHING_LANDING 99               // Unused

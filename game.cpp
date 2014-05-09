@@ -207,7 +207,7 @@ void Save_Entity(FILE **f, entity_p ent)
 }
 
 /**
- * Сохранение текущего состояния игры
+ * Save current game state
  */
 int Game_Save(const char* name)
 {
@@ -354,7 +354,6 @@ void Game_ApplyControls(struct entity_s *ent)
     else
     {
         // Apply controls to Lara
-        
         ent->character->cmd.action = control_states.state_action;
         ent->character->cmd.jump = control_states.do_jump;
         ent->character->cmd.shift = control_states.state_walk;
@@ -366,7 +365,9 @@ void Game_ApplyControls(struct entity_s *ent)
         if(control_states.use_small_medi)
         {
             if(Character_IncreaseHealth(ent, 250))
+            {
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+            }
                 
             control_states.use_small_medi = !control_states.use_small_medi;
         }
@@ -374,7 +375,9 @@ void Game_ApplyControls(struct entity_s *ent)
         if(control_states.use_big_medi)
         {
             if(Character_IncreaseHealth(ent, CHARACTER_OPTION_HEALTH_MAX))
+            {
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+            }
                 
             control_states.use_big_medi = !control_states.use_big_medi;
         }
@@ -562,6 +565,12 @@ void Game_UpdateCharacters()
     }
 }
 
+btScalar Game_Tick(btScalar *game_logic_time)
+{
+    int t;
+    t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
+    *game_logic_time -= (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+}  
 
 void Game_Frame(btScalar time)
 {   
@@ -576,8 +585,9 @@ void Game_Frame(btScalar time)
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
             Audio_Update();
-            game_logic_time = 0.0;
+            Game_Tick(&game_logic_time);
         }
+        
         return;
     }
     
@@ -592,15 +602,13 @@ void Game_Frame(btScalar time)
         Audio_Update();
         Character_UpdateValues(engine_world.Character);
         
-        t = game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-        game_logic_time -= (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+        Game_Tick(&game_logic_time);
     }
     
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
     
-    
-    Game_ApplyControls(engine_world.Character);
+	Game_ApplyControls(engine_world.Character);
     
     if(!control_states.noclip)
     {
