@@ -2137,7 +2137,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->next_state = TR_STATE_LARA_STOP;       // Back to stand
             }
-            else if(cmd->move[0] != 0 || cmd->kill == 1)
+            else if((cmd->move[0] != 0) || (cmd->kill == 1))
             {
                 ent->next_state = TR_STATE_LARA_CRAWL_IDLE; // Both forward & back provoke crawl stage
             }
@@ -2194,7 +2194,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if(cmd->kill == 1)
             {
                 ent->dir_flag = ENT_STAY;
-                ent->next_state = TR_STATE_LARA_CROUCH_IDLE;
+                ent->next_state = TR_STATE_LARA_DEATH;
             }
             else if(cmd->move[1] == -1)
             {
@@ -2303,7 +2303,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             vec3_add(offset, offset, pos);
             Character_GetHeightInfo(offset, &next_fc);
 
-            if(cmd->move[0] != 1)
+            if((cmd->move[0] != 1) || (cmd->kill == 1))
             {
                 ent->next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop
             }
@@ -2325,7 +2325,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             offset[2] += 128.0;
             vec3_add(offset, offset, pos);
             Character_GetHeightInfo(offset, &next_fc);
-            if(cmd->move[0] != -1)
+            if((cmd->move[0] != -1) || (cmd->kill == 1))
             {
                 ent->next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop
             } 
@@ -2353,7 +2353,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->dir_flag = ENT_MOVE_FORWARD;
             cmd->rot[0] *= ((ent->current_frame > 3) && (ent->current_frame < 14))?(1.0):(0.0);
 
-            if(cmd->move[1] != -1)
+            if((cmd->move[1] != -1) || (cmd->kill == 1))
             {
                 ent->next_state = TR_STATE_LARA_CRAWL_IDLE; // stop
             }
@@ -2363,7 +2363,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->dir_flag = ENT_MOVE_FORWARD;
             cmd->rot[0] *= ((ent->current_frame > 3) && (ent->current_frame < 14))?(1.0):(0.0);
 
-            if(cmd->move[1] != 1)
+            if((cmd->move[1] != 1) || (cmd->kill == 1))
             {
                 ent->next_state = TR_STATE_LARA_CRAWL_IDLE; // stop
             }
@@ -2373,7 +2373,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_CROUCH_TURN_RIGHT:
             cmd->rot[0] *= ((ent->current_frame > 3) && (ent->current_frame < 23))?(0.6):(0.0);
 
-            if(cmd->move[1] == 0)
+            if((cmd->move[1] == 0) || (cmd->kill == 1))
             {
                 ent->next_state = TR_STATE_LARA_CROUCH_IDLE;
             }
