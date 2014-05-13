@@ -52,9 +52,11 @@ void TR_Level::read_tr3_room_staticmesh(SDL_RWops * const src, tr2_room_staticme
 	room_static_mesh.intensity2 = read_bit16(src);
 	room_static_mesh.object_id = read_bitu16(src);
 
-	room_static_mesh.tint.r = ((room_static_mesh.intensity1 & 0x001F)        ) / 31.0f;
-	room_static_mesh.tint.g = ((room_static_mesh.intensity1 & 0x03E0) >> 5   ) / 31.0f;
-	room_static_mesh.tint.b = ((room_static_mesh.intensity1 & 0x7C00) >> 10  ) / 31.0f;
+	room_static_mesh.tint.r = ((room_static_mesh.intensity1 & 0x001F)        ) / 15.0f;
+
+ 	room_static_mesh.tint.g = ((room_static_mesh.intensity1 & 0x03E0) >> 5   ) / 15.0f;
+
+ 	room_static_mesh.tint.b = ((room_static_mesh.intensity1 & 0x7C00) >> 10  ) / 15.0f;
 	room_static_mesh.tint.a = 1.0f;
 }
 

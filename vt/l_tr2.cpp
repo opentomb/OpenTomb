@@ -102,7 +102,7 @@ void TR_Level::read_tr2_room_staticmesh(SDL_RWops * const src, tr2_room_staticme
 	if (room_static_mesh.intensity2 >= 0)
 		room_static_mesh.intensity2 = (8191 - room_static_mesh.intensity2) << 2;
 
-    room_static_mesh.tint.b = room_static_mesh.tint.g = room_static_mesh.tint.r = room_static_mesh.intensity2 / (16384.0f);
+    room_static_mesh.tint.b = room_static_mesh.tint.g = room_static_mesh.tint.r = room_static_mesh.intensity2 / (8192.0f);
     room_static_mesh.tint.a = 1.0f;
 }
 
