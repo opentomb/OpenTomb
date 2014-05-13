@@ -425,6 +425,8 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             break;
     };
 
+    glDisable(GL_DEPTH_TEST);
+
     glBegin(GL_POLYGON);
 
         glColor4fv(colorUpperLeft);     // Upper left
