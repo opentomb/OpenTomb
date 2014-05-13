@@ -136,7 +136,7 @@ void Render_SkyBox()
         p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
         glMultMatrixf(tr);
-        Render_Mesh(renderer.world->sky_box->mesh_offset, NULL, NULL);
+        Render_Mesh(renderer.world->sky_box->mesh_offset, NULL, NULL, NULL);
         glPopMatrix();
         glDepthMask(GL_TRUE);
     }
@@ -145,7 +145,7 @@ void Render_SkyBox()
 /**
  * Opaque meshes drawing
  */
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
+void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals, const btScalar *overrideColors)
 {
     polygon_p p = mesh->polygons;
     
@@ -180,6 +180,12 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
         glNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
+    }
+
+    if (overrideColors)
+    {
+        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glColorPointer(4, GL_BT_SCALAR, 0, overrideColors);
     }
 
     const uint32_t *elementsbase = mesh->elements;
@@ -253,11 +259,11 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
         
         if(p->double_side)
         {
-            glEnable(GL_CULL_FACE); ///@FIXME: Check if it is needed at all.
+            glDisable(GL_CULL_FACE);
         }
         else
         {
-            glDisable(GL_CULL_FACE);
+            glEnable(GL_CULL_FACE);
         }
 
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
@@ -458,12 +464,12 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
         // Write new texture coordinates to polygon.
         if(seq->uvrotate)
         {
-            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 1, 
+            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0,
                                                 polygon, seq->current_uvrotate, true);
         }
         else
         {
-            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 1, polygon);
+            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, polygon);
         }
     }
 }
@@ -526,7 +532,7 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
         dst_n += 3;
     }
 
-    Render_Mesh(mesh, p_vertex, p_normale);
+    Render_Mesh(mesh, p_vertex, p_normale, NULL);
     ReturnTempbtScalar(6 * mesh->vertex_count);
 }
 
@@ -542,7 +548,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
     {
         glPushMatrix();
         glMultMatrixbt(btag->full_transform);
-        Render_Mesh(btag->mesh, NULL, NULL);
+        Render_Mesh(btag->mesh, NULL, NULL, NULL);
         if(btag->mesh2)
         {
             Render_SkinMesh(btag->mesh2, btag->transform);
@@ -569,6 +575,37 @@ void Render_Entity(struct entity_s *entity)
     }
 }
 
+void Render_StaticMesh(struct static_mesh_s *static_mesh)
+{
+        uint32_t i;
+        vertex_p v;
+        btScalar *p_color, *src_p, *dst_p;
+        base_mesh_s *mesh = static_mesh->mesh;
+        btScalar tint[4];
+
+        tint[0] = static_mesh->tint[0];
+        tint[1] = static_mesh->tint[1];
+        tint[2] = static_mesh->tint[2];
+        tint[3] = static_mesh->tint[3];
+
+        p_color  = (GLfloat*)GetTempbtScalar(4 * mesh->vertex_count);
+        dst_p = p_color;
+        v = mesh->vertices;
+        for(i=0;i<mesh->vertex_count;i++,v++)
+        {
+            src_p = v->color;
+
+            dst_p[0] = src_p[0] * tint[0];
+            dst_p[1] = src_p[1] * tint[1];
+            dst_p[2] = src_p[2] * tint[2];
+            dst_p[3] = src_p[3] * tint[3];
+
+            dst_p += 4;
+        }
+
+        Render_Mesh(mesh, NULL, NULL, p_color);
+        ReturnTempbtScalar(4 * mesh->vertex_count);
+}
 
 /**
  * drawing world models.
@@ -583,7 +620,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
     {
         glPushMatrix();
         glMultMatrixbt(room->transform);
-        Render_Mesh(room->mesh, NULL, NULL);
+        Render_Mesh(room->mesh, NULL, NULL, NULL);
         glPopMatrix();
     }
 
@@ -601,7 +638,17 @@ void Render_Room(struct room_s *room, struct render_s *render)
 
         glPushMatrix();
         glMultMatrixbt(room->static_mesh[i].transform);
-        Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
+        //if(room->static_mesh[i].mesh->uses_vertex_colors > 0)
+        {
+            Render_StaticMesh(&room->static_mesh[i]);
+        }
+        /*else
+        {
+            glDisableClientState(GL_COLOR_ARRAY);
+            glColor3f(room->static_mesh[i].color[0], room->static_mesh[i].color[1], room->static_mesh[i].color[2]);
+            Render_Mesh(room->static_mesh[i].mesh, NULL, NULL, NULL);
+            glEnableClientState(GL_COLOR_ARRAY);
+        }*/
         glPopMatrix();
         room->static_mesh[i].was_rendered = 1;
     }

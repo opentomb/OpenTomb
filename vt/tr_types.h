@@ -194,6 +194,7 @@ typedef struct {
 	int16_t intensity1;	// Constant lighting; -1 means use mesh lighting
 	int16_t intensity2;	// Like Intensity 1, and almost always the same value [absent from TR1 data files]
 	uint16_t object_id;	// which StaticMesh item to draw
+	tr5_colour_t tint;  // extracted from intensity
 } tr2_room_staticmesh_t;
 //typedef prtl::array < tr2_room_staticmesh_t > tr2_room_staticmesh_array_t;
 

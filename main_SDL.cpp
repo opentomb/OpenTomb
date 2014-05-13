@@ -224,7 +224,7 @@ void SkeletalModelTestDraw()
     //glEnable(GL_TEXTURE_2D);
     glColor3f(1.0, 1.0, 1.0);
     glMultMatrixf(tr);
-    Render_Mesh(mt->mesh, NULL, NULL);
+    Render_Mesh(mt->mesh, NULL, NULL, NULL);
     btag++;
     mt++;;
     for(stack=0,i=1;i<bframe->bone_tag_count;i++,btag++,mt++)
@@ -246,7 +246,7 @@ void SkeletalModelTestDraw()
             stack++;
         }
         glMultMatrixf(tr);
-        Render_Mesh(mt->mesh, NULL, NULL);
+        Render_Mesh(mt->mesh, NULL, NULL, NULL);
         //Render_BBox(tree_tag->mesh->bb_min, tree_tag->mesh->bb_max);
         if(mt->mesh2)
         {
@@ -272,7 +272,7 @@ void SkeletalModelTestDraw()
 
     glPushMatrix();
     glTranslated(-1024.0, 0.0, 0.0);
-    Render_Mesh(engine_world.meshes + mesh, NULL, NULL);
+    Render_Mesh(engine_world.meshes + mesh, NULL, NULL, NULL);
     glPopMatrix();
 }
 
@@ -322,8 +322,6 @@ void Engine_PrepareOpenGL()
     //glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 45.0);
     //glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spot_direction);
     //glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0);
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
 
     dbgSphere = gluNewQuadric();
     dbgCyl = gluNewQuadric();
@@ -519,6 +517,8 @@ void Engine_Display()
         glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
+        glFrontFace(GL_CW);
+
 #if 0
         GLfloat fogColor[3] = {1.0, 0.8, 0.6};
         glFogi(GL_FOG_MODE, GL_EXP2);                                           // Fog Mode
@@ -532,14 +532,9 @@ void Engine_Display()
 
         Cam_RecalcClipPlanes(&engine_camera);
         Cam_Apply(&engine_camera);
-        
-        Render_UpdateAnimTextures();
-        
 #if !SKELETAL_TEST
-        glDisable(GL_LIGHTING);
         Render_SkyBox();
-        glEnable(GL_LIGHTING);
-        
+
         Render_GenWorldList();
         Render_DrawList();
 #else
@@ -550,6 +545,7 @@ void Engine_Display()
         ShowDebugInfo();
 
         glPolygonMode(GL_FRONT, GL_FILL);
+        glFrontFace(GL_CCW);
         //glDisable(GL_CULL_FACE);
         glBindTexture(GL_TEXTURE_2D, 0);
         Render_DrawAxis(10000.0);

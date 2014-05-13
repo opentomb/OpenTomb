@@ -184,9 +184,9 @@ enum TR_AUDIO_STREAM_TYPE
 // since background ones tend to blend in smoothly, while one-shot
 // tracks should be switched fastly.
 
-#define TR_AUDIO_STREAM_CROSSFADE_ONESHOT (GAME_LOGIC_REFRESH_INTERVAL / 0.3f)
+#define TR_AUDIO_STREAM_CROSSFADE_ONESHOT (GAME_LOGIC_REFRESH_INTERVAL    / 0.3f)
 #define TR_AUDIO_STREAM_CROSSFADE_BACKGROUND (GAME_LOGIC_REFRESH_INTERVAL / 2.0f)
-#define TR_AUDIO_STREAM_CROSSFADE_CHAT (GAME_LOGIC_REFRESH_INTERVAL / 0.1f)
+#define TR_AUDIO_STREAM_CROSSFADE_CHAT (GAME_LOGIC_REFRESH_INTERVAL       / 0.1f)
 
 // Damp coefficient specifies target volume level on a tracks
 // that are being silenced (background music). The larger it is, the bigger
@@ -200,8 +200,6 @@ enum TR_AUDIO_STREAM_TYPE
 #define TR_AUDIO_STREAM_DAMP_SPEED (GAME_LOGIC_REFRESH_INTERVAL / 1.0f)
 
 // Possible errors produced by Audio_StreamPlay / Audio_StreamStop functions.
-
-// Possible types of errors returned by Audio_Send / Audio_Kill functions.
 
 #define TR_AUDIO_STREAMPLAY_PLAYERROR    (-4)
 #define TR_AUDIO_STREAMPLAY_LOADERROR    (-3)
