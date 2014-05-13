@@ -389,9 +389,12 @@ void Gui_DrawCrosshair()
 
 void Gui_DrawBars()
 {
-    Bar[BAR_AIR].Show(engine_world.Character->character->opt.air);
-    Bar[BAR_SPRINT].Show(engine_world.Character->character->opt.sprint);
-    Bar[BAR_HEALTH].Show(engine_world.Character->character->opt.health);
+    if(engine_world.Character && engine_world.Character->character)
+    {
+        Bar[BAR_AIR].Show(engine_world.Character->character->opt.air);
+        Bar[BAR_SPRINT].Show(engine_world.Character->character->opt.sprint);
+        Bar[BAR_HEALTH].Show(engine_world.Character->character->opt.health);
+    }
 }
 
 /**

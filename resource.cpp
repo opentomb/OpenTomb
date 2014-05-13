@@ -2215,8 +2215,13 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
     mesh_tree_tag_p tree_tag;
     animation_frame_p anim;
 
-
     tr_moveable = &tr->moveables[model_num];                                    // original tr structure
+    model->collision_map = (uint16_t*)malloc(model->mesh_count * sizeof(uint16_t));
+    model->collision_map_size = model->mesh_count;
+    for(i=0;i<model->mesh_count;i++)
+    {
+        model->collision_map[i] = i;
+    }
 
     model->mesh_tree = (mesh_tree_tag_p)malloc(model->mesh_count * sizeof(mesh_tree_tag_t));
     tree_tag = model->mesh_tree;

@@ -242,6 +242,51 @@ void Engine_Init()
 }
 
 
+int lua_SetModelCollisionMapSize(lua_State * lua)
+{
+    int size, id, top;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    if(id < 0 || id > engine_world.skeletal_model_count - 1)
+    {
+        Con_Printf("there are not models with id = %d", id);
+        return 0;
+    }
+    
+    size = lua_tointeger(lua, 2);
+    if(size >= 0 && size < engine_world.skeletal_models[id].mesh_count)
+    {
+        engine_world.skeletal_models[id].collision_map_size = size;
+    }
+    
+    return 0;
+}
+
+
+int lua_SetModelCollisionMap(lua_State * lua)
+{
+    int arg, val, id, top;
+    top = lua_gettop(lua);
+    id = lua_tointeger(lua, 1);
+    
+    if(id < 0 || id > engine_world.skeletal_model_count - 1)
+    {
+        Con_Printf("there are not models with id = %d", id);
+        return 0;
+    }
+    
+    arg = lua_tointeger(lua, 2);
+    val = lua_tointeger(lua, 3);
+    if(arg >= 0 && arg < engine_world.skeletal_models[id].mesh_count)
+    {
+        engine_world.skeletal_models[id].collision_map[arg] = val;
+    }
+    
+    return 0;
+}
+
+
 int lua_EnableEntity(lua_State * lua)
 {
     int num = lua_gettop(lua);                                                  // get # of arguments
@@ -972,6 +1017,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     
     lua_register(lua, "playstream", lua_PlayStream);
     
+	lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
+    lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
+
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
@@ -1332,7 +1380,7 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
-    
+	luaL_dofile(engine_lua, "scripts/autoexec.lua");
     
     Character_SetHealth(engine_world.Character, CHARACTER_OPTION_HEALTH_MAX);
     Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
