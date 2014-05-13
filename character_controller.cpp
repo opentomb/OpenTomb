@@ -20,8 +20,8 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
-#define NUM_PENETRATION_ITERATIONS      (6)
-#define PENETRATION_PART_KOEF           (0.2)
+#define NUM_PENETRATION_ITERATIONS      (4)
+#define PENETRATION_PART_KOEF           (0.25)
 
 void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h)
 {
@@ -72,6 +72,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->ry = ry;
     ret->Height = h;
 
+    ret->shapes = NULL;
     ret->shapeBox = new btBoxShape(btVector3(CHARACTER_BOX_HALF_SIZE, CHARACTER_BOX_HALF_SIZE, CHARACTER_BOX_HALF_SIZE));
     size[0] = CHARACTER_BASE_RADIUS;
     size[1] = CHARACTER_BASE_RADIUS;
@@ -110,13 +111,16 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->climb.height_info = 0x00;
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
+    
+    Character_CreateCollisionObject(ent);
 }
 
 
 void Character_Clean(struct entity_s *ent)
 {
     character_p actor = ent->character;
-
+    int i;
+    
     if(actor == NULL)
     {
         return;
@@ -172,6 +176,17 @@ void Character_Clean(struct entity_s *ent)
         delete actor->manifoldArray;
         actor->manifoldArray = NULL;
     }
+    
+    if(actor->shapes)
+    {
+        for(i=0;i<ent->model->mesh_count;i++)
+        {
+            delete ent->character->shapes[i];
+        }
+        free(ent->character->shapes);
+        ent->character->shapes = NULL;
+    }
+    
     actor->height_info.cb = NULL;
     actor->height_info.ccb = NULL;
     actor->height_info.ceiling_hit = 0x00;
@@ -184,14 +199,31 @@ void Character_Clean(struct entity_s *ent)
 }
 
 
+void Character_CreateCollisionObject(struct entity_s *ent)
+{
+    int i;
+    btVector3 box;
+    
+    if(!ent->character || !ent->model || !ent->model->mesh_count)
+    {
+        return;
+    }
+    
+    ent->character->shapes = (btCollisionShape**)malloc(ent->model->mesh_count * sizeof(btCollisionShape*));
+    for(i=0;i<ent->model->mesh_count;i++)
+    {
+        box.m_floats[0] = 0.40 * (ent->model->mesh_offset[i].bb_max[0] - ent->model->mesh_offset[i].bb_min[0]);
+        box.m_floats[1] = 0.40 * (ent->model->mesh_offset[i].bb_max[1] - ent->model->mesh_offset[i].bb_min[1]);
+        box.m_floats[2] = 0.40 * (ent->model->mesh_offset[i].bb_max[2] - ent->model->mesh_offset[i].bb_min[2]);
+        ent->character->shapes[i] = new btBoxShape(box);
+    }
+}
+
+
 void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
 {
     btVector3 tv;
     btScalar t;
-    
-    /*
-     **@TODO: add real collision model, based on skeletal model!
-     */
     
     tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] - ent->bf.bb_min[0]) / CHARACTER_BOX_HALF_SIZE;
     tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] - ent->bf.bb_min[1]) / CHARACTER_BOX_HALF_SIZE;
@@ -890,7 +922,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
 /**
  * It is from bullet_character_controller
  */
-int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar react[3])
+int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3])
 {
     // Here we must refresh the overlapping paircache as the penetrating movement itself or the
     // previous recovery iteration might have used setWorldTransform and pushed us into an object
@@ -904,14 +936,13 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
     int num_pairs, manifolds_size;
     const btCollisionShape *cs = ghost->getCollisionShape();
     btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
-    btVector3 aabb_min, aabb_max, pos = ghost->getWorldTransform().getOrigin();
-    btScalar koef;
-    
+    btVector3 aabb_min, aabb_max, t, pos = ghost->getWorldTransform().getOrigin();
+
     cs->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
     bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
     bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
-    vec3_set_zero(react);    
+    vec3_set_zero(correction);    
     num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
     for(i=0;i<num_pairs;i++)
     {
@@ -926,7 +957,7 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
             continue;
         }
 
-        if (collisionPair->m_algorithm)
+        if(collisionPair->m_algorithm)
         {
             collisionPair->m_algorithm->getAllContactManifolds(*manifoldArray);
         }
@@ -943,11 +974,11 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
 
                 if (dist < 0.0)
                 {
-                    koef = directionSign * PENETRATION_PART_KOEF;
-                    pos += pt.m_normalWorldOnB * koef * dist;
-                    react[0] += pt.m_normalWorldOnB.m_floats[0] * koef;
-                    react[1] += pt.m_normalWorldOnB.m_floats[1] * koef;
-                    react[2] += pt.m_normalWorldOnB.m_floats[2] * koef;
+                    t = pt.m_normalWorldOnB * dist * directionSign * PENETRATION_PART_KOEF;
+                    pos += t;
+                    correction[0] += t.m_floats[0];
+                    correction[1] += t.m_floats[1];
+                    correction[2] += t.m_floats[2];
                     ret = 1;
                 }
             }
@@ -956,9 +987,7 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
 
     if(ret)
     {
-        btTransform newTrans = ghost->getWorldTransform();
-        newTrans.setOrigin(pos);
-        ghost->setWorldTransform(newTrans);
+        ghost->getWorldTransform().setOrigin(pos);
     }
 
     return ret;
@@ -972,51 +1001,78 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
     btScalar t1, t2, reaction[3], tmp[3];
     
     vec3_set_zero(reaction);
-    ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(ent->transform);
-    Mat4_vec3_rot_macro(delta.m_floats, ent->transform, ent->collision_offset);
-    ent->character->ghostObject->getWorldTransform().getOrigin() += delta;
-    cmd->horizontal_collide = 0x00;
     
-    while(Character_RecoverFromPenetration(ent->character->ghostObject, ent->character->manifoldArray, tmp))
+    if(ent->character->shapes)                                                  /* complex collision shape */
     {
-        numPenetrationLoops++;
-        vec3_add(reaction, reaction, tmp);
+        btScalar tr[16], *v, *ltr;
+        btCollisionShape *shape = ent->character->ghostObject->getCollisionShape();
+        int i, m;
         
-        if(numPenetrationLoops > NUM_PENETRATION_ITERATIONS)
+        cmd->horizontal_collide = 0x00;
+        for(i=0;i<ent->model->collision_map_size;i++)
         {
-            break;
-        }
-    }
-    
-    if(move && numPenetrationLoops > 0)
-    {
-        t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
-        t2 = move[0] * move[0] + move[1] * move[1];
-        if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))    
-        {
-            t2 *= t1;
-            t1 = reaction[0] * move[0] + reaction[1] * move[1];
-            if(t1 > 0.0)
-            {
-                t1 = t1 * t1 / t2;
+            numPenetrationLoops = 0;
+            m = ent->model->collision_map[i];
+            ltr = ent->bf.bone_tags[m].full_transform;
+            Mat4_Mat4_mul_macro(tr, ent->transform, ltr);
+            v = ent->model->mesh_offset[m].centre;
+            ent->character->ghostObject->setCollisionShape(ent->character->shapes[m]);
 
-                if(t1 > ent->character->critical_wall_component * ent->character->critical_wall_component)
+            ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(tr);
+            Mat4_vec3_mul_macro(pos.m_floats, tr, v);
+            ent->character->ghostObject->getWorldTransform().setOrigin(pos);
+            while(Character_RecoverFromPenetration(ent->character->ghostObject, ent->character->manifoldArray, tmp))
+            {
+                numPenetrationLoops++;
+                vec3_add(reaction, reaction, tmp);
+                if(numPenetrationLoops > NUM_PENETRATION_ITERATIONS)
                 {
-                    cmd->horizontal_collide |= 0x01;
+                    break;
                 }
+            }
+        }
+        ent->character->ghostObject->setCollisionShape(shape);
+    }
+    else                                                                        /* simple collision shape */
+    {
+        ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(ent->transform);
+        Mat4_vec3_rot_macro(delta.m_floats, ent->transform, ent->collision_offset);
+        ent->character->ghostObject->getWorldTransform().getOrigin() += delta;
+        cmd->horizontal_collide = 0x00;
+
+        while(Character_RecoverFromPenetration(ent->character->ghostObject, ent->character->manifoldArray, tmp))
+        {
+            numPenetrationLoops++;
+            vec3_add(reaction, reaction, tmp);
+            if(numPenetrationLoops > NUM_PENETRATION_ITERATIONS)
+            {
+                break;
             }
         }
     }
     
-    pos = ent->character->ghostObject->getWorldTransform().getOrigin();    
+    vec3_add(pos.m_floats, ent->transform+12, reaction);
+    if(move && numPenetrationLoops > 0)
+    {
+        t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
+        t2 = move[0] * move[0] + move[1] * move[1];
+        if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))        // we have horizontal move and horizontal correction
+        {
+            t2 = btSqrt(t2 * t1);
+            t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / t2;
+            if(t1 < -ent->character->critical_wall_component)                   // cos(alpha) < -0.707
+            {
+                cmd->horizontal_collide |= 0x01;
+            }
+        }
+    }
+
     if(ent->character->height_info.ceiling_hit && (pos.m_floats[2] > ent->character->height_info.ceiling_point.m_floats[2]))
     {
         pos.m_floats[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->character->ry;
         ent->character->cmd.vertical_collide |= 0x02;
     }
 
-    Mat4_vec3_rot_macro(delta.m_floats, ent->transform, ent->collision_offset.m_floats);
-    pos -= delta;
     if(ent->character->height_info.floor_hit && pos.m_floats[2] < ent->character->height_info.floor_point.m_floats[2])
     {
         pos.m_floats[2] = ent->character->height_info.floor_point.m_floats[2];
@@ -1025,6 +1081,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
     
     vec3_copy(ent->transform+12, pos.m_floats);
 }
+
 
 /**
  * we check walls and other collision objects reaction. if reaction more then critacal 

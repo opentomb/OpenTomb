@@ -587,7 +587,6 @@ void Game_Frame(btScalar time)
             Audio_Update();
             Game_Tick(&game_logic_time);
         }
-        
         return;
     }
     

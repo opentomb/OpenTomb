@@ -2,9 +2,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-
+#include "bullet/LinearMath/btScalar.h"
 #include <stdint.h>
 
 // This is the global game logic refresh interval.
@@ -31,7 +29,7 @@ int Game_Load(const char* name);
 int Game_Save(const char* name);
 
 btScalar Game_Tick(btScalar *game_logic_time);
-void     Game_Frame(btScalar game);
+void     Game_Frame(btScalar time);
 
 void Game_ApplyControls(struct entity_s *ent);
 
