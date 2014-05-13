@@ -159,6 +159,7 @@ typedef struct character_s
     btScalar                     ry;                     // base character radius Y
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
+    btCollisionShape           **shapes;
     btCollisionShape            *shapeZ;                 // running / jumping
     btCapsuleShape              *shapeY;                 // swimming / crocodile
 
@@ -178,6 +179,7 @@ typedef struct character_s
 }character_t, *character_p;
 
 void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h);
+void Character_CreateCollisionObject(struct entity_s *ent);
 void Character_Clean(struct entity_s *ent);
 
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc);
@@ -185,7 +187,7 @@ int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct hei
 int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
-int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar react[3]);
+int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
 void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
 

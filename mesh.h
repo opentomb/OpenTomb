@@ -259,6 +259,8 @@ typedef struct skeletal_model_s
     uint16_t                    mesh_count;                                     // number of model meshes
     struct base_mesh_s         *mesh_offset;                                    // pointer to the first mesh in skeletal model mesh array
     struct mesh_tree_tag_s     *mesh_tree;                                      // base mesh tree.
+    uint16_t                    collision_map_size;
+    uint16_t                   *collision_map;
 }skeletal_model_t, *skeletal_model_p; 
 
 
