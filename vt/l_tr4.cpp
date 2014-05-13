@@ -91,10 +91,11 @@ void TR_Level::read_tr4_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & r
 	room_vertex.normal.x = 0;
 	room_vertex.normal.y = 0;
 	room_vertex.normal.z = 0;
-	room_vertex.colour.r = room_vertex.lighting1 / 16383.0f;
-	room_vertex.colour.g = room_vertex.lighting1 / 16383.0f;
-	room_vertex.colour.b = room_vertex.lighting1 / 16383.0f;
-	room_vertex.colour.a = 255;
+
+	room_vertex.colour.r = ((room_vertex.lighting2 & 0x7C00) >> 10  ) / 15.5f;
+	room_vertex.colour.g = ((room_vertex.lighting2 & 0x03E0) >> 5   ) / 15.5f;
+	room_vertex.colour.b = ((room_vertex.lighting2 & 0x001F)        ) / 15.5f;
+	room_vertex.colour.a = 1.0f;
 }
 
 void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)

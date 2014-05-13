@@ -83,7 +83,8 @@ typedef struct room_s
     btScalar                    bb_min[3];                                      // room's bounding box
     btScalar                    bb_max[3];                                      // room's bounding box
     btScalar                    transform[16];                                  // GL transformation matrix
-    
+    btScalar                    ambient_lighting[3];
+
     uint16_t                    portal_count;                                   // number of room portals
     struct portal_s            *portals;                                        // room portals array
     struct room_s              *alternate_room;                                 // alternative room pointer

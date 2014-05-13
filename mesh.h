@@ -27,7 +27,9 @@ typedef struct base_mesh_s
 {
     uint32_t              ID;                                                   // mesh's ID
     uint32_t              transparancy_flags;                                   // transparancy flags
-    
+
+    uint8_t               uses_vertex_colors;                                   // does this mesh have prebaked vertex lighting
+
     uint32_t              transparancy_count;                                   // number of transparancy polygons
     uint32_t              poly_count;                                           // number of all mesh's polygons
     struct polygon_s     *polygons;                                             // polygons data
@@ -106,7 +108,8 @@ typedef struct static_mesh_s
     uint8_t                     hide;                                           // disable static mesh rendering
     btScalar                    pos[3];                                         // model position
     btScalar                    rot[3];                                         // model angles
-    
+    btScalar                    tint[4];                                        // model tint
+
     btScalar                    vbb_min[3];                                     // visible bounding box
     btScalar                    vbb_max[3];
     btScalar                    cbb_min[3];                                     // collision bounding box

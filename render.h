@@ -114,7 +114,7 @@ void Render_RoomSprite(struct room_sprite_s *sp);
 void Render_SkeletalModel(struct ss_bone_frame_s *bframe);
 void Render_Sprite(struct sprite_s *sprite);
 void Render_SkyBox();
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
+void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals, const btScalar *overrideColors);
 void Render_MeshTransparency(struct base_mesh_s *mesh);
 void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16]);
 void Render_AnimTexture(struct polygon_s *polygon);
