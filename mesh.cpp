@@ -207,6 +207,13 @@ void SkeletalModel_Clear(skeletal_model_p model)
             model->mesh_tree = NULL;
         }
 
+        if(model->collision_map)
+        {
+            free(model->collision_map);
+            model->collision_map = NULL;
+            model->collision_map_size = 0;
+        }
+        
         if(model->animation_count)
         {
             anim = model->animations;

@@ -39,7 +39,7 @@
 #define LARA_HANG_WALL_DISTANCE (128.0 - 24.0)
 #define LARA_HANG_VERTICAL_EPSILON (64.0)
 #define LARA_HANG_VERTICAL_OFFSET (12.0)        // in original is 0, in real life hands are little more higher than edge
-#define LARA_TRY_HANG_WALL_OFFSET (48.0)        // It works more stable than 32 or 128
+#define LARA_TRY_HANG_WALL_OFFSET (72.0)        // It works more stable than 32 or 128
 #define LARA_HANG_SENSOR_Z (800.0)              // It works more stable than 1024 (after collision critical fix, of course)
 
 #define OSCILLATE_HANG_USE 0
@@ -47,7 +47,8 @@
 void ent_set_on_floor(entity_p ent)
 {
     ent->move_type = MOVE_ON_FLOOR;
-    ent->transform[12 + 2] = ent->character->climb.point[2];
+    //ent->transform[12 + 2] = ent->character->climb.point[2];
+    vec3_copy(ent->transform+12,ent->character->climb.point);
 }
 
 /**
@@ -226,6 +227,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                             pos[2] = next_fc.floor_point[2] - 512.0;
                             vec3_copy(climb->point, next_fc.floor_point);
                             Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_2CLICK, 0);
+                            ent->onAnimChange = ent_set_on_floor;
                         }
                         else if(pos[2] + 896.0 >= next_fc.floor_point[2])
                         {
@@ -234,6 +236,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                             pos[2] = next_fc.floor_point[2] - 768.0;
                             vec3_copy(climb->point, next_fc.floor_point);
                             Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_3CLICK, 0);
+                            ent->onAnimChange = ent_set_on_floor;
                         }
                         else if(pos[2] + 1920.0 >= next_fc.floor_point[2])
                         {
@@ -444,8 +447,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(cmd->action)
                 {
-                    ent->speed.m_floats[0] *= 0.0;
-                    ent->speed.m_floats[1] *= 0.0;
+                    ent->speed.m_floats[0] *= 0.1;
+                    ent->speed.m_floats[1] *= 0.1;
                 }
                 else
                 {
@@ -453,8 +456,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->speed.m_floats[1] *= 0.7;
                 }
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
-                
-                
             }
             else if(cmd->horizontal_collide & 0x01)
             {
@@ -589,7 +590,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_copy(pos, next_fc.floor_point);
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
-                else
+                else //if(i == 1)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_UP_STEP_LEFT, 0);
                     vec3_copy(pos, next_fc.floor_point);
@@ -782,7 +783,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->move_type = MOVE_CLIMBING;
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
-                else
+                else //if(i == 0)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALK_DOWN_LEFT, 0);
                     vec3_copy(climb->point, next_fc.floor_point);
