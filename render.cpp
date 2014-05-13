@@ -638,17 +638,17 @@ void Render_Room(struct room_s *room, struct render_s *render)
 
         glPushMatrix();
         glMultMatrixbt(room->static_mesh[i].transform);
-        //if(room->static_mesh[i].mesh->uses_vertex_colors > 0)
+        if(room->static_mesh[i].mesh->uses_vertex_colors > 0)
         {
             Render_StaticMesh(&room->static_mesh[i]);
         }
-        /*else
+        else
         {
             glDisableClientState(GL_COLOR_ARRAY);
-            glColor3f(room->static_mesh[i].color[0], room->static_mesh[i].color[1], room->static_mesh[i].color[2]);
+            glColor3f(room->static_mesh[i].tint[0], room->static_mesh[i].tint[1], room->static_mesh[i].tint[2]);
             Render_Mesh(room->static_mesh[i].mesh, NULL, NULL, NULL);
             glEnableClientState(GL_COLOR_ARRAY);
-        }*/
+        }
         glPopMatrix();
         room->static_mesh[i].was_rendered = 1;
     }
