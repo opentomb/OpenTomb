@@ -875,20 +875,20 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         case TR_II:
         case TR_II_DEMO:
-            world->sky_box = World_FindModelByID(world, 254);
+            world->sky_box = World_FindModelByID(world, TR_ITEM_SKYBOX_TR2);
             break;
 
         case TR_III:
-            world->sky_box = World_FindModelByID(world, 355);
+            world->sky_box = World_FindModelByID(world, TR_ITEM_SKYBOX_TR3);
             break;
 
         case TR_IV:
         case TR_IV_DEMO:
-            world->sky_box = World_FindModelByID(world, 459);
+            world->sky_box = World_FindModelByID(world, TR_ITEM_SKYBOX_TR4);
             break;
 
         case TR_V:
-            world->sky_box = World_FindModelByID(world, 454);
+            world->sky_box = World_FindModelByID(world, TR_ITEM_SKYBOX_TR5);
             break;
 
         default:
@@ -2840,10 +2840,15 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             switch(tr->game_version)
             {
                 case TR_I:
+                    LM = World_FindModelByID(world, TR_ITEM_LARA_SKIN_HOME_TR1);
+                    if(LM)
+                    {
+                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count - 1); // Head is the same.
+                    }
                     break;
 
                 case TR_III:
-                    LM = World_FindModelByID(world, 315);
+                    LM = World_FindModelByID(world, TR_ITEM_LARA_SKIN_TR3);
                     if(LM)
                     {
                         SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
@@ -2858,12 +2863,12 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
                 case TR_IV:
                 case TR_IV_DEMO:
                 case TR_V:
-                    LM = World_FindModelByID(world, 8);                         // base skeleton meshes
+                    LM = World_FindModelByID(world, TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
                     if(LM)
                     {
                         SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
                     }
-                    LM = World_FindModelByID(world, 9);                         // skin skeleton meshes
+                    LM = World_FindModelByID(world, TR_ITEM_LARA_SKIN_JOINTS_TR45);                         // skin skeleton meshes
                     if(LM)
                     {
                         SkeletonCopyMeshes2(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);

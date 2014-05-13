@@ -1860,6 +1860,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->next_state = TR_STATE_LARA_UNDERWATER_DIVING;
             }
+            else if(cmd->jump)
+            {
+                ent->next_state = TR_STATE_LARA_JUMP_ROLL;
+            }
             break;
 
             /*
