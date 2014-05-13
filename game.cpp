@@ -623,4 +623,6 @@ void Game_Frame(btScalar time)
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
     }
+    
+    Render_UpdateAnimTextures();
 }
