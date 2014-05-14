@@ -574,7 +574,6 @@ btScalar Game_Tick(btScalar *game_logic_time)
 
 void Game_Frame(btScalar time)
 {   
-    int t;
     static btScalar game_logic_time  = 0.0;
                     game_logic_time += time;
     
@@ -607,7 +606,7 @@ void Game_Frame(btScalar time)
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
     
-	Game_ApplyControls(engine_world.Character);
+    Game_ApplyControls(engine_world.Character);
     
     if(!control_states.noclip)
     {
