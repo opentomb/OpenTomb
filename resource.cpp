@@ -2807,7 +2807,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             free(entity);
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
         }
-
+    
         if(tr->game_version < TR_II && tr_item->object_id == 83)
         {
             Entity_Clear(entity);                                               // skip PSX save model
@@ -2845,11 +2845,6 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             switch(tr->game_version)
             {
                 case TR_I:
-                    LM = World_FindModelByID(world, TR_ITEM_LARA_SKIN_HOME_TR1);
-                    if(LM)
-                    {
-                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count - 1); // Head is the same.
-                    }
                     break;
 
                 case TR_III:
