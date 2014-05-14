@@ -1066,6 +1066,11 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
         animation = 0;
     }
     
+    if(entity->character)
+    {
+        entity->character->no_fix = 0x00;
+    }
+
     entity->next_bf = NULL;
     entity->lerp = 0.0;
     anim = &entity->model->animations[animation];
@@ -1297,6 +1302,10 @@ int Entity_Frame(entity_p entity, btScalar time)
     {
         entity->onAnimChange(entity);
         entity->onAnimChange = NULL;
+        if(entity->character)
+        {
+            entity->character->no_fix = 0x00;
+        }
     }
     
     return ret;

@@ -1000,6 +1000,11 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
     btVector3 pos, delta;
     btScalar t1, t2, reaction[3], tmp[3];
     
+    if(ent->character && ent->character->no_fix)
+    {
+        return;
+    }
+    
     vec3_set_zero(reaction);
     
     if(ent->character->shapes)                                                  /* complex collision shape */
@@ -1346,8 +1351,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
-        
+        Character_FixPenetrations(ent, cmd, move.m_floats);                 // get horizontal collide
         if(ent->character->height_info.floor_hit)
         {
             if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height > pos[2])
@@ -1742,16 +1746,12 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
         Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
-        if(ent->character->no_fix == 0)
-        {
-            Character_FixPenetrations(ent, cmd, move.m_floats);                 // get horizontal collide
-        }
+        Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
 
         Entity_UpdateRoomPos(ent);
     }
     
     pos[2] = z;
-    ent->character->no_fix = 0;
     
     return 1;
 }
