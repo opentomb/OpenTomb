@@ -480,6 +480,17 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
     rs->antialias_samples = lua_GetScalarField(lua, "antialias_samples");
     rs->texture_border = lua_GetScalarField(lua, "texture_border");
     rs->z_depth = lua_GetScalarField(lua, "z_depth");
+    rs->fog_enabled = lua_GetScalarField(lua, "fog_enabled");
+    rs->fog_start_depth = lua_GetScalarField(lua, "fog_start_depth");
+    rs->fog_end_depth = lua_GetScalarField(lua, "fog_end_depth");
+
+    lua_getfield(lua, -1, "fog_color");
+    if(lua_istable(lua, -1))
+    {
+        rs->fog_color[0] = (GLfloat)lua_GetScalarField(lua, "r") / 255.0;
+        rs->fog_color[1] = (GLfloat)lua_GetScalarField(lua, "g") / 255.0;
+        rs->fog_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
+    }
 
     if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
     {

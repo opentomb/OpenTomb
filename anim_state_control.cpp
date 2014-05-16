@@ -384,10 +384,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 if(cmd->horizontal_collide == 0)
 					ent->next_state = TR_STATE_LARA_JUMP_RIGHT;               // jump left
             }
-            else
-            {
-                ent->dir_flag = ENT_MOVE_FORWARD;
-            }
             break;
 
         case TR_STATE_LARA_JUMP_BACK:
