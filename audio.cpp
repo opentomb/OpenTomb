@@ -1148,7 +1148,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     AudioSource    *source = NULL;
     
     // Remap global engine effect ID to local effect ID.
-    if((effect_ID < 0) || (effect_ID > engine_world.audio_map_count - 1))
+    if((effect_ID < 0) || (effect_ID + 1 > engine_world.audio_map_count))
     {
         return TR_AUDIO_SEND_NOSAMPLE;
     }
