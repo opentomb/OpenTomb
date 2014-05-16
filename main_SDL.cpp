@@ -57,18 +57,17 @@ static int done = 0;
 GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-GLfloat hang_offset_point[3] = {0.0, 0.0, 0.0};
-
-static int model = 0;
-static int mesh = 0;
+static int model =  0;
+static int mesh =   0;
 static int paused = 0;
-static int frame = 0;
-static int anim = 0;
+static int frame =  0;
+static int anim =   0;
 static int sprite = 0;
 
 static GLUquadricObj   *dbgSphere;
 static GLUquadricObj   *dbgCyl;
 static btScalar         dbgR = 128.0;
+
 entity_p                last_rmb = NULL;
 
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
@@ -90,15 +89,14 @@ entity_p                last_rmb = NULL;
  *      - GL and renderer optimisations
  * 40) Physics / gameplay
  *      - optimize and fix character controller, bug fixes: permanent task
- *      - health limit
  *      - weapons
  * 41) scripts module
  *      - cutscenes playing
  *      - enemies AI
  *      - end level -> next level
  * 42) sound
- *      - optimise sound system;
- *      - add OGG and MP3 support + soundtracks playing;
+ *      - click removal;
+ *      - add ADPCM and CDAUDIO.WAD soundtrack support;
  */
 
 void SkeletalModelTestDraw();
@@ -295,7 +293,7 @@ void TestGenScene()
 void Engine_PrepareOpenGL()
 {
     InitGLExtFuncs();
-    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
     glShadeModel(GL_SMOOTH);
 
     glEnable(GL_DEPTH_TEST);
@@ -311,18 +309,6 @@ void Engine_PrepareOpenGL()
         glDisable(GL_MULTISAMPLE);
     }
     
-    //glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-    //glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    //glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-    //glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    //glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.5);
-    //glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.5);
-    //glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.2);
-
-    //glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 45.0);
-    //glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spot_direction);
-    //glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0);
-
     dbgSphere = gluNewQuadric();
     dbgCyl = gluNewQuadric();
     gluQuadricDrawStyle(dbgSphere, GLU_FILL);
@@ -519,16 +505,15 @@ void Engine_Display()
 
         glFrontFace(GL_CW);
 
-#if 0
-        GLfloat fogColor[3] = {1.0, 0.8, 0.6};
-        glFogi(GL_FOG_MODE, GL_EXP2);                                           // Fog Mode
-        glFogfv(GL_FOG_COLOR, fogColor);                                        // Set Fog Color
-        glFogf(GL_FOG_DENSITY, 0.000025f);                                      // How Dense Will The Fog Be
-        glHint(GL_FOG_HINT, GL_DONT_CARE);                                      // Fog Hint Value
-        glFogf(GL_FOG_START, 8192.0f);                                          // Fog Start Depth
-        glFogf(GL_FOG_END, renderer.cam->dist_far);                             // Fog End Depth
-        glEnable(GL_FOG);                                                       // Enables GL_FOG
-#endif
+        if (renderer.settings.fog_enabled == 1)
+        {
+            glFogi(GL_FOG_MODE, GL_LINEAR);
+            glFogfv(GL_FOG_COLOR, renderer.settings.fog_color);
+            glHint(GL_FOG_HINT, GL_DONT_CARE);
+            glFogf(GL_FOG_START, renderer.settings.fog_start_depth);
+            glFogf(GL_FOG_END, renderer.settings.fog_end_depth);
+            glEnable(GL_FOG);
+        }
 
         Cam_RecalcClipPlanes(&engine_camera);
         Cam_Apply(&engine_camera);
@@ -773,12 +758,6 @@ void ShowDebugInfo()
             Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc.water, fc.water_level);            
        }
 
-       /*
-        glPushMatrix();
-        glTranslatef(hang_offset_point[0], hang_offset_point[1], hang_offset_point[2]);
-        gluSphere(dbgSphere, 72.0, 8, 8);
-        glPopMatrix();
-        */
 #if 0
         glPushMatrix();
         trans.setFromOpenGLMatrix(ent->transform);

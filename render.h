@@ -83,6 +83,10 @@ typedef struct render_settings_s
     int8_t    antialias_samples;
     int8_t    texture_border;
     int8_t    z_depth;
+   	int8_t	  fog_enabled;
+	GLfloat   fog_color[2];
+	float	  fog_start_depth;
+	float	  fog_end_depth;
 }render_settings_t, *render_settings_p;
 
 typedef struct render_s

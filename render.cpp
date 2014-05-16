@@ -33,6 +33,12 @@ void Render_InitGlobals()
     renderer.settings.mipmap_mode = 3;
     renderer.settings.texture_border = 8;
     renderer.settings.z_depth = 16;
+    renderer.settings.fog_enabled = 1;
+    renderer.settings.fog_color[0] = 0.0f;
+    renderer.settings.fog_color[1] = 0.0f;
+    renderer.settings.fog_color[2] = 0.0f;
+    renderer.settings.fog_start_depth = 10000.0f;
+    renderer.settings.fog_end_depth = 16000.0f;
 }
 
 

@@ -598,7 +598,10 @@ void Game_Frame(btScalar time)
         lua_DoTasks(engine_lua, game_logic_time);
         Game_UpdateAI();
         Audio_Update();
-        Character_UpdateValues(engine_world.Character);
+        if(engine_world.Character)
+        {
+            Character_UpdateValues(engine_world.Character);
+        }
         
         Game_Tick(&game_logic_time);
     }
@@ -608,14 +611,17 @@ void Game_Frame(btScalar time)
     
     Game_ApplyControls(engine_world.Character);
     
-    if(!control_states.noclip)
+    if(engine_world.Character && !control_states.noclip)
     {
         Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
         Entity_Frame(engine_world.Character, engine_frame_time);
         Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
     }
         
-    Game_UpdateCharacters();
+    if(engine_world.Character)
+    {
+        Game_UpdateCharacters();
+    }
     
     if(engine_world.entity_tree && engine_world.entity_tree->root)
     {
