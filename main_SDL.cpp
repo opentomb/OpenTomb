@@ -404,7 +404,16 @@ void Engine_InitSDLControls()
 
 void Engine_InitSDLVideo()
 {
-    Uint32 video_flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
+    Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
+
+    if(screen_info.FS_flag)
+    {
+        video_flags |= SDL_WINDOW_FULLSCREEN;
+    }
+    else
+    {
+        video_flags |= (SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+    }
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
