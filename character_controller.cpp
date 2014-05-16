@@ -73,7 +73,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->Height = h;
 
     ret->shapes = NULL;
-    ret->comlex_collision = 0x00;
+    ret->complex_collision = 0x00;
     ret->shapeBox = new btBoxShape(btVector3(CHARACTER_BOX_HALF_SIZE, CHARACTER_BOX_HALF_SIZE, CHARACTER_BOX_HALF_SIZE));
     size[0] = CHARACTER_BASE_RADIUS;
     size[1] = CHARACTER_BASE_RADIUS;
@@ -270,7 +270,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
     }
     else
     {
-        ent->character->comlex_collision = 0x01;
+        ent->character->complex_collision = 0x01;
         tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] - ent->bf.bb_min[0]) / CHARACTER_BASE_RADIUS;
         tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] - ent->bf.bb_min[1]) / CHARACTER_BASE_RADIUS;
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / CHARACTER_BASE_HEIGHT;
@@ -1009,7 +1009,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
     
     vec3_set_zero(reaction);
     
-    if(ent->character->shapes && ent->character->comlex_collision)              /* complex collision shape */
+    if(ent->character->shapes && ent->character->complex_collision)              /* complex collision shape */
     {
         btScalar tr[16], *v, *ltr;
         btCollisionShape *shape = ent->character->ghostObject->getCollisionShape();

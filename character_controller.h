@@ -159,7 +159,7 @@ typedef struct character_s
     btScalar                     ry;                     // base character radius Y
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
-    uint8_t                      comlex_collision;       // use complex collision flag
+    uint8_t                      complex_collision;      // use complex collision flag
     btCollisionShape           **shapes;
     btCollisionShape            *shapeZ;                 // running / jumping
     btCapsuleShape              *shapeY;                 // swimming / crocodile
