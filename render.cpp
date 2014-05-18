@@ -79,7 +79,7 @@ render_list_p Render_CreateRoomListArray(unsigned int count)
     unsigned int i;
     render_list_p ret = (render_list_p)malloc(count * sizeof(render_list_t));
 
-    for(i=0;i<count;i++)
+    for(i=0; i<count; i++)
     {
         ret[i].active = 0;
         ret[i].room = NULL;
@@ -131,7 +131,7 @@ void Render_SkyBox()
 {
     GLfloat tr[16];
     btScalar *p;
-    
+
     if(renderer.world != NULL && renderer.world->sky_box != NULL)
     {
         glDepthMask(GL_FALSE);
@@ -154,13 +154,13 @@ void Render_SkyBox()
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals, const btScalar *overrideColors)
 {
     polygon_p p = mesh->polygons;
-    
+
     for(int i = 0; i < mesh->poly_count; i++)
     {
         Render_AnimTexture(p);
         p++;
     }
-    
+
     if(mesh->vbo_vertex_array)
     {
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
@@ -233,7 +233,7 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
     }
 
     p = mesh->polygons;
-    for(i=0;i<mesh->transparancy_count;i++,p++)
+    for(i=0; i<mesh->transparancy_count; i++,p++)
     {
         // Blending mode switcher.
         // Note that modes above 2 aren't explicitly used in TR textures, only for
@@ -241,28 +241,28 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
         // them if you will force type via TRTextur utility.
         switch(p->transparency)
         {
-            default:
-            case BM_MULTIPLY:                                    // Classic PC alpha
-                glBlendFunc(GL_ONE, GL_ONE);
-                break;
-                
-            case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
-                glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-                break;
-                
-            case BM_INVERT_DEST:                                 // Inversion by dest
-                glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-                break;
-                
-            case BM_SCREEN:                                      // Screen (smoke, etc.)
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-                break;
-                
-            case BM_ANIMATED_TEX:
-                glBlendFunc(GL_ONE, GL_ZERO);
-                break;
+        default:
+        case BM_MULTIPLY:                                    // Classic PC alpha
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+
+        case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
+            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+            break;
+
+        case BM_INVERT_DEST:                                 // Inversion by dest
+            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+            break;
+
+        case BM_SCREEN:                                      // Screen (smoke, etc.)
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+            break;
+
+        case BM_ANIMATED_TEX:
+            glBlendFunc(GL_ONE, GL_ZERO);
+            break;
         };
-        
+
         if(p->double_side)
         {
             glDisable(GL_CULL_FACE);
@@ -286,148 +286,148 @@ void Render_MeshTransparency(struct base_mesh_s *mesh)
 void Render_UpdateAnimTextures()                                                // This function is used for updating global animated sequences.
 {
     anim_seq_p current_sequence;
-    
+
     for(int i = 0; i < engine_world.anim_sequences_count; i++)
     {
         current_sequence = engine_world.anim_sequences + i;
-        
+
         if( (!current_sequence->frame_lock) &&
-            ( current_sequence->frame_time >= current_sequence->frame_rate) )   // If it's time to update...
+                ( current_sequence->frame_time >= current_sequence->frame_rate) )   // If it's time to update...
         {
             current_sequence->frame_time = 0.0;                                 // Reset interval counter.
-            
+
             // We have different ways of animating textures, depending on type.
             // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
             // However, in TRNG it is possible to animate textures back and reverse, so we
             // also implement this type in OpenTomb.
             // UVRotate way of animating is more complicated and left as a placeholder.
-            
+
             switch(current_sequence->type)
             {
-                case TR_ANIMTEXTURE_FORWARD:
+            case TR_ANIMTEXTURE_FORWARD:
+                if(current_sequence->current_frame < (current_sequence->frame_count-1))
+                {
+                    // Increase animation frame.
+                    current_sequence->current_frame++;
+                }
+                else
+                {
+                    // Restart animation, if end is reached.
+                    current_sequence->current_frame = 0;
+                }
+                break;
+
+            case TR_ANIMTEXTURE_BACKWARD:
+                if(current_sequence->current_frame > 0)
+                {
+                    // Decrease animation frame.
+                    current_sequence->current_frame--;
+                }
+                else
+                {
+                    // Restart animation, if beginning is reached.
+                    current_sequence->current_frame = current_sequence->frame_count - 1;
+                }
+                break;
+
+            case TR_ANIMTEXTURE_REVERSE:
+                if(!current_sequence->type_flag)    // Take action, depending on direction flag.
+                {
+                    // FORWARD CASE:
                     if(current_sequence->current_frame < (current_sequence->frame_count-1))
                     {
-                        // Increase animation frame.
-                        current_sequence->current_frame++;
+                        current_sequence->current_frame++;   // As in TR_ANIMTEXTURE_FORWARD.
                     }
                     else
                     {
-                        // Restart animation, if end is reached.
-                        current_sequence->current_frame = 0;
+                        current_sequence->type_flag = true;  // Reverse animation direction.
+                        current_sequence->current_frame--;   // Eat up duplicate frame.
                     }
-                    break;
-                    
-                case TR_ANIMTEXTURE_BACKWARD:
+                }
+                else
+                {
+                    // BACKWARD CASE:
                     if(current_sequence->current_frame > 0)
                     {
-                        // Decrease animation frame.
                         current_sequence->current_frame--;
                     }
                     else
                     {
-                        // Restart animation, if beginning is reached.
-                        current_sequence->current_frame = current_sequence->frame_count - 1;
+                        current_sequence->type_flag = false;  // Reverse animation direction.
+                        current_sequence->current_frame++;    // Eat up duplicate frame.
                     }
-                    break;
-                    
-                case TR_ANIMTEXTURE_REVERSE:
-                    if(!current_sequence->type_flag)    // Take action, depending on direction flag.
-                    {
-                        // FORWARD CASE:
-                        if(current_sequence->current_frame < (current_sequence->frame_count-1))
-                        {
-                            current_sequence->current_frame++;   // As in TR_ANIMTEXTURE_FORWARD.
-                        }
-                        else
-                        {
-                            current_sequence->type_flag = true;  // Reverse animation direction.
-                            current_sequence->current_frame--;   // Eat up duplicate frame.
-                        }
-                    }
-                    else
-                    {
-                        // BACKWARD CASE:
-                        if(current_sequence->current_frame > 0)
-                        {
-                            current_sequence->current_frame--;
-                        }
-                        else
-                        {
-                            current_sequence->type_flag = false;  // Reverse animation direction.
-                            current_sequence->current_frame++;    // Eat up duplicate frame.
-                        }
-                    }
-                    break;
+                }
+                break;
             }
         }
         else
         {
             current_sequence->frame_time += engine_frame_time;   // Simply increase interval timer.
         } // end if(current_sequence->frame_time >= current_sequence->frame_rate)
-        
-        
+
+
         if(current_sequence->uvrotate)  // Also apply UVRotate, if option is set.
         {
             if(current_sequence->uvrotate_time >= TR_ANIMTEXTURE_UPDATE_INTERVAL)  // If it's time to update...
             {
                 current_sequence->uvrotate_time = 0.0;  // Reset interval counter.
-                
+
                 switch(current_sequence->uvrotate_type)
                 {
-                    case TR_ANIMTEXTURE_UVROTATE_FORWARD:
+                case TR_ANIMTEXTURE_UVROTATE_FORWARD:
+                    if(current_sequence->current_uvrotate < current_sequence->uvrotate_max)
+                    {
+                        current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
+                    }
+                    else
+                    {
+                        // Restart rotation.
+                        current_sequence->current_uvrotate = current_sequence->uvrotate_speed;
+                    }
+                    break;
+
+                case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
+                    if(current_sequence->current_uvrotate > 0)
+                    {
+                        current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
+                    }
+                    else
+                    {
+                        // Restart rotation.
+                        current_sequence->current_uvrotate = current_sequence->uvrotate_max - current_sequence->uvrotate_speed;
+                    }
+                    break;
+
+                case TR_ANIMTEXTURE_UVROTATE_REVERSE:
+                    if(!current_sequence->uvrotate_flag) // Take action, depending on direction flag.
+                    {
                         if(current_sequence->current_uvrotate < current_sequence->uvrotate_max)
                         {
                             current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
                         }
                         else
                         {
-                            // Restart rotation.
-                            current_sequence->current_uvrotate = current_sequence->uvrotate_speed;
+                            // End is reached, reverse rotation direction.
+                            current_sequence->uvrotate_flag = true;
+                            // Eat up dublicate position.
+                            current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
                         }
-                        break;
-                        
-                    case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
+                    }
+                    else
+                    {
                         if(current_sequence->current_uvrotate > 0)
                         {
                             current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
                         }
                         else
                         {
-                            // Restart rotation.
-                            current_sequence->current_uvrotate = current_sequence->uvrotate_max - current_sequence->uvrotate_speed;
+                            // End is reached, reverse rotation direction.
+                            current_sequence->uvrotate_flag = false;
+                            // Eat up dublicate position.
+                            current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
                         }
-                        break;
-                        
-                    case TR_ANIMTEXTURE_UVROTATE_REVERSE:
-                        if(!current_sequence->uvrotate_flag) // Take action, depending on direction flag.
-                        {
-                            if(current_sequence->current_uvrotate < current_sequence->uvrotate_max)
-                            {
-                                current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
-                            }
-                            else
-                            {
-                                // End is reached, reverse rotation direction.
-                                current_sequence->uvrotate_flag = true;
-                                // Eat up dublicate position.
-                                current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
-                            }
-                        }
-                        else
-                        {
-                            if(current_sequence->current_uvrotate > 0)
-                            {
-                                current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
-                            }
-                            else
-                            {
-                                // End is reached, reverse rotation direction.
-                                current_sequence->uvrotate_flag = false;
-                                // Eat up dublicate position.
-                                current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
-                            }
-                        }
-                        break;
+                    }
+                    break;
                 }
             }
             else
@@ -437,7 +437,7 @@ void Render_UpdateAnimTextures()                                                
         }                                                                       // end if(current_sequence->uvrotate)
     }                                                                           // end for(int i = 0; i < engine_world.anim_sequences_count; i++)
 }
-            
+
 void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys themselves.
 {
     uint32_t    tex_id;
@@ -445,8 +445,8 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
 
     if(polygon->anim_id)    // If animation sequence is assigned to polygon...
     {
-        seq = engine_world.anim_sequences + (polygon->anim_id - 1); 
-        
+        seq = engine_world.anim_sequences + (polygon->anim_id - 1);
+
         if(polygon->anim_offset)    // If polygon uses frame offset for animation...
         {
             if((polygon->anim_offset + seq->current_frame) > (seq->frame_count - 1))
@@ -464,9 +464,9 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
         {
             tex_id = seq->current_frame;    // Just use current frame, if no offset specified.
         }
-        
+
         tex_id = seq->frame_list[tex_id];   // Extract TexInfo ID from sequence frame list.
-        
+
         // Write new texture coordinates to polygon.
         if(seq->uvrotate)
         {
@@ -494,44 +494,44 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
     dst_v = p_vertex;
     dst_n = p_normale;
     v = mesh->vertices;
-    for(i=0;i<mesh->vertex_count;i++,v++)
+    for(i=0; i<mesh->vertex_count; i++,v++)
     {
         src_v = v->position;
         src_n = v->normal;
         switch(*ch)
         {
-            case 0:
-                dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
-                dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
-                dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
+        case 0:
+            dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
+            dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
+            dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
 
-                dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
-                dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
-                dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
+            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
+            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
+            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
 
-                vec3_add(dst_v, dst_v, src_v);
-                dst_v[0] /= 2.0;
-                dst_v[1] /= 2.0;
-                dst_v[2] /= 2.0;
-                vec3_add(dst_n, dst_n, src_n);
-                vec3_norm(dst_n, t);
-                break;
+            vec3_add(dst_v, dst_v, src_v);
+            dst_v[0] /= 2.0;
+            dst_v[1] /= 2.0;
+            dst_v[2] /= 2.0;
+            vec3_add(dst_n, dst_n, src_n);
+            vec3_norm(dst_n, t);
+            break;
 
-            case 2:
-                dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
-                dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
-                dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
+        case 2:
+            dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
+            dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
+            dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
 
-                dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
-                dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
-                dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
-                //vec3_copy(dst_n, src_n);
-                break;
+            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
+            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
+            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
+            //vec3_copy(dst_n, src_n);
+            break;
 
-            case 1:
-                vec3_copy(dst_v, src_v);
-                vec3_copy(dst_n, src_n);
-                break;
+        case 1:
+            vec3_copy(dst_v, src_v);
+            vec3_copy(dst_n, src_n);
+            break;
         }
         ch++;
         dst_v += 3;
@@ -550,7 +550,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
     uint16_t i;
     ss_bone_tag_p btag = bframe->bone_tags;
 
-    for(i=0;i<bframe->bone_tag_count;i++,btag++)
+    for(i=0; i<bframe->bone_tag_count; i++,btag++)
     {
         glPushMatrix();
         glMultMatrixbt(btag->full_transform);
@@ -583,34 +583,34 @@ void Render_Entity(struct entity_s *entity)
 
 void Render_StaticMesh(struct static_mesh_s *static_mesh)
 {
-        uint32_t i;
-        vertex_p v;
-        btScalar *p_color, *src_p, *dst_p;
-        base_mesh_s *mesh = static_mesh->mesh;
-        btScalar tint[4];
+    uint32_t i;
+    vertex_p v;
+    btScalar *p_color, *src_p, *dst_p;
+    base_mesh_s *mesh = static_mesh->mesh;
+    btScalar tint[4];
 
-        tint[0] = static_mesh->tint[0];
-        tint[1] = static_mesh->tint[1];
-        tint[2] = static_mesh->tint[2];
-        tint[3] = static_mesh->tint[3];
+    tint[0] = static_mesh->tint[0];
+    tint[1] = static_mesh->tint[1];
+    tint[2] = static_mesh->tint[2];
+    tint[3] = static_mesh->tint[3];
 
-        p_color  = (GLfloat*)GetTempbtScalar(4 * mesh->vertex_count);
-        dst_p = p_color;
-        v = mesh->vertices;
-        for(i=0;i<mesh->vertex_count;i++,v++)
-        {
-            src_p = v->color;
+    p_color  = (GLfloat*)GetTempbtScalar(4 * mesh->vertex_count);
+    dst_p = p_color;
+    v = mesh->vertices;
+    for(i=0; i<mesh->vertex_count; i++,v++)
+    {
+        src_p = v->color;
 
-            dst_p[0] = src_p[0] * tint[0];
-            dst_p[1] = src_p[1] * tint[1];
-            dst_p[2] = src_p[2] * tint[2];
-            dst_p[3] = src_p[3] * tint[3];
+        dst_p[0] = src_p[0] * tint[0];
+        dst_p[1] = src_p[1] * tint[1];
+        dst_p[2] = src_p[2] * tint[2];
+        dst_p[3] = src_p[3] * tint[3];
 
-            dst_p += 4;
-        }
+        dst_p += 4;
+    }
 
-        Render_Mesh(mesh, NULL, NULL, p_color);
-        ReturnTempbtScalar(4 * mesh->vertex_count);
+    Render_Mesh(mesh, NULL, NULL, p_color);
+    ReturnTempbtScalar(4 * mesh->vertex_count);
 }
 
 /**
@@ -618,7 +618,23 @@ void Render_StaticMesh(struct static_mesh_s *static_mesh)
  */
 void Render_Room(struct room_s *room, struct render_s *render)
 {
+    //TOMB3 - closely matches TOMB3
+    /*
+    tint[0] = 0.55f * 0.5f;
+    tint[1] = 0.90f * 0.5f;
+    tint[2] = 1.0f * 0.5f;
+    tint[3] = 1.0f * 0.5f;
+    */
+
     uint32_t i;
+    vertex_p v;
+    btScalar *p_color, *src_p, *dst_p;
+    btScalar tint[4];
+    tint[0] = 0.65f * 0.9f;//Placeholder, color very similar to TR1 PSX ver.
+    tint[1] = 1.0f * 0.9f;
+    tint[2] = 1.0f * 0.9f;
+    tint[3] = 1.0f * 0.9f;
+
     engine_container_p cont;
     entity_p ent;
 
@@ -626,11 +642,36 @@ void Render_Room(struct room_s *room, struct render_s *render)
     {
         glPushMatrix();
         glMultMatrixbt(room->transform);
-        Render_Mesh(room->mesh, NULL, NULL, NULL);
+
+        if(room->flags & 0x1)//If water room
+        {
+            p_color  = (GLfloat*)GetTempbtScalar(4 * room->mesh->vertex_count);
+            dst_p = p_color;
+
+            v = room->mesh->vertices;
+
+            for(i=0; i<room->mesh->vertex_count; i++,v++)
+            {
+                src_p = v->color;
+
+                dst_p[0] = src_p[0] * tint[0];
+                dst_p[1] = src_p[1] * tint[1];
+                dst_p[2] = src_p[2] * tint[2];
+                dst_p[3] = src_p[3] * tint[3];
+
+                dst_p += 4;
+            }
+            Render_Mesh(room->mesh, NULL, NULL, p_color);//Render with modified color
+        }
+        else
+        {
+            Render_Mesh(room->mesh, NULL, NULL, NULL);
+        }
+
         glPopMatrix();
     }
 
-    for(i=0;i<room->static_mesh_count;i++)
+    for(i=0; i<room->static_mesh_count; i++)
     {
         if(room->static_mesh[i].was_rendered || !Frustum_IsBVVisibleInRoom(room->static_mesh[i].bv, room))
         {
@@ -659,21 +700,21 @@ void Render_Room(struct room_s *room, struct render_s *render)
         room->static_mesh[i].was_rendered = 1;
     }
 
-    for(cont=room->containers;cont;cont=cont->next)
+    for(cont=room->containers; cont; cont=cont->next)
     {
         switch(cont->object_type)
         {
-            case OBJECT_ENTITY:
-                ent = (entity_p)cont->object;
-                if(ent->was_rendered == 0)
+        case OBJECT_ENTITY:
+            ent = (entity_p)cont->object;
+            if(ent->was_rendered == 0)
+            {
+                if(Frustum_IsBVVisibleInRoom(ent->bv, room))
                 {
-                    if(Frustum_IsBVVisibleInRoom(ent->bv, room))
-                    {
-                        Render_Entity(ent);
-                    }
-                    ent->was_rendered = 1;
+                    Render_Entity(ent);
                 }
-                break;
+                ent->was_rendered = 1;
+            }
+            break;
         };
     }
 }
@@ -684,7 +725,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render)
     unsigned int i;
     btScalar *v;
 
-    for(i=0;i<room->sprites_count;i++)
+    for(i=0; i<room->sprites_count; i++)
     {
         if(!room->sprites[i].was_rendered)
         {
@@ -735,7 +776,7 @@ int Render_AddRoom(struct room_s *room)
     }
 
     if(room->mesh && (room->mesh->transparancy_count > 0) &&            // Has tranparancy polygons
-       (renderer.r_transparancy_list_active_count < renderer.r_transparancy_list_size-1))     // If we have enough free space
+            (renderer.r_transparancy_list_active_count < renderer.r_transparancy_list_size-1))     // If we have enough free space
     {
         renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].room = room;
         renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].active = 1;
@@ -744,24 +785,24 @@ int Render_AddRoom(struct room_s *room)
         ret++;
     }
 
-    for(i=0;i<room->static_mesh_count;i++)
+    for(i=0; i<room->static_mesh_count; i++)
     {
         room->static_mesh[i].was_rendered = 0;
         room->static_mesh[i].was_rendered_lines = 0;
     }
 
-    for(cont=room->containers;cont;cont=cont->next)
+    for(cont=room->containers; cont; cont=cont->next)
     {
         switch(cont->object_type)
         {
-            case OBJECT_ENTITY:
-                ((entity_p)cont->object)->was_rendered = 0;
-                ((entity_p)cont->object)->was_rendered_lines = 0;
-                break;
+        case OBJECT_ENTITY:
+            ((entity_p)cont->object)->was_rendered = 0;
+            ((entity_p)cont->object)->was_rendered_lines = 0;
+            break;
         };
     }
 
-    for(i=0;i<room->sprites_count;i++)
+    for(i=0; i<room->sprites_count; i++)
     {
         room->sprites[i].was_rendered = 0;
     }
@@ -784,7 +825,7 @@ void Render_CleanList()
         renderer.world->Character->was_rendered_lines = 0;
     }
 
-    for(i=0;i<renderer.r_list_active_count;i++)
+    for(i=0; i<renderer.r_list_active_count; i++)
     {
         renderer.r_list[i].active = 0;
         renderer.r_list[i].dist = 0.0;
@@ -794,7 +835,7 @@ void Render_CleanList()
         r->is_in_r_list = 0;
         r->active_frustums = 0;
         f = r->last_frustum = r->frustum;
-        for(;f;f=f->next)
+        for(; f; f=f->next)
         {
             f->active = 0;
             f->parent = NULL;
@@ -802,7 +843,7 @@ void Render_CleanList()
         }
     }
 
-    for(i=0;i<renderer.r_transparancy_list_active_count;i++)
+    for(i=0; i<renderer.r_transparancy_list_active_count; i++)
     {
         renderer.r_transparancy_list[i].active = 0;
         renderer.r_transparancy_list[i].dist = 0.0;
@@ -846,7 +887,7 @@ void Render_DrawList()
     /*
      * room rendering
      */
-    for(i=0;i<renderer.r_list_active_count;i++)
+    for(i=0; i<renderer.r_list_active_count; i++)
     {
         Render_Room(renderer.r_list[i].room, &renderer);
     }
@@ -854,7 +895,7 @@ void Render_DrawList()
     glDisable(GL_CULL_FACE);
     glDisableClientState(GL_COLOR_ARRAY);                                       ///@FIXME: reduce number of gl state changes
     glDisableClientState(GL_NORMAL_ARRAY);
-    for(i=0;i<renderer.r_list_active_count;i++)
+    for(i=0; i<renderer.r_list_active_count; i++)
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer);
     }
@@ -866,7 +907,7 @@ void Render_DrawList()
     glEnableClientState(GL_NORMAL_ARRAY);
     glDisable(GL_ALPHA_TEST);
     glEnable(GL_BLEND);
-    for(i=renderer.r_transparancy_list_active_count-1;i>=0;i--)
+    for(i=renderer.r_transparancy_list_active_count-1; i>=0; i--)
     {
         room = renderer.r_transparancy_list[i].room;
         if(room->mesh)
@@ -899,7 +940,7 @@ void Render_DrawList_DebugLines()
     /*
      * Render world debug information
      */
-    for(i=0;i<renderer.r_list_active_count;i++)
+    for(i=0; i<renderer.r_list_active_count; i++)
     {
         Render_Room_DebugLines(renderer.r_list[i].room, &renderer);
     }
@@ -926,7 +967,7 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 
     p = room->portals;
 
-    for(i=0;i<room->portal_count;i++,p++)                                       // перебираем все порталы входной комнаты
+    for(i=0; i<room->portal_count; i++,p++)                                     // перебираем все порталы входной комнаты
     {
         if((p->dest_room->active) && (p->dest_room != src_room))                // обратно идти даже не пытаемся
         {
@@ -971,11 +1012,11 @@ void Render_GenWorldList()
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
         p = curr_room->portals;                                                 // указатель на массив порталов стартовой комнаты
-        for(i=0;i<curr_room->portal_count;i++,p++)                              // ТУПО!!! перебираем все порталы стартовой комнаты
+        for(i=0; i<curr_room->portal_count; i++,p++)                            // ТУПО!!! перебираем все порталы стартовой комнаты
         {
             last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
             if(last_frus)
-            {                                   
+            {
                 Render_AddRoom(p->dest_room);                                   // portal destination room
                 last_frus->parents_count = 1;                                   // created by camera
                 Render_ProcessRoom(p, last_frus);                               // next start reccursion algorithm
@@ -985,7 +1026,7 @@ void Render_GenWorldList()
     else                                                                        // camera is out of all rooms
     {
         curr_room = renderer.world->rooms;                                      // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
-        for(i=0;i<renderer.world->room_count;i++,curr_room++)
+        for(i=0; i<renderer.world->room_count; i++,curr_room++)
         {
             if(Frustum_IsAABBVisible(curr_room->bb_min, curr_room->bb_max, renderer.cam->frustum))
             {
@@ -1010,7 +1051,7 @@ void Render_SetWorld(struct world_s *world)
         {
             renderer.r_list = (render_list_p)realloc(renderer.r_list, list_size * sizeof(render_list_t));
             renderer.r_transparancy_list = (render_list_p)realloc(renderer.r_transparancy_list, list_size * sizeof(render_list_t));
-            for(i=0;i<list_size;i++)
+            for(i=0; i<list_size; i++)
             {
                 renderer.r_list[i].active = 0;
                 renderer.r_list[i].room = NULL;
@@ -1039,7 +1080,7 @@ void Render_SetWorld(struct world_s *world)
     engine_camera.frustum->next = NULL;
     engine_camera.current_room = NULL;
 
-    for(i=0;i<world->room_count;i++)
+    for(i=0; i<world->room_count; i++)
     {
         world->rooms[i].is_in_r_list = 0;
     }
@@ -1074,7 +1115,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
     {
         glColor3f(0.0, 0.0, 0.0);
         glLineWidth(3.0f);
-        for(i=0;i<room->portal_count;i++)
+        for(i=0; i<room->portal_count; i++)
         {
             Portal_DrawVire(room->portals+i);
         }
@@ -1085,7 +1126,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
     {
         glColor3f(1.0, 0.0, 0.0);
         glLineWidth(3.0f);
-        for(frus=room->frustum;frus && frus->active;frus=frus->next)
+        for(frus=room->frustum; frus && frus->active; frus=frus->next)
         {
             Frustum_DrawVire(frus);
         }
@@ -1104,7 +1145,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
     }
 
     flag = render->style & R_DRAW_BOXES;
-    for(i=0;i<room->static_mesh_count;i++)
+    for(i=0; i<room->static_mesh_count; i++)
     {
         if(flag)
         {
@@ -1132,21 +1173,21 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
         room->static_mesh[i].was_rendered_lines = 1;
     }
 
-    for(cont=room->containers;cont;cont=cont->next)
+    for(cont=room->containers; cont; cont=cont->next)
     {
         switch(cont->object_type)
         {
-            case OBJECT_ENTITY:
-                ent = (entity_p)cont->object;
-                if(ent->was_rendered_lines == 0)
+        case OBJECT_ENTITY:
+            ent = (entity_p)cont->object;
+            if(ent->was_rendered_lines == 0)
+            {
+                if(Frustum_IsBVVisibleInRoom(ent->bv, room))
                 {
-                    if(Frustum_IsBVVisibleInRoom(ent->bv, room))
-                    {
-                        Render_Entity_DebugLines(ent);
-                    }
-                    ent->was_rendered_lines = 1;
+                    Render_Entity_DebugLines(ent);
                 }
-                break;
+                ent->was_rendered_lines = 1;
+            }
+            break;
         };
     }
 }
@@ -1156,7 +1197,7 @@ void Render_SkyBox_DebugLines()
 {
     GLfloat tr[16];
     btScalar *p;
-    
+
     if(!(renderer.style & R_DRAW_NORMALS))
     {
         return;
@@ -1227,7 +1268,7 @@ void Render_SkeletalModel_DebugLines(struct ss_bone_frame_s *bframe)
         // If this happens, the lines after this will get drawn with random colors. I don't care.
         Render_DrawAxis(1000.0);
     }
-    for(i=0;i<bframe->bone_tag_count;i++,btag++)
+    for(i=0; i<bframe->bone_tag_count; i++,btag++)
     {
         glPushMatrix();
         glMultMatrixbt(btag->full_transform);
@@ -1252,7 +1293,7 @@ void Render_Mesh_DebugLines(struct base_mesh_s *mesh, const btScalar *overrideVe
 
         if(overrideVertices)
         {
-            for(i=0;i<mesh->vertex_count;i++)
+            for(i=0; i<mesh->vertex_count; i++)
             {
                 memcpy(&normalLines[i*6], overrideVertices+3*i, sizeof(btScalar [3]));
                 normalLines[i*6 + 3] = (overrideVertices+3*i)[0] + (overrideNormals+3*i)[0] * 128.0;
@@ -1282,13 +1323,14 @@ void Render_Mesh_DebugLines(struct base_mesh_s *mesh, const btScalar *overrideVe
 void Render_DrawAxis(btScalar r)
 {
     // debug local coordinate system axis drawing
-    const GLfloat vertexArray[] = {
-            1.0, 0.0, 0.0,	0.0, 0.0, 0.0,
-            1.0, 0.0, 0.0,	r, 0.0, 0.0,
-            0.0, 1.0, 0.0,	0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0,	0.0, r, 0.0,
-            0.0, 0.0, 1.0,	0.0, 0.0, 0.0,
-            0.0, 0.0, 1.0,	0.0, 0.0, r
+    const GLfloat vertexArray[] =
+    {
+        1.0, 0.0, 0.0,	0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,	r, 0.0, 0.0,
+        0.0, 1.0, 0.0,	0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,	0.0, r, 0.0,
+        0.0, 0.0, 1.0,	0.0, 0.0, 0.0,
+        0.0, 0.0, 1.0,	0.0, 0.0, r
     };
 
     glEnableClientState(GL_COLOR_ARRAY);                                        ///@FIXME: reduce number of gl state changes
@@ -1304,7 +1346,8 @@ void Render_DrawAxis(btScalar r)
  */
 void Render_BBox(btScalar bb_min[3], btScalar bb_max[3])
 {
-    btScalar vertices[24] = {
+    btScalar vertices[24] =
+    {
         bb_min[0], bb_min[1], bb_min[2],
         bb_min[0], bb_max[1], bb_min[2],
         bb_max[0], bb_max[1], bb_min[2],
@@ -1314,9 +1357,10 @@ void Render_BBox(btScalar bb_min[3], btScalar bb_max[3])
         bb_min[0], bb_max[1], bb_max[2],
         bb_max[0], bb_max[1], bb_max[2],
         bb_max[0], bb_min[1], bb_max[2]
-        };
+    };
 
-    const GLushort indices[24] = {
+    const GLushort indices[24] =
+    {
         0, 1,
         1, 2,
         2, 3,
@@ -1331,7 +1375,7 @@ void Render_BBox(btScalar bb_min[3], btScalar bb_max[3])
         1, 5,
         2, 6,
         3, 7
-        };
+    };
 
     static GLuint indicesVBO = 0;
 
@@ -1386,7 +1430,7 @@ void Render_BV(struct bounding_volume_s *bv)
     polygon_p p;
 
     p = bv->polygons;
-    for(i=0;i<bv->polygons_count;i++,p++)
+    for(i=0; i<bv->polygons_count; i++,p++)
     {
         glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices);
         glDrawArrays(GL_LINE_LOOP, 0, p->vertex_count);
