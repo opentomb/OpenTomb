@@ -108,15 +108,19 @@ struct character_s;
 typedef struct entity_s
 {
     uint32_t                            ID;                                     // ID
+    int32_t                             OCB;
+    uint32_t                            activation_flags;
+    
     uint32_t                            flags;
     uint8_t                             active;
+    uint8_t                             hide;
+    
     uint8_t                             dir_flag;                               // (move direction)
     uint16_t                            anim_flags;                             // additional animation control param
     uint16_t                            move_type;                              // on floor / free fall / swim ....
     uint8_t                             was_rendered;                           // render once per frame trigger
     uint8_t                             was_rendered_lines;                     // same for debug lines
     uint8_t                             smooth_anim;
-    uint8_t                             hide;
     
     btScalar                            current_speed;                          // current linear speed from animation info
     btVector3                           speed;                                  // speed of the entity XYZ

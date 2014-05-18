@@ -205,6 +205,7 @@ void TR_Level::read_tr2_item(SDL_RWops * const src, tr2_item_t & item)
 	item.intensity2 = read_bitu16(src);
 	if (item.intensity2 >= 0)
 		item.intensity2 = (8191 - item.intensity2) << 2;
+	item.ocb = 0;   // Not present in TR2!
 	item.flags = read_bitu16(src);
 }
 

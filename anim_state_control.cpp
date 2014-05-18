@@ -133,6 +133,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     ent->dir_flag = ENT_MOVE_FORWARD;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
+                    Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, ent->ID);
                 }
                 else
                 {
@@ -145,6 +146,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     ent->dir_flag = ENT_MOVE_BACKWARD;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
+                    Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, ent->ID);
                 }
                 else
                 {
@@ -1816,6 +1818,14 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+                Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->ID);       // Stop scream
+                
+                // Splash sound is hardcoded, beginning with TR3.
+                
+                if(CVAR_get_val_d("engine_version") > TR_II)
+                {
+                    Audio_Send(TR_AUDIO_SOUND_SPLASH, TR_AUDIO_EMITTER_ENTITY, ent->ID);
+                }
             }
             else if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {

@@ -183,6 +183,18 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
 	room.light_colour.a = 1.0f;
 }
 
+void TR_Level::read_tr4_item(SDL_RWops * const src, tr2_item_t & item)
+{
+	item.object_id = read_bit16(src);
+	item.room = read_bit16(src);
+	read_tr_vertex32(src, item.pos);
+	item.rotation = (float)read_bitu16(src) / 16384.0f * -90;
+	item.intensity1 = read_bitu16(src);
+	item.intensity2 = item.intensity1;
+	item.ocb = read_bitu16(src);
+	item.flags = read_bitu16(src);
+}
+
 void TR_Level::read_tr4_object_texture_vert(SDL_RWops * const src, tr4_object_texture_vert_t & vert)
 {
 	vert.xcoordinate = read_bit8(src);
@@ -647,7 +659,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         this->items_count = read_bitu32(newsrc);
 	this->items = (tr2_item_t*)malloc(this->items_count * sizeof(tr2_item_t));
 	for (i = 0; i < this->items_count; i++)
-                read_tr3_item(newsrc, this->items[i]);
+                read_tr4_item(newsrc, this->items[i]);
 
         this->ai_objects_count = read_bitu32(newsrc);
 	this->ai_objects = (tr4_ai_object_t*)malloc(this->ai_objects_count * sizeof(tr4_ai_object_t));
