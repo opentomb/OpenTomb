@@ -131,3 +131,17 @@ TARGET_LINK_LIBRARIES(
     ${SDL2_LIBRARIES}
     ${ZLIB_LIBRARIES}
 )
+
+SET_TARGET_PROPERTIES(
+    ${PROJECT_NAME}
+    PROPERTIES LINK_FLAGS
+    "-L${SDL2_LIBRARY_DIRS}"
+)
+
+if(APPLE)
+    SET_TARGET_PROPERTIES(
+        ${PROJECT_NAME}
+        PROPERTIES LINK_FLAGS
+        "-L${SDL2_LIBRARY_DIRS} -framework CoreFoundation -framework ApplicationServices"
+    )
+endif(APPLE)
