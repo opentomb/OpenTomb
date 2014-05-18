@@ -153,6 +153,7 @@ void TR_Level::read_tr3_item(SDL_RWops * const src, tr2_item_t & item)
 	item.rotation = (float)read_bitu16(src) / 16384.0f * -90;
 	item.intensity1 = read_bitu16(src);
 	item.intensity2 = read_bitu16(src);
+	item.ocb = 0;   // Not present in TR3!
 	item.flags = read_bitu16(src);
 }
 

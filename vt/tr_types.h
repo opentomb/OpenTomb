@@ -383,6 +383,7 @@ typedef struct {		// 24 bytes [TR1: 22 bytes]
 	float rotation;		// ((0xc000 >> 14) * 90) degrees
 	int16_t intensity1;	// (constant lighting; -1 means use mesh lighting)
 	int16_t intensity2;	// Like Intensity1, and almost always with the same value. [absent from TR1 data files]
+	int16_t ocb;        // Object code bit - used for altering entity behaviour. Only in TR4-5.
 	uint16_t flags;		// 0x0100 indicates "initially invisible", 0x3e00 is Activation Mask
 	// 0x3e00 indicates "open" or "activated";  these can be XORed with
 	// related FloorData::FDlist fields (e.g. for switches)

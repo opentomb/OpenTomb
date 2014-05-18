@@ -754,7 +754,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->items_count = read_bitu32(src);
 	this->items = (tr2_item_t*)malloc(this->items_count * sizeof(tr2_item_t));
 	for (i = 0; i < this->items_count; i++)
-		read_tr3_item(src, this->items[i]);
+		read_tr4_item(src, this->items[i]);
 
         this->ai_objects_count = read_bitu32(src);
 	this->ai_objects = (tr4_ai_object_t*)malloc(this->ai_objects_count * sizeof(tr4_ai_object_t));

@@ -1996,6 +1996,11 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
     }
 }
 
+void Audio_UpdateListenerByEntity(struct entity_s *ent)
+{
+    ///@FIXME: Add entity camera updater here.
+}
+
 void Audio_Update()
 {
     Audio_UpdateSources();

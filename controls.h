@@ -88,8 +88,8 @@ typedef struct control_settings_s
     // Global joystick settings.
     int8_t   use_joy;
     int8_t   joy_number;
-
     int8_t   joy_rumble;
+    
     // Look axis settings.
     btScalar joy_look_x;                        // Raw look axis data!
     btScalar joy_look_y;                        // Raw look axis data!
@@ -97,6 +97,7 @@ typedef struct control_settings_s
     int8_t   joy_look_invert_y;
     btScalar joy_look_sensitivity;
     int16_t  joy_look_deadzone;
+    
     // Move axis settings.
     btScalar joy_move_x;                        // Raw move axis data!
     btScalar joy_move_y;                        // Raw move axis data!

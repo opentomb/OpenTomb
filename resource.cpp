@@ -2761,7 +2761,10 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         {
             entity->self->room = NULL;
         }
-
+        
+        entity->activation_flags = tr_item->flags;
+        entity->OCB              = tr_item->ocb;
+        
         entity->self->collide_flag = 0x0000;
         entity->anim_flags = 0x0000;
         entity->flags = 0x00000000;

@@ -124,8 +124,10 @@ enum TR_AUDIO_FX {
 
 // Define some common samples across ALL TR versions.
 
-#define TR_AUDIO_SOUND_HOLSTERIN   6
-#define TR_AUDIO_SOUND_HOLSTEROUT  7
+#define TR_AUDIO_SOUND_NO          2
+#define TR_AUDIO_SOUND_LANDING     4
+#define TR_AUDIO_SOUND_HOLSTEROUT  6
+#define TR_AUDIO_SOUND_HOLSTERIN   7
 #define TR_AUDIO_SOUND_SHOTPISTOLS 8
 #define TR_AUDIO_SOUND_RELOAD      9
 #define TR_AUDIO_SOUND_RICOCHET    10
@@ -432,6 +434,7 @@ void Audio_StopAllSources();    // Used in audio deinit.
 void Audio_ResumeAllSources();	// Used to resume all effects currently paused.
 void Audio_UpdateSources();     // Main sound loop.
 void Audio_UpdateListenerByCamera(struct camera_s *cam);
+void Audio_UpdateListenerByEntity(struct entity_s *ent);
 
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
