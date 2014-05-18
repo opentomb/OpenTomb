@@ -7,3 +7,4 @@ syntax: glob
 *.htm
 *.html
 CMakeLists.txt.user
+build

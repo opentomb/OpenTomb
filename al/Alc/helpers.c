@@ -25,7 +25,11 @@
 #include <errno.h>
 #include <stdarg.h>
 #ifdef HAVE_MALLOC_H
+#ifdef __APPLE__
+#include <malloc/malloc.h>
+#else
 #include <malloc.h>
+#endif
 #endif
 
 #ifdef HAVE_CPUID_H

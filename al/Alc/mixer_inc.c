@@ -19,17 +19,16 @@
 
 
 ///@FIXME: was static __inline
-__inline void ApplyCoeffsStep(ALuint Offset, ALfloat (*__restrict__ Values)[2],
+void ApplyCoeffsStep(ALuint Offset, ALfloat (*__restrict__ Values)[2],
                                      const ALuint irSize,
                                      ALfloat (*__restrict__ Coeffs)[2],
                                      const ALfloat (*__restrict__ CoeffStep)[2],
                                      ALfloat left, ALfloat right);
 ///@FIXME: was static __inline
-__inline void ApplyCoeffs(ALuint Offset, ALfloat (*__restrict__ Values)[2],
+void ApplyCoeffs(ALuint Offset, ALfloat (*__restrict__ Values)[2],
                                  const ALuint irSize,
                                  ALfloat (*__restrict__ Coeffs)[2],
                                  ALfloat left, ALfloat right);
-
 
 void MixDirect_Hrtf(const DirectParams *params, const ALfloat *__restrict__ data, ALuint srcchan,
   ALuint OutPos, ALuint SamplesToDo, ALuint BufferSize)

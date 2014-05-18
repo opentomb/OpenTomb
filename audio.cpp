@@ -1553,7 +1553,6 @@ void Audio_InitGlobals()
 
 void Audio_InitFX()
 {
-    EFXEAXREVERBPROPERTIES reverb = {0};
     memset(&fxManager, 0, sizeof(audio_fxmanager_s));
     
     // Set up effect slots, effects and filters.
@@ -1568,23 +1567,23 @@ void Audio_InitFX()
     
     // Fill up effects with reverb presets.
     
-    reverb = EFX_REVERB_PRESET_CITY;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_OUTSIDE, &reverb);
+    EFXEAXREVERBPROPERTIES reverb1 = EFX_REVERB_PRESET_CITY;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_OUTSIDE, &reverb1);
 
-    reverb = EFX_REVERB_PRESET_LIVINGROOM;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_SMALLROOM, &reverb);
+    EFXEAXREVERBPROPERTIES reverb2 = EFX_REVERB_PRESET_LIVINGROOM;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_SMALLROOM, &reverb2);
     
-    reverb = EFX_REVERB_PRESET_WOODEN_LONGPASSAGE;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_MEDIUMROOM, &reverb);
+    EFXEAXREVERBPROPERTIES reverb3 = EFX_REVERB_PRESET_WOODEN_LONGPASSAGE;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_MEDIUMROOM, &reverb3);
     
-    reverb = EFX_REVERB_PRESET_DOME_TOMB;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_LARGEROOM, &reverb);
+    EFXEAXREVERBPROPERTIES reverb4 = EFX_REVERB_PRESET_DOME_TOMB;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_LARGEROOM, &reverb4);
 
-    reverb = EFX_REVERB_PRESET_PIPE_LARGE;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_PIPE, &reverb);
+    EFXEAXREVERBPROPERTIES reverb5 = EFX_REVERB_PRESET_PIPE_LARGE;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_PIPE, &reverb5);
 
-    reverb = EFX_REVERB_PRESET_UNDERWATER;
-    Audio_LoadReverbToFX(TR_AUDIO_FX_WATER, &reverb);
+    EFXEAXREVERBPROPERTIES reverb6 = EFX_REVERB_PRESET_UNDERWATER;
+    Audio_LoadReverbToFX(TR_AUDIO_FX_WATER, &reverb6);
 }
 
 int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
