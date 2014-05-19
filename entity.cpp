@@ -653,7 +653,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                         break;
                                         
                                     case 1:                                     // Snow - TR3 & TR5 only
-                                        if(CVAR_get_val_d("engine_version") != TR_IV)
+                                        if(engine_world.version != TR_IV)
                                         {
                                             Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         }
@@ -668,7 +668,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                         break;
                                         
                                     case 4:                                     // Ice - TR3 & TR5 only
-                                        if(CVAR_get_val_d("engine_version") != TR_IV)
+                                        if(engine_world.version != TR_IV)
                                         {
                                             Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         }
@@ -691,7 +691,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                         break;
                                         
                                     case 9:                                     // Marble - TR4 only
-                                        if(CVAR_get_val_d("engine_version") == TR_IV)
+                                        if(engine_world.version == TR_IV)
                                         {
                                             Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         }

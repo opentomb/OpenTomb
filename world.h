@@ -111,6 +111,8 @@ typedef struct world_s
 {
     char                       *name;
     uint32_t                    ID;
+    uint32_t                    version;
+    
     uint32_t                    room_count;
     struct room_s              *rooms;
    

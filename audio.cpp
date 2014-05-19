@@ -1563,9 +1563,9 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     
     // Quick TR1 fix for underwater looped sound.
     
-    if(CVAR_get_val_d("engine_version") < TR_II)
+    if(engine_world.version < TR_II)
     {
-        engine_world.audio_effects[(engine_world.audio_map[60])].loop = TR_AUDIO_LOOP_LOOPED;
+        engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
     }
     
     // Reset last room type used for assigning reverb.

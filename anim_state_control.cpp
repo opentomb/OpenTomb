@@ -1062,7 +1062,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if(cmd->slide == 0)
             {
-                if(cmd->move[0] == 1 && (CVAR_get_val_d("engine_version") >= TR_III))
+                if((cmd->move[0] == 1) && (engine_world.version >= TR_III))
                 {
                      ent->next_state = TR_STATE_LARA_RUN_FORWARD;
                 }
@@ -1822,7 +1822,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 
                 // Splash sound is hardcoded, beginning with TR3.
                 
-                if(CVAR_get_val_d("engine_version") > TR_II)
+                if(engine_world.version > TR_II)
                 {
                     Audio_Send(TR_AUDIO_SOUND_SPLASH, TR_AUDIO_EMITTER_ENTITY, ent->ID);
                 }
@@ -2190,7 +2190,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                if(CVAR_get_val_d("engine_version") > TR_III)
+                if(engine_world.version > TR_III)
                 {
                     if(cmd->move[1] == 1 && cmd->jump == 0 && cmd->shift == 0)
                     {
