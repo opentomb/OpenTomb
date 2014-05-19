@@ -601,6 +601,7 @@ class TR_Level {
 	void read_tr4_face4(SDL_RWops * const src, tr4_face4_t & meshface);
 	void read_tr4_room_light(SDL_RWops * const src, tr5_room_light_t & light);
 	void read_tr4_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & room_vertex);
+ 	void read_tr4_room_staticmesh(SDL_RWops * const src, tr2_room_staticmesh_t & room_static_mesh);
 	void read_tr4_room(SDL_RWops * const src, tr5_room_t & room);
 	void read_tr4_item(SDL_RWops * const src, tr2_item_t & item);
 	void read_tr4_object_texture_vert(SDL_RWops * const src, tr4_object_texture_vert_t & vert);
