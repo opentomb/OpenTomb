@@ -678,7 +678,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     if(level_script)
     {
         top = lua_gettop(level_script);
-        lua_getfield(level_script, LUA_GLOBALSINDEX, "uc_tex_count");
+        lua_getglobal(level_script, "uc_tex_count");
         uc_rect_count = lua_tointeger(level_script, -1);
         lua_settop(level_script, top);                                          // restore LUA stack
         if(uc_rect_count)
@@ -686,7 +686,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             uc_rect_list = (uncollision_tex_rect_p)malloc(uc_rect_count * sizeof(uncollision_tex_rect_t));
             for(i=0;i<uc_rect_count;i++)
             {
-                lua_getfield(level_script, LUA_GLOBALSINDEX, "GetUCTexture");   // add to the up of stack LUA's function
+                lua_getglobal(level_script, "GetUCTexture");   // add to the up of stack LUA's function
                 lua_pushinteger(level_script, i);                               // add to stack first argument
                 lua_pcall(level_script, 1, 5, 0);                               // call that function
 
@@ -1097,7 +1097,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         if(collide_flags_conf)
         {
             top = lua_gettop(collide_flags_conf);                                               // save LUA stack
-            lua_getfield(collide_flags_conf, LUA_GLOBALSINDEX, "GetStaticMeshFlags");           // add to the up of stack LUA's function
+            lua_getglobal(collide_flags_conf, "GetStaticMeshFlags");                            // add to the up of stack LUA's function
             lua_pushinteger(collide_flags_conf, tr->game_version);                              // add to stack first argument
             lua_pushinteger(collide_flags_conf, r_static->object_id);                           // add to stack second argument
             lua_pcall(collide_flags_conf, 2, 2, 0);                                             // call that function
@@ -1109,7 +1109,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         if(level_script)
         {
             top = lua_gettop(level_script);                                                        // save LUA stack
-            lua_getfield(level_script, LUA_GLOBALSINDEX, "GetStaticMeshFlags");                    // add to the up of stack LUA's function
+            lua_getglobal(level_script, "GetStaticMeshFlags");                                     // add to the up of stack LUA's function
 
             if(lua_isfunction(level_script, -1))                                                   // If function exists...
             {
@@ -1368,7 +1368,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         if(level_script)
         {
             int top = lua_gettop(level_script);
-            lua_getfield(level_script, LUA_GLOBALSINDEX, "UVRotate");
+            lua_getglobal(level_script, "UVRotate");
             uvrotate_script = lua_tointeger(level_script, -1);
             lua_settop(level_script, top);      
         }
@@ -2780,7 +2780,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             if(ent_ID_override)
             {
                 top = lua_gettop(ent_ID_override);                                         // save LUA stack
-                lua_getfield(ent_ID_override, LUA_GLOBALSINDEX, "GetOverridedID");         // add to the up of stack LUA's function
+                lua_getglobal(ent_ID_override, "GetOverridedID");         // add to the up of stack LUA's function
                 lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
                 lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
                 lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
@@ -2900,7 +2900,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         if(collide_flags_conf)
         {
             top = lua_gettop(collide_flags_conf);                                               // save LUA stack
-            lua_getfield(collide_flags_conf, LUA_GLOBALSINDEX, "GetEntityFlags");               // add to the up of stack LUA's function
+            lua_getglobal(collide_flags_conf, "GetEntityFlags");                                // add to the up of stack LUA's function
             lua_pushinteger(collide_flags_conf, tr->game_version);                              // add to stack first argument
             lua_pushinteger(collide_flags_conf, tr_item->object_id);                            // add to stack second argument
             lua_pcall(collide_flags_conf, 2, 2, 0);                                             // call that function
@@ -2912,7 +2912,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         if(level_script)
         {
             top = lua_gettop(level_script);                                             // save LUA stack
-            lua_getfield(level_script, LUA_GLOBALSINDEX, "GetEntityFlags");             // add to the up of stack LUA's function
+            lua_getglobal(level_script, "GetEntityFlags");                              // add to the up of stack LUA's function
 
             if(lua_isfunction(level_script, -1))                                        // If function exists...
             {

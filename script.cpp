@@ -332,8 +332,8 @@ int lua_DoTasks(lua_State *lua, btScalar time)
 
     top = lua_gettop(lua);
     lua_pushnumber(lua, time);
-    lua_setfield(lua, LUA_GLOBALSINDEX, "frame_time");
-    lua_getfield(lua, LUA_GLOBALSINDEX, "doTasks");
+    lua_setglobal(lua, "frame_time");
+    lua_getglobal(lua, "doTasks");
     lua_pcall(lua, 0, 0, 0);
     lua_settop(lua, top);
 }
@@ -343,7 +343,7 @@ int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator)
     int top;
     
     top = lua_gettop(lua);
-    lua_getfield(lua, LUA_GLOBALSINDEX, "activateEntity");
+    lua_getglobal(lua, "activateEntity");
     if (!lua_isfunction(lua, -1))
     {
         lua_settop(lua, top);
@@ -406,7 +406,7 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
     {
         top = lua_gettop(lua);                                             // save LUA stack
         
-        lua_getfield(lua, LUA_GLOBALSINDEX, "GetTrackInfo");               // add to the up of stack LUA's function
+        lua_getglobal(lua, "GetTrackInfo");                                // add to the up of stack LUA's function
 
         if(lua_isfunction(lua, -1))                                        // If function exists...
         {
