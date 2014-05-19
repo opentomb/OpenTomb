@@ -69,6 +69,15 @@ typedef struct sprite_s
 
 
 /*
+ * lights
+ */
+typedef struct light_s
+{
+    btScalar                    pos[3];                                         // world position
+    btScalar                    colour[4];                                      // RGBA value
+}light_t, *light_p;
+
+/*
  *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
  */
 typedef struct anim_seq_s

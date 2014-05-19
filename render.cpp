@@ -571,6 +571,29 @@ void Render_Entity(struct entity_s *entity)
         return;
     }
 
+    // Calculate lighting
+    glDisable(GL_LIGHT0);
+    glDisable(GL_LIGHT1);
+    glDisable(GL_LIGHT2);
+    glDisable(GL_LIGHT3);
+    glDisable(GL_LIGHT4);
+    glDisable(GL_LIGHT5);
+    glDisable(GL_LIGHT6);
+    glDisable(GL_LIGHT7);
+
+    room_s *room = entity->self->room;
+    if(room != NULL)
+    {
+        GLfloat ambient_component[4];
+
+        ambient_component[0] = room->ambient_lighting[0];
+        ambient_component[1] = room->ambient_lighting[1];
+        ambient_component[2] = room->ambient_lighting[2];
+        ambient_component[3] = 1.0f;
+
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient_component);
+    }
+
     if(entity->model && entity->model->animations)
     {
         glPushMatrix();
@@ -704,6 +727,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
         room->static_mesh[i].was_rendered = 1;
     }
 
+	glEnable(GL_LIGHTING);
     for(cont=room->containers; cont; cont=cont->next)
     {
         switch(cont->object_type)
@@ -721,6 +745,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
             break;
         };
     }
+    glDisable(GL_LIGHTING);
 }
 
 
@@ -883,10 +908,13 @@ void Render_DrawList()
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
+
+    glEnable(GL_LIGHTING);
     if(renderer.world->Character)
     {
         Render_Entity(renderer.world->Character);
     }
+    glDisable(GL_LIGHTING);
 
     /*
      * room rendering
@@ -1177,6 +1205,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
         room->static_mesh[i].was_rendered_lines = 1;
     }
 
+	glEnable(GL_LIGHTING);
     for(cont=room->containers; cont; cont=cont->next)
     {
         switch(cont->object_type)
@@ -1194,6 +1223,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
             break;
         };
     }
+    glDisable(GL_LIGHTING);
 }
 
 

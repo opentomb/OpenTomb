@@ -537,10 +537,10 @@ void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v)
 
 void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c)
 {
-    v[0] = tr_c->r;
-    v[1] = tr_c->g;
-    v[2] = tr_c->b;
-    v[3] = tr_c->a;
+    v[0] = tr_c->r * 2;
+    v[1] = tr_c->g * 2;
+    v[2] = tr_c->b * 2;
+    v[3] = tr_c->a * 2;
 }
 
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
@@ -1013,9 +1013,9 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
     room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
     room->transform[14] = tr->rooms[room_index].offset.y;                       // z = y;
-    room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r;
-    room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g;
-    room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b;
+    room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
+    room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
+    room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
     room->self = (engine_container_p)malloc(sizeof(engine_container_t));
     room->self->room = room;
     room->self->next = NULL;
@@ -1061,10 +1061,10 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->rot[0] = tr_room->static_meshes[i].rotation;
         r_static->rot[1] = 0.0;
         r_static->rot[2] = 0.0;
-        r_static->tint[0] = tr_room->static_meshes[i].tint.r;
-        r_static->tint[1] = tr_room->static_meshes[i].tint.g;
-        r_static->tint[2] = tr_room->static_meshes[i].tint.b;
-        r_static->tint[3] = tr_room->static_meshes[i].tint.a;
+        r_static->tint[0] = tr_room->static_meshes[i].tint.r * 2;
+        r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
+        r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
+        r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
         r_static->bv = BV_Create();
 
         r_static->cbb_min[0] = tr_static->collision_box[0].x;
@@ -1194,6 +1194,29 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         sector->ceiling = -256 * (int)tr_room->sector_list[i].ceiling;
         sector->fd_index = tr_room->sector_list[i].fd_index;
     }
+
+    /*
+     *  load lights
+     */
+    room->light_count = tr_room->num_lights;
+    room->lights = NULL;
+    if(room->light_count)
+    {
+        room->lights = (light_p)malloc(room->light_count * sizeof(light_t));
+    }
+
+    for(i=0;i<tr_room->num_lights;i++)
+    {
+        room->lights[i].pos[0] = tr_room->lights[i].pos.x;
+        room->lights[i].pos[1] = tr_room->lights[i].pos.y;
+        room->lights[i].pos[2] = tr_room->lights[i].pos.z;
+
+        room->lights[i].colour[0] = tr_room->lights[i].color.r / 255.0;
+        room->lights[i].colour[1] = tr_room->lights[i].color.g / 255.0;
+        room->lights[i].colour[2] = tr_room->lights[i].color.b / 255.0;
+        room->lights[i].colour[3] = tr_room->lights[i].color.a / 255.0;
+    }
+
 
     /*
      * portals loading / calculation!!!

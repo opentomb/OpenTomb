@@ -328,7 +328,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 
         room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
         for (i = 0; i < room.num_static_meshes; i++)
-                read_tr3_room_staticmesh(newsrc, room.static_meshes[i]);
+                read_tr4_room_staticmesh(newsrc, room.static_meshes[i]);
 
         SDL_RWseek(newsrc, 208 + layer_offset, SEEK_SET);
 
