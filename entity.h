@@ -109,7 +109,7 @@ typedef struct entity_s
 {
     uint32_t                            ID;                                     // ID
     int32_t                             OCB;
-    uint32_t                            activation_flags;
+    uint32_t                            activation_mask;
     
     uint32_t                            flags;
     uint8_t                             active;
