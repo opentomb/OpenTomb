@@ -618,22 +618,10 @@ void Render_StaticMesh(struct static_mesh_s *static_mesh)
  */
 void Render_Room(struct room_s *room, struct render_s *render)
 {
-    //TOMB3 - closely matches TOMB3
-    /*
-    tint[0] = 0.55f * 0.5f;
-    tint[1] = 0.90f * 0.5f;
-    tint[2] = 1.0f * 0.5f;
-    tint[3] = 1.0f * 0.5f;
-    */
-
     uint32_t i;
     vertex_p v;
     btScalar *p_color, *src_p, *dst_p;
     btScalar tint[4];
-    tint[0] = 0.65f * 0.9f;//Placeholder, color very similar to TR1 PSX ver.
-    tint[1] = 1.0f * 0.9f;
-    tint[2] = 1.0f * 0.9f;
-    tint[3] = 1.0f * 0.9f;
 
     engine_container_p cont;
     entity_p ent;
@@ -643,12 +631,28 @@ void Render_Room(struct room_s *room, struct render_s *render)
         glPushMatrix();
         glMultMatrixbt(room->transform);
 
-        if(room->flags & 0x1)//If water room
+        if( (room->flags & 0x01) &&
+            (engine_world.version < TR_IV) )  // If water room and level is TR1-3
         {
             p_color  = (GLfloat*)GetTempbtScalar(4 * room->mesh->vertex_count);
             dst_p = p_color;
 
             v = room->mesh->vertices;
+            
+            if(engine_world.version < TR_III)
+            {
+                tint[0] = 0.65f * 0.9f; // Placeholder, color very similar to TR1 PSX ver.
+                tint[1] = 1.0f  * 0.9f;
+                tint[2] = 1.0f  * 0.9f;
+                tint[3] = 1.0f  * 0.9f;
+            }
+            else
+            {
+                tint[0] = 0.55f * 0.5f; // TOMB3 - closely matches TOMB3
+                tint[1] = 0.90f * 0.5f;
+                tint[2] = 1.0f  * 0.5f;
+                tint[3] = 1.0f  * 0.5f;
+            }
 
             for(i=0; i<room->mesh->vertex_count; i++,v++)
             {
@@ -661,7 +665,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
 
                 dst_p += 4;
             }
-            Render_Mesh(room->mesh, NULL, NULL, p_color);//Render with modified color
+            Render_Mesh(room->mesh, NULL, NULL, p_color);   //Render with modified color
         }
         else
         {

@@ -395,7 +395,6 @@ int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs)
 
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
 {
-    int     engine_version = CVAR_get_val_d("engine_version");
     size_t  string_length  = 0;
     int     track_type     = 0;
     int     top;
@@ -410,7 +409,7 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 
         if(lua_isfunction(lua, -1))                                        // If function exists...
         {
-            lua_pushinteger(lua, engine_version);                          // add to stack first argument
+            lua_pushinteger(lua, engine_world.version);                    // add to stack first argument
             lua_pushinteger(lua, track_index);                             // add to stack second argument
 
             lua_pcall(lua, 2, 3, 0);                                       // call that function
