@@ -2762,7 +2762,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             entity->self->room = NULL;
         }
         
-        entity->activation_flags = tr_item->flags;
+        entity->activation_mask  = tr_item->flags;
         entity->OCB              = tr_item->ocb;
         
         entity->self->collide_flag = 0x0000;

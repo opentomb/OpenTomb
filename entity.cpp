@@ -887,8 +887,8 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     switch(FD_function)
                     {
                         case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
-                            ent->activation_flags ^= trigger_mask;
-                            if((skip == 0) && ((ent->activation_flags & 0x3E) == 0x3E))
+                            ent->activation_mask ^= trigger_mask;
+                            if((skip == 0) && ((ent->activation_mask & 0x3E) == 0x3E))
                             {
                                 Con_Printf("Activate %d, %d", operands, ent->ID);
                                 lua_ActivateEntity(engine_lua, operands, ent->ID);
