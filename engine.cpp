@@ -1034,7 +1034,7 @@ int lua_StopSound(lua_State *lua)
 void Engine_LuaClearTasks()
 {
     int top = lua_gettop(engine_lua);
-    lua_getfield(engine_lua, LUA_GLOBALSINDEX, "clearTasks");
+    lua_getglobal(engine_lua, "clearTasks");
     lua_pcall(engine_lua, 0, 0, 0);
     lua_settop(engine_lua, top);
 }
