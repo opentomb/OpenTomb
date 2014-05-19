@@ -85,6 +85,9 @@ typedef struct room_s
     btScalar                    transform[16];                                  // GL transformation matrix
     btScalar                    ambient_lighting[3];
 
+    uint32_t                    light_count;
+    struct light_s             *lights;
+
     uint16_t                    portal_count;                                   // number of room portals
     struct portal_s            *portals;                                        // room portals array
     struct room_s              *alternate_room;                                 // alternative room pointer

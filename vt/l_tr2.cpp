@@ -83,9 +83,9 @@ void TR_Level::read_tr2_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & r
 	room_vertex.normal.x = 0;
 	room_vertex.normal.y = 0;
 	room_vertex.normal.z = 0;
-	room_vertex.colour.r = room_vertex.lighting2 / 16384.0f;
-	room_vertex.colour.g = room_vertex.lighting2 / 16384.0f;
-	room_vertex.colour.b = room_vertex.lighting2 / 16384.0f;
+	room_vertex.colour.r = room_vertex.lighting2 / 32768.0f;
+	room_vertex.colour.g = room_vertex.lighting2 / 32768.0f;
+	room_vertex.colour.b = room_vertex.lighting2 / 32768.0f;
 	room_vertex.colour.a = 1.0f;
 }
 
@@ -102,7 +102,7 @@ void TR_Level::read_tr2_room_staticmesh(SDL_RWops * const src, tr2_room_staticme
 	if (room_static_mesh.intensity2 >= 0)
 		room_static_mesh.intensity2 = (8191 - room_static_mesh.intensity2) << 2;
 
-    room_static_mesh.tint.b = room_static_mesh.tint.g = room_static_mesh.tint.r = room_static_mesh.intensity2 / (8192.0f);
+    room_static_mesh.tint.b = room_static_mesh.tint.g = room_static_mesh.tint.r = (room_static_mesh.intensity2 / 16384.0f);
     room_static_mesh.tint.a = 1.0f;
 }
 

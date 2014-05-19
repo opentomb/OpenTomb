@@ -92,10 +92,26 @@ void TR_Level::read_tr4_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & r
 	room_vertex.normal.y = 0;
 	room_vertex.normal.z = 0;
 
-	room_vertex.colour.r = ((room_vertex.lighting2 & 0x7C00) >> 10  ) / 15.5f;
-	room_vertex.colour.g = ((room_vertex.lighting2 & 0x03E0) >> 5   ) / 15.5f;
-	room_vertex.colour.b = ((room_vertex.lighting2 & 0x001F)        ) / 15.5f;
+	room_vertex.colour.r = ((room_vertex.lighting2 & 0x7C00) >> 10  ) / 31.0f;
+ 	room_vertex.colour.g = ((room_vertex.lighting2 & 0x03E0) >> 5   ) / 31.0f;
+ 	room_vertex.colour.b = ((room_vertex.lighting2 & 0x001F)        ) / 31.0f;
 	room_vertex.colour.a = 1.0f;
+}
+
+void TR_Level::read_tr4_room_staticmesh(SDL_RWops * const src, tr2_room_staticmesh_t & room_static_mesh)
+{
+	read_tr_vertex32(src, room_static_mesh.pos);
+	room_static_mesh.rotation = (float)read_bitu16(src) / 16384.0f * -90;
+	room_static_mesh.intensity1 = read_bit16(src);
+	room_static_mesh.intensity2 = read_bit16(src);
+	room_static_mesh.object_id = read_bitu16(src);
+
+	room_static_mesh.tint.r = ((room_static_mesh.intensity1 & 0x001F)        ) / 31.0f;
+
+ 	room_static_mesh.tint.g = ((room_static_mesh.intensity1 & 0x03E0) >> 5   ) / 31.0f;
+
+ 	room_static_mesh.tint.b = ((room_static_mesh.intensity1 & 0x7C00) >> 10  ) / 31.0f;
+	room_static_mesh.tint.a = 1.0f;
 }
 
 void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
@@ -165,7 +181,7 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
 	room.num_static_meshes = read_bitu16(src);
 	room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
 	for (i = 0; i < room.num_static_meshes; i++)
-		read_tr3_room_staticmesh(src, room.static_meshes[i]);
+		read_tr4_room_staticmesh(src, room.static_meshes[i]);
 
 	room.alternate_room = read_bit16(src);
 	room.flags = read_bitu16(src);
@@ -177,10 +193,10 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
 
         SDL_RWseek(src, 1, SEEK_CUR);
 
-	room.light_colour.r = room.intensity1 / 32767.0f;
-	room.light_colour.g = room.intensity1 / 32767.0f;
-	room.light_colour.b = room.intensity1 / 32767.0f;
-	room.light_colour.a = 1.0f;
+        room.light_colour.r = (( room.intensity2 & 0x00FF)       / 255.0f);
+        room.light_colour.g = (((room.intensity1 & 0xFF00) >> 8) / 255.0f);
+        room.light_colour.b = (( room.intensity1 & 0x00FF)       / 255.0f);
+        room.light_colour.a = (((room.intensity2 & 0xFF00) >> 8) / 255.0f);
 }
 
 void TR_Level::read_tr4_item(SDL_RWops * const src, tr2_item_t & item)

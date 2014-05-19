@@ -130,6 +130,13 @@ void Room_Empty(room_p room)
         room->sprites_count = 0;
     }
 
+    if(room->light_count)
+    {
+        free(room->lights);
+        room->lights = NULL;
+        room->light_count = 0;
+    }
+
     if(room->self)
     {
         free(room->self);
