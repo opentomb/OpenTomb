@@ -164,6 +164,15 @@ enum TR_AUDIO_FX {
 
 #define TR_AUDIO_STREAM_NUMSOURCES 6
 
+// MAP_SIZE is similar to sound map size, but it is used to mark
+// already played audiotracks. Note that audiotracks CAN play several
+// times, if they were consequently called with increasing activation
+// flags (e.g., at first we call it with 00001 flag, then with 00101,
+// and so on). If all activation flags were set, including only once
+// flag, audiotrack won't play anymore.
+
+#define TR_AUDIO_STREAM_MAP_SIZE 256
+
 // Stream loading method describes the way audiotracks are loaded.
 // There are either seperate OGG files, single CDAUDIO.WAD file or
 // seperate ADPCM WAV files.
@@ -445,6 +454,8 @@ int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *
 
 int  Audio_GetFreeStream();                     // Get free (stopped) stream.
 bool Audio_IsTrackPlaying(int track_index);     // See if track is already playing.
+bool Audio_TrackAlreadyPlayed(int track_index,
+                              int8_t mask = 0); // Check if track played with given activation mask.
 void Audio_UpdateStreams();                     // Update all streams.
 void Audio_UpdateStreamsDamping();              // See if there any damping tracks playing.
 void Audio_PauseStreams(int stream_type = -1);  // Pause ALL streams (of specified type).
@@ -453,7 +464,7 @@ bool Audio_EndStreams(int stream_type = -1);    // End ALL streams (with crossfa
 bool Audio_StopStreams(int stream_type = -1);   // Immediately stop ALL streams.
 
 // Generally, you need only this function to trigger any track.
-int Audio_StreamPlay(const int track_index);
+int Audio_StreamPlay(const int track_index, const uint8_t mask = 0);
 
 // Error handling routines.
 

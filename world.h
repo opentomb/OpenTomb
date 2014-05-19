@@ -119,25 +119,25 @@ typedef struct world_s
     
     
     bordered_texture_atlas_p    tex_atlas;
-    uint32_t                    tex_count;                                      // cumber of textures
-    GLuint                     *textures;                                       // OpenGL textures indexes
+    uint32_t                    tex_count;              // Number of textures
+    GLuint                     *textures;               // OpenGL textures indexes
     
-    uint32_t                    anim_sequences_count;                            // Animated texture sequence count
-    struct anim_seq_s          *anim_sequences;                                 // Animated textures
+    uint32_t                    anim_sequences_count;   // Animated texture sequence count
+    struct anim_seq_s          *anim_sequences;         // Animated textures
     
-    uint32_t                    meshs_count;                                    // Base meshs count
-    struct base_mesh_s         *meshes;                                         // Base meshs data
+    uint32_t                    meshs_count;            // Base meshes count
+    struct base_mesh_s         *meshes;                 // Base meshes data
     
-    uint32_t                    sprites_count;                                  // Base sprites count
-    struct sprite_s            *sprites;                                        // Base sprites data
+    uint32_t                    sprites_count;          // Base sprites count
+    struct sprite_s            *sprites;                // Base sprites data
     
-    uint32_t                    skeletal_model_count;                           // number of base skeletal models
-    struct skeletal_model_s    *skeletal_models;                                // base skeletal models data
+    uint32_t                    skeletal_model_count;   // number of base skeletal models
+    struct skeletal_model_s    *skeletal_models;        // base skeletal models data
     
-    struct entity_s            *Character;                                      // this is an unical Lara pointer =)  
-    struct skeletal_model_s    *sky_box;                                        // global skybox
+    struct entity_s            *Character;              // this is an unique Lara pointer =)  
+    struct skeletal_model_s    *sky_box;                // global skybox
                                    
-    struct RedBlackHeader_s    *entity_tree;                                    // tree of world active objects
+    struct RedBlackHeader_s    *entity_tree;            // tree of world active objects
     
     uint32_t                    type; 
     
@@ -147,21 +147,24 @@ typedef struct world_s
     uint32_t                    anim_commands_count;
     int16_t                    *anim_commands;
     
-    uint32_t                    audio_emitters_count;                           // Amount of audio emitters in level.
-    struct audio_emitter_s     *audio_emitters;                                 // Audio emitters.
+    uint32_t                    audio_emitters_count;   // Amount of audio emitters in level.
+    struct audio_emitter_s     *audio_emitters;         // Audio emitters.
     
-    uint32_t                    audio_map_count;                                // Amount of overall effects in engine.
-    int16_t                    *audio_map;                                      // Effect indexes.
-    uint32_t                    audio_effects_count;                            // Amount of available effects in level.
-    struct audio_effect_s      *audio_effects;                                  // Effects and their parameters.
+    uint32_t                    audio_map_count;        // Amount of overall effects in engine.
+    int16_t                    *audio_map;              // Effect indexes.
+    uint32_t                    audio_effects_count;    // Amount of available effects in level.
+    struct audio_effect_s      *audio_effects;          // Effects and their parameters.
     
-    uint32_t                    audio_buffers_count;                            // Amount of samples.
-    ALuint                     *audio_buffers;                                  // Samples.
-    uint32_t                    audio_sources_count;                            // Amount of runtime channels.
-    AudioSource                *audio_sources;                                  // Channels.
+    uint32_t                    audio_buffers_count;    // Amount of samples.
+    ALuint                     *audio_buffers;          // Samples.
+    uint32_t                    audio_sources_count;    // Amount of runtime channels.
+    AudioSource                *audio_sources;          // Channels.
     
-    uint32_t                    stream_tracks_count;
-    StreamTrack                *stream_tracks;
+    uint32_t                    stream_tracks_count;    // Amount of stream track channels.
+    StreamTrack                *stream_tracks;          // Stream tracks.
+    
+    uint32_t                    stream_track_map_count; // Stream track flag map count.
+    uint8_t                    *stream_track_map;       // Stream track flag map.
 }world_t, *world_p;
 
 void World_Prepare(world_p world);

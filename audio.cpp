@@ -826,7 +826,7 @@ void StreamTrack::UnsetFX()
 // General soundtrack playing routine. All native TR CD triggers and commands should ONLY
 // call this one.
 
-int Audio_StreamPlay(const int track_index)
+int Audio_StreamPlay(const int track_index, const uint8_t mask)
 {        
     int    target_stream = -1;
     bool   do_fade_in    =  false;
@@ -835,6 +835,13 @@ int Audio_StreamPlay(const int track_index)
     
     char   file_path[256];          // Should be enough, and this is not the full path...
     
+    // Don't try to play track, if it was already played by specified bit mask.
+    // Additionally, TrackAlreadyPlayed function sets specified bit mask to track map.
+    
+    if(Audio_TrackAlreadyPlayed(track_index, mask))
+    {
+        return TR_AUDIO_STREAMPLAY_IGNORED;
+    }
     
     // Don't play track, if it is already playing.
     // This should become useless option, once proper one-shot trigger functionality is implemented.
@@ -954,6 +961,41 @@ bool Audio_IsTrackPlaying(int track_index)
     }
     
     return false;
+}
+
+bool Audio_TrackAlreadyPlayed(int track_index, int8_t mask)
+{
+    if(!mask)
+    {
+        return false;   // No mask, play in any case.
+    }
+    
+    if(track_index >= engine_world.stream_track_map_count)
+    {
+        return true;    // No such track, hence "already" played.
+    }
+    else
+    {
+        mask &= 0x3F;   // Clamp mask just in case.
+        
+        if(engine_world.stream_track_map[track_index] == mask)
+        {
+            return true;    // Immediately return true, if flags are directly equal.
+        }
+        else
+        {
+            int8_t played = engine_world.stream_track_map[track_index] & mask;
+            if(played == mask)
+            {
+                return true;    // Bits were set, hence already played.
+            }
+            else
+            {
+                engine_world.stream_track_map[track_index] |= mask;
+                return false;   // Not yet played, set bits and return false.
+            }
+        }
+    }
 }
 
 int Audio_GetFreeStream()
@@ -1325,6 +1367,11 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
     engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
     
+    // Generate stream track map array.
+    engine_world.stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
+    engine_world.stream_track_map = (uint8_t*)malloc(engine_world.stream_track_map_count * sizeof(uint8_t));
+    memset(engine_world.stream_track_map, 0, sizeof(uint8_t) * engine_world.stream_track_map_count);
+    
     // Generate new audio effects array.
     engine_world.audio_effects_count = tr->sound_details_count;
     engine_world.audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
@@ -1636,6 +1683,13 @@ int Audio_DeInit()
         delete[] engine_world.stream_tracks;
         engine_world.stream_tracks = NULL;
         engine_world.stream_tracks_count = 0;
+    }
+    
+    if(engine_world.stream_track_map)
+    {
+        delete[] engine_world.stream_track_map;
+        engine_world.stream_track_map = NULL;
+        engine_world.stream_track_map_count = 0;
     }
     
     ///@CRITICAL: You must delete all sources before buffers deleting!!!

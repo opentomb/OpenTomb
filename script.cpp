@@ -338,7 +338,7 @@ int lua_DoTasks(lua_State *lua, btScalar time)
     lua_settop(lua, top);
 }
  
-int lua_AclivateEntity(lua_State *lua, int id_object, int id_activator)
+int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator)
 {
     int top;
     

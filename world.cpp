@@ -271,6 +271,9 @@ void World_Prepare(world_p world)
     world->anim_sequences_count = 0;
     world->stream_tracks = NULL;
     world->stream_tracks_count = 0;
+    world->stream_track_map = NULL;
+    world->stream_track_map_count = 0;
+    
     world->tex_count = 0;
     world->textures = 0;
     world->floor_data = NULL;
