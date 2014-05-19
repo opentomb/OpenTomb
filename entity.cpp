@@ -751,9 +751,8 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     char skip = 0;
     
     // Trigger options.
-    bool   only_once;
-    bool   trigger_mask[5];
-    int8_t timer_field;
+    uint8_t  trigger_mask;
+    int8_t   timer_field;
     
     if(ent->character)
     {
@@ -815,15 +814,10 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 break;
 
             case TR_FD_FUNC_TRIGGER:          // TRIGGER
-                timer_field     = (*entry) & 0x00FF;
-                only_once       = (*entry) & 0x0100;
-                trigger_mask[0] = (*entry) & 0x0200;
-                trigger_mask[1] = (*entry) & 0x0400;
-                trigger_mask[2] = (*entry) & 0x0800;
-                trigger_mask[3] = (*entry) & 0x1000;
-                trigger_mask[4] = (*entry) & 0x2000;
+                timer_field      =  (*entry) &  0x00FF;
+                trigger_mask     = ((*entry) >> 8);
                 
-                Con_Printf("TRIGGER: timer - %d, once - %d, mask - %d%d%d%d%d", timer_field, only_once, trigger_mask[0], trigger_mask[1], trigger_mask[2], trigger_mask[3], trigger_mask[4]);
+                Con_Printf("TRIGGER: timer - %d, mask - %02X", timer_field, trigger_mask);
                 
                 skip = 0;
                 switch(sub_function)
@@ -893,10 +887,11 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     switch(FD_function)
                     {
                         case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
-                            if(skip == 0)
+                            ent->activation_flags ^= trigger_mask;
+                            if((skip == 0) && ((ent->activation_flags & 0x3E) == 0x3E))
                             {
                                 Con_Printf("Activate %d, %d", operands, ent->ID);
-                                lua_AclivateEntity(engine_lua, operands, ent->ID);
+                                lua_ActivateEntity(engine_lua, operands, ent->ID);
                             }
                             break;
 
@@ -939,7 +934,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                         case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
                             Con_Printf("Play audiotrack id = %d", operands);
-                            Audio_StreamPlay(operands);
+                            Audio_StreamPlay(operands, trigger_mask);
                             break;
 
                         case TR_FD_TRIGFUNC_FLIPEFFECT:          // Various in-game actions.
@@ -1377,7 +1372,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
                    (vec3_dist_sq(ent->transform+12, pos) < r))
                 {
-                    lua_AclivateEntity(engine_lua, e->ID, ent->ID);
+                    lua_ActivateEntity(engine_lua, e->ID, ent->ID);
                 }
             }
             else if(e->flags & ENTITY_IS_PICKABLE)
@@ -1386,7 +1381,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) && 
                                  (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
                 {
-                    lua_AclivateEntity(engine_lua, e->ID, ent->ID);
+                    lua_ActivateEntity(engine_lua, e->ID, ent->ID);
                 }
             }
         }
