@@ -20,6 +20,8 @@
 #include "lualib.h"
 
 
+int engine_lua_printf(const char *fmt, ...);
+
 static int luaB_print (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
   int i;
@@ -34,11 +36,13 @@ static int luaB_print (lua_State *L) {
     if (s == NULL)
       return luaL_error(L,
          LUA_QL("tostring") " must return a string to " LUA_QL("print"));
-    if (i>1) luai_writestring("\t", 1);
-    luai_writestring(s, l);
+    if (i>1) 
+      engine_lua_printf("    %s", s);    //luai_writestring("\t", 1);
+    else
+      engine_lua_printf("%s", s);        //luai_writestring(s, l);
     lua_pop(L, 1);  /* pop result */
   }
-  luai_writeline();
+  //luai_writeline();
   return 0;
 }
 
