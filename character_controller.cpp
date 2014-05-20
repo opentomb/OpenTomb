@@ -246,7 +246,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
         tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2] - z_factor) + z_factor;
         ent->collision_offset = tv;
     }
-    else if((t <= 1.0 / 1.6) || (ent->move_type != MOVE_CLIMBING))
+    else if((t <= 1.0 / 1.6))// || (ent->move_type != MOVE_CLIMBING))
     {
         //Y_CAPSULE
         tv.m_floats[0] = ent->character->ry / CHARACTER_BASE_RADIUS;
@@ -608,7 +608,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     btScalar n0[4], n1[4], n2[4];                                               // planes equations
     btTransform t1, t2;
     char up_founded;
-    //extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
+    extern GLfloat cast_ray[6];                                                 // pointer to the test line coordinates
     /*
      * init callbacks functions
      */
@@ -652,9 +652,9 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
     up_founded = 0;
     test_height = (test_height >= ent->character->max_step_up_height)?(test_height):(ent->character->max_step_up_height);
     d = pos[2] + ent->bf.bb_max[2] - test_height;
-    //vec3_copy(cast_ray, to.m_floats);
-    //vec3_copy(cast_ray+3, cast_ray);
-    //cast_ray[5] -= d;
+    vec3_copy(cast_ray, to.m_floats);
+    vec3_copy(cast_ray+3, cast_ray);
+    cast_ray[5] -= d;
     do
     {
         t1.setOrigin(from);
@@ -750,7 +750,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
                                   n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
     ret.edge_point.m_floats[2] /= d;
     vec3_copy(ret.point, ret.edge_point.m_floats);
-    
+    vec3_copy(cast_ray+3, ret.point);
     /*
      * unclimbable edge slant %)
      */
@@ -1370,7 +1370,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
                 Entity_UpdateRoomPos(ent);
                 return 2;
             }            
-            if(pos[2] < ent->character->height_info.floor_point.m_floats[2])
+            if((pos[2] < ent->character->height_info.floor_point.m_floats[2]) && (ent->character->no_fix == 0x00))
             {
                 pos[2] = ent->character->height_info.floor_point.m_floats[2];
                 cmd->vertical_collide |= 0x01;
@@ -1711,28 +1711,30 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
     ent->angles[2] = 0.0;
     Entity_UpdateRotation(ent);                                                 // apply rotations
 
-    if(ent->dir_flag & ENT_MOVE_FORWARD)
+    if(ent->dir_flag == ENT_MOVE_FORWARD)
     {
         vec3_mul_scalar(spd.m_floats, ent->transform+4, t);
     }
-    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
+    else if(ent->dir_flag == ENT_MOVE_BACKWARD)
     {
         vec3_mul_scalar(spd.m_floats, ent->transform+4,-t);
     }
-    else if(ent->dir_flag & ENT_MOVE_LEFT)
+    else if(ent->dir_flag == ENT_MOVE_LEFT)
     {
         vec3_mul_scalar(spd.m_floats, ent->transform+0,-t);
     }
-    else if(ent->dir_flag & ENT_MOVE_RIGHT)
+    else if(ent->dir_flag == ENT_MOVE_RIGHT)
     {
         vec3_mul_scalar(spd.m_floats, ent->transform+0, t);
     }
     else
     {
-        //ent->dir_flag = ENT_MOVE_FORWARD;
+        cmd->slide = 0x00;
+        Character_FixPenetrations(ent, cmd, NULL); 
+        return 1;
     }
-    cmd->slide = 0x00;
     
+    cmd->slide = 0x00;
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
@@ -1742,7 +1744,7 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
         iter = 1;
     }
     move /= (btScalar)iter;
-            
+    
     for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
         Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
