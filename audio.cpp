@@ -835,14 +835,6 @@ int Audio_StreamPlay(const int track_index, const uint8_t mask)
     
     char   file_path[256];          // Should be enough, and this is not the full path...
     
-    // Don't try to play track, if it was already played by specified bit mask.
-    // Additionally, TrackAlreadyPlayed function sets specified bit mask to track map.
-    
-    if(Audio_TrackAlreadyPlayed(track_index, mask))
-    {
-        return TR_AUDIO_STREAMPLAY_IGNORED;
-    }
-    
     // Don't play track, if it is already playing.
     // This should become useless option, once proper one-shot trigger functionality is implemented.
 
@@ -862,6 +854,17 @@ int Audio_StreamPlay(const int track_index, const uint8_t mask)
     {
         Con_Printf("StreamPlay: CANCEL, wrong track index or broken script.");
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
+    }
+    
+    // Don't try to play track, if it was already played by specified bit mask.
+    // Additionally, TrackAlreadyPlayed function applies specified bit mask to track map.
+    // Also, bit mask is valid only for non-looped tracks, since looped tracks are played
+    // in any way.
+    
+    if((stream_type != TR_AUDIO_STREAM_TYPE_BACKGROUND) &&
+        Audio_TrackAlreadyPlayed(track_index, mask))
+    {
+        return TR_AUDIO_STREAMPLAY_IGNORED;
     }
     
     // Entry found, now process to actual track loading.
