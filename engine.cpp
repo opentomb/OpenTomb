@@ -1188,6 +1188,22 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
 }
 
 
+int engine_lua_printf(const char *fmt, ...)
+{
+    va_list argptr;
+    char buf[4096];
+    int ret;
+
+    va_start(argptr, fmt);
+    ret = vsnprintf(buf, 4096, fmt, argptr);
+    va_end(argptr);
+
+    Con_AddText(buf);
+
+    return ret;
+}
+
+
 engine_container_p Container_Create()
 {
     engine_container_p ret;
