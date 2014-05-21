@@ -919,6 +919,28 @@ int lua_GetEntityState(lua_State * lua)
     return 1;
 }
 
+int lua_SetEntityMeshswap(lua_State * lua)
+{
+    int top     = lua_gettop(lua);
+    int id_src  = lua_tointeger(lua, 2);
+    int id_dest = lua_tointeger(lua, 1);
+    
+    entity_p         ent_dest;
+    skeletal_model_p model_src, model_dest;
+    
+    ent_dest   = World_GetEntityByID(&engine_world, id_dest);
+    model_src  = World_FindModelByID(&engine_world, id_src );
+    model_dest = (skeletal_model_p)ent_dest->model;
+
+    int meshes_to_copy = (ent_dest->bf.bone_tag_count > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->bf.bone_tag_count);
+
+    for(int i = 0; i < meshes_to_copy; i++)
+    {
+        ent_dest->bf.bone_tags[i].mesh  = model_src->mesh_tree[i].mesh;
+        ent_dest->bf.bone_tags[i].mesh2 = model_src->mesh_tree[i].mesh2;
+    }
+    
+}
 
 int lua_SetEntityState(lua_State * lua)
 {
@@ -1079,6 +1101,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityActivationMask", lua_SetEntityActivationMask);
     lua_register(lua, "getEntityState", lua_GetEntityState);
     lua_register(lua, "setEntityState", lua_SetEntityState);
+    lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
 
