@@ -75,11 +75,12 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
     int i, argn, ret = 0;
     uint16_t *entry, *end_p, end_bit, cont_bit;
     char script[4096], buf[64];
-    // Trigger options.
     
-    bool   only_once;
-    bool   trigger_mask[5];
-    int8_t timer_field;
+    // Trigger options.
+    uint8_t  trigger_mask;
+    uint8_t  only_once;
+    int8_t   timer_field;
+    
     
     if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size) || !engine_lua)
     {
@@ -132,13 +133,9 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                 break;
 
             case TR_FD_FUNC_TRIGGER:          // TRIGGER
-                timer_field     = (*entry) & 0x00FF;
-                only_once       = (*entry) & 0x0100;
-                trigger_mask[0] = (*entry) & 0x0200;
-                trigger_mask[1] = (*entry) & 0x0400;
-                trigger_mask[2] = (*entry) & 0x0800;
-                trigger_mask[3] = (*entry) & 0x1000;
-                trigger_mask[4] = (*entry) & 0x2000;
+                timer_field      =   (*entry) &  0x00FF;
+                trigger_mask     =  ((*entry) &  0x3E00) >> 9;
+                only_once        =  ((*entry) &  0x0100) >> 8;
                 
                 //Con_Printf("TRIGGER: timer - %d, once - %d, mask - %d%d%d%d%d", timer_field, only_once, trigger_mask[0], trigger_mask[1], trigger_mask[2], trigger_mask[3], trigger_mask[4]);
                 script[0] = 0;
@@ -302,7 +299,8 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                 {
                     if((sub_function == TR_FD_TRIGTYPE_SWITCH) || (sub_function == TR_FD_TRIGTYPE_KEY))
                     {
-                        strcat(script, "}, nil);");
+                        snprintf(buf, 64, "}, nil, %d);", trigger_mask);
+                        strcat(script, buf);
                         Con_Printf(script);
                         luaL_dostring(engine_lua, script);
                     }
@@ -2787,8 +2785,8 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             entity->self->room = NULL;
         }
         
-        entity->activation_mask  = tr_item->flags;
-        entity->OCB              = tr_item->ocb;
+        entity->activation_mask  = (tr_item->flags & 0x3E00) >> 9;  ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
+        entity->OCB              =  tr_item->ocb;
         
         entity->self->collide_flag = 0x0000;
         entity->anim_flags = 0x0000;

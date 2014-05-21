@@ -752,6 +752,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     
     // Trigger options.
     uint8_t  trigger_mask;
+    uint8_t  only_once;
     int8_t   timer_field;
     
     if(ent->character)
@@ -814,8 +815,9 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 break;
 
             case TR_FD_FUNC_TRIGGER:          // TRIGGER
-                timer_field      =  (*entry) &  0x00FF;
-                trigger_mask     = ((*entry) >> 8);
+                timer_field      =   (*entry) &  0x00FF;
+                trigger_mask     =  ((*entry) &  0x3E00) >> 9;
+                only_once        =  ((*entry) &  0x0100) >> 8;
                 
                 Con_Printf("TRIGGER: timer - %d, mask - %02X", timer_field, trigger_mask);
                 
@@ -888,7 +890,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     {
                         case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
                             ent->activation_mask ^= trigger_mask;
-                            if((skip == 0) && ((ent->activation_mask & 0x3E) == 0x3E))
+                            if((skip == 0) && (ent->activation_mask == 0x1F))
                             {
                                 Con_Printf("Activate %d, %d", operands, ent->ID);
                                 lua_ActivateEntity(engine_lua, operands, ent->ID);
@@ -934,7 +936,9 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                         case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
                             Con_Printf("Play audiotrack id = %d", operands);
-                            Audio_StreamPlay(operands, trigger_mask);
+                            // We need to use only_once flag as extra trigger mask,
+                            // as it's the way it works in original.
+                            Audio_StreamPlay(operands, (trigger_mask << 1) + only_once);
                             break;
 
                         case TR_FD_TRIGFUNC_FLIPEFFECT:          // Various in-game actions.
