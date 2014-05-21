@@ -138,6 +138,7 @@ void Render_GenWorldList();
 
 void Render_SetWorld(struct world_s *world);
 
+void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour);
 
 /*
  * DEBUG PRIMITIVES RENDERING

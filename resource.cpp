@@ -1207,13 +1207,13 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     for(i=0;i<tr_room->num_lights;i++)
     {
         room->lights[i].pos[0] = tr_room->lights[i].pos.x;
-        room->lights[i].pos[1] = tr_room->lights[i].pos.y;
-        room->lights[i].pos[2] = tr_room->lights[i].pos.z;
+        room->lights[i].pos[1] = -tr_room->lights[i].pos.z;
+        room->lights[i].pos[2] = tr_room->lights[i].pos.y;
 
-        room->lights[i].colour[0] = tr_room->lights[i].color.r / 255.0;
-        room->lights[i].colour[1] = tr_room->lights[i].color.g / 255.0;
-        room->lights[i].colour[2] = tr_room->lights[i].color.b / 255.0;
-        room->lights[i].colour[3] = tr_room->lights[i].color.a / 255.0;
+        room->lights[i].colour[0] = tr_room->lights[i].color.r / 255.0f;
+        room->lights[i].colour[1] = tr_room->lights[i].color.g / 255.0f;
+        room->lights[i].colour[2] = tr_room->lights[i].color.b / 255.0f;
+        room->lights[i].colour[3] = tr_room->lights[i].color.a / 255.0f;
     }
 
 
@@ -1651,9 +1651,9 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face3->vertices[1]]);
         TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face3->vertices[2]]);
         Polygon_FindNormale(p);
-        t = mesh->vertices[face3->vertices[2]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face3->vertices[1]].normal; vec3_add(t, t, p->plane);
         t = mesh->vertices[face3->vertices[0]].normal; vec3_add(t, t, p->plane);
+        t = mesh->vertices[face3->vertices[1]].normal; vec3_add(t, t, p->plane);
+        t = mesh->vertices[face3->vertices[2]].normal; vec3_add(t, t, p->plane);
 
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {

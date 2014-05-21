@@ -591,6 +591,11 @@ void Render_Entity(struct entity_s *entity)
         ambient_component[2] = room->ambient_lighting[2];
         ambient_component[3] = 1.0f;
 
+        if(room->flags & 0x01)
+        {
+            Render_CalculateWaterTint(ambient_component, 0);
+        }
+
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient_component);
     }
 
@@ -604,7 +609,7 @@ void Render_Entity(struct entity_s *entity)
     }
 }
 
-void Render_StaticMesh(struct static_mesh_s *static_mesh)
+void Render_StaticMesh(struct static_mesh_s *static_mesh, struct room_s *room)
 {
     uint32_t i;
     vertex_p v;
@@ -616,6 +621,11 @@ void Render_StaticMesh(struct static_mesh_s *static_mesh)
     tint[1] = static_mesh->tint[1];
     tint[2] = static_mesh->tint[2];
     tint[3] = static_mesh->tint[3];
+
+    if(room->flags & 0x01)
+    {
+        Render_CalculateWaterTint(tint, 0);
+    }
 
     p_color  = (GLfloat*)GetTempbtScalar(4 * mesh->vertex_count);
     dst_p = p_color;
@@ -644,7 +654,6 @@ void Render_Room(struct room_s *room, struct render_s *render)
     uint32_t i;
     vertex_p v;
     btScalar *p_color, *src_p, *dst_p;
-    btScalar tint[4];
 
     engine_container_p cont;
     entity_p ent;
@@ -654,28 +663,16 @@ void Render_Room(struct room_s *room, struct render_s *render)
         glPushMatrix();
         glMultMatrixbt(room->transform);
 
-        if( (room->flags & 0x01) &&
-            (engine_world.version < TR_IV) )  // If water room and level is TR1-3
+        if(room->flags & 0x01)
         {
+            btScalar tint[4];
+
             p_color  = (GLfloat*)GetTempbtScalar(4 * room->mesh->vertex_count);
             dst_p = p_color;
 
             v = room->mesh->vertices;
-            
-            if(engine_world.version < TR_III)
-            {
-                tint[0] = 0.65f * 0.9f; // Placeholder, color very similar to TR1 PSX ver.
-                tint[1] = 1.0f  * 0.9f;
-                tint[2] = 1.0f  * 0.9f;
-                tint[3] = 1.0f  * 0.9f;
-            }
-            else
-            {
-                tint[0] = 0.55f * 0.5f; // TOMB3 - closely matches TOMB3
-                tint[1] = 0.90f * 0.5f;
-                tint[2] = 1.0f  * 0.5f;
-                tint[3] = 1.0f  * 0.5f;
-            }
+
+            Render_CalculateWaterTint(tint, 1);
 
             for(i=0; i<room->mesh->vertex_count; i++,v++)
             {
@@ -714,13 +711,31 @@ void Render_Room(struct room_s *room, struct render_s *render)
         glMultMatrixbt(room->static_mesh[i].transform);
         if(room->static_mesh[i].mesh->uses_vertex_colors > 0)
         {
-            Render_StaticMesh(&room->static_mesh[i]);
+            Render_StaticMesh(&room->static_mesh[i], room);
         }
         else
         {
             glDisableClientState(GL_COLOR_ARRAY);
-            glColor3f(room->static_mesh[i].tint[0], room->static_mesh[i].tint[1], room->static_mesh[i].tint[2]);
-            Render_Mesh(room->static_mesh[i].mesh, NULL, NULL, NULL);
+
+            if(room->flags & 0x01)
+            {
+                btScalar tint[4];
+                tint[0] = room->static_mesh[i].tint[0];
+                tint[1] = room->static_mesh[i].tint[1];
+                tint[2] = room->static_mesh[i].tint[2];
+                tint[3] = 1.0f;
+
+                Render_CalculateWaterTint(tint, 0);
+
+                glColor3f(tint[0], tint[1], tint[2]);
+                Render_Mesh(room->static_mesh[i].mesh, NULL, NULL, NULL);
+            }
+            else
+            {
+                glColor3f(room->static_mesh[i].tint[0], room->static_mesh[i].tint[1], room->static_mesh[i].tint[2]);
+                Render_Mesh(room->static_mesh[i].mesh, NULL, NULL, NULL);
+            }
+
             glEnableClientState(GL_COLOR_ARRAY);
         }
         glPopMatrix();
@@ -1471,3 +1486,53 @@ void Render_BV(struct bounding_volume_s *bv)
     }
 }
 
+void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour)
+{
+    if(engine_world.version < TR_IV)  // If water room and level is TR1-3
+    {
+        if(engine_world.version < TR_III)
+        {
+             // Placeholder, color very similar to TR1 PSX ver.
+            if(fixed_colour > 0)
+            {
+                tint[0] = 0.585f;
+                tint[1] = 0.9f;
+                tint[2] = 0.9f;
+                tint[3] = 1.0f;
+            }
+            else
+            {
+                tint[0] *= 0.585f;
+                tint[1] *= 0.9f;
+                tint[2] *= 0.9f;
+            }
+        }
+        else
+        {
+            // TOMB3 - closely matches TOMB3
+            if(fixed_colour > 0)
+            {
+                tint[0] = 0.275f;
+                tint[1] = 0.45f;
+                tint[2] = 0.5f;
+                tint[3] = 1.0f;
+            }
+            else
+            {
+                tint[0] *= 0.275f;
+                tint[1] *= 0.45f;
+                tint[2] *= 0.5f;
+            }
+        }
+    }
+    else
+    {
+        if(fixed_colour > 0)
+        {
+            tint[0] = 1.0f;
+            tint[1] = 1.0f;
+            tint[2] = 1.0f;
+            tint[3] = 1.0f;
+        }
+    }
+}

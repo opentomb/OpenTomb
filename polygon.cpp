@@ -96,7 +96,7 @@ void Polygon_FindNormale(polygon_p p)
     vec3_sub(v1, p->vertices[1].position, p->vertices[0].position);
     vec3_sub(v2, p->vertices[2].position, p->vertices[1].position);
     vec3_cross(p->plane, v1, v2);
-    p->plane[3] = vec3_abs(p->plane);
+    p->plane[3] = -vec3_abs(p->plane);
     vec3_norm_plane(p->plane, p->vertices[0].position, p->plane[3]);
 }
 
