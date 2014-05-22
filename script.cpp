@@ -392,6 +392,28 @@ int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs)
     return 1;
 }
 
+int lua_GetSecretTrackNumber(lua_State *lua)
+{
+    int top;
+    int track_number = 0;
+    
+    if(lua)
+    {
+        top = lua_gettop(lua);                                             // save LUA stack
+        lua_getglobal(lua, "GetSecretTrackNumber");                        // add to the up of stack LUA's function
+
+        if(lua_isfunction(lua, -1))                                        // If function exists...
+        {
+            lua_pushinteger(lua, engine_world.version);                    // add to stack first argument
+            lua_pcall(lua, 1, 1, 0);                                       // call that function
+            track_number = lua_tointeger(lua, -1);                         // get returned value 1
+        }
+        
+        lua_settop(lua, top);                                              // restore LUA stack
+    }
+    
+    return track_number;
+}
 
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
 {
@@ -440,7 +462,6 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
     
     return false;
 }
-
 
 int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
 {
