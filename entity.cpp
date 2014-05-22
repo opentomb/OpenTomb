@@ -946,8 +946,8 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             break;
 
                         case TR_FD_TRIGFUNC_SECRET:          // PLAYSOUND SECRET_FOUND
-                            Con_Printf("Play SECRET[%d] FOUND", operands);
-                            Audio_StreamPlay(TR_AUDIO_STREAM_SECRET_INDEX);
+                            Con_Printf("Play SECRET[%d] FOUND", lua_GetSecretTrackNumber(engine_lua));
+                            Audio_StreamPlay(lua_GetSecretTrackNumber(engine_lua));
                             break;
 
                         case TR_FD_TRIGFUNC_BODYBAG:          // UNKNOWN

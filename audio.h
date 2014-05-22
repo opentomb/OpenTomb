@@ -150,6 +150,25 @@ enum TR_AUDIO_FX {
 #define TR_AUDIO_SOUND_MENUPAGE    115
 #define TR_AUDIO_SOUND_MEDIPACK    116
 
+// Certain sound effect indexes were changed across different TR
+// versions, despite remaining the same - mostly, it happened with
+// menu sounds and some general sounds. For such effects, we specify
+// additional remap enumeration list, which is fed into Lua script
+// to get actual effect ID for current game version.
+
+enum TR_AUDIO_SOUND_GLOBALID
+{
+    TR_AUDIO_SOUND_GLOBALID_MENUOPEN,
+    TR_AUDIO_SOUND_GLOBALID_MENUCLOSE,
+    TR_AUDIO_SOUND_GLOBALID_MENUROTATE,
+    TR_AUDIO_SOUND_GLOBALID_MENUPAGE,
+    TR_AUDIO_SOUND_GLOBALID_MENUSELECT,
+    TR_AUDIO_SOUND_GLOBALID_MENUWEAPON,
+    TR_AUDIO_SOUND_GLOBALID_MENUCLANG,
+    TR_AUDIO_SOUND_GLOBALID_MENUAUDIOTEST,
+    TR_AUDIO_SOUND_GLOBALID_LASTINDEX
+};
+
 
 // NUMBUFFERS is a number of buffers cyclically used for each stream.
 // Double is enough, but we use quad for further stability, because
