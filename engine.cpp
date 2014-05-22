@@ -1228,7 +1228,7 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
 
     Con_AddText(buf);
 
-    return ret;//vfprintf(f, fmt, argptr);
+    return ret;
 }
 
 

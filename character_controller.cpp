@@ -1751,7 +1751,6 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
         Character_GetHeightInfo(fc_pos, &ent->character->height_info);
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
-
         Entity_UpdateRoomPos(ent);
     }
     
