@@ -56,6 +56,15 @@ void ent_set_underwater(entity_p ent)
     ent->move_type = MOVE_UNDER_WATER;
 }
 
+void ent_out_of_water(entity_p ent)
+{
+    btScalar *v = ent->character->climb.point;
+    
+    ent->transform[12 + 0] = v[0] + ent->transform[4 + 0] * 64.0;
+    ent->transform[12 + 1] = v[1] + ent->transform[4 + 1] * 64.0;
+    ent->transform[12 + 2] = v[2];
+}
+
 /**
  * Current animation == current state
  * works correct in tr1 - tr2
@@ -1535,7 +1544,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_LADDER_LEFT:
             //ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_LEFT;
-            ent->current_speed = 5;
+            ent->current_speed = 5.0;
             if((cmd->action == 0) || (ent->character->climb.wall_hit == 0))
             {
                 ent->next_state = TR_STATE_LARA_HANG; 
@@ -1549,7 +1558,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_LADDER_RIGHT:
             //ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_RIGHT;
-            ent->current_speed = 5;
+            ent->current_speed = 5.0;
             if((cmd->action == 0) || (ent->character->climb.wall_hit == 0))
             {
                 ent->next_state = TR_STATE_LARA_HANG; 
@@ -1613,6 +1622,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_SHIMMY_LEFT:
             //ent->character->complex_collision = 0x00;
+            ent->current_speed = 5.0;
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_LEFT;
             if(cmd->action == 0)
@@ -1673,6 +1683,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_SHIMMY_RIGHT:
             //ent->character->complex_collision = 0x00;
+            ent->current_speed = 5.0;
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_RIGHT;
             if(cmd->action == 0)
@@ -1733,7 +1744,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_ONWATER_EXIT:
             ent->character->no_fix = 0x01;
-            ent->current_speed = 0.0;
+            //ent->current_speed = 0.0;
             ent->onAnimChange = ent_set_on_floor;
             break;
 
@@ -1991,9 +2002,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     ent->character->no_fix = 0x01;
                     ent->angles[0] = climb->edge_z_ang;
                     Entity_UpdateRotation(ent);
-                    pos[0] = climb->edge_point.m_floats[0] + ent->transform[4 + 0] * 64.0;
-                    pos[1] = climb->edge_point.m_floats[1] + ent->transform[4 + 1] * 64.0;
-                    pos[2] = climb->edge_point.m_floats[2];
                     vec3_copy(climb->point, climb->edge_point.m_floats);
                 }
             }
@@ -2004,6 +2012,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 cmd->rot[0] = 0.0;
                 ent->character->no_fix = 0x01;
                 ent->next_state = TR_STATE_LARA_STOP;
+                ent->onAnimChange = ent_out_of_water;
             }
             else if(cmd->kill)
             {
@@ -2019,17 +2028,31 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->dir_flag = ENT_MOVE_BACKWARD;
                 ent->next_state = TR_STATE_LARA_ONWATER_BACK;
             }
-            else if(cmd->move[1] ==-1 && cmd->shift == 1)
+            else if(cmd->move[1] ==-1) 
             {
-                ent->dir_flag = ENT_MOVE_LEFT;
-                cmd->rot[0] = 0.0;
-                ent->next_state = TR_STATE_LARA_ONWATER_LEFT;
+                if(cmd->shift == 1)
+                {
+                    ent->dir_flag = ENT_MOVE_LEFT;
+                    cmd->rot[0] = 0.0;
+                    ent->next_state = TR_STATE_LARA_ONWATER_LEFT;
+                }
+                else
+                {
+                    // rotate on water
+                }
             }
-            else if(cmd->move[1] == 1 && cmd->shift == 1)
+            else if(cmd->move[1] == 1)
             {
-                ent->dir_flag = ENT_MOVE_RIGHT;
-                cmd->rot[0] = 0.0;
-                ent->next_state = TR_STATE_LARA_ONWATER_RIGHT;
+                if(cmd->shift == 1)
+                {
+                    ent->dir_flag = ENT_MOVE_RIGHT;
+                    cmd->rot[0] = 0.0;
+                    ent->next_state = TR_STATE_LARA_ONWATER_RIGHT;
+                }
+                else
+                {
+                    // rotate on water
+                }
             }
             break;
 
@@ -2506,7 +2529,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->character->complex_collision = 0x01;
             if(ent->speed.m_floats[3] < -FREE_FALL_SPEED_1)
             {
-                ent->current_speed = 0.0;
+                ent->current_speed *= 0.5;
             }
             break;
             
