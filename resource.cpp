@@ -450,7 +450,8 @@ void Gen_EntityRigidBody(entity_p ent)
             startTransform.setFromOpenGLMatrix(tr);
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             ent->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
-            bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i]);
+            ///@TODO: use switch for COLLISION_GROUP correction
+            bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_CINEMATIC, COLLISION_MASK_ALL);
             ent->bt_body[i]->setUserPointer(ent->self);
         }
     }
@@ -828,7 +829,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
                 startTransform.setFromOpenGLMatrix(room->transform);
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 room->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                bt_engine_dynamicsWorld->addRigidBody(room->bt_body);
+                bt_engine_dynamicsWorld->addRigidBody(room->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
                 room->bt_body->setUserPointer(room->self);
                 room->self->collide_flag = COLLISION_TRIMESH;                   // meshtree
                 if(!room->active)
@@ -1130,7 +1131,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
                 startTransform.setFromOpenGLMatrix(r_static->transform);
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body);
+                bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
                 r_static->bt_body->setUserPointer(r_static->self);
             }
         }

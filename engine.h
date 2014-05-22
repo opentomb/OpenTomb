@@ -17,6 +17,14 @@
 #define OBJECT_ENTITY                           (0x0003)
 #define OBJECT_BULLET_MISC                      (0x0004)
 
+#define COLLISION_MASK_ALL                      (0xFFFF)
+#define COLLISION_GROUP_ALL                     (0xFFFF)
+#define COLLISION_GROUP_STATIC                  (0x0001)        // room mesh, statics
+#define COLLISION_GROUP_CINEMATIC               (0x0002)        // doors, blocks, static animated entityes
+#define COLLISION_GROUP_CHARACTERS              (0x0004)        // Lara, enemies, friends, creatures
+#define COLLISION_GROUP_BULLETS                 (0x0008)        // bullets, rockets, grenades, arrows...
+#define COLLISION_GROUP_DYNAMICS                (0x0010)        // test balls, warious
+
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
