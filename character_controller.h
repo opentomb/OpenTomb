@@ -193,11 +193,13 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
 void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz);
-int Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
 void Character_UpdatePlatformPostStep(struct entity_s *ent);
 void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor);
+
+void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
+void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);
 
 int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd);
 int Character_FreeFalling(struct entity_s *ent, character_command_p cmd);

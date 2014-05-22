@@ -1159,14 +1159,14 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
 }
 
 
-int Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal)
+void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal)
 {
     btScalar t;
     btVector3 spd(0.0, 0.0, 0.0);
 
     if(!ent->character)
     {
-        return 0;
+        return;
     }
     
     // Jump length is a speed value multiplied by global speed coefficient.
@@ -1204,10 +1204,83 @@ int Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_ho
     // Apply vertical speed.
     ent->speed.m_floats[2] = v_vertical * ent->character->speed_mult;
     ent->move_type = MOVE_FREE_FALLING;
-
-    return 0;
 }
 
+void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean)
+{ 
+    // If maximum lean is zero, simply reset angles and exit.
+    if(max_lean == 0.0)
+    {
+        ent->angles[2] = 0.0;
+        return;
+    }
+ 
+    btScalar neg_lean   = 360.0 - max_lean;
+    btScalar lean_coeff = max_lean * 3;   
+    
+    // Continously lean character, according to current left/right direction.
+    
+    if(cmd->move[1] == 1)   // Right direction
+    {
+        if(ent->angles[2] != max_lean)
+        {
+            if(ent->angles[2] < max_lean)   // Approaching from center
+            {
+                ent->angles[2] += ((abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                if(ent->angles[2] > max_lean)
+                    ent->angles[2] = max_lean;
+            }
+            else if(ent->angles[2] > 180.0) // Approaching from left
+            {
+                ent->angles[2] += ((360 - abs(ent->angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
+                if(ent->angles[2] < 180.0) ent->angles[2] = 0.0;
+            }
+            else    // Reduce previous lean
+            {
+                ent->angles[2] -= ((abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                if(ent->angles[2] < 0.0) ent->angles[2] = 0.0;
+            }
+        }
+    }
+    else if(cmd->move[1] == -1)     // Left direction
+    {
+        if(ent->angles[2] != neg_lean)
+        {
+            if(ent->angles[2] > neg_lean)   // Reduce previous lean
+            {
+                ent->angles[2] -= ((360 - abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                if(ent->angles[2] < neg_lean)
+                    ent->angles[2] = neg_lean;
+            }
+            else if(ent->angles[2] < 180.0) // Approaching from right
+            {
+                ent->angles[2] -= ((abs(ent->angles[2]) + (lean_coeff*2)) / 2) * engine_frame_time;
+                if(ent->angles[2] < 0.0) ent->angles[2] += 360.0;
+            }
+            else    // Approaching from center
+            {
+                ent->angles[2] += ((360 - abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                if(ent->angles[2] > 360.0) ent->angles[2] -= 360.0;
+            }
+        }
+    }
+    else    // No direction - restore straight vertical position!
+    {
+        if(ent->angles[2] != 0.0)
+        {
+            if(ent->angles[2] < 180.0)
+            {
+                ent->angles[2] -= ((abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                if(ent->angles[2] < 0.0) ent->angles[2] = 0.0;
+            }
+            else
+            {
+                ent->angles[2] += ((360 - abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                if(ent->angles[2] < 180.0) ent->angles[2] = 0.0;
+            }
+        }
+    }
+}
 
 /*
  * MOVE IN DIFFERENCE CONDITIONS
@@ -1224,8 +1297,8 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         return 0;
     }
 
-    ent->angles[1] = 0.0;
-    ent->angles[2] = 0.0;
+    //ent->angles[1] = 0.0;
+    //ent->angles[2] = 0.0;
     
     /*
      * resize collision model

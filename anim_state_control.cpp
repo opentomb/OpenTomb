@@ -110,6 +110,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] = 0;
             cmd->crouch |= low_vertical_space;
             
+            Character_Lean(ent, cmd, 0.0);
+            
             if( (climb->can_hang &&
                 (climb->next_z_space >= ent->character->Height) &&
                 (ent->move_type == MOVE_CLIMBING)) ||
@@ -563,6 +565,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->dir_flag = ENT_MOVE_FORWARD;
             cmd->crouch |= low_vertical_space;
             
+            Character_Lean(ent, cmd, 6.0);
+            
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
@@ -667,6 +671,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_SPRINT:          
             vec3_mul_scalar(offset, ent->transform + 4, RUN_FORWARD_OFFSET);
             offset[2] += 512.0;
+            
+            Character_Lean(ent, cmd, 12.0);
+            
             i = Character_CheckNextStep(ent, offset, &next_fc);
             cmd->crouch |= low_vertical_space;
             
@@ -748,6 +755,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] *= 0.4;
             vec3_mul_scalar(offset, ent->transform + 4, WALK_FORWARD_OFFSET);
             offset[2] += 512.0;
+            
+            Character_Lean(ent, cmd, 0.5);
+            
             i = Character_CheckNextStep(ent, offset, &next_fc);
             ent->dir_flag = ENT_MOVE_FORWARD;
 
@@ -2158,6 +2168,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             move[1] = pos[1];
             move[2] = pos[2] + 0.5 * ent->collision_offset.m_floats[2];
             Character_GetHeightInfo(move, &next_fc);
+            
+            Character_Lean(ent, cmd, 0.1);
+            
             if((cmd->crouch == 0) && !low_vertical_space)
             {
                 ent->next_state = TR_STATE_LARA_STOP;       // Back to stand
