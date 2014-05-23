@@ -388,7 +388,7 @@ void Game_ApplyControls(struct entity_s *ent)
         }
         else
         {
-            ent->character->cmd.rot[0] =-360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
+            ent->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
         }
         
         if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
