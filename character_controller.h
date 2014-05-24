@@ -24,7 +24,7 @@
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (0.707)                         ///@FIXME: cos(alpha = 45 deg)
 #define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
-#define DEFAULT_CHARACTER_CLIMB_R               (64.0)
+#define DEFAULT_CHARACTER_CLIMB_R               (48.0)
 #define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
 
 // Speed limits
@@ -70,6 +70,7 @@ class bt_engine_ClosestConvexResultCallback;
 class bt_engine_ClosestRayResultCallback;
 class btPairCachingGhostObject;
 class btCollisionObject;
+class btConvexShape;
 
 typedef struct climb_info_s
 {
@@ -97,6 +98,7 @@ typedef struct height_info_s
 {
     bt_engine_ClosestRayResultCallback         *cb;
     bt_engine_ClosestConvexResultCallback      *ccb;
+    btConvexShape                              *sp;
     
     int8_t                                      ceiling_climb;
     int8_t                                      walls_climb;

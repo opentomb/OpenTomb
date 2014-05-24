@@ -102,6 +102,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
 
     ret->height_info.cb = ret->ray_cb;
     ret->height_info.ccb = ret->convex_cb;
+    ret->height_info.sp = new btSphereShape(16.0);
     ret->height_info.ceiling_hit = 0x00;
     ret->height_info.floor_hit = 0x00;
     ret->height_info.water = 0x00;
@@ -190,6 +191,11 @@ void Character_Clean(struct entity_s *ent)
     
     actor->height_info.cb = NULL;
     actor->height_info.ccb = NULL;
+    if(actor->height_info.sp)
+    {
+        delete actor->height_info.sp;
+        actor->height_info.sp = NULL;
+    }
     actor->height_info.ceiling_hit = 0x00;
     actor->height_info.floor_hit = 0x00;
     actor->height_info.water = 0x00;
@@ -299,35 +305,13 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
  * Move character to the point where to platfom mowes
  */
 void Character_UpdatePlatformPreStep(struct entity_s *ent)
-{   
-    switch(ent->move_type)
-    {
-        case MOVE_ON_FLOOR:
-            if(ent->character->height_info.floor_hit)
-            {
-                ent->character->platform = ent->character->height_info.floor_obj;
-            }
-            break;
-            
-        case MOVE_CLIMBING:
-            if(ent->character->climb.edge_hit)
-            {
-                ent->character->platform = ent->character->climb.edge_obj;
-            }
-            break;
-            
-        default:
-            ent->character->platform = NULL;
-            break;
-    };
-    
-    
+{
     if(ent->character->platform)
     {
         engine_container_p cont = (engine_container_p)ent->character->platform->getUserPointer();
         if(cont && (cont->object_type == OBJECT_ENTITY/* || cont->object_type == OBJECT_BULLET_MISC*/))
         {
-            btScalar trpl[16], new_tr[16];
+            btScalar trpl[16];
             ent->character->platform->getWorldTransform().getOpenGLMatrix(trpl);
 #if 0
             Mat4_Mat4_mul(new_tr, trpl, ent->character->local_platform);
@@ -344,7 +328,7 @@ void Character_UpdatePlatformPreStep(struct entity_s *ent)
  * Get local character transform relative platfom
  */
 void Character_UpdatePlatformPostStep(struct entity_s *ent)
-{
+{   
     switch(ent->move_type)
     {
         case MOVE_ON_FLOOR:
@@ -376,6 +360,10 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
             /* local_platform = (global_platform ^ -1) x (global_entity); */
             Mat4_inv_Mat4_mul(ent->character->local_platform, trpl, ent->transform);
         }
+        else
+        {
+            ent->character->platform = NULL;
+        }
     }
 }
 
@@ -386,7 +374,9 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
 {
     btVector3 from, to;
+    btTransform tr1, tr2;
     bt_engine_ClosestRayResultCallback *cb = fc->cb;
+    bt_engine_ClosestConvexResultCallback *ccb = fc->ccb;
     room_p r = (cb->m_cont)?(cb->m_cont->room):(NULL);
     room_sector_p rs;
     
@@ -430,20 +420,38 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     /*
      * GET HEIGHTS
      */
+    btVector3 base_pos;
+    vec3_copy(base_pos.m_floats, pos);
     vec3_copy(from.m_floats, pos);
     to = from;
     to.m_floats[2] -= 4096.0;
-    cb->m_closestHitFraction = 1.0;
-    cb->m_collisionObject = NULL;
-    cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
-    bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-    fc->floor_hit = (int)cb->hasHit();
+    tr1.setIdentity();
+    tr1.setOrigin(from);
+    tr2.setIdentity();
+    tr2.setOrigin(to);
+    ccb->m_closestHitFraction = 1.0;
+    ccb->m_hitCollisionObject = NULL;
+    bt_engine_dynamicsWorld->convexSweepTest(fc->sp, tr1, tr2, *ccb);
+    fc->floor_hit = (int)ccb->hasHit();
     if(fc->floor_hit)
     {
         fc->floor_normale = cb->m_hitNormalWorld;
-        fc->floor_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        fc->floor_obj = (btCollisionObject*)cb->m_collisionObject;
-    }
+        fc->floor_point = base_pos;
+        fc->floor_point.m_floats[2] = ccb->m_hitPointWorld.m_floats[2];
+        fc->floor_normale = ccb->m_hitNormalWorld;
+        fc->floor_obj = (btCollisionObject*)ccb->m_hitCollisionObject;
+        
+        from.m_floats[0] = to.m_floats[0] = base_pos.m_floats[0];
+        from.m_floats[1] = to.m_floats[1] = base_pos.m_floats[1];
+        cb->m_closestHitFraction = 1.0;
+        cb->m_collisionObject = NULL;
+        cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
+        bt_engine_dynamicsWorld->rayTest(from, to, *cb);
+        if(cb->hasHit())
+        {
+            fc->floor_normale = cb->m_hitNormalWorld;
+        }
+    }   
     
     to = from;
     to.m_floats[2] += 4096.0;
@@ -465,16 +473,30 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
         from.m_floats[2] -= 64.0;
         to = from;
         to.m_floats[2] -= 4096.0;
-        cb->m_closestHitFraction = 1.0;
-        cb->m_collisionObject = NULL;
-        cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;// kF_KeepUnflippedNormal
-        bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-        fc->floor_hit = (int)cb->hasHit();
+        tr1.setOrigin(from);
+        tr2.setOrigin(to);
+        ccb->m_closestHitFraction = 1.0;
+        ccb->m_hitCollisionObject = NULL;
+        bt_engine_dynamicsWorld->convexSweepTest(fc->sp, tr1, tr2, *ccb);
+        fc->floor_hit = (int)ccb->hasHit();
         if(fc->floor_hit)
         {
             fc->floor_normale = cb->m_hitNormalWorld;
-            fc->floor_point.setInterpolate3(from, to, cb->m_closestHitFraction);
-            fc->floor_obj = (btCollisionObject*)cb->m_collisionObject;
+            fc->floor_point = base_pos;
+            fc->floor_point.m_floats[2] = ccb->m_hitPointWorld.m_floats[2];
+            fc->floor_normale = ccb->m_hitNormalWorld;
+            fc->floor_obj = (btCollisionObject*)ccb->m_hitCollisionObject;
+
+            from.m_floats[0] = to.m_floats[0] = base_pos.m_floats[0];
+            from.m_floats[1] = to.m_floats[1] = base_pos.m_floats[1];
+            cb->m_closestHitFraction = 1.0;
+            cb->m_collisionObject = NULL;
+            cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
+            bt_engine_dynamicsWorld->rayTest(from, to, *cb);
+            if(cb->hasHit())
+            {
+                fc->floor_normale = cb->m_hitNormalWorld;
+            }
         }
     }
 }
@@ -1072,6 +1094,17 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
                 cmd->horizontal_collide |= 0x01;
             }
         }
+        else
+        {
+            if((reaction[2] > 0.0) && (move[2] < 0.0))
+            {
+                cmd->vertical_collide |= 0x01;
+            }
+            else if((reaction[2] < 0.0) && (move[2] > 0.0))
+            {
+                cmd->vertical_collide |= 0x02;
+            }
+        }
     }
 
     if(ent->character->height_info.ceiling_hit && (pos.m_floats[2] > ent->character->height_info.ceiling_point.m_floats[2]))
@@ -1312,7 +1345,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
     /*
      * check move type
      */
-    if(ent->character->height_info.floor_hit)
+    if(ent->character->height_info.floor_hit || (cmd->vertical_collide & 0x01))
     {
         if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height < pos[2])
         {
@@ -1442,7 +1475,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
                 cmd->vertical_collide |= 0x01;
             }
         }
-        else
+        else if(!(cmd->vertical_collide & 0x01))
         {
             ent->move_type = MOVE_FREE_FALLING;
             ent->speed.m_floats[2] = 0.0;
@@ -1531,7 +1564,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
             Entity_UpdateRoomPos(ent);
         }
     }
-    if(ent->character->height_info.floor_hit && ent->speed.m_floats[2] < 0.0)                 // move down
+    if(ent->character->height_info.floor_hit && ent->speed.m_floats[2] < 0.0)   // move down
     {
         if(ent->character->height_info.floor_point.m_floats[2] >= pos[2] + ent->bf.bb_min[2] + move.m_floats[2])
         {
@@ -1576,6 +1609,13 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
                 Mat4_vec3_mul_macro(fc_pos, ent->transform, ent->collision_offset.m_floats);
                 Character_GetHeightInfo(fc_pos, &ent->character->height_info);
                 Character_FixPenetrations(ent, cmd, move);
+                Entity_UpdateRoomPos(ent);
+                return 2;
+            }
+            if(cmd->vertical_collide & 0x01)
+            {
+                ent->speed.m_floats[2] = 0.0;
+                ent->move_type = MOVE_ON_FLOOR;
                 Entity_UpdateRoomPos(ent);
                 return 2;
             }

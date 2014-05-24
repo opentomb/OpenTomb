@@ -76,9 +76,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     climb_info_t *climb = &ent->character->climb; 
     
     // last frame is a stick... but is some cases works absolute correctly
-    char last_frame = ent->model->animations[ent->current_animation].frames_count - 1 <= ent->current_frame;
+    char last_frame = ent->model->animations[ent->current_animation].frames_count <= ent->current_frame + 1;
     
     curr_fc = &ent->character->height_info;
+    next_fc.sp = curr_fc->sp;
     next_fc.cb = ent->character->ray_cb;
     next_fc.cb->m_closestHitFraction = 1.0;
     next_fc.cb->m_collisionObject = NULL;

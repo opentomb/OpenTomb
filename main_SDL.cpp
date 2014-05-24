@@ -760,6 +760,7 @@ void ShowDebugInfo()
 
        fc.cb = ent->character->ray_cb;
        fc.ccb = ent->character->convex_cb;
+       fc.sp = ent->character->climb_sensor;
        vec3_add(pos, ent->transform+12, ent->collision_offset.m_floats);
        Character_GetHeightInfo(pos, &fc);
 
