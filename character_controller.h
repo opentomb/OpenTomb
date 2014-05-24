@@ -27,6 +27,14 @@
 #define DEFAULT_CHARACTER_CLIMB_R               (64.0)
 #define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
 
+// Speed limits
+
+#define FREE_FALL_SPEED_0 (2000)
+#define FREE_FALL_SPEED_1 (4200)
+#define FREE_FALL_SPEED_2 (6400)
+#define FREE_FALL_SPEED_CRITICAL (7200)
+#define FREE_FALL_SPEED_MAXIMUM (8000)
+
 // flags constants
 #define CHARACTER_SLIDE_FRONT                   (0x02)
 #define CHARACTER_SLIDE_BACK                    (0x01)
