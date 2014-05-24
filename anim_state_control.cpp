@@ -25,11 +25,6 @@
  * postframe do {if(out) {load pos; do command;}}
  */
 
-#define FREE_FALL_SPEED_0 (2000)
-#define FREE_FALL_SPEED_1 (4200)
-#define FREE_FALL_SPEED_2 (6400)
-#define FREE_FALL_SPEED_CRITICAL (7200)
-
 #define PENETRATION_TEST_OFFSET (0.16 * ent->character->ry)
 #define WALK_FORWARD_OFFSET (96.0)              ///@FIXME: find real offset
 #define WALK_FORWARD_STEP_UP (256.0)            // by bone frame bb
@@ -1794,6 +1789,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_FREEFALL:
             ent->character->complex_collision = 0x01;
+            
+            Character_Lean(ent, cmd, 4.0);
+            
             if( (int(ent->speed.m_floats[2]) <=  -FREE_FALL_SPEED_CRITICAL) &&
                 (int(ent->speed.m_floats[2]) >= (-FREE_FALL_SPEED_CRITICAL-100)) )
             {

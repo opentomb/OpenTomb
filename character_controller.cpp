@@ -1482,12 +1482,13 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     cmd->vertical_collide = 0x00;
     ent->angles[0] += cmd->rot[0] * 0.5;                                        ///@FIXME magic const
     ent->angles[1] = 0.0;
-    ent->angles[2] = 0.0;
+    
     Entity_UpdateRotation(ent);                                                 // apply rotations
     
     move = ent->speed + bt_engine_dynamicsWorld->getGravity() * engine_frame_time * 0.5;
     move *= engine_frame_time;
     ent->speed += bt_engine_dynamicsWorld->getGravity() * engine_frame_time;
+    ent->speed.m_floats[2] = (ent->speed.m_floats[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(ent->speed.m_floats[2]);
     vec3_RotateZ(ent->speed.m_floats, ent->speed.m_floats, cmd->rot[0] * 0.5);  ///@FIXME magic const
     
     t = move.length();
