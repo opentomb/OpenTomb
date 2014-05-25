@@ -30,6 +30,7 @@
 #include "resource.h"
 #include "entity.h"
 #include "audio.h"
+#include "gameflow.h"
 
 #include "vt/vt_level.h"
 #include "bounding_volume.h"
@@ -75,7 +76,7 @@ entity_p                last_rmb = NULL;
  * 1) console
  *      - add notify functions
  * 2) LUA enngine global script:
- *      - add base functions for entity manipulation, I.E.: health, collision callbacks, 
+ *      - add base functions for entity manipulation, I.E.: health, collision callbacks,
  *        spawn, new, delete, inventory manipulation.
  * 6) Menu (create own menu)
  *      - settings
@@ -309,7 +310,7 @@ void Engine_PrepareOpenGL()
     {
         glDisable(GL_MULTISAMPLE);
     }
-    
+
     dbgSphere = gluNewQuadric();
     dbgCyl = gluNewQuadric();
     gluQuadricDrawStyle(dbgSphere, GLU_FILL);
@@ -340,7 +341,7 @@ void Engine_InitSDLControls()
         {
             init_flags |= SDL_INIT_HAPTIC;                                      // Update init flags for force feedback.
         }
-        
+
         SDL_Init(init_flags);
 
         NumJoysticks = SDL_NumJoysticks();
@@ -349,7 +350,7 @@ void Engine_InitSDLControls()
             Sys_DebugLog(LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
             return;
         }
-        
+
         if(SDL_IsGameController(control_mapper.joy_number))                     // If joystick has mapping (e.g. X360 controller)
         {
             SDL_GameControllerEventState(SDL_ENABLE);                           // Use GameController API
@@ -436,9 +437,9 @@ void Engine_InitALAudio()
         ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
         ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
         ALC_FREQUENCY,       44100, 0};
-    
+
     const char *drv = SDL_GetCurrentAudioDriver();
-    
+
     Con_Printf("Current audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
     al_device = alcOpenDevice(NULL);
     if (!al_device)
@@ -452,7 +453,7 @@ void Engine_InitALAudio()
         Con_Printf("AL context is not current!");
         return;
     }
-    
+
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
@@ -475,18 +476,19 @@ int main(int argc, char **argv)
 
     Engine_PrepareOpenGL();
     Engine_InitALAudio();
-    
+
     World_Prepare(&engine_world);
-    TestGenScene();
+    //TestGenScene();
+    GF_NextAction = true;//We want to start our first gameflow action!
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
-    
+
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
-   
+
     while(!done)
     {
         newtime = Sys_FloatTime();
@@ -494,7 +496,7 @@ int main(int argc, char **argv)
         oldtime = newtime;
         Engine_Frame(time);
     }
-    
+
     Engine_Shutdown(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
 }
@@ -693,7 +695,7 @@ void Engine_Frame(btScalar time)
         cycles = 0;
         time_cycl = 0.0;
     }
-    
+
     Engine_PollSDLInput();
 
 #if SKELETAL_TEST
@@ -766,7 +768,7 @@ void ShowDebugInfo()
 
        if(ent->self->room)
        {
-            Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc.water, fc.water_level);            
+            Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc.water, fc.water_level);
        }
 
 #if 0
@@ -822,6 +824,8 @@ void ShowDebugInfo()
         Gui_OutTextXY(screen_info.w-420, 28, "room = %d, co = %d", engine_world.Character->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
     }
 
+
+	 Gui_OutTextXY(screen_info.w-420, 128, "Level Name: %s", GF_CurrentLevelName);
     //Gui_OutTextXY(screen_info.w-380, 68, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
     //Gui_OutTextXY(screen_info.w-380, 68, "r_room_active = %d", renderer.r_list_active_count);
 #endif
@@ -831,7 +835,7 @@ void Engine_PollSDLInput()
 {
     SDL_Event   event;
     static int mouse_setup = 0;
-    
+
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
@@ -846,7 +850,7 @@ void Engine_PollSDLInput()
                         control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
                         control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
                     }
-                    
+
                     if((event.motion.x < ((screen_info.w/2)-(screen_info.w/4))) ||
                        (event.motion.x > ((screen_info.w/2)+(screen_info.w/4))) ||
                        (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
@@ -910,7 +914,7 @@ void Engine_PollSDLInput()
                     done = 1;
                     break;
                 }
-                
+
                 if(con_base.show && event.key.state)
                 {
                     Con_Edit(Controls_KeyConsoleFilter(event.key.keysym.sym, event.key.keysym.mod));
@@ -1001,13 +1005,13 @@ void DebugKeys(int button, int state)
                     mesh = 0;
                 }
                 break;
-                
+
             case SDLK_z:
                 paused = !paused;
                 if(engine_world.Character != NULL)
                 {
                     engine_world.Character->character->cmd.kill = 0;
-                    
+
                     if(engine_world.Character->move_type == MOVE_UNDER_WATER)
                     {
                         Entity_SetAnimation(engine_world.Character, 103, 0);

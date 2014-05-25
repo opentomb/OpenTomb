@@ -40,6 +40,7 @@ extern "C" {
 #include "gui.h"
 #include "audio.h"
 #include "character_controller.h"
+#include "gameflow.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
@@ -247,19 +248,19 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
     int size, id, top;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     if(id < 0 || id > engine_world.skeletal_model_count - 1)
     {
         Con_Printf("there are not models with id = %d", id);
         return 0;
     }
-    
+
     size = lua_tointeger(lua, 2);
     if(size >= 0 && size < engine_world.skeletal_models[id].mesh_count)
     {
         engine_world.skeletal_models[id].collision_map_size = size;
     }
-    
+
     return 0;
 }
 
@@ -269,20 +270,20 @@ int lua_SetModelCollisionMap(lua_State * lua)
     int arg, val, id, top;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     if(id < 0 || id > engine_world.skeletal_model_count - 1)
     {
         Con_Printf("there are not models with id = %d", id);
         return 0;
     }
-    
+
     arg = lua_tointeger(lua, 2);
     val = lua_tointeger(lua, 3);
     if(arg >= 0 && arg < engine_world.skeletal_models[id].mesh_count)
     {
         engine_world.skeletal_models[id].collision_map[arg] = val;
     }
-    
+
     return 0;
 }
 
@@ -291,19 +292,19 @@ int lua_EnableEntity(lua_State * lua)
 {
     int num = lua_gettop(lua);                                                  // get # of arguments
     entity_p ent;
-    
+
     if(num < 1)
     {
         Con_AddLine("You must to enter entity ID");
         return 0;
     }
-    
+
     ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent)
     {
         Entity_Enable(ent);
     }
-    
+
     return 0;
 }
 
@@ -312,19 +313,19 @@ int lua_DisableEntity(lua_State * lua)
 {
     int num = lua_gettop(lua);                                                  // get # of arguments
     entity_p ent;
-    
+
     if(num < 1)
     {
         Con_AddLine("You must to enter entity ID");
         return 0;
     }
-    
+
     ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent)
     {
         Entity_Disable(ent);
     }
-    
+
     return 0;
 }
 
@@ -372,14 +373,14 @@ int lua_GetModelID(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     if(ent->model)
     {
         lua_pushinteger(lua, ent->model->ID);
@@ -395,20 +396,20 @@ int lua_GetActivationOffset(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushnumber(lua, ent->activation_offset[0]);
     lua_pushnumber(lua, ent->activation_offset[1]);
     lua_pushnumber(lua, ent->activation_offset[2]);
     lua_pushnumber(lua, ent->activation_offset[3]);
 
-    return 4;    
+    return 4;
 }
 
 
@@ -418,14 +419,14 @@ int lua_SetActivationOffset(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     if(top >= 4)
     {
         ent->activation_offset[0] = lua_tonumber(lua, 2);
@@ -484,13 +485,13 @@ int lua_GetEntityPosition(lua_State * lua)
         return 0;
     }
     ent = World_GetEntityByID(&engine_world, id);
-    
+
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushnumber(lua, ent->transform[12+0]);
     lua_pushnumber(lua, ent->transform[12+1]);
     lua_pushnumber(lua, ent->transform[12+2]);
@@ -507,14 +508,14 @@ int lua_SetEntityPosition(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     switch(top)
     {
         case 4:
@@ -525,8 +526,8 @@ int lua_SetEntityPosition(lua_State * lua)
             {
                 Character_UpdatePlatformPreStep(ent);
             }
-            return 0;  
-        
+            return 0;
+
         case 7:
             ent->transform[12+0] = lua_tonumber(lua, 2);
             ent->transform[12+1] = lua_tonumber(lua, 3);
@@ -539,8 +540,8 @@ int lua_SetEntityPosition(lua_State * lua)
             {
                 Character_UpdatePlatformPreStep(ent);
             }
-            return 0;  
-            
+            return 0;
+
         default:
             Con_Printf("Wrong arguments count. Must be (id, x, y, z) or (id, x, y, z, fi_x, fi_y, fi_z)");
             return 0;
@@ -556,22 +557,22 @@ int lua_MoveEntityGlobal(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     switch(top)
     {
         case 4:
             ent->transform[12+0] += lua_tonumber(lua, 2);
             ent->transform[12+1] += lua_tonumber(lua, 3);
             ent->transform[12+2] += lua_tonumber(lua, 4);
-            return 0;  
-            
+            return 0;
+
         default:
             Con_Printf("Wrong arguments count. Must be (id, x, y, z)");
             return 0;
@@ -588,18 +589,18 @@ int lua_MoveEntityLocal(lua_State * lua)
     btScalar dx, dy, dz;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     dx = lua_tonumber(lua, 2);
     dy = lua_tonumber(lua, 3);
     dz = lua_tonumber(lua, 4);
-    
+
     ent->transform[12+0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
     ent->transform[12+1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
     ent->transform[12+2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
@@ -620,13 +621,13 @@ int lua_GetEntitySpeed(lua_State * lua)
         return 0;
     }
     ent = World_GetEntityByID(&engine_world, id);
-    
+
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushnumber(lua, ent->speed[0]);
     lua_pushnumber(lua, ent->speed[1]);
     lua_pushnumber(lua, ent->speed[2]);
@@ -640,22 +641,22 @@ int lua_SetEntitySpeed(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     switch(top)
     {
         case 4:
             ent->speed[0] = lua_tonumber(lua, 2);
             ent->speed[1] = lua_tonumber(lua, 3);
             ent->speed[2] = lua_tonumber(lua, 4);
-            return 0;  
-            
+            return 0;
+
         default:
             Con_Printf("Wrong arguments count. Must be (id, Vx, Vy, Vz)");
             return 0;
@@ -671,14 +672,14 @@ int lua_SetEntityAnim(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
 
     return 0;
@@ -691,14 +692,14 @@ int lua_GetEntityAnim(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, ent->current_animation);
     lua_pushinteger(lua, ent->current_frame);
     lua_pushinteger(lua, ent->model->animations[ent->current_animation].frames_count);
@@ -713,13 +714,13 @@ int lua_CanTriggerEntity(lua_State * lua)
     entity_p e1, e2;
     btScalar pos[3], offset[3], r;
     top = lua_gettop(lua);
-    
+
     if(top < 2)
     {
         lua_pushinteger(lua, 0);
         return 1;
     }
-    
+
     id = lua_tointeger(lua, 1);
     e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL || !e1->character || !e1->character->cmd.action)
@@ -734,7 +735,7 @@ int lua_CanTriggerEntity(lua_State * lua)
         lua_pushinteger(lua, 0);
         return 1;
     }
-    
+
     r = e2->activation_offset[3];
     if(top >= 3)
     {
@@ -748,7 +749,7 @@ int lua_CanTriggerEntity(lua_State * lua)
         offset[1] = lua_tonumber(lua, 5);
         offset[2] = lua_tonumber(lua, 6);
     }
-    
+
     Mat4_vec3_mul_macro(pos, e2->transform, offset);
     if((vec3_dot(e1->transform+4, e2->transform+4) > 0.75) &&
        (vec3_dist_sq(e1->transform+12, pos) < r))
@@ -756,7 +757,7 @@ int lua_CanTriggerEntity(lua_State * lua)
         lua_pushinteger(lua, 1);
         return 1;
     }
-    
+
     lua_pushinteger(lua, 0);
     return 1;
 }
@@ -768,14 +769,14 @@ int lua_SetEntityWisibility(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     ent->hide = !lua_tointeger(lua, 2);
 
     return 0;
@@ -788,14 +789,14 @@ int lua_GetEntityActivity(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, ent->active);
 
     return 1;
@@ -808,14 +809,14 @@ int lua_SetEntityActivity(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     ent->active = lua_tointeger(lua, 2);
 
     return 0;
@@ -828,14 +829,14 @@ int lua_GetEntityOCB(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, ent->OCB);
 
     return 1;
@@ -848,14 +849,14 @@ int lua_GetEntityFlag(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, ent->flags);
 
     return 1;
@@ -868,14 +869,14 @@ int lua_SetEntityFlag(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     ent->flags = lua_tointeger(lua, 2);
 
     return 0;
@@ -887,14 +888,14 @@ int lua_GetEntityActivationMask(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, ent->activation_mask);
 
     return 1;
@@ -907,14 +908,14 @@ int lua_SetEntityActivationMask(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     ent->activation_mask = lua_tointeger(lua, 2);
 
     return 0;
@@ -926,14 +927,14 @@ int lua_GetEntityState(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, ent->next_state);
 
     return 1;
@@ -944,10 +945,10 @@ int lua_SetEntityMeshswap(lua_State * lua)
     int top     = lua_gettop(lua);
     int id_src  = lua_tointeger(lua, 2);
     int id_dest = lua_tointeger(lua, 1);
-    
+
     entity_p         ent_dest;
     skeletal_model_p model_src, model_dest;
-    
+
     ent_dest   = World_GetEntityByID(&engine_world, id_dest);
     model_src  = World_FindModelByID(&engine_world, id_src );
     model_dest = (skeletal_model_p)ent_dest->model;
@@ -959,7 +960,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
         ent_dest->bf.bone_tags[i].mesh  = model_src->mesh_tree[i].mesh;
         ent_dest->bf.bone_tags[i].mesh2 = model_src->mesh_tree[i].mesh2;
     }
-    
+
 }
 
 int lua_SetEntityState(lua_State * lua)
@@ -968,14 +969,14 @@ int lua_SetEntityState(lua_State * lua)
     entity_p ent;
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
-    
+
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
-    
+
     ent->next_state = lua_tointeger(lua, 2);
 
     return 0;
@@ -985,57 +986,78 @@ int lua_SetEntityState(lua_State * lua)
 int lua_PlayStream(lua_State *lua)
 {
         int id, top;
-    
+
     top = lua_gettop(lua);
     id  = lua_tointeger(lua, 1);
-    
+
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
-    
+
     if(id < 0)
     {
         Con_Printf("Wrong stream ID. Must be more or equal to 0.");
         return 0;
     }
-    
+
     Audio_StreamPlay(id);
 
     return 1;
 }
 
-
-int lua_PlaySound(lua_State *lua)
+int lua_SetLevel(lua_State *lua)
 {
     int id, top;
-    
+
     top = lua_gettop(lua);
     id  = lua_tointeger(lua, 1);
-    
+
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
-    
+
+    Con_Printf("Changing GF_CurrentLevelID to %d", id);
+
+    GF_CurrentLevelID = id;
+    GF_NextAction = true;//Next level
+    return 0;
+}
+
+
+
+int lua_PlaySound(lua_State *lua)
+{
+    int id, top;
+
+    top = lua_gettop(lua);
+    id  = lua_tointeger(lua, 1);
+
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (id).");
+        return 0;
+    }
+
     if((id < 0) || (id >= engine_world.audio_map_count))
     {
         Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
         return 0;
     }
-    
+
     switch(Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL))
     {
         case TR_AUDIO_SEND_NOCHANNEL:
             Con_Printf("Audio_Send error: no free channel.", id);
             break;
-            
+
         case TR_AUDIO_SEND_NOSAMPLE:
             Con_Printf("Audio_Send error: no such sample.", id);
             break;
-            
+
         case TR_AUDIO_SEND_IGNORED:
             Con_Printf("Audio_Send: sample skipped - please retry!", id);
             break;
@@ -1048,27 +1070,27 @@ int lua_PlaySound(lua_State *lua)
 int lua_StopSound(lua_State *lua)
 {
     int id, top;
-    
+
     top = lua_gettop(lua);
     id  = lua_tointeger(lua, 1);
-    
+
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
-    
+
     if((id < 0) || (id >= engine_world.audio_map_count))
     {
         Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
         return 0;
     }
-    
+
     if(Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL) == 0)
     {
         Con_Printf("Audio_Kill: sample %d isn't playing.", id);
     }
-    
+
     return 0;
 }
 
@@ -1094,9 +1116,10 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      */
     lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "stopsound", lua_StopSound);
-    
+
     lua_register(lua, "playstream", lua_PlayStream);
-    
+    lua_register(lua, "setlevel", lua_SetLevel);
+
 	lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
 
@@ -1187,22 +1210,22 @@ void Engine_Shutdown(int val)
     {
         SDL_JoystickClose(sdl_joystick);
     }
-    
+
     if(sdl_controller)
     {
         SDL_GameControllerClose(sdl_controller);
     }
-    
+
     if(sdl_haptic)
     {
         SDL_HapticClose(sdl_haptic);
     }
-    
+
     if(al_device)
     {
         alcCloseDevice(al_device);
     }
-    
+
     SDL_Quit();
     //printf("\nSDL_Quit...");
     exit(val);
@@ -1263,7 +1286,7 @@ engine_container_p Container_Create()
 bool Engine_FileFound(const char *name, bool Write)
 {
     FILE *ff;
-    
+
     if(Write)
     {
         ff = fopen(name, "ab");
@@ -1272,7 +1295,7 @@ bool Engine_FileFound(const char *name, bool Write)
     {
         ff = fopen(name, "rb");
     }
-    
+
     if(!ff)
     {
         return false;
@@ -1481,7 +1504,7 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
 	luaL_dofile(engine_lua, "scripts/autoexec.lua");
-    
+
     Character_SetHealth(engine_world.Character, CHARACTER_OPTION_HEALTH_MAX);
     Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
     Character_SetSprint(engine_world.Character, CHARACTER_OPTION_SPRINT_MAX);
@@ -1519,8 +1542,8 @@ int Engine_ExecCmd(char *ch)
             Con_AddLine("free_look - switch camera mode\0");
             Con_AddLine("cam_distance - camera distance to actor\0");
             Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0");
-            Con_AddLine("playsound(id) - play specified sound\0");  
-            Con_AddLine("stopsound(id) - stop specified sound\0");  
+            Con_AddLine("playsound(id) - play specified sound\0");
+            Con_AddLine("stopsound(id) - stop specified sound\0");
         }
         else if(!strcmp(token, "map"))
         {
@@ -1742,7 +1765,7 @@ void Engine_LoadConfig()
     {
         Sys_Warn("Could not find \"scripts/control_constants.lua\"");
     }
-    
+
     if(Engine_FileFound("config.lua"))
     {
         luaL_dofile(engine_lua, "config.lua");
