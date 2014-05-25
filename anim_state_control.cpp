@@ -1243,7 +1243,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                if(ent->speed.m_floats[2] < -FREE_FALL_SPEED_1)                 // next free fall stage
+                if(ent->speed.m_floats[2] < -FREE_FALL_SPEED_2)                 // next free fall stage
                 {
                     ent->move_type = MOVE_FREE_FALLING;
                     ent->next_state = TR_STATE_LARA_FREEFALL;
@@ -1285,7 +1285,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 break;
             }
 
-            if((ent->speed.m_floats[2] < -FREE_FALL_SPEED_1) || (cmd->action == 0)) 
+            if((ent->speed.m_floats[2] < -FREE_FALL_SPEED_2) || (cmd->action == 0)) 
             {
                 ent->move_type == MOVE_FREE_FALLING;
                 ent->next_state = TR_STATE_LARA_FREEFALL;
@@ -1729,6 +1729,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             break;
 
         case TR_STATE_LARA_JUMP_FORWARD:
+            
+            Character_Lean(ent, cmd, 4.0);
+            
             ent->character->complex_collision = 0x01;
             if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
@@ -1768,7 +1771,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_1)
+                if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
                 {
                     ent->next_state = TR_STATE_LARA_FREEFALL;       // free falling
                 }
@@ -1789,9 +1792,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             break;
 
         case TR_STATE_LARA_FREEFALL:
-            ent->character->complex_collision = 0x01;
             
-            Character_Lean(ent, cmd, 4.0);
+            Character_Lean(ent, cmd, 1.0);
+            
+            ent->character->complex_collision = 0x01;
             
             if( (int(ent->speed.m_floats[2]) <=  -FREE_FALL_SPEED_CRITICAL) &&
                 (int(ent->speed.m_floats[2]) >= (-FREE_FALL_SPEED_CRITICAL-100)) )
@@ -1815,9 +1819,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
-                if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
-                {
-                    if(!Character_DecreaseHealth(ent, -((ent->speed.m_floats[2] + FREE_FALL_SPEED_2) * 1.75)))
+                if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_MAXSAFE)
+                {                    
+                    if(!Character_DecreaseHealth(ent, -(ent->speed.m_floats[2] + FREE_FALL_SPEED_MAXSAFE) / 2))
                     {
                         cmd->kill = 1;
                         Controls_JoyRumble(200.0, 500);
@@ -1828,17 +1832,13 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_HARD, 0);
                     }
                 }
-                else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_1)
+                else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_HARD, 0);
                 }
-                else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_0)
-                {
-                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_MIDDLE, 0);
-                }
                 else
                 {
-                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_LIGHT, 0);
+                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_MIDDLE, 0);
                 }
                 
                 if(cmd->kill == 1)
@@ -2519,7 +2519,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             
         case TR_STATE_LARA_FALL_FORWARD:
             ent->character->complex_collision = 0x01;
-            if(ent->speed.m_floats[3] < -FREE_FALL_SPEED_1)
+            if(ent->speed.m_floats[3] < -FREE_FALL_SPEED_2)
             {
                 ent->current_speed *= 0.5;
             }
