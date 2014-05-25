@@ -1757,24 +1757,21 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->dir_flag = ENT_MOVE_BACKWARD;
                 Character_UpdateCurrentSpeed(ent, 1);
             }
-            else if(cmd->action == 0 && cmd->shift == 1)
+            else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
             {
-                ent->next_state = TR_STATE_LARA_SWANDIVE_BEGIN;     // fly like fish
-            }
-            else if(cmd->action == 0 && cmd->roll)
-            {
-                ent->next_state = TR_STATE_LARA_JUMP_ROLL;
+                ent->next_state = TR_STATE_LARA_FREEFALL;           // free falling
             }
             else if(cmd->action == 1)
             {
                 ent->next_state = TR_STATE_LARA_REACH;
             }
-            else
+            else if(cmd->shift == 1)
             {
-                if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
-                {
-                    ent->next_state = TR_STATE_LARA_FREEFALL;       // free falling
-                }
+                ent->next_state = TR_STATE_LARA_SWANDIVE_BEGIN;     // fly like fish
+            }
+            else if(cmd->roll)
+            {
+                ent->next_state = TR_STATE_LARA_JUMP_ROLL;
             }
             break;
 
@@ -1854,6 +1851,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             break;
 
         case TR_STATE_LARA_SWANDIVE_BEGIN:
+            cmd->rot[0] *= 0.4;
             ent->character->complex_collision = 0x01;
             if(cmd->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
             {
@@ -1871,7 +1869,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_SWANDIVE_END:
             ent->character->complex_collision = 0x01;
-            cmd->rot[0] = 0;
+            cmd->rot[0] = 0.0;
             if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
                 ent->next_state = TR_STATE_LARA_DEATH;
