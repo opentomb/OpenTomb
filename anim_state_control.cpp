@@ -1279,7 +1279,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
             }
             
-            if(cmd->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
+            if((ent->move_type != MOVE_CLIMBING) && (cmd->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR))
             {
                 ent->next_state = TR_STATE_LARA_STOP;                           // middle landing
                 break;
