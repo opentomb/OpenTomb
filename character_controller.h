@@ -31,8 +31,8 @@
 
 #define FREE_FALL_SPEED_1        (2000)
 #define FREE_FALL_SPEED_2        (4500)
-#define FREE_FALL_SPEED_MAXSAFE  (5600)
-#define FREE_FALL_SPEED_CRITICAL (7600)
+#define FREE_FALL_SPEED_MAXSAFE  (5500)
+#define FREE_FALL_SPEED_CRITICAL (7500)
 #define FREE_FALL_SPEED_MAXIMUM  (7800)
 
 // flags constants
