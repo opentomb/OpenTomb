@@ -585,6 +585,7 @@ void Render_Entity(struct entity_s *entity)
     if(room != NULL)
     {
         GLfloat ambient_component[4];
+        GLfloat position[4];
 
         ambient_component[0] = room->ambient_lighting[0];
         ambient_component[1] = room->ambient_lighting[1];
@@ -597,6 +598,76 @@ void Render_Entity(struct entity_s *entity)
         }
 
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient_component);
+
+        GLenum current_light_number = GL_LIGHT0;
+        light_s *current_light = NULL;
+
+        int i;
+        for(i = 0; i < room->light_count; i++)
+        {
+            if(current_light_number < GL_LIGHT7)
+            {
+                current_light = &room->lights[i];
+
+                float x = entity->transform[12] - current_light->pos[0];
+                float y = entity->transform[13] - current_light->pos[1];
+                float z = entity->transform[14] - current_light->pos[2];
+
+                float distance = sqrt(x * x + y * y + z * z);
+
+                float directional_component[4];
+                directional_component[0] = current_light->colour[0];
+                directional_component[1] = current_light->colour[1];
+                directional_component[2] = current_light->colour[2];
+                directional_component[3] = current_light->colour[3];
+
+
+                if(room->flags & 0x01)
+                {
+                    Render_CalculateWaterTint(directional_component, 0);
+                }
+
+                if(current_light->light_type == LT_SUN)
+                {
+                    glEnable(current_light_number);
+                    glLightfv(current_light_number, GL_POSITION, current_light->pos);
+                    glLightfv(current_light_number, GL_DIFFUSE, directional_component);
+
+                    glLightf(current_light_number, GL_CONSTANT_ATTENUATION, 1.0f);
+                    glLightf(current_light_number, GL_LINEAR_ATTENUATION, 0.0f);
+                    glLightf(current_light_number, GL_QUADRATIC_ATTENUATION, 0.0);
+
+                    current_light_number++;
+                }
+                else if(distance <= current_light->outer + 1024.0f)
+                {
+                    if(current_light->light_type == LT_POINT)
+                    {
+                        glEnable(current_light_number);
+                        glLightfv(current_light_number, GL_POSITION, current_light->pos);
+                        glLightfv(current_light_number, GL_DIFFUSE, directional_component);
+
+                        glLightf(current_light_number, GL_CONSTANT_ATTENUATION, 1.0f);
+                        glLightf(current_light_number, GL_LINEAR_ATTENUATION, 0.0f);
+                        glLightf(current_light_number, GL_QUADRATIC_ATTENUATION, current_light->falloff);
+
+                        current_light_number++;
+                    }
+                    else if(current_light->light_type == LT_SHADOW)
+                    {
+                        glEnable(current_light_number);
+                        glLightfv(current_light_number, GL_POSITION, current_light->pos);
+                        glLightfv(current_light_number, GL_DIFFUSE, directional_component);
+
+                        glLightf(current_light_number, GL_CONSTANT_ATTENUATION, 1.0f);
+                        glLightf(current_light_number, GL_LINEAR_ATTENUATION, 0.0f);
+                        glLightf(current_light_number, GL_QUADRATIC_ATTENUATION, current_light->falloff);
+
+                        current_light_number++;
+                    }
+                }
+            }
+        }
     }
 
     if(entity->model && entity->model->animations)

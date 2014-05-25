@@ -71,10 +71,29 @@ typedef struct sprite_s
 /*
  * lights
  */
+enum LightType
+{
+    LT_NULL,
+    LT_POINT,
+    LT_SPOTLIGHT,
+    LT_SUN,
+    LT_SHADOW
+};
+
+
 typedef struct light_s
 {
-    btScalar                    pos[3];                                         // world position
-    btScalar                    colour[4];                                      // RGBA value
+    float                       pos[4];                                         // world position
+    float                       colour[4];                                      // RGBA value
+
+    float                       inner;
+    float                       outer;
+    float                       length;
+    float                       cutoff;
+
+    float                       falloff;
+
+    LightType                   light_type;
 }light_t, *light_p;
 
 /*

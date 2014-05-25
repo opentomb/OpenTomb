@@ -26,6 +26,24 @@
 
 #define RCSID "$Id: l_tr3.cpp,v 1.15 2002/09/20 15:59:02 crow Exp $"
 
+void TR_Level::read_tr3_room_light(SDL_RWops * const src, tr5_room_light_t & light)
+{
+	read_tr_vertex32(src, light.pos);
+	light.color.r = read_bitu8(src);
+	light.color.g = read_bitu8(src);
+	light.color.b = read_bitu8(src);
+	light.color.a = read_bitu8(src);
+	light.fade1 = read_bitu32(src);
+	light.fade2 = read_bitu32(src);
+
+	light.intensity = 1.0f;
+
+    light.r_outer = light.fade1;
+    light.r_inner = light.fade1 / 2;
+
+    light.light_type = 0x01; // Point light
+}
+
 void TR_Level::read_tr3_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & room_vertex)
 {
 	read_tr_vertex16(src, room_vertex.vertex);

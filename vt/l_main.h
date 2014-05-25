@@ -589,6 +589,7 @@ class TR_Level {
 	void read_tr2_item(SDL_RWops * const src, tr2_item_t & item);
 	void read_tr2_level(SDL_RWops * const src, bool demo);
 
+	void read_tr3_room_light(SDL_RWops * const src, tr5_room_light_t & light);
 	void read_tr3_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & room_vertex);
 	void read_tr3_room_staticmesh(SDL_RWops * const src, tr2_room_staticmesh_t & room_static_mesh);
 	void read_tr3_room(SDL_RWops * const src, tr5_room_t & room);

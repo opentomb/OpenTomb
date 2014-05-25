@@ -70,6 +70,22 @@ void TR_Level::read_tr2_room_light(SDL_RWops * const src, tr5_room_light_t & lig
 	light.intensity2 = read_bitu16(src);
 	light.fade1 = read_bitu32(src);
 	light.fade2 = read_bitu32(src);
+
+	light.intensity = light.intensity1;
+	light.intensity /= 4096.0f;
+
+	if(light.intensity > 1.0f)
+        light.intensity = 1.0f;
+
+    light.r_outer = light.fade1;
+    light.r_inner = light.fade1 / 2;
+
+    light.light_type = 0x01; // Point light
+
+    // all white
+	light.color.r = 0xff;
+	light.color.g = 0xff;
+	light.color.b = 0xff;
 }
 
 void TR_Level::read_tr2_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & room_vertex)

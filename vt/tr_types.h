@@ -117,7 +117,8 @@ typedef struct {
   */
 typedef struct {
 	tr5_vertex_t pos;           // world coords
-	tr2_colour_t color;         // three bytes rgb values 
+	tr2_colour_t color;         // three bytes rgb values
+	float intensity;            // Calculated intensity
 	uint16_t intensity1;        // Light intensity
 	uint16_t intensity2;        // Almost always equal to Intensity1 [absent from TR1 data files]
 	uint32_t fade1;	            // Falloff value 1

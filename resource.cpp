@@ -1206,14 +1206,51 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
     for(i=0;i<tr_room->num_lights;i++)
     {
+        switch(tr_room->lights[i].light_type)
+        {
+        case 0:
+            room->lights[i].light_type = LT_SUN;
+            break;
+        case 1:
+            room->lights[i].light_type = LT_POINT;
+            break;
+        case 2:
+            room->lights[i].light_type = LT_SPOTLIGHT;
+            break;
+        case 3:
+            room->lights[i].light_type = LT_SHADOW;
+            break;
+        default:
+            room->lights[i].light_type = LT_NULL;
+            break;
+        }
+
         room->lights[i].pos[0] = tr_room->lights[i].pos.x;
         room->lights[i].pos[1] = -tr_room->lights[i].pos.z;
         room->lights[i].pos[2] = tr_room->lights[i].pos.y;
+        room->lights[i].pos[3] = 1.0f;
 
-        room->lights[i].colour[0] = tr_room->lights[i].color.r / 255.0f;
-        room->lights[i].colour[1] = tr_room->lights[i].color.g / 255.0f;
-        room->lights[i].colour[2] = tr_room->lights[i].color.b / 255.0f;
-        room->lights[i].colour[3] = tr_room->lights[i].color.a / 255.0f;
+        if(room->lights[i].light_type == LT_SHADOW)
+        {
+            room->lights[i].colour[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
+            room->lights[i].colour[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
+            room->lights[i].colour[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
+            room->lights[i].colour[3] = 1.0f;
+        }
+        else
+        {
+            room->lights[i].colour[0] = (tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
+            room->lights[i].colour[1] = (tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
+            room->lights[i].colour[2] = (tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
+            room->lights[i].colour[3] = 1.0f;
+        }
+
+        room->lights[i].inner = tr_room->lights[i].r_inner;
+        room->lights[i].outer = tr_room->lights[i].r_outer;
+        room->lights[i].length = tr_room->lights[i].length;
+        room->lights[i].cutoff = tr_room->lights[i].cutoff;
+
+        room->lights[i].falloff = 0.001f / room->lights[i].outer;
     }
 
 

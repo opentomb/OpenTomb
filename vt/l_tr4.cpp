@@ -73,6 +73,8 @@ void TR_Level::read_tr4_room_light(SDL_RWops * const src, tr5_room_light_t & lig
 	light.light_type = read_bitu8(src);
 	light.unknown = read_bitu8(src);
 	light.intensity1 = read_bitu8(src);
+	light.intensity = light.intensity1;
+	light.intensity /= 32;
 	light.r_inner = read_float(src);
 	light.r_outer = read_float(src);
 	light.length = read_float(src);
