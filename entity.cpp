@@ -42,7 +42,10 @@ entity_p Entity_Create()
     ret->onAnimChange = NULL;
     
     ret->lerp = 0.0;
-    ret->next_bf = NULL;
+    ret->current_animation = 0;
+    ret->current_frame = 0;
+    ret->next_animation = 0;
+    ret->next_frame = 0;
     
     ret->bf.bone_tag_count = 0;;
     ret->bf.bone_tags = 0;
@@ -388,7 +391,19 @@ void Entity_GetAnimCommandTransform(entity_p entity, int anim, int frame, btScal
                 break;
                 
             case TR_ANIMCOMMAND_PLAYEFFECT:
-                pointer += 2;                                                   // Parse through 2 operands.
+                if(frame == *++pointer)
+                {
+                    switch(*++pointer & 0x3FFF)
+                    {
+                        case TR_EFFECT_CHANGEDIRECTION:
+                            tr[3] = 180.0;
+                            break;
+                    }
+                }
+                else
+                {
+                    pointer++;
+                }
                 break;
         }
     }
@@ -398,44 +413,55 @@ void Entity_GetAnimCommandTransform(entity_p entity, int anim, int frame, btScal
 void Entity_UpdateCurrentBoneFrame(entity_p entity)
 {
     long int k, stack_use;
-    btScalar cmd_tr[3];
+    btScalar cmd_tr[3], next_bf_tr[4];
     ss_bone_tag_p btag = entity->bf.bone_tags;
     bone_tag_p src_btag, next_btag;
     btScalar *stack, *sp, t;
     skeletal_model_p model = entity->model;
-    bone_frame_p bf = model->animations[entity->current_animation].frames + entity->current_frame;    
-        
-    if(entity->next_bf == NULL)
-    {
-        entity->lerp = 0.0;
-        entity->next_bf = bf;
-    }
+    bone_frame_p next_bf = entity->model->animations[entity->next_animation].frames + entity->next_frame, 
+                 curr_bf = model->animations[entity->current_animation].frames + entity->current_frame;    
 
     t = 1.0 - entity->lerp;
-    vec3_mul_scalar(cmd_tr, entity->next_bf_tr, entity->lerp);
+    Entity_GetAnimCommandTransform(entity, entity->current_animation, entity->current_frame, next_bf_tr);
+    vec3_mul_scalar(cmd_tr, next_bf_tr, entity->lerp);
 
-    vec3_interpolate_macro(entity->bf.bb_max, bf->bb_max, entity->next_bf->bb_max, entity->lerp, t);
+    vec3_interpolate_macro(entity->bf.bb_max, curr_bf->bb_max, next_bf->bb_max, entity->lerp, t);
     vec3_add(entity->bf.bb_max, entity->bf.bb_max, cmd_tr);
-    vec3_interpolate_macro(entity->bf.bb_min, bf->bb_min, entity->next_bf->bb_min, entity->lerp, t);
+    vec3_interpolate_macro(entity->bf.bb_min, curr_bf->bb_min, next_bf->bb_min, entity->lerp, t);
     vec3_add(entity->bf.bb_min, entity->bf.bb_min, cmd_tr);
-    vec3_interpolate_macro(entity->bf.centre, bf->centre, entity->next_bf->centre, entity->lerp, t);
+    vec3_interpolate_macro(entity->bf.centre, curr_bf->centre, next_bf->centre, entity->lerp, t);
     vec3_add(entity->bf.centre, entity->bf.centre, cmd_tr);
     
-    vec3_interpolate_macro(entity->bf.pos, bf->pos, entity->next_bf->pos, entity->lerp, t);
+    vec3_interpolate_macro(entity->bf.pos, curr_bf->pos, next_bf->pos, entity->lerp, t);
     vec3_add(entity->bf.pos, entity->bf.pos, cmd_tr);
-    next_btag = entity->next_bf->bone_tags;
-    src_btag = bf->bone_tags;
-    for(k=0;k<bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
+    next_btag = next_bf->bone_tags;
+    src_btag = curr_bf->bone_tags;
+    for(k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
     {
         vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, entity->lerp, t);      
         vec3_copy(btag->transform+12, btag->offset);
         btag->transform[15] = 1.0;
         if(k == 0)
         {
+            btScalar tq[4];
+            if(next_bf_tr[3] == 180.0)
+            {
+                tq[0] =-next_btag->qrotate[1];  // -  +
+                tq[1] = next_btag->qrotate[0];  // +  -
+                tq[2] = next_btag->qrotate[3];  // +  +
+                tq[3] =-next_btag->qrotate[2];  // -  -
+            }
+            else
+            {
+                vec4_copy(tq, next_btag->qrotate);
+            }
             vec3_add(btag->transform+12, btag->transform+12, entity->bf.pos);
+            vec4_slerp(btag->qrotate, src_btag->qrotate, tq, entity->lerp);
         }
-        
-        vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, entity->lerp);
+        else
+        {
+            vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, entity->lerp);
+        }
         Mat4_set_qrotation(btag->transform, btag->qrotate);
     }
 
@@ -451,7 +477,7 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
     Mat4_Copy(sp, btag->transform);
     btag++;
     
-    for(k=1;k<bf->bone_tag_count;k++,btag++)
+    for(k=1;k<curr_bf->bone_tag_count;k++,btag++)
     {
         if(btag->flag & 0x01)
         {
@@ -534,11 +560,6 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     entity->transform[12] += entity->transform[0 + 0] * delta[0] + entity->transform[4 + 0] * delta[1] + entity->transform[8 + 0] * delta[2];
                     entity->transform[13] += entity->transform[0 + 1] * delta[0] + entity->transform[4 + 1] * delta[1] + entity->transform[8 + 1] * delta[2];
                     entity->transform[14] += entity->transform[0 + 2] * delta[0] + entity->transform[4 + 2] * delta[1] + entity->transform[8 + 2] * delta[2];
- /*                 
-                    delta[0] = entity->transform[12 + 0];
-                    delta[1] = entity->transform[12 + 1];
-                    delta[2] = entity->transform[12 + 2] + 0.5 * (entity->bf.bb_min[2] + entity->bf.bb_max[2]);
-                    entity->self->room = Room_FindPosCogerrence(&engine_world, delta, entity->self->room);*/  
                 }
                 else
                 {
@@ -1070,7 +1091,6 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
         entity->character->no_fix = 0x00;
     }
 
-    entity->next_bf = NULL;
     entity->lerp = 0.0;
     anim = &entity->model->animations[animation];
     frame %= anim->frames_count;
@@ -1079,9 +1099,11 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     
     entity->last_state    = anim->state_id;
     entity->next_state = anim->state_id;
-    entity->current_animation = animation;
     entity->current_speed = anim->speed;
+    entity->current_animation = animation;
     entity->current_frame = frame;
+    entity->next_animation = animation;
+    entity->next_frame = frame;
     
     entity->frame_time = (btScalar)frame * entity->period;
     t = (entity->frame_time) / entity->period;
@@ -1174,7 +1196,7 @@ int Entity_GetAnimDispatchCase(struct entity_s *ent, int id)
 /*
  * Next frame and next anim calculation function. 
  */
-void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int *frame, int *anim)
+void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim)
 {
     animation_frame_p curr_anim = entity->model->animations + entity->current_animation;
     anim_dispath_p disp;
@@ -1236,37 +1258,40 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
 
 
 /**
- *
+ * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
 int Entity_Frame(entity_p entity, btScalar time)
 {
-    int frame, anim, ret = 0;
+    int16_t frame, anim, ret = 0;
     long int t;
     btScalar dt;
     animation_frame_p af;
     state_change_p stc;
     
-    vec4_set_zero(entity->next_bf_tr);
     if(!entity || !entity->active || !entity->model || !entity->model->animations || ((entity->model->animations->frames_count == 1) && (entity->model->animation_count == 1)))
     {
         return 0;
     }
 
-    entity->next_bf = NULL;
     entity->lerp = 0.0;
     stc = Anim_FindStateChangeByID(entity->model->animations + entity->current_animation, entity->next_state);
     Entity_GetNextFrame(entity, time, stc, &frame, &anim);
     if(anim != entity->current_animation)
     {
         ret = 2;
-        Entity_DoAnimCommands(entity, ret);
+        Entity_DoAnimCommands(entity, ret);                                     ///@CRAZY: the offset commands have to be here, but 180 degrees rotation must be under frame / anim change
         Entity_SetAnimation(entity, anim, frame);
-        stc = NULL;
+        if(entity->onAnimChange)
+        {
+            entity->onAnimChange(entity);
+            entity->onAnimChange = NULL;
+        }
+        stc = Anim_FindStateChangeByID(entity->model->animations + entity->current_animation, entity->next_state);
     }
     else if(entity->current_frame != frame)
     {
         ret = 1;
-        Entity_DoAnimCommands(entity, ret);
+        Entity_DoAnimCommands(entity, ret);                                     ///@CRAZY: the offset commands have to be here, but 180 degrees rotation must be under frame / anim change
         entity->current_frame = frame;
     }
     
@@ -1277,10 +1302,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     dt = entity->frame_time - (btScalar)t * entity->period;
     entity->frame_time = (btScalar)frame * entity->period + dt;
     entity->lerp = (entity->smooth_anim)?(dt / entity->period):(0.0);
-    
-    Entity_GetNextFrame(entity, entity->period, stc, &frame, &anim);
-    entity->next_bf = entity->model->animations[anim].frames + frame;
-    Entity_GetAnimCommandTransform(entity, entity->current_animation, entity->current_frame, entity->next_bf_tr);
+    Entity_GetNextFrame(entity, entity->period, stc, &entity->next_frame, &entity->next_animation);
 
     /*
      * Update acceleration
@@ -1295,16 +1317,6 @@ int Entity_Frame(entity_p entity, btScalar time)
     if(ret)
     {
         Entity_RebuildBV(entity);
-    }
-    
-    if((2 <= ret) && entity->onAnimChange)
-    {
-        entity->onAnimChange(entity);
-        entity->onAnimChange = NULL;
-        if(entity->character)
-        {
-            entity->character->no_fix = 0x00;
-        }
     }
     
     return ret;
