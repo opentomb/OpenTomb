@@ -125,8 +125,6 @@ typedef struct entity_s
     btScalar                            current_speed;                          // current linear speed from animation info
     btVector3                           speed;                                  // speed of the entity XYZ
     struct ss_bone_frame_s              bf;                                     // current boneframe with full frame information 
-    struct bone_frame_s                *next_bf;
-    btScalar                            next_bf_tr[4];                          // next boneframe anim command offset
     btScalar                            angles[3];
     btScalar                            transform[16];                          // GL transformation matrix
     
@@ -137,6 +135,8 @@ typedef struct entity_s
     int16_t                             next_state;
     int16_t                             current_animation;                      // 
     int16_t                             current_frame;                          // 
+    int16_t                             next_animation;                         // 
+    int16_t                             next_frame;                             // 
     struct room_sector_s               *current_sector;
     btScalar                            period;                                 // one frame change period
     btScalar                            frame_time;                             // current time 
@@ -164,7 +164,7 @@ void Entity_UpdateRigidBody(entity_p ent);
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, int id);
 int  Entity_GetAnimDispatchCase(struct entity_s *ent, int id);
-void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int *frame, int *anim);
+void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim);
 int  Entity_Frame(entity_p entity, btScalar time);                 // frame + trying to chabge state
 
 void Entity_RebuildBV(entity_p ent);

@@ -1402,7 +1402,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     if(climb->edge_hit && (climb->next_z_space >= 512.0) && ((climb->next_z_space < ent->character->Height) || (cmd->crouch == 1)))
                     {
                         vec3_copy(climb->point, climb->edge_point.m_floats);
-                        ent->next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;               // crawlspace climb
+                        ent->next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;         // crawlspace climb
                     }
                     else if(climb->edge_hit && (climb->next_z_space >= ent->character->Height))
                     {

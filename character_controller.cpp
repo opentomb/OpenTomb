@@ -297,7 +297,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
 void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
     btScalar pos[3];
-    Mat4_vec3_mul_macro(pos, ent->transform, ent->collision_offset.m_floats);
+    Mat4_vec3_mul_macro(pos, ent->transform, ent->bf.centre);
     Character_GetHeightInfo(pos, &ent->character->height_info); 
 }
 
@@ -440,9 +440,9 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
         fc->floor_point.m_floats[2] = ccb->m_hitPointWorld.m_floats[2];
         fc->floor_normale = ccb->m_hitNormalWorld;
         fc->floor_obj = (btCollisionObject*)ccb->m_hitCollisionObject;
-        
-        from.m_floats[0] = to.m_floats[0] = base_pos.m_floats[0];
-        from.m_floats[1] = to.m_floats[1] = base_pos.m_floats[1];
+       
+        from.m_floats[0] = to.m_floats[0] = ccb->m_hitPointWorld.m_floats[0];
+        from.m_floats[1] = to.m_floats[1] = ccb->m_hitPointWorld.m_floats[1];
         cb->m_closestHitFraction = 1.0;
         cb->m_collisionObject = NULL;
         cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
@@ -451,6 +451,8 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
         {
             fc->floor_normale = cb->m_hitNormalWorld;
         }
+        from.m_floats[0] = to.m_floats[0] = base_pos.m_floats[0];
+        from.m_floats[1] = to.m_floats[1] = base_pos.m_floats[1];
     }   
     
     to = from;
@@ -487,8 +489,8 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
             fc->floor_normale = ccb->m_hitNormalWorld;
             fc->floor_obj = (btCollisionObject*)ccb->m_hitCollisionObject;
 
-            from.m_floats[0] = to.m_floats[0] = base_pos.m_floats[0];
-            from.m_floats[1] = to.m_floats[1] = base_pos.m_floats[1];
+            from.m_floats[0] = to.m_floats[0] = ccb->m_hitPointWorld.m_floats[0];
+            from.m_floats[1] = to.m_floats[1] = ccb->m_hitPointWorld.m_floats[1];
             cb->m_closestHitFraction = 1.0;
             cb->m_collisionObject = NULL;
             cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
