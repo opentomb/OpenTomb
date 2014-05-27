@@ -753,21 +753,10 @@ void ShowDebugInfo()
 
     rs = NULL;
     ent = engine_world.Character;
-    if(ent && ent->character && ent->character->ray_cb)
+    if(ent && ent->character)
     {
-       height_info_t fc;
-       btScalar pos[3];
-
-       fc.cb = ent->character->ray_cb;
-       fc.ccb = ent->character->convex_cb;
-       fc.sp = ent->character->climb_sensor;
-       vec3_add(pos, ent->transform+12, ent->collision_offset.m_floats);
-       Character_GetHeightInfo(pos, &fc);
-
-       if(ent->self->room)
-       {
-            Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc.water, fc.water_level);            
-       }
+       height_info_t *fc = &ent->character->height_info;
+        Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc->water, fc->water_level);            
 
 #if 0
         glPushMatrix();
@@ -798,7 +787,7 @@ void ShowDebugInfo()
 
         glPopMatrix();
 #endif
-        txt = Gui_OutTextXY(screen_info.w-420, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc.floor_point.m_floats[2], (int)fc.ceiling_point.m_floats[2], (int)fc.water_level);
+        txt = Gui_OutTextXY(screen_info.w-420, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         if(txt)
         {
             Gui_StringAutoRect(txt);
