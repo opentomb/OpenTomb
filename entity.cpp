@@ -1279,7 +1279,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     if(anim != entity->current_animation)
     {
         ret = 2;
-        Entity_DoAnimCommands(entity, ret);                                     ///@CRAZY: the offset commands have to be here, but 180 degrees rotation must be under frame / anim change
+        Entity_DoAnimCommands(entity, ret);
         Entity_SetAnimation(entity, anim, frame);
         if(entity->onAnimChange)
         {
@@ -1291,7 +1291,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     else if(entity->current_frame != frame)
     {
         ret = 1;
-        Entity_DoAnimCommands(entity, ret);                                     ///@CRAZY: the offset commands have to be here, but 180 degrees rotation must be under frame / anim change
+        Entity_DoAnimCommands(entity, ret);
         entity->current_frame = frame;
     }
     
