@@ -562,7 +562,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->version = tr->game_version;
 
     buf[0] = 0;
-    strcat(buf, "scripts/");
+    strcat(buf, "scripts/level/");
     if(tr->game_version < TR_II)
     {
         strcat(buf, "tr1/");
@@ -607,7 +607,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     if(collide_flags_conf != NULL)
     {
         luaL_openlibs(collide_flags_conf);
-        lua_err = luaL_loadfile(collide_flags_conf, "scripts/collide_flags.lua");
+        lua_err = luaL_loadfile(collide_flags_conf, "scripts/entity/collide_flags.lua");
         lua_pcall(collide_flags_conf, 0, 0, 0);
         if(lua_err)
         {
@@ -622,7 +622,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     if(ent_ID_override != NULL)
     {
         luaL_openlibs(ent_ID_override);
-        lua_err = luaL_loadfile(ent_ID_override, "scripts/entity_model_ID_override.lua");
+        lua_err = luaL_loadfile(ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
         lua_pcall(ent_ID_override, 0, 0, 0);
         if(lua_err)
         {
@@ -633,7 +633,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
     
-    luaL_dofile(engine_lua, "scripts/soundtrack.lua");
+    luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
 
     world->Character = NULL;
     world->meshes = NULL;

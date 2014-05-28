@@ -933,8 +933,8 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                         case TR_FD_TRIGFUNC_ENDLEVEL:          // END LEVEL
                             Con_Printf("End of level! id = %d", operands);
-                            GF_NextAction = true;
-                            GF_Operand = operands; //If operands 0 we load next level, if not we load the level ID which matches operand!
+                            gameflow_manager.NextAction = true;
+                            gameflow_manager.Operand = operands; //If operands 0 we load next level, if not we load the level ID which matches operand!
                             break;
 
                         case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK

@@ -21,47 +21,40 @@ extern "C" {
 #include "anim_state_control.h"
 #include "world.h"
 
-
-const char* GF_Script = "scripts/tr1/gameflow.lua";
-bool GF_NextAction;
-const char* GF_CurrentLevelName;
-uint8_t GF_CurrentLevelID;
-uint8_t GF_Operand;
+gameflow_manager_s gameflow_manager;
 
 void Gameflow_Do()
 {
-    if(GF_NextAction == true)//If we need to load the next level
+    if(gameflow_manager.NextAction == true)//If we need to load the next level
     {
-        GF_Script = CVAR_get_val_s("game_script");//Get our script filepath from game_script cvar!
+        gameflow_manager.Script = CVAR_get_val_s("game_script");//Get our script filepath from game_script cvar!
 
-        if(Engine_FileFound(GF_Script))//If the lua file exists
+        if(Engine_FileFound(gameflow_manager.Script))//If the lua file exists
         {
-            luaL_dofile(engine_lua, GF_Script);
+            luaL_dofile(engine_lua, gameflow_manager.Script);
             lua_getglobal(engine_lua, "GetNextLevel");//Define the function to be called from LUA (GetNextLevel)
-            lua_pushnumber(engine_lua, GF_CurrentLevelID);//Push the first argument (GF_CurrentLevelID)
-            lua_pushnumber(engine_lua, GF_Operand);//Push the second argument (GF_Operand)
+            lua_pushnumber(engine_lua, gameflow_manager.CurrentLevelID);//Push the first argument (gameflow_manager.CurrentLevelID)
+            lua_pushnumber(engine_lua, gameflow_manager.Operand);//Push the second argument (gameflow_manager.Operand)
 
             if (!lua_pcall(engine_lua, 2, 3, 0) != 0)//Call function from lua, 2 arguments 3 return values
             {
-                GF_CurrentLevelID = lua_tonumber(engine_lua, -1);//First value in stack is level id
+                gameflow_manager.CurrentLevelID = lua_tonumber(engine_lua, -1);//First value in stack is level id
                 lua_pop(engine_lua, 1);//Pop stack to get next value
-                GF_CurrentLevelName = lua_tostring(engine_lua, -1);//Second value in stack is level name
+                gameflow_manager.CurrentLevelName = lua_tostring(engine_lua, -1);//Second value in stack is level name
                 lua_pop(engine_lua, 1);//Pop stack to get next value
                 Engine_LoadMap(lua_tostring(engine_lua, -1));
-                GF_NextAction = false;
+                gameflow_manager.NextAction = false;
             }
             else
             {
-                Con_Printf("Fatal Error: Failed to call GetNextLevel(); from LUA script: %s", GF_Script);
-                GF_NextAction = false;//An error has been detected, continuing is not possible! If this happens, check the LUA syntax!
+                Con_Printf("Fatal Error: Failed to call GetNextLevel(); from LUA script: %s", gameflow_manager.Script);
+                gameflow_manager.NextAction = false;//An error has been detected, continuing is not possible! If this happens, check the LUA syntax!
             }
         }
         else
         {
-            Con_Printf("Fatal Error: Cannot find script file at path: %s", GF_Script);
-            GF_NextAction = false; //We want to stop cause yet again, an error has been encountered.
+            Con_Printf("Fatal Error: Cannot find script file at path: %s", gameflow_manager.Script);
+            gameflow_manager.NextAction = false; //We want to stop cause yet again, an error has been encountered.
         }
     }
 }
-
-
