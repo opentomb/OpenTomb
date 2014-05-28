@@ -333,99 +333,31 @@ void Entity_UpdateRotation(entity_p entity)
 }
 
 
-/**
- * @FIXME: find rotation command and implement it!!!
- * Check the entity transformation anim commands and writes one to the tr[4] array. 
- * @param entity - entity pointer
- * @param anim - animation number, where we search command
- * @param frame - frame number for correct condition check
- * @param tr - x, y, z offset + OZ rotation in deg.
- */
-void Entity_GetAnimCommandTransform(entity_p entity, int anim, int frame, btScalar tr[4])
-{
-    vec4_set_zero(tr);
-    
-    if((engine_world.anim_commands_count == 0) || 
-       (entity->model->animations[entity->current_animation].num_anim_commands > 255))
-    {
-        return;                                                                 // If no anim commands or current anim has more than 255 (according to TRosettaStone).
-    }
-        
-    animation_frame_p af  = entity->model->animations + anim;
-    uint32_t count        = af->num_anim_commands;
-    int16_t *pointer      = engine_world.anim_commands + af->anim_command;
-    
-    for(uint32_t i = 0; i < count; i++, pointer++)
-    {
-        switch(*pointer)
-        {
-            case TR_ANIMCOMMAND_SETPOSITION:
-                // This command executes ONLY at the end of animation. 
-                if(frame == af->frames_count - 1)
-                {
-                    btScalar delta[3];                                          // delta in entity local coordinate system!
-                    delta[0] = (btScalar)(*++pointer);                          // x = x;
-                    delta[2] =-(btScalar)(*++pointer);                          // z =-y
-                    delta[1] = (btScalar)(*++pointer);                          // y = z
-                    tr[0] = entity->transform[0 + 0] * delta[0] + entity->transform[4 + 0] * delta[1] + entity->transform[8 + 0] * delta[2];
-                    tr[1] = entity->transform[0 + 1] * delta[0] + entity->transform[4 + 1] * delta[1] + entity->transform[8 + 1] * delta[2];
-                    tr[2] = entity->transform[0 + 2] * delta[0] + entity->transform[4 + 2] * delta[1] + entity->transform[8 + 2] * delta[2];
-                }
-                else
-                {
-                    pointer += 3;                                               // Parse through 3 operands.
-                }
-                break;
-                
-            case TR_ANIMCOMMAND_JUMPDISTANCE:
-                pointer += 2;                                                   // Parse through 2 operands.
-                break;
-                
-            case TR_ANIMCOMMAND_EMPTYHANDS:
-                break;
-                
-            case TR_ANIMCOMMAND_KILL:
-                break;
-                
-            case TR_ANIMCOMMAND_PLAYSOUND:
-                ++pointer;
-                break;
-                
-            case TR_ANIMCOMMAND_PLAYEFFECT:
-                if(frame == *++pointer)
-                {
-                    switch(*++pointer & 0x3FFF)
-                    {
-                        case TR_EFFECT_CHANGEDIRECTION:
-                            tr[3] = 180.0;
-                            break;
-                    }
-                }
-                else
-                {
-                    pointer++;
-                }
-                break;
-        }
-    }
-}
-
-
 void Entity_UpdateCurrentBoneFrame(entity_p entity)
 {
     long int k, stack_use;
-    btScalar cmd_tr[3], next_bf_tr[4];
+    btScalar cmd_tr[3], tr[3];
     ss_bone_tag_p btag = entity->bf.bone_tags;
     bone_tag_p src_btag, next_btag;
     btScalar *stack, *sp, t;
     skeletal_model_p model = entity->model;
-    bone_frame_p next_bf = entity->model->animations[entity->next_animation].frames + entity->next_frame, 
-                 curr_bf = model->animations[entity->current_animation].frames + entity->current_frame;    
+    bone_frame_p curr_bf, next_bf;
+    
+    next_bf = model->animations[entity->next_animation].frames + entity->next_frame; 
+    curr_bf = model->animations[entity->current_animation].frames + entity->current_frame;    
 
     t = 1.0 - entity->lerp;
-    Entity_GetAnimCommandTransform(entity, entity->current_animation, entity->current_frame, next_bf_tr);
-    vec3_mul_scalar(cmd_tr, next_bf_tr, entity->lerp);
-
+    if(curr_bf->command & 0x01)
+    {
+        Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
+        vec3_mul_scalar(cmd_tr, tr, entity->lerp);
+    }
+    else
+    {
+        vec3_set_zero(tr);
+        vec3_set_zero(cmd_tr);
+    }
+    
     vec3_interpolate_macro(entity->bf.bb_max, curr_bf->bb_max, next_bf->bb_max, entity->lerp, t);
     vec3_add(entity->bf.bb_max, entity->bf.bb_max, cmd_tr);
     vec3_interpolate_macro(entity->bf.bb_min, curr_bf->bb_min, next_bf->bb_min, entity->lerp, t);
@@ -445,18 +377,23 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
         if(k == 0)
         {
             btScalar tq[4];
-            if(next_bf_tr[3] == 180.0)
+            if(next_bf->command & 0x02)
             {
+                ///@TODO: add OX rotation inverse for underwater case
                 tq[0] =-next_btag->qrotate[1];  // -  +
                 tq[1] = next_btag->qrotate[0];  // +  -
                 tq[2] = next_btag->qrotate[3];  // +  +
                 tq[3] =-next_btag->qrotate[2];  // -  -
+                
+                btag->transform[12 + 0] -= entity->bf.pos[0];
+                btag->transform[12 + 1] -= entity->bf.pos[1];
+                btag->transform[12 + 2] += entity->bf.pos[2];
             }
             else
             {
                 vec4_copy(tq, next_btag->qrotate);
+                vec3_add(btag->transform+12, btag->transform+12, entity->bf.pos);
             }
-            vec3_add(btag->transform+12, btag->transform+12, entity->bf.pos);
             vec4_slerp(btag->qrotate, src_btag->qrotate, tq, entity->lerp);
         }
         else
@@ -552,20 +489,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
         {
             case TR_ANIMCOMMAND_SETPOSITION:
                 // This command executes ONLY at the end of animation. 
-                if(entity->current_frame == af->frames_count - 1)
-                {
-                    btScalar delta[3];                                          // delta in entity local coordinate system!
-                    delta[0] = (btScalar)(*++pointer);                          // x = x;
-                    delta[2] =-(btScalar)(*++pointer);                          // z =-y
-                    delta[1] = (btScalar)(*++pointer);                          // y = z
-                    entity->transform[12] += entity->transform[0 + 0] * delta[0] + entity->transform[4 + 0] * delta[1] + entity->transform[8 + 0] * delta[2];
-                    entity->transform[13] += entity->transform[0 + 1] * delta[0] + entity->transform[4 + 1] * delta[1] + entity->transform[8 + 1] * delta[2];
-                    entity->transform[14] += entity->transform[0 + 2] * delta[0] + entity->transform[4 + 2] * delta[1] + entity->transform[8 + 2] * delta[2];
-                }
-                else
-                {
-                    pointer += 3; // Parse through 3 operands.
-                }
+                pointer += 3; // Parse through 3 operands.
                 break;
                 
             case TR_ANIMCOMMAND_JUMPDISTANCE:
@@ -638,15 +562,6 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     switch(*++pointer & 0x3FFF)
                     {
                         case TR_EFFECT_CHANGEDIRECTION:
-                            entity->angles[0] += 180.0;
-                            if(entity->dir_flag == ENT_MOVE_BACKWARD)
-                            {
-                                entity->dir_flag = ENT_MOVE_FORWARD;
-                            }
-                            else if(entity->dir_flag == ENT_MOVE_FORWARD)
-                            {
-                                entity->dir_flag = ENT_MOVE_BACKWARD;
-                            }
                             break;
                             
                         case TR_EFFECT_HIDEOBJECT:
@@ -1260,6 +1175,44 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
 }
 
 
+void Entity_DoAnimMove(entity_p entity)
+{
+    if(entity->model)
+    {
+        btScalar tr[3];
+        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;  
+        if(curr_bf->command & 0x01)
+        {
+            Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
+            vec3_add(entity->transform+12, entity->transform+12, tr);
+        }
+    }
+}
+
+
+void Entity_DoAnimRotate(entity_p entity)
+{
+    if(entity->model)
+    {
+        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;    
+        if(curr_bf->command & 0x02)
+        {
+            entity->angles[0] += 180.0;
+            entity->angles[1] = -entity->angles[1];                             // for underwater case
+            if(entity->dir_flag == ENT_MOVE_BACKWARD)
+            {
+                entity->dir_flag = ENT_MOVE_FORWARD;
+            }
+            else if(entity->dir_flag == ENT_MOVE_FORWARD)
+            {
+                entity->dir_flag = ENT_MOVE_BACKWARD;
+            }
+            Entity_UpdateRotation(entity);
+        }
+    }
+}
+
+
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
@@ -1283,7 +1236,9 @@ int Entity_Frame(entity_p entity, btScalar time)
     {
         ret = 2;
         Entity_DoAnimCommands(entity, ret);
+        Entity_DoAnimMove(entity);
         Entity_SetAnimation(entity, anim, frame);
+        Entity_DoAnimRotate(entity);
         if(entity->onAnimChange)
         {
             entity->onAnimChange(entity);
@@ -1295,7 +1250,9 @@ int Entity_Frame(entity_p entity, btScalar time)
     {
         ret = 1;
         Entity_DoAnimCommands(entity, ret);
+        Entity_DoAnimMove(entity);
         entity->current_frame = frame;
+        Entity_DoAnimRotate(entity);
     }
     
     af = entity->model->animations + entity->current_animation;

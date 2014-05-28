@@ -173,7 +173,6 @@ void Entity_CheckActivators(struct entity_s *ent);
 
 int  Entity_GetWaterState(entity_p entity);
 
-void Entity_GetAnimCommandTransform(entity_p entity, int anim, int frame, btScalar tr[4]);
 void Entity_UpdateCurrentBoneFrame(entity_p entity);
 void Entity_DoAnimCommands(entity_p entity, int changing);
 int  Entity_ParseFloorData(struct entity_s *ent, struct world_s *world);

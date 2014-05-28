@@ -364,6 +364,66 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
 }
 
 
+void GenerateAnimCommandsTransform(skeletal_model_p model)
+{   
+    if(engine_world.anim_commands_count == 0)
+    {
+        return;
+    }
+    
+    for(int anim = 0;anim < model->animation_count;anim++)
+    {
+        if(model->animations[anim].num_anim_commands > 255)
+        {
+            continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
+        }
+
+        animation_frame_p af  = model->animations + anim;
+        int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+
+        for(uint32_t i = 0; i < af->num_anim_commands; i++, pointer++)
+        {
+            switch(*pointer)
+            {
+                case TR_ANIMCOMMAND_SETPOSITION:
+                    // This command executes ONLY at the end of animation. 
+                    af->frames[af->frames_count-1].move[0] = (btScalar)(*++pointer);                          // x = x;
+                    af->frames[af->frames_count-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
+                    af->frames[af->frames_count-1].move[1] = (btScalar)(*++pointer);                          // y = z
+                    af->frames[af->frames_count-1].command |= 0x01;
+                    break;
+
+                case TR_ANIMCOMMAND_JUMPDISTANCE:
+                    pointer += 2;                                               // Parse through 2 operands.
+                    break;
+
+                case TR_ANIMCOMMAND_EMPTYHANDS:
+                    break;
+
+                case TR_ANIMCOMMAND_KILL:
+                    break;
+
+                case TR_ANIMCOMMAND_PLAYSOUND:
+                    ++pointer;
+                    break;
+
+                case TR_ANIMCOMMAND_PLAYEFFECT:
+                    {
+                        int frame = *++pointer;
+                        switch(*++pointer & 0x3FFF)
+                        {
+                            case TR_EFFECT_CHANGEDIRECTION:
+                                af->frames[frame].command |= 0x02;
+                                break;
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+}
+
+
 int IsInUCRectFace3(tr4_object_texture_t *tex)
 {
     int32_t i;
@@ -948,7 +1008,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     
     buf[0] = 0;
 
-	strcat(buf, "scripts/level/");
+    strcat(buf, "scripts/level/");
     if(tr->game_version < TR_II)
     {
         strcat(buf, "tr1/");
@@ -2334,9 +2394,9 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
 
-        bone_frame->pos[0] = 0.0;
-        bone_frame->pos[1] = 0.0;
-        bone_frame->pos[2] = 0.0;
+        vec3_set_zero(bone_frame->pos);
+        vec3_set_zero(bone_frame->move);
+        bone_frame->command = 0x00;
         for(k=0;k<bone_frame->bone_tag_count;k++)
         {
             tree_tag = model->mesh_tree + k;
@@ -2459,7 +2519,9 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
             frame = tr->frame_data + frame_offset;
             bone_frame->bone_tag_count = model->mesh_count;
             bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
-
+            vec3_set_zero(bone_frame->pos);
+            vec3_set_zero(bone_frame->move);
+            bone_frame->command = 0x00;
             GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset < 0 || frame_offset >= tr->frame_data_size)
@@ -2567,6 +2629,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
      * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
      */
     SkeletalModel_InterpolateFrames(model);
+    GenerateAnimCommandsTransform(model);
     /*
      * state change's loading
      */
