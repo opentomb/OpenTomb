@@ -440,13 +440,14 @@ void Engine_InitALAudio()
 
     const char *drv = SDL_GetCurrentAudioDriver();
 
-    Con_Printf("Current audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
+    Con_Printf("Current SDL audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
         Con_Printf("We have no AL audio devices");
         return;
     }
+    
     al_context = alcCreateContext(al_device, paramList);
     if(!alcMakeContextCurrent(al_context))
     {
@@ -479,7 +480,6 @@ int main(int argc, char **argv)
 
     World_Prepare(&engine_world);
     //TestGenScene();
-    GF_NextAction = true;//We want to start our first gameflow action!
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
@@ -821,11 +821,10 @@ void ShowDebugInfo()
 
     if(engine_world.Character && engine_world.Character->self->room)
     {
+        Gui_OutTextXY(screen_info.w-420, 128, "Level Name: %s", gameflow_manager.CurrentLevelName);
         Gui_OutTextXY(screen_info.w-420, 28, "room = %d, co = %d", engine_world.Character->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
     }
 
-
-	 Gui_OutTextXY(screen_info.w-420, 128, "Level Name: %s", GF_CurrentLevelName);
     //Gui_OutTextXY(screen_info.w-380, 68, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
     //Gui_OutTextXY(screen_info.w-380, 68, "r_room_active = %d", renderer.r_list_active_count);
 #endif

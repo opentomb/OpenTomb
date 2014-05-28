@@ -239,6 +239,7 @@ void Engine_Init()
     CVAR_Register("time_scale", "1.0");
 
     Con_AddLine("Engine inited");
+    luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
     luaL_dofile(engine_lua, "scripts/sys_scripts.lua");
 }
 
@@ -982,6 +983,80 @@ int lua_SetEntityState(lua_State * lua)
     return 0;
 }
 
+/*
+ * General gameplay functions
+ */
+
+int lua_GetSecretTrackNumber(lua_State *lua)
+{
+    int top;
+    int track_number = 0;
+    
+    if(lua)
+    {
+        top = lua_gettop(lua);                                             // save LUA stack
+        lua_getglobal(lua, "GetSecretTrackNumber");                        // add to the up of stack LUA's function
+
+        if(lua_isfunction(lua, -1))                                        // If function exists...
+        {
+            lua_pushinteger(lua, engine_world.version);                    // add to stack first argument
+            lua_pcall(lua, 1, 1, 0);                                       // call that function
+            track_number = lua_tointeger(lua, -1);                         // get returned value 1
+        }
+        
+        lua_settop(lua, top);                                              // restore LUA stack
+    }
+    
+    return track_number;
+}
+
+bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
+{
+    size_t  string_length  = 0;
+    int     track_type     = 0;
+    int     top;
+    
+    const char *real_path;
+        
+    if(lua)
+    {
+        top = lua_gettop(lua);                                             // save LUA stack
+        
+        lua_getglobal(lua, "GetTrackInfo");                                // add to the up of stack LUA's function
+
+        if(lua_isfunction(lua, -1))                                        // If function exists...
+        {
+            lua_pushinteger(lua, engine_world.version);                    // add to stack first argument
+            lua_pushinteger(lua, track_index);                             // add to stack second argument
+
+            lua_pcall(lua, 2, 3, 0);                                       // call that function
+            
+            real_path   = lua_tolstring(lua, -3, &string_length);          // get returned value 1
+           *stream_type = lua_tointeger(lua, -2);                          // get returned value 2
+           *load_method = lua_tointeger(lua, -1);                          // get returned value 3
+           
+            // For some reason, Lua returns constant string pointer, which we can't assign to
+            // provided argument; so we need to straightly copy it.
+        
+            strcpy(file_path, real_path);
+            
+            lua_settop(lua, top);                                          // restore LUA stack
+            
+            if(*stream_type != -1)
+                return true;        // Entry extracted, success!
+        }
+        else
+        {
+            lua_settop(lua, top);   // restore LUA stack
+        }
+    }
+    
+    // If Lua wasn't able to extract file path from the script, most likely it means
+    // that entry is broken or missing, or wrong track ID was specified. So we return
+    // FALSE in such cases.
+    
+    return false;
+}
 
 int lua_PlayStream(lua_State *lua)
 {
@@ -1006,28 +1081,6 @@ int lua_PlayStream(lua_State *lua)
 
     return 1;
 }
-
-int lua_SetLevel(lua_State *lua)
-{
-    int id, top;
-
-    top = lua_gettop(lua);
-    id  = lua_tointeger(lua, 1);
-
-    if(top != 1)
-    {
-        Con_Printf("Wrong arguments count. Must be (id).");
-        return 0;
-    }
-
-    Con_Printf("Changing GF_CurrentLevelID to %d", id);
-
-    GF_CurrentLevelID = id;
-    GF_NextAction = true;//Next level
-    return 0;
-}
-
-
 
 int lua_PlaySound(lua_State *lua)
 {
@@ -1094,6 +1147,60 @@ int lua_StopSound(lua_State *lua)
     return 0;
 }
 
+int lua_SetLevel(lua_State *lua)
+{
+    int id, top;
+
+    top = lua_gettop(lua);
+    id  = lua_tointeger(lua, 1);
+
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (id).");
+        return 0;
+    }
+
+    Con_Printf("Changing gameflow_manager.CurrentLevelID to %d", id);
+
+    gameflow_manager.CurrentLevelID = id;
+    gameflow_manager.NextAction = true;//Next level
+    return 0;
+}
+
+int lua_SetGame(lua_State *lua)
+{
+    int top;
+    const char *id;
+
+    top = lua_gettop(lua);
+    id  = lua_tostring(lua, 1);
+
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (gamename).");
+        return 0;
+    }
+
+    lua_getglobal(lua, "GetGameflowScriptPath");
+
+    if(lua_isfunction(lua, -1))                                        // If function exists...
+    {
+        lua_pushstring(lua, id);                                       // add to stack first argument
+        lua_pcall(lua, 1, 0, 0);                                       // call that function
+        lua_settop(lua, top);                                          // restore LUA stack
+        
+        Con_Printf("Changing game to %s", id);
+        
+        gameflow_manager.NextAction = true;//Next level
+        return 1;
+    }
+    else
+    {
+        lua_settop(lua, top);   // restore LUA stack
+    }
+    
+    return 0;
+}
 
 void Engine_LuaClearTasks()
 {
@@ -1110,7 +1217,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      * register globals
      */
     luaL_dostring(lua, CVAR_LUA_TABLE_NAME" = {};");
-
+    
     /*
      * register functions
      */
@@ -1118,7 +1225,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "stopsound", lua_StopSound);
 
     lua_register(lua, "playstream", lua_PlayStream);
+
     lua_register(lua, "setlevel", lua_SetLevel);
+    lua_register(lua, "setgame", lua_SetGame);
 
 	lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
@@ -1757,13 +1866,13 @@ void Engine_LoadConfig()
         return;
     }
 
-    if(Engine_FileFound("scripts/control_constants.lua"))
+    if(Engine_FileFound("scripts/config/control_constants.lua"))
     {
-        luaL_dofile(engine_lua, "scripts/control_constants.lua");
+        luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
     }
     else
     {
-        Sys_Warn("Could not find \"scripts/control_constants.lua\"");
+        Sys_Warn("Could not find \"scripts/config/control_constants.lua\"");
     }
 
     if(Engine_FileFound("config.lua"))
