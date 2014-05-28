@@ -30,6 +30,7 @@
 #include "resource.h"
 #include "entity.h"
 #include "audio.h"
+#include "gameflow.h"
 
 #include "vt/vt_level.h"
 #include "bounding_volume.h"
@@ -438,8 +439,8 @@ void Engine_InitALAudio()
         ALC_FREQUENCY,       44100, 0};
     
     const char *drv = SDL_GetCurrentAudioDriver();
-    
-    Con_Printf("Current audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
+
+    Con_Printf("Current SDL audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
@@ -808,6 +809,7 @@ void ShowDebugInfo()
 
     if(engine_world.Character && engine_world.Character->self->room)
     {
+        Gui_OutTextXY(screen_info.w-420, 128, "Level Name: %s", gameflow_manager.CurrentLevelName);
         Gui_OutTextXY(screen_info.w-420, 28, "room = %d, co = %d", engine_world.Character->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
     }
 
