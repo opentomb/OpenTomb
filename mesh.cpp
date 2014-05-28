@@ -293,6 +293,9 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
              */
             bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
             bf->bone_tag_count = model->mesh_count;
+            vec3_set_zero(bf->pos);
+            vec3_set_zero(bf->move);
+            bf->command = 0x00;
             vec3_copy(bf->centre, anim->frames[0].centre);
             vec3_copy(bf->pos, anim->frames[0].pos);
             vec3_copy(bf->bb_max, anim->frames[0].bb_max);
@@ -308,6 +311,9 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
             {
                 for(l=1;l<=anim->original_frame_rate;l++)
                 {
+                    vec3_set_zero(bf->pos);
+                    vec3_set_zero(bf->move);
+                    bf->command = 0x00;
                     lerp = ((btScalar)l) / (btScalar)anim->original_frame_rate;
                     t = 1.0 - lerp;
                     

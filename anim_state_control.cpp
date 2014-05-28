@@ -179,7 +179,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                     Character_CheckNextPenetration(ent, cmd, move);
                     vec3_mul_scalar(offset, ent->transform + 4, WALK_FORWARD_OFFSET);
-                    offset[2] += 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+                    offset[2] += ent->bf.bb_max[2];
                     vec3_add(offset, offset, pos);
                     Character_GetHeightInfo(offset, &next_fc);
                     if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
@@ -274,7 +274,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
                     Character_CheckNextPenetration(ent, cmd, move);
                     vec3_mul_scalar(offset, ent->transform + 4, -WALK_FORWARD_OFFSET);
-                    offset[2] += 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+                    offset[2] += ent->bf.bb_max[2];
                     vec3_add(offset, offset, pos);
                     Character_GetHeightInfo(offset, &next_fc);
                     if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
@@ -978,7 +978,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->move[0] == 0 && cmd->move[1] == -1 && cmd->jump == 0 && cmd->shift)
             {
                 vec3_mul_scalar(offset, ent->transform + 0, -RUN_FORWARD_OFFSET);  // not an error - RUN_... more correct here
-                offset[2] += 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+                offset[2] += ent->bf.bb_max[2];
                 vec3_add(offset, offset, pos);
                 Character_GetHeightInfo(offset, &next_fc);
                 if(next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height))
@@ -1019,7 +1019,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->move[0] == 0 && cmd->move[1] == 1 && cmd->jump == 0 && cmd->shift)
             {
                 vec3_mul_scalar(offset, ent->transform + 0, RUN_FORWARD_OFFSET);// not an error - RUN_... more correct here
-                offset[2] += 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+                offset[2] += ent->bf.bb_max[2];
                 vec3_add(offset, offset, pos);
                 Character_GetHeightInfo(offset, &next_fc);
                 if(next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height))
@@ -1966,7 +1966,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
                 vec3_mul_scalar(offset, ent->transform + 4, t);
-                offset[2] += LARA_HANG_VERTICAL_EPSILON;                // inc for water_surf.z
+                offset[2] += LARA_HANG_VERTICAL_EPSILON;                        // inc for water_surf.z
                 *climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
                 if(climb->edge_hit)
                 {
@@ -2263,7 +2263,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
                 vec3_mul_scalar(offset, ent->transform + 4, CRAWL_FORWARD_OFFSET);
-                offset[2] += 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+                offset[2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
                 vec3_add(offset, offset, pos);
                 Character_GetHeightInfo(offset, &next_fc);
                 if((cmd->horizontal_collide == 0) &&
@@ -2278,7 +2278,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
                 vec3_mul_scalar(offset, ent->transform + 4, -CRAWL_FORWARD_OFFSET);
-                offset[2] += 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+                offset[2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
                 vec3_add(offset, offset, pos);
                 Character_GetHeightInfo(offset, &next_fc);
                 if((cmd->horizontal_collide == 0) &&
@@ -2295,7 +2295,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_copy(temp, pos);                                       // save entity position
                     pos[0] = next_fc.floor_point.m_floats[0];
                     pos[1] = next_fc.floor_point.m_floats[1];
-                    vec3_mul_scalar(offset, ent->transform + 4, CRAWL_FORWARD_OFFSET);
+                    vec3_mul_scalar(offset, ent->transform + 4, 0.5 * CRAWL_FORWARD_OFFSET);
                     offset[2] += 128.0;
                     curr_fc->floor_hit = next_fc.floor_hit;
                     curr_fc->floor_point = next_fc.floor_point;
@@ -2306,7 +2306,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     curr_fc->ceiling_normale = next_fc.ceiling_normale;
                     curr_fc->ceiling_obj = next_fc.ceiling_obj;
                     
-                    *climb = Character_CheckClimbability(ent, offset, &next_fc, 1.2 * ent->bf.bb_max[2]);
+                    *climb = Character_CheckClimbability(ent, offset, &next_fc, 1.5 * ent->bf.bb_max[2]);
                     vec3_copy(pos, temp);                                       // restore entity position
                     if(climb->can_hang)
                     {
@@ -2350,7 +2350,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
             Character_CheckNextPenetration(ent, cmd, move);
             vec3_mul_scalar(offset, ent->transform + 4, CRAWL_FORWARD_OFFSET);
-            offset[2] += 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+            offset[2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
             vec3_add(offset, offset, pos);
             Character_GetHeightInfo(offset, &next_fc);
 
@@ -2374,7 +2374,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
             Character_CheckNextPenetration(ent, cmd, move);
             vec3_mul_scalar(offset, ent->transform + 4, -CRAWL_FORWARD_OFFSET);
-            offset[2] += 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+            offset[2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
             vec3_add(offset, offset, pos);
             Character_GetHeightInfo(offset, &next_fc);
             if((cmd->move[0] != -1) || (cmd->kill == 1))

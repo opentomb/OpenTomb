@@ -298,7 +298,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
     btScalar pos[3], t[3];
     t[0] = t[1] = 0.0;
-    t[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+    t[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
     Mat4_vec3_mul_macro(pos, ent->transform, t);
     Character_GetHeightInfo(pos, &ent->character->height_info); 
 }
@@ -1454,7 +1454,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, cmd, move.m_floats);                 // get horizontal collide
+        Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
         if(ent->character->height_info.floor_hit)
         {
             if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height > pos[2])

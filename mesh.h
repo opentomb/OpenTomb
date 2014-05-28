@@ -49,7 +49,7 @@ typedef struct base_mesh_s
 
     GLuint                vbo_vertex_array;
     GLuint                vbo_index_array;
-}base_mesh_t, *base_mesh_p;
+}__attribute__((aligned(4))) base_mesh_t, *base_mesh_p;
 
 
 /*
@@ -65,7 +65,7 @@ typedef struct sprite_s
     btScalar            right;
     btScalar            top;
     btScalar            bottom;
-}sprite_t, *sprite_p;
+}__attribute__((aligned(4))) sprite_t, *sprite_p;
 
 
 /*
@@ -94,7 +94,7 @@ typedef struct light_s
     float                       falloff;
 
     LightType                   light_type;
-}light_t, *light_p;
+}__attribute__((aligned(4))) light_t, *light_p;
 
 /*
  *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
@@ -122,7 +122,7 @@ typedef struct anim_seq_s
     uint32_t    frame_count;      // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
     bool        frame_lock;       // Single frame mode. Needed for TR4-5 compatible UVRotate.
     uint32_t*   frame_list;       // Offset into anim textures frame list.
-}anim_seq_t, *anim_seq_p;
+}__attribute__((aligned(4))) anim_seq_t, *anim_seq_p;
 
 
 /*
@@ -149,7 +149,7 @@ typedef struct static_mesh_s
     
     struct base_mesh_s         *mesh;                                           // base model
     btRigidBody                *bt_body;
-}static_mesh_t, *static_mesh_p;
+}__attribute__((aligned(4))) static_mesh_t, *static_mesh_p;
 
 /*
  * Animated skeletal model. Taken from openraider.
@@ -173,7 +173,7 @@ typedef struct ss_bone_tag_s
     
     uint16_t            flag;                                                   // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
     uint16_t            overrided;                                              // flag for shoot / guns animations
-}ss_bone_tag_t, *ss_bone_tag_p;
+}__attribute__((aligned(4))) ss_bone_tag_t, *ss_bone_tag_p;
 
 /*
  * base frame of animated skeletal model
@@ -186,7 +186,7 @@ typedef struct ss_bone_frame_s
     btScalar                    bb_min[3];                                      // bounding box min coordinates
     btScalar                    bb_max[3];                                      // bounding box max coordinates
     btScalar                    centre[3];                                      // bounding box centre
-}ss_bone_frame_t, *ss_bone_frame_p;
+}__attribute__((aligned(4))) ss_bone_frame_t, *ss_bone_frame_p;
 
 /*
  * ORIGINAL ANIMATIONS
@@ -195,7 +195,7 @@ typedef struct bone_tag_s
 {
     btScalar              offset[3];                                            // bone vector
     btScalar              qrotate[4];                                           // rotation quaternion
-}bone_tag_t, *bone_tag_p;
+}__attribute__((aligned(4))) bone_tag_t, *bone_tag_p;
 
 /*
  * base frame of animated skeletal model
@@ -203,12 +203,14 @@ typedef struct bone_tag_s
 typedef struct bone_frame_s
 {
     uint16_t            bone_tag_count;                                         // number of bones
+    uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
     struct bone_tag_s  *bone_tags;                                              // bones data
     btScalar            pos[3];                                                 // position (base offset)
     btScalar            bb_min[3];                                              // bounding box min coordinates
     btScalar            bb_max[3];                                              // bounding box max coordinates
     btScalar            centre[3];                                              // bounding box centre
-}bone_frame_t, *bone_frame_p;
+    btScalar            move[3];
+}__attribute__((aligned(4))) bone_frame_t, *bone_frame_p ;
 
 /*
  * mesh tree base element structure
@@ -220,7 +222,7 @@ typedef struct mesh_tree_tag_s
     btScalar                    offset[3];                                      // model position offset
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
     uint16_t                    overrided;                                      // flag for shoot / guns animations
-}mesh_tree_tag_t, *mesh_tree_tag_p;
+}__attribute__((aligned(4))) mesh_tree_tag_t, *mesh_tree_tag_p;
 
 /*
  * animation switching control structure
@@ -231,14 +233,14 @@ typedef struct anim_dispath_s
     uint16_t    next_frame;                                                     // "switch to" frame 
     uint16_t    frame_low;                                                      // low border of state change condition
     uint16_t    frame_high;                                                     // high border of state change condition
-} anim_dispath_t, *anim_dispath_p;
+}__attribute__((aligned(4))) anim_dispath_t, *anim_dispath_p;
 
 typedef struct state_change_s
 {
     uint32_t                    ID;
     uint16_t                    anim_dispath_count;
     struct anim_dispath_s      *anim_dispath;
-} state_change_t, *state_change_p;
+}__attribute__((aligned(4))) state_change_t, *state_change_p;
 
 /*
  * one animation frame structure
@@ -266,7 +268,7 @@ typedef struct animation_frame_s
     
     struct animation_frame_s   *next_anim;                                      // next default animation
     int                         next_frame;                                     // next default frame
-}animation_frame_t, *animation_frame_p;
+}__attribute__((aligned(4))) animation_frame_t, *animation_frame_p;
 
 /*
  * skeletal model with animations data.
@@ -289,7 +291,7 @@ typedef struct skeletal_model_s
     struct mesh_tree_tag_s     *mesh_tree;                                      // base mesh tree.
     uint16_t                    collision_map_size;
     uint16_t                   *collision_map;
-}skeletal_model_t, *skeletal_model_p; 
+}__attribute__((aligned(4))) skeletal_model_t, *skeletal_model_p; 
 
 
 void BaseMesh_Clear(base_mesh_p mesh);
