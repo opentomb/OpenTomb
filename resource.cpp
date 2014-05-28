@@ -948,7 +948,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     
     buf[0] = 0;
 
-	strcat(buf, "scripts/");
+	strcat(buf, "scripts/level/");
     if(tr->game_version < TR_II)
     {
         strcat(buf, "tr1/");

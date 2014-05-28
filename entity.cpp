@@ -12,6 +12,7 @@
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "bounding_volume.h"
+#include "gameflow.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
@@ -953,6 +954,8 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                         case TR_FD_TRIGFUNC_ENDLEVEL:          // END LEVEL
                             Con_Printf("End of level! id = %d", operands);
+                            gameflow_manager.NextAction = true;
+                            gameflow_manager.Operand = operands; //If operands 0 we load next level, if not we load the level ID which matches operand!
                             break;
 
                         case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
