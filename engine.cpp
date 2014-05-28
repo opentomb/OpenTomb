@@ -240,7 +240,7 @@ void Engine_Init()
 
     Con_AddLine("Engine inited");
     luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
-    luaL_dofile(engine_lua, "scripts/sys_scripts.lua");
+    luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
 }
 
 
