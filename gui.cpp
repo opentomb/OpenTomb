@@ -15,11 +15,13 @@
 #define MAX_TEMP_LINES (128)
 #define TEMP_LINE_LENGHT (128)
 
+extern SDL_Window      *sdl_window;
+
 gui_text_line_p         gui_base_lines = NULL;
 gui_text_line_t         gui_temp_lines[MAX_TEMP_LINES];
 uint16_t                temp_lines_used = 0;
 
-ProgressBar      Bar[BAR_LASTINDEX];
+ProgressBar             Bar[BAR_LASTINDEX];
 
 void Gui_Init()
 {
@@ -131,7 +133,26 @@ void Gui_Init()
                     Bar[i].SetAutoshow(true, 500, true, 300);
                 }
                 break;
-        } // end switch(i)
+                
+            case BAR_LOADING:
+                {
+                    Bar[i].Visible =      true;
+                    Bar[i].Alternate =    false;
+                    Bar[i].Invert =       false;
+                    Bar[i].Vertical =     false;
+
+                    Bar[i].SetDimensions(100, 860, 800, 35, 3);
+                    Bar[i].SetColor(BASE_MAIN, 157, 205, 255, 255);
+                    Bar[i].SetColor(BASE_FADE, 166, 157, 255, 255);
+                    Bar[i].SetColor(BACK_MAIN, 30, 30, 30, 255);
+                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 255);
+                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 255);
+                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 255);
+                    Bar[i].SetValues(1000, 0);
+                    Bar[i].SetExtrude(true, 70);
+                    Bar[i].SetAutoshow(false, 500, false, 300);
+                }
+                break;        } // end switch(i)
     } // end for(int i = 0; i < BAR_LASTINDEX; i++)
 #endif
 }
@@ -395,6 +416,36 @@ void Gui_DrawBars()
         Bar[BAR_SPRINT].Show(engine_world.Character->character->opt.sprint);
         Bar[BAR_HEALTH].Show(engine_world.Character->character->opt.health);
     }
+}
+
+void Gui_DrawLoadingBar(int value)
+{
+    
+    Gui_SwitchConGLMode(1);
+
+    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
+    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_ALPHA_TEST);
+    glDepthMask(GL_FALSE);
+
+    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glBindTexture(GL_TEXTURE_2D, 0);                                            // in other case +textured font we lost background in all rects and console
+    
+    Bar[BAR_LOADING].Show(value);
+
+    glDepthMask(GL_TRUE);
+    glPopClientAttrib();
+    glPopAttrib();
+
+    Gui_SwitchConGLMode(0);
+    
+    SDL_GL_SwapWindow(sdl_window);
 }
 
 /**

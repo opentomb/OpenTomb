@@ -34,6 +34,7 @@ enum Bars
     BAR_AIR,        // TR 1-5, alternate state - gas (TR5)
     BAR_SPRINT,     // TR 3-5
     BAR_FREEZE,     // TR 3 only
+    BAR_LOADING,
     BAR_LASTINDEX
 };
 
@@ -194,4 +195,6 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const int &blendMode);
 void Gui_DrawCrosshair();
 void Gui_DrawBars();
+void Gui_DrawLoadingBar(int value);
+
 #endif
