@@ -577,7 +577,7 @@ void Controls_InitGlobals()
     control_mapper.action_map[ACT_ACTION].primary     = SDLK_LCTRL;
     control_mapper.action_map[ACT_ROLL].primary       = SDLK_x;
     control_mapper.action_map[ACT_SPRINT].primary     = SDLK_CAPSLOCK;
-    control_mapper.action_map[ACT_CROUCH].primary     = SDLK_v;
+    control_mapper.action_map[ACT_CROUCH].primary     = SDLK_c;
     control_mapper.action_map[ACT_WALK].primary       = SDLK_LSHIFT;
 
     control_mapper.action_map[ACT_UP].primary         = SDLK_w;
