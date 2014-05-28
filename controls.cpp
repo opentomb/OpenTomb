@@ -97,7 +97,7 @@ void Controls_Key(int32_t button, int state)
                 case ACT_CONSOLE:
                     if(!state)
                     {
-                        Audio_Send(TR_AUDIO_SOUND_MENUOPEN);
+                        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                         con_base.show = !con_base.show;
                         
                         if(con_base.show)

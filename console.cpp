@@ -251,7 +251,7 @@ void Con_Edit(int key)
 
     if(key == SDLK_RETURN)
     {
-        Audio_Send(TR_AUDIO_SOUND_MENUSELECT);
+        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUSELECT));
         Con_AddLog(con_base.shown_lines[0]);
         if(!Engine_ExecCmd(con_base.shown_lines[0]))
         {
@@ -271,7 +271,7 @@ void Con_Edit(int key)
     switch(key)
     {
         case SDLK_UP:
-            Audio_Send(TR_AUDIO_SOUND_MENUPAGE);
+            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
             strncpy(con_base.shown_lines[0], con_base.log_lines[con_base.log_pos], con_base.line_size);
             con_base.log_pos++;
             if(con_base.log_pos >= con_base.log_lines_count)
@@ -282,7 +282,7 @@ void Con_Edit(int key)
             break;
 
         case SDLK_DOWN:
-            Audio_Send(TR_AUDIO_SOUND_MENUPAGE);
+            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
             strncpy(con_base.shown_lines[0], con_base.log_lines[con_base.log_pos], con_base.line_size);
             con_base.log_pos--;
             if(con_base.log_pos < 0)

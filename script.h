@@ -35,6 +35,7 @@ int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs);
 
 int SC_ParseEntity(char **ch, struct entity_s *ent);
 
+int  lua_GetGlobalSound(lua_State *lua, int global_sound_id);
 int  lua_GetSecretTrackNumber(lua_State *lua);
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *track_path, int *load_method, int *stream_type);
 
