@@ -1282,7 +1282,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 break;
             }
 
-            if((ent->speed.m_floats[2] < -FREE_FALL_SPEED_2) || (cmd->action == 0)) 
+            if((ent->speed.m_floats[2] < -FREE_FALL_SPEED_2)) 
             {
                 ent->move_type == MOVE_FREE_FALLING;
                 ent->next_state = TR_STATE_LARA_FREEFALL;
@@ -1430,8 +1430,11 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     Character_CheckNextPenetration(ent, cmd, move);
                     if(cmd->horizontal_collide == 0)
                     {
-                        ent->move_type = ENT_MOVE_LEFT;
-                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_LEFT, 0);  // edge climb left
+                        if(last_frame)//we only want lara to shimmy when last frame is reached!
+                        {
+                            ent->move_type = ENT_MOVE_LEFT;
+                            Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_LEFT, 0);  // edge climb left
+                        }
                     }
                     else
                     {
@@ -1444,8 +1447,11 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     Character_CheckNextPenetration(ent, cmd, move);
                     if(cmd->horizontal_collide == 0)
                     {
-                        ent->dir_flag = ENT_MOVE_RIGHT;
-                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_RIGHT, 0); // edge climb right
+                        if(last_frame)//we only want lara to shimmy when last frame is reached!
+                        {
+                            ent->dir_flag = ENT_MOVE_RIGHT;
+                            Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_RIGHT, 0); // edge climb right
+                        }
                     }
                     else
                     {
@@ -1604,8 +1610,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->dir_flag = ENT_MOVE_LEFT;
             if(cmd->action == 0)
             {
+                vec3_set_zero(ent->speed.m_floats);
                 ent->move_type = MOVE_FREE_FALLING;
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
                 break;
             }
             
@@ -1665,8 +1672,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->dir_flag = ENT_MOVE_RIGHT;
             if(cmd->action == 0)
             {
+                vec3_set_zero(ent->speed.m_floats);
                 ent->move_type = MOVE_FREE_FALLING;
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
                 break;
             }
             
