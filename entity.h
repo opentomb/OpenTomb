@@ -76,7 +76,7 @@ struct character_s;
 #define TR_FD_TRIGTYPE_COMBAT           0x07    // If Lara is in combat state, run (any case).
 #define TR_FD_TRIGTYPE_DUMMY            0x08    // If Lara is in sector, run (air case).
 #define TR_FD_TRIGTYPE_ANTITRIGGER      0x09    // If Lara is in sector, stop (any case).
-#define TR_FD_TRIGTYPE_HEAVYTRIGGER     0x0A    // If item is activated by item, run.
+#define TR_FD_TRIGTYPE_HEAVYSWITCH      0x0A    // If item is activated by item, run.
 #define TR_FD_TRIGTYPE_HEAVYANTITRIGGER 0x0B    // If item is activated by item, stop.
 #define TR_FD_TRIGTYPE_MONKEY           0x0C    // TR3-5 only: If Lara is monkey-swinging, run.
 #define TR_FD_TRIGTYPE_SKELETON         0x0D    // TR5 only: Activated by skeleton only?

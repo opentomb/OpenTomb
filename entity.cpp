@@ -793,8 +793,8 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     case TR_FD_TRIGTYPE_ANTITRIGGER:
                         Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTITRIGGER");
                         break;
-                    case TR_FD_TRIGTYPE_HEAVYTRIGGER:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYTRIGGER");
+                    case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYSWITCH");
                         break;
                     case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
                         Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYANTITRIGGER");
