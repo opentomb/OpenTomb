@@ -18,6 +18,7 @@ extern "C" {
 #include "world.h"
 #include "mesh.h"
 #include "entity.h"
+#include "gameflow.h"
 #include "resource.h"
 #include "vmath.h"
 #include "polygon.h"
@@ -3021,6 +3022,16 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             switch(tr->game_version)
             {
                 case TR_I:
+                    if(gameflow_manager.CurrentLevelID == 1)
+                    {
+                        LM = World_FindModelByID(world, TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
+                        if(LM)
+                        {
+                            // In TR1, Lara has unified head mesh for all her alternate skins.
+                            // Hence, we copy all meshes except head, to prevent Potato Raider bug.
+                            SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count - 1);
+                        }
+                    }
                     break;
 
                 case TR_III:
