@@ -25,17 +25,17 @@
  * postframe do {if(out) {load pos; do command;}}
  */
 
-#define PENETRATION_TEST_OFFSET (0.16 * ent->character->ry)
-#define WALK_FORWARD_OFFSET (96.0)              ///@FIXME: find real offset
-#define WALK_FORWARD_STEP_UP (256.0)            // by bone frame bb
-#define RUN_FORWARD_OFFSET (128.0)              ///@FIXME: find real offset
-#define RUN_FORWARD_STEP_UP (320.0)             // by bone frame bb
-#define CRAWL_FORWARD_OFFSET (256.0)
-#define LARA_HANG_WALL_DISTANCE (128.0 - 24.0)
-#define LARA_HANG_VERTICAL_EPSILON (64.0)
-#define LARA_HANG_VERTICAL_OFFSET (12.0)        // in original is 0, in real life hands are little more higher than edge
-#define LARA_TRY_HANG_WALL_OFFSET (72.0)        // It works more stable than 32 or 128
-#define LARA_HANG_SENSOR_Z (800.0)              // It works more stable than 1024 (after collision critical fix, of course)
+#define PENETRATION_TEST_OFFSET     (0.16 * ent->character->ry)
+#define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
+#define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
+#define RUN_FORWARD_OFFSET          (128.0)       ///@FIXME: find real offset
+#define RUN_FORWARD_STEP_UP         (320.0)       // by bone frame bb
+#define CRAWL_FORWARD_OFFSET        (256.0)
+#define LARA_HANG_WALL_DISTANCE     (128.0 - 24.0)
+#define LARA_HANG_VERTICAL_EPSILON  (64.0)
+#define LARA_HANG_VERTICAL_OFFSET   (12.0)        // in original is 0, in real life hands are little more higher than edge
+#define LARA_TRY_HANG_WALL_OFFSET   (72.0)        // It works more stable than 32 or 128
+#define LARA_HANG_SENSOR_Z          (800.0)       // It works more stable than 1024 (after collision critical fix, of course)
 
 #define OSCILLATE_HANG_USE 0
 
@@ -61,10 +61,7 @@ void ent_to_edge_climb(entity_p ent)
 }
 
 /**
- * Current animation == current state
- * works correct in tr1 - tr2
- * tr3 and next - jump like fish has other state change number
- * swim strafe has other state change number
+ * Current animation != current state - use original TR state concept!
  */
 int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 {
@@ -104,7 +101,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
  * - Water animations
  */
 
-    ent->character->complex_collision = 0x00;                                    // by default simple collision
+    ent->character->complex_collision = 0x00;   // by default simple collision
     switch(ent->last_state)
     {
         /*
@@ -1430,7 +1427,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     Character_CheckNextPenetration(ent, cmd, move);
                     if(cmd->horizontal_collide == 0)
                     {
-                        if(last_frame)//we only want lara to shimmy when last frame is reached!
+                        if(last_frame)  //we only want lara to shimmy when last frame is reached!
                         {
                             ent->move_type = ENT_MOVE_LEFT;
                             Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_LEFT, 0);  // edge climb left
@@ -1447,7 +1444,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     Character_CheckNextPenetration(ent, cmd, move);
                     if(cmd->horizontal_collide == 0)
                     {
-                        if(last_frame)//we only want lara to shimmy when last frame is reached!
+                        if(last_frame)  //we only want lara to shimmy when last frame is reached!
                         {
                             ent->dir_flag = ENT_MOVE_RIGHT;
                             Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_RIGHT, 0); // edge climb right
