@@ -175,8 +175,8 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                     case TR_FD_TRIGTYPE_ANTITRIGGER:
                         //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTITRIGGER");
                         break;
-                    case TR_FD_TRIGTYPE_HEAVYTRIGGER:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYTRIGGER");
+                    case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYSWITCH");
                         break;
                     case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
                         //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYANTITRIGGER");
@@ -2927,20 +2927,39 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         entity->current_frame = 0;
         entity->frame_time = 0.0;
         entity->move_type = 0;
-
+            
         entity->model = World_FindModelByID(world, tr_item->object_id);
-        if(entity->model == NULL)
+        
+        if(ent_ID_override)
         {
-            if(ent_ID_override)
+            if(entity->model == NULL)
             {
                 top = lua_gettop(ent_ID_override);                                         // save LUA stack
-                lua_getglobal(ent_ID_override, "GetOverridedID");         // add to the up of stack LUA's function
+                lua_getglobal(ent_ID_override, "GetOverridedID");                          // add to the up of stack LUA's function
                 lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
                 lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
                 lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
                 entity->model = World_FindModelByID(world, lua_tointeger(ent_ID_override, -1));
                 lua_settop(ent_ID_override, top);                                          // restore LUA stack
             }
+
+            top = lua_gettop(ent_ID_override);                                         // save LUA stack
+            lua_getglobal(ent_ID_override, "GetOverridedAnim");                        // add to the up of stack LUA's function
+            lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
+            lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
+            lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
+            
+            int replace_anim_id = lua_tointeger(ent_ID_override, -1);
+            
+            if(replace_anim_id > 0)
+            {
+                skeletal_model_s* replace_anim_model = World_FindModelByID(world, replace_anim_id);
+            
+                entity->model->animations = replace_anim_model->animations;
+                entity->model->animation_count = replace_anim_model->animation_count;
+            }
+             
+            lua_settop(ent_ID_override, top); 
         }
 
         if(entity->model == NULL)
