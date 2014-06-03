@@ -407,6 +407,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
 
                 case TR_ANIMCOMMAND_PLAYSOUND:
                     ++pointer;
+                    ++pointer;
                     break;
 
                 case TR_ANIMCOMMAND_PLAYEFFECT:

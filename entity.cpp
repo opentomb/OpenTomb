@@ -1198,7 +1198,10 @@ void Entity_DoAnimRotate(entity_p entity)
         if(curr_bf->command & 0x02)
         {
             entity->angles[0] += 180.0;
-            entity->angles[1] = -entity->angles[1];                             // for underwater case
+            if(entity->move_type == MOVE_UNDER_WATER)
+            {
+                entity->angles[1] = -entity->angles[1];                         // for underwater case
+            }
             if(entity->dir_flag == ENT_MOVE_BACKWARD)
             {
                 entity->dir_flag = ENT_MOVE_FORWARD;
