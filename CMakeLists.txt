@@ -13,7 +13,7 @@ IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE "Release")
 ENDIF()
 
-IF (MINGW)
+IF(MINGW)
     IF(CMAKE_CROSSCOMPILING)
         # We are cross compiling on Linux with the MinGW toolchain.
         # zlib and SDL2 must be installed for the cross compiler
@@ -169,16 +169,10 @@ TARGET_LINK_LIBRARIES(
     ${ZLIB_LIBRARIES}
 )
 
-SET_TARGET_PROPERTIES(
-    ${PROJECT_NAME}
-    PROPERTIES LINK_FLAGS
-    "-L${SDL2_LIBRARY_DIRS}"
-)
-
-if(APPLE)
+IF(APPLE)
     SET_TARGET_PROPERTIES(
         ${PROJECT_NAME}
         PROPERTIES LINK_FLAGS
         "-L${SDL2_LIBRARY_DIRS} -framework CoreFoundation -framework ApplicationServices"
     )
-endif(APPLE)
+ENDIF(APPLE)
