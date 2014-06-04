@@ -14,13 +14,50 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF()
 
 IF (MINGW)
-    SET(ZLIB_INCLUDE_DIRS "/include")
-    SET(ZLIB_LIBRARIES "z")
+    IF(CMAKE_CROSSCOMPILING)
+        # We are cross compiling on Linux with the MinGW toolchain.
+        # zlib and SDL2 must be installed for the cross compiler
+        MESSAGE(STATUS "MinGW Cross-Compilation")
+        
+        SET(ZLIB_INCLUDE_DIRS "/usr/${COMPILER_PREFIX}/include")
+        SET(ZLIB_LIBRARIES z)
+        
+        SET(SDL2_INCLUDE_DIRS "/usr/${COMPILER_PREFIX}/include/SDL2")
+        SET(SDL2_LIBRARIES
+            /usr/${COMPILER_PREFIX}/lib/libmingw32.a
+            /usr/${COMPILER_PREFIX}/lib/libSDL2main.a
+            /usr/${COMPILER_PREFIX}/lib/libSDL2.a
+            /usr/${COMPILER_PREFIX}/lib/libm.a
+            /usr/${COMPILER_PREFIX}/lib/libdinput8.a
+            /usr/${COMPILER_PREFIX}/lib/libdxguid.a
+            /usr/${COMPILER_PREFIX}/lib/libdxerr8.a
+            /usr/${COMPILER_PREFIX}/lib/libuser32.a
+            /usr/${COMPILER_PREFIX}/lib/libgdi32.a
+            /usr/${COMPILER_PREFIX}/lib/libwinmm.a
+            /usr/${COMPILER_PREFIX}/lib/libimm32.a
+            /usr/${COMPILER_PREFIX}/lib/libole32.a
+            /usr/${COMPILER_PREFIX}/lib/liboleaut32.a
+            /usr/${COMPILER_PREFIX}/lib/libshell32.a
+            /usr/${COMPILER_PREFIX}/lib/libversion.a
+            /usr/${COMPILER_PREFIX}/lib/libuuid.a
+#            /usr/${COMPILER_PREFIX}/lib/libwinpthread.a # works as static linkage with mingw-w64/gcc4.8 on ubuntu 14.04 but not on ubuntu 12.04
+            /usr/${COMPILER_PREFIX}/lib/libpthreadGC2.a # GC-inlined build lib together with pthreadGC2.dll
+        )
+        ADD_DEFINITIONS("-Dmain=SDL_main")
+        SET(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+    ELSE()
+        # We are probably creating project files for CodeBlocks on Windows
+        MESSAGE(STATUS "MinGW Compilation")
+        
+        # zlib must be installed in the MinGW directory
+        SET(ZLIB_INCLUDE_DIRS "/include")
+        SET(ZLIB_LIBRARIES z)
 
-    SET(SDL2_INCLUDE_DIRS "/include/SDL2")
-    SET(SDL2_LIBRARIES SDL2 "pthread")
-
-    ADD_DEFINITIONS("-DSDL_MAIN_HANDLED")
+        # SDL2 must be installed in the MinGW directory
+        SET(SDL2_INCLUDE_DIRS "/include/SDL2")
+        SET(SDL2_LIBRARIES SDL2 pthread)
+        ADD_DEFINITIONS("-DSDL_MAIN_HANDLED")
+    ENDIF()
 
     # flag for AntTweakBar
     SET(CMAKE_CXX_FLAGS "-D_WINDOWS")
