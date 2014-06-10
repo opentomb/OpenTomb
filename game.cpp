@@ -479,6 +479,11 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         cam_pos += old_pos;
     }
 
+    if(control_states.mouse_look == 0)//If mouse look is off
+    {
+        cam_angles[0] = (ent->angles[0] * (M_PI/180)); //TEMPORARY We convert the current entity's angle to radians!
+    }
+
     vec3_copy(cam->pos, cam_pos.m_floats);
     Cam_SetRotation(cam, cam_angles);
 
