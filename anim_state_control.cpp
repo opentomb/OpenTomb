@@ -1281,7 +1281,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if((ent->speed.m_floats[2] < -FREE_FALL_SPEED_2)) 
             {
-                ent->move_type == MOVE_FREE_FALLING;
+                ent->move_type = MOVE_FREE_FALLING;
                 ent->next_state = TR_STATE_LARA_FREEFALL;
                 break;
             }
