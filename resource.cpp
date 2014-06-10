@@ -77,18 +77,18 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
     int i, argn, ret = 0;
     uint16_t *entry, *end_p, end_bit, cont_bit;
     char script[4096], buf[64];
-    
+
     // Trigger options.
     uint8_t  trigger_mask;
     uint8_t  only_once;
     int8_t   timer_field;
-    
-    
+
+
     if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size) || !engine_lua)
     {
         return 0;
     }
-    
+
     /*
      * PARSE FUNCTIONS
      */
@@ -99,16 +99,16 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
     do
     {
         end_bit = ((*entry) & 0x8000) >> 15;            // 0b10000000 00000000
-        
+
         // TR_I - TR_II
         //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
         //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
-        
+
         //TR_III+, but works with TR_I - TR_II
         function = (*entry) & 0x001F;                   // 0b00000000 00011111
         sub_function = ((*entry) & 0x3FF0) >> 8;        // 0b01111111 11100000
         b3 = ((*entry) & 0x00E0) >> 5;                  // 0b00000000 11100000  TR_III+
-        
+
         entry++;
 
         switch(function)
@@ -138,7 +138,7 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                 timer_field      =   (*entry) &  0x00FF;
                 trigger_mask     =  ((*entry) &  0x3E00) >> 9;
                 only_once        =  ((*entry) &  0x0100) >> 8;
-                
+
                 //Con_Printf("TRIGGER: timer - %d, once - %d, mask - %d%d%d%d%d", timer_field, only_once, trigger_mask[0], trigger_mask[1], trigger_mask[2], trigger_mask[3], trigger_mask[4]);
                 script[0] = 0;
                 argn = 0;
@@ -198,7 +198,7 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                         //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CLIMB");
                         break;
                 }
-                
+
                 do
                 {
                     entry++;
@@ -226,14 +226,14 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                             break;
 
                         case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH
-                            {                                
+                            {
                                 uint8_t cam_index = (*entry) & 0x007F;
                                 entry++;
                                 uint8_t cam_timer = ((*entry) & 0x00FF);
                                 uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
                                 uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
                                         cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-                                
+
                                 //Con_Printf("CAMERA: index = %d, timer = %d, once = %d, zoom = %d", cam_index, cam_timer, cam_once, cam_zoom);
                             }
                             break;
@@ -308,7 +308,7 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                     }
                     script[0] = 0;
                 }
-                
+
                 break;
 
             case TR_FD_FUNC_DEATH:          // KILL LARA
@@ -345,15 +345,15 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
             case TR_FD_FUNC_MONKEY:          // Climbable ceiling
                 //Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
                 break;
-                
+
             case TR_FD_FUNC_TRIGGERER_MARK:
                 //Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
                 break;
-                
+
             case TR_FD_FUNC_BEETLE_MARK:
                 //Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
                 break;
-                
+
             default:
                 //Con_Printf("UNKNOWN function id = %d, sub = %d, b3 = %d", function, sub_function, b3);
                 break;
@@ -367,12 +367,12 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
 
 
 void GenerateAnimCommandsTransform(skeletal_model_p model)
-{   
+{
     if(engine_world.anim_commands_count == 0)
     {
         return;
     }
-    
+
     for(int anim = 0;anim < model->animation_count;anim++)
     {
         if(model->animations[anim].num_anim_commands > 255)
@@ -388,7 +388,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
             switch(*pointer)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation. 
+                    // This command executes ONLY at the end of animation.
                     af->frames[af->frames_count-1].move[0] = (btScalar)(*++pointer);                          // x = x;
                     af->frames[af->frames_count-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
                     af->frames[af->frames_count-1].move[1] = (btScalar)(*++pointer);                          // y = z
@@ -697,7 +697,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             ent_ID_override = NULL;
         }
     }
-    
+
     luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
     luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
 
@@ -714,7 +714,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->entity_tree->rb_compEQ = compEntityEQ;
     world->entity_tree->rb_compLT = compEntityLT;
     world->entity_tree->rb_free_data = RBEntityFree;
-    
+
     uc_rect_count = 0;
     uc_rect_list = NULL;
 
@@ -733,7 +733,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
     }
-    
+
     Gui_DrawLoadingBar(100);
 
     for (i = 0; i < tr->sprite_textures_count; i++)
@@ -820,7 +820,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 4, 4, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
     glDisable(GL_TEXTURE_2D);
-    
+
     Gui_DrawLoadingBar(300);
 
     /*
@@ -838,12 +838,12 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->anim_commands = tr->anim_commands;
     tr->anim_commands = NULL;
     tr->anim_commands_count = 0;
-    
+
     /*
      * Generate anim textures
      */
     TR_GenAnimTextures(world, tr);
-    
+
     Gui_DrawLoadingBar(400);
 
     /*
@@ -892,7 +892,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         TR_GenRoom(i, r, world, tr);
         r->frustum = Frustum_Create();
     }
-   
+
     /*
      * sector data parsing
      */
@@ -933,14 +933,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
      * build all skeletal models
      */
     GenSkeletalModels(world, tr);
-    
+
     Gui_DrawLoadingBar(700);
 
     /*
      * build all moveables
      */
     GenEntitys(world, tr);
-    
+
     r = world->rooms;
     if(tr->game_version < TR_V)
     {
@@ -952,11 +952,11 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             }
         }
     }
-    
+
     Gui_DrawLoadingBar(800);
-    
+
     // Initialize audio.
-    
+
     Audio_Init(TR_AUDIO_MAX_CHANNELS, tr);
 
     Gui_DrawLoadingBar(900);
@@ -1009,7 +1009,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             Mesh_GenVBO(world->meshes + i);
         }
     }
-    
+
     Gui_DrawLoadingBar(1000);
 
     for(i=0;i<world->room_count;i++)
@@ -1035,7 +1035,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         free(uc_rect_list);
         uc_rect_list = NULL;
     }
-    
+
     buf[0] = 0;
 
     strcat(buf, "scripts/level/");
@@ -1059,7 +1059,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         strcat(buf, "tr5/");
     }
-    
+
 
     Engine_GetLevelName(map, CVAR_get_val_s("game_level"));
     strcat(buf, map);
@@ -1114,10 +1114,10 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->self->object_type = OBJECT_ROOM_BASE;
 
     TR_GenRoomMesh(world, room_index, room, tr);
-    if(room->mesh && room->flags & 0x01)
+    /*if(room->mesh && room->flags & 0x01)
     {
         Mesh_MullColors(room->mesh, vater_color);
-    }
+    }*/
 
     room->bt_body = NULL;
     /*
@@ -1166,14 +1166,14 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->cbb_max[2] = tr_static->collision_box[0].y;
         vec3_copy(r_static->mesh->bb_min, r_static->cbb_min);
         vec3_copy(r_static->mesh->bb_max, r_static->cbb_max);
-        
+
         r_static->vbb_min[0] = tr_static->visibility_box[0].x;
         r_static->vbb_min[1] =-tr_static->visibility_box[0].z;
         r_static->vbb_min[2] = tr_static->visibility_box[1].y;
         r_static->vbb_max[0] = tr_static->visibility_box[1].x;
         r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
-        
+
         r_static->bv->transform = room->static_mesh[i].transform;
         r_static->bv->r = room->static_mesh[i].mesh->R;
         Mat4_E(r_static->transform);
@@ -1214,7 +1214,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             }
             lua_settop(level_script, top);                                                         // restore LUA stack
         }
-        
+
         if(r_static->self->collide_flag != 0x0000)
         {
             cshape = MeshToBTCS(r_static->mesh, true, true, r_static->self->collide_flag);
@@ -1482,33 +1482,33 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     uint16_t  i, j, num_sequences, num_uvrotates;
     uint16_t  block_size = tr->animated_textures_count; // This is actually whole anim textures block size.
     int32_t   uvrotate_script;
-    
+
     pointer       = tr->animated_textures;
-    num_uvrotates = tr->animated_textures_uv_count;   
-    
+    num_uvrotates = tr->animated_textures_uv_count;
+
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
-    
+
     world->anim_sequences_count = num_sequences;
     world->anim_sequences = (anim_seq_p)malloc(num_sequences * sizeof(anim_seq_t));
     memset(world->anim_sequences, 0, sizeof(anim_seq_t) * num_sequences);   // Reset all structure.
-    
+
     for(i = 0; i < num_sequences; i++)
     {
         world->anim_sequences[i].frame_count = *(pointer++) + 1;
         world->anim_sequences[i].frame_list  =  (uint32_t*)malloc(world->anim_sequences[i].frame_count * sizeof(uint32_t));
-        
+
         // Fill up new sequence with frame list.
         world->anim_sequences[i].type          = TR_ANIMTEXTURE_FORWARD;
         world->anim_sequences[i].type_flag     = false; // Needed for proper reverse-type start-up.
         world->anim_sequences[i].frame_rate    = 0.05;  // Should be passed as 1 / FPS.
         world->anim_sequences[i].frame_time    = 0.0;   // Reset frame time to initial state.
         world->anim_sequences[i].current_frame = 0;     // Reset current frame to zero.
-        
+
         for(int j = 0; j < world->anim_sequences[i].frame_count; j++)
         {
             world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
         }
-        
+
         // UVRotate textures case.
         // In TR4-5, it is possible to define special UVRotate animation mode.
         // It is specified by num_uvrotates variable. If sequence belongs to
@@ -1517,22 +1517,22 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         // In OpenTomb, we can have BOTH UVRotate and classic frames mode
         // applied to the same sequence, but there we specify compatibility
         // method for TR4-5.
-        
+
         if(level_script)
         {
             int top = lua_gettop(level_script);
             lua_getglobal(level_script, "UVRotate");
             uvrotate_script = lua_tointeger(level_script, -1);
-            lua_settop(level_script, top);      
+            lua_settop(level_script, top);
         }
-        
+
         if((i < num_uvrotates) && (uvrotate_script != 0))
         {
             world->anim_sequences[i].frame_lock       = true;
             world->anim_sequences[i].uvrotate         = true;
             world->anim_sequences[i].uvrotate_flag    = false;
             world->anim_sequences[i].uvrotate_time    = 0.0;
-            
+
             if(uvrotate_script > 0)
             {
                 world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_FORWARD;
@@ -1543,14 +1543,14 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
                 world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_BACKWARD;
                 world->anim_sequences[i].uvrotate_speed   = (btScalar)abs(uvrotate_script);
             }
-            
-            
+
+
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
             // if scrolling is completed or not.
-            
+
             world->anim_sequences[i].uvrotate_max     = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, world->anim_sequences[i].frame_list[0]) / 2);
-        } 
+        }
     } // end for(i = 0; i < num_sequences; i++)
 }
 
@@ -1564,14 +1564,14 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world)
 {
     int i, j;
-    
+
     polygon->anim_id = 0;                           // Reset to 0 by default.
     tex_index = tex_index & TR_TEXTURE_INDEX_MASK;  ///@FIXME: Is it really needed?
-                
+
     for(i = 0; i < world->anim_sequences_count; i++)
     {
         for(j = 0; j < world->anim_sequences[i].frame_count; j++)
-        {  
+        {
             if(world->anim_sequences[i].frame_list[j] == tex_index)
             {
                 // If we have found assigned texture ID in animation texture lists,
@@ -1583,7 +1583,7 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
             }
         }
     }
-    
+
     return false;   // No such TexInfo found in animation textures lists.
 }
 
@@ -1646,7 +1646,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      * flipped texture & 0x8000 (1 bit  ) - horizontal flipping.
      * shape texture   & 0x7000 (3 bits ) - texture sample shape.
      * index texture   & $0FFF  (12 bits) - texture sample index.
-     * 
+     *
      * if bit [15] is set, as in ( texture and $8000 ), it indicates that the texture
      * sample must be flipped horizontally prior to be used.
      * Bits [14..12] as in ( texture and $7000 ), are used to store the texture
@@ -1655,7 +1655,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      * the top-left corner and going clockwise: 0, 2, 4, 6 represent the positions
      * of the square angle of the triangles, 7 represents a quad.
      */
-    
+
     tr_mesh = &tr->meshes[mesh_index];
     mesh->ID = mesh_index;
     mesh->centre[0] = tr_mesh->centre.x;
@@ -1693,7 +1693,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
 
         Polygon_Resize(p, 3);
         p->type = !IsInUCRectFace3(tex);
-        
+
         //p->double_side = face3->texture >> 15;    // CORRECT, BUT WRONG IN TR3-5
         if(tr->game_version < TR_III)
         {
@@ -1703,7 +1703,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         {
             p->double_side = true;
         }
-        
+
         SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
         if(p->anim_id > 0)
         {
@@ -1852,7 +1852,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         Polygon_Resize(p, 4);
         p->type = !IsInUCRectFace4(tex);
-        
+
         //p->double_side = face3->texture >> 15;    // CORRECT, BUT WRONG IN TR3-5
         if(tr->game_version < TR_III)
         {
@@ -1862,7 +1862,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         {
             p->double_side = true;
         }
-        
+
         SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
         if(p->anim_id > 0)
         {
@@ -2176,7 +2176,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
             mesh->transparancy_count++;
         }
         Polygon_Resize(p, 3);
-        
+
         p->transparency = tex->transparency_flags;
         if((p->transparency < 0x0002) || (p->transparency == BM_ANIMATED_TEX))
         {
@@ -2233,7 +2233,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
             mesh->transparancy_count++;
         }
         Polygon_Resize(p, 4);
-        
+
         p->transparency = tex->transparency_flags;
         if((p->transparency < 0x0002) || (p->transparency == BM_ANIMATED_TEX))
         {
@@ -2432,7 +2432,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         {
             tree_tag = model->mesh_tree + k;
             bone_tag = bone_frame->bone_tags + k;
-            
+
             rot[0] = 0.0;
             rot[1] = 0.0;
             rot[2] = 0.0;
@@ -2495,7 +2495,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         // Parse AnimCommands
         // Max. amount of AnimCommands is 255, larger numbers are considered as 0.
         // See http://evpopov.com/dl/TR4format.html#Animations for details.
-            
+
         if( (anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255) )
         {
             // Calculate current animation anim command block offset.
@@ -2512,17 +2512,17 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
                         *(pointer + 1) -= tr_animation->frame_start;
                         pointer += 2;
                         break;
-                        
+
                     case TR_ANIMCOMMAND_SETPOSITION:
                         // Parse through 3 operands.
                         pointer += 3;
                         break;
-                            
+
                     case TR_ANIMCOMMAND_JUMPDISTANCE:
                         // Parse through 2 operands.
                         pointer += 2;
                         break;
-                        
+
                     default:
                         // All other commands have no operands.
                         break;
@@ -2539,7 +2539,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
             anim->frames_count = 1;
         }
         anim->frames = (bone_frame_p)malloc(anim->frames_count * sizeof(bone_frame_t));
-        
+
         /*
          * let us begin to load animations
          */
@@ -2758,17 +2758,17 @@ int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
     tr_moveable_t *curr_moveable, *next_moveable;
 
     curr_moveable = &tr->moveables[moveable_ind];
-    
+
     if(curr_moveable->animation_index == 0xFFFF)
     {
         return 0;
     }
-    
+
     if(moveable_ind == tr->moveables_count-1)
     {
         ret = (int32_t)tr->animations_count - (int32_t)curr_moveable->animation_index;
         if(ret < 0)
-        {                                                                       
+        {
             return 1;
         }
         else
@@ -2789,7 +2789,7 @@ int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
             return 1;
         }
     }
-    
+
     ret = (next_moveable->animation_index <= tr->animations_count)?(next_moveable->animation_index):(tr->animations_count);
     ret -= (int32_t)curr_moveable->animation_index;
 
@@ -2810,7 +2810,7 @@ int GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
     {
         return 1;                                                               // impossible!
     }
-    
+
     if(animation_ind == tr->animations_count - 1)
     {
         ret = 2 * tr->frame_data_size - curr_anim->frame_offset;
@@ -2917,10 +2917,10 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         {
             entity->self->room = NULL;
         }
-        
+
         entity->activation_mask  = (tr_item->flags & 0x3E00) >> 9;  ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
         entity->OCB              =  tr_item->ocb;
-        
+
         entity->self->collide_flag = 0x0000;
         entity->anim_flags = 0x0000;
         entity->flags = 0x00000000;
@@ -2929,9 +2929,9 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         entity->current_frame = 0;
         entity->frame_time = 0.0;
         entity->move_type = 0;
-            
+
         entity->model = World_FindModelByID(world, tr_item->object_id);
-        
+
         if(ent_ID_override)
         {
             if(entity->model == NULL)
@@ -2950,18 +2950,18 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
             lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
             lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
-            
+
             int replace_anim_id = lua_tointeger(ent_ID_override, -1);
-            
+
             if(replace_anim_id > 0)
             {
                 skeletal_model_s* replace_anim_model = World_FindModelByID(world, replace_anim_id);
-            
+
                 entity->model->animations = replace_anim_model->animations;
                 entity->model->animation_count = replace_anim_model->animation_count;
             }
-             
-            lua_settop(ent_ID_override, top); 
+
+            lua_settop(ent_ID_override, top);
         }
 
         if(entity->model == NULL)
@@ -2985,7 +2985,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             free(entity);
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
         }
-    
+
         if(tr->game_version < TR_II && tr_item->object_id == 83)
         {
             Entity_Clear(entity);                                               // skip PSX save model
@@ -3192,7 +3192,7 @@ btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool
                 delete trimesh;
                 return NULL;
             }
-            
+
             ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
             BV_Clear(bv);
             free(bv);
