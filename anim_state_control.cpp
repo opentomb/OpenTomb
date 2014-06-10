@@ -1788,7 +1788,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(ent->dir_flag == ENT_MOVE_BACKWARD)
                 {
-                    if(ent->current_frame > 3 && ent->current_animation == TR_ANIMATION_LARA_FREE_FALL_MIDDLE)///@INFO This is fixing a bug where the player is allowed to grab too early, we need Lara to grab at this sort of time frame so it doesn't glitch
+                    if(ent->current_frame > 3 && ent->current_animation == TR_ANIMATION_LARA_FREE_FALL_MIDDLE)///@FIXME This should stop the player from grabbing too early but sometimes it is not consistent? possibly the frame > 3
                     {
                         ent->next_state = TR_STATE_LARA_REACH;
                     }
