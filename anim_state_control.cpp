@@ -465,14 +465,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(cmd->action)
                 {
-                    ent->speed.m_floats[0] *= 0.1;
-                    ent->speed.m_floats[1] *= 0.1;
-                }
-                else
-                {
                     ent->speed.m_floats[0] *= 0.7;
                     ent->speed.m_floats[1] *= 0.7;
                 }
+
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
             else if(cmd->horizontal_collide & 0x01)
@@ -1057,8 +1053,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if(ent->move_type == MOVE_FREE_FALLING)
             {
-                ent->speed.m_floats[0] *= 0.2;
-                ent->speed.m_floats[1] *= 0.2;
+                ent->speed.m_floats[0] *= 0.7;
+                ent->speed.m_floats[1] *= 0.7;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
             else if(cmd->slide == 0)
@@ -1270,6 +1266,31 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
                     vec3_set_zero(ent->speed.m_floats);
+                }
+
+                if(ent->dir_flag == ENT_MOVE_BACKWARD)//If Lara is moving backwards off the ledge we want to move Lara slightly forwards depending on the current angle
+                {
+                    float old_speed = ent->speed.m_floats[2];///@FIXME Please find another way of doing this!
+                    vec3_mul_scalar(ent->speed.m_floats, ent->transform+4, t);
+                    ent->speed.m_floats[2] = old_speed;
+
+
+                    if(ent->angles[0] > 45.0 && ent->angles[0] < 135.0)
+                    {
+                        ent->speed.m_floats[0] = -FREE_FALL_SPEED_1 / 2;
+                    }
+                    else if(ent->angles[0] > 135.0 && ent->angles[0] < 225.0)
+                    {
+                        ent->speed.m_floats[1] = -FREE_FALL_SPEED_1 / 2;
+                    }
+                    else if(ent->angles[0] > 225.0 && ent->angles[0] < 315.0)
+                    {
+                        ent->speed.m_floats[0] = FREE_FALL_SPEED_1 / 2;
+                    }
+                    else if(ent->angles[0] > 315.0 || ent->angles[0] < 45.0)
+                    {
+                        ent->speed.m_floats[1] = FREE_FALL_SPEED_1 / 2;
+                    }
                 }
             }
 
@@ -1765,7 +1786,17 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if(cmd->action == 1)
             {
-                ent->next_state = TR_STATE_LARA_REACH;
+                if(ent->dir_flag == ENT_MOVE_BACKWARD)
+                {
+                    if(ent->current_frame > 3 && ent->current_animation == TR_ANIMATION_LARA_FREE_FALL_MIDDLE)///@INFO This is fixing a bug where the player is allowed to grab too early, we need Lara to grab at this sort of time frame so it doesn't glitch
+                    {
+                        ent->next_state = TR_STATE_LARA_REACH;
+                    }
+                }
+                else
+                {
+                    ent->next_state = TR_STATE_LARA_REACH;
+                }
             }
             else if(cmd->shift == 1)
             {
