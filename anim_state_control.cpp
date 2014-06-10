@@ -54,7 +54,7 @@ void ent_set_underwater(entity_p ent)
 void ent_to_edge_climb(entity_p ent)
 {
     btScalar *v = ent->character->climb.point;
-    
+
     ent->transform[12 + 0] = v[0] - ent->transform[4 + 0] * ent->bf.bb_max[1];
     ent->transform[12 + 1] = v[1] - ent->transform[4 + 1] * ent->bf.bb_max[1];
     ent->transform[12 + 2] = v[2] - ent->bf.bb_max[2];
@@ -70,11 +70,11 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     btScalar t, *pos = ent->transform + 12;
     btScalar offset[3], move[3];
     height_info_t next_fc, *curr_fc;
-    climb_info_t *climb = &ent->character->climb; 
-    
+    climb_info_t *climb = &ent->character->climb;
+
     // last frame is a stick... but is some cases works absolute correctly
     char last_frame = ent->model->animations[ent->current_animation].frames_count <= ent->current_frame + 1;
-    
+
     curr_fc = &ent->character->height_info;
     next_fc.sp = curr_fc->sp;
     next_fc.cb = ent->character->ray_cb;
@@ -111,9 +111,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->dir_flag = ENT_STAY;
             cmd->rot[0] = 0;
             cmd->crouch |= low_vertical_space;
-            
+
             Character_Lean(ent, cmd, 0.0);
-            
+
             if( (climb->can_hang &&
                 (climb->next_z_space >= ent->character->Height) &&
                 (ent->move_type == MOVE_CLIMBING)) ||
@@ -121,7 +121,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->move_type = MOVE_ON_FLOOR;
             }
-            
+
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
@@ -159,7 +159,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if(cmd->jump)
             {
-                ent->next_state = TR_STATE_LARA_JUMP_PREPARE;       // jump sideways 
+                ent->next_state = TR_STATE_LARA_JUMP_PREPARE;       // jump sideways
             }
             else if(cmd->roll)
             {
@@ -193,7 +193,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         }
                     }
                 }       // end IF CMD->SHIFT
-                else    
+                else
                 {
                     vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                     Character_CheckNextPenetration(ent, cmd, move);
@@ -214,7 +214,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         }
                     }
                 }
-                
+
                 if( (cmd->action) &&
                     ((ent->current_animation == TR_ANIMATION_LARA_STAY_IDLE)        ||
                      (ent->current_animation == TR_ANIMATION_LARA_STAY_SOLID)       ||
@@ -225,10 +225,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_mul_scalar(offset, ent->transform + 4, t);
                     offset[2] += DEFAULT_CLIMB_UP_HEIGHT;
                     *climb = Character_CheckClimbability(ent, offset, &next_fc, DEFAULT_CLIMB_UP_HEIGHT);
-                
+
                     if(  climb->edge_hit                                                         &&
                         (climb->next_z_space >= ent->character->Height)                          &&
-                        (pos[2] + ent->character->max_step_up_height < next_fc.floor_point[2])   && 
+                        (pos[2] + ent->character->max_step_up_height < next_fc.floor_point[2])   &&
                         (pos[2] + 2944.0 >= next_fc.floor_point[2])                              &&
                         (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component)  ) // trying to climb on
                     {
@@ -255,7 +255,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                             ent->next_state = TR_STATE_LARA_JUMP_UP;
                         }
                     }   // end IF MOVE_CLIMBING
-                    
+
                     *climb = Character_CheckWallsClimbability(ent);
                     if(climb->wall_hit)
                     {
@@ -346,9 +346,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_JUMP_PREPARE:
             //ent->character->complex_collision = 0x01;
-            cmd->rot[0] = 0;                                                
+            cmd->rot[0] = 0;
             Character_Lean(ent, cmd, 0.0);
-            
+
             if(cmd->slide == CHARACTER_SLIDE_BACK)      // Slide checking is only for jumps direction correction!
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
@@ -485,7 +485,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] *= 0.7;
             ent->dir_flag = ENT_STAY;
             Character_Lean(ent, cmd, 0.0);
-            
+
             if(cmd->move[0] == 1)
             {
                 if(cmd->shift == 1)
@@ -516,7 +516,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] *= 0.7;
             ent->dir_flag = ENT_STAY;
             Character_Lean(ent, cmd, 0.0);
-            
+
             if(cmd->move[0] == 1)
             {
                 if(cmd->shift == 1)
@@ -547,7 +547,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             // 65 - wade
             ent->dir_flag = ENT_STAY;
             Character_Lean(ent, cmd, 0.0);
-            
+
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
@@ -577,9 +577,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             i = Character_CheckNextStep(ent, offset, &next_fc);
             ent->dir_flag = ENT_MOVE_FORWARD;
             cmd->crouch |= low_vertical_space;
-            
+
             Character_Lean(ent, cmd, 6.0);
-            
+
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
@@ -634,7 +634,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 else
                 {
                     Controls_JoyRumble(200.0, 200);
-                    
+
                     if(cmd->move[0] == 1)
                     {
                         i = Entity_GetAnimDispatchCase(ent, 2);
@@ -683,13 +683,13 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             break;
 
-        case TR_STATE_LARA_SPRINT:          
+        case TR_STATE_LARA_SPRINT:
             vec3_mul_scalar(offset, ent->transform + 4, RUN_FORWARD_OFFSET);
             Character_Lean(ent, cmd, 12.0);
             offset[2] += ent->bf.bb_max[2];
             i = Character_CheckNextStep(ent, offset, &next_fc);
             cmd->crouch |= low_vertical_space;
-            
+
             if(!ent->character->opt.sprint)
             {
                 ent->next_state = TR_STATE_LARA_RUN_FORWARD;
@@ -722,7 +722,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->horizontal_collide & 0x01)
             {
                 Controls_JoyRumble(200.0, 200);
-                
+
                 i = Entity_GetAnimDispatchCase(ent, 2);                         // tested!
                 if(i == 1)
                 {
@@ -857,15 +857,15 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
             }
-            
+
             if(!curr_fc->floor_hit || ent->move_type == MOVE_FREE_FALLING)      // free fall, next swim
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
             }
             else if(curr_fc->water)
-            {    
-                if((curr_fc->water_level - curr_fc->floor_point.m_floats[2] <= ent->character->wade_depth))     
-                {                                                               
+            {
+                if((curr_fc->water_level - curr_fc->floor_point.m_floats[2] <= ent->character->wade_depth))
+                {
                     // run / walk case
                     if((cmd->move[0] == 1) && (cmd->horizontal_collide == 0))
                     {
@@ -876,7 +876,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         ent->next_state = TR_STATE_LARA_STOP;
                     }
                 }
-                else if(curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->Height)               
+                else if(curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->Height)
                 {
                     // swim case
                     if(curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->Height + ent->character->max_step_up_height)
@@ -889,7 +889,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         ent->move_type = MOVE_ON_WATER;
                         pos[2] = curr_fc->water_level;
                     }
-                }            
+                }
                 else if(curr_fc->water_level - curr_fc->floor_point.m_floats[2] > ent->character->wade_depth)              // wade case
                 {
                     if((cmd->move[0] != 1) || (cmd->horizontal_collide != 0))
@@ -910,7 +910,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
             }
             break;
-            
+
         case TR_STATE_LARA_WALK_BACK:
             cmd->rot[0] *= 0.4;
             vec3_mul_scalar(offset, ent->transform + 4, -WALK_FORWARD_OFFSET);
@@ -984,7 +984,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     {
                         // continue walking
                     }
-                    else 
+                    else
                     {
                         ent->next_state = TR_STATE_LARA_ONWATER_LEFT;
                         if(last_frame)
@@ -1025,7 +1025,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     {
                         // continue walking
                     }
-                    else 
+                    else
                     {
                         ent->next_state = TR_STATE_LARA_ONWATER_RIGHT;
                         if(last_frame)
@@ -1046,7 +1046,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_STOP;
             }
             break;
-            
+
             /*
              * Slide animations section
              */
@@ -1102,7 +1102,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_JUMP_FORWARD;       // jump
             }
             break;
-            
+
             /*
              * Misk animations
              */
@@ -1173,7 +1173,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     Entity_UpdateRotation(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
                     vec3_set_zero(ent->speed.m_floats);
-                    
+
                     pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                     pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                     pos[2] = climb->point[2] - ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
@@ -1189,7 +1189,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     }
                 }
             }
-            
+
             if(cmd->move[0] == 1)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
@@ -1241,7 +1241,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     ent->move_type = MOVE_FREE_FALLING;
                     ent->next_state = TR_STATE_LARA_FREEFALL;
-                } 
+                }
                 break;
             }
             break;
@@ -1272,20 +1272,20 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_set_zero(ent->speed.m_floats);
                 }
             }
-            
+
             if((ent->move_type != MOVE_CLIMBING) && (cmd->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR))
             {
                 ent->next_state = TR_STATE_LARA_STOP;                           // middle landing
                 break;
             }
 
-            if((ent->speed.m_floats[2] < -FREE_FALL_SPEED_2)) 
+            if((ent->speed.m_floats[2] < -FREE_FALL_SPEED_2))
             {
                 ent->move_type = MOVE_FREE_FALLING;
                 ent->next_state = TR_STATE_LARA_FREEFALL;
                 break;
             }
-            
+
             if(ent->move_type == MOVE_CLIMBING)
             {
                 vec3_set_zero(ent->speed.m_floats);
@@ -1367,7 +1367,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 break;
             }
-            
+
             if(cmd->action == 1)                                                // we have to update climb point every time so entity can move
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
@@ -1408,7 +1408,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                         pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                         pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                         pos[2] = climb->point[2] - ent->bf.bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                        vec3_set_zero(ent->speed.m_floats);                        
+                        vec3_set_zero(ent->speed.m_floats);
                         ent->anim_flags = ANIM_LOOP_LAST_FRAME;                 // disable shake
                     }
                 }
@@ -1470,7 +1470,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
             }
             break;
-            
+
         case TR_STATE_LARA_LADDER_IDLE:
             //ent->character->complex_collision = 0x01;
             cmd->rot[0] = 0;
@@ -1504,51 +1504,51 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if((!curr_fc->ceiling_hit) || (pos[2] + ent->bf.bb_max[2] < curr_fc->ceiling_point.m_floats[2]))
                 {
-                    ent->next_state = TR_STATE_LARA_LADDER_UP; 
+                    ent->next_state = TR_STATE_LARA_LADDER_UP;
                 }
             }
             else if(cmd->move[0] == -1)
             {
-                ent->next_state = TR_STATE_LARA_LADDER_DOWN; 
+                ent->next_state = TR_STATE_LARA_LADDER_DOWN;
             }
             else if(cmd->move[1] == 1)
             {
-                ent->next_state = TR_STATE_LARA_LADDER_RIGHT; 
+                ent->next_state = TR_STATE_LARA_LADDER_RIGHT;
             }
-            else if(cmd->move[1] == -1)  
+            else if(cmd->move[1] == -1)
             {
-                ent->next_state = TR_STATE_LARA_LADDER_LEFT; 
+                ent->next_state = TR_STATE_LARA_LADDER_LEFT;
             }
             break;
-            
+
         case TR_STATE_LARA_LADDER_LEFT:
             //ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_LEFT;
             ent->current_speed = 5.0;
             if((cmd->action == 0) || (ent->character->climb.wall_hit == 0))
             {
-                ent->next_state = TR_STATE_LARA_HANG; 
+                ent->next_state = TR_STATE_LARA_HANG;
             }
             else
             {
-                ent->next_state = TR_STATE_LARA_LADDER_IDLE; 
+                ent->next_state = TR_STATE_LARA_LADDER_IDLE;
             }
             break;
-            
+
         case TR_STATE_LARA_LADDER_RIGHT:
             //ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_RIGHT;
             ent->current_speed = 5.0;
             if((cmd->action == 0) || (ent->character->climb.wall_hit == 0))
             {
-                ent->next_state = TR_STATE_LARA_HANG; 
+                ent->next_state = TR_STATE_LARA_HANG;
             }
             else
             {
-                ent->next_state = TR_STATE_LARA_LADDER_IDLE; 
+                ent->next_state = TR_STATE_LARA_LADDER_IDLE;
             }
             break;
-            
+
         case TR_STATE_LARA_LADDER_UP:
             //ent->character->complex_collision = 0x01;
             if(ent->move_type == MOVE_CLIMBING)
@@ -1556,8 +1556,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_LADDER_IDLE;
                 break;
             }
-            
-            if(cmd->action && ent->character->climb.wall_hit) 
+
+            if(cmd->action && ent->character->climb.wall_hit)
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
                 vec3_mul_scalar(offset, ent->transform + 4, t);
@@ -1566,13 +1566,13 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 if(climb->edge_hit && (climb->next_z_space >= 512.0))
                 {
                     ent->move_type = MOVE_CLIMBING;
-                    ent->next_state = TR_STATE_LARA_LADDER_IDLE; 
+                    ent->next_state = TR_STATE_LARA_LADDER_IDLE;
                 }
                 else if((cmd->move[0] <= 0) && (curr_fc->ceiling_hit || (pos[2] + ent->bf.bb_max[2] >= curr_fc->ceiling_point.m_floats[2])))
                 {
-                    ent->next_state = TR_STATE_LARA_LADDER_IDLE; 
+                    ent->next_state = TR_STATE_LARA_LADDER_IDLE;
                 }
-                
+
                 if(curr_fc->ceiling_hit && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2]))
                 {
                     pos[2] = curr_fc->ceiling_point.m_floats[2] - ent->bf.bb_max[2];
@@ -1581,10 +1581,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else
             {
                 // Free fall after stop
-                ent->next_state = TR_STATE_LARA_LADDER_IDLE; 
+                ent->next_state = TR_STATE_LARA_LADDER_IDLE;
             }
             break;
-            
+
         case TR_STATE_LARA_LADDER_DOWN:
             //ent->character->complex_collision = 0x01;
             if(cmd->action && ent->character->climb.wall_hit && (cmd->move[1] < 0))
@@ -1596,7 +1596,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else
             {
-                ent->next_state = TR_STATE_LARA_LADDER_IDLE; 
+                ent->next_state = TR_STATE_LARA_LADDER_IDLE;
             }
             break;
 
@@ -1612,7 +1612,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
                 break;
             }
-            
+
             if(ent->move_type == MOVE_WALLS_CLMB)
             {
                 if(!ent->character->climb.wall_hit)
@@ -1674,7 +1674,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
                 break;
             }
-            
+
             if(ent->move_type == MOVE_WALLS_CLMB)
             {
                 if(!ent->character->climb.wall_hit)
@@ -1731,9 +1731,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             break;
 
         case TR_STATE_LARA_JUMP_FORWARD:
-            
+
             Character_Lean(ent, cmd, 4.0);
-            
+
             ent->character->complex_collision = 0x01;
             if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
@@ -1791,25 +1791,28 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             break;
 
         case TR_STATE_LARA_FREEFALL:
-            
+
             Character_Lean(ent, cmd, 1.0);
-            
+
             ent->character->complex_collision = 0x01;
-            
+
+            ent->speed.m_floats[0] = 0.0;//Reset these to zero so Lara is only falling downwards
+            ent->speed.m_floats[1] = 0.0;
+
             if( (int(ent->speed.m_floats[2]) <=  -FREE_FALL_SPEED_CRITICAL) &&
                 (int(ent->speed.m_floats[2]) >= (-FREE_FALL_SPEED_CRITICAL-100)) )
             {
                 Audio_Send(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->ID);       // Scream
                 ent->speed.m_floats[2] = -FREE_FALL_SPEED_CRITICAL-101;
             }
-            
+
             if(ent->move_type == MOVE_UNDER_WATER)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->ID);       // Stop scream
-                
+
                 // Splash sound is hardcoded, beginning with TR3.
                 if(engine_world.version > TR_II)
                 {
@@ -1819,7 +1822,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
                 if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_MAXSAFE)
-                {                    
+                {
                     if(!Character_DecreaseHealth(ent, -(ent->speed.m_floats[2] + FREE_FALL_SPEED_MAXSAFE) / 2))
                     {
                         cmd->kill = 1;
@@ -1839,7 +1842,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_MIDDLE, 0);
                 }
-                
+
                 if(cmd->kill == 1)
                 {
                     ent->next_state = TR_STATE_LARA_DEATH;
@@ -1872,6 +1875,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_SWANDIVE_END:
             ent->character->complex_collision = 0x01;
             cmd->rot[0] = 0.0;
+
+            ent->speed.m_floats[0] = 0.0;//Reset these to zero so Lara is only falling downwards
+            ent->speed.m_floats[1] = 0.0;
+
             if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
                 ent->next_state = TR_STATE_LARA_DEATH;
@@ -1914,7 +1921,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 pos[2] += 1; // go to the air
             }
             break;
-            
+
 
         case TR_STATE_LARA_UNDERWATER_FORWARD:
             if(ent->move_type != MOVE_UNDER_WATER && ent->move_type != MOVE_ON_WATER)
@@ -1983,7 +1990,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     offset[2] += ent->character->max_step_up_height + LARA_HANG_VERTICAL_EPSILON;
                    *climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
                 }
-                
+
                 if(climb->edge_hit && (climb->next_z_space >= ent->character->Height))// && (climb->edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))   // max_step_up_height is not correct value here
                 {
                     ent->dir_flag = ENT_STAY;
@@ -2025,7 +2032,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->dir_flag = ENT_MOVE_BACKWARD;
                 ent->next_state = TR_STATE_LARA_ONWATER_BACK;
             }
-            else if(cmd->move[1] ==-1) 
+            else if(cmd->move[1] ==-1)
             {
                 if(cmd->shift == 1)
                 {
@@ -2184,9 +2191,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             move[1] = pos[1];
             move[2] = pos[2] + 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
             Character_GetHeightInfo(move, &next_fc);
-            
+
             Character_Lean(ent, cmd, 0.0);
-            
+
             if((cmd->crouch == 0) && !low_vertical_space)
             {
                 ent->next_state = TR_STATE_LARA_STOP;       // Back to stand
@@ -2224,7 +2231,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
             }
             break;
-            
+
         case TR_STATE_LARA_CROUCH_ROLL:
         case TR_STATE_LARA_SPRINT_ROLL:
             ent->character->complex_collision = 0x01;
@@ -2236,7 +2243,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->speed.m_floats[1] *= 0.5;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
-            
+
             vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
             Character_CheckNextPenetration(ent, cmd, move);
             if(cmd->horizontal_collide == 1) // Smash into wall
@@ -2310,7 +2317,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     curr_fc->ceiling_point = next_fc.ceiling_point;
                     curr_fc->ceiling_normale = next_fc.ceiling_normale;
                     curr_fc->ceiling_obj = next_fc.ceiling_obj;
-                    
+
                     *climb = Character_CheckClimbability(ent, offset, &next_fc, 1.5 * ent->bf.bb_max[2]);
                     vec3_copy(pos, temp);                                       // restore entity position
                     if(climb->can_hang)
@@ -2347,7 +2354,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->character->no_fix = 0x00;
             }
             break;
-            
+
         case TR_STATE_LARA_CRAWL_FORWARD:
             ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_FORWARD;
@@ -2385,7 +2392,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if((cmd->move[0] != -1) || (cmd->kill == 1))
             {
                 ent->next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop
-            } 
+            }
             else if( (cmd->horizontal_collide != 0)                                                     ||
                      (next_fc.floor_point.m_floats[2] >= pos[2] + ent->character->min_step_up_height)   ||
                      (next_fc.floor_point.m_floats[2] <= pos[2] - ent->character->min_step_up_height)    )
@@ -2438,7 +2445,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_CROUCH_IDLE;
             }
             break;
-		
+
             /*
              * CLIMB MONKEY
              */
@@ -2474,7 +2481,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_MONKEYSWING_TURN_RIGHT;
             }
             break;
-            
+
         case TR_STATE_LARA_MONKEYSWING_TURN_LEFT:
             cmd->rot[0] *= 0.5;
             if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
@@ -2488,7 +2495,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
-            
+
         case TR_STATE_LARA_MONKEYSWING_TURN_RIGHT:
             cmd->rot[0] *= 0.5;
             if((ent->move_type != MOVE_CEILING_CLMB) || (!cmd->action))
@@ -2502,7 +2509,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
-            
+
         case TR_STATE_LARA_MONKEYSWING_FORWARD:
             cmd->rot[0] *= 0.45;
             ent->dir_flag = ENT_MOVE_FORWARD;
@@ -2516,7 +2523,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
-            
+
         case TR_STATE_LARA_FALL_FORWARD:
             ent->character->complex_collision = 0x01;
             if(ent->speed.m_floats[3] < -FREE_FALL_SPEED_2)
@@ -2524,7 +2531,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->current_speed *= 0.5;
             }
             break;
-            
+
             /*
              * intermediate animations are processed automatically.
              */
