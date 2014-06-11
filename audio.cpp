@@ -374,12 +374,19 @@ StreamTrack::StreamTrack()
         damped_volume  =  0.0f;
         active         =  false;
         stream_type    =  TR_AUDIO_STREAM_TYPE_ONESHOT;
+        
+        // Setting method to -1 at init is required to prevent accidental
+        // ov_clear call, which results in crash, if no vorbis file was
+        // associated with given vorbis file structure.
+        
+        method         = -1;
     }
 }
 
 
 StreamTrack::~StreamTrack()
 {
+    
     Stop(); // In case we haven't stopped yet.
     
     alDeleteSources(1, &source);
@@ -536,7 +543,9 @@ void StreamTrack::Stop()    // Immediately stop track.
     
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
-        alSourceStop(source);
+        if(IsPlaying())
+            alSourceStop(source);
+            
         alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
         
         while(queued--)
@@ -1036,9 +1045,9 @@ bool Audio_StopStreams(int stream_type)
     
     for(int i = 0; i < engine_world.stream_tracks_count; i++)
     {
-        if( (stream_type == -1) ||                              // Stop ALL streams at once.
-            ((engine_world.stream_tracks[i].IsPlaying()) && 
-             (engine_world.stream_tracks[i].IsType(stream_type))) )
+        if(engine_world.stream_tracks[i].IsPlaying()          && 
+           (engine_world.stream_tracks[i].IsType(stream_type) ||
+            stream_type == -1)) // Stop ALL streams at once.
         {
             result = true;
             engine_world.stream_tracks[i].Stop();
