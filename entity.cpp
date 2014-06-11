@@ -9,6 +9,7 @@
 #include "engine.h"
 #include "console.h"
 #include "script.h"
+#include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "bounding_volume.h"
@@ -869,8 +870,9 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                         case TR_FD_TRIGFUNC_ENDLEVEL:          // END LEVEL
                             Con_Printf("End of level! id = %d", operands);
-                            gameflow_manager.NextAction = true;
-                            gameflow_manager.Operand = operands; //If operands 0 we load next level, if not we load the level ID which matches operand!
+                            //If operands 0 we load next level, if not we load the level ID which matches operand!
+                            Gui_Fade(FADER_BLACK, TR_FADER_DIR_OUT);
+                            Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, operands);
                             break;
 
                         case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK

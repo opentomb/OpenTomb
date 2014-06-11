@@ -45,3 +45,4 @@ enum TR_GAMEFLOW_OP
 extern gameflow_manager_s gameflow_manager;
 
 void Gameflow_Do();
+void Gameflow_Send(int opcode, int operand = -1);

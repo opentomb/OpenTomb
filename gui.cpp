@@ -15,13 +15,14 @@
 #define MAX_TEMP_LINES (128)
 #define TEMP_LINE_LENGHT (128)
 
-extern SDL_Window      *sdl_window;
+extern SDL_Window  *sdl_window;
 
-gui_text_line_p         gui_base_lines = NULL;
-gui_text_line_t         gui_temp_lines[MAX_TEMP_LINES];
-uint16_t                temp_lines_used = 0;
+gui_text_line_p     gui_base_lines = NULL;
+gui_text_line_t     gui_temp_lines[MAX_TEMP_LINES];
+uint16_t            temp_lines_used = 0;
 
-ProgressBar             Bar[BAR_LASTINDEX];
+gui_ProgressBar     Bar[BAR_LASTINDEX];
+gui_Fader           Fader[FADER_LASTINDEX];
 
 void Gui_Init()
 {
@@ -47,7 +48,13 @@ void Gui_Init()
         gui_temp_lines[i].rect_color[2] = 0.0;
         gui_temp_lines[i].rect_color[3] = 0.5;
     }
-#if 1
+    
+    Gui_InitBars();
+    Gui_InitFaders();
+}
+
+void Gui_InitBars()
+{
     for(int i = 0; i < BAR_LASTINDEX; i++)
     {
         switch(i)
@@ -152,9 +159,28 @@ void Gui_Init()
                     Bar[i].SetExtrude(true, 70);
                     Bar[i].SetAutoshow(false, 500, false, 300);
                 }
-                break;        } // end switch(i)
+                break;      
+        } // end switch(i)
     } // end for(int i = 0; i < BAR_LASTINDEX; i++)
-#endif
+}
+
+void Gui_InitFaders()
+{
+    for(int i = 0; i < FADER_LASTINDEX; i++)
+    {
+        switch(i)
+        {
+            case FADER_BLACK:
+                {
+                    Fader[i].SetAlpha(255);
+                    Fader[i].SetColor(0, 0, 0);
+                    Fader[i].SetBlendingMode(BM_OPAQUE);
+                    Fader[i].SetSpeed(500);
+                    Fader[i].SetAutoReset(true);
+                }
+                break;
+        }
+    }
 }
 
 void Gui_Destroy()
@@ -280,6 +306,7 @@ void Gui_Render()
     glBindTexture(GL_TEXTURE_2D, 0);                                            // in other case +textured font we lost background in all rects and console
     Gui_DrawCrosshair();
     Gui_DrawBars();
+    Gui_DrawFaders();
     Gui_RenderStrings();
 
     glDepthMask(GL_TRUE);
@@ -393,6 +420,14 @@ void Gui_DrawCrosshair()
     glPopAttrib();
 }
 
+void Gui_DrawFaders()
+{
+    for(int i = 0; i < FADER_LASTINDEX; i++)
+    {
+        Fader[i].Show();
+    }
+}
+
 void Gui_DrawBars()
 {
     if(engine_world.Character && engine_world.Character->character)
@@ -483,12 +518,193 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glEnd();
 }
 
+bool Gui_Fade(int fader, int fade_direction)
+{
+    // fade_direction is -1 by default - it means that if you call it without
+    // second argument, it will act like fade check function, doing nothing else.
+    
+    if(fade_direction == -1)
+    {
+        return Fader[fader].IsFading(); // Return fader's current state.
+    }
+    
+    // If fader exists, and is not active, we engage it.
+    
+    if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() == false))
+    {
+        Fader[fader].Engage(fade_direction);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+// ===================================================================================
+// ============================ FADER CLASS IMPLEMENTATION ===========================
+// ===================================================================================
+
+gui_Fader::gui_Fader()
+{
+    SetColor(0, 0, 0);
+    SetBlendingMode(BM_OPAQUE);
+    SetAlpha(255);
+    SetSpeed(500);
+    SetAutoReset(true);
+    
+    active             = false;
+    direction          = TR_FADER_DIR_IN;
+}
+
+void gui_Fader::SetAlpha(uint8_t alpha)
+{
+    max_alpha = (float)(alpha / 255);
+}
+
+void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
+{
+    
+    // Each corner of the fader could be colored independently, thus allowing
+    // to create gradient faders. It is nifty yet not so useful feature, so
+    // it is completely optional - if you won't specify corner, color will be
+    // set for the whole fader.
+    
+    switch(corner)
+    {
+        case TR_FADER_CORNER_TOPLEFT:
+            top_left_color[0] = (GLfloat)R / 255;
+            top_left_color[1] = (GLfloat)G / 255;
+            top_left_color[2] = (GLfloat)B / 255;
+            break;
+            
+        case TR_FADER_CORNER_TOPRIGHT:
+            top_right_color[0] = (GLfloat)R / 255;
+            top_right_color[1] = (GLfloat)G / 255;
+            top_right_color[2] = (GLfloat)B / 255;
+            break;
+            
+        case TR_FADER_CORNER_BOTTOMLEFT:
+            bottom_left_color[0] = (GLfloat)R / 255;
+            bottom_left_color[1] = (GLfloat)G / 255;
+            bottom_left_color[2] = (GLfloat)B / 255;
+            break;
+            
+        case TR_FADER_CORNER_BOTTOMRIGHT:
+            bottom_right_color[0] = (GLfloat)R / 255;
+            bottom_right_color[1] = (GLfloat)G / 255;
+            bottom_right_color[2] = (GLfloat)B / 255;
+            break;
+            
+        default:
+            top_right_color[0] = (GLfloat)R / 255;
+            top_right_color[1] = (GLfloat)G / 255;
+            top_right_color[2] = (GLfloat)B / 255;
+            
+            // Copy top right corner color to all other corners.
+            
+            memcpy(top_left_color,     top_right_color, sizeof(GLfloat) * 4);
+            memcpy(bottom_right_color, top_right_color, sizeof(GLfloat) * 4);
+            memcpy(bottom_left_color,  top_right_color, sizeof(GLfloat) * 4);
+            break;
+    }
+}
+
+void gui_Fader::SetBlendingMode(uint32_t mode)
+{
+    blending_mode = mode;
+}
+
+void gui_Fader::SetSpeed(uint16_t fade_speed)
+{
+    speed      = 1000.0 / (float)fade_speed;
+}
+
+void gui_Fader::SetAutoReset(bool reset)
+{
+    autoreset = reset;
+}
+
+void gui_Fader::Engage(int fade_dir)
+{
+    direction = fade_dir;
+    active    = true;
+    
+    if(direction == TR_FADER_DIR_IN)
+    {
+        current_alpha = max_alpha;      // Fade in: set alpha to maximum.
+    }
+    else
+    {
+        current_alpha = 0.0;            // Fade out: set alpha to zero.
+    }
+}
+
+void gui_Fader::Cut()
+{
+    active        = false;
+    current_alpha = 0.0;
+}
+
+void gui_Fader::Show()
+{
+    if(!active)
+        return; // If fader is not active, don't render it.
+    
+    if(direction == TR_FADER_DIR_IN)    // Fade in case
+    {
+        if(current_alpha > 0.0)         // If alpha is more than zero, continue to fade.
+        {
+            current_alpha -= engine_frame_time * speed;
+        }
+        else
+        {
+            current_alpha = 0.0;
+            active = false;             // We've reached zero alpha, stop and disable fader.
+        }
+    }
+    else    // Fade out case
+    {
+        if(current_alpha < max_alpha)   // If alpha is less than maximum, continue to fade.
+        {
+            current_alpha += engine_frame_time * speed;
+        }
+        else
+        {
+            current_alpha = max_alpha;
+            
+            // Autoreset is only needed for fadeouts, as you get clear fader on fade-in anyway.
+            if(autoreset)               
+                active = false;         // We've reached maximum alpha, stop and disable fader.
+        }
+    }
+    
+    // Apply current alpha value to all vertices.
+    
+    top_left_color[3]     = current_alpha;
+    top_right_color[3]    = current_alpha;
+    bottom_left_color[3]  = current_alpha;
+    bottom_right_color[3] = current_alpha;
+    
+    // Draw the rectangle.
+    // We draw it from the very top left corner to the end of the screen.
+    
+    Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h,
+                 top_left_color, top_right_color, bottom_left_color, bottom_right_color,
+                 blending_mode);
+}
+
+bool gui_Fader::IsFading()
+{
+    return active;
+}
+
 
 // ===================================================================================
 // ======================== PROGRESS BAR CLASS IMPLEMENTATION ========================
 // ===================================================================================
 
-ProgressBar::ProgressBar()
+gui_ProgressBar::gui_ProgressBar()
 {
     // Set up some defaults.
     Visible =      false;
@@ -515,7 +731,7 @@ ProgressBar::ProgressBar()
 
 // Update bar resolution.
 // This function is also used to compare if resolution is changed.
-bool ProgressBar::UpdateResolution(int scrWidth, int scrHeight)
+bool gui_ProgressBar::UpdateResolution(int scrWidth, int scrHeight)
 {
     if( (scrWidth != mLastScrWidth) || (scrHeight != mLastScrHeight) )
     {
@@ -530,7 +746,7 @@ bool ProgressBar::UpdateResolution(int scrWidth, int scrHeight)
 }
 
 // Set specified color.
-void ProgressBar::SetColor(BarColorType colType,
+void gui_ProgressBar::SetColor(BarColorType colType,
                            uint8_t R, uint8_t G, uint8_t B, uint8_t A)
 {
     float maxColValue = 255.0;
@@ -599,7 +815,7 @@ void ProgressBar::SetColor(BarColorType colType,
 }
 
 // Set bar dimensions (coordinates and size)
-void ProgressBar::SetDimensions(float X, float Y,
+void gui_ProgressBar::SetDimensions(float X, float Y,
                                 float width, float height, float borderSize)
 {
     // Absolute values are needed to recalculate actual bar size according to resolution.
@@ -618,12 +834,12 @@ void ProgressBar::SetDimensions(float X, float Y,
 }
 
 // Recalculate size, according to viewport resolution.
-void ProgressBar::RecalculateSize()
+void gui_ProgressBar::RecalculateSize()
 {
-    mWidth  = mLastScrWidth  * ( (float)mAbsWidth / 1000 );
-    mHeight = mLastScrHeight * ( (float)mAbsHeight / 1000 );
-    mBorderWidth  = mLastScrWidth  * ( (float)mAbsBorderSize / 1000 );
-    mBorderHeight = mLastScrHeight * ( (float)mAbsBorderSize / 1000 ) *
+    mWidth  = mLastScrWidth  * ( (float)mAbsWidth / TR_GUI_SCREEN_METERING_RESOLUTION );
+    mHeight = mLastScrHeight * ( (float)mAbsHeight / TR_GUI_SCREEN_METERING_RESOLUTION );
+    mBorderWidth  = mLastScrWidth  * ( (float)mAbsBorderSize / TR_GUI_SCREEN_METERING_RESOLUTION );
+    mBorderHeight = mLastScrHeight * ( (float)mAbsBorderSize / TR_GUI_SCREEN_METERING_RESOLUTION ) *
                     ((float)mLastScrWidth / (float)mLastScrHeight);
 
     // Calculate range unit, according to maximum bar value set up.
@@ -633,14 +849,14 @@ void ProgressBar::RecalculateSize()
 }
 
 // Recalculate position, according to viewport resolution.
-void ProgressBar::RecalculatePosition()
+void gui_ProgressBar::RecalculatePosition()
 {
-    mX = (mLastScrWidth  * ( (float)mAbsX / 1000 ) );
-    mY = mLastScrHeight - mLastScrHeight * ( (mAbsY + mAbsHeight + (mAbsBorderSize * 2 * ((float)mLastScrWidth / (float)mLastScrHeight))) / 1000 );
+    mX = (mLastScrWidth  * ( (float)mAbsX / TR_GUI_SCREEN_METERING_RESOLUTION ) );
+    mY = mLastScrHeight - mLastScrHeight * ( (mAbsY + mAbsHeight + (mAbsBorderSize * 2 * ((float)mLastScrWidth / (float)mLastScrHeight))) / TR_GUI_SCREEN_METERING_RESOLUTION );
 }
 
 // Set maximum and warning state values.
-void ProgressBar::SetValues(float maxValue, float warnValue)
+void gui_ProgressBar::SetValues(float maxValue, float warnValue)
 {
     mMaxValue  = maxValue;
     mWarnValue = warnValue;
@@ -649,14 +865,14 @@ void ProgressBar::SetValues(float maxValue, float warnValue)
 }
 
 // Set warning state blinking interval.
-void ProgressBar::SetBlink(int interval)
+void gui_ProgressBar::SetBlink(int interval)
 {
     mBlinkInterval = (float)interval / 1000;
     mBlinkCnt      = (float)interval / 1000;  // Also reset blink counter.
 }
 
 // Set extrude overlay effect parameters.
-void ProgressBar::SetExtrude(bool enabled, uint8_t depth)
+void gui_ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 {
     mExtrude = enabled;
     memset(mExtrudeDepth, 0, sizeof(float) * 5);    // Set all colors to 0.
@@ -666,7 +882,7 @@ void ProgressBar::SetExtrude(bool enabled, uint8_t depth)
 
 // Set autoshow and fade parameters.
 // Please note that fade parameters are actually independent of autoshow.
-void ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay)
+void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay)
 {
     mAutoShow = enabled;
 
@@ -681,7 +897,7 @@ void ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay)
 // Main bar show procedure.
 // Draws a bar with a given value. Please note that it also accepts float,
 // so effectively you can create bars for floating-point parameters.
-void ProgressBar::Show(float value)
+void gui_ProgressBar::Show(float value)
 {
     // Initial value limiters (to prevent bar overflow).
     value  = (value >= 0)?(value):(0);

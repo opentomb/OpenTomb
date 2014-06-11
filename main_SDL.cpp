@@ -486,7 +486,7 @@ int main(int argc, char **argv)
     Engine_InitALAudio();
     
     World_Prepare(&engine_world);
-    TestGenScene();
+    // TestGenScene();
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
