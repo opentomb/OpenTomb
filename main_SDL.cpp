@@ -37,6 +37,10 @@
 #include "anim_state_control.h"
 #include "character_controller.h"
 
+#if defined(__MACOSX__)
+#include "FindConfigFile.h"
+#endif
+
 extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
@@ -464,6 +468,10 @@ int main(int argc, char **argv)
 {
     btScalar time, newtime;
     static btScalar oldtime = 0.0;
+	
+#if defined(__MACOSX__)
+	FindConfigFile();
+#endif
 
     Engine_Init();
     Engine_InitGlobals();
@@ -670,7 +678,6 @@ void Engine_SecondaryMouseDown()
 
 void Engine_Frame(btScalar time)
 {
-    int i;
     static int  cycles = 0;
     static btScalar time_cycl = 0.0;
     extern gui_text_line_t system_fps;

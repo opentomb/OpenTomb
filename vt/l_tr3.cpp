@@ -44,7 +44,7 @@ void TR_Level::read_tr3_room_light(SDL_RWops * const src, tr5_room_light_t & lig
     light.light_type = 0x01; // Point light
 }
 
-void TR_Level::read_tr3_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & room_vertex)
+void TR_Level::read_tr3_room_vertex(SDL_RWops *const src, tr5_room_vertex_t & room_vertex)
 {
 	read_tr_vertex16(src, room_vertex.vertex);
 	// read and make consistent
@@ -62,7 +62,7 @@ void TR_Level::read_tr3_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & r
 	room_vertex.colour.a = 1.0f;
 }
 
-void TR_Level::read_tr3_room_staticmesh(SDL_RWops * const src, tr2_room_staticmesh_t & room_static_mesh)
+void TR_Level::read_tr3_room_staticmesh(SDL_RWops *const src, tr2_room_staticmesh_t & room_static_mesh)
 {
 	read_tr_vertex32(src, room_static_mesh.pos);
 	room_static_mesh.rotation = (float)read_bitu16(src) / 16384.0f * -90;
@@ -163,7 +163,7 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
 	room.light_colour.a = 1.0f;
 }
 
-void TR_Level::read_tr3_item(SDL_RWops * const src, tr2_item_t & item)
+void TR_Level::read_tr3_item(SDL_RWops *const src, tr2_item_t & item)
 {
 	item.object_id = read_bit16(src);
 	item.room = read_bit16(src);
@@ -175,7 +175,7 @@ void TR_Level::read_tr3_item(SDL_RWops * const src, tr2_item_t & item)
 	item.flags = read_bitu16(src);
 }
 
-void TR_Level::read_tr3_level(SDL_RWops * const src)
+void TR_Level::read_tr3_level(SDL_RWops *const src)
 {
 	uint32_t i;
 
@@ -275,7 +275,7 @@ void TR_Level::read_tr3_level(SDL_RWops * const src)
                 this->cameras[i].y = read_bit32(src);
                 this->cameras[i].z = read_bit32(src);
 
-                this->cameras[i].room = read_bit16(src);
+                this->cameras[i].room     = read_bit16(src);
                 this->cameras[i].unknown1 = read_bitu16(src);
         }
 
@@ -338,18 +338,18 @@ void TR_Level::read_tr3_level(SDL_RWops * const src)
 
 	// Soundmap
 	this->soundmap = (int16_t*)malloc(TR_AUDIO_MAP_SIZE_TR3 * sizeof(int16_t));
-        for(i=0; i < TR_AUDIO_MAP_SIZE_TR3; i++)
+        for(i = 0; i < TR_AUDIO_MAP_SIZE_TR3; i++)
                 this->soundmap[i] = read_bit16(src);
                 
 	this->sound_details_count = read_bitu32(src);
         this->sound_details = (tr_sound_details_t*)malloc(this->sound_details_count * sizeof(tr_sound_details_t));
         for(i = 0; i < this->sound_details_count; i++)
         {
-            this->sound_details[i].sample = read_bitu16(src);
-            this->sound_details[i].volume = (uint16_t)read_bitu8(src);
+            this->sound_details[i].sample      = read_bitu16(src);
+            this->sound_details[i].volume      = (uint16_t)read_bitu8(src);
             this->sound_details[i].sound_range = (uint16_t)read_bitu8(src);
-            this->sound_details[i].chance = (uint16_t)read_bit8(src);
-            this->sound_details[i].pitch = (int16_t)read_bit8(src);
+            this->sound_details[i].chance      = (uint16_t)read_bit8(src);
+            this->sound_details[i].pitch       = (int16_t)read_bit8(src);
             this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
             this->sound_details[i].flags_2 = read_bitu8(src);
         }

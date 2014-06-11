@@ -287,14 +287,14 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
 }
 
 
-/* Specific functions to get specific parameters from script.
- *
+/*
+ *   Specific functions to get specific parameters from script.
  */
  
  int lua_GetGlobalSound(lua_State *lua, int global_sound_id)
 {
     int top;
-    int sound_id = 0;
+    lua_Integer sound_id = 0;
     
     if(lua)
     {
@@ -309,16 +309,16 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
             sound_id = lua_tointeger(lua, -1);                         // get returned value 1
         }
         
-        lua_settop(lua, top);                                              // restore LUA stack
+        lua_settop(lua, top);
     }
     
-    return sound_id;
+    return (int)sound_id;
 }
 
 int lua_GetSecretTrackNumber(lua_State *lua)
 {
     int top;
-    int track_number = 0;
+    lua_Integer track_number = 0;
     
     if(lua)
     {
@@ -335,13 +335,35 @@ int lua_GetSecretTrackNumber(lua_State *lua)
         lua_settop(lua, top);                                              // restore LUA stack
     }
     
-    return track_number;
+    return (int)track_number;
+}
+
+int lua_GetNumTracks(lua_State *lua)
+{
+    int top;
+    lua_Integer num_tracks = 0;
+    
+    if(lua)
+    {
+        top = lua_gettop(lua);
+        lua_getglobal(lua, "GetNumTracks");
+
+        if(lua_isfunction(lua, -1))
+        {
+            lua_pushinteger(lua, engine_world.version);
+            lua_pcall(lua, 1, 1, 0);
+            num_tracks = lua_tointeger(lua, -1);
+        }
+        
+        lua_settop(lua, top);
+    }
+    
+    return (int)num_tracks;
 }
 
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
 {
     size_t  string_length  = 0;
-    int     track_type     = 0;
     int     top;
     
     const char *real_path;
@@ -360,8 +382,8 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
             lua_pcall(lua, 2, 3, 0);                                       // call that function
             
             real_path   = lua_tolstring(lua, -3, &string_length);          // get returned value 1
-           *stream_type = lua_tointeger(lua, -2);                          // get returned value 2
-           *load_method = lua_tointeger(lua, -1);                          // get returned value 3
+           *stream_type = (int)lua_tointeger(lua, -2);                          // get returned value 2
+           *load_method = (int)lua_tointeger(lua, -1);                          // get returned value 3
            
             // For some reason, Lua returns constant string pointer, which we can't assign to
             // provided argument; so we need to straightly copy it.
@@ -436,6 +458,8 @@ int lua_DoTasks(lua_State *lua, btScalar time)
     lua_getglobal(lua, "doTasks");
     lua_pcall(lua, 0, 0, 0);
     lua_settop(lua, top);
+	
+	return 0;
 }
  
 int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator)
@@ -539,6 +563,7 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
         rs->fog_color[0] = (GLfloat)lua_GetScalarField(lua, "r") / 255.0;
         rs->fog_color[1] = (GLfloat)lua_GetScalarField(lua, "g") / 255.0;
         rs->fog_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
+        rs->fog_color[3] = 1.0; // Not sure if we need this at all...
     }
 
     if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
@@ -577,7 +602,7 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
 
 int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
 {
-    const char *patch;
+    const char *path;
     FILE *f;
     int32_t t, i;
     int top;
@@ -592,27 +617,23 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
 
     top = lua_gettop(lua);
     lua_getglobal(lua, "console");
-    patch = lua_GetStrField(lua, "font_path");
-    if(patch && strncmp(patch, cn->font_patch, 255))
+    path = lua_GetStrField(lua, "font_path");
+    if(path && strncmp(path, cn->font_path, 255))
     {
-        f = fopen(patch, "rb");
+        f = fopen(path, "rb");
         if(f)
         {
             fclose(f);
-            strncpy(cn->font_patch, patch, 255);
-            
-            delete con_base.font_bitmap;
-            con_base.font_bitmap = new FTGLBitmapFont(con_base.font_patch);
+            strncpy(cn->font_path, path, 255);
 
             delete con_base.font_texture;
-            con_base.font_texture = new FTGLTextureFont(con_base.font_patch);
+            con_base.font_texture = new FTGLTextureFont(con_base.font_path);
         }
         else
         {
-            Sys_Warn("Console: could not find font = \"%s\"", con_base.font_patch);
+            Sys_Warn("Console: could not find font = \"%s\"", con_base.font_path);
         }
     }
-    cn->smooth = lua_GetScalarField(lua, "smooth");
     lua_getfield(lua, -1, "font_color");
     if(lua_istable(lua, -1))
     {

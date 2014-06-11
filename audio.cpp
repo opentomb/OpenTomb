@@ -826,7 +826,7 @@ void StreamTrack::UnsetFX()
 // General soundtrack playing routine. All native TR CD triggers and commands should ONLY
 // call this one.
 
-int Audio_StreamPlay(const int track_index, const uint8_t mask)
+int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 {        
     int    target_stream = -1;
     bool   do_fade_in    =  false;
@@ -835,9 +835,18 @@ int Audio_StreamPlay(const int track_index, const uint8_t mask)
     
     char   file_path[256];          // Should be enough, and this is not the full path...
     
+    // Don't even try to do anything with track, if its index is greater than overall amount of
+    // soundtracks specified in a stream track map count (which is derived from script).
+    
+    if(track_index >= engine_world.stream_track_map_count)
+    {
+        Con_Printf("StreamPlay: CANCEL, track index is out of bounds.");
+        return TR_AUDIO_STREAMPLAY_WRONGTRACK;
+    }
+    
     // Don't play track, if it is already playing.
     // This should become useless option, once proper one-shot trigger functionality is implemented.
-
+    
     if(Audio_IsTrackPlaying(track_index))
     {
         Con_Printf("StreamPlay: CANCEL, stream already playing.");
@@ -878,15 +887,20 @@ int Audio_StreamPlay(const int track_index, const uint8_t mask)
         
         if(target_stream == -1)
             Con_Printf("StreamPlay: CANCEL, no free stream.");
-            return TR_AUDIO_STREAMPLAY_NOFREESTREAM;                             // No success, exit and don't play anything.
+            return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
     }
     else
     {
         do_fade_in = Audio_EndStreams(stream_type);   // End all streams of this type with fadeout.
+        
+        // Additionally check if track type is looped. If it is, force fade in in any case.
+        // This is needed to smooth out possible pop with gapless looped track at a start-up.
+        
         do_fade_in = (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)?(true):(false);
     }
     
     // Finally - load our track.
+    
     if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
     {
         Con_Printf("StreamPlay: CANCEL, stream load error.");
@@ -894,13 +908,14 @@ int Audio_StreamPlay(const int track_index, const uint8_t mask)
     }
 
     // Try to play newly assigned and loaded track.
+    
     if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in))) 
     {
         Con_Printf("StreamPlay: CANCEL, stream play error.");
         return TR_AUDIO_STREAMPLAY_PLAYERROR;
     }
     
-    return TR_AUDIO_STREAMPLAY_PROCESSED;
+    return TR_AUDIO_STREAMPLAY_PROCESSED;   // Everything is OK!
 }
 
 
@@ -952,7 +967,7 @@ void Audio_UpdateStreams()
     }
 }
 
-bool Audio_IsTrackPlaying(int track_index)
+bool Audio_IsTrackPlaying(uint32_t track_index)
 {
     for(int i = 0; i < engine_world.stream_tracks_count; i++)
     {
@@ -966,7 +981,7 @@ bool Audio_IsTrackPlaying(int track_index)
     return false;
 }
 
-bool Audio_TrackAlreadyPlayed(int track_index, int8_t mask)
+bool Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask)
 {
     if(!mask)
     {
@@ -1039,7 +1054,7 @@ bool Audio_EndStreams(int stream_type)
     
     for(int i = 0; i < engine_world.stream_tracks_count; i++)
     {
-        if( (stream_type == -1) ||                              // Stop ALL streams at once.
+        if( (stream_type == -1) ||                              // End ALL streams at once.
             ((engine_world.stream_tracks[i].IsPlaying()) && 
              (engine_world.stream_tracks[i].IsType(stream_type))) )
         {
@@ -1146,8 +1161,7 @@ void Audio_ResumeAllSources()
 }
 
 
-///@FIXME: add condition (compare max_dist with new source dist)
-int Audio_GetFreeSource()
+int Audio_GetFreeSource()   ///@FIXME: add condition (compare max_dist with new source dist)
 {    
     for(int i = 0; i < engine_world.audio_sources_count; i++)
     {
@@ -1193,11 +1207,15 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     AudioSource    *source = NULL;
     
     // Remap global engine effect ID to local effect ID.
-    if((effect_ID < 0) || (effect_ID + 1 > engine_world.audio_map_count))
+    
+    if((effect_ID < 0) || (effect_ID >= engine_world.audio_map_count))
     {
-        return TR_AUDIO_SEND_NOSAMPLE;
+        return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
-    effect_ID = (int)engine_world.audio_map[effect_ID];
+    else
+    {
+        effect_ID = (int)engine_world.audio_map[effect_ID];
+    }
     
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
     
@@ -1205,7 +1223,10 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     {
         return TR_AUDIO_SEND_NOSAMPLE;
     }
-    effect = engine_world.audio_effects + effect_ID;
+    else
+    {
+        effect = engine_world.audio_effects + effect_ID;        
+    }
             
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
     // then randomly select if it should be played or not.
@@ -1285,11 +1306,15 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
             source->SetLooping(AL_FALSE);
         }
         
+        // Step 3. Apply internal sound parameters.
+        
         source->emitter_ID   = entity_ID;
         source->emitter_type = entity_type;
         source->effect_index = effect_ID;
         
-        if(effect->rand_pitch)
+        // Step 4. Apply sound effect properties.
+        
+        if(effect->rand_pitch)  // Vary pitch, if flag is set.
         {
             random_float = rand() % effect->rand_pitch_var;
             random_float = effect->pitch + ((random_float - 25.0) / 200.0);
@@ -1300,7 +1325,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
             source->SetPitch(effect->pitch);
         }
         
-        if(effect->rand_gain)
+        if(effect->rand_gain)   // Vary gain, if flag is set.
         {
             random_float = rand() % effect->rand_gain_var;
             random_float = effect->gain + (random_float - 25.0) / 200.0;            
@@ -1311,9 +1336,9 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
             source->SetGain(effect->gain);
         }
         
-        source->SetRange(effect->range);
+        source->SetRange(effect->range);    // Set audible range.
         
-        source->Play();
+        source->Play();                     // Everything is OK, play sound now!
         
         return TR_AUDIO_SEND_PROCESSED;
     }
@@ -1371,7 +1396,10 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
     
     // Generate stream track map array.
-    engine_world.stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
+    // We use scripted amount of tracks to define map bounds.
+    // If script had no such parameter, we define map bounds by default.
+    engine_world.stream_track_map_count = lua_GetNumTracks(engine_lua);
+    if(engine_world.stream_track_map_count == 0) engine_world.stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
     engine_world.stream_track_map = (uint8_t*)malloc(engine_world.stream_track_map_count * sizeof(uint8_t));
     memset(engine_world.stream_track_map, 0, sizeof(uint8_t) * engine_world.stream_track_map_count);
     

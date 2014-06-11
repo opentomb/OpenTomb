@@ -37,6 +37,7 @@ int SC_ParseEntity(char **ch, struct entity_s *ent);
 
 int  lua_GetGlobalSound(lua_State *lua, int global_sound_id);
 int  lua_GetSecretTrackNumber(lua_State *lua);
+int  lua_GetNumTracks(lua_State *lua);
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *track_path, int *load_method, int *stream_type);
 
 btScalar lua_GetScalarField(lua_State *lua, const char *key);

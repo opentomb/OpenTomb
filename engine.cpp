@@ -175,12 +175,10 @@ void ResetTempbtScalar()
 
 void Engine_InitGlobals()
 {
-    Con_InitGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
     Render_InitGlobals();
     Audio_InitGlobals();
-    Portal_InitGlobals();
 }
 
 
@@ -1283,10 +1281,15 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     char buf[4096];
     int ret;
 
+	// Create string
     va_start(argptr, fmt);
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
+	
+	// Write it to target file
+	fwrite(buf, 1, ret, f);
 
+	// Write it to console, too (if it helps) und
     Con_AddText(buf);
 
     return ret;
