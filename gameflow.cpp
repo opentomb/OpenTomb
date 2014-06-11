@@ -28,7 +28,7 @@ void Gameflow_Do()
 {
     if(!gameflow_manager.NextAction)
         return;
-    
+
     switch(gameflow_manager.Opcode)
     {
         case TR_GAMEFLOW_OP_LEVELCOMPLETE:
@@ -50,9 +50,10 @@ void Gameflow_Do()
                         lua_pop(engine_lua, 1); // Pop stack to get next value
                         gameflow_manager.CurrentLevelName = lua_tostring(engine_lua, -1); // Second value in stack is level name
                         lua_pop(engine_lua, 1); // Pop stack to get next value
-                        
-                        // Now, load the level!                        
-                        Engine_LoadMap(lua_tostring(engine_lua, -1));
+                        gameflow_manager.CurrentLevelPath = lua_tostring(engine_lua, -1); // Third value in stack is level path
+                        // Now, load the level!
+                        Engine_LoadMap(gameflow_manager.CurrentLevelPath);
+
                     }
                     else
                     {
@@ -69,15 +70,15 @@ void Gameflow_Do()
                 // If fadeout is in the process, we block level loading until it is complete.
                 // It is achieved by not resetting action marker and exiting the function instead.
                 return;
-                
+
             }   // end if(!Gui_Fade(FADER_BLACK))
             break;
-        
+
         default:
             break;  ///@FIXME: Implement all other gameflow opcodes here!
-            
+
     }   // end switch(gameflow_manager.Operand)
-    
+
     gameflow_manager.NextAction = false;    // Reset action marker!
 }
 
