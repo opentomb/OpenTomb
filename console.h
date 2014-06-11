@@ -22,39 +22,35 @@
 
 typedef struct console_info_s
 {
-    char                        font_patch[255];            // путь к файлу шрифта
-    FTGLBitmapFont             *font_bitmap;                // рендерер простого шрифта
-    FTGLTextureFont            *font_texture;               // рендерер сглаженного шрифта
+    char                        font_path[255];             // Font file path
+    FTGLTextureFont            *font_texture;               // Texture font renderer
 
-    uint16_t                    font_size;                  // размер шрифта в чем то =)
+    uint16_t                    font_size;
     GLfloat                     font_color[4];
     GLfloat                     background_color[4];
 
-    int8_t                      smooth;                     // Режим вывода текста - сглаживание вкл.
-
-    int                         log_lines_count;            // объём лога
-    int                         log_pos;                    // текущая позиция указателя в логе
-    int                         line_size;                  // Размер строки в консоли
-    int                         shown_lines_count;          // количество показываемых строк
-    int                         showing_lines;              // количество отображаемых строк
-    float                       spacing;                    // межстрочный интервал %) - это уже ворд, а не движок
+    int                         log_lines_count;            // Amount of log lines to use
+    int                         log_pos;                    // Current log position
+    int                         line_size;                  // Console line size
+    int                         shown_lines_count;          // Amount of shown lines
+    int                         showing_lines;              // Amount of visible lines
+    float                       spacing;                    // Line spacing
     float                       show_cursor_period;
-    float                       cursor_time;                // текущее время отрисовки курсора
-    int8_t                      show_cursor;                // флаг видимости курсора
+    float                       cursor_time;                // Current cursor draw time
+    int8_t                      show_cursor;                // Cursor visibility flag
 
-    int16_t                     line_height;                // высота строки с учетом отступа в пикселах
-    int16_t                     cursor_pos;                 // положение курсора в строке (в смволах)
-    int16_t                     cursor_x;                   // положение курсора в пикселах x
-    int16_t                     cursor_y;                   // положение курсора в пикселах y
-    char                      **shown_lines;                // текст консоли
-    char                      **log_lines;                  // текст консоли
-    int8_t                      inited;                     // флаг готовности к использованию
-    int8_t                      show;                       // флаг видимости консоли
+    int16_t                     line_height;                // Height, including spacing
+    int16_t                     cursor_pos;                 // Current cursor position, in symbols
+    int16_t                     cursor_x;                   // Cursor position in pixels
+    int16_t                     cursor_y;
+    char                      **shown_lines;                // Console text
+    char                      **log_lines;                  // Console lines
+    int8_t                      inited;                     // Ready-to-use flag
+    int8_t                      show;                       // Visibility flag
 }console_info_t, *console_info_p;
 
 extern console_info_t con_base;
 
-void Con_InitGlobals();
 void Con_Init();
 void Con_Destroy();
 

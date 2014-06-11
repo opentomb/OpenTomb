@@ -2829,7 +2829,7 @@ void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_
 {
     unsigned short int *frame;
 
-    if((frame_offset >= 0) && (frame_offset < tr->frame_data_size))
+    if(frame_offset < tr->frame_data_size)
     {
         frame = tr->frame_data + frame_offset;
         bone_frame->bb_min[0] = (short int)frame[0];                            // x_min

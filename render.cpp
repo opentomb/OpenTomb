@@ -585,7 +585,6 @@ void Render_Entity(struct entity_s *entity)
     if(room != NULL)
     {
         GLfloat ambient_component[4];
-        GLfloat position[4];
 
         ambient_component[0] = room->ambient_lighting[0];
         ambient_component[1] = room->ambient_lighting[1];

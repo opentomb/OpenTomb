@@ -51,6 +51,15 @@ void ent_set_underwater(entity_p ent)
     ent->move_type = MOVE_UNDER_WATER;
 }
 
+void ent_out_of_water(entity_p ent)
+{
+    btScalar *v = ent->character->climb.point;
+    
+    ent->transform[12 + 0] = v[0];
+    ent->transform[12 + 1] = v[1];
+    ent->transform[12 + 2] = v[2];
+}
+
 void ent_to_edge_climb(entity_p ent)
 {
     btScalar *v = ent->character->climb.point;
@@ -83,15 +92,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     next_fc.ccb = ent->character->convex_cb;
     next_fc.ccb->m_closestHitFraction = 1.0;
     next_fc.ccb->m_hitCollisionObject = NULL;
+    
     ent->anim_flags = ANIM_NORMAL_CONTROL;
     Character_UpdateCurrentHeight(ent);
+    
     low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height));
 
-    if(cmd->kill)   // Stop any music, if Lara is dead.
-    {
-        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
-        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
-    }
 
  /*
  * - On floor animations
@@ -1268,9 +1274,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_set_zero(ent->speed.m_floats);
                 }
 
-                if(ent->dir_flag == ENT_MOVE_BACKWARD)//If Lara is moving backwards off the ledge we want to move Lara slightly forwards depending on the current angle
+                // If Lara is moving backwards off the ledge we want to move Lara slightly forwards
+                // depending on the current angle.
+                
+                if(ent->dir_flag == ENT_MOVE_BACKWARD)
                 {
-                    float old_speed = ent->speed.m_floats[2];///@FIXME Please find another way of doing this!
+                    float old_speed = ent->speed.m_floats[2]; ///@FIXME Please find another way of doing this!
                     vec3_mul_scalar(ent->speed.m_floats, ent->transform+4, t);
                     ent->speed.m_floats[2] = old_speed;
 
@@ -2041,12 +2050,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 if(low_vertical_space)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_ONWATER_TO_LAND_LOW, 0);
-                    ent_to_edge_climb(ent);
+                    ent_out_of_water(ent);
                 }
                 else
                 {
                     ent->next_state = TR_STATE_LARA_STOP;
-                    ent->onAnimChange = ent_to_edge_climb;
+                    ent->onAnimChange = ent_out_of_water;
                 }
             }
             else if(cmd->kill)

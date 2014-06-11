@@ -77,9 +77,9 @@ enum TR_AUDIO_FX {
 // Sound flags are found at offset 7 of SoundDetail unit and specify
 // certain sound modifications.
 
-#define TR_AUDIO_FLAG_RAND_PITCH  0x20 // Slight random pitch shift.
-#define TR_AUDIO_FLAG_RAND_VOLUME 0x40 // Slight random gain shift.
-#define TR_AUDIO_FLAG_UNKNOWN     0x10 // UNKNOWN MEANING!
+#define TR_AUDIO_FLAG_RAND_PITCH  0x20 // P flag. Slight random pitch shift.
+#define TR_AUDIO_FLAG_RAND_VOLUME 0x40 // V flag. Slight random gain shift.
+#define TR_AUDIO_FLAG_UNKNOWN     0x10 // N flag. UNKNOWN MEANING!
 
 // Looped field is located at offset 6 of SoundDetail structure and
 // combined with SampleIndexes value. This field is responsible for
@@ -177,7 +177,7 @@ enum TR_AUDIO_SOUND_GLOBALID
 #define TR_AUDIO_STREAM_NUMBUFFERS 4
 
 // NUMSOURCES tells the engine how many sources we should reserve for
-// in-game music and BGMs, considering crossfades. By default, it's 6, 
+// in-game music and BGMs, considering crossfades. By default, it's 6,
 // as it's more than enough for typical TR audio setup (one BGM track
 // plus one one-shot track or chat track in TR5).
 
@@ -222,12 +222,6 @@ enum TR_AUDIO_STREAM_TYPE
     TR_AUDIO_STREAM_TYPE_LASTINDEX
 
 };
-
-// Secret track index is internally used by OpenTomb when calling
-// soundtrack script. It allows to unify secret track index in all
-// engine versions.
-
-#define TR_AUDIO_STREAM_SECRET_INDEX 999
 
 // Crossfades for different track types are also different,
 // since background ones tend to blend in smoothly, while one-shot
@@ -471,19 +465,19 @@ int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *
 
 // Stream tracks (music / BGM) routines.
 
-int  Audio_GetFreeStream();                     // Get free (stopped) stream.
-bool Audio_IsTrackPlaying(int track_index);     // See if track is already playing.
-bool Audio_TrackAlreadyPlayed(int track_index,
-                              int8_t mask = 0); // Check if track played with given activation mask.
-void Audio_UpdateStreams();                     // Update all streams.
-void Audio_UpdateStreamsDamping();              // See if there any damping tracks playing.
-void Audio_PauseStreams(int stream_type = -1);  // Pause ALL streams (of specified type).
-void Audio_ResumeStreams(int stream_type = -1); // Resume ALL streams.
-bool Audio_EndStreams(int stream_type = -1);    // End ALL streams (with crossfade).
-bool Audio_StopStreams(int stream_type = -1);   // Immediately stop ALL streams.
+int  Audio_GetFreeStream();                         // Get free (stopped) stream.
+bool Audio_IsTrackPlaying(uint32_t track_index);    // See if track is already playing.
+bool Audio_TrackAlreadyPlayed(uint32_t track_index,
+                              int8_t mask = 0);     // Check if track played with given activation mask.
+void Audio_UpdateStreams();                         // Update all streams.
+void Audio_UpdateStreamsDamping();                  // See if there any damping tracks playing.
+void Audio_PauseStreams(int stream_type = -1);      // Pause ALL streams (of specified type).
+void Audio_ResumeStreams(int stream_type = -1);     // Resume ALL streams.
+bool Audio_EndStreams(int stream_type = -1);        // End ALL streams (with crossfade).
+bool Audio_StopStreams(int stream_type = -1);       // Immediately stop ALL streams.
 
 // Generally, you need only this function to trigger any track.
-int Audio_StreamPlay(const int track_index, const uint8_t mask = 0);
+int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
 
 // Error handling routines.
 

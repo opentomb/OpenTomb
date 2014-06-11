@@ -12,15 +12,8 @@
 
 console_info_t con_base;
 
-void Con_InitGlobals()
-{
-
-}
-
 void Con_Init()
 {
-    long int i;
-    
     con_base.inited = 0;
     con_base.log_pos = 0;
     con_base.log_lines_count = 0;
@@ -35,7 +28,7 @@ void Con_Init()
     con_base.background_color[2] = 0.7;
     con_base.background_color[3] = 0.4;
     
-    strncpy(con_base.font_patch, "VeraMono.ttf", 255);
+    strncpy(con_base.font_path, "VeraMono.ttf", sizeof(con_base.font_path));
     
     con_base.font_size = 12;
     con_base.log_lines_count = CON_MIN_LOG;
@@ -45,30 +38,27 @@ void Con_Init()
     con_base.showing_lines = con_base.shown_lines_count;
     con_base.show_cursor_period = 0.5;
     
-    if(!Engine_FileFound(con_base.font_patch))
+    if(!Engine_FileFound(con_base.font_path))
     {
-        Sys_Error("Console: could not find font = \"%s\"", con_base.font_patch);
+        Sys_Error("Console: could not find font = \"%s\"", con_base.font_path);
     }
     
-    con_base.font_bitmap = new FTGLBitmapFont(con_base.font_patch);
-    con_base.font_bitmap->FaceSize(con_base.font_size);
-    con_base.font_texture = new FTGLTextureFont(con_base.font_patch);
+    con_base.font_texture = new FTGLTextureFont(con_base.font_path);
     con_base.font_texture->FaceSize(con_base.font_size);
-    con_base.smooth = 0;
     
     con_base.shown_lines = (char**) malloc(con_base.shown_lines_count*sizeof(char*));
-    for(i=0;i<con_base.shown_lines_count;i++)
+    for(long i=0;i<con_base.shown_lines_count;i++)
     {
         con_base.shown_lines[i] = (char*) calloc(con_base.line_size*sizeof(char), 1);
     }
 
     con_base.log_lines = (char**) malloc(con_base.log_lines_count*sizeof(char*));
-    for(i=0;i<con_base.log_lines_count;i++)
+    for(long i=0;i<con_base.log_lines_count;i++)
     {
         con_base.log_lines[i] = (char*) calloc(con_base.line_size*sizeof(char), 1);
     }
 
-    con_base.line_height = con_base.spacing * ((con_base.smooth)?(con_base.font_texture->Ascender()):(con_base.font_bitmap->Ascender()));
+    con_base.line_height = con_base.spacing * con_base.font_texture->Ascender();
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -87,11 +77,6 @@ void Con_Destroy()
         if(con_base.font_texture)
         {
             delete con_base.font_texture;
-        }
-
-        if(con_base.font_bitmap)
-        {
-            delete con_base.font_bitmap;
         }
 
         for(i=0;i<con_base.shown_lines_count;i++)
@@ -119,9 +104,8 @@ void Con_SetFontSize(int size)
 
     con_base.inited = 0;
     con_base.font_size = size;
-    con_base.font_bitmap->FaceSize(con_base.font_size);
     con_base.font_texture->FaceSize(con_base.font_size);
-    con_base.line_height = con_base.spacing * ((con_base.smooth)?(con_base.font_texture->Ascender()):(con_base.font_bitmap->Ascender()));
+    con_base.line_height = con_base.spacing * con_base.font_texture->Ascender();
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -142,7 +126,7 @@ void Con_SetLineInterval(float interval)
 
     con_base.inited = 0;
     con_base.spacing = interval;
-    con_base.line_height = con_base.spacing * ((con_base.smooth)?(con_base.font_texture->Ascender()):(con_base.font_bitmap->Ascender()));
+    con_base.line_height = con_base.spacing * con_base.font_texture->Ascender();
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -164,26 +148,14 @@ void Con_Draw()
         x = 8;
         y = con_base.cursor_y;
         glColor4fv(con_base.font_color);
-        if(con_base.smooth)
-        {
-            for(i=0;i<con_base.showing_lines;i++)
-            {
-                y += con_base.line_height;
-                glPushMatrix();
-                glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
-                con_base.font_texture->RenderRaw(con_base.shown_lines[i]);
-                glPopMatrix();
-            }
-        }
-        else    
-        {
-            for(i=0;i<con_base.showing_lines;i++)
-            {
-                y += con_base.line_height;
-                glRasterPos2i(x, y);
-                con_base.font_bitmap->RenderRaw(con_base.shown_lines[i]);
-            }
-        }
+		for(i=0;i<con_base.showing_lines;i++)
+		{
+			y += con_base.line_height;
+			glPushMatrix();
+			glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
+			con_base.font_texture->RenderRaw(con_base.shown_lines[i]);
+			glPopMatrix();
+		}
         Con_DrawCursor();
     }
 }
@@ -207,10 +179,7 @@ void Con_DrawBackground()
      * Draw finalise line
      */
     glColor4fv(con_base.font_color);
-    
-    rectCoords[0] = 0.0;                        rectCoords[1] = (GLfloat)(con_base.cursor_y + con_base.line_height - 8);
-    rectCoords[2] = (GLfloat)screen_info.w;     rectCoords[3] = rectCoords[1];
-    glVertexPointer(2, GL_FLOAT, 0, rectCoords);
+    glVertexPointer(2, GL_FLOAT, 0, rectCoords + 2);
     glDrawArrays(GL_LINES, 0, 2);    
 }
 
@@ -242,8 +211,6 @@ void Con_DrawCursor()
 
 void Con_Edit(int key)
 {
-    int i, len;
-
     if(key == SDLK_UNKNOWN || !con_base.inited)
     {
         return;
@@ -266,7 +233,7 @@ void Con_Edit(int key)
     con_base.cursor_time = 0.0;
     con_base.show_cursor = 1;
 
-    len = strlen(con_base.shown_lines[0]);
+    size_t oldLength = strlen(con_base.shown_lines[0]);
 
     switch(key)
     {
@@ -300,7 +267,7 @@ void Con_Edit(int key)
             break;
 
         case SDLK_RIGHT:
-            if(con_base.cursor_pos < len)
+            if(con_base.cursor_pos < oldLength)
             {
                 con_base.cursor_pos++;
             }
@@ -311,42 +278,42 @@ void Con_Edit(int key)
             break;
 
         case SDLK_END:
-            con_base.cursor_pos = len;
+            con_base.cursor_pos = oldLength;
             break;
 
         case SDLK_BACKSPACE:
             if(con_base.cursor_pos > 0)
             {
-                for(i = con_base.cursor_pos; i < len ;i++)
+                for(size_t i = con_base.cursor_pos; i < oldLength ;i++)
                 {
                     con_base.shown_lines[0][i-1] = con_base.shown_lines[0][i];
                 }
-                con_base.shown_lines[0][i-1] = 0;
-                con_base.shown_lines[0][i] = 0;
+                con_base.shown_lines[0][oldLength-1] = 0;
+                con_base.shown_lines[0][oldLength] = 0;
                 con_base.cursor_pos--;
             }
             break;
 
         case SDLK_DELETE:
-            if(/*(con_base.cursor_pos > 0) && */(con_base.cursor_pos < len))
+            if(/*(con_base.cursor_pos > 0) && */(con_base.cursor_pos < oldLength))
             {
-                for(i=con_base.cursor_pos;i<len-1;i++)
+                for(size_t i=con_base.cursor_pos;i<oldLength-1;i++)
                 {
                     con_base.shown_lines[0][i] = con_base.shown_lines[0][i+1];
                 }
-                con_base.shown_lines[0][len-1] = 0;
+                con_base.shown_lines[0][oldLength-1] = 0;
             }
             break;
 
         default:
-            if((len < con_base.line_size-1) && (key >= SDLK_SPACE))
+            if((oldLength < con_base.line_size-1) && (key >= SDLK_SPACE))
             {
-                for(i=len;i>con_base.cursor_pos;i--)
+                for(size_t i=oldLength;i>con_base.cursor_pos;i--)
                 {
                     con_base.shown_lines[0][i] = con_base.shown_lines[0][i-1];
                 }
                 con_base.shown_lines[0][con_base.cursor_pos++] = key;
-                con_base.shown_lines[0][len+1] = 0;
+                con_base.shown_lines[0][oldLength+1] = 0;
             }
             break;
     }
@@ -358,14 +325,7 @@ void Con_CalcCursorPosition()
 {
     char ch = con_base.shown_lines[0][con_base.cursor_pos];
     con_base.shown_lines[0][con_base.cursor_pos] = 0;
-    if(con_base.smooth)
-    {
-        con_base.cursor_x = 8 + 1 + con_base.font_texture->Advance(con_base.shown_lines[0]);
-    }
-    else
-    {
-        con_base.cursor_x = 8 + 1 + con_base.font_bitmap->Advance(con_base.shown_lines[0]);
-    }
+    con_base.cursor_x = 8 + 1 + con_base.font_texture->Advance(con_base.shown_lines[0]);
     con_base.shown_lines[0][con_base.cursor_pos] = ch;
 }
 
@@ -401,7 +361,7 @@ void Con_AddLine(const char *text)
 {
     int i;
     char *last;
-    uint32_t len;
+    size_t len;
     
     if(con_base.inited && (text != NULL))
     {
@@ -425,7 +385,7 @@ void Con_AddLine(const char *text)
 void Con_AddText(const char *text)
 {
     char buf[4096], ch;
-    int text_size = strlen(text);
+    size_t text_size = strlen(text);
     int i, j;
     
     buf[0] = 0;
@@ -442,9 +402,8 @@ void Con_AddText(const char *text)
                 Con_AddLine(buf);
             }
             j=0;
-            continue;
         }
-        if(j < 4096)
+		else if(j < 4096)
         {
            buf[j++] = ch;
         }
