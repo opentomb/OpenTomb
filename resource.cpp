@@ -649,7 +649,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         strcat(buf, "tr5/");
     }
 
-    Engine_GetLevelName(map, CVAR_get_val_s("game_level"));
+    Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
     strcat(buf, map);
     strcat(buf, ".lua");
 
@@ -1061,7 +1061,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
 
-    Engine_GetLevelName(map, CVAR_get_val_s("game_level"));
+    Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
     strcat(buf, map);
     strcat(buf, "_trigger.lua");
     luaL_dofile(engine_lua, buf);
