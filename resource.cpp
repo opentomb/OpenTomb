@@ -3023,7 +3023,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             switch(tr->game_version)
             {
                 case TR_I:
-                    if(gameflow_manager.CurrentLevelID == 1)
+                    if(gameflow_manager.CurrentLevelID == 0)
                     {
                         LM = World_FindModelByID(world, TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
                         if(LM)

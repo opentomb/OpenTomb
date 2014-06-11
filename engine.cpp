@@ -232,7 +232,7 @@ void Engine_Init()
         Engine_LuaRegisterFuncs(engine_lua);
     }
 
-    CVAR_Register("game_level", "data/tr1/data/LEVEL1.PHD");
+    CVAR_Register("game_level", "empty"); // Empty level name - jump right to the game sequence!
     CVAR_Register("engine_version", "1");
     CVAR_Register("time_scale", "1.0");
 
@@ -1089,8 +1089,7 @@ int lua_SetLevel(lua_State *lua)
 
     Con_Printf("Changing gameflow_manager.CurrentLevelID to %d", id);
 
-    gameflow_manager.CurrentLevelID = id;
-    gameflow_manager.NextAction = true;//Next level
+    Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
     return 0;
 }
 
@@ -1117,8 +1116,8 @@ int lua_SetGame(lua_State *lua)
         lua_settop(lua, top);                                          // restore LUA stack
         
         Con_Printf("Changing game to %s", id);
+        Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, 1);
         
-        gameflow_manager.NextAction = true;//Next level
         return 1;
     }
     else
@@ -1550,6 +1549,9 @@ int Engine_LoadMap(const char *name)
     Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
     Character_SetSprint(engine_world.Character, CHARACTER_OPTION_SPRINT_MAX);
     Render_SetWorld(&engine_world);
+    
+    Gui_Fade(FADER_BLACK, TR_FADER_DIR_IN);
+    
     return 1;
 }
 
