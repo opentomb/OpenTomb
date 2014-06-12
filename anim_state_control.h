@@ -352,7 +352,7 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_CRAWL_TO_CROUCH_END 274
 #define TR_ANIMATION_LARA_CRAWL_FORWARD 260
 #define TR_ANIMATION_LARA_CRAWL_IDLE_TO_FORWARD 261
-#define TR_ANIMATION_LARA_CRAWL_BACKWARD 276	
+#define TR_ANIMATION_LARA_CRAWL_BACKWARD 276    
 #define TR_ANIMATION_LARA_CRAWL_IDLE_TO_BACKWARD 275
 #define TR_ANIMATION_LARA_CRAWL_IDLE 263
 #define TR_ANIMATION_LARA_CRAWL_FORWARD_TO_IDLE_BEGIN_RIGHT 262
@@ -460,7 +460,7 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_TRAIN_DEATH 372
 
 #define TR_ANIMATION_LARA_MONKEY_TO_ROPE_END 373
-#define TR_ANIMATION_LARA_ROPE_IDLE 374			  // Review all rope animations!
+#define TR_ANIMATION_LARA_ROPE_IDLE 374              // Review all rope animations!
 #define TR_ANIMATION_LARA_ROPE_DOWN_BEGIN 375
 #define TR_ANIMATION_LARA_ROPE_UP 376
 #define TR_ANIMATION_LARA_ROPE_IDLE_TO_SWING_SOFT 377                  // Unused
@@ -484,12 +484,12 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_ROPE_SWING_FORWARD_SOFT 399                  // Unused
 
 #define TR_ANIMATION_LARA_ROPE_SWING_FORWARD_HARD 404                   // Not found... Uhh, unused
-#define TR_ANIMATION_LARA_ROPE_CHANGE_ROPE 405 				            // Unused
+#define TR_ANIMATION_LARA_ROPE_CHANGE_ROPE 405                          // Unused
 #define TR_ANIMATION_LARA_ROPE_SWING_TO_TRY_HANG_FRONT2 406             // Not sure it's used?
 #define TR_ANIMATION_LARA_ROPE_SWING_TO_TRY_HANG_MIDDLE 407             // Not sure it's used?
-#define TR_ANIMATION_LARA_ROPE_SWING_BLOCK 408		                    // Unused
-#define TR_ANIMATION_LARA_ROPE_SWING_TO_TRY_HANG_SEMIMIDDLE 409		    // Not sure it's used?
-#define TR_ANIMATION_LARA_ROPE_SWING_TO_TRY_HANG_FRONT3 410		        // Not sure it's used?
+#define TR_ANIMATION_LARA_ROPE_SWING_BLOCK 408                          // Unused
+#define TR_ANIMATION_LARA_ROPE_SWING_TO_TRY_HANG_SEMIMIDDLE 409         // Not sure it's used?
+#define TR_ANIMATION_LARA_ROPE_SWING_TO_TRY_HANG_FRONT3 410             // Not sure it's used?
 
 
 

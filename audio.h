@@ -285,7 +285,7 @@ typedef struct audio_fxmanager_s
 // Contains all global effect parameters.
 
 typedef struct audio_effect_s
-{	
+{    
     // General sound source parameters (similar to TR sound info).
     
     ALfloat     pitch;          // [PIT in TR] Global pitch shift.
@@ -295,11 +295,11 @@ typedef struct audio_effect_s
     ALuint      loop;           // 0 = none, 1 = W, 2 = R, 3 = L.
     ALboolean   rand_pitch;     // Similar to flag 0x200000 (P) in native TRs.
     ALboolean   rand_gain;      // Similar to flag 0x400000 (V) in native TRs.
-	
+    
     // Additional sound source parameters.
     // These are not natively in TR engines, but can be later assigned by
     // external script.
-	
+    
     ALboolean   rand_freq;          // Slightly randomize frequency.
     ALuint      rand_pitch_var;     // Pitch randomizer bounds.
     ALuint      rand_gain_var;      // Gain  randomizer bounds.
@@ -333,7 +333,7 @@ class AudioSource
 {
 public:
     AudioSource();  // Audio source constructor.
-   ~AudioSource();	// Audio source destructor.
+   ~AudioSource();  // Audio source destructor.
    
     void Play();    // Make source active and play it.
     void Pause();   // Pause source (leaving it active).
@@ -448,13 +448,13 @@ int  Audio_GetFreeSource();
 bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain);
 int  Audio_IsEffectPlaying(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);
 
-int  Audio_Send(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);	// Send to play effect with given parameters.
-int  Audio_Kill(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);	// If exist, immediately stop and destroy all effects with given parameters.
+int  Audio_Send(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);    // Send to play effect with given parameters.
+int  Audio_Kill(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int entity_ID = 0);    // If exist, immediately stop and destroy all effects with given parameters.
 
-void Audio_PauseAllSources();	// Used to pause all effects currently playing.
-void Audio_StopAllSources();    // Used in audio deinit.
-void Audio_ResumeAllSources();	// Used to resume all effects currently paused.
-void Audio_UpdateSources();     // Main sound loop.
+void Audio_PauseAllSources();    // Used to pause all effects currently playing.
+void Audio_StopAllSources();     // Used in audio deinit.
+void Audio_ResumeAllSources();   // Used to resume all effects currently paused.
+void Audio_UpdateSources();      // Main sound loop.
 void Audio_UpdateListenerByCamera(struct camera_s *cam);
 void Audio_UpdateListenerByEntity(struct entity_s *ent);
 

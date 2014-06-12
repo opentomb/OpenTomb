@@ -68,9 +68,9 @@ struct bounding_volume_s;
 
 typedef struct render_list_s
 {
-    char active;
-    struct room_s *room;
-    btScalar dist;
+    char               active;
+    struct room_s     *room;
+    btScalar           dist;
 }render_list_t, *render_list_p;
 
 typedef struct render_settings_s
@@ -83,10 +83,10 @@ typedef struct render_settings_s
     int8_t    antialias_samples;
     int8_t    texture_border;
     int8_t    z_depth;
-   	int8_t	  fog_enabled;
-	GLfloat   fog_color[3];
-	float	  fog_start_depth;
-	float	  fog_end_depth;
+    int8_t    fog_enabled;
+    GLfloat   fog_color[3];
+    float     fog_start_depth;
+    float     fog_end_depth;
 }render_settings_t, *render_settings_p;
 
 typedef struct render_s

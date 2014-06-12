@@ -1,6 +1,6 @@
 
 #ifndef CONTROLS_H
-#define	CONTROLS_H
+#define CONTROLS_H
 
 #include <SDL2/SDL.h>
 #include <stdint.h>
@@ -121,5 +121,5 @@ void Controls_InitGlobals();
 
 int  Controls_KeyConsoleFilter(int32_t key, int kmod_states);
 
-#endif	/* CONTROLS_H */
+#endif /* CONTROLS_H */
 
