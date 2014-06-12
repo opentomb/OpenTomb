@@ -218,7 +218,6 @@ void Con_Edit(int key)
 
     if(key == SDLK_RETURN)
     {
-        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUSELECT));
         Con_AddLog(con_base.shown_lines[0]);
         if(!Engine_ExecCmd(con_base.shown_lines[0]))
         {

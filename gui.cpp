@@ -176,7 +176,6 @@ void Gui_InitFaders()
                     Fader[i].SetColor(0, 0, 0);
                     Fader[i].SetBlendingMode(BM_OPAQUE);
                     Fader[i].SetSpeed(500);
-                    Fader[i].SetAutoReset(true);
                 }
                 break;
         }
@@ -440,6 +439,7 @@ void Gui_DrawBars()
 
 void Gui_DrawLoadingBar(int value)
 {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     Gui_SwitchConGLMode(1);
 
@@ -519,18 +519,10 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 }
 
 bool Gui_Fade(int fader, int fade_direction)
-{
-    // fade_direction is -1 by default - it means that if you call it without
-    // second argument, it will act like fade check function, doing nothing else.
-    
-    if(fade_direction == -1)
-    {
-        return Fader[fader].IsFading(); // Return fader's current state.
-    }
-    
+{    
     // If fader exists, and is not active, we engage it.
     
-    if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() == false))
+    if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != TR_FADER_STATUS_FADING))
     {
         Fader[fader].Engage(fade_direction);
         return true;
@@ -540,6 +532,15 @@ bool Gui_Fade(int fader, int fade_direction)
         return false;
     }
 }
+
+int Gui_IsFading(int fader)
+{
+    if(fader < FADER_LASTINDEX)
+    {
+        return Fader[fader].IsFading();
+    }
+}
+
 
 // ===================================================================================
 // ============================ FADER CLASS IMPLEMENTATION ===========================
@@ -551,9 +552,9 @@ gui_Fader::gui_Fader()
     SetBlendingMode(BM_OPAQUE);
     SetAlpha(255);
     SetSpeed(500);
-    SetAutoReset(true);
     
     active             = false;
+    complete           = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
     direction          = TR_FADER_DIR_IN;
 }
 
@@ -620,15 +621,11 @@ void gui_Fader::SetSpeed(uint16_t fade_speed)
     speed      = 1000.0 / (float)fade_speed;
 }
 
-void gui_Fader::SetAutoReset(bool reset)
-{
-    autoreset = reset;
-}
-
 void gui_Fader::Engage(int fade_dir)
 {
     direction = fade_dir;
     active    = true;
+    complete  = false;
     
     if(direction == TR_FADER_DIR_IN)
     {
@@ -643,6 +640,7 @@ void gui_Fader::Engage(int fade_dir)
 void gui_Fader::Cut()
 {
     active        = false;
+    complete      = false;
     current_alpha = 0.0;
 }
 
@@ -653,29 +651,31 @@ void gui_Fader::Show()
     
     if(direction == TR_FADER_DIR_IN)    // Fade in case
     {
-        if(current_alpha > 0.0)         // If alpha is more than zero, continue to fade.
+        if(current_alpha > 0.0)       // If alpha is more than zero, continue to fade.
         {
             current_alpha -= engine_frame_time * speed;
         }
         else
         {
+            complete = true;          // We've reached zero alpha, complete and disable fader.
+            active   = false;
             current_alpha = 0.0;
-            active = false;             // We've reached zero alpha, stop and disable fader.
         }
     }
     else    // Fade out case
     {
-        if(current_alpha < max_alpha)   // If alpha is less than maximum, continue to fade.
+        if(current_alpha < max_alpha) // If alpha is less than maximum, continue to fade.
         {
             current_alpha += engine_frame_time * speed;
         }
         else
         {
-            current_alpha = max_alpha;
+            // We've reached maximum alpha, so complete fader but leave it active.
+            // This is needed for engine to receive proper callback in case some events are
+            // delayed to the next frame - e.g., level loading.
             
-            // Autoreset is only needed for fadeouts, as you get clear fader on fade-in anyway.
-            if(autoreset)               
-                active = false;         // We've reached maximum alpha, stop and disable fader.
+            complete = true;
+            current_alpha = max_alpha;
         }
     }
     
@@ -694,9 +694,20 @@ void gui_Fader::Show()
                  blending_mode);
 }
 
-bool gui_Fader::IsFading()
+int gui_Fader::IsFading()
 {
-    return active;
+    if(complete)
+    {
+        return TR_FADER_STATUS_COMPLETE;
+    }
+    else if(active)
+    {
+        return TR_FADER_STATUS_FADING;
+    }
+    else
+    {
+        return TR_FADER_STATUS_IDLE;
+    }
 }
 
 

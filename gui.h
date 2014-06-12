@@ -49,6 +49,10 @@ enum Faders
 #define TR_FADER_DIR_IN  0
 #define TR_FADER_DIR_OUT 1
 
+#define TR_FADER_STATUS_IDLE     0
+#define TR_FADER_STATUS_FADING   1
+#define TR_FADER_STATUS_COMPLETE 2
+
 #define TR_FADER_CORNER_TOPLEFT     0
 #define TR_FADER_CORNER_TOPRIGHT    1
 #define TR_FADER_CORNER_BOTTOMLEFT  2
@@ -65,13 +69,12 @@ public:
     void Engage(int fade_dir);    // Resets and starts fader.
     void Cut();                   // Immediately cuts fader.
     
-    bool IsFading();              // Get current state of the fader.
+    int  IsFading();              // Get current state of the fader.
     
     void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
     void SetBlendingMode(uint32_t mode = BM_OPAQUE);
     void SetAlpha(uint8_t alpha  = 255);
     void SetSpeed(uint16_t fade_speed = 200);
-    void SetAutoReset(bool reset);
     
 private:
     GLfloat         top_left_color[4];      // All colors are defined separately, for
@@ -85,8 +88,8 @@ private:
     GLfloat         max_alpha;              // Maximum reachable alpha value.
     GLfloat         speed;                  // Fade speed.
     
-    bool            autoreset;              // Specifies if fader auto-resets or not.
     bool            active;                 // Specifies if fader active or not.
+    bool            complete;               // Specifies if fading is complete or not.
     int8_t          direction;              // Specifies fade direction.
 };
 
@@ -283,8 +286,8 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
  *  corresponding fader.
  */
 
-bool Gui_Fade(int fader, int fade_direction = -1);
-
+bool Gui_Fade(int fader, int fade_direction);
+int  Gui_IsFading(int fader);
                   
 /**
  * General GUI drawing routines.

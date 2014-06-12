@@ -32,12 +32,12 @@ void Gameflow_Do()
     switch(gameflow_manager.Opcode)
     {
         case TR_GAMEFLOW_OP_LEVELCOMPLETE:
-            if(!Gui_Fade(FADER_BLACK))    // Switch level only when fade out is complete!
+            if(Gui_IsFading(FADER_BLACK) == TR_FADER_STATUS_COMPLETE)   // Switch level only when fade is complete!
             {
                 // Get our script filepath from game_script cvar!
                 gameflow_manager.Script = CVAR_get_val_s("game_script");
 
-                if(Engine_FileFound(gameflow_manager.Script))   // If the lua file exists...
+                if(Engine_FileFound(gameflow_manager.Script))           // If the lua file exists...
                 {
                     luaL_dofile(engine_lua, gameflow_manager.Script);
                     lua_getglobal(engine_lua, "GetNextLevel");
