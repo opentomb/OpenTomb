@@ -234,7 +234,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
     if(l)
     {
         float llx, lly, llz, urx, ury, urz;
-		con_base.font_texture->BBox(l->text, llx, lly, llz, urx, ury, urz);
+        con_base.font_texture->BBox(l->text, llx, lly, llz, urx, ury, urz);
         l->rect[0] = llx + l->x;
         l->rect[1] = lly + l->y;
         l->rect[2] = urx + l->x;
@@ -340,10 +340,10 @@ void Gui_RenderStringLine(gui_text_line_p l)
     if(l->show)
     {     
         glColor4fv(l->font_color);
-		glPushMatrix();
-		glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
-		con_base.font_texture->RenderRaw(l->text);
-		glPopMatrix();
+        glPushMatrix();
+        glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
+        con_base.font_texture->RenderRaw(l->text);
+        glPopMatrix();
     }
 }
 

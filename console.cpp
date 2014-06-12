@@ -148,14 +148,14 @@ void Con_Draw()
         x = 8;
         y = con_base.cursor_y;
         glColor4fv(con_base.font_color);
-		for(i=0;i<con_base.showing_lines;i++)
-		{
-			y += con_base.line_height;
-			glPushMatrix();
-			glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
-			con_base.font_texture->RenderRaw(con_base.shown_lines[i]);
-			glPopMatrix();
-		}
+        for(i=0;i<con_base.showing_lines;i++)
+        {
+            y += con_base.line_height;
+            glPushMatrix();
+            glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
+            con_base.font_texture->RenderRaw(con_base.shown_lines[i]);
+            glPopMatrix();
+        }
         Con_DrawCursor();
     }
 }
@@ -403,7 +403,7 @@ void Con_AddText(const char *text)
             }
             j=0;
         }
-		else if(j < 4096)
+        else if(j < 4096)
         {
            buf[j++] = ch;
         }

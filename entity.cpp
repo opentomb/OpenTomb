@@ -202,7 +202,7 @@ void Entity_UpdateRigidBody(entity_p ent)
 {
     int i;
     btScalar tr[16];
-    btTransform	bt_tr;
+    btTransform bt_tr;
     room_p old_room;
     
     if(!ent->model || !ent->bt_body || ((ent->model->animations->frames_count == 1) && (ent->model->animation_count == 1)))

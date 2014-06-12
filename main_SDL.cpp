@@ -468,9 +468,9 @@ int main(int argc, char **argv)
 {
     btScalar time, newtime;
     static btScalar oldtime = 0.0;
-	
+
 #if defined(__MACOSX__)
-	FindConfigFile();
+    FindConfigFile();
 #endif
 
     Engine_Init();
@@ -591,7 +591,7 @@ void Engine_PrimaryMouseDown()
     btScalar *dir = engine_camera.view_dir;
     btScalar new_pos[3];
     btVector3 localInertia(0, 0, 0);
-    btTransform	startTransform;
+    btTransform startTransform;
     btCollisionShape *cshape;
     btRigidBody *body;
 

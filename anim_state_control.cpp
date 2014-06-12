@@ -372,7 +372,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
                 if(cmd->horizontal_collide == 0)
-					ent->next_state = TR_STATE_LARA_JUMP_FORWARD;       // jump forward
+                    ent->next_state = TR_STATE_LARA_JUMP_FORWARD;       // jump forward
             }
             else if(cmd->move[0] ==-1)
             {
@@ -380,7 +380,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
                 if(cmd->horizontal_collide == 0)
-					ent->next_state = TR_STATE_LARA_JUMP_BACK;               // jump backward
+                    ent->next_state = TR_STATE_LARA_JUMP_BACK;               // jump backward
             }
             else if(cmd->move[1] == 1)
             {
@@ -388,7 +388,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
                 if(cmd->horizontal_collide == 0)
-					ent->next_state = TR_STATE_LARA_JUMP_LEFT;               // jump right
+                    ent->next_state = TR_STATE_LARA_JUMP_LEFT;               // jump right
             }
             else if(cmd->move[1] ==-1)
             {
@@ -396,7 +396,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
                 if(cmd->horizontal_collide == 0)
-					ent->next_state = TR_STATE_LARA_JUMP_RIGHT;               // jump left
+                    ent->next_state = TR_STATE_LARA_JUMP_RIGHT;               // jump left
             }
             break;
 
@@ -2160,7 +2160,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if(cmd->jump == 0)
             {
                 if(cmd->move[1] ==-1 && cmd->shift)
-            	{
+                {
                     if(!curr_fc->floor_hit || (pos[2] - ent->character->Height > curr_fc->floor_point.m_floats[2]))
                     {
                         // walk left
@@ -2193,7 +2193,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             if(cmd->jump == 0)
             {
                 if(cmd->move[1] == 1 && cmd->shift)
-            	{
+                {
                     if(!curr_fc->floor_hit || (pos[2] - ent->character->Height > curr_fc->floor_point.m_floats[2]))
                     {
                         // swim RIGHT
@@ -2202,12 +2202,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     else
                     {
                         // walk left
-                    	ent->next_state = TR_STATE_LARA_WALK_RIGHT;
-                    	if(last_frame)
-                    	{
+                        ent->next_state = TR_STATE_LARA_WALK_RIGHT;
+                        if(last_frame)
+                        {
                             pos[2] = curr_fc->floor_point.m_floats[2];
                             ent->move_type = MOVE_ON_FLOOR;
-                    	}
+                        }
                     }
                 }
                 else

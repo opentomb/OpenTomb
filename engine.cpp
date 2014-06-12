@@ -210,7 +210,7 @@ void Engine_Init()
     bt_engine_collisionConfiguration = new btDefaultCollisionConfiguration();
 
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-    bt_engine_dispatcher = new	btCollisionDispatcher(bt_engine_collisionConfiguration);
+    bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
     bt_engine_dispatcher->setNearCallback(RoomNearCallback);
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
@@ -467,6 +467,101 @@ int lua_BindKey(lua_State * lua)
 
     Con_Printf("wrong arguments number, must be 2 or 3");
     return 0;
+}
+
+
+int lua_GetAnimCommandTransform(lua_State * lua)
+{
+    int top, id, anim, frame;
+    top = lua_gettop(lua);
+    
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (model_id, anim_num, frame_num");
+        return 0;
+    }
+    id = lua_tointeger(lua, 1);
+    anim = lua_tointeger(lua, 2);
+    frame = lua_tointeger(lua, 3);
+    
+    skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    if(model == NULL)
+    {
+        Con_Printf("can not find skeletal model with id = %d", id);
+        return 0;
+    }
+    
+    if((anim < 0) || (anim + 1 > model->animation_count))
+    {
+        Con_Printf("wrong anim number");
+        return 0;
+    }
+    
+    if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
+    {
+        frame = (int)model->animations[anim].frames_count + frame;
+    }
+    
+    if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
+    {
+        Con_Printf("wrong frame number");
+        return 0;
+    }
+    
+    lua_pushinteger(lua, model->animations[anim].frames[frame].command);
+    lua_pushnumber(lua, model->animations[anim].frames[frame].move[0]);
+    lua_pushnumber(lua, model->animations[anim].frames[frame].move[1]);
+    lua_pushnumber(lua, model->animations[anim].frames[frame].move[2]);
+    
+    return 4;
+}
+
+
+int lua_SetAnimCommandTransform(lua_State * lua)
+{
+    int top, id, anim, frame;
+    top = lua_gettop(lua);
+    
+    if(top < 4)
+    {
+        Con_Printf("Wrong arguments count. Must be (model_id, anim_num, frame_num, flag, (option: dx, dy, dz))");
+        return 0;
+    }
+    id = lua_tointeger(lua, 1);
+    anim = lua_tointeger(lua, 2);
+    frame = lua_tointeger(lua, 3);
+    
+    skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    if(model == NULL)
+    {
+        Con_Printf("can not find skeletal model with id = %d", id);
+        return 0;
+    }
+    
+    if((anim < 0) || (anim + 1 > model->animation_count))
+    {
+        Con_Printf("wrong anim number");
+        return 0;
+    }
+    
+    if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
+    {
+        frame = (int)model->animations[anim].frames_count + frame;
+    }
+    
+    if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
+    {
+        Con_Printf("wrong frame number");
+        return 0;
+    }
+    
+    model->animations[anim].frames[frame].command = 0x00ff & lua_tointeger(lua, 4);
+    if(top >= 7)
+    {
+        model->animations[anim].frames[frame].move[0] = lua_tonumber(lua, 5);
+        model->animations[anim].frames[frame].move[1] = lua_tonumber(lua, 6);
+        model->animations[anim].frames[frame].move[2] = lua_tonumber(lua, 7);
+    }
 }
 
 /*
@@ -1155,9 +1250,11 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setlevel", lua_SetLevel);
     lua_register(lua, "setgame", lua_SetGame);
 
-	lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
+    lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
-
+    lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
+    lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
+            
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
@@ -1280,15 +1377,15 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     char buf[4096];
     int ret;
 
-	// Create string
+    // Create string
     va_start(argptr, fmt);
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
-	
-	// Write it to target file
-	fwrite(buf, 1, ret, f);
+    
+    // Write it to target file
+    fwrite(buf, 1, ret, f);
 
-	// Write it to console, too (if it helps) und
+    // Write it to console, too (if it helps) und
     Con_AddText(buf);
 
     return ret;
@@ -1543,7 +1640,7 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
-	luaL_dofile(engine_lua, "scripts/autoexec.lua");
+    luaL_dofile(engine_lua, "scripts/autoexec.lua");
 
     Character_SetHealth(engine_world.Character, CHARACTER_OPTION_HEALTH_MAX);
     Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
