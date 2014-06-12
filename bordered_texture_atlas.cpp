@@ -246,11 +246,10 @@ bordered_texture_atlas_p BorderedTextureAtlas_Create(int border)
 
     GLint max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
-	if (max_texture_edge_length > 4096)
-		max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
+    if (max_texture_edge_length > 4096)
+        max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
     atlas->result_page_width = max_texture_edge_length;
-	atlas->supports_npot = IsGLExtensionSupported("GL_ARB_texture_non_power_of_two");
-
+    atlas->supports_npot = IsGLExtensionSupported("GL_ARB_texture_non_power_of_two");
 
     return atlas;
 }

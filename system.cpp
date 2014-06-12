@@ -23,7 +23,7 @@ gui_text_line_t         system_fps;
 void Sys_Printf(char *fmt, ...)
 {
     va_list     argptr;
-    char	text[4096];
+    char        text[4096];
 
     va_start (argptr,fmt);
     vsnprintf (text, 4096, fmt,argptr);

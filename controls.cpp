@@ -546,7 +546,7 @@ int Controls_KeyConsoleFilter(int32_t key, int kmod_states)
                 return 0;
             }
     }
-	return 0;
+    return 0;
 }
 
 void Controls_InitGlobals()

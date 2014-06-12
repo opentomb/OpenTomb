@@ -586,5 +586,5 @@ int Frustum_IsBVVisibleInRoom(struct bounding_volume_s *bv, struct room_s *room)
 int Frustum_IsBSphereVisible(btScalar sphere[4], struct frustum_s *frustum)
 {
 
-	return 0;
+    return 0;
 }
