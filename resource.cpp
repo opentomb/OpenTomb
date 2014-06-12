@@ -494,7 +494,7 @@ void Gen_EntityRigidBody(entity_p ent)
     int i;
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
-    btTransform	startTransform;
+    btTransform startTransform;
     btCollisionShape *cshape;
     if(!ent->model)
     {
@@ -614,7 +614,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     room_p room;
     btCollisionShape *cshape;
     btVector3 localInertia(0, 0, 0);
-    btTransform	startTransform;
+    btTransform startTransform;
     char buf[256], map[LEVEL_NAME_MAX_LEN];
     /// white texture data for coloured polygons and debug lines.
     GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -1081,7 +1081,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     btScalar pos[3];
     float vater_color[] = {0.7, 0.75, 1.0, 1.0};
     btVector3 localInertia(0, 0, 0);
-    btTransform	startTransform;
+    btTransform startTransform;
     btCollisionShape *cshape;
 
     room->ID = room_index;
@@ -2616,28 +2616,28 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
 
                             switch (temp1 & 0xc000)
                             {
-                                case 0x4000:	// x only
+                                case 0x4000:    // x only
                                     rot[0] = ang;
                                     rot[1] = 0;
                                     rot[2] = 0;
                                     vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     break;
 
-                                case 0x8000:	// y only
+                                case 0x8000:    // y only
                                     rot[0] = 0;
                                     rot[1] = 0;
                                     rot[2] =-ang;
                                     vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     break;
 
-                                case 0xc000:	// z only
+                                case 0xc000:    // z only
                                     rot[0] = 0;
                                     rot[1] = ang;
                                     rot[2] = 0;
                                     vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     break;
 
-                                default:	// all three
+                                default:        // all three
                                     temp2 = tr->frame_data[frame_offset + l];
                                     rot[0] = (float)((temp1 & 0x3ff0) >> 4);
                                     rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));

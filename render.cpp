@@ -812,7 +812,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
         room->static_mesh[i].was_rendered = 1;
     }
 
-	glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHTING);
     for(cont=room->containers; cont; cont=cont->next)
     {
         switch(cont->object_type)
@@ -1290,7 +1290,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
         room->static_mesh[i].was_rendered_lines = 1;
     }
 
-	glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHTING);
     for(cont=room->containers; cont; cont=cont->next)
     {
         switch(cont->object_type)
@@ -1444,12 +1444,12 @@ void Render_DrawAxis(btScalar r)
     // debug local coordinate system axis drawing
     const GLfloat vertexArray[] =
     {
-        1.0, 0.0, 0.0,	0.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,	r, 0.0, 0.0,
-        0.0, 1.0, 0.0,	0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,	0.0, r, 0.0,
-        0.0, 0.0, 1.0,	0.0, 0.0, 0.0,
-        0.0, 0.0, 1.0,	0.0, 0.0, r
+        1.0, 0.0, 0.0,    0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,    r,   0.0, 0.0,
+        0.0, 1.0, 0.0,    0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,    0.0, r,   0.0,
+        0.0, 0.0, 1.0,    0.0, 0.0, 0.0,
+        0.0, 0.0, 1.0,    0.0, 0.0, r
     };
 
     glEnableClientState(GL_COLOR_ARRAY);                                        ///@FIXME: reduce number of gl state changes

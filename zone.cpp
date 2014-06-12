@@ -25,37 +25,37 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdarg.h>
 #include <string.h>
 
-typedef unsigned char 		byte;
+typedef unsigned char         byte;
 
 #include "system.h"
 #include "console.h"
 #include "zone.h"
 
-#define	ZONEID          0x1d4a11
-#define MINFRAGMENT	64
+#define ZONEID          0x1d4a11
+#define MINFRAGMENT     64
 
 //TODO: добавить выравнивание структуры
 typedef struct memblock_s
 {
-	size_t              size;                                               // размер, включая заголовок и по возможности мелкие фрагменты
-        size_t              user_size;                                          // размер, запрошенный пользователем
-	int                 tag;                                                // tag = 0 если блок свободен
-	int                 id;                                                 // должно быть равно ZONEID
-	struct memblock_s   *next;                                              // указатель на следующий блок
-        struct memblock_s   *prev;                                              // указатель на предыдущий блок
+    size_t              size;                                               // размер, включая заголовок и по возможности мелкие фрагменты
+    size_t              user_size;                                          // размер, запрошенный пользователем
+    int                 tag;                                                // tag = 0 если блок свободен
+    int                 id;                                                 // должно быть равно ZONEID
+    struct memblock_s   *next;                                              // указатель на следующий блок
+    struct memblock_s   *prev;                                              // указатель на предыдущий блок
 } memblock_t, *memblock_p;
 
 typedef struct
 {
-	size_t              size;                                               // total bytes malloced, including header
-	memblock_t          blocklist;                                          // start / end cap for linked list
-	memblock_t          *rover;                                             // текущий блок
+    size_t              size;                                               // total bytes malloced, including header
+    memblock_t          blocklist;                                          // start / end cap for linked list
+    memblock_t          *rover;                                             // current block
 } memzone_t, *memzone_p;
 
 /*
 ==============================================================================
 
-			ZONE MEMORY ALLOCATION
+            ZONE MEMORY ALLOCATION
 
 There is never any space between memblocks, and there will never be two
 contiguous free memblocks.
@@ -67,7 +67,7 @@ all big things are allocated on the hunk.
 ==============================================================================
 */
 
-memzone_t	*mainzone;
+memzone_t *mainzone;
 
 void Z_ClearZone (memzone_t *zone, size_t size);
 
@@ -79,7 +79,7 @@ Z_ClearZone
 */
 void Z_ClearZone (memzone_t *zone, size_t size)                                 // уничтожаются все блоки, список обнуляется. теперь вся куча свободна.
 {
-    memblock_t	*block;                                                         // новый добавляемый блок
+    memblock_t *block;                                                          // новый добавляемый блок
 
 // set the entire zone to one free block
 
@@ -106,7 +106,7 @@ Z_Free
 */
 void Z_Free (void *ptr)
 {
-    memblock_t	*block, *other;
+    memblock_t *block, *other;
 
     if (!ptr)
     {
@@ -153,7 +153,7 @@ void Z_Free (void *ptr)
 
 void Z_FreeTag (int tag)
 {
-    memblock_t	*head, *p, *p_temp;
+    memblock_t *head, *p, *p_temp;
 
     head = &mainzone->blocklist;
 
@@ -185,7 +185,7 @@ void Z_FreeTag (int tag)
 
 size_t Z_GetSize (void *ptr)
 {
-    memblock_t	*block;
+    memblock_t *block;
 
     if (!ptr)
     {
@@ -209,7 +209,7 @@ Z_Malloc
 */
 void *Z_Malloc (size_t size)
 {
-    void	*buf;
+    void *buf;
 #ifdef PARANOID
     Z_CheckHeap ();                                                             // DEBUG
 #endif
@@ -232,9 +232,9 @@ void *Z_Malloc (size_t size)
 
 void *Z_TagMalloc (size_t size, int tag)
 {
-    size_t		extra;                                                  // размер выданного блока минус запрашиваемый размер
-    size_t          usersize = size;
-    memblock_t	*start, *rover, *new_block, *base;
+    size_t extra;                                                               // размер выданного блока минус запрашиваемый размер
+    size_t usersize = size;
+    memblock_t *start, *rover, *new_block, *base;
 
     if (!tag)                                                                   // если флаг 0 (т.е. обозначение свободного блока) то
     {
@@ -275,7 +275,7 @@ void *Z_TagMalloc (size_t size, int tag)
     extra = base->size - size;
 
     if (extra >  MINFRAGMENT)                                                   // если extra больше минимального предела, то создадим в незанятой памяти свободный блок
-    {	
+    {
         new_block = (memblock_t *) ((byte *)base + size );
         new_block->size = extra;
         new_block->user_size = 0;
@@ -306,7 +306,7 @@ Z_Realloc
 
 void *Z_Realloc (void *ptr, size_t newsize)
 {
-    memblock_t	*block, *p;
+    memblock_t *block, *p;
     size_t          usersize = newsize;
 
     if ( !ptr )                                                                 // если на входе нулевой указатель
@@ -394,7 +394,7 @@ Z_Print
 */
 void Z_Print (memzone_t *zone)
 {
-    memblock_t	*block;
+    memblock_t *block;
 
     Con_Printf ("zone size: %d  location: %p\n",mainzone->size,mainzone);
 
@@ -403,7 +403,7 @@ void Z_Print (memzone_t *zone)
         Con_Printf ("block:%p    size:%7i    usersize:%7i    tag:%3i\n", block, block->size, block->user_size, block->tag);
 
         if (block->next == &zone->blocklist)
-            break;			// all blocks have been hit
+            break;      // all blocks have been hit
         if ( (byte *)block + block->size != (byte *)block->next)
             Con_Printf ("ERROR: block size does not touch the next block\n");
         if ( block->next->prev != block)
@@ -423,12 +423,12 @@ Z_CheckHeap
 */
 void Z_CheckHeap (void)
 {
-    memblock_t	*block;
+    memblock_t *block;
 
     for (block = mainzone->blocklist.next ; ; block = block->next)
     {
         if (block->next == &mainzone->blocklist)
-            break;			// all blocks have been hit
+            break;                  // all blocks have been hit
         if ( (byte *)block + block->size != (byte *)block->next)
             Sys_Error ("Z_CheckHeap: block size does not touch the next block\n");
         if ( block->next->prev != block)

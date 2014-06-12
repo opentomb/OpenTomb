@@ -475,8 +475,8 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
 int Polygon_SplitClassify(polygon_p p, btScalar n[4])
 {
     int i;
-    int	positive = 0;
-    int	negative = 0;
+    int positive = 0;
+    int negative = 0;
     btScalar dist;
     vertex_p v;
 

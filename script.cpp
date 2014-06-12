@@ -458,8 +458,8 @@ int lua_DoTasks(lua_State *lua, btScalar time)
     lua_getglobal(lua, "doTasks");
     lua_pcall(lua, 0, 0, 0);
     lua_settop(lua, top);
-	
-	return 0;
+
+    return 0;
 }
  
 int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator)

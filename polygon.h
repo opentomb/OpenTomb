@@ -19,11 +19,11 @@
  */
 typedef struct vertex_s
 {
-	btScalar        position[4];
-	GLfloat         normal[4];
-	GLfloat         color[4];
-	GLfloat         base_color[4];
-	GLfloat         tex_coord[2];
+    btScalar        position[4];
+    GLfloat         normal[4];
+    GLfloat         color[4];
+    GLfloat         base_color[4];
+    GLfloat         tex_coord[2];
 } vertex_t, *vertex_p;
 
 

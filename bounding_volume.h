@@ -6,7 +6,7 @@
  */
 
 #ifndef BOUNDING_VOLUME_H
-#define	BOUNDING_VOLUME_H
+#define BOUNDING_VOLUME_H
 
 #include <stdint.h>
 
@@ -46,5 +46,5 @@ void BV_TransformZZ(bounding_volume_p bv, btScalar z1, btScalar z2);
 
 btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n);
 
-#endif	/* BOUNDING_VOLUME_H */
+#endif /* BOUNDING_VOLUME_H */
 
