@@ -28,7 +28,7 @@ entity_p Entity_Create()
     ret->next_state = 0;
     Mat4_E(ret->transform);
     ret->active = 1;
-    
+
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
     ret->self->next = NULL;
     ret->self->object = ret;
@@ -42,22 +42,22 @@ entity_p Entity_Create()
     ret->smooth_anim = 1;
     ret->current_sector = NULL;
     ret->onAnimChange = NULL;
-    
+
     ret->lerp = 0.0;
     ret->current_animation = 0;
     ret->current_frame = 0;
     ret->next_animation = 0;
     ret->next_frame = 0;
-    
+
     ret->bf.bone_tag_count = 0;;
     ret->bf.bone_tags = 0;
-    vec3_set_zero(ret->bf.bb_max);     
-    vec3_set_zero(ret->bf.bb_min);  
-    vec3_set_zero(ret->bf.centre);  
-    vec3_set_zero(ret->bf.pos);  
+    vec3_set_zero(ret->bf.bb_max);
+    vec3_set_zero(ret->bf.bb_min);
+    vec3_set_zero(ret->bf.centre);
+    vec3_set_zero(ret->bf.pos);
     vec4_set_zero(ret->collision_offset.m_floats);                              // not an error, really btVector3 has 4 elements in array
     vec4_set_zero(ret->speed.m_floats);
-    
+
     ret->activation_offset[0] = 0.0;
     ret->activation_offset[1] = 256.0;
     ret->activation_offset[2] = 0.0;
@@ -77,7 +77,7 @@ void Entity_Clear(entity_p entity)
             free(entity->bv);
             entity->bv = NULL;
         }
-        
+
         if(entity->model && entity->bt_body)
         {
             for(int i=0;i<entity->model->mesh_count;i++)
@@ -85,7 +85,7 @@ void Entity_Clear(entity_p entity)
                 btRigidBody *body = entity->bt_body[i];
                 if(body)
                 {
-                    body->setUserPointer(NULL);           
+                    body->setUserPointer(NULL);
                     if(body && body->getMotionState())
                     {
                         delete body->getMotionState();
@@ -101,19 +101,19 @@ void Entity_Clear(entity_p entity)
                 }
             }
         }
-        
-        
+
+
         if(entity->character)
         {
             Character_Clean(entity);
         }
-        
+
         if(entity->self)
         {
             free(entity->self);
             entity->self = NULL;
         }
-        
+
         if(entity->bf.bone_tag_count)
         {
             free(entity->bf.bone_tags);
@@ -127,12 +127,12 @@ void Entity_Clear(entity_p entity)
 void Entity_Enable(entity_p ent)
 {
     int i;
-    
+
     if(ent->active)
     {
         return;
     }
-    
+
     for(i=0;i<ent->bf.bone_tag_count;i++)
     {
         btRigidBody *b = ent->bt_body[i];
@@ -141,7 +141,7 @@ void Entity_Enable(entity_p ent)
             bt_engine_dynamicsWorld->addRigidBody(b);
         }
     }
-    
+
     ent->hide = 0;
     ent->active = 1;
 }
@@ -149,12 +149,12 @@ void Entity_Enable(entity_p ent)
 void Entity_Disable(entity_p ent)
 {
     int i;
-    
+
     if(!ent->active)
     {
         return;
     }
-    
+
     for(i=0;i<ent->bf.bone_tag_count;i++)
     {
         btRigidBody *b = ent->bt_body[i];
@@ -163,7 +163,7 @@ void Entity_Disable(entity_p ent)
             bt_engine_dynamicsWorld->removeRigidBody(b);
         }
     }
-    
+
     ent->hide = 1;
     ent->active = 0;
 }
@@ -174,7 +174,7 @@ void Entity_UpdateRoomPos(entity_p ent)
     btScalar pos[3], *v;
     room_p new_room;
     room_sector_p new_sector;
-    
+
     v = ent->collision_offset.m_floats;
     Mat4_vec3_mul_macro(pos, ent->transform, v);
     new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
@@ -204,7 +204,7 @@ void Entity_UpdateRigidBody(entity_p ent)
     btScalar tr[16];
     btTransform bt_tr;
     room_p old_room;
-    
+
     if(!ent->model || !ent->bt_body || ((ent->model->animations->frames_count == 1) && (ent->model->animation_count == 1)))
     {
         return;
@@ -236,7 +236,7 @@ void Entity_UpdateRigidBody(entity_p ent)
         }
     }
 #endif
-    
+
     for(i=0;i<ent->model->mesh_count;i++)
     {
         if(ent->bt_body[i])
@@ -258,42 +258,42 @@ void Entity_UpdateRotation(entity_p entity)
     btScalar *view_dir = entity->transform + 4;                                 // OY
     btScalar *right_dir = entity->transform + 0;                                // OX
     int i;
-    
+
     i = entity->angles[0] / 360.0;
     i = (entity->angles[0] < 0.0)?(i-1):(i);
     entity->angles[0] -= 360.0 * i;
-    
+
     i = entity->angles[1] / 360.0;
     i = (entity->angles[1] < 0.0)?(i-1):(i);
     entity->angles[1] -= 360.0 * i;
-    
+
     i = entity->angles[2] / 360.0;
     i = (entity->angles[2] < 0.0)?(i-1):(i);
     entity->angles[2] -= 360.0 * i;
-    
+
     t = entity->angles[0] * M_PI / 180.0;
     sin_t2 = sin(t);
     cos_t2 = cos(t);
-    
+
     /*
      * LEFT - RIGHT INIT
      */
-    
+
     view_dir[0] =-sin_t2;                                                       // OY - view
     view_dir[1] = cos_t2;
     view_dir[2] = 0.0;
     view_dir[3] = 0.0;
-        
+
     right_dir[0] = cos_t2;                                                      // OX - right
     right_dir[1] = sin_t2;
     right_dir[2] = 0.0;
     right_dir[3] = 0.0;
-    
+
     up_dir[0] = 0.0;                                                            // OZ - up
     up_dir[1] = 0.0;
     up_dir[2] = 1.0;
-    up_dir[3] = 0.0; 
-    
+    up_dir[3] = 0.0;
+
     if(entity->angles[1] != 0.0)
     {
         t = entity->angles[1] * M_PI / 360.0;                                   // UP - DOWN
@@ -303,14 +303,14 @@ void Entity_UpdateRotation(entity_p entity)
         R[0] = right_dir[0] * sin_t2;
         R[1] = right_dir[1] * sin_t2;
         R[2] = right_dir[2] * sin_t2;
-        vec4_sop(Rt, R); 
+        vec4_sop(Rt, R);
 
-        vec4_mul(temp, R, up_dir); 
-        vec4_mul(up_dir, temp, Rt); 
-        vec4_mul(temp, R, view_dir); 
-        vec4_mul(view_dir, temp, Rt); 
+        vec4_mul(temp, R, up_dir);
+        vec4_mul(up_dir, temp, Rt);
+        vec4_mul(temp, R, view_dir);
+        vec4_mul(view_dir, temp, Rt);
     }
-    
+
     if(entity->angles[2] != 0.0)
     {
         t = entity->angles[2] * M_PI / 360.0;                                   // ROLL
@@ -320,17 +320,17 @@ void Entity_UpdateRotation(entity_p entity)
         R[0] = view_dir[0] * sin_t2;
         R[1] = view_dir[1] * sin_t2;
         R[2] = view_dir[2] * sin_t2;
-        vec4_sop(Rt, R); 
+        vec4_sop(Rt, R);
 
-        vec4_mul(temp, R, right_dir); 
-        vec4_mul(right_dir, temp, Rt); 
-        vec4_mul(temp, R, up_dir); 
-        vec4_mul(up_dir, temp, Rt);   
+        vec4_mul(temp, R, right_dir);
+        vec4_mul(right_dir, temp, Rt);
+        vec4_mul(temp, R, up_dir);
+        vec4_mul(up_dir, temp, Rt);
     }
-    
+
     view_dir[3] = 0.0;
     right_dir[3] = 0.0;
-    up_dir[3] = 0.0; 
+    up_dir[3] = 0.0;
 }
 
 
@@ -343,9 +343,9 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
     btScalar *stack, *sp, t;
     skeletal_model_p model = entity->model;
     bone_frame_p curr_bf, next_bf;
-    
-    next_bf = model->animations[entity->next_animation].frames + entity->next_frame; 
-    curr_bf = model->animations[entity->current_animation].frames + entity->current_frame;    
+
+    next_bf = model->animations[entity->next_animation].frames + entity->next_frame;
+    curr_bf = model->animations[entity->current_animation].frames + entity->current_frame;
 
     t = 1.0 - entity->lerp;
     if(curr_bf->command & 0x01)
@@ -358,21 +358,21 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
         vec3_set_zero(tr);
         vec3_set_zero(cmd_tr);
     }
-    
+
     vec3_interpolate_macro(entity->bf.bb_max, curr_bf->bb_max, next_bf->bb_max, entity->lerp, t);
     vec3_add(entity->bf.bb_max, entity->bf.bb_max, cmd_tr);
     vec3_interpolate_macro(entity->bf.bb_min, curr_bf->bb_min, next_bf->bb_min, entity->lerp, t);
     vec3_add(entity->bf.bb_min, entity->bf.bb_min, cmd_tr);
     vec3_interpolate_macro(entity->bf.centre, curr_bf->centre, next_bf->centre, entity->lerp, t);
     vec3_add(entity->bf.centre, entity->bf.centre, cmd_tr);
-    
+
     vec3_interpolate_macro(entity->bf.pos, curr_bf->pos, next_bf->pos, entity->lerp, t);
     vec3_add(entity->bf.pos, entity->bf.pos, cmd_tr);
     next_btag = next_bf->bone_tags;
     src_btag = curr_bf->bone_tags;
     for(k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
     {
-        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, entity->lerp, t);      
+        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, entity->lerp, t);
         vec3_copy(btag->transform+12, btag->offset);
         btag->transform[15] = 1.0;
         if(k == 0)
@@ -385,7 +385,7 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
                 tq[1] = next_btag->qrotate[0];  // +  -
                 tq[2] = next_btag->qrotate[3];  // +  +
                 tq[3] =-next_btag->qrotate[2];  // -  -
-                
+
                 btag->transform[12 + 0] -= entity->bf.pos[0];
                 btag->transform[12 + 1] -= entity->bf.pos[1];
                 btag->transform[12 + 2] += entity->bf.pos[2];
@@ -415,7 +415,7 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
     Mat4_Copy(btag->full_transform, btag->transform);
     Mat4_Copy(sp, btag->transform);
     btag++;
-    
+
     for(k=1;k<curr_bf->bone_tag_count;k++,btag++)
     {
         if(btag->flag & 0x01)
@@ -449,13 +449,13 @@ int  Entity_GetWaterState(entity_p entity)
     {
         return false;
     }
-    
+
     if(!entity->character->height_info.water)
     {
         return ENTITY_WATER_NONE;
     }
     else if( entity->character->height_info.water &&
-            (entity->character->height_info.water_level > entity->transform[12 + 2]) && 
+            (entity->character->height_info.water_level > entity->transform[12 + 2]) &&
             (entity->character->height_info.water_level < entity->transform[12 + 2] + entity->character->wade_depth) )
     {
         return ENTITY_WATER_SHALLOW;
@@ -473,33 +473,33 @@ int  Entity_GetWaterState(entity_p entity)
 
 void Entity_DoAnimCommands(entity_p entity, int changing)
 {
-    if((engine_world.anim_commands_count == 0) || 
+    if((engine_world.anim_commands_count == 0) ||
        (entity->model->animations[entity->current_animation].num_anim_commands > 255))
     {
         return;  // If no anim commands or current anim has more than 255 (according to TRosettaStone).
     }
-        
+
     animation_frame_p af  = entity->model->animations + entity->current_animation;
     uint32_t count        = af->num_anim_commands;
     int16_t *pointer      = engine_world.anim_commands + af->anim_command;
     int8_t   random_value = 0;
-    
+
     for(uint32_t i = 0; i < count; i++, pointer++)
     {
         switch(*pointer)
         {
             case TR_ANIMCOMMAND_SETPOSITION:
-                // This command executes ONLY at the end of animation. 
+                // This command executes ONLY at the end of animation.
                 pointer += 3; // Parse through 3 operands.
                 break;
-                
+
             case TR_ANIMCOMMAND_JUMPDISTANCE:
-                // This command executes ONLY at the end of animation. 
+                // This command executes ONLY at the end of animation.
                 if(entity->current_frame == af->frames_count - 1)
                 {
                     int16_t v_Vertical   = *++pointer;
                     int16_t v_Horizontal = *++pointer;
-                    
+
                     Character_SetToJump(entity, -v_Vertical, v_Horizontal);
                 }
                 else
@@ -507,13 +507,13 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     pointer += 2; // Parse through 2 operands.
                 }
                 break;
-                
+
             case TR_ANIMCOMMAND_EMPTYHANDS:
                 ///@FIXME: Behaviour is yet to be discovered.
                 break;
-                
+
             case TR_ANIMCOMMAND_KILL:
-                // This command executes ONLY at the end of animation. 
+                // This command executes ONLY at the end of animation.
                 if(entity->current_frame == af->frames_count - 1)
                 {
                     if(entity->character)
@@ -521,17 +521,17 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                         entity->character->cmd.kill = 1;
                     }
                 }
-                
+
                 break;
-                
+
             case TR_ANIMCOMMAND_PLAYSOUND:
                 bool    surface_flag[2];
                 int16_t sound_index;
-                
+
                 if(entity->current_frame == *++pointer)
                 {
                     sound_index = *++pointer & 0x3FFF;
-                    
+
                     if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
                     {
                         if(Entity_GetWaterState(entity) == ENTITY_WATER_SHALLOW)
@@ -546,14 +546,14 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     {
                         Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                     }
-                        
+
                 }
                 else
                 {
                     pointer++;
                 }
                 break;
-                
+
             case TR_ANIMCOMMAND_PLAYEFFECT:
                 // Effects (flipeffects) are various non-typical actions which vary
                 // across different TR game engine versions. There are common ones,
@@ -564,15 +564,15 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     {
                         case TR_EFFECT_CHANGEDIRECTION:
                             break;
-                            
+
                         case TR_EFFECT_HIDEOBJECT:
                             entity->hide = 1;
                             break;
-                            
+
                         case TR_EFFECT_SHOWOBJECT:
                             entity->hide = 0;
                             break;
-                            
+
                         case TR_EFFECT_PLAYSTEPSOUND:
                             // Please note that we bypass land/water mask, as TR3-5 tends to ignore
                             // this flag and play step sound in any case on land, ignoring it
@@ -589,71 +589,71 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                     case 0:                                     // Mud
                                         Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 1:                                     // Snow - TR3 & TR5 only
                                         if(engine_world.version != TR_IV)
                                         {
                                             Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         }
                                         break;
-                                        
+
                                     case 2:                                     // Sand - same as grass
                                         Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 3:                                     // Gravel
                                         Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 4:                                     // Ice - TR3 & TR5 only
                                         if(engine_world.version != TR_IV)
                                         {
                                             Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         }
                                         break;
-                                        
+
                                     case 5:                                     // Water
                                         // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 6:                                     // Stone - DEFAULT SOUND, BYPASS!
                                         Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 7:                                     // Wood
                                         Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 8:                                     // Metal
                                         Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 9:                                     // Marble - TR4 only
                                         if(engine_world.version == TR_IV)
                                         {
                                             Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         }
                                         break;
-                                        
+
                                     case 10:                                    // Grass - same as sand
                                         Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 11:                                    // Concrete - DEFAULT SOUND, BYPASS!
                                         Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
-                                    case 12:                                    // Old wood - same as wood 
+
+                                    case 12:                                    // Old wood - same as wood
                                         Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
-                                        
+
                                     case 13:                                    // Old metal - same as metal
                                         Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                                         break;
                                 }
                             }
                             break;
-                            
+
                         case TR_EFFECT_BUBBLE:
                             ///@FIXME: Spawn bubble particle here, when particle system is developed.
                             random_value = rand() % 100;
@@ -662,7 +662,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->ID);
                             }
                             break;
-                            
+
                         default:
                             ///@FIXME: TODO ALL OTHER EFFECTS!
                             break;
@@ -687,19 +687,19 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     uint16_t *entry, *end_p, end_bit, cont_bit;
     room_sector_p sector = ent->current_sector;
     char skip = 0;
-    
+
     // Trigger options.
     uint8_t  trigger_mask;
     uint8_t  only_once;
     int8_t   timer_field;
-    
+
     if(ent->character)
     {
         ent->character->height_info.walls_climb = 0;
         ent->character->height_info.walls_climb_dir = 0;
         ent->character->height_info.ceiling_climb = 0;
     }
-    
+
     if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size))
     {
         return 0;
@@ -714,16 +714,16 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     do
     {
         end_bit = ((*entry) & 0x8000) >> 15;            // 0b10000000 00000000
-        
+
         // TR_I - TR_II
         //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
         //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
-        
+
         //TR_III+, but works with TR_I - TR_II
         function = (*entry) & 0x001F;                   // 0b00000000 00011111
         sub_function = ((*entry) & 0x3FF0) >> 8;        // 0b01111111 11100000
         b3 = ((*entry) & 0x00E0) >> 5;                  // 0b00000000 11100000  TR_III+
-        
+
         entry++;
 
         switch(function)
@@ -732,7 +732,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 if(sub_function == 0x00)
                 {
                     i = *(entry++);
-                    
+
                 }
                 break;
 
@@ -756,9 +756,9 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 timer_field      =   (*entry) &  0x00FF;
                 trigger_mask     =  ((*entry) &  0x3E00) >> 9;
                 only_once        =  ((*entry) &  0x0100) >> 8;
-                
+
                 Con_Printf("TRIGGER: timer - %d, mask - %02X", timer_field, trigger_mask);
-                
+
                 skip = 0;
                 switch(sub_function)
                 {
@@ -816,7 +816,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                         Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CLIMB");
                         break;
                 }
-                
+
                 do
                 {
                     entry++;
@@ -836,14 +836,14 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             break;
 
                         case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH
-                            {                                
+                            {
                                 uint8_t cam_index = (*entry) & 0x007F;
                                 entry++;
                                 uint8_t cam_timer = ((*entry) & 0x00FF);
                                 uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
                                 uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
                                         cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-                                
+
                                 Con_Printf("CAMERA: index = %d, timer = %d, once = %d, zoom = %d", cam_index, cam_timer, cam_once, cam_zoom);
                             }
                             break;
@@ -887,8 +887,18 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             break;
 
                         case TR_FD_TRIGFUNC_SECRET:          // PLAYSOUND SECRET_FOUND
-                            Con_Printf("Play SECRET[%d] FOUND", operands);
-                            Audio_StreamPlay(lua_GetSecretTrackNumber(engine_lua));
+
+                            if(!gameflow_manager.SecretsTriggerMap[operands])
+                            {
+                                Audio_StreamPlay(lua_GetSecretTrackNumber(engine_lua));
+                                gameflow_manager.SecretsTriggerMap[operands] ^= 0x01; //Set our flag to on
+                                Con_Printf("Play SECRET[%d] FOUND", operands);
+                            }
+                            else
+                            {
+                                Con_Printf("SECRET[%d] Has already been found!", operands);
+                            }
+
                             break;
 
                         case TR_FD_TRIGFUNC_BODYBAG:          // UNKNOWN
@@ -910,7 +920,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                         case 0x0f:          // UNKNOWN
                             Con_Printf("TRIGGER: unknown 0x0f, OP = %d", operands);
                             break;
-                            
+
                         default:
                             Con_Printf("UNKNOWN MEANING: %X", *entry);
                     };
@@ -966,18 +976,18 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 }
                 if(sub_function == 0x00)
                 {
-                
+
                 }
                 break;
-                
+
             case TR_FD_FUNC_TRIGGERER_MARK:
                 Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
                 break;
-                
+
             case TR_FD_FUNC_BEETLE_MARK:
                 Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
                 break;
-                
+
             default:
                 Con_Printf("UNKNOWN function id = %d, sub = %d, b3 = %d", function, sub_function, b3);
                 break;
@@ -995,7 +1005,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     animation_frame_p anim;
     long int t;
     btScalar dt;
-    
+
     if(!entity || !entity->model)
     {
         return;
@@ -1005,7 +1015,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     {
         animation = 0;
     }
-    
+
     if(entity->character)
     {
         entity->character->no_fix = 0x00;
@@ -1016,7 +1026,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     frame %= anim->frames_count;
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->period = 1.0 / 30.0;
-    
+
     entity->last_state    = anim->state_id;
     entity->next_state = anim->state_id;
     entity->current_speed = anim->speed;
@@ -1024,27 +1034,27 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     entity->current_frame = frame;
     entity->next_animation = animation;
     entity->next_frame = frame;
-    
+
     entity->frame_time = (btScalar)frame * entity->period;
     t = (entity->frame_time) / entity->period;
     dt = entity->frame_time - (btScalar)t * entity->period;
     entity->frame_time = (btScalar)frame * entity->period + dt;
-    
+
     Entity_UpdateCurrentBoneFrame(entity);
     Entity_UpdateRigidBody(entity);
 }
-    
+
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
 {
     int i, j;
     state_change_p ret = anim->state_change;
-    
+
     if(state_change_anim < 0)
     {
         return NULL;
     }
-    
+
     for(i=0;i<anim->state_change_count;i++,ret++)
     {
         for(j=0;j<ret->anim_dispath_count;j++)
@@ -1055,7 +1065,7 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
             }
         }
     }
-    
+
     return NULL;
 }
 
@@ -1064,12 +1074,12 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 {
     int i;
     state_change_p ret = anim->state_change;
-    
+
     if(id < 0)
     {
         return NULL;
     }
-    
+
     for(i=0;i<anim->state_change_count;i++,ret++)
     {
         if(ret->ID == id)
@@ -1077,7 +1087,7 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
             return ret;
         }
     }
-    
+
     return NULL;
 }
 
@@ -1088,12 +1098,12 @@ int Entity_GetAnimDispatchCase(struct entity_s *ent, int id)
     animation_frame_p anim = ent->model->animations + ent->current_animation;
     state_change_p stc = anim->state_change;
     anim_dispath_p disp;
-    
+
     if(id < 0)
     {
         return -1;
     }
-    
+
     for(i=0;i<anim->state_change_count;i++,stc++)
     {
         if(stc->ID == id)
@@ -1109,12 +1119,12 @@ int Entity_GetAnimDispatchCase(struct entity_s *ent, int id)
             }
         }
     }
-    
+
     return -1;
 }
 
 /*
- * Next frame and next anim calculation function. 
+ * Next frame and next anim calculation function.
  */
 void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim)
 {
@@ -1125,9 +1135,9 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
     *frame = (entity->frame_time + time) / entity->period;
     *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
     *anim = entity->current_animation;
-    
+
     /*
-     * Flag has a highest priority 
+     * Flag has a highest priority
      */
     if(entity->anim_flags == ANIM_LOOP_LAST_FRAME)
     {
@@ -1138,24 +1148,24 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
         }
         return;
     }
-    
+
     /*
      * Check next anim if frame >= frames_count
      */
     if(*frame >= curr_anim->frames_count)
-    {            
+    {
         if(curr_anim->next_anim)
         {
             *frame = curr_anim->next_frame;
             *anim = curr_anim->next_anim->ID;
             return;
         }
-        
+
         *frame %= curr_anim->frames_count;
         *anim = entity->current_animation;                                      // paranoid dublicate
         return;
     }
-    
+
     /*
      * State change check
      */
@@ -1182,7 +1192,7 @@ void Entity_DoAnimMove(entity_p entity)
     if(entity->model)
     {
         btScalar tr[3];
-        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;  
+        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;
         if(curr_bf->command & 0x01)
         {
             Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
@@ -1196,7 +1206,7 @@ void Entity_DoAnimRotate(entity_p entity)
 {
     if(entity->model)
     {
-        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;    
+        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;
         if(curr_bf->command & 0x02)
         {
             entity->angles[0] += 180.0;
@@ -1228,7 +1238,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     btScalar dt;
     animation_frame_p af;
     state_change_p stc;
-    
+
     if(!entity || !entity->active || !entity->model || !entity->model->animations || ((entity->model->animations->frames_count == 1) && (entity->model->animation_count == 1)))
     {
         return 0;
@@ -1259,10 +1269,10 @@ int Entity_Frame(entity_p entity, btScalar time)
         entity->current_frame = frame;
         Entity_DoAnimRotate(entity);
     }
-    
+
     af = entity->model->animations + entity->current_animation;
     entity->frame_time += time;
-    
+
     t = (entity->frame_time) / entity->period;
     dt = entity->frame_time - (btScalar)t * entity->period;
     entity->frame_time = (btScalar)frame * entity->period + dt;
@@ -1276,14 +1286,14 @@ int Entity_Frame(entity_p entity, btScalar time)
     {
         entity->current_speed += time * entity->character->speed_mult * (btScalar)af->accel_hi;
     }
-    
+
     Entity_UpdateCurrentBoneFrame(entity);
     Entity_UpdateRigidBody(entity);
     if(ret)
     {
         Entity_RebuildBV(entity);
     }
-    
+
     return ret;
 }
 
@@ -1331,7 +1341,7 @@ void Entity_CheckActivators(struct entity_s *ent)
     entity_p e;
     engine_container_p cont;
     btScalar *v, ppos[3], pos[3], r;
-    
+
     if(!ent || !ent->self->room)
     {
         return;
@@ -1339,7 +1349,7 @@ void Entity_CheckActivators(struct entity_s *ent)
     ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf.bb_max[1];
     ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf.bb_max[1];
     ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf.bb_max[1];
-    cont = ent->self->room->containers;            
+    cont = ent->self->room->containers;
     for(;cont;cont=cont->next)
     {
         if((cont->object_type == OBJECT_ENTITY) && (cont->object))
@@ -1359,7 +1369,7 @@ void Entity_CheckActivators(struct entity_s *ent)
             else if(e->flags & ENTITY_IS_PICKABLE)
             {
                 v = e->transform + 12;
-                if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) && 
+                if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                                  (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
                 {
                     lua_ActivateEntity(engine_lua, e->ID, ent->ID);

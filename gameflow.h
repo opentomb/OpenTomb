@@ -12,6 +12,8 @@ typedef struct gameflow_manager_s
     uint8_t     Operand;
 
     bool        NextAction;
+
+    char        SecretsTriggerMap[256];//Info for what secrets have been triggered in a level
 } gameflow_manager_t, *gameflow_manager_p;
 
 enum TR_GAMEFLOW_OP

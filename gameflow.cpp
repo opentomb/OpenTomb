@@ -50,9 +50,12 @@ void Gameflow_Do()
                         lua_pop(engine_lua, 1); // Pop stack to get next value
                         gameflow_manager.CurrentLevelName = lua_tostring(engine_lua, -1); // Second value in stack is level name
                         lua_pop(engine_lua, 1); // Pop stack to get next value
-                        
+
                         // Now, load the level!
                         Engine_LoadMap(lua_tostring(engine_lua, -1));
+
+                        //Now we reset our secret trigger map!
+                        memset(gameflow_manager.SecretsTriggerMap, 0, sizeof gameflow_manager.SecretsTriggerMap);
 
                     }
                     else
