@@ -649,7 +649,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         strcat(buf, "tr5/");
     }
 
-    Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
+    Engine_GetLevelName(map, CVAR_get_val_s("game_level"));
     strcat(buf, map);
     strcat(buf, ".lua");
 
@@ -819,7 +819,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 4, 4, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-    glDisable(GL_TEXTURE_2D);
+    
+    //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
 
     Gui_DrawLoadingBar(300);
 
@@ -1061,10 +1062,13 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
 
-    Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
+    Engine_GetLevelName(map, CVAR_get_val_s("game_level"));
     strcat(buf, map);
     strcat(buf, "_trigger.lua");
     luaL_dofile(engine_lua, buf);
+    
+    // Set loadscreen fader to fade-in state.
+    Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_IN);
 }
 
 

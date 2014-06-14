@@ -33,21 +33,38 @@ typedef struct gui_text_line_s
 // TR1-3 had only one type of fader - black one, which was activated on level 
 // transitions. Since TR4, additional colored fader was introduced to emulate
 // various full-screen effects (flashes, flares, and so on).
+// With OpenTomb, we extend fader functionality to support not only simple dip to
+// color effect, but also various advanced parameters - texture, delay and variable
+// fade-in and fade-out speeds.
 
 // Immutable fader enumeration.
 // These faders always exist in engine, and rarely you will need more than these.
 
 enum Faders
 {
-    FADER_BLACK,        // Classic black fader for level transition
-    FADER_COLORED,      // Effect fader (flashes, etc.)
+    FADER_EFFECT,       // Effect fader (flashes, etc.)
     FADER_SUN,          // Sun fader (engages on looking at the sun)
-    FADER_DEATH,        // Just for fun - death fader.
+    FADER_VIGNETTE,     // Just for fun - death fader.
+    FADER_LOADSCREEN,   // Classic black fader for level transition
     FADER_LASTINDEX
 };
 
-#define TR_FADER_DIR_IN  0
-#define TR_FADER_DIR_OUT 1
+#define TR_FADER_DIR_IN    0    // Normal fade-in.
+#define TR_FADER_DIR_OUT   1    // Normal fade-out.
+#define TR_FADER_DIR_TIMED 2    // Timed fade: in -> stay -> out.
+
+// Scale type specifies how textures with various aspect ratios will be
+// handled. If scale type is set to ZOOM, texture will be zoomed up to
+// current screen's aspect ratio. If type is LETTERBOX, empty spaces
+// will be filled with bars of fader's color. If type is STRETCH, image
+// will be simply stretched across whole screen.
+// ZOOM type is the best shot for loading screens, while LETTERBOX is
+// needed for pictures with crucial info that shouldn't be cut by zoom,
+// and STRETCH type is usable for full-screen effects, like vignette.
+
+#define TR_FADER_SCALE_ZOOM      0
+#define TR_FADER_SCALE_LETTERBOX 1
+#define TR_FADER_SCALE_STRETCH   2
 
 #define TR_FADER_STATUS_IDLE     0
 #define TR_FADER_STATUS_FADING   1
@@ -71,12 +88,19 @@ public:
     
     int  IsFading();              // Get current state of the fader.
     
+    void SetScaleMode(uint8_t mode = TR_FADER_SCALE_ZOOM);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
     void SetBlendingMode(uint32_t mode = BM_OPAQUE);
     void SetAlpha(uint8_t alpha  = 255);
-    void SetSpeed(uint16_t fade_speed = 200);
+    void SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary = 200);
+    void SetDelay(uint32_t delay_msec);
+    
+    bool SetTexture(const char* texture_path);
     
 private:
+    void SetAspect();
+    bool DropTexture();
+    
     GLfloat         top_left_color[4];      // All colors are defined separately, for
     GLfloat         top_right_color[4];     // further possibility of advanced full
     GLfloat         bottom_left_color[4];   // screen effects with gradients.
@@ -87,10 +111,21 @@ private:
     GLfloat         current_alpha;          // Current alpha value.
     GLfloat         max_alpha;              // Maximum reachable alpha value.
     GLfloat         speed;                  // Fade speed.
+    GLfloat         speed_optional;         // Optional speed - used with TIMED type.
+    
+    GLuint          texture;                // Texture (optional).
+    uint16_t        texture_width;
+    uint16_t        texture_height;
+    bool            texture_wide;           // Set, if texture width is greater than height.
+    float           texture_aspect_ratio;   // Pre-calculated aspect ratio.
+    uint8_t         texture_scale_mode;     // Fader texture's scale mode.
     
     bool            active;                 // Specifies if fader active or not.
     bool            complete;               // Specifies if fading is complete or not.
     int8_t          direction;              // Specifies fade direction.
+    
+    float           current_time;           // Current fader time.
+    float           max_time;               // Maximum delay time.
 };
 
 
@@ -277,7 +312,8 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat &width, const GLfloat &height,
                   const GLfloat colorUpperLeft[], const GLfloat colorUpperRight[],
                   const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
-                  const int &blendMode);
+                  const int &blendMode,
+                  const GLuint texture = 0);
                   
 /**
  *  Initiate fade or check if fade is active.
@@ -286,8 +322,9 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
  *  corresponding fader.
  */
 
-bool Gui_Fade(int fader, int fade_direction);
-int  Gui_IsFading(int fader);
+bool Gui_FadeStart(int fader, int fade_direction);
+bool Gui_FadeAssignPic(int fader, const char* pic_name);
+int  Gui_FadeCheck(int fader);
                   
 /**
  * General GUI drawing routines.

@@ -1,5 +1,6 @@
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_opengl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1184,17 +1185,16 @@ int lua_SetLevel(lua_State *lua)
 
     Con_Printf("Changing gameflow_manager.CurrentLevelID to %d", id);
 
+    Game_LevelTransition(id);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
+    
     return 0;
 }
 
 int lua_SetGame(lua_State *lua)
 {
-    int top;
-    const char *id;
-
-    top = lua_gettop(lua);
-    id  = lua_tostring(lua, 1);
+    int   top = lua_gettop(lua);
+    float id  = lua_tonumber(lua, 1);
 
     if(top != 1)
     {
@@ -1206,11 +1206,12 @@ int lua_SetGame(lua_State *lua)
 
     if(lua_isfunction(lua, -1))                                        // If function exists...
     {
-        lua_pushstring(lua, id);                                       // add to stack first argument
+        lua_pushnumber(lua, id);                                       // add to stack first argument
         lua_pcall(lua, 1, 0, 0);                                       // call that function
         lua_settop(lua, top);                                          // restore LUA stack
         
-        Con_Printf("Changing game to %s", id);
+        Con_Printf("Changing game to Tomb Raider %.1f", id);
+        
         Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, 1);
         
         return 1;
@@ -1358,7 +1359,9 @@ void Engine_Shutdown(int val)
         alcCloseDevice(al_device);
     }
 
+    IMG_Quit();
     SDL_Quit();
+    
     //printf("\nSDL_Quit...");
     exit(val);
 }
@@ -1646,8 +1649,6 @@ int Engine_LoadMap(const char *name)
     Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
     Character_SetSprint(engine_world.Character, CHARACTER_OPTION_SPRINT_MAX);
     Render_SetWorld(&engine_world);
-    
-    Gui_Fade(FADER_BLACK, TR_FADER_DIR_IN);
     
     return 1;
 }

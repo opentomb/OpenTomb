@@ -408,6 +408,50 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
     return false;
 }
 
+bool lua_GetLoadingScreen(lua_State *lua, int level_index, int next_level, char *pic_path)
+{
+    size_t  string_length  = 0;
+    int     top;
+    
+    const char *real_path;
+        
+    if(lua)
+    {
+        top = lua_gettop(lua);                                             // save LUA stack
+        
+        lua_getglobal(lua, "GetLoadingScreen");                                // add to the up of stack LUA's function
+
+        if(lua_isfunction(lua, -1))                                        // If function exists...
+        {
+            lua_pushinteger(lua, level_index);                    // add to stack first argument
+            lua_pushinteger(lua, next_level);                    // add to stack first argument
+            
+
+            lua_pcall(lua, 2, 1, 0);                                       // call that function
+            
+            real_path   = lua_tolstring(lua, -1, &string_length);          // get returned value 1
+           
+            // For some reason, Lua returns constant string pointer, which we can't assign to
+            // provided argument; so we need to straightly copy it.
+        
+            strcpy(pic_path, real_path);
+            
+            lua_settop(lua, top);                                          // restore LUA stack
+            
+            return true;
+        }
+        else
+        {
+            lua_settop(lua, top);   // restore LUA stack
+        }
+    }
+    
+    // If Lua wasn't able to extract file path from the script, most likely it means
+    // that entry is broken or missing, or wrong track ID was specified. So we return
+    // FALSE in such cases.
+    
+    return false;
+}
 /**
  * set tbl[key]
  */

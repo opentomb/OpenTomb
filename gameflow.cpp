@@ -32,7 +32,7 @@ void Gameflow_Do()
     switch(gameflow_manager.Opcode)
     {
         case TR_GAMEFLOW_OP_LEVELCOMPLETE:
-            if(Gui_IsFading(FADER_BLACK) == TR_FADER_STATUS_COMPLETE)   // Switch level only when fade is complete!
+            if(Gui_FadeCheck(FADER_LOADSCREEN) == TR_FADER_STATUS_COMPLETE)   // Switch level only when fade is complete!
             {
                 // Get our script filepath from game_script cvar!
                 gameflow_manager.Script = CVAR_get_val_s("game_script");
@@ -50,9 +50,9 @@ void Gameflow_Do()
                         lua_pop(engine_lua, 1); // Pop stack to get next value
                         gameflow_manager.CurrentLevelName = lua_tostring(engine_lua, -1); // Second value in stack is level name
                         lua_pop(engine_lua, 1); // Pop stack to get next value
-                        gameflow_manager.CurrentLevelPath = lua_tostring(engine_lua, -1); // Third value in stack is level path
+                        
                         // Now, load the level!
-                        Engine_LoadMap(gameflow_manager.CurrentLevelPath);
+                        Engine_LoadMap(lua_tostring(engine_lua, -1));
 
                     }
                     else
@@ -71,7 +71,7 @@ void Gameflow_Do()
                 // It is achieved by not resetting action marker and exiting the function instead.
                 return;
 
-            }   // end if(!Gui_Fade(FADER_BLACK))
+            }   // end if(Gui_FadeCheck(FADER_LOADSCREEN))
             break;
 
         default:
