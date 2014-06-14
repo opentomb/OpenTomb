@@ -703,7 +703,6 @@ void gui_Fader::SetAspect()
             texture_wide = false;
             texture_aspect_ratio = (float)texture_width / (float)texture_height;
         }
-        
     }
 }
 
@@ -823,6 +822,7 @@ void gui_Fader::Cut()
     active        = false;
     complete      = false;
     current_alpha = 0.0;
+    current_time  = 0.0;
     
     DropTexture();
 }
@@ -1164,8 +1164,9 @@ void gui_ProgressBar::SetDimensions(float X, float Y,
 // Recalculate size, according to viewport resolution.
 void gui_ProgressBar::RecalculateSize()
 {
-    mWidth  = mLastScrWidth  * ( (float)mAbsWidth / TR_GUI_SCREEN_METERING_RESOLUTION );
+    mWidth  = mLastScrWidth  * ( (float)mAbsWidth  / TR_GUI_SCREEN_METERING_RESOLUTION );
     mHeight = mLastScrHeight * ( (float)mAbsHeight / TR_GUI_SCREEN_METERING_RESOLUTION );
+    
     mBorderWidth  = mLastScrWidth  * ( (float)mAbsBorderSize / TR_GUI_SCREEN_METERING_RESOLUTION );
     mBorderHeight = mLastScrHeight * ( (float)mAbsBorderSize / TR_GUI_SCREEN_METERING_RESOLUTION ) *
                     ((float)mLastScrWidth / (float)mLastScrHeight);
