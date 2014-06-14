@@ -7,7 +7,6 @@ typedef struct gameflow_manager_s
     const char* Script;
     uint8_t     CurrentLevelID;
     const char* CurrentLevelName;
-    const char* CurrentLevelPath;
 
     uint8_t     Opcode;
     uint8_t     Operand;

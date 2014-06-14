@@ -30,6 +30,7 @@ extern "C" {
 #include "character_controller.h"
 #include "redblack.h"
 #include "gameflow.h"
+#include "gui.h"
 
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
 extern lua_State *engine_lua;
@@ -635,4 +636,13 @@ void Game_Frame(btScalar time)
     }
 
     Render_UpdateAnimTextures();
+}
+
+void Game_LevelTransition(uint16_t level_index)
+{
+    char   file_path[256];
+    lua_GetLoadingScreen(engine_lua, gameflow_manager.CurrentLevelID, level_index, file_path);
+    Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
+    Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
+    Audio_EndStreams();
 }

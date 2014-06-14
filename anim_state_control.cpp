@@ -776,10 +776,14 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             offset[2] += ent->bf.bb_max[2];
             i = Character_CheckNextStep(ent, offset, &next_fc);
             ent->dir_flag = ENT_MOVE_FORWARD;
-
+        
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+            }
+            else if(cmd->kill == 1)
+            {
+                ent->next_state = TR_STATE_LARA_STOP;
             }
             else if((next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_UP_BIG))
             {

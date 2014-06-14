@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
+#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
@@ -434,6 +435,17 @@ void Engine_InitSDLVideo()
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 }
 
+void Engine_InitSDLImage()
+{
+    int flags = IMG_INIT_JPG | IMG_INIT_PNG;
+    int init  = IMG_Init(flags);
+    
+    if(init & flags != flags)
+    {
+        Sys_DebugLog(LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
+    }
+}
+
 void Engine_InitALAudio()
 {
 #if !NO_AUDIO
@@ -479,6 +491,7 @@ int main(int argc, char **argv)
 
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
+    Engine_InitSDLImage();
 
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
@@ -491,6 +504,9 @@ int main(int argc, char **argv)
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
+    
+    Gui_FadeAssignPic(FADER_LOADSCREEN, "graphics/legal.png");
+    Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
     
 #if SKELETAL_TEST
     control_states.free_look = 1;
@@ -546,13 +562,14 @@ void Engine_Display()
 #endif
         glPopClientAttrib();
         Render_DrawList_DebugLines();
-        ShowDebugInfo();
+        
+        //ShowDebugInfo();
 
         glPolygonMode(GL_FRONT, GL_FILL);
         glFrontFace(GL_CCW);
         //glDisable(GL_CULL_FACE);
         glBindTexture(GL_TEXTURE_2D, 0);
-        Render_DrawAxis(10000.0);
+        //Render_DrawAxis(10000.0);
         /*if(engine_world.Character)
         {
             glPushMatrix();
