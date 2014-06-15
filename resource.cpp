@@ -622,7 +622,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
-    Gui_DrawLoadingBar(0);
+    Gui_DrawLoadScreen(200);
 
     world->version = tr->game_version;
 
@@ -701,7 +701,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
     luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
 
-    Gui_DrawLoadingBar(50);
+    Gui_DrawLoadScreen(250);
 
     world->Character = NULL;
     world->meshes = NULL;
@@ -734,21 +734,21 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
     }
 
-    Gui_DrawLoadingBar(100);
+    Gui_DrawLoadScreen(300);
 
     for (i = 0; i < tr->sprite_textures_count; i++)
     {
         BorderedTextureAtlas_AddSpriteTexture(world->tex_atlas, tr->sprite_textures + i);
     }
 
-    Gui_DrawLoadingBar(150);
+    Gui_DrawLoadScreen(400);
 
     for (i = 0; i < tr->object_textures_count; i++)
     {
         BorderedTextureAtlas_AddObjectTexture(world->tex_atlas, tr->object_textures + i);
     }
 
-    Gui_DrawLoadingBar(200);
+    Gui_DrawLoadScreen(500);
 
     if(level_script)
     {
@@ -822,7 +822,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     
     //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
 
-    Gui_DrawLoadingBar(300);
+    Gui_DrawLoadScreen(600);
 
     /*
      * copy sectors floordata
@@ -845,7 +845,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
      */
     TR_GenAnimTextures(world, tr);
 
-    Gui_DrawLoadingBar(400);
+    Gui_DrawLoadScreen(650);
 
     /*
      * generate all meshes
@@ -862,7 +862,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
      */
     TR_GenSprites(world, tr);
 
-    Gui_DrawLoadingBar(500);
+    Gui_DrawLoadScreen(700);
 
     /*
      * generate boxes
@@ -928,14 +928,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         Room_BuildNearRoomsList(r);
     }
 
-    Gui_DrawLoadingBar(600);
+    Gui_DrawLoadScreen(800);
 
     /*
      * build all skeletal models
      */
     GenSkeletalModels(world, tr);
 
-    Gui_DrawLoadingBar(700);
+    Gui_DrawLoadScreen(850);
 
     /*
      * build all moveables
@@ -954,13 +954,13 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    Gui_DrawLoadingBar(800);
+    Gui_DrawLoadScreen(900);
 
     // Initialize audio.
 
     Audio_Init(TR_AUDIO_MAX_CHANNELS, tr);
 
-    Gui_DrawLoadingBar(900);
+    Gui_DrawLoadScreen(950);
 
     switch(tr->game_version)
     {
@@ -1011,7 +1011,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    Gui_DrawLoadingBar(1000);
+    Gui_DrawLoadScreen(1000);
 
     for(i=0;i<world->room_count;i++)
     {

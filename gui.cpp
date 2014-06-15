@@ -295,7 +295,7 @@ gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...)
 
 void Gui_Render()
 {
-    Gui_SwitchConGLMode(1);
+    Gui_SwitchGLMode(1);
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
@@ -320,7 +320,7 @@ void Gui_Render()
     glPopClientAttrib();
     glPopAttrib();
 
-    Gui_SwitchConGLMode(0);
+    Gui_SwitchGLMode(0);
 }
 
 void Gui_RenderStringLine(gui_text_line_p l)
@@ -378,7 +378,7 @@ void Gui_RenderStrings()
     temp_lines_used = 0;
 }
 
-void Gui_SwitchConGLMode(char is_gui)
+void Gui_SwitchGLMode(char is_gui)
 {
     static char curr_mode = 0;
     if((0 != is_gui) && (0 == curr_mode))                                       // set gui coordinate system
@@ -442,11 +442,11 @@ void Gui_DrawBars()
     }
 }
 
-void Gui_DrawLoadingBar(int value)
+void Gui_DrawLoadScreen(int value)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    Gui_SwitchConGLMode(1);
+    Gui_SwitchGLMode(1);
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
@@ -469,7 +469,7 @@ void Gui_DrawLoadingBar(int value)
     glPopClientAttrib();
     glPopAttrib();
 
-    Gui_SwitchConGLMode(0);
+    Gui_SwitchGLMode(0);
     
     SDL_GL_SwapWindow(sdl_window);
 }
