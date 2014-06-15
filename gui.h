@@ -274,7 +274,7 @@ gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...);
  * Either changes to 2D matrix state (is_gui = 1) or away from it (is_gui = 0). Does not do any drawing.
  */
  
-void Gui_SwitchConGLMode(char is_gui);
+void Gui_SwitchGLMode(char is_gui);
 
 /**
  * Draws wireframe of this frustum.
@@ -333,6 +333,6 @@ int  Gui_FadeCheck(int fader);
 void Gui_DrawCrosshair();
 void Gui_DrawFaders();
 void Gui_DrawBars();
-void Gui_DrawLoadingBar(int value);
+void Gui_DrawLoadScreen(int value);
 
 #endif

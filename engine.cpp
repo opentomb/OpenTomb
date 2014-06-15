@@ -1616,6 +1616,8 @@ int Engine_LoadMap(const char *name)
     VT_Level tr_level;
     char buf[LEVEL_NAME_MAX_LEN];
 
+    Gui_DrawLoadScreen(0);
+
     if(!Engine_FileFound(name))
     {
         Con_Printf("File not found - \"%s\"", name);
@@ -1633,14 +1635,23 @@ int Engine_LoadMap(const char *name)
 
     tr_level.read_level(name, trv);
     tr_level.prepare_level();
+    
+    Gui_DrawLoadScreen(50);
 
 #if 0
     tr_level.dump_textures();
 #endif
+    
+    Gui_DrawLoadScreen(100);
+
     World_Empty(&engine_world);
     World_Prepare(&engine_world);
+    
+    Gui_DrawLoadScreen(150);
+    
     TR_GenWorld(&engine_world, &tr_level);
-    engine_world.ID = 0;
+    
+    engine_world.ID   = 0;
     engine_world.name = 0;
     engine_world.type = 0;
     CVAR_set_val_s("game_level", name);
