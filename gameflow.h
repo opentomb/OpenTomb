@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define TR_GAMEFLOW_MAX_SECRETS 256
+
 typedef struct gameflow_manager_s
 {
     const char* Script;
@@ -13,7 +15,8 @@ typedef struct gameflow_manager_s
 
     bool        NextAction;
 
-    char        SecretsTriggerMap[256];//Info for what secrets have been triggered in a level
+    char        SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS]; //Info for what secrets have been triggered in a level
+    
 } gameflow_manager_t, *gameflow_manager_p;
 
 enum TR_GAMEFLOW_OP

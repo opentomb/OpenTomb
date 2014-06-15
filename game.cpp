@@ -638,9 +638,24 @@ void Game_Frame(btScalar time)
     Render_UpdateAnimTextures();
 }
 
+void Game_Prepare()
+{
+    // Set character values to default.
+    
+    Character_SetHealth(engine_world.Character, CHARACTER_OPTION_HEALTH_MAX);
+    Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
+    Character_SetSprint(engine_world.Character, CHARACTER_OPTION_SPRINT_MAX);
+    
+    // Set gameflow parameters to default.
+    
+    // Reset secret trigger map.
+    
+    memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
+}
+
 void Game_LevelTransition(uint16_t level_index)
 {
-    char   file_path[256];
+    char file_path[256];
     lua_GetLoadingScreen(engine_lua, gameflow_manager.CurrentLevelID, level_index, file_path);
     Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
