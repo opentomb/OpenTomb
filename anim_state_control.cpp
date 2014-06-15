@@ -54,7 +54,7 @@ void ent_set_underwater(entity_p ent)
 void ent_out_of_water(entity_p ent)
 {
     btScalar *v = ent->character->climb.point;
-    
+
     ent->transform[12 + 0] = v[0];
     ent->transform[12 + 1] = v[1];
     ent->transform[12 + 2] = v[2];
@@ -92,10 +92,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     next_fc.ccb = ent->character->convex_cb;
     next_fc.ccb->m_closestHitFraction = 1.0;
     next_fc.ccb->m_hitCollisionObject = NULL;
-    
+
     ent->anim_flags = ANIM_NORMAL_CONTROL;
     Character_UpdateCurrentHeight(ent);
-    
+
     low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height));
 
 
@@ -175,6 +175,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->next_state = TR_STATE_LARA_CROUCH_IDLE;
             }
+            /*else if(cmd->action)///@FIXME: Need to check if there is actually a block in front and also to activate it when pushed/pulled, don't push if next floor (after block) will not allow it!
+            {
+                ent->next_state = TR_STATE_LARA_PUSHABLE_GRAB;
+            }*/
             else if(cmd->move[0] == 1)
             {
                 if(cmd->shift)
@@ -776,7 +780,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             offset[2] += ent->bf.bb_max[2];
             i = Character_CheckNextStep(ent, offset, &next_fc);
             ent->dir_flag = ENT_MOVE_FORWARD;
-        
+
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
@@ -1113,20 +1117,54 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
              * Misk animations
              */
         case TR_STATE_LARA_PUSHABLE_GRAB:
-            /*if(cmd->action == 1 && cmd->move[0] == 0)
-            {
-                Entity_Frame(ent, engine_frame_time, ent->next_state);         // hold block
-            }
-            else if(cmd->action == 1 && cmd->move[0] == 1 && 1)                 // @FIXME
-            {
-                Entity_Frame(ent, engine_frame_time, 1);                        // push block
-            }
-            else if(cmd->action == 1 && cmd->move[0] ==-1 && 1)                 // @FIXME
-            {
-                Entity_Frame(ent, engine_frame_time, 2);                        // pop block
-            }*/
-            break;
 
+			ent->move_type = MOVE_ON_FLOOR;
+                        
+            if(cmd->action == 1)//If Lara is grabbing the block
+            {
+				ent->dir_flag = ENT_STAY;
+                ent->anim_flags = ANIM_LOOP_LAST_FRAME;         //We hold it (loop last frame)
+
+                if(cmd->move[0] == 1)//If player press up push
+                {
+					 ent->dir_flag = ENT_MOVE_FORWARD;
+                     ent->anim_flags = ANIM_NORMAL_CONTROL;
+                     ent->next_state = TR_STATE_LARA_PUSHABLE_PUSH;
+                }
+                else if(cmd->move[0] == -1)//If player press down pull
+                {
+					 ent->dir_flag = ENT_MOVE_BACKWARD;
+                     ent->anim_flags = ANIM_NORMAL_CONTROL;
+                     ent->next_state = TR_STATE_LARA_PUSHABLE_PULL;
+                }
+            }
+            else//Lara has let go of the block
+            {
+				ent->dir_flag = ENT_STAY;
+                ent->anim_flags = ANIM_NORMAL_CONTROL;          //We no longer loop last frame
+                ent->next_state = TR_STATE_LARA_STOP;           //Switch to next Lara state
+            }
+            break;
+        case TR_STATE_LARA_PUSHABLE_PUSH:
+            if(cmd->action == 0)//For TOMB4/5 If Lara is pushing and action let go, don't push
+            {
+                ent->next_state = TR_STATE_LARA_STOP;
+            }
+            else//Or we keep our last state (pushing)
+            {
+                ent->next_state = ent->last_state; //Repeat last state (TR4/5)
+            }
+            break;
+        case TR_STATE_LARA_PUSHABLE_PULL:
+            if(cmd->action == 0)//For TOMB4/5 If Lara is pulling and action let go, don't pull
+            {
+                ent->next_state = TR_STATE_LARA_STOP;
+            }
+            else//Or we keep our last state (pulling)
+            {
+                ent->next_state = ent->last_state; //Repeat last state (TR4/5)
+            }
+            break;
         case TR_STATE_LARA_ROLL_FORWARD:
             ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_FORWARD;
@@ -1280,7 +1318,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
                 // If Lara is moving backwards off the ledge we want to move Lara slightly forwards
                 // depending on the current angle.
-                
+
                 if(ent->dir_flag == ENT_MOVE_BACKWARD)
                 {
                     float old_speed = ent->speed.m_floats[2]; ///@FIXME Please find another way of doing this!
