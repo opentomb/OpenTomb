@@ -972,6 +972,11 @@ void DebugKeys(int button, int state)
                 frame = 0;
                 anim = 0;
                 break;
+                
+            case SDLK_f:
+                Audio_Send(105);
+                Gui_FadeStart(FADER_EFFECT, TR_FADER_DIR_TIMED);
+                break;
 
             case SDLK_o:
                 model--;

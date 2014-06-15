@@ -181,6 +181,14 @@ void Gui_InitFaders()
                     Fader[i].SetScaleMode(TR_FADER_SCALE_ZOOM);
                 }
                 break;
+                
+            case FADER_EFFECT:
+                {
+                    Fader[i].SetAlpha(255);
+                    Fader[i].SetColor(255,180,0);
+                    Fader[i].SetBlendingMode(BM_MULTIPLY);
+                    Fader[i].SetSpeed(10,800);
+                }
         }
     }
 }
@@ -429,7 +437,10 @@ void Gui_DrawCrosshair()
 
 void Gui_DrawFaders()
 {
-    Fader[FADER_LOADSCREEN].Show();
+    for(int i = 0; i < FADER_LASTINDEX; i++)
+    {
+        Fader[i].Show();
+    }
 }
 
 void Gui_DrawBars()
@@ -489,16 +500,13 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         case BM_HIDE:
             return;
         case BM_MULTIPLY:
-            glBlendFunc(GL_ONE, GL_ONE);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             break;
-        case BM_INVERT_SRC:
-            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
-            break;
-        case BM_INVERT_DEST:
-            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+        case BM_SIMPLE_SHADE:
+            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA);
             break;
         case BM_SCREEN:
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         default:
         case BM_OPAQUE:
@@ -607,6 +615,7 @@ gui_Fader::gui_Fader()
     SetBlendingMode(BM_OPAQUE);
     SetAlpha(255);
     SetSpeed(500);
+    SetDelay(0);
     
     active             = false;
     complete           = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
@@ -864,11 +873,11 @@ void gui_Fader::Show()
     }
     else    // Timed fader case
     {
-        if(current_time < max_time)
+        if(current_time <= max_time)
         {
             if(current_alpha == max_alpha)
             {
-                current_time += engine_frame_time * speed;
+                current_time += engine_frame_time;
             }
             else if(current_alpha < max_alpha)
             {
@@ -883,7 +892,7 @@ void gui_Fader::Show()
         {
             if(current_alpha > 0.0)
             {
-                current_alpha -= engine_frame_time * speed;
+                current_alpha -= engine_frame_time * speed_optional;
             }
             else
             {
@@ -908,7 +917,8 @@ void gui_Fader::Show()
     
     if(texture)
     {
-        GLfloat tex_color[4] = {255, 255, 255, current_alpha}; // Texture is always white, except alpha!
+        // Texture is always modulated with alpha!
+        GLfloat tex_color[4] = {current_alpha, current_alpha, current_alpha, current_alpha};
         
         if(texture_scale_mode == TR_FADER_SCALE_LETTERBOX)
         {
