@@ -1198,8 +1198,18 @@ int lua_SetGame(lua_State *lua)
 
     if(top != 1)
     {
-        Con_Printf("Wrong arguments count. Must be (gamename).");
+        Con_Printf("Wrong arguments count. Must be (gameversion).");
         return 0;
+    }
+
+    lua_getglobal(lua, "GetTitleScreen");
+
+    if(lua_isfunction(lua, -1))                                        // If function exists...
+    {
+        lua_pushnumber(lua, id);                                       // add to stack first argument
+        lua_pcall(lua, 1, 1, 0);                                       // call that function
+        Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
+        Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
     }
 
     lua_getglobal(lua, "GetGameflowScriptPath");
@@ -1216,11 +1226,8 @@ int lua_SetGame(lua_State *lua)
         
         return 1;
     }
-    else
-    {
-        lua_settop(lua, top);   // restore LUA stack
-    }
     
+    lua_settop(lua, top);   // restore LUA stack
     return 0;
 }
 
