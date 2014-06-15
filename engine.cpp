@@ -1652,9 +1652,8 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Num textures = %d", tr_level.textile32_count);
     luaL_dofile(engine_lua, "scripts/autoexec.lua");
 
-    Character_SetHealth(engine_world.Character, CHARACTER_OPTION_HEALTH_MAX);
-    Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
-    Character_SetSprint(engine_world.Character, CHARACTER_OPTION_SPRINT_MAX);
+    Game_Prepare();
+    
     Render_SetWorld(&engine_world);
     
     return 1;

@@ -31,6 +31,7 @@ int  Game_Save(const char* name);
 btScalar Game_Tick(btScalar *game_logic_time);
 void     Game_Frame(btScalar time);
 
+void Game_Prepare();
 void Game_LevelTransition(uint16_t level_index);
 
 void Game_ApplyControls(struct entity_s *ent);

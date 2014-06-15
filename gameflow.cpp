@@ -53,10 +53,6 @@ void Gameflow_Do()
 
                         // Now, load the level!
                         Engine_LoadMap(lua_tostring(engine_lua, -1));
-
-                        //Now we reset our secret trigger map!
-                        memset(gameflow_manager.SecretsTriggerMap, 0, sizeof gameflow_manager.SecretsTriggerMap);
-
                     }
                     else
                     {
