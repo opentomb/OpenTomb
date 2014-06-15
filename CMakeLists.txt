@@ -18,10 +18,10 @@ IF(MINGW)
         # We are cross compiling on Linux with the MinGW toolchain.
         # zlib and SDL2 must be installed for the cross compiler
         MESSAGE(STATUS "MinGW Cross-Compilation")
-        
+
         SET(ZLIB_INCLUDE_DIRS "/usr/${COMPILER_PREFIX}/include")
         SET(ZLIB_LIBRARIES z)
-        
+
         SET(SDL2_INCLUDE_DIRS "/usr/${COMPILER_PREFIX}/include/SDL2")
         SET(SDL2_LIBRARIES
             /usr/${COMPILER_PREFIX}/lib/libmingw32.a
@@ -43,12 +43,14 @@ IF(MINGW)
 #            /usr/${COMPILER_PREFIX}/lib/libwinpthread.a # works as static linkage with mingw-w64/gcc4.8 on ubuntu 14.04 but not on ubuntu 12.04
             /usr/${COMPILER_PREFIX}/lib/libpthreadGC2.a # GC-inlined build lib together with pthreadGC2.dll
         )
+        SET(SDL2_IMAGE_INCLUDE_DIRS "/include/SDL2")
+        SET(SDL2_IMAGE_LIBRARIES /usr/${COMPILER_PREFIX}/lib/libSDL2_image.a)
         ADD_DEFINITIONS("-Dmain=SDL_main")
         SET(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
     ELSE()
         # We are probably creating project files for CodeBlocks on Windows
         MESSAGE(STATUS "MinGW Compilation")
-        
+
         # zlib must be installed in the MinGW directory
         SET(ZLIB_INCLUDE_DIRS "/include")
         SET(ZLIB_LIBRARIES z)
@@ -56,6 +58,8 @@ IF(MINGW)
         # SDL2 must be installed in the MinGW directory
         SET(SDL2_INCLUDE_DIRS "/include/SDL2")
         SET(SDL2_LIBRARIES SDL2 pthread)
+        SET(SDL2_IMAGE_INCLUDE_DIRS "/include/SDL2")
+        SET(SDL2_IMAGE_LIBRARIES SDL2_image)
         ADD_DEFINITIONS("-DSDL_MAIN_HANDLED")
     ENDIF()
 
@@ -66,6 +70,7 @@ ELSE()
 
     INCLUDE(FindPkgConfig)
     PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+    PKG_SEARCH_MODULE(SDL2_IMAGE REQUIRED SDL2_image)
 
     # disable glext prototypes
     ADD_DEFINITIONS("-DGL_GLEXT_PROTOTYPES")
@@ -87,6 +92,7 @@ INCLUDE_DIRECTORIES(
     ${LUA_DIR}
     ${OGG_DIR}
     ${SDL2_INCLUDE_DIRS}
+    ${SDL2_IMAGE_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
 
@@ -166,6 +172,7 @@ TARGET_LINK_LIBRARIES(
     ${PROJECT_NAME}
     ${OPENGL_LIBRARIES}
     ${SDL2_LIBRARIES}
+    ${SDL2_IMAGE_LIBRARIES}
     ${ZLIB_LIBRARIES}
 )
 
