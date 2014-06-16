@@ -460,6 +460,7 @@ void Audio_UpdateListenerByEntity(struct entity_s *ent);
 
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
+void Audio_LoadOverridedSamples();
 
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 

@@ -361,6 +361,78 @@ int lua_GetNumTracks(lua_State *lua)
     return (int)num_tracks;
 }
 
+
+bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask)
+{
+    bool result = false;
+    const char *real_path;
+        
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+        
+        lua_getglobal(lua, "GetOverridedSamplesInfo");
+
+        if(lua_isfunction(lua, -1))
+        {
+            size_t string_length = 0;
+            
+            lua_pushinteger(lua, engine_world.version);
+            lua_pcall(lua, 1, 3, 0);
+            
+            real_path   = lua_tolstring(lua, -1, &string_length);
+           *num_sounds  = (int)lua_tointeger(lua, -2);
+           *num_samples = (int)lua_tointeger(lua, -3);
+        
+            strcpy(sample_name_mask, real_path);
+            
+            if((*num_sounds != -1) && (*num_samples != -1) && (strcmp(real_path, "NONE") != 0))
+            {
+                result = true;
+            }
+        }
+        
+        lua_settop(lua, top);
+    }
+    
+    // If Lua environment doesn't exist or script function returned -1 in one of the
+    // fields, it means that corresponding sample override table is missing or not
+    // valid - hence, return false.
+    
+    return result;
+}
+
+
+bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_number, int *samples_count)
+{
+    bool result = false;
+    
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+        lua_getglobal(lua, "GetOverridedSample");
+
+        if(lua_isfunction(lua, -1))
+        {
+            lua_pushinteger(lua, engine_world.version);
+            lua_pushinteger(lua, sound_id);
+            lua_pcall(lua, 2, 2, 0);
+            
+           *first_sample_number = (int)lua_tointeger(lua, -2);
+           *samples_count       = (int)lua_tointeger(lua, -1);
+            
+            if((*first_sample_number != -1) && (*samples_count != -1))
+                result = true;
+        }
+        else
+
+        lua_settop(lua, top);
+    }
+    
+    return result;
+}
+
+
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
 {
     size_t  string_length  = 0;
@@ -408,6 +480,7 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
     return false;
 }
 
+
 bool lua_GetLoadingScreen(lua_State *lua, int level_index, int next_level, char *pic_path)
 {
     size_t  string_length  = 0;
@@ -452,6 +525,8 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, int next_level, char 
     
     return false;
 }
+
+
 /**
  * set tbl[key]
  */

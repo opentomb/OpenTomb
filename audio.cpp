@@ -1601,6 +1601,13 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
         engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
     }
     
+    // Try to override samples via script.
+    // If there is no script entry exist, we just leave default samples.
+    // NB! We need to override samples AFTER audio effects array is inited, as override
+    //     routine refers to existence of certain audio effect in level.
+    
+    Audio_LoadOverridedSamples();
+    
     // Quick TR1 fix for underwater looped sound.
     
     if(engine_world.version < TR_II)
@@ -1628,6 +1635,43 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     
     return 1;
 }
+
+
+void Audio_LoadOverridedSamples() 
+{
+    int  num_samples, num_sounds;
+    int  sample_index, sample_count;
+    char sample_name_mask[256];
+    char sample_name[256];
+    
+    if(lua_GetOverridedSamplesInfo(engine_lua, &num_samples, &num_sounds, sample_name_mask))
+    {
+        int buffer_counter = 0;
+        
+        for(int i = 0; i < engine_world.audio_map_count; i++)
+        {
+            if(engine_world.audio_map[i] != -1)
+            {
+                if(lua_GetOverridedSample(engine_lua, i, &sample_index, &sample_count))
+                {
+                    for(int j = 0; j < sample_count; j++, buffer_counter++)
+                    {
+                        sprintf(sample_name, sample_name_mask, (sample_index + j));
+                        if(Engine_FileFound(sample_name))
+                        {
+                            Audio_LoadALbufferFromWAV_File(engine_world.audio_buffers[buffer_counter], sample_name);
+                        }
+                    }
+                }
+                else
+                {
+                    buffer_counter += engine_world.audio_effects[(engine_world.audio_map[i])].sample_count;
+                }
+            }
+        }
+    }
+}
+
 
 void Audio_InitGlobals()
 {
