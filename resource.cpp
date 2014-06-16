@@ -700,6 +700,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
     luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
+    luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
 
     Gui_DrawLoadScreen(250);
 

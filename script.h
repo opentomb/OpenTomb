@@ -35,6 +35,9 @@ int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs);
 
 int SC_ParseEntity(char **ch, struct entity_s *ent);
 
+bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask);
+bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_number, int *samples_count);
+
 int  lua_GetGlobalSound(lua_State *lua, int global_sound_id);
 int  lua_GetSecretTrackNumber(lua_State *lua);
 int  lua_GetNumTracks(lua_State *lua);
