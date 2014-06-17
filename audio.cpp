@@ -1868,10 +1868,9 @@ void Audio_LogOGGError(int code)
 int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
 {
     SDL_AudioSpec wav_spec;
-    SDL_AudioCVT cvt;
-    Uint8 *wav_buffer;
-    Uint32 wav_length, new_len;
-    int ret = 0;
+    Uint8        *wav_buffer;
+    Uint32        wav_length;
+
     SDL_RWops *src = SDL_RWFromMem(sample_pointer, sample_size);
     
     // Decode WAV structure with SDL methods.
@@ -1881,10 +1880,8 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     if(SDL_LoadWAV_RW(src, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Sys_DebugLog(LOG_FILENAME, "Error: can't load sample #%03d from sample block!", buf_number);
-        //SDL_FreeRW(src);
         return -1;
     }
-    //SDL_FreeRW(src);
     
     // Uncomp_sample_size explicitly specifies amount of raw sample data
     // to load into buffer. It is only used in TR4/5 with ADPCM samples,
@@ -1902,95 +1899,25 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
-#if 1
-    int FrameSize = wav_spec.channels * 4;                                      // channels * sizeof(float32)
-    if(wav_spec.channels == 1)                                                  // mono
-    {
-        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, 1, 44100);
-        cvt.len = uncomp_sample_size;
-        new_len = cvt.len * cvt.len_mult;
-        if(new_len % FrameSize)
-        {
-            new_len += FrameSize - (new_len % FrameSize);                       // make align
-        }
-        cvt.buf = (Uint8*)calloc(new_len, 1);
-        memcpy(cvt.buf, wav_buffer, cvt.len);
-        if(cvt.needed)
-        {
-            SDL_ConvertAudio(&cvt);
-        }
-        alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, cvt.buf, new_len, 44100);
-        free(cvt.buf);
-    }
-    else if(wav_spec.channels == 2)                                             // stereo
-    {
-        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, 2, 44100);
-        cvt.len = uncomp_sample_size;
-        new_len = cvt.len * cvt.len_mult;
-        if(new_len % FrameSize)
-        {
-            new_len += FrameSize - (new_len % FrameSize);                       // make align
-        }
-        cvt.buf = (Uint8*)calloc(new_len, 1);
-        memcpy(cvt.buf, wav_buffer, cvt.len);
-        if(cvt.needed)
-        {
-            SDL_ConvertAudio(&cvt);
-        }
-        alBufferData(buf_number, AL_FORMAT_STEREO_FLOAT32, cvt.buf, new_len, 44100);
-        free(cvt.buf);
-    }
-#else
-    switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
-    {
-        case 8:
-            if(wav_spec.channels == 1)                                          // mono
-            {
-                alBufferData(buf_number, AL_FORMAT_MONO8, wav_buffer, uncomp_sample_size, wav_spec.freq);
-            }
-            else if(wav_spec.channels == 2)                                     // stereo
-            {
-                alBufferData(buf_number, AL_FORMAT_STEREO8, wav_buffer, uncomp_sample_size, wav_spec.freq);
-            }
-            else                                                                // unsupported
-            {
-                //Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
-                ret = -3;
-            }
-            break;
-            
-        case 16:
-            if(wav_spec.channels == 1)                                          // mono
-            {
-                alBufferData(buf_number, AL_FORMAT_MONO16, wav_buffer, uncomp_sample_size, wav_spec.freq);
-            }
-            else if(wav_spec.channels == 2)                                     // stereo
-            {
-                alBufferData(buf_number, AL_FORMAT_STEREO16, wav_buffer, uncomp_sample_size, wav_spec.freq);
-            }
-            else                                                                // unsupported
-            {
-                //Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
-                ret = -3;
-            }
-    }
-#endif
+
+    bool result = Audio_FillALBuffer(buf_number, wav_buffer, wav_length, wav_spec);
     
     SDL_FreeWAV(wav_buffer);
-    return ret;
+    
+    return (result)?(0):(-3);
 }
 
 
 int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 {
-    SDL_AudioSpec wav_spec;
-    SDL_AudioCVT cvt;
-    Uint8 *wav_buffer;
-    Uint32 wav_length, new_len;
-    int ret = 0;
-    SDL_RWops *file;
+    SDL_RWops     *file;
+    SDL_AudioSpec  wav_spec;
+    SDL_AudioCVT   cvt;
+    Uint8         *wav_buffer;
+    Uint32         wav_length;
     
     file = SDL_RWFromFile(fname, "rb");
+    
     if(!file)
     {
         Con_Printf("Error: can not open \"%s\"", fname);
@@ -2000,88 +1927,101 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
         Con_Printf("Error: bad file format \"%s\"", fname);
-        //SDL_FreeRW(file);
         return -2;
     }
-    //SDL_FreeRW(file);
 
-#if 1
-    int FrameSize = wav_spec.channels * 4;                                      // channels * sizeof(float32)
-    if(wav_spec.channels == 1)                                                  // mono
-    {
-        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, 1, 44100);
-        cvt.len = wav_length;
-        new_len = cvt.len * cvt.len_mult;
-        if(new_len % FrameSize)
-        {
-            new_len += FrameSize - (new_len % FrameSize);                       // make align
-        }
-        cvt.buf = (Uint8*)calloc(new_len, 1);
-        memcpy(cvt.buf, wav_buffer, cvt.len);
-        if(cvt.needed)
-        {
-            SDL_ConvertAudio(&cvt);
-        }
-        alBufferData(buf_number, AL_FORMAT_MONO_FLOAT32, cvt.buf, new_len, 44100);
-        free(cvt.buf);
-    }
-    else if(wav_spec.channels == 2)                                             // stereo
-    {
-        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, 2, 44100);
-        cvt.len = wav_length;
-        new_len = cvt.len * cvt.len_mult;
-        if(new_len % FrameSize)
-        {
-            new_len += FrameSize - (new_len % FrameSize);                       // make align
-        }
-        cvt.buf = (Uint8*)calloc(new_len, 1);
-        memcpy(cvt.buf, wav_buffer, cvt.len);
-        if(cvt.needed)
-        {
-            SDL_ConvertAudio(&cvt);
-        }
-        alBufferData(buf_number, AL_FORMAT_STEREO_FLOAT32, cvt.buf, new_len, 44100);
-        free(cvt.buf);
-    }
-#else
-    switch(wav_spec.format & SDL_AUDIO_MASK_BITSIZE)
-    {
-        case 8:
-            if(wav_spec.channels == 1)                                          // mono
-            {
-                alBufferData(buf_number, AL_FORMAT_MONO8, wav_buffer, wav_length, wav_spec.freq);
-            }
-            else if(wav_spec.channels == 2)                                     // stereo
-            {
-                alBufferData(buf_number, AL_FORMAT_STEREO8, wav_buffer, wav_length, wav_spec.freq);
-            }
-            else                                                                // unsupported
-            {
-                //Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
-                ret = -3;
-            }
-            break;
-            
-        case 16:
-            if(wav_spec.channels == 1)                                          // mono
-            {
-                alBufferData(buf_number, AL_FORMAT_MONO16, wav_buffer, wav_length, wav_spec.freq);
-            }
-            else if(wav_spec.channels == 2)                                     // stereo
-            {
-                alBufferData(buf_number, AL_FORMAT_STEREO16, wav_buffer, wav_length, wav_spec.freq);
-            }
-            else                                                                // unsupported
-            {
-                //Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
-                ret = -3;
-            }
-    }
-#endif
+    bool result = Audio_FillALBuffer(buf_number, wav_buffer, wav_length, wav_spec);
     
     SDL_FreeWAV(wav_buffer);
-    return ret;
+    
+    return (result)?(0):(-3);
 }
+
+bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler)
+{
+    if(wav_spec.channels > 2)   // We can't use non-mono and barely can use stereo samples.
+    {
+        Sys_DebugLog(LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
+        return false;
+    }
+    
+    uint8_t sample_bitsize = (uint8_t)(wav_spec.format & SDL_AUDIO_MASK_BITSIZE);
+    
+    if((sample_bitsize != 32) && (sample_bitsize != 16) && (sample_bitsize != 8))
+    {
+        Sys_DebugLog(LOG_FILENAME, "Can't load sample - wrong bitsize (%d)", sample_bitsize);
+        return false;
+    }
+        
+    if(use_SDL_resampler)
+    {
+        SDL_AudioCVT cvt;
+        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, wav_spec.channels, 44100);
+        
+        int    FrameSize = wav_spec.channels * 4;                                      // channels * sizeof(float32)
+        Uint32 new_len = buffer_size * cvt.len_mult;
+        
+        cvt.len = buffer_size;
+        
+        if(new_len % FrameSize)
+        {
+            new_len += FrameSize - (new_len % FrameSize);                       // make align
+        }
+        
+        cvt.buf = (Uint8*)calloc(new_len, 1);
+        memcpy(cvt.buf, buffer_data, cvt.len);
+        
+        if(cvt.needed)
+        {
+            SDL_ConvertAudio(&cvt);
+        }
+        
+        ALenum buffer_format = (wav_spec.channels == 1)?(AL_FORMAT_MONO_FLOAT32):(AL_FORMAT_STEREO_FLOAT32);
+        
+        alBufferData(buf_number, buffer_format, cvt.buf, new_len, 44100);
+        free(cvt.buf);
+    }
+    else
+    {
+        ALenum sample_format;
+        
+        if(wav_spec.channels == 1)
+        {
+            switch(sample_bitsize)
+            {
+                case 8:
+                    sample_format = AL_FORMAT_MONO8;
+                    break;
+                case 16:
+                    sample_format = AL_FORMAT_MONO16;
+                    break;
+                case 32:
+                    sample_format = AL_FORMAT_MONO_FLOAT32;
+                    break;
+            }
+        }
+        else
+        {
+            switch(sample_bitsize)
+            {
+                case 8:
+                    sample_format = AL_FORMAT_STEREO8;
+                    break;
+                case 16:
+                    sample_format = AL_FORMAT_STEREO16;
+                    break;
+                case 32:
+                    sample_format = AL_FORMAT_STEREO_FLOAT32;
+                    break;
+            }
+        }
+        
+        alBufferData(buf_number, sample_format, buffer_data, buffer_size, wav_spec.freq);
+    }
+    
+    return true;
+}
+
 
 /**
  * Updates listener parameters by camera structure. Forcorrect speed calculation
