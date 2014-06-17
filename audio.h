@@ -19,6 +19,7 @@ extern "C" {
 #include "script.h"
 #include "system.h"
 
+#include <SDL2/SDL_audio.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -458,6 +459,7 @@ void Audio_UpdateSources();      // Main sound loop.
 void Audio_UpdateListenerByCamera(struct camera_s *cam);
 void Audio_UpdateListenerByEntity(struct entity_s *ent);
 
+bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
 void Audio_LoadOverridedSamples();
