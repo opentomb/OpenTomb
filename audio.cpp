@@ -1859,7 +1859,7 @@ void Audio_LogOGGError(int code)
             Sys_DebugLog(LOG_FILENAME, "OGG error: Internal logic fault (bug or heap/stack corruption.");
             break;
         default:
-            //Sys_DebugLog(LOG_FILENAME, "OGG error: Unknown Ogg error.");
+            Sys_DebugLog(LOG_FILENAME, "OGG error: Unknown Ogg error.");
             break;
     }
 }
@@ -1900,11 +1900,11 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
 
-    bool result = Audio_FillALBuffer(buf_number, wav_buffer, wav_length, wav_spec);
+    bool result = Audio_FillALBuffer(buf_number, wav_buffer, uncomp_sample_size, wav_spec);
     
     SDL_FreeWAV(wav_buffer);
     
-    return (result)?(0):(-3);
+    return (result)?(0):(-3);   // Zero means success.
 }
 
 
@@ -1934,7 +1934,7 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
     
     SDL_FreeWAV(wav_buffer);
     
-    return (result)?(0):(-3);
+    return (result)?(0):(-3);   // Zero means success.
 }
 
 bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler)
@@ -1945,27 +1945,36 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
         return false;
     }
     
+    // Extract bitsize from SDL audio spec for further usage.
     uint8_t sample_bitsize = (uint8_t)(wav_spec.format & SDL_AUDIO_MASK_BITSIZE);
     
+    // Check if bitsize is supported.
+    // We rarely encounter samples with exotic bitsizes, but just in case...
     if((sample_bitsize != 32) && (sample_bitsize != 16) && (sample_bitsize != 8))
     {
         Sys_DebugLog(LOG_FILENAME, "Can't load sample - wrong bitsize (%d)", sample_bitsize);
         return false;
     }
-        
+    
+    // SDL resampler (SDL_ConvertAudio) is actually not needed, as OpenAL works
+    // normally with samples of different formats. Also, it breaks with non-standard
+    // sample rates, ruining whole audio engine in the process. Hence, SDL resampler
+    // is silently ignored by default, but you still can enable it by passing additional
+    // boolean "true" argument to the function.
+    
     if(use_SDL_resampler)
     {
         SDL_AudioCVT cvt;
         SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, wav_spec.channels, 44100);
         
-        int    FrameSize = wav_spec.channels * 4;                                      // channels * sizeof(float32)
+        int    FrameSize = wav_spec.channels * 4;           // channels * sizeof(float32)
         Uint32 new_len = buffer_size * cvt.len_mult;
         
         cvt.len = buffer_size;
         
         if(new_len % FrameSize)
         {
-            new_len += FrameSize - (new_len % FrameSize);                       // make align
+            new_len += FrameSize - (new_len % FrameSize);   // make align
         }
         
         cvt.buf = (Uint8*)calloc(new_len, 1);
@@ -1981,7 +1990,7 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
         alBufferData(buf_number, buffer_format, cvt.buf, new_len, 44100);
         free(cvt.buf);
     }
-    else
+    else    // Standard OpenAL sample loading process.
     {
         ALenum sample_format;
         
