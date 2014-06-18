@@ -527,6 +527,13 @@ void TR_Level::read_tr_moveable(SDL_RWops * const src, tr_moveable_t & moveable)
 	moveable.mesh_tree_index = read_bitu32(src);
 	moveable.frame_offset = read_bitu32(src);
 	moveable.animation_index = read_bitu16(src);
+	
+	// Disable unused skybox polygons.
+	if(  ((this->game_version == TR_III) && (moveable.object_id == 355)) ||
+        (((this->game_version == TR_II ) || (this->game_version == TR_II_DEMO)) && (moveable.object_id == 254)) )
+    {
+        this->meshes[(this->mesh_indices[moveable.starting_mesh])].num_coloured_triangles = 16;
+    }
 }
 
 /// \brief reads an item definition.
