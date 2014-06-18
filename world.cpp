@@ -20,7 +20,7 @@
 #include "script.h"
 #include "bounding_volume.h"
 #include "redblack.h"
-
+#include "console.h"
 
 void Room_Empty(room_p room)
 {
@@ -46,7 +46,7 @@ void Room_Empty(room_p room)
         room->portals = NULL;
         room->portal_count = 0;
     }
-    
+
     Frustum_Delete(room->frustum);
     room->frustum = NULL;
 
@@ -241,13 +241,13 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
 
 int Room_IsOverlapped(room_p r0, room_p r1)
 {
-    if(r0->bb_min[0] >= r1->bb_max[0] || r0->bb_max[0] <= r1->bb_min[0] || 
+    if(r0->bb_min[0] >= r1->bb_max[0] || r0->bb_max[0] <= r1->bb_min[0] ||
        r0->bb_min[1] >= r1->bb_max[1] || r0->bb_max[1] <= r1->bb_min[1] ||
        r0->bb_min[2] >= r1->bb_max[2] || r0->bb_max[2] <= r1->bb_min[2])
     {
         return 0;
     }
-    
+
     return !Room_IsJoined(r0, r1);
 }
 
@@ -267,7 +267,7 @@ void World_Prepare(world_p world)
     world->type = 0;
     world->entity_tree = NULL;
     world->Character = NULL;
-    
+
     world->audio_sources = NULL;
     world->audio_sources_count = 0;
     world->audio_buffers = NULL;
@@ -280,7 +280,7 @@ void World_Prepare(world_p world)
     world->stream_tracks_count = 0;
     world->stream_track_map = NULL;
     world->stream_track_map_count = 0;
-    
+
     world->tex_count = 0;
     world->textures = 0;
     world->floor_data = NULL;
@@ -300,12 +300,12 @@ void World_Empty(world_p world)
     int32_t i;
     engine_container_p cont;
     extern entity_p last_rmb;
-    
+
     last_rmb = NULL;
     Engine_LuaClearTasks();
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
-    
+
     // Now we can delete all other
     for(i=0;i<world->room_count;i++)
     {
@@ -332,7 +332,7 @@ void World_Empty(world_p world)
     /*entity empty*/
     RB_Free(world->entity_tree);
     world->entity_tree = NULL;
-    
+
     if(world->Character)
     {
         Entity_Clear(world->Character);
@@ -407,13 +407,13 @@ void World_Empty(world_p world)
         free(world->textures);
         world->textures = NULL;
     }
-    
+
     if(world->tex_atlas)
     {
         BorderedTextureAtlas_Destroy(world->tex_atlas);
         world->tex_atlas = NULL;
     }
-                
+
     if(world->anim_sequences_count)
     {
         for(i = 0; i < world->anim_sequences_count; i++)
@@ -454,18 +454,18 @@ struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
 {
     entity_p ent = NULL;
     RedBlackNode_p node;
-    
+
     if(world->Character && (world->Character->ID == id))
     {
         return world->Character;
     }
-       
+
     node = RB_SearchNode(&id, world->entity_tree);
     if(node)
     {
         ent = (entity_p)node->data;
     }
-    
+
     return ent;
 }
 
@@ -484,7 +484,7 @@ room_p Room_FindPos(world_p w, btScalar pos[3])
     room_p r = w->rooms;
     for(i=0;i<w->room_count;i++,r++)
     {
-        if(r->active && 
+        if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
@@ -516,13 +516,13 @@ room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room)
 {
     unsigned int i;
     room_p r;
-    
+
     if(room == NULL)
     {
         return Room_FindPos(w, pos);
     }
 
-    if(room->active && 
+    if(room->active &&
        (pos[0] >= room->bb_min[0]) && (pos[0] < room->bb_max[0]) &&
        (pos[1] >= room->bb_min[1]) && (pos[1] < room->bb_max[1]) &&
        (pos[2] >= room->bb_min[2]) && (pos[2] < room->bb_max[2]))
@@ -611,7 +611,7 @@ room_sector_p Room_GetSector(room_p room, btScalar pos[3])
      * column index system
      * X - column number, Y - string number
      */
-    ret = room->sectors + x * room->sectors_y + y;    
+    ret = room->sectors + x * room->sectors_y + y;
     return ret;
 }
 
@@ -637,7 +637,7 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
      * X - column number, Y - string number
      */
     ret = room->sectors + x * room->sectors_y + y;
-    
+
     /*
      * resolve Z overlapped neighboard rooms. room below has more priority.
      */
@@ -645,12 +645,12 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
     {
         return ret->sector_below;
     }
-    
+
     if(ret->sector_above && (ret->sector_above->floor <= pos[2]))
     {
         return ret->sector_above;
     }
-    
+
     return ret;
 }
 
@@ -659,12 +659,12 @@ void Room_Enable(room_p room)
 {
     int i;
     engine_container_p cont;
-    
+
     if(room->active)
     {
         return;
     }
-    
+
     if(room->bt_body)
     {
         bt_engine_dynamicsWorld->addRigidBody(room->bt_body);
@@ -676,7 +676,9 @@ void Room_Enable(room_p room)
             bt_engine_dynamicsWorld->addRigidBody(room->static_mesh[i].bt_body);
         }
     }
-    
+
+    ///@FIXME: This is causing a critical crash on some rooms when it is already alternate flipping back to original!
+    /*
     for(cont = room->containers;cont;cont = cont->next)
     {
         switch(cont->object_type)
@@ -685,8 +687,8 @@ void Room_Enable(room_p room)
                 Entity_Disable((entity_p)cont->object);
                 break;
         }
-    }
-    
+    }*/
+
     room->active = 1;
 }
 
@@ -694,12 +696,12 @@ void Room_Enable(room_p room)
 void Room_Disable(room_p room)
 {
     int i;
-    
+
     if(!room->active)
     {
         return;
     }
-    
+
     if(room->bt_body)
     {
         bt_engine_dynamicsWorld->removeRigidBody(room->bt_body);
@@ -711,28 +713,112 @@ void Room_Disable(room_p room)
             bt_engine_dynamicsWorld->removeRigidBody(room->static_mesh[i].bt_body);
         }
     }
-    
+
     room->active = 0;
 }
 
-
 void Room_SwapAlternate(room_p room)
 {
-    /*if(room->alternate_room)
+    if(Room_IsAlternate(room))//If room is already an alternate room
     {
-        if(room->active)
+        //Find our original room
+        for(int i=0;i<engine_world.room_count;i++)//For every room in the world itself
         {
-            Room_Disable(room);
-            Room_Enable(room->alternate_room);
+            if(engine_world.rooms[i].alternate_room == room)//If our input room matches a world's alternate room this room is our original room!
+            {
+                Room_Disable(room);//Disable current room
+                Room_Enable(&engine_world.rooms[i]);//Enable original room
+                Room_SwapPortals(room, &engine_world.rooms[i]);//Update portals to match this room
+                //Room_SwapItems(room, &engine_world.rooms[i]);//Update items to match this room
+                break;
+            }
+        }
+    }
+    else
+    {
+        if(room->alternate_room)//If our input room has an alternate room
+        {
+            Room_Disable(room);//Disable current room
+            Room_Enable(room->alternate_room);//Enable alternate room
+            Room_SwapPortals(room, room->alternate_room);//Update portals to match this room
+            //Room_SwapItems(room, room->alternate_room);//Update items to match this room
         }
         else
         {
-            Room_Enable(room);
-            Room_Disable(room->alternate_room);
+            Con_Printf("Fatal Error: Room %d has no alternate room to enable!", room->ID);
+        }
+    }
+}
+
+bool Room_IsAlternate(room_p room)
+{
+    bool is_alternate;
+
+    if(room->alternate_room)//If alternate room exists it's obviously not an alternate room!
+    {
+        is_alternate = false;
+    }
+    else
+    {
+        for(int i=0;i<engine_world.room_count;i++)//For every room in the world itself
+        {
+            if(engine_world.rooms[i].alternate_room == room)//If our input room matches a world's alternate room it is already an alternate room itself!
+            {
+                is_alternate = true;
+                break;
+            }
+        }
+    }
+    return is_alternate;
+}
+
+void Room_SwapPortals(room_p room, room_p dest_room)
+{
+    //Update portals in room rooms
+    for(int i=0;i<engine_world.room_count;i++)//For every room in the world itself
+    {
+        for(int j=0;j<engine_world.rooms[i].portal_count;j++)//For every portal in this room
+        {
+            if(engine_world.rooms[i].portals[j].dest_room->ID == room->ID)//If a portal is linked to the input room
+            {
+                engine_world.rooms[i].portals[j].dest_room = dest_room;//The portal destination room is the destination room!
+                //Con_Printf("The current room %d! has room %d joined to it!", room->ID, i);
+            }
+        }
+    }
+
+ //Update portal adjoining rooms portals only (old code, might be more optimized for singular room swaps)
+ /*for(int i=0;i<room->portal_count;i++)//For each portal in the input room
+   {
+        for(int j=0;j<room->portals[i].dest_room->portal_count;j++)//For each portal in the destination room from a portal in the input room
+        {
+            if(engine_world.rooms[room->portals[i].dest_room->ID].portals[j].dest_room->ID == room->ID)//If the portal in the input room's, destination room is the input room, this is the one we want to update!
+            {
+                engine_world.rooms[room->portals[i].dest_room->ID].portals[j].dest_room = parent_room;//Update portal destination room to the alternate room
+            }
         }
     }*/
 }
 
+void Room_SwapItems(room_p room, room_p dest_room)
+{
+    ///@FIXME: This won't work :/
+    entity_p ent;
+
+    //Update items in room rooms
+    for(int i=0;i<engine_world.entity_tree->node_count;i++)//For every item in the world itself
+    {
+        ent = World_GetEntityByID(&engine_world, i);//Get entity
+
+        if(ent)
+        {
+            if(ent->self->room->ID == room->ID)//If the item is in the room
+            {
+                ent->self->room = dest_room;
+            }
+        }
+    }
+}
 
 int World_AddEntity(world_p world, struct entity_s *entity)
 {
