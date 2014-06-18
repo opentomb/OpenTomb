@@ -1027,7 +1027,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->period = 1.0 / 30.0;
 
-    entity->last_state    = anim->state_id;
+    entity->last_state = anim->state_id;
     entity->next_state = anim->state_id;
     entity->current_speed = anim->speed;
     entity->current_animation = animation;
@@ -1134,7 +1134,7 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
 
     *frame = (entity->frame_time + time) / entity->period;
     *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
-    *anim = entity->current_animation;
+    *anim  = entity->current_animation;
 
     /*
      * Flag has a highest priority
@@ -1144,7 +1144,7 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
         if(*frame >= curr_anim->frames_count - 1)
         {
             *frame = curr_anim->frames_count - 1;
-            *anim = entity->current_animation;                                  // paranoid dublicate
+            *anim  = entity->current_animation;                                  // paranoid dublicate
         }
         return;
     }
@@ -1157,12 +1157,12 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
         if(curr_anim->next_anim)
         {
             *frame = curr_anim->next_frame;
-            *anim = curr_anim->next_anim->ID;
+            *anim  = curr_anim->next_anim->ID;
             return;
         }
 
         *frame %= curr_anim->frames_count;
-        *anim = entity->current_animation;                                      // paranoid dublicate
+        *anim   = entity->current_animation;                                      // paranoid dublicate
         return;
     }
 
@@ -1249,6 +1249,8 @@ int Entity_Frame(entity_p entity, btScalar time)
     Entity_GetNextFrame(entity, time, stc, &frame, &anim);
     if(anim != entity->current_animation)
     {
+        entity->last_animation = entity->current_animation;
+        
         ret = 2;
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);
@@ -1263,6 +1265,9 @@ int Entity_Frame(entity_p entity, btScalar time)
     }
     else if(entity->current_frame != frame)
     {
+        if(entity->current_frame == 0)
+            entity->last_animation = entity->current_animation;
+        
         ret = 1;
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);

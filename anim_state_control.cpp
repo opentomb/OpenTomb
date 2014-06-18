@@ -75,14 +75,10 @@ void ent_to_edge_climb(entity_p ent)
 int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 {
     int i;
-    int8_t low_vertical_space;
     btScalar t, *pos = ent->transform + 12;
     btScalar offset[3], move[3];
     height_info_t next_fc, *curr_fc;
     climb_info_t *climb = &ent->character->climb;
-
-    // last frame is a stick... but is some cases works absolute correctly
-    char last_frame = ent->model->animations[ent->current_animation].frames_count <= ent->current_frame + 1;
 
     curr_fc = &ent->character->height_info;
     next_fc.sp = curr_fc->sp;
@@ -96,8 +92,16 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     ent->anim_flags = ANIM_NORMAL_CONTROL;
     Character_UpdateCurrentHeight(ent);
 
-    low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height));
+    // last frame is a stick... but is some cases works absolute correctly
+    char   last_frame = ent->model->animations[ent->current_animation].frames_count <= ent->current_frame + 1;
+    int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height));
 
+    
+    if(cmd->kill)   // Stop any music, if Lara is dead.
+    {
+        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
+        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
+    }
 
  /*
  * - On floor animations
@@ -107,7 +111,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
  * - Water animations
  */
 
-    ent->character->complex_collision = 0x00;   // by default simple collision
+    ent->character->complex_collision = 0x00;   // by default - simple collision
+    
     switch(ent->last_state)
     {
         /*
@@ -670,7 +675,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     ent->next_state = TR_STATE_LARA_WALK_FORWARD;
                 }
-                else if((cmd->jump == 1) && (ent->current_animation != TR_ANIMATION_LARA_STAY_TO_RUN))
+                else if((cmd->jump == 1) && (ent->last_animation != TR_ANIMATION_LARA_STAY_TO_RUN))
                 {
                     ent->next_state = TR_STATE_LARA_JUMP_FORWARD;
                 }
