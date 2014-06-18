@@ -52,7 +52,6 @@ void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v);
 void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c);
 
 void SortPolygonsInMesh(struct base_mesh_s *mesh);
-void Room_BuildNearRoomsList(room_p room);
 
 void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame);
 int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
@@ -560,36 +559,6 @@ void RoomCalculateSectorData(struct world_s *world, class VT_Level *tr, long int
     }
 }
 
-
-
-void Room_BuildNearRoomsList(room_p room)
-{
-    int i, j, nc1;
-    portal_p p;
-    room_p r;
-
-    room->near_room_list_size = 0;
-
-    p = room->portals;
-    for(i=0;i<room->portal_count;i++,p++)
-    {
-        Room_AddToNearRoomsList(room, p->dest_room);
-    }
-
-    nc1 = room->near_room_list_size;
-
-    for(i=0;i<nc1;i++)
-    {
-        r = room->near_room_list[i];
-        p = r->portals;
-        for(j=0;j<r->portal_count;j++,p++)
-        {
-            Room_AddToNearRoomsList(room, p->dest_room);
-        }
-    }
-}
-
-
 void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v)
 {
     v[0] = tr_v->x;
@@ -820,7 +789,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 4, 4, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-    
+
     //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
 
     Gui_DrawLoadScreen(600);
@@ -1067,7 +1036,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     strcat(buf, map);
     strcat(buf, "_trigger.lua");
     luaL_dofile(engine_lua, buf);
-    
+
     // Set loadscreen fader to fade-in state.
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_IN);
 }
