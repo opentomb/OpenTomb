@@ -24,11 +24,11 @@ extern "C" {
 #include "render.h"
 #include <math.h>
 
-ALfloat                         listener_position[3];
-struct audio_fxmanager_s        fxManager;
-static uint8_t                  audio_blocked = 1;
+ALfloat                     listener_position[3];
+struct audio_fxmanager_s    fxManager;
+static uint8_t              audio_blocked = 1;
 
-bool                            StreamTrack::damp_active = false;
+bool                        StreamTrack::damp_active = false;
 
 /*
  * NextPowerOf2 are taken from OpenAL
@@ -555,7 +555,7 @@ void StreamTrack::Stop()    // Immediately stop track.
         }
     }
     
-    // Format-specific clear-up routines should belong here.
+    // Format-specific clean-up routines should belong here.
     
     switch(method)
     {
@@ -934,7 +934,6 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 void Audio_UpdateStreamsDamping()
 {
     StreamTrack::damp_active = false;   // Reset damp activity flag.
-    
     
     // Scan for any tracks that can provoke damp. Usually it's any tracks that are
     // NOT background. So we simply check this condition and set damp activity flag
@@ -1557,44 +1556,23 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
         engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
         engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
         
-        switch(tr->game_version)
+        if(tr->game_version < TR_II)
         {
-            case TR_I:
-            case TR_I_DEMO:
-            case TR_I_UB:
-                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
-                {
-                    case 0x02:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
-                        break;
-                    case 0x01:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                        break;
-                    default:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
-                }
-                break;
-                
-            case TR_II:
-            case TR_II_DEMO:
-                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
-                {
-                    case 0x02:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
-                        break;
-                    case 0x01:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                        break;
-                    case 0x03:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
-                        break;
-                    default:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
-                }
-                break;
-                
-            default:
-                engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
+            switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
+            {
+                case 0x02:
+                    engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                    break;
+                case 0x01:
+                    engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                    break;
+                default:
+                    engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+            }
+        }
+        else
+        {
+            engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
         }
         
         engine_world.audio_effects[i].sample_index =  tr->sound_details[i].sample;
@@ -1912,7 +1890,6 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 {
     SDL_RWops     *file;
     SDL_AudioSpec  wav_spec;
-    SDL_AudioCVT   cvt;
     Uint8         *wav_buffer;
     Uint32         wav_length;
     
