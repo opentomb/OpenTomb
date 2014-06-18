@@ -24,7 +24,7 @@ struct character_s;
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction
 #define ENTITY_CINEMATIC_COLLISION                2                             // doors and other moveable statics
-#define ENTITY_STATIC_COLLISION                   3                             // static object - newer moved
+#define ENTITY_STATIC_COLLISION                   3                             // static object - never moved
 #define ENTITY_ACTOR_COLLISION                    4                             // actor, enemies, NPC, animals
 #define ENTITY_VEHICLE_COLLISION                  5                             // car, moto, bike
 
@@ -133,9 +133,10 @@ typedef struct entity_s
     void                              (*onAnimChange)(struct entity_s *ent);
     int16_t                             last_state;
     int16_t                             next_state;
+    int16_t                             last_animation;
     int16_t                             current_animation;                      // 
-    int16_t                             current_frame;                          // 
     int16_t                             next_animation;                         // 
+    int16_t                             current_frame;                          // 
     int16_t                             next_frame;                             // 
     struct room_sector_s               *current_sector;
     btScalar                            period;                                 // one frame change period

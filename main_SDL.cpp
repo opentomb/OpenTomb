@@ -563,7 +563,7 @@ void Engine_Display()
         glPopClientAttrib();
         Render_DrawList_DebugLines();
 
-        //ShowDebugInfo();
+        // ShowDebugInfo();
 
         glPolygonMode(GL_FRONT, GL_FILL);
         glFrontFace(GL_CCW);
@@ -781,7 +781,7 @@ void ShowDebugInfo()
     if(ent && ent->character)
     {
        height_info_t *fc = &ent->character->height_info;
-        Gui_OutTextXY(screen_info.w-420, 108, "is water = %d, level = %.1f", fc->water, fc->water_level);
+        Gui_OutTextXY(20, 108, "is water = %d, level = %.1f", fc->water, fc->water_level);
 
 #if 0
         glPushMatrix();
@@ -812,7 +812,7 @@ void ShowDebugInfo()
 
         glPopMatrix();
 #endif
-        txt = Gui_OutTextXY(screen_info.w-420, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
+        txt = Gui_OutTextXY(20, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         if(txt)
         {
             Gui_StringAutoRect(txt);
@@ -823,18 +823,18 @@ void ShowDebugInfo()
             //txt->show_rect = 1;
         }
 
-        Gui_OutTextXY(screen_info.w-420, 68, "anim = %d, last_st = %d, next_st = %d", ent->current_animation, ent->last_state, ent->next_state);
+        Gui_OutTextXY(20, 68, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->last_animation, ent->current_animation, ent->next_animation, ent->last_state, ent->next_state);
         if(last_rmb)
         {
-            Gui_OutTextXY(screen_info.w-420, 48, "ent_rmb_ID = %d", last_rmb->ID);
+            Gui_OutTextXY(20, 48, "ent_rmb_ID = %d", last_rmb->ID);
         }
-        Gui_OutTextXY(screen_info.w-420, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Character->character->cmd.rot[0], engine_world.Character->character->cmd.rot[1], (btScalar)engine_world.Character->angles[1]);
+        Gui_OutTextXY(20, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Character->character->cmd.rot[0], engine_world.Character->character->cmd.rot[1], (btScalar)engine_world.Character->angles[1]);
     }
 
     if(engine_world.Character && engine_world.Character->self->room)
     {
-        Gui_OutTextXY(screen_info.w-420, 128, "Level Name: %s", gameflow_manager.CurrentLevelName);
-        Gui_OutTextXY(screen_info.w-420, 28, "room = %d, co = %d", engine_world.Character->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
+        Gui_OutTextXY(20, 128, "Level Name: %s", gameflow_manager.CurrentLevelName);
+        Gui_OutTextXY(20, 28, "room = %d, co = %d", engine_world.Character->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
     }
 
     //Gui_OutTextXY(screen_info.w-380, 68, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
