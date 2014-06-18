@@ -200,6 +200,7 @@ void Room_SwapAlternate(room_p room);
 bool Room_IsAlternate(room_p room); //checks if input room is alternate return true/false
 void Room_SwapPortals(room_p room, room_p dest_room);//Swap room portals of input room to destination room
 void Room_SwapItems(room_p room, room_p dest_room);//Swap room items of input room to destination room
+void Room_BuildNearRoomsList(room_p room);
 
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);

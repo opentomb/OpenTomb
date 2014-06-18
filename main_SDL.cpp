@@ -1088,7 +1088,7 @@ void DebugKeys(int button, int state)
                  * alternate rooms testing
                  */
             case SDLK_r:
-                /*if(!con_base.show)
+                if(!con_base.show)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
@@ -1097,10 +1097,10 @@ void DebugKeys(int button, int state)
                             Room_SwapAlternate(&engine_world.rooms[i]);
                         }
                     }
-                }*/
+                }
                 break;
             case SDLK_4:
-                /*if(!con_base.show)
+                if(!con_base.show)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
@@ -1109,7 +1109,7 @@ void DebugKeys(int button, int state)
                             Room_SwapAlternate(&engine_world.rooms[i]);
                         }
                     }
-                }*/
+                }
                 break;
 
             default:

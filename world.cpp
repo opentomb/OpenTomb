@@ -785,6 +785,7 @@ void Room_SwapPortals(room_p room, room_p dest_room)
                 //Con_Printf("The current room %d! has room %d joined to it!", room->ID, i);
             }
         }
+         Room_BuildNearRoomsList(&engine_world.rooms[i]);//Rebuild room near list!
     }
 
  //Update portal adjoining rooms portals only (old code, might be more optimized for singular room swaps)
@@ -925,5 +926,32 @@ int Room_IsJoined(room_p r1, room_p r2)
     }
 
     return 0;
+}
+
+void Room_BuildNearRoomsList(room_p room)
+{
+    int i, j, nc1;
+    portal_p p;
+    room_p r;
+
+    room->near_room_list_size = 0;
+
+    p = room->portals;
+    for(i=0;i<room->portal_count;i++,p++)
+    {
+        Room_AddToNearRoomsList(room, p->dest_room);
+    }
+
+    nc1 = room->near_room_list_size;
+
+    for(i=0;i<nc1;i++)
+    {
+        r = room->near_room_list[i];
+        p = r->portals;
+        for(j=0;j<r->portal_count;j++,p++)
+        {
+            Room_AddToNearRoomsList(room, p->dest_room);
+        }
+    }
 }
 
