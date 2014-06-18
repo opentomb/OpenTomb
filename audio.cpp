@@ -2010,7 +2010,7 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
 
 
 /**
- * Updates listener parameters by camera structure. Forcorrect speed calculation
+ * Updates listener parameters by camera structure. For correct speed calculation
  * that function have to be called every game frame.
  * @param cam - pointer to the camera structure.
  */
@@ -2061,7 +2061,7 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
 
 void Audio_UpdateListenerByEntity(struct entity_s *ent)
 {
-    ///@FIXME: Add entity camera updater here.
+    ///@FIXME: Add entity listener updater here.
 }
 
 void Audio_Update()

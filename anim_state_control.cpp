@@ -1878,7 +1878,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             ent->character->complex_collision = 0x01;
 
-            ent->speed.m_floats[0] = 0.0;//Reset these to zero so Lara is only falling downwards
+            ent->speed.m_floats[0] = 0.0; //Reset these to zero so Lara is only falling downwards
             ent->speed.m_floats[1] = 0.0;
 
             if( (int(ent->speed.m_floats[2]) <=  -FREE_FALL_SPEED_CRITICAL) &&
