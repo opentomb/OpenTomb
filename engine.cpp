@@ -858,7 +858,7 @@ int lua_CanTriggerEntity(lua_State * lua)
 }
 
 
-int lua_SetEntityWisibility(lua_State * lua)
+int lua_SetEntityVisibility(lua_State * lua)
 {
     int id, top;
     entity_p ent;
@@ -1275,7 +1275,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
     lua_register(lua, "getModelID", lua_GetModelID);
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
-    lua_register(lua, "setEntityWisibility", lua_SetEntityWisibility);
+    lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
     lua_register(lua, "getEntityOCB", lua_GetEntityOCB);
