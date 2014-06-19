@@ -1006,15 +1006,12 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     long int t;
     btScalar dt;
 
-    if(!entity || !entity->model)
+    if(!entity || !entity->model || (animation >= entity->model->animation_count))
     {
         return;
     }
-
-    if(animation < 0 || animation >= entity->model->animation_count)
-    {
-        animation = 0;
-    }
+    
+    animation = (animation < 0)?(0):(animation);
 
     if(entity->character)
     {

@@ -2313,12 +2313,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(engine_world.version > TR_III)
                 {
-                    if(cmd->move[1] == 1 && cmd->jump == 0 && cmd->shift == 0)
+                    if(cmd->move[1] == 1)
                     {
                         ent->dir_flag = ENT_MOVE_FORWARD;
                         ent->next_state = TR_STATE_LARA_CROUCH_TURN_RIGHT;
                     }
-                    else if(cmd->move[1] ==-1 && cmd->jump == 0 && cmd->shift == 0)
+                    else if(cmd->move[1] == -1)
                     {
                         ent->dir_flag = ENT_MOVE_FORWARD;
                         ent->next_state = TR_STATE_LARA_CROUCH_TURN_LEFT;
