@@ -1556,23 +1556,45 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
         engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
         engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
         
-        if(tr->game_version < TR_II)
+        switch(tr->game_version)
         {
-            switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
-            {
-                case 0x02:
-                    engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
-                    break;
-                case 0x01:
-                    engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                    break;
-                default:
-                    engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
-            }
-        }
-        else
-        {
-            engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
+            case TR_I:
+            case TR_I_DEMO:
+            case TR_I_UB:
+                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
+                {
+                    case 0x02:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                        break;
+                    case 0x01:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        break;
+                    default:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+                }
+                break;
+                
+            case TR_II:
+            case TR_II_DEMO:
+                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
+                {
+                    case 0x02:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
+                        break;
+                    case 0x01:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        break;
+                    case 0x03:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                        break;
+                    default:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+                }
+                break;
+                
+            default:
+                engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
+                break;
         }
         
         engine_world.audio_effects[i].sample_index =  tr->sound_details[i].sample;
