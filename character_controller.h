@@ -157,6 +157,7 @@ typedef struct character_s
     int16_t                      no_fix;
     
     btScalar                     speed_mult;
+    btScalar                     inertia;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
     btScalar                     max_climb_height;
@@ -210,6 +211,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor);
 
 void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);
+void Character_Inertia(struct entity_s *ent, int8_t command, btScalar max_speed, btScalar in_speed, btScalar out_speed);
 
 int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd);
 int Character_FreeFalling(struct entity_s *ent, character_command_p cmd);

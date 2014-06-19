@@ -1243,6 +1243,7 @@ void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_h
     ent->move_type = MOVE_FREE_FALLING;
 }
 
+
 void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean)
 {  
     btScalar neg_lean   = 360.0 - max_lean;
@@ -1311,6 +1312,32 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_
         }
     }
 }
+
+
+/*
+ * Inertia is absolutely needed for in-water states, and also it gives
+ * more organic feel to land animations.
+ */
+void Character_Inertia(struct entity_s *ent, btScalar max_speed, btScalar in_speed, btScalar out_speed, int8_t command)
+{
+    if(command)
+    {
+        if(ent->character->inertia < max_speed)
+        {
+            ent->character->inertia += in_speed * engine_frame_time;
+            if(ent->character->inertia > max_speed) ent->character->inertia = max_speed;
+        }
+    }
+    else
+    {
+        if(ent->character->inertia > 0.0)
+        {
+            ent->character->inertia -= out_speed * engine_frame_time;
+            if(ent->character->inertia < 0.0) ent->character->inertia = 0.0;
+        }
+    }
+}
+
 
 /*
  * MOVE IN DIFFERENCE CONDITIONS
@@ -1888,7 +1915,8 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
     cmd->horizontal_collide = 0x00;
     cmd->vertical_collide = 0x00;
     
-    t = 64.0 * ent->character->speed_mult * cmd->jump;                          ///@FIXME: magick!
+    Character_Inertia(ent, 64.0, 64.0, 48.0, cmd->jump);
+    t = ent->character->inertia * ent->character->speed_mult;
     
     ent->angles[0] += cmd->rot[0];
     ent->angles[1] -= cmd->rot[1];
@@ -2032,6 +2060,7 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     
     return 1;
 }
+
 
 /**
  * Main character frame function

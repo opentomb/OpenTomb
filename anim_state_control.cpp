@@ -476,6 +476,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_RUN_BACK:
             ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_BACKWARD;
+            
+            if(ent->current_animation == TR_ANIMATION_LARA_RUN_BACK_BEGIN)
+            {
+                ent->current_speed = 16.0;      ///@FIXME: magick!
+            }
+            
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 if(cmd->action)
@@ -2032,6 +2038,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(ent->move_type == MOVE_ON_WATER)
                 {
+                    ent->character->inertia = 0.0;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
                 }
             }
@@ -2042,7 +2049,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             break;
 
         case TR_STATE_LARA_UNDERWATER_INERTIA:
-            if(cmd->kill == 1)
+            if(ent->move_type == MOVE_ON_WATER)
+            {
+                ent->character->inertia = 0.0;
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
+            }
+            else if(cmd->kill == 1)
             {
                 ent->next_state = TR_STATE_LARA_WATER_DEATH;
             }
