@@ -1177,7 +1177,7 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
             if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))// ||
                //(disp->frame_high <  disp->frame_low) && ((*frame >= disp->frame_low) || (*frame <= disp->frame_high)))
             {
-                *anim = disp->next_anim;
+                *anim  = disp->next_anim;
                 *frame = disp->next_frame;
                 //*frame = (disp->next_frame + (*frame - disp->frame_low)) % entity->model->animations[disp->next_anim].frames_count;
                 return;                                                         // anim was changed
@@ -1266,7 +1266,10 @@ int Entity_Frame(entity_p entity, btScalar time)
     else if(entity->current_frame != frame)
     {
         if(entity->current_frame == 0)
+        {
             entity->last_animation = entity->current_animation;
+        }
+            
         
         ret = 1;
         Entity_DoAnimCommands(entity, ret);

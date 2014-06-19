@@ -987,7 +987,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
             }
-            else if(cmd->move[0] == 0 && cmd->move[1] == -1 && cmd->jump == 0 && cmd->shift)
+            else if(cmd->move[1] == -1 && cmd->shift)
             {
                 vec3_mul_scalar(offset, ent->transform + 0, -RUN_FORWARD_OFFSET);  // not an error - RUN_... more correct here
                 offset[2] += ent->bf.bb_max[2];
@@ -1028,7 +1028,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
             }
-            else if(cmd->move[0] == 0 && cmd->move[1] == 1 && cmd->jump == 0 && cmd->shift)
+            else if(cmd->move[1] == 1 && cmd->shift)
             {
                 vec3_mul_scalar(offset, ent->transform + 0, RUN_FORWARD_OFFSET);// not an error - RUN_... more correct here
                 offset[2] += ent->bf.bb_max[2];

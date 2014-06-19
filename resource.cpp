@@ -2705,11 +2705,11 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
                         anim_dispath_p adsp = sch_p->anim_dispath + sch_p->anim_dispath_count - 1;
                         int next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames_count;
                         int next_frame = tr_adisp->next_frame - tr->animations[next_anim].frame_start;
-                        int high, low;
-                        low = tr_adisp->low - tr_animation->frame_start;
-                        high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low = low % anim->frames_count;
+                        int low  = tr_adisp->low  - tr_animation->frame_start;
+                        int high = tr_adisp->high - tr_animation->frame_start;
+
+                        adsp->frame_low  = low  % anim->frames_count;
                         adsp->frame_high = (high - 1) % anim->frames_count;
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         adsp->next_frame = next_frame % next_frames_count;
