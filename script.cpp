@@ -11,6 +11,7 @@
 #include "engine.h"
 #include "controls.h"
 #include "game.h"
+#include "gameflow.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "vmath.h"
@@ -415,8 +416,9 @@ bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_numb
         if(lua_isfunction(lua, -1))
         {
             lua_pushinteger(lua, engine_world.version);
+            lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
             lua_pushinteger(lua, sound_id);
-            lua_pcall(lua, 2, 2, 0);
+            lua_pcall(lua, 3, 2, 0);
             
            *first_sample_number = (int)lua_tointeger(lua, -2);
            *samples_count       = (int)lua_tointeger(lua, -1);
