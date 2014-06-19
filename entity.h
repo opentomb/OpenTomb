@@ -124,6 +124,7 @@ typedef struct entity_s
     
     btScalar                            current_speed;                          // current linear speed from animation info
     btVector3                           speed;                                  // speed of the entity XYZ
+    btScalar                            inertia;
     struct ss_bone_frame_s              bf;                                     // current boneframe with full frame information 
     btScalar                            angles[3];
     btScalar                            transform[16];                          // GL transformation matrix

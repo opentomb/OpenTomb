@@ -2882,6 +2882,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         entity->angles[0] = tr_item->rotation;
         entity->angles[1] = 0.0;
         entity->angles[2] = 0.0;
+        entity->inertia = 0.0;
         Entity_UpdateRotation(entity);
         if(tr_item->room >= 0 && tr_item->room < world->room_count)
         {
