@@ -101,31 +101,31 @@ private:
     void SetAspect();
     bool DropTexture();
     
-    GLfloat         top_left_color[4];      // All colors are defined separately, for
-    GLfloat         top_right_color[4];     // further possibility of advanced full
-    GLfloat         bottom_left_color[4];   // screen effects with gradients.
-    GLfloat         bottom_right_color[4];
+    GLfloat         mTopLeftColor[4];       // All colors are defined separately, for
+    GLfloat         mTopRightColor[4];      // further possibility of advanced full
+    GLfloat         mBottomLeftColor[4];    // screen effects with gradients.
+    GLfloat         mBottomRightColor[4];
     
-    uint32_t        blending_mode;          // Fader's blending mode.
+    uint32_t        mBlendingMode;          // Fader's blending mode.
     
-    GLfloat         current_alpha;          // Current alpha value.
-    GLfloat         max_alpha;              // Maximum reachable alpha value.
-    GLfloat         speed;                  // Fade speed.
-    GLfloat         speed_optional;         // Optional speed - used with TIMED type.
+    GLfloat         mCurrentAlpha;          // Current alpha value.
+    GLfloat         mMaxAlpha;              // Maximum reachable alpha value.
+    GLfloat         mSpeed;                 // Fade speed.
+    GLfloat         mSpeedSecondary;        // Secondary speed - used with TIMED type.
     
-    GLuint          texture;                // Texture (optional).
-    uint16_t        texture_width;
-    uint16_t        texture_height;
-    bool            texture_wide;           // Set, if texture width is greater than height.
-    float           texture_aspect_ratio;   // Pre-calculated aspect ratio.
-    uint8_t         texture_scale_mode;     // Fader texture's scale mode.
+    GLuint          mTexture;               // Texture (optional).
+    uint16_t        mTextureWidth;
+    uint16_t        mTextureHeight;
+    bool            mTextureWide;           // Set, if texture width is greater than height.
+    float           mTextureAspectRatio;    // Pre-calculated aspect ratio.
+    uint8_t         mTextureScaleMode;      // Fader texture's scale mode.
     
-    bool            active;                 // Specifies if fader active or not.
-    bool            complete;               // Specifies if fading is complete or not.
-    int8_t          direction;              // Specifies fade direction.
+    bool            mActive;                // Specifies if fader active or not.
+    bool            mComplete;              // Specifies if fading is complete or not.
+    int8_t          mDirection;             // Specifies fade direction.
     
-    float           current_time;           // Current fader time.
-    float           max_time;               // Maximum delay time.
+    float           mCurrentTime;           // Current fader time.
+    float           mMaxTime;               // Maximum delay time.
 };
 
 
