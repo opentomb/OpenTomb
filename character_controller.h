@@ -157,7 +157,6 @@ typedef struct character_s
     int16_t                      no_fix;
     
     btScalar                     speed_mult;
-    btScalar                     inertia;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
     btScalar                     max_climb_height;

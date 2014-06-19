@@ -1322,18 +1322,18 @@ void Character_Inertia(struct entity_s *ent, btScalar max_speed, btScalar in_spe
 {
     if(command)
     {
-        if(ent->character->inertia < max_speed)
+        if(ent->inertia < max_speed)
         {
-            ent->character->inertia += in_speed * engine_frame_time;
-            if(ent->character->inertia > max_speed) ent->character->inertia = max_speed;
+            ent->inertia += in_speed * engine_frame_time;
+            if(ent->inertia > max_speed) ent->inertia = max_speed;
         }
     }
     else
     {
-        if(ent->character->inertia > 0.0)
+        if(ent->inertia > 0.0)
         {
-            ent->character->inertia -= out_speed * engine_frame_time;
-            if(ent->character->inertia < 0.0) ent->character->inertia = 0.0;
+            ent->inertia -= out_speed * engine_frame_time;
+            if(ent->inertia < 0.0) ent->inertia = 0.0;
         }
     }
 }
@@ -1916,7 +1916,7 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
     cmd->vertical_collide = 0x00;
     
     Character_Inertia(ent, 64.0, 64.0, 48.0, cmd->jump);
-    t = ent->character->inertia * ent->character->speed_mult;
+    t = ent->inertia * ent->character->speed_mult;
     
     ent->angles[0] += cmd->rot[0];
     ent->angles[1] -= cmd->rot[1];
