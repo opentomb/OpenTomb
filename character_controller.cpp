@@ -1915,7 +1915,7 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
     cmd->horizontal_collide = 0x00;
     cmd->vertical_collide = 0x00;
     
-    Character_Inertia(ent, 64.0, 64.0, 48.0, cmd->jump);
+    Character_Inertia(ent, 64.0, 64.0, 64.0, cmd->jump);
     t = ent->inertia * ent->character->speed_mult;
     
     ent->angles[0] += cmd->rot[0];
