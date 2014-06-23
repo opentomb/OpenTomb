@@ -50,7 +50,8 @@ void Gameflow_Do()
                         lua_pop(engine_lua, 1); // Pop stack to get next value
                         gameflow_manager.CurrentLevelName = lua_tostring(engine_lua, -1); // Second value in stack is level name
                         lua_pop(engine_lua, 1); // Pop stack to get next value
-
+                        gameflow_manager.CurrentLevelPath = lua_tostring(engine_lua, -1); // Third value in stack is level path
+                        
                         // Now, load the level!
                         Engine_LoadMap(lua_tostring(engine_lua, -1));
                     }
