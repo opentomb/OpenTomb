@@ -1034,7 +1034,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     Engine_GetLevelName(map, CVAR_get_val_s("game_level"));
     strcat(buf, map);
-    strcat(buf, "_trigger.lua");
+    strcat(buf, "_autoexec.lua");
+    
     luaL_dofile(engine_lua, buf);
 
     // Set loadscreen fader to fade-in state.
