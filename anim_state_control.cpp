@@ -1128,7 +1128,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
              * Misk animations
              */
         case TR_STATE_LARA_PUSHABLE_GRAB:
-
 			ent->move_type = MOVE_ON_FLOOR;
                         
             if(cmd->action == 1)//If Lara is grabbing the block
@@ -1156,26 +1155,21 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->next_state = TR_STATE_LARA_STOP;           //Switch to next Lara state
             }
             break;
+            
         case TR_STATE_LARA_PUSHABLE_PUSH:
             if(cmd->action == 0)//For TOMB4/5 If Lara is pushing and action let go, don't push
             {
                 ent->next_state = TR_STATE_LARA_STOP;
             }
-            else//Or we keep our last state (pushing)
-            {
-                ent->next_state = ent->last_state; //Repeat last state (TR4/5)
-            }
             break;
+            
         case TR_STATE_LARA_PUSHABLE_PULL:
             if(cmd->action == 0)//For TOMB4/5 If Lara is pulling and action let go, don't pull
             {
                 ent->next_state = TR_STATE_LARA_STOP;
             }
-            else//Or we keep our last state (pulling)
-            {
-                ent->next_state = ent->last_state; //Repeat last state (TR4/5)
-            }
             break;
+            
         case TR_STATE_LARA_ROLL_FORWARD:
             ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_FORWARD;
@@ -2120,6 +2114,15 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->kill)
             {
                 ent->next_state = TR_STATE_LARA_WATER_DEATH;
+            }
+            else if(cmd->jump == 1)
+            {
+                t = pos[2];
+                Character_GetHeightInfo(pos, &next_fc);
+                Character_FixPenetrations(ent, cmd, NULL);
+                pos[2] = t;
+                ent->next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
+                ent->onAnimChange = ent_set_underwater;                         // dive
             }
             else if(cmd->move[0] == 1)
             {
