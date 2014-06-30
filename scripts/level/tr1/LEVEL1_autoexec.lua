@@ -10,13 +10,13 @@ setEntityActivity(11, 0);
 setEntityActivity(31, 0);
 setEntityActivity(32, 0);
 setEntityActivity(49, 0);
-setEntityWisibility(1, 0);
-setEntityWisibility(2, 0);
-setEntityWisibility(3, 0);
-setEntityWisibility(11, 0);
-setEntityWisibility(31, 0);
-setEntityWisibility(32, 0);
-setEntityWisibility(49, 0);
+SetEntityVisibility(1, 0);
+SetEntityVisibility(2, 0);
+SetEntityVisibility(3, 0);
+SetEntityVisibility(11, 0);
+SetEntityVisibility(31, 0);
+SetEntityVisibility(32, 0);
+SetEntityVisibility(49, 0);
 
 -- Wolves
 setEntityActivity(26, 0);
@@ -25,16 +25,16 @@ setEntityActivity(45, 0);
 setEntityActivity(46, 0);
 setEntityActivity(53, 0);
 setEntityActivity(57, 0);
-setEntityWisibility(26, 0);
-setEntityWisibility(27, 0);
-setEntityWisibility(45, 0);
-setEntityWisibility(46, 0);
-setEntityWisibility(53, 0);
-setEntityWisibility(57, 0);
+setEntityVisibility(26, 0);
+setEntityVisibility(27, 0);
+setEntityVisibility(45, 0);
+setEntityVisibility(46, 0);
+setEntityVisibility(53, 0);
+setEntityVisibility(57, 0);
 
 -- Bear
 setEntityActivity(30, 0);
-setEntityWisibility(30, 0);
+SetEntityVisibility(30, 0);
 
 -- Doors
 setEntityActivity(9, 0);
@@ -67,7 +67,7 @@ function activate_wolves(object_id, activator_id)
     end
     setEntityAnim(object_id, 1, 0);
     setEntityActivity(object_id, 1);
-	setEntityWisibility(object_id, 1);
+	SetEntityVisibility(object_id, 1);
 end
 
 -- bats
@@ -77,7 +77,7 @@ function activate_bats(object_id, activator_id)
     end
     setEntityAnim(object_id, 0, 0);
     setEntityActivity(object_id, 1);
-	setEntityWisibility(object_id, 1);
+	SetEntityVisibility(object_id, 1);
 end
 
 -- bear
@@ -87,7 +87,7 @@ function activate_bear(object_id, activator_id)
     end
     setEntityAnim(object_id, 8, 0);
     setEntityActivity(object_id, 1);
-	setEntityWisibility(object_id, 1);
+	SetEntityVisibility(object_id, 1);
 end
 
 -- floor

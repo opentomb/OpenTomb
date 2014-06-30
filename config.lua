@@ -105,10 +105,11 @@ bind(act.bigmedi, KEY_6);
 cvars.show_fps = 1; 
 cvars.free_look_speed = 2500;
 
-setgame "TR1";
-setlevel(1);
 
 -- AUTOEXEC LINES
+setgame(1);
+setlevel(1);
+
 gravity(0, 0, -5700.0);
 mlook(1);
 freelook(0);
