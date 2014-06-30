@@ -371,7 +371,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
     {
         return;
     }
-
+    //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model->ID);
     for(int anim = 0;anim < model->animation_count;anim++)
     {
         if(model->animations[anim].num_anim_commands > 255)
@@ -392,6 +392,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                     af->frames[af->frames_count-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
                     af->frames[af->frames_count-1].move[1] = (btScalar)(*++pointer);                          // y = z
                     af->frames[af->frames_count-1].command |= 0x01;
+                    //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames_count-1, af->frames_count);
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
@@ -416,6 +417,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
                                 af->frames[frame].command |= 0x02;
+                                //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
                                 break;
                         }
                     }
