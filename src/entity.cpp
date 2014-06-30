@@ -1189,21 +1189,7 @@ void Entity_DoAnimMove(entity_p entity)
     if(entity->model)
     {
         btScalar tr[3];
-        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;
-        if(curr_bf->command & 0x01)
-        {
-            Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
-            vec3_add(entity->transform+12, entity->transform+12, tr);
-        }
-    }
-}
-
-
-void Entity_DoAnimRotate(entity_p entity)
-{
-    if(entity->model)
-    {
-        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;
+        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;  
         if(curr_bf->command & 0x02)
         {
             entity->angles[0] += 180.0;
@@ -1220,6 +1206,11 @@ void Entity_DoAnimRotate(entity_p entity)
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
             Entity_UpdateRotation(entity);
+        }
+        if(curr_bf->command & 0x01)
+        {
+            Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
+            vec3_add(entity->transform+12, entity->transform+12, tr);
         }
     }
 }
@@ -1252,7 +1243,6 @@ int Entity_Frame(entity_p entity, btScalar time)
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);
         Entity_SetAnimation(entity, anim, frame);
-        Entity_DoAnimRotate(entity);
         if(entity->onAnimChange)
         {
             entity->onAnimChange(entity);
@@ -1272,7 +1262,6 @@ int Entity_Frame(entity_p entity, btScalar time)
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);
         entity->current_frame = frame;
-        Entity_DoAnimRotate(entity);
     }
 
     af = entity->model->animations + entity->current_animation;
