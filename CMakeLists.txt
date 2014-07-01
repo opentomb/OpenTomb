@@ -81,10 +81,10 @@ ENDIF()
 
 FIND_PACKAGE(OpenGL REQUIRED)
 
-SET(OPENAL_DIR al)
-SET(BULLET_DIR bullet)
-SET(LUA_DIR lua)
-SET(OGG_DIR ogg)
+SET(OPENAL_DIR src/al)
+SET(BULLET_DIR src/bullet)
+SET(LUA_DIR src/lua)
+SET(OGG_DIR src/ogg)
 
 INCLUDE_DIRECTORIES(
     ${OPENAL_DIR}
@@ -96,8 +96,8 @@ INCLUDE_DIRECTORIES(
     ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
 
-    freetype2
-    freetype2/freetype
+    src/freetype2
+    src/freetype2/freetype
 )
 
 FILE(GLOB OPENAL_FILES
@@ -138,24 +138,24 @@ FILE(GLOB OGG_FILES
 )
 
 FILE(GLOB PRJ_HDR
-    *.h*
-    freetype2/*.h
-    freetype2/*/*.h
-    freetype2/*/*/*.h
-    freetype2/*/*/*/*.h
-    ftgl/*.h
-    lua/*.h*
-    vt/*.h
+    src/*.h*
+    src/freetype2/*.h
+    src/freetype2/*/*.h
+    src/freetype2/*/*/*.h
+    src/freetype2/*/*/*/*.h
+    src/ftgl/*.h
+    src/lua/*.h*
+    src/vt/*.h
 )
 
 FILE(GLOB PRJ_SRC
-    *.c*
-    freetype2/*.c
-    freetype2/*/*.c
-    freetype2/*/*/*.c
-    freetype2/*/*/*/*.c
-    ftgl/*.cpp
-    vt/*.cpp
+    src/*.c*
+    src/freetype2/*.c
+    src/freetype2/*/*.c
+    src/freetype2/*/*/*.c
+    src/freetype2/*/*/*/*.c
+    src/ftgl/*.cpp
+    src/vt/*.cpp
 )
 
 
