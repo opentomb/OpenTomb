@@ -191,7 +191,7 @@ void Engine_Init()
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-
+    
     Sys_Init();
     Com_Init();
     Render_Init();
@@ -1586,6 +1586,12 @@ void Engine_GetLevelName(char *name, const char *path)
 {
     int len, start, ext, i;
 
+    if(!path || (path[0] == 0x00))
+    {
+        name[0] = 0x00;
+        return;
+    }
+    
     ext = len = strlen(path);
     start = 0;
 
@@ -1614,7 +1620,7 @@ int Engine_LoadMap(const char *name)
 {
     int trv;
     VT_Level tr_level;
-    char buf[LEVEL_NAME_MAX_LEN];
+    char buf[LEVEL_NAME_MAX_LEN], sbuf[LEVEL_NAME_MAX_LEN] = {0x00};
 
     Gui_DrawLoadScreen(0);
 
@@ -1632,7 +1638,7 @@ int Engine_LoadMap(const char *name)
     }
 
     renderer.world = NULL;
-
+    
     tr_level.read_level(name, trv);
     tr_level.prepare_level();
     
@@ -1656,8 +1662,33 @@ int Engine_LoadMap(const char *name)
     engine_world.type = 0;
     CVAR_set_val_s("game_level", name);
     CVAR_set_val_d("engine_version", (btScalar)trv);
-
+    
     Engine_GetLevelName(buf, name);
+    strcat(sbuf, "scripts/level/");
+    if(trv < TR_II)
+    {
+        strcat(sbuf, "tr1/");
+    }
+    else if(trv < TR_III)
+    {
+        strcat(sbuf, "tr2/");
+    }
+    else if(trv < TR_IV)
+    {
+        strcat(sbuf, "tr3/");
+    }
+    else if(trv < TR_V)
+    {
+        strcat(sbuf, "tr4/");
+    }
+    else
+    {
+        strcat(sbuf, "tr5/");
+    }
+    strcat(sbuf, buf);
+    strcat(sbuf, ".lua");
+    CVAR_set_val_s("game_script", sbuf);
+    
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
