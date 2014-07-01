@@ -711,8 +711,7 @@ tr5_track_tbl[135] = {file = "xa17_Andy11.ogg", mode = ONCE};
 
 
 function GetTrackInfo(ver, id)
-    local tbl = {};
-	local path, method;
+    tbl = {};
 	
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         tbl    = tr1_track_tbl;

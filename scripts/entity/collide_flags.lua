@@ -1880,10 +1880,9 @@ tr5_entity_tbl[387] = {coll = 0x0000, hide = 1}; -- Teleporter
 tr5_entity_tbl[388] = {coll = 0x0000, hide = 1}; -- Lift teleporter
 
 tr5_entity_tbl[389] = {coll = 0x0000}; -- Raising cog
-
-tr5_entity_tbl[390] = {coll = 0x0000, hide = 1}; -- Laser
-tr5_entity_tbl[391] = {coll = 0x0000, hide = 1}; -- Steam laser
-tr5_entity_tbl[392] = {coll = 0x0000, hide = 1}; -- Floor laser 3
+tr5_entity_tbl[390] = {coll = 0x0000}; -- Laser
+tr5_entity_tbl[391] = {coll = 0x0000}; -- Steam laser
+tr5_entity_tbl[392] = {coll = 0x0000}; -- Floor laser 3
 
 tr5_entity_tbl[393] = {coll = 0x0000, hide = 1}; -- Kill all triggers (or Laser 4?)
 tr5_entity_tbl[394] = {coll = 0x0000, hide = 1}; -- Trigger Triggerer
