@@ -31,7 +31,7 @@ echo "(7/9)    'bullet' lib building complete"
 "gcc" -c "*.c"
 "g++" -c "*.cpp" -I"freetype2" -I"bullet" -s -O2 -march=prescott
 echo "(8/9)    'image' lib building complete"
-"gcc.exe" -c "image/*.c" -s -O2 -march=prescott
+"gcc.exe" -c "image/*.c" "image/jpeg-9/*.c" "image/libpng-1.6.2/*.c" -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -I"image/jpeg-9" -I"image/libpng-1.6.2" -s -O2 -march=prescott
 ar rcs ../lib/libimagee.a *.o
 rm -rf *.o
 echo "(9/9)    'engine' object files building complete, next linking..."

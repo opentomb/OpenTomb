@@ -1662,7 +1662,7 @@ int Engine_LoadMap(const char *name)
     engine_world.type = 0;
     CVAR_set_val_s("game_level", name);
     CVAR_set_val_d("engine_version", (btScalar)trv);
-    
+
     Engine_GetLevelName(buf, name);
     strcat(sbuf, "scripts/level/");
     if(trv < TR_II)
