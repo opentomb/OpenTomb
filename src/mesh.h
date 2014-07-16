@@ -6,6 +6,9 @@
 #define MESH_FULL_TRANSPERENCY 0x01                                             // Fully transparancy object (all polygons are transparancy: all t.flags >= 2)
 #define MESH_PART_TRANSPERENCY 0x02                                             // Has transparancy and opaque polygons
 
+#define ANIM_CMD_MOVE               0x01
+#define ANIM_CMD_CHANGE_DIRECTION   0x02
+
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 #include "bullet/LinearMath/btScalar.h"

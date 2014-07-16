@@ -348,7 +348,7 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
     curr_bf = model->animations[entity->current_animation].frames + entity->current_frame;
 
     t = 1.0 - entity->lerp;
-    if(curr_bf->command & 0x01)
+    if(curr_bf->command & ANIM_CMD_MOVE)
     {
         Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
         vec3_mul_scalar(cmd_tr, tr, entity->lerp);
@@ -378,7 +378,7 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
         if(k == 0)
         {
             btScalar tq[4];
-            if(next_bf->command & 0x02)
+            if(next_bf->command & ANIM_CMD_CHANGE_DIRECTION)
             {
                 ///@TODO: add OX rotation inverse for underwater case
                 tq[0] =-next_btag->qrotate[1];  // -  +
@@ -1190,7 +1190,7 @@ void Entity_DoAnimMove(entity_p entity)
     {
         btScalar tr[3];
         bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;  
-        if(curr_bf->command & 0x02)
+        if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
         {
             entity->angles[0] += 180.0;
             if(entity->move_type == MOVE_UNDER_WATER)
@@ -1207,7 +1207,7 @@ void Entity_DoAnimMove(entity_p entity)
             }
             Entity_UpdateRotation(entity);
         }
-        if(curr_bf->command & 0x01)
+        if(curr_bf->command & ANIM_CMD_MOVE)
         {
             Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
             vec3_add(entity->transform+12, entity->transform+12, tr);

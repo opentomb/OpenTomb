@@ -265,8 +265,14 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
         dst->bone_tags = (bone_tag_p)realloc(dst->bone_tags, src->bone_tag_count * sizeof(bone_tag_t));
     }
     dst->bone_tag_count = src->bone_tag_count;
-    vec3_copy(dst->pos,src->pos);
+    vec3_copy(dst->pos, src->pos);
+    vec3_copy(dst->centre, src->centre);
+    vec3_copy(dst->bb_max, src->bb_max);
+    vec3_copy(dst->bb_min, src->bb_min);
 
+    dst->command = src->command;
+    vec3_copy(dst->move, src->move);
+    
     for(i=0;i<dst->bone_tag_count;i++)
     {
         vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
