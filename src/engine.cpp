@@ -471,6 +471,64 @@ int lua_BindKey(lua_State * lua)
 }
 
 
+int lua_SetStateChangeRange(lua_State * lua)
+{
+    int top, id, anim, state, dispath, frame_low, frame_high;
+    top = lua_gettop(lua);
+    
+    if(top < 6)
+    {
+        Con_Printf("Wrong arguments count. Must be (model_id, anim_num, state_id, dispath_num, start_frame, end_frame (, next_anim, next_frame)");
+        return 0;
+    }
+    
+    id = lua_tointeger(lua, 1);
+    anim = lua_tointeger(lua, 2);
+    state = lua_tointeger(lua, 3);
+    dispath = lua_tointeger(lua, 4);
+    frame_low = lua_tointeger(lua, 5);
+    frame_high = lua_tointeger(lua, 6);
+    
+    skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    if(model == NULL)
+    {
+        Con_Printf("can not find skeletal model with id = %d", id);
+        return 0;
+    }
+    
+    if((anim < 0) || (anim + 1 > model->animation_count))
+    {
+        Con_Printf("wrong anim number");
+        return 0;
+    }
+    
+    animation_frame_p af = model->animations + anim;
+    for(int i=0;i<af->state_change_count;i++)
+    {
+        if(af->state_change[i].ID == state)
+        {
+            if((dispath >= 0) && (dispath < af->state_change[i].anim_dispath_count))
+            {
+                af->state_change[i].anim_dispath[dispath].frame_low = frame_low;
+                af->state_change[i].anim_dispath[dispath].frame_high = frame_high;
+                if(top >= 8)
+                {
+                    af->state_change[i].anim_dispath[dispath].next_anim = lua_tointeger(lua, 7);
+                    af->state_change[i].anim_dispath[dispath].next_frame = lua_tointeger(lua, 8);
+                }
+            }
+            else
+            {
+                Con_Printf("wrong dispath number");
+            }
+            break;
+        }
+    }
+    
+    return 0;
+}
+
+
 int lua_GetAnimCommandTransform(lua_State * lua)
 {
     int top, id, anim, frame;
@@ -1261,6 +1319,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
     lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
+    lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
     lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
             
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
