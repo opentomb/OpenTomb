@@ -471,6 +471,83 @@ int lua_BindKey(lua_State * lua)
 }
 
 
+int lua_AddItem(lua_State * lua)
+{
+    int top, entity_id, item_id, count;
+    top = lua_gettop(lua);
+    
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, item_id, items_count)");
+        return 0;
+    }
+    entity_id = lua_tointeger(lua, 1);
+    item_id = lua_tointeger(lua, 2);
+    count = lua_tointeger(lua, 3);
+    
+    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", entity_id);
+        return 0;
+    }
+    
+    lua_pushinteger(lua, Character_AddItem(ent, item_id, count));
+    return 1;
+}
+
+
+int lua_RemoveItem(lua_State * lua)
+{
+    int top, entity_id, item_id, count;
+    top = lua_gettop(lua);
+    
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, item_id, items_count)");
+        return 0;
+    }
+    entity_id = lua_tointeger(lua, 1);
+    item_id = lua_tointeger(lua, 2);
+    count = lua_tointeger(lua, 3);
+    
+    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", entity_id);
+        return 0;
+    }
+    
+    lua_pushinteger(lua, Character_RemoveItem(ent, item_id, count));
+    return 1;
+}
+
+
+int lua_GetItemsCount(lua_State * lua)
+{
+    int top, entity_id, item_id;
+    top = lua_gettop(lua);
+    
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, item_id)");
+        return 0;
+    }
+    entity_id = lua_tointeger(lua, 1);
+    item_id = lua_tointeger(lua, 2);
+    
+    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", entity_id);
+        return 0;
+    }
+    
+    lua_pushinteger(lua, Character_GetItemsCount(ent, item_id));
+    return 1;
+}
+
+
 int lua_SetStateChangeRange(lua_State * lua)
 {
     int top, id, anim, state, dispath, frame_low, frame_high;
@@ -1321,7 +1398,10 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
     lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
-            
+    
+    lua_register(lua, "addItem", lua_AddItem);
+    lua_register(lua, "removeItem", lua_RemoveItem);
+    lua_register(lua, "getItemsCount", lua_GetItemsCount);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);

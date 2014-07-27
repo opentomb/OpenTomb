@@ -495,17 +495,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
 
             case TR_ANIMCOMMAND_JUMPDISTANCE:
                 // This command executes ONLY at the end of animation.
-                if(entity->current_frame == af->frames_count - 1)
-                {
-                    int16_t v_Vertical   = *++pointer;
-                    int16_t v_Horizontal = *++pointer;
-
-                    Character_SetToJump(entity, -v_Vertical, v_Horizontal);
-                }
-                else
-                {
-                    pointer += 2; // Parse through 2 operands.
-                }
+                pointer += 2; // Parse through 2 operands.
                 break;
 
             case TR_ANIMCOMMAND_EMPTYHANDS:
@@ -1190,6 +1180,10 @@ void Entity_DoAnimMove(entity_p entity)
     {
         btScalar tr[3];
         bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;  
+        if(curr_bf->command & ANIM_CMD_JUMP)
+        {
+            Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
+        }
         if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
         {
             entity->angles[0] += 180.0;
