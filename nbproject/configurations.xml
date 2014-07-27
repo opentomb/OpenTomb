@@ -1083,7 +1083,7 @@
           <commandLine>-I"src\bullet" -I"src\freetype2" -g</commandLine>
         </cTool>
         <ccTool>
-          <commandLine>-I"src\bullet" -I"src\freetype2" -g -std=gnu++11</commandLine>
+          <commandLine>-I"src\bullet" -I"src\freetype2" -g</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
@@ -3959,7 +3959,7 @@
         <ccTool>
           <developmentMode>5</developmentMode>
           <stripSymbols>true</stripSymbols>
-          <commandLine>-I"src\bullet" -I"src\freetype2" -O2 -march=prescott -std=gnu++11</commandLine>
+          <commandLine>-I"src\bullet" -I"src\freetype2" -O2 -march=prescott</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>

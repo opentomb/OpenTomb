@@ -8,6 +8,7 @@
 
 #define ANIM_CMD_MOVE               0x01
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
+#define ANIM_CMD_JUMP               0x04
 
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
@@ -212,7 +213,9 @@ typedef struct bone_frame_s
     btScalar            bb_min[3];                                              // bounding box min coordinates
     btScalar            bb_max[3];                                              // bounding box max coordinates
     btScalar            centre[3];                                              // bounding box centre
-    btScalar            move[3];
+    btScalar            move[3];                                                // move command data 
+    btScalar            v_Vertical;                                             // jump command data
+    btScalar            v_Horizontal;                                           // jump command data
 }__attribute__((aligned(4))) bone_frame_t, *bone_frame_p ;
 
 /*

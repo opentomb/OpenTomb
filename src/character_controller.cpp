@@ -38,6 +38,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret = (character_p)malloc(sizeof(character_t));
     ret->platform = NULL;
     ret->state_func = NULL;
+    ret->inventory = NULL;
     ret->ent = ent;
     ent->character = ret;
     ent->dir_flag = ENT_STAY;
@@ -130,6 +131,15 @@ void Character_Clean(struct entity_s *ent)
 
     actor->ent = NULL;
 
+    inventory_node_p in, rn;
+    in = actor->inventory;
+    while(in)
+    {
+        rn = in;
+        in = in->next;
+        free(rn);
+    }
+    
     if(actor->ghostObject)
     {
         actor->ghostObject->setUserPointer(NULL);
@@ -205,6 +215,109 @@ void Character_Clean(struct entity_s *ent)
     ent->character = NULL;
 }
 
+int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)    // returns items count after in the function's end
+{
+    if(ent->character == NULL)
+    {
+        return 0;
+    }
+    
+    inventory_node_p i = ent->character->inventory;
+    
+    while(i)
+    {
+        if(i->id == item_id)
+        {
+            i->count += count;
+            return i->count;
+        }
+        i = i->next;
+    }
+    
+    i = (inventory_node_p)malloc(sizeof(inventory_node_t));
+    i->id = item_id;
+    i->count = count;
+    i->type = 0;
+    i->next = ent->character->inventory;
+    ent->character->inventory = i;
+    return count;
+}
+
+int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count) // returns items count after in the function's end
+{
+    if((ent->character == NULL) || (ent->character->inventory == NULL))
+    {
+        return 0;
+    }
+    
+    inventory_node_p pi, i;
+    pi = ent->character->inventory;
+    i = pi->next;
+    if(pi->id == item_id)
+    {
+        if(pi->count > count)
+        {
+            pi->count -= count;
+            return pi->count;
+        }
+        else if(pi->count == count)
+        {
+            ent->character->inventory = pi->next;
+            free(pi);
+            return 0;
+        }
+        else // count_to_remove > current_items_count
+        {
+            return (int32_t)pi->count - (int32_t)count;
+        }
+    }
+    
+    while(i)
+    {
+        if(i->id == item_id)
+        {
+            if(i->count > count)
+            {
+                i->count -= count;
+                return i->count;
+            }
+            else if(i->count == count)
+            {
+                pi->next = i->next;
+                free(i);
+                return 0;
+            }
+            else // count_to_remove > current_items_count
+            {
+                return (int32_t)i->count - (int32_t)count;
+            }
+        }
+        pi = i;
+        i = i->next;
+    }
+    
+    return -count;
+}
+
+int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         // returns items count
+{
+    if(ent->character == NULL)
+    {
+        return 0;
+    }
+    
+    inventory_node_p i = ent->character->inventory;
+    while(i)
+    {
+        if(i->id == item_id)
+        {
+            return i->count;
+        }
+        i = i->next;
+    }
+    
+    return 0;
+}
 
 void Character_CreateCollisionObject(struct entity_s *ent)
 {

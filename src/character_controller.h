@@ -146,11 +146,20 @@ typedef struct character_options_s
     float       freeze;
 }character_options_t, *character_options_p;
 
+typedef struct inventory_node_s
+{
+    uint32_t                    id;
+    int32_t                     count;
+    int16_t                     type;
+    struct inventory_node_s    *next;
+}inventory_node_t, *inventory_node_p;
+
 typedef struct character_s
 {
     struct entity_s             *ent;                    // actor entity
     struct character_command_s   cmd;                    // character control commands
     struct character_options_s   opt;
+    struct inventory_node_s     *inventory;
     
     int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
     int16_t                      max_move_iterations;
@@ -192,6 +201,10 @@ typedef struct character_s
 void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h);
 void Character_CreateCollisionObject(struct entity_s *ent);
 void Character_Clean(struct entity_s *ent);
+
+int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
+int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
+int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id);                // returns items count
 
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc);
 int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc);

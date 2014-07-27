@@ -194,8 +194,8 @@ OBJECTFILES= \
 CFLAGS=-I"src\bullet" -I"src\freetype2" -g
 
 # CC Compiler Flags
-CCFLAGS=-I"src\bullet" -I"src\freetype2" -g -std=gnu++11
-CXXFLAGS=-I"src\bullet" -I"src\freetype2" -g -std=gnu++11
+CCFLAGS=-I"src\bullet" -I"src\freetype2" -g
+CXXFLAGS=-I"src\bullet" -I"src\freetype2" -g
 
 # Fortran Compiler Flags
 FFLAGS=

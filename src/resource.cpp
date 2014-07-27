@@ -391,12 +391,14 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                     af->frames[af->frames_count-1].move[0] = (btScalar)(*++pointer);                          // x = x;
                     af->frames[af->frames_count-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
                     af->frames[af->frames_count-1].move[1] = (btScalar)(*++pointer);                          // y = z
-                    af->frames[af->frames_count-1].command |= 0x01;
+                    af->frames[af->frames_count-1].command |= ANIM_CMD_MOVE;
                     //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames_count-1, af->frames_count);
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    pointer += 2;                                               // Parse through 2 operands.
+                    af->frames[af->frames_count-1].v_Vertical   = *++pointer;
+                    af->frames[af->frames_count-1].v_Horizontal = *++pointer;
+                    af->frames[af->frames_count-1].command |= ANIM_CMD_JUMP;
                     break;
 
                 case TR_ANIMCOMMAND_EMPTYHANDS:
@@ -416,7 +418,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                         switch(*++pointer & 0x3FFF)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
-                                af->frames[frame].command |= 0x02;
+                                af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
                                 //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
                                 break;
                         }
@@ -2404,6 +2406,8 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
 
         vec3_set_zero(bone_frame->pos);
         vec3_set_zero(bone_frame->move);
+        bone_frame->v_Horizontal = 0.0;
+        bone_frame->v_Vertical = 0.0;
         bone_frame->command = 0x00;
         for(k=0;k<bone_frame->bone_tag_count;k++)
         {
@@ -2529,6 +2533,8 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
             bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
             vec3_set_zero(bone_frame->pos);
             vec3_set_zero(bone_frame->move);
+            bone_frame->v_Horizontal = 0.0;
+            bone_frame->v_Vertical = 0.0;
             bone_frame->command = 0x00;
             GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
