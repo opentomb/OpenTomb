@@ -488,7 +488,7 @@ int main(int argc, char **argv)
     Engine_Init();
     Engine_InitGlobals();
     Engine_LoadConfig();
-
+    
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
     Engine_InitSDLImage();
@@ -563,7 +563,7 @@ void Engine_Display()
         glPopClientAttrib();
         Render_DrawList_DebugLines();
 
-        // ShowDebugInfo();
+        //ShowDebugInfo();
 
         glPolygonMode(GL_FRONT, GL_FILL);
         glFrontFace(GL_CCW);

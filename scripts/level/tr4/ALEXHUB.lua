@@ -16,9 +16,9 @@ print("Level script loaded (ALEXHUB.lua)");
 
 static_tbl = {};
 
-static_tbl[10] = {coll = BBOX};       			-- Pillar
-static_tbl[11] = {coll = NONE};       			-- Wall lamp
-static_tbl[12] = {coll = BBOX};       			-- Book shelf
+static_tbl[10] = {coll = BBOX};                 -- Pillar
+static_tbl[11] = {coll = NONE};                 -- Wall lamp
+static_tbl[12] = {coll = BBOX};                 -- Book shelf
 static_tbl[13] = {coll = BBOX, hide = 1};       -- Book shelf 1, only upper part
 static_tbl[14] = {coll = BBOX, hide = 1};       -- Book shelf 2, only upper part
 static_tbl[18] = {coll = BBOX};                 -- Locker
@@ -48,9 +48,9 @@ static_tbl[46] = {coll = MESH};                 -- Pillars
 --------------------------------------------------------------------------------
 
 function GetStaticMeshFlags(ver, id)
-	if(static_tbl[id] == nil) then
-		return nil, nil;
-	else
-		return static_tbl[id].coll, static_tbl[id].hide;
-	end;
+    if(static_tbl[id] == nil) then
+        return nil, nil;
+    else
+        return static_tbl[id].coll, static_tbl[id].hide;
+    end;
 end;

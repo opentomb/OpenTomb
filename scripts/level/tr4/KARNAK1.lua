@@ -28,11 +28,11 @@ static_tbl[17] = {coll = BBOX};            -- Pedestal
 
 static_tbl[20] = {coll = BBOX};            -- Pillar
 static_tbl[21] = {coll = MESH};            -- Pillar (half)
-static_tbl[22] = {coll = MESH};			   -- Border stones
-static_tbl[23] = {coll = MESH};			   -- Horn
+static_tbl[22] = {coll = MESH};            -- Border stones
+static_tbl[23] = {coll = MESH};            -- Horn
 static_tbl[24] = {coll = BBOX};            -- Hanging statue 1
 static_tbl[25] = {coll = BBOX};            -- Hanging statue 2
-static_tbl[26] = {coll = BBOX};			   -- Pillar 2
+static_tbl[26] = {coll = BBOX};            -- Pillar 2
 static_tbl[29] = {coll = BBOX};            -- Wall pillar
 
 -- ARCHITECTURE statics
@@ -51,10 +51,10 @@ static_tbl[50] = {coll = MESH};            -- Vase 2
 --------------------------------------------------------------------------------
 
 function GetStaticMeshFlags(ver, id)
-	if(static_tbl[id] == nil) then
-		return nil, nil;
-	else
-		return static_tbl[id].coll, static_tbl[id].hide;
-	end;
+    if(static_tbl[id] == nil) then
+        return nil, nil;
+    else
+        return static_tbl[id].coll, static_tbl[id].hide;
+    end;
 end;
 

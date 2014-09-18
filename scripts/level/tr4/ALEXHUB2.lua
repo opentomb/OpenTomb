@@ -15,9 +15,9 @@ BBOX = 0x0002;  -- Object uses bounding box for collision.
 
 static_tbl = {};
 
-static_tbl[22] = {coll = MESH};       			-- Stone arc
-static_tbl[23] = {coll = BBOX};       			-- Dummy mummy
-static_tbl[24] = {coll = MESH};       			-- Stairs
+static_tbl[22] = {coll = MESH};                 -- Stone arc
+static_tbl[23] = {coll = BBOX};                 -- Dummy mummy
+static_tbl[24] = {coll = MESH};                 -- Stairs
 static_tbl[25] = {coll = BBOX};                 -- Dummy pharaoh
 static_tbl[26] = {coll = NONE};                 -- Wall light
 static_tbl[27] = {coll = BBOX};                 -- Tree
@@ -47,9 +47,9 @@ static_tbl[52] = {coll = MESH};                 -- Target
 --------------------------------------------------------------------------------
 
 function GetStaticMeshFlags(ver, id)
-	if(static_tbl[id] == nil) then
-		return nil, nil;
-	else
-		return static_tbl[id].coll, static_tbl[id].hide;
-	end;
+    if(static_tbl[id] == nil) then
+        return nil, nil;
+    else
+        return static_tbl[id].coll, static_tbl[id].hide;
+    end;
 end;

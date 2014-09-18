@@ -1,1 +1,1 @@
-playstream("73");
+playstream(73);

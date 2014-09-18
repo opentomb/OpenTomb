@@ -21,15 +21,15 @@ static_tbl[12] = {coll = COLL_BBOX};            -- Floodlight 2
 static_tbl[13] = {coll = COLL_NONE};            -- Rays
 static_tbl[14] = {coll = COLL_NONE};            -- Red lamp
 static_tbl[15] = {coll = COLL_BBOX};            -- Metallic structure
-static_tbl[16] = {coll = COLL_BBOX};			-- Metallic structure 2
+static_tbl[16] = {coll = COLL_BBOX};            -- Metallic structure 2
 static_tbl[17] = {coll = COLL_MESH};            -- Grated panel
 
 --------------------------------------------------------------------------------
 
 function GetStaticMeshFlags(ver, id)
-	if(static_tbl[id] == nil) then
-		return nil, nil;
-	else
-		return static_tbl[id].coll, static_tbl[id].hide;
-	end;
+    if(static_tbl[id] == nil) then
+        return nil, nil;
+    else
+        return static_tbl[id].coll, static_tbl[id].hide;
+    end;
 end;

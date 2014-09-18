@@ -23,9 +23,9 @@ tr_static_tbl[39] = {coll = 0x0001};             -- Wall bricks
 tr_static_tbl[43] = {coll = 0x0000};             -- Icicle
 
 function GetStaticMeshFlags(ver, id)
-	if(static_tbl[id] == nil) then
-		return nil, nil;
-	else
-		return static_tbl[id].coll, static_tbl[id].hide;
-	end;
+    if(static_tbl[id] == nil) then
+        return nil, nil;
+    else
+        return static_tbl[id].coll, static_tbl[id].hide;
+    end;
 end;

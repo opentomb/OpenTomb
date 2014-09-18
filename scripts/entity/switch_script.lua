@@ -40,80 +40,80 @@ tr5_puzzlehole_meshswap = {};
 
 tr_anim_puzzlehole =
 {
-	on  = {ready_anim = -1, trig_anim = 0, actor_anim = 134, switch_frame = 79 },
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim = -1, trig_anim = 0, actor_anim = 134, switch_frame = 79 },
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 tr_anim_keyhole =
 {
-	on  = {ready_anim = -1, trig_anim = 0, actor_anim = 131, switch_frame = 109},
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim = -1, trig_anim = 0, actor_anim = 131, switch_frame = 109},
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 tr_anim_bigwallswitch =
 {
-	on  = {ready_anim =  0, trig_anim = 2, actor_anim = 63,  switch_frame = 36 },
-	off = {ready_anim =  1, trig_anim = 3, actor_anim = 64,  switch_frame = 33 }
+    on  = {ready_anim =  0, trig_anim = 2, actor_anim = 63,  switch_frame = 36 },
+    off = {ready_anim =  1, trig_anim = 3, actor_anim = 64,  switch_frame = 33 }
 };
 
 tr_anim_smallwallswitch =
 {
-	on  = {ready_anim =  0, trig_anim = 2, actor_anim = 195, switch_frame = 50 },
-	off = {ready_anim =  1, trig_anim = 3, actor_anim = 196, switch_frame = 50 }
+    on  = {ready_anim =  0, trig_anim = 2, actor_anim = 195, switch_frame = 50 },
+    off = {ready_anim =  1, trig_anim = 3, actor_anim = 196, switch_frame = 50 }
 };
 
 tr_anim_smallbutton =
 {
-	on  = {ready_anim =  0, trig_anim = 2, actor_anim = 197, switch_frame = 24 },
-	off = {ready_anim =  1, trig_anim = 3, actor_anim = 197, switch_frame = 24 }
+    on  = {ready_anim =  0, trig_anim = 2, actor_anim = 197, switch_frame = 24 },
+    off = {ready_anim =  1, trig_anim = 3, actor_anim = 197, switch_frame = 24 }
 };
 
 tr_anim_uwswitch =
 {
-	on  = {ready_anim =  0, trig_anim = 2, actor_anim = 129, switch_frame = 85},
-	off = {ready_anim =  1, trig_anim = 3, actor_anim = 129, switch_frame = 85}
+    on  = {ready_anim =  0, trig_anim = 2, actor_anim = 129, switch_frame = 85},
+    off = {ready_anim =  1, trig_anim = 3, actor_anim = 129, switch_frame = 85}
 };
 
 tr_anim_hole =
 {
-	on  = {ready_anim = -1, trig_anim = 0, actor_anim = 325, switch_frame = 40 },
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim = -1, trig_anim = 0, actor_anim = 325, switch_frame = 40 },
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 tr_anim_bigbutton =
 {
-	on  = {ready_anim =  0, trig_anim = 1, actor_anim = 413, switch_frame = 35 },
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim =  0, trig_anim = 1, actor_anim = 413, switch_frame = 35 },
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 tr_anim_valve =
 {
-	on  = {ready_anim =  0, trig_anim = 1, actor_anim = 470, switch_frame = 30 },
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim =  0, trig_anim = 1, actor_anim = 470, switch_frame = 30 },
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 tr_anim_pickup_stand =
 {
-	on  = {ready_anim = -1, trig_anim = 0, actor_anim = 135, switch_frame = 14 },
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim = -1, trig_anim = 0, actor_anim = 135, switch_frame = 14 },
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 tr_anim_pickup_underwater =
 {
-	on  = {ready_anim = -1, trig_anim = 0, actor_anim = 130, switch_frame = 15 },
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim = -1, trig_anim = 0, actor_anim = 130, switch_frame = 15 },
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 tr_anim_pickup_crouch =
 {
-	on  = {ready_anim = -1, trig_anim = 0, actor_anim = 291, switch_frame = 15 },
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim = -1, trig_anim = 0, actor_anim = 291, switch_frame = 15 },
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 tr_anim_pickup_crawl =
 {
-	on  = {ready_anim = -1, trig_anim = 0, actor_anim = 292, switch_frame = 15 },	-- CHECK: TR3 possibly have less keyframes.
-	off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
+    on  = {ready_anim = -1, trig_anim = 0, actor_anim = 292, switch_frame = 15 },    -- CHECK: TR3 possibly have less keyframes.
+    off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
 
@@ -257,7 +257,7 @@ function trigger_activate(trig_id, actor_id, func)
         if(tr1_triggers[m_id] ~= nil) then
             on       = tr1_triggers[m_id].on;
             off      = tr1_triggers[m_id].off;
-			meshswap = tr1_puzzlehole_meshswap[m_id];
+            meshswap = tr1_puzzlehole_meshswap[m_id];
         else
             return;
         end
@@ -265,7 +265,7 @@ function trigger_activate(trig_id, actor_id, func)
         if(tr2_triggers[m_id] ~= nil) then
             on       = tr2_triggers[m_id].on;
             off      = tr2_triggers[m_id].off;
-			meshswap = tr2_puzzlehole_meshswap[m_id];
+            meshswap = tr2_puzzlehole_meshswap[m_id];
         else
             return;
         end
@@ -273,7 +273,7 @@ function trigger_activate(trig_id, actor_id, func)
         if(tr3_triggers[m_id] ~= nil) then
             on       = tr3_triggers[m_id].on;
             off      = tr3_triggers[m_id].off;
-			meshswap = tr3_puzzlehole_meshswap[m_id];
+            meshswap = tr3_puzzlehole_meshswap[m_id];
         else
             return;
         end
@@ -281,43 +281,43 @@ function trigger_activate(trig_id, actor_id, func)
         if(tr4_triggers[m_id] ~= nil) then
             on       = tr4_triggers[m_id].on;
             off      = tr4_triggers[m_id].off;
-			meshswap = tr4_puzzlehole_meshswap[m_id];
+            meshswap = tr4_puzzlehole_meshswap[m_id];
         else
             return;
         end
     else
         if(tr5_triggers[m_id] == nil) then
-			if(m_id >= 266 and m_id <= 274) then
-				local ocb = getEntityOCB(trig_id);
-				if(ocb == 0) then
-					on  = tr_anim_bigwallswitch.on;
-					off = tr_anim_bigwallswitch.off;
-				elseif(ocb == 1 or ocb == 2) then
-					on  = tr_anim_hole.on;
-					off = tr_anim_hole.off;
-				elseif(ocb == 3) then
-					on  = tr_anim_bigbutton.on;
-					off = tr_anim_bigbutton.off;
-				elseif(ocb == 4) then
-					on  = tr_anim_smallwallswitch.on;
-					off = tr_anim_smallwallswitch.off;
-				elseif(ocb == 5) then
-					on  = tr_anim_smallbutton.on;
-					off = tr_anim_smallbutton.off;
-				elseif(ocb >= 6 and ocb <= 10) then
-					on  = tr_anim_valve.on;
-					off = tr_anim_valve.off;
-				elseif(ocb > 10) then
-					on  = {ready_anim =  0, trig_anim = 2, actor_anim = ocb};
-					off = {ready_anim =  1, trig_anim = 3, actor_anim = ocb + 1};
-				end
-			else
-				return;
-			end
+            if(m_id >= 266 and m_id <= 274) then
+                local ocb = getEntityOCB(trig_id);
+                if(ocb == 0) then
+                    on  = tr_anim_bigwallswitch.on;
+                    off = tr_anim_bigwallswitch.off;
+                elseif(ocb == 1 or ocb == 2) then
+                    on  = tr_anim_hole.on;
+                    off = tr_anim_hole.off;
+                elseif(ocb == 3) then
+                    on  = tr_anim_bigbutton.on;
+                    off = tr_anim_bigbutton.off;
+                elseif(ocb == 4) then
+                    on  = tr_anim_smallwallswitch.on;
+                    off = tr_anim_smallwallswitch.off;
+                elseif(ocb == 5) then
+                    on  = tr_anim_smallbutton.on;
+                    off = tr_anim_smallbutton.off;
+                elseif(ocb >= 6 and ocb <= 10) then
+                    on  = tr_anim_valve.on;
+                    off = tr_anim_valve.off;
+                elseif(ocb > 10) then
+                    on  = {ready_anim =  0, trig_anim = 2, actor_anim = ocb};
+                    off = {ready_anim =  1, trig_anim = 3, actor_anim = ocb + 1};
+                end
+            else
+                return;
+            end
         else
             on       = tr5_triggers[m_id].on;
-			off      = tr5_triggers[m_id].off;
-			meshswap = tr5_puzzlehole_meshswap[m_id];
+            off      = tr5_triggers[m_id].off;
+            meshswap = tr5_puzzlehole_meshswap[m_id];
         end
     end
 
@@ -329,15 +329,15 @@ function trigger_activate(trig_id, actor_id, func)
         addTask(
         function()
             local a, f, c = getEntityAnim(actor_id);
-			if(on.switch_frame ~= nil) then
-				c = on.switch_frame
-			end
+            if(on.switch_frame ~= nil) then
+                c = on.switch_frame
+            end
             if(f >= c - 1) then                                 -- check the end of animation
-				if(meshswap ~= nil) then
-					setEntityMeshswap(trig_id, meshswap)
-				end
+                if(meshswap ~= nil) then
+                    setEntityMeshswap(trig_id, meshswap)
+                end
                 func(1);                                        -- turn on
-				return nil;
+                return nil;
             end
             return true;
         end);
@@ -348,9 +348,9 @@ function trigger_activate(trig_id, actor_id, func)
         addTask(
         function()
             local a, f, c = getEntityAnim(actor_id);
-			if(off.switch_frame ~= nil) then
-				c = off.switch_frame
-			end
+            if(off.switch_frame ~= nil) then
+                c = off.switch_frame
+            end
             if(f >= c - 1) then                                 -- check the end of animation
                 func(0);                                        -- turn off
                 return nil;

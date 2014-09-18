@@ -185,7 +185,7 @@ public:
 
     bool          Invert;               // Invert decrease direction flag.
     bool          Vertical;             // Change bar style to vertical.
-
+    
 private:
 
     bool          UpdateResolution      // Try to update bar resolution.

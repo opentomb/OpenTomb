@@ -19,7 +19,7 @@ static_tbl[10] = {coll = BBOX};              -- Stone wall block
 static_tbl[11] = {coll = BBOX};              -- Stone wall block 2
 static_tbl[12] = {coll = BBOX};              -- Stone wall block 3
 static_tbl[13] = {coll = BBOX};              -- Stone wall block 4
-static_tbl[14] = {coll = BBOX};              -- Ladder	
+static_tbl[14] = {coll = BBOX};              -- Ladder
 static_tbl[15] = {coll = BBOX};              -- Green top
 static_tbl[16] = {coll = BBOX};              -- Pole
 static_tbl[17] = {coll = BBOX};              -- Stone arch
@@ -61,9 +61,9 @@ static_tbl[53] = {coll = MESH};              -- Fuel barrel
 --------------------------------------------------------------------------------
 
 function GetStaticMeshFlags(ver, id)
-	if(static_tbl[id] == nil) then
-		return nil, nil;
-	else
-		return static_tbl[id].coll, static_tbl[id].hide;
-	end;
+    if(static_tbl[id] == nil) then
+        return nil, nil;
+    else
+        return static_tbl[id].coll, static_tbl[id].hide;
+    end;
 end;

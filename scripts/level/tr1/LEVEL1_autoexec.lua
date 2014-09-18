@@ -10,13 +10,13 @@ setEntityActivity(11, 0);
 setEntityActivity(31, 0);
 setEntityActivity(32, 0);
 setEntityActivity(49, 0);
-SetEntityVisibility(1, 0);
-SetEntityVisibility(2, 0);
-SetEntityVisibility(3, 0);
-SetEntityVisibility(11, 0);
-SetEntityVisibility(31, 0);
-SetEntityVisibility(32, 0);
-SetEntityVisibility(49, 0);
+setEntityVisibility(1, 0);
+setEntityVisibility(2, 0);
+setEntityVisibility(3, 0);
+setEntityVisibility(11, 0);
+setEntityVisibility(31, 0);
+setEntityVisibility(32, 0);
+setEntityVisibility(49, 0);
 
 -- Wolves
 setEntityActivity(26, 0);
@@ -34,7 +34,7 @@ setEntityVisibility(57, 0);
 
 -- Bear
 setEntityActivity(30, 0);
-SetEntityVisibility(30, 0);
+setEntityVisibility(30, 0);
 
 -- Doors
 setEntityActivity(9, 0);
@@ -67,7 +67,7 @@ function activate_wolves(object_id, activator_id)
     end
     setEntityAnim(object_id, 1, 0);
     setEntityActivity(object_id, 1);
-	SetEntityVisibility(object_id, 1);
+    SetEntityVisibility(object_id, 1);
 end
 
 -- bats
@@ -77,7 +77,7 @@ function activate_bats(object_id, activator_id)
     end
     setEntityAnim(object_id, 0, 0);
     setEntityActivity(object_id, 1);
-	SetEntityVisibility(object_id, 1);
+    SetEntityVisibility(object_id, 1);
 end
 
 -- bear
@@ -87,7 +87,7 @@ function activate_bear(object_id, activator_id)
     end
     setEntityAnim(object_id, 8, 0);
     setEntityActivity(object_id, 1);
-	SetEntityVisibility(object_id, 1);
+    SetEntityVisibility(object_id, 1);
 end
 
 -- floor
@@ -139,4 +139,9 @@ function activateEntity(object_id, activator_id)
     end
 end
 
+--print("==============  try to set pickables  =================");
+create_pickup_func(58, 1);
+create_pickup_func(48, 1);
+create_pickup_func(34, 1);
 
+print("autoexec level script loaded");

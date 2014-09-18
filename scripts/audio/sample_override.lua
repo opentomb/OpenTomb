@@ -11,7 +11,7 @@
 
 print("Sample remapper script loaded");
 
-tr1_sound	   = {};
+tr1_sound      = {};
 
 tr1_sound[000] = {sample = 0,   count = 004};
 tr1_sound[001] = {sample = 4,   count = 001};
@@ -179,26 +179,26 @@ tr1_sound[171] = {sample = 188, count = 001};
 tr1_sound[172] = {sample = 189, count = 001};
 
 
-tr_sound_info    = {};
+tr_sound_info = {};
 
 tr_sound_info[0] = { num_samples       = 195,
-					 num_sounds        = 165,
-					 sample_name_mask  = "data/tr1/samples/SFX_%04d.wav",
-					 sample_table      = tr1_sound };
+                     num_sounds        = 165,
+                     sample_name_mask  = "data/tr1/samples/SFX_%04d.wav",
+                     sample_table      = tr1_sound };
 
 
 function GetOverridedSample(ver, level_id, sound_id)
-	if((tr_sound_info[ver] ~= nil) and (tr_sound_info[ver].sample_table[sound_id] ~= nil)) then
-		return tr_sound_info[ver].sample_table[sound_id].sample, tr_sound_info[ver].sample_table[sound_id].count;
+    if((tr_sound_info[ver] ~= nil) and (tr_sound_info[ver].sample_table[sound_id] ~= nil)) then
+        return tr_sound_info[ver].sample_table[sound_id].sample, tr_sound_info[ver].sample_table[sound_id].count;
     else
-		return -1, -1;
-	end
+        return -1, -1;
+    end
 end;
 
 function GetOverridedSamplesInfo(ver)
     if(tr_sound_info[ver] ~= nil) then
-		return tr_sound_info[ver].num_samples, tr_sound_info[ver].num_sounds, tr_sound_info[ver].sample_name_mask;
-	else
-		return -1, -1, "NONE";
+        return tr_sound_info[ver].num_samples, tr_sound_info[ver].num_sounds, tr_sound_info[ver].sample_name_mask;
+    else
+        return -1, -1, "NONE";
     end;
 end;

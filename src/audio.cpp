@@ -1,16 +1,17 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_audio.h>
+#define NO_AUDIO        1
 extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
 #include "al/AL/alext.h"
 #include "al/AL/efx-presets.h"
 
-#include "ogg/codec.h"
+/*#include "ogg/codec.h"
 #include "ogg/ogg.h"
 #include "ogg/os_types.h"
-#include "ogg/vorbisfile.h"
+#include "ogg/vorbisfile.h"*/
 }
 
 #include "audio.h"
@@ -427,7 +428,7 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
 
 bool StreamTrack::Load_Ogg(const char *path)
 {
-    vorbis_info    *vorbis_Info;
+    /*vorbis_info    *vorbis_Info;
     int             result;
 
     if(!(audio_file = fopen(path, "rb")))
@@ -454,7 +455,7 @@ bool StreamTrack::Load_Ogg(const char *path)
         format = AL_FORMAT_STEREO16;
         
     rate = vorbis_Info->rate;
-        
+        */
     return true;    // Success!
 }
 
@@ -556,7 +557,7 @@ void StreamTrack::Stop()    // Immediately stop track.
     }
     
     // Format-specific clean-up routines should belong here.
-    
+    /*
     switch(method)
     {
         case TR_AUDIO_STREAM_METHOD_OGG:
@@ -568,7 +569,7 @@ void StreamTrack::Stop()    // Immediately stop track.
             
         case TR_AUDIO_STREAM_METHOD_WAV:
             break;  ///@FIXME: PLACEHOLDER!!!
-    }
+    }*/
 }
 
 bool StreamTrack::Update()
@@ -733,7 +734,7 @@ bool StreamTrack::Stream(ALuint buffer)             // Update stream process.
 
 bool StreamTrack::Stream_Ogg(ALuint buffer)
 {
-    char pcm[audio_settings.stream_buffer_size];
+    /*char pcm[audio_settings.stream_buffer_size];
     int  size = 0;
     int  section;
     int  result;
@@ -769,7 +770,7 @@ bool StreamTrack::Stream_Ogg(ALuint buffer)
     if(size == 0)
         return false;
         
-    alBufferData(buffer, format, pcm, size, rate);
+    alBufferData(buffer, format, pcm, size, rate);*/
     return true;
 }
 
@@ -1841,7 +1842,7 @@ bool Audio_LogALError(int error_marker)
 
 void Audio_LogOGGError(int code)
 {
-    switch(code)
+    /*switch(code)
     {
         case OV_EREAD:
             Sys_DebugLog(LOG_FILENAME, "OGG error: Read from media.");
@@ -1861,7 +1862,7 @@ void Audio_LogOGGError(int code)
         default:
             Sys_DebugLog(LOG_FILENAME, "OGG error: Unknown Ogg error.");
             break;
-    }
+    }*/
 }
 
 

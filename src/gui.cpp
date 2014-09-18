@@ -322,7 +322,6 @@ void Gui_Render()
     Gui_DrawFaders();
     Con_Draw();
     Gui_RenderStrings();
-    
 
     glDepthMask(GL_TRUE);
     glPopClientAttrib();

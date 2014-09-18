@@ -1,7 +1,7 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER 4, ANGKOR1
 
-UVRotate	= 4;
+UVRotate = 4;
 
 print("Level script loaded (ANGKOR1.lua)");
 
@@ -34,29 +34,29 @@ static_tbl[10] = {coll = BBOX, hide = 1};  -- Dummy cube
 
 -- ROCK statics
 
-static_tbl[20] = {coll = NONE};			   -- Wall light
+static_tbl[20] = {coll = NONE};            -- Wall light
 
 -- ARCHITECTURE statics
 
-static_tbl[30] = {coll = BBOX};			   -- Ornate arch
+static_tbl[30] = {coll = BBOX};            -- Ornate arch
 static_tbl[31] = {coll = BBOX};            -- Pillar
 static_tbl[32] = {coll = BBOX, hide = 1};  -- Dummy block
 
 -- DEBRIS statics
 
-static_tbl[40] = {coll = NONE};			   -- Ornate arch 2
+static_tbl[40] = {coll = NONE};            -- Ornate arch 2
 static_tbl[41] = {coll = MESH};            -- Stone border
 static_tbl[42] = {coll = BBOX};            -- Pillar 2
-static_tbl[43] = {coll = BBOX};  		   -- Stone lion
-static_tbl[44] = {coll = NONE};  		   -- Rays
-static_tbl[45] = {coll = MESH};			   -- Stone face
+static_tbl[43] = {coll = BBOX};            -- Stone lion
+static_tbl[44] = {coll = NONE};            -- Rays
+static_tbl[45] = {coll = MESH};            -- Stone face
 
 --------------------------------------------------------------------------------
 
 function GetStaticMeshFlags(ver, id)
-	if(static_tbl[id] == nil) then
-		return nil, nil;
-	else
-		return static_tbl[id].coll, static_tbl[id].hide;
-	end;
+    if(static_tbl[id] == nil) then
+        return nil, nil;
+    else
+        return static_tbl[id].coll, static_tbl[id].hide;
+    end;
 end;
