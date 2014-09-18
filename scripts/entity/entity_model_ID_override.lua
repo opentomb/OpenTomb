@@ -76,8 +76,8 @@ tr2_id_override[194] = 198;             --
 
 tr2_anim_override = {};
 
-tr2_anim_override[17] = 16;				-- Masked goon (white mask, vest)
-tr2_anim_override[18] = 16;				-- Masked goon (black mask)
+tr2_anim_override[17] = 16;             -- Masked goon (white mask, vest)
+tr2_anim_override[18] = 16;             -- Masked goon (black mask)
 
 
 --------------------------------------------------------------------------------

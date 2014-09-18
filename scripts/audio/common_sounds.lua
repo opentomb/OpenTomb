@@ -12,12 +12,12 @@
 
 GLOBALID_MENUOPEN       = 0;
 GLOBALID_MENUCLOSE      = 1;
-GLOBALID_MENUROTATE		= 2;
-GLOBALID_MENUPAGE		= 3;
-GLOBALID_MENUSELECT		= 4;
-GLOBALID_MENUWEAPON		= 5;
-GLOBALID_MENUCLANG		= 6;
-GLOBALID_MENUTEST		= 7;
+GLOBALID_MENUROTATE     = 2;
+GLOBALID_MENUPAGE       = 3;
+GLOBALID_MENUSELECT     = 4;
+GLOBALID_MENUWEAPON     = 5;
+GLOBALID_MENUCLANG      = 6;
+GLOBALID_MENUTEST       = 7;
 
 tr1_global_sounds = {};
 tr2_global_sounds = {};
@@ -39,7 +39,7 @@ tr2_global_sounds[GLOBALID_MENUCLOSE]   = 112;
 tr2_global_sounds[GLOBALID_MENUROTATE]  = 108;
 tr2_global_sounds[GLOBALID_MENUPAGE]    = 115;
 tr2_global_sounds[GLOBALID_MENUWEAPON]  = 114;
-tr2_global_sounds[GLOBALID_MENUCLANG]   = 114;	-- 113 is a looped clock sound.
+tr2_global_sounds[GLOBALID_MENUCLANG]   = 114;    -- 113 is a looped clock sound.
 tr2_global_sounds[GLOBALID_MENUSELECT]  = 112;
 tr2_global_sounds[GLOBALID_MENUTEST]    = 8;
 
@@ -48,16 +48,16 @@ tr3_global_sounds[GLOBALID_MENUCLOSE]   = 112;
 tr3_global_sounds[GLOBALID_MENUROTATE]  = 108;
 tr3_global_sounds[GLOBALID_MENUPAGE]    = 115;
 tr3_global_sounds[GLOBALID_MENUWEAPON]  = 114;
-tr3_global_sounds[GLOBALID_MENUCLANG]   = 114; -- There is no CLANG sound in TR3.
-tr3_global_sounds[GLOBALID_MENUSELECT]  = 109; -- Lara's Home photo sound was replaced by this.
+tr3_global_sounds[GLOBALID_MENUCLANG]   = 114;    -- There is no CLANG sound in TR3.
+tr3_global_sounds[GLOBALID_MENUSELECT]  = 109;    -- Lara's Home photo sound was replaced by this.
 tr3_global_sounds[GLOBALID_MENUTEST]    = 8;
 
 tr4_global_sounds[GLOBALID_MENUOPEN]    = 109; 
 tr4_global_sounds[GLOBALID_MENUCLOSE]   = 109;
 tr4_global_sounds[GLOBALID_MENUROTATE]  = 108;
-tr4_global_sounds[GLOBALID_MENUPAGE]    = 111; -- No passport in TR4/5 menu system, hence no sound.
-tr4_global_sounds[GLOBALID_MENUWEAPON]  = 9;   -- There was no WEAPON sound for TR4/5 menu system.
-tr4_global_sounds[GLOBALID_MENUCLANG]   = 114; -- Now used for COMBINE item.
+tr4_global_sounds[GLOBALID_MENUPAGE]    = 111;    -- No passport in TR4/5 menu system, hence no sound.
+tr4_global_sounds[GLOBALID_MENUWEAPON]  = 9;      -- There was no WEAPON sound for TR4/5 menu system.
+tr4_global_sounds[GLOBALID_MENUCLANG]   = 114;    -- Now used for COMBINE item.
 tr4_global_sounds[GLOBALID_MENUSELECT]  = 111;
 tr4_global_sounds[GLOBALID_MENUTEST]    = 8;
 
@@ -73,11 +73,11 @@ tr5_global_sounds[GLOBALID_MENUTEST]    = 8;
 
 function GetGlobalSound(ver, id)
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
-		return tr1_global_sounds[id];
+        return tr1_global_sounds[id];
     elseif(ver < 5) then                -- TR_II, TR_II_DEMO
         return tr2_global_sounds[id];
     elseif(ver < 6) then                -- TR_III
-		return tr3_global_sounds[id];
+        return tr3_global_sounds[id];
     elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
         return tr4_global_sounds[id];
     elseif(ver < 9) then                -- TR_V

@@ -278,7 +278,7 @@ JOY_POVDOWN = 1104;
 JOY_POVLEFT = 1108;
 JOY_POVRIGHT = 1102;
 
-JOY_TRIGGERLEFT = 1204;		-- Only for XBOX360-like controllers - analog triggers.
+JOY_TRIGGERLEFT = 1204;        -- Only for XBOX360-like controllers - analog triggers.
 JOY_TRIGGERRIGHT = 1205;
 
 act = {}; 

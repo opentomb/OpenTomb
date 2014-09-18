@@ -16,9 +16,9 @@ print("Collide / visibility flags script loaded");
 --------------------------------------------------------------------------------
 ----------------------------- TR_I, TR_I_DEMO, TR_I_UB -------------------------
 --------------------------------------------------------------------------------
-tr1_static_tbl = {};                         	 -- TR_I, TR_I_DEMO, TR_I_UB
-tr1_static_tbl[10] = {coll = 0x0001};        	 -- closed gate
-tr1_static_tbl[11] = {coll = 0x0002};        	 -- trough
+tr1_static_tbl = {};                             -- TR_I, TR_I_DEMO, TR_I_UB
+tr1_static_tbl[10] = {coll = 0x0001};            -- closed gate
+tr1_static_tbl[11] = {coll = 0x0002};            -- trough
 tr1_static_tbl[12] = {coll = 0x0001};            -- animal leather
 --tr1_static_tbl[13] = {coll = 0x0001};
 tr1_static_tbl[14] = {coll = 0x0001};            -- table
@@ -611,7 +611,7 @@ tr2_entity_tbl[210] = {coll = 0x0000};               -- Dragon explosion effect 
 tr2_entity_tbl[211] = {coll = 0x0000};               -- Dragon explosion effect (expanding solid bubble)
 tr2_entity_tbl[212] = {coll = 0x0000};               -- Alarm
 tr2_entity_tbl[213] = {coll = 0x0000, hide = 1};     -- Placeholder
-tr2_entity_tbl[214] = {coll = 0x0002};      		 -- Tyrannosaur
+tr2_entity_tbl[214] = {coll = 0x0002};               -- Tyrannosaur
 tr2_entity_tbl[215] = {coll = 0x0000, hide = 1};     -- Singing birds
 tr2_entity_tbl[216] = {coll = 0x0000, hide = 1};     -- Placeholder
 tr2_entity_tbl[217] = {coll = 0x0000, hide = 1};     -- Placeholder
@@ -641,7 +641,7 @@ tr2_entity_tbl[258] = {coll = 0x0000, hide = 1}      -- Alarm bell
 tr2_entity_tbl[259] = {coll = 0x0001};               -- Helicopter
 tr2_entity_tbl[260] = {coll = 0x0002};               -- The butler
 tr2_entity_tbl[262] = {coll = 0x0000, hide = 1};     -- Lara cutscene placement?
-tr2_entity_tbl[263] = {coll = 0x0000};      		 -- Shotgun animation (Home Sweet Home)
+tr2_entity_tbl[263] = {coll = 0x0000};               -- Shotgun animation (Home Sweet Home)
 tr2_entity_tbl[264] = {coll = 0x0000, hide = 1};     -- Dragon transform wave
 
 
@@ -654,63 +654,63 @@ tr3_entity_tbl = {};
 
 -- VEHICLES --
 
-tr3_entity_tbl[12] = {coll = 0x0001};      		 -- UPV
-tr3_entity_tbl[14] = {coll = 0x0001};      		 -- Kayak
-tr3_entity_tbl[15] = {coll = 0x0001};      		 -- Inflatable boat
-tr3_entity_tbl[16] = {coll = 0x0001};      		 -- Quadbike
-tr3_entity_tbl[17] = {coll = 0x0001};      		 -- Mine cart
-tr3_entity_tbl[18] = {coll = 0x0001};      		 -- Big gun
+tr3_entity_tbl[12] = {coll = 0x0001};               -- UPV
+tr3_entity_tbl[14] = {coll = 0x0001};               -- Kayak
+tr3_entity_tbl[15] = {coll = 0x0001};               -- Inflatable boat
+tr3_entity_tbl[16] = {coll = 0x0001};               -- Quadbike
+tr3_entity_tbl[17] = {coll = 0x0001};               -- Mine cart
+tr3_entity_tbl[18] = {coll = 0x0001};               -- Big gun
 
 -- ACTORS --
 
-tr3_entity_tbl[19] = {coll = 0x0002};      		 -- Hydro propeller (?)
-tr3_entity_tbl[20] = {coll = 0x0002};      		 -- Tribesman with spiked axe
-tr3_entity_tbl[21] = {coll = 0x0002};      		 -- Tribesman with poison-dart gun
-tr3_entity_tbl[22] = {coll = 0x0002};      		 -- Dog
-tr3_entity_tbl[23] = {coll = 0x0002};      		 -- Rat
-tr3_entity_tbl[24] = {coll = 0x0002, hide = 1};	 -- Kill All Triggers
-tr3_entity_tbl[25] = {coll = 0x0002};      		 -- Killer whale
-tr3_entity_tbl[26] = {coll = 0x0002};      		 -- Scuba diver
-tr3_entity_tbl[27] = {coll = 0x0002};      		 -- Crow
-tr3_entity_tbl[28] = {coll = 0x0002};      		 -- Tiger
-tr3_entity_tbl[29] = {coll = 0x0002};      		 -- Vulture
-tr3_entity_tbl[30] = {coll = 0x0001};      		 -- Assault-course target
-tr3_entity_tbl[31] = {coll = 0x0002};      		 -- Crawler mutant in closet
-tr3_entity_tbl[32] = {coll = 0x0002};      		 -- Crocodile (in water)
-tr3_entity_tbl[34] = {coll = 0x0002};      		 -- Compsognathus
-tr3_entity_tbl[35] = {coll = 0x0002};      		 -- Lizard thing
-tr3_entity_tbl[36] = {coll = 0x0002};      		 -- Puna guy
-tr3_entity_tbl[37] = {coll = 0x0002};      		 -- Mercenary
-tr3_entity_tbl[38] = {coll = 0x0001};      		 -- Raptor hung by rope (fish bait)
-tr3_entity_tbl[39] = {coll = 0x0002};      		 -- RX-Tech guy in red jacket
-tr3_entity_tbl[40] = {coll = 0x0002};      		 -- RX-Tech guy with gun (dressed like flamethrower guy)
-tr3_entity_tbl[41] = {coll = 0x0002};      		 -- Dog (Antarctica)
-tr3_entity_tbl[42] = {coll = 0x0002};      		 -- Crawler mutant
-tr3_entity_tbl[44] = {coll = 0x0002};      		 -- Tinnos wasp
-tr3_entity_tbl[45] = {coll = 0x0002};      		 -- Tinnos monster
-tr3_entity_tbl[46] = {coll = 0x0002};      		 -- Brute mutant (with claw)
-tr3_entity_tbl[47] = {coll = 0x0002};      		 -- Tinnos wasp respawn point
-tr3_entity_tbl[48] = {coll = 0x0002};      		 -- Raptor respawn point
-tr3_entity_tbl[49] = {coll = 0x0002};      		 -- Willard spider
-tr3_entity_tbl[50] = {coll = 0x0002};      		 -- RX-Tech flamethrower guy
-tr3_entity_tbl[51] = {coll = 0x0002};      		 -- London goon
-tr3_entity_tbl[53] = {coll = 0x0002};      		 -- 'Damned' stick-wielding goon
-tr3_entity_tbl[56] = {coll = 0x0002};      		 -- London guard
-tr3_entity_tbl[57] = {coll = 0x0002};      		 -- Sophia Lee
-tr3_entity_tbl[58] = {coll = 0x0001};      		 -- Thames Wharf machine
-tr3_entity_tbl[60] = {coll = 0x0002};      		 -- MP with stick
-tr3_entity_tbl[61] = {coll = 0x0002};      		 -- MP with gun
-tr3_entity_tbl[62] = {coll = 0x0002};      		 -- Prisoner
-tr3_entity_tbl[63] = {coll = 0x0002};      		 -- MP with sighted gun and night sight
-tr3_entity_tbl[64] = {coll = 0x0002};      		 -- Gun turret
-tr3_entity_tbl[65] = {coll = 0x0002};      		 -- Dam guard
-tr3_entity_tbl[66] = {coll = 0x0002, hide = 1};  -- Kind of tripwire
-tr3_entity_tbl[67] = {coll = 0x0002, hide = 1};  -- Electrified wire
-tr3_entity_tbl[68] = {coll = 0x0002, hide = 1};  -- Killer tripwire
-tr3_entity_tbl[69] = {coll = 0x0002};      		 -- Cobra / Rattlesnake
-tr3_entity_tbl[70] = {coll = 0x0001};      		 -- Temple statue
-tr3_entity_tbl[71] = {coll = 0x0002};      		 -- Monkey
-tr3_entity_tbl[73] = {coll = 0x0002};      		 -- Tony Firehands
+tr3_entity_tbl[19] = {coll = 0x0002};               -- Hydro propeller (?)
+tr3_entity_tbl[20] = {coll = 0x0002};               -- Tribesman with spiked axe
+tr3_entity_tbl[21] = {coll = 0x0002};               -- Tribesman with poison-dart gun
+tr3_entity_tbl[22] = {coll = 0x0002};               -- Dog
+tr3_entity_tbl[23] = {coll = 0x0002};               -- Rat
+tr3_entity_tbl[24] = {coll = 0x0002, hide = 1};     -- Kill All Triggers
+tr3_entity_tbl[25] = {coll = 0x0002};               -- Killer whale
+tr3_entity_tbl[26] = {coll = 0x0002};               -- Scuba diver
+tr3_entity_tbl[27] = {coll = 0x0002};               -- Crow
+tr3_entity_tbl[28] = {coll = 0x0002};               -- Tiger
+tr3_entity_tbl[29] = {coll = 0x0002};               -- Vulture
+tr3_entity_tbl[30] = {coll = 0x0001};               -- Assault-course target
+tr3_entity_tbl[31] = {coll = 0x0002};               -- Crawler mutant in closet
+tr3_entity_tbl[32] = {coll = 0x0002};               -- Crocodile (in water)
+tr3_entity_tbl[34] = {coll = 0x0002};               -- Compsognathus
+tr3_entity_tbl[35] = {coll = 0x0002};               -- Lizard thing
+tr3_entity_tbl[36] = {coll = 0x0002};               -- Puna guy
+tr3_entity_tbl[37] = {coll = 0x0002};               -- Mercenary
+tr3_entity_tbl[38] = {coll = 0x0001};               -- Raptor hung by rope (fish bait)
+tr3_entity_tbl[39] = {coll = 0x0002};               -- RX-Tech guy in red jacket
+tr3_entity_tbl[40] = {coll = 0x0002};               -- RX-Tech guy with gun (dressed like flamethrower guy)
+tr3_entity_tbl[41] = {coll = 0x0002};               -- Dog (Antarctica)
+tr3_entity_tbl[42] = {coll = 0x0002};               -- Crawler mutant
+tr3_entity_tbl[44] = {coll = 0x0002};               -- Tinnos wasp
+tr3_entity_tbl[45] = {coll = 0x0002};               -- Tinnos monster
+tr3_entity_tbl[46] = {coll = 0x0002};               -- Brute mutant (with claw)
+tr3_entity_tbl[47] = {coll = 0x0002};               -- Tinnos wasp respawn point
+tr3_entity_tbl[48] = {coll = 0x0002};               -- Raptor respawn point
+tr3_entity_tbl[49] = {coll = 0x0002};               -- Willard spider
+tr3_entity_tbl[50] = {coll = 0x0002};               -- RX-Tech flamethrower guy
+tr3_entity_tbl[51] = {coll = 0x0002};               -- London goon
+tr3_entity_tbl[53] = {coll = 0x0002};               -- 'Damned' stick-wielding goon
+tr3_entity_tbl[56] = {coll = 0x0002};               -- London guard
+tr3_entity_tbl[57] = {coll = 0x0002};               -- Sophia Lee
+tr3_entity_tbl[58] = {coll = 0x0001};               -- Thames Wharf machine
+tr3_entity_tbl[60] = {coll = 0x0002};               -- MP with stick
+tr3_entity_tbl[61] = {coll = 0x0002};               -- MP with gun
+tr3_entity_tbl[62] = {coll = 0x0002};               -- Prisoner
+tr3_entity_tbl[63] = {coll = 0x0002};               -- MP with sighted gun and night sight
+tr3_entity_tbl[64] = {coll = 0x0002};               -- Gun turret
+tr3_entity_tbl[65] = {coll = 0x0002};               -- Dam guard
+tr3_entity_tbl[66] = {coll = 0x0002, hide = 1};     -- Kind of tripwire
+tr3_entity_tbl[67] = {coll = 0x0002, hide = 1};     -- Electrified wire
+tr3_entity_tbl[68] = {coll = 0x0002, hide = 1};     -- Killer tripwire
+tr3_entity_tbl[69] = {coll = 0x0002};               -- Cobra / Rattlesnake
+tr3_entity_tbl[70] = {coll = 0x0001};               -- Temple statue
+tr3_entity_tbl[71] = {coll = 0x0002};               -- Monkey
+tr3_entity_tbl[73] = {coll = 0x0002};               -- Tony Firehands
 
 -- AI OBJECTS --
 
@@ -726,16 +726,16 @@ tr3_entity_tbl[82] = {coll = 0x0000, hide = 1};  -- Unknown Id #82
 
 -- TRAPS & DOORS --
 
-tr3_entity_tbl[83] = {coll = 0x0001};      		 -- Collapsible floor
-tr3_entity_tbl[86] = {coll = 0x0001};      		 -- Swinging thing
-tr3_entity_tbl[87] = {coll = 0x0001};      		 -- Spikes / Barbed wire
-tr3_entity_tbl[88] = {coll = 0x0001};      		 -- Boulder / Barrel
-tr3_entity_tbl[89] = {coll = 0x0001};      		 -- Giant boulder (Temple of Puna)
-tr3_entity_tbl[90] = {coll = 0x0001};      		 -- Disk (like dart)
-tr3_entity_tbl[91] = {coll = 0x0001};      		 -- Dart shooter
-tr3_entity_tbl[94] = {coll = 0x0001};      		 -- Spiked impaled skeleton / Slamming door
-tr3_entity_tbl[97] = {coll = 0x0001};      		 -- Movable cubical block (pushable)
-tr3_entity_tbl[98] = {coll = 0x0001};      		 -- Movable cubical block (pushable)
+tr3_entity_tbl[83] = {coll = 0x0001};            -- Collapsible floor
+tr3_entity_tbl[86] = {coll = 0x0001};            -- Swinging thing
+tr3_entity_tbl[87] = {coll = 0x0001};            -- Spikes / Barbed wire
+tr3_entity_tbl[88] = {coll = 0x0001};            -- Boulder / Barrel
+tr3_entity_tbl[89] = {coll = 0x0001};            -- Giant boulder (Temple of Puna)
+tr3_entity_tbl[90] = {coll = 0x0001};            -- Disk (like dart)
+tr3_entity_tbl[91] = {coll = 0x0001};            -- Dart shooter
+tr3_entity_tbl[94] = {coll = 0x0001};            -- Spiked impaled skeleton / Slamming door
+tr3_entity_tbl[97] = {coll = 0x0001};            -- Movable cubical block (pushable)
+tr3_entity_tbl[98] = {coll = 0x0001};            -- Movable cubical block (pushable)
 tr3_entity_tbl[101] = {coll = 0x0001};           -- Destroyable boarded-up window
 tr3_entity_tbl[102] = {coll = 0x0001};           -- Destroyable boarded-up window / wall
 tr3_entity_tbl[106] = {coll = 0x0001};           -- Overhead pulley hook

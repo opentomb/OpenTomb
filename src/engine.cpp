@@ -523,6 +523,37 @@ int lua_RemoveItem(lua_State * lua)
 }
 
 
+int lua_PrintItems(lua_State * lua)
+{
+    int top, entity_id;
+    top = lua_gettop(lua);
+    
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
+    entity_id = lua_tointeger(lua, 1);
+    
+    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", entity_id);
+        return 0;
+    }
+    
+    if(ent->character)
+    {
+        inventory_node_p i = ent->character->inventory;
+        for(;i;i=i->next)
+        {
+            Con_Printf("item[id = %d]: count = %d, type = %d", i->id, i->count, i->type);
+        }
+    }
+    return 0;
+}
+
+
 int lua_GetItemsCount(lua_State * lua)
 {
     int top, entity_id, item_id;
@@ -703,6 +734,39 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 /*
  * Moveables script control section
  */
+int lua_GetEntityVector(lua_State * lua)
+{
+    int id, top;
+    entity_p e1, e2;
+    
+    top = lua_gettop(lua);
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (id1, id2)");
+        return 0;
+    }
+    id = lua_tointeger(lua, 1);
+    e1 = World_GetEntityByID(&engine_world, id);
+    if(e1 == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    id = lua_tointeger(lua, 2);
+    e2 = World_GetEntityByID(&engine_world, id);
+    if(e2 == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+
+    lua_pushnumber(lua, e2->transform[12+0] - e1->transform[12+0]);
+    lua_pushnumber(lua, e2->transform[12+1] - e1->transform[12+1]);
+    lua_pushnumber(lua, e2->transform[12+2] - e1->transform[12+2]);
+    return 3;
+}
+
+
 int lua_GetEntityPosition(lua_State * lua)
 {
     int id, top;
@@ -1401,7 +1465,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     
     lua_register(lua, "addItem", lua_AddItem);
     lua_register(lua, "removeItem", lua_RemoveItem);
+    lua_register(lua, "printItems", lua_PrintItems);
     lua_register(lua, "getItemsCount", lua_GetItemsCount);
+    lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
@@ -2028,6 +2094,14 @@ int Engine_ExecCmd(char *ch)
                     for(int i=0;i<sect->owner_room->static_mesh_count;i++)
                     {
                         Con_Printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i].object_id);
+                    }
+                    for(engine_container_p cont=sect->owner_room->containers;cont;cont=cont->next)
+                    {
+                        if(cont->object_type == OBJECT_ENTITY)
+                        {
+                            entity_p e = (entity_p)cont->object;
+                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform[12+0], (int)e->transform[12+1], (int)e->transform[12+2], e->ID);
+                        }
                     }
                 }
             }

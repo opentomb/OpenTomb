@@ -275,7 +275,7 @@ tr3_new_track_tbl[075] = {file = "75_Refining_Plant.ogg", mode = LOOP};
 tr3_new_track_tbl[076] = {file = "76_Rumble_Sub.ogg", mode = LOOP};
 tr3_new_track_tbl[077] = {file = "77_Quake.ogg", mode = LOOP};
 tr3_new_track_tbl[078] = {file = "78_Blank.ogg", mode = ONCE};
-tr3_new_track_tbl[082] = {file = "82.ogg", mode = CHAT};		-- Home block begin
+tr3_new_track_tbl[082] = {file = "82.ogg", mode = CHAT};        -- Home block begin
 tr3_new_track_tbl[083] = {file = "83.ogg", mode = CHAT};
 tr3_new_track_tbl[084] = {file = "84.ogg", mode = CHAT};
 tr3_new_track_tbl[085] = {file = "85.ogg", mode = CHAT};
@@ -312,7 +312,7 @@ tr3_new_track_tbl[115] = {file = "115.ogg", mode = CHAT};
 tr3_new_track_tbl[116] = {file = "116.ogg", mode = CHAT};
 tr3_new_track_tbl[117] = {file = "117.ogg", mode = CHAT};
 tr3_new_track_tbl[118] = {file = "118.ogg", mode = CHAT};
-tr3_new_track_tbl[119] = {file = "119.ogg", mode = CHAT};		-- Home block end
+tr3_new_track_tbl[119] = {file = "119.ogg", mode = CHAT};        -- Home block end
 tr3_new_track_tbl[120] = {file = "120_In_The_Hut.ogg", mode = LOOP};
 tr3_new_track_tbl[121] = {file = "and so on.ogg", mode = ONCE};
 tr3_new_track_tbl[122] = {file = "secret.ogg", mode = ONCE};
@@ -400,7 +400,7 @@ tr3_old_track_tbl[075] = {file = "75_Refining_Plant.ogg", mode = LOOP};
 tr3_old_track_tbl[076] = {file = "76_Rumble_Sub.ogg", mode = LOOP};
 tr3_old_track_tbl[077] = {file = "77_Quake.ogg", mode = LOOP};
 tr3_old_track_tbl[078] = {file = "78_Blank.ogg", mode = ONCE};
-tr3_old_track_tbl[082] = {file = "82.ogg", mode = CHAT};		-- Home block begin
+tr3_old_track_tbl[082] = {file = "82.ogg", mode = CHAT};        -- Home block begin
 tr3_old_track_tbl[083] = {file = "83.ogg", mode = CHAT};
 tr3_old_track_tbl[084] = {file = "84.ogg", mode = CHAT};
 tr3_old_track_tbl[085] = {file = "85.ogg", mode = CHAT};
@@ -437,7 +437,7 @@ tr3_old_track_tbl[115] = {file = "115.ogg", mode = CHAT};
 tr3_old_track_tbl[116] = {file = "116.ogg", mode = CHAT};
 tr3_old_track_tbl[117] = {file = "117.ogg", mode = CHAT};
 tr3_old_track_tbl[118] = {file = "118.ogg", mode = CHAT};
-tr3_old_track_tbl[119] = {file = "119.ogg", mode = CHAT};		-- Home block end
+tr3_old_track_tbl[119] = {file = "119.ogg", mode = CHAT};        -- Home block end
 tr3_old_track_tbl[120] = {file = "120_In_The_Hut.ogg", mode = LOOP};
 tr3_old_track_tbl[121] = {file = "121_And_So_On.ogg", mode = ONCE};
 tr3_old_track_tbl[122] = {file = "122_secret.ogg", mode = ONCE};
@@ -712,36 +712,36 @@ tr5_track_tbl[135] = {file = "xa17_Andy11.ogg", mode = ONCE};
 
 function GetTrackInfo(ver, id)
     local tbl = {};
-	local path, method;
-	
+    local path, method;
+    
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         tbl    = tr1_track_tbl;
-		path   = "data/tr1/audio/";
-		method = OGG;
+        path   = "data/tr1/audio/";
+        method = OGG;
     elseif(ver < 5) then                -- TR_II, TR_II_DEMO
         tbl    = tr2_track_tbl;
-		path   = "data/tr2/audio/";
-		method = OGG;
+        path   = "data/tr2/audio/";
+        method = OGG;
     elseif(ver < 6) then                
-		if(USE_TR3_REMASTER == 1) then
-            tbl  = tr3_new_track_tbl;	-- TR_III (REMASTERED)
-		else
-			tbl  = tr3_old_track_tbl;	-- TR_III (OLD)
-		end
-		path   = "data/tr3/audio/";
-		method = OGG;
+        if(USE_TR3_REMASTER == 1) then
+            tbl  = tr3_new_track_tbl;    -- TR_III (REMASTERED)
+        else
+            tbl  = tr3_old_track_tbl;    -- TR_III (OLD)
+        end
+        path   = "data/tr3/audio/";
+        method = OGG;
     elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
         tbl    = tr4_track_tbl;
-		path   = "data/tr4/audio/";
-		method = OGG;
+        path   = "data/tr4/audio/";
+        method = OGG;
     elseif(ver < 9) then                -- TR_V
         tbl    = tr5_track_tbl;
-		path   = "data/tr5/audio/";
-		method = OGG;
+        path   = "data/tr5/audio/";
+        method = OGG;
     else
         return "NONE", -1, -1;
     end;
-	
+    
     if(tbl[id] == nil) then
         return "NONE", -1, -1;
     else
@@ -750,33 +750,33 @@ function GetTrackInfo(ver, id)
 end;
 
 function GetSecretTrackNumber(ver)
-	if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
-		return SECRET_TR1;
-	elseif(ver < 5) then                -- TR_II, TR_II_DEMO
-		return SECRET_TR2;
-	elseif(ver < 6) then                
-		return SECRET_TR3;
-	elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
-		return SECRET_TR4;
-	elseif(ver < 9) then                -- TR_V
-		return SECRET_TR5;
-	else
-		return 0;
-	end;
+    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
+        return SECRET_TR1;
+    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
+        return SECRET_TR2;
+    elseif(ver < 6) then                
+        return SECRET_TR3;
+    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
+        return SECRET_TR4;
+    elseif(ver < 9) then                -- TR_V
+        return SECRET_TR5;
+    else
+        return 0;
+    end;
 end;
 
 function GetNumTracks(ver)
-	if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
-		return tr1_num_soundtracks;
-	elseif(ver < 5) then                -- TR_II, TR_II_DEMO
-		return tr2_num_soundtracks;
-	elseif(ver < 6) then                
-		return tr3_num_soundtracks;
-	elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
-		return tr4_num_soundtracks;
-	elseif(ver < 9) then                -- TR_V
-		return tr5_num_soundtracks;
-	else
-		return 0;
-	end;
+    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
+        return tr1_num_soundtracks;
+    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
+        return tr2_num_soundtracks;
+    elseif(ver < 6) then                
+        return tr3_num_soundtracks;
+    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
+        return tr4_num_soundtracks;
+    elseif(ver < 9) then                -- TR_V
+        return tr5_num_soundtracks;
+    else
+        return 0;
+    end;
 end;

@@ -33,15 +33,15 @@
 
 int8_t TR_Level::read_bit8(SDL_RWops * const src)
 {
-	int8_t data;
+    int8_t data;
 
-	if (src == NULL)
-                Sys_extError("read_bit8: src == NULL");
+    if (src == NULL)
+        Sys_extError("read_bit8: src == NULL");
 
-	if (SDL_RWread(src, &data, 1, 1) < 1)
-                Sys_extError("read_bit8");
+    if (SDL_RWread(src, &data, 1, 1) < 1)
+        Sys_extError("read_bit8");
 
-	return data;
+    return data;
 }
 
 /** \brief reads unsigned 8-bit value.
@@ -50,15 +50,15 @@ int8_t TR_Level::read_bit8(SDL_RWops * const src)
   */
 uint8_t TR_Level::read_bitu8(SDL_RWops * const src)
 {
-	uint8_t data;
+    uint8_t data;
 
-	if (src == NULL)
-                Sys_extError("read_bitu8: src == NULL");
+    if (src == NULL)
+        Sys_extError("read_bitu8: src == NULL");
 
-	if (SDL_RWread(src, &data, 1, 1) < 1)
-                Sys_extError("read_bitu8");
+    if (SDL_RWread(src, &data, 1, 1) < 1)
+        Sys_extError("read_bitu8");
 
-	return data;
+    return data;
 }
 
 /** \brief reads signed 16-bit value.
@@ -67,17 +67,17 @@ uint8_t TR_Level::read_bitu8(SDL_RWops * const src)
   */
 int16_t TR_Level::read_bit16(SDL_RWops * const src)
 {
-	int16_t data;
+    int16_t data;
 
-	if (src == NULL)
-                Sys_extError("read_bit16: src == NULL");
+    if (src == NULL)
+        Sys_extError("read_bit16: src == NULL");
 
-	if (SDL_RWread(src, &data, 2, 1) < 1)
-                Sys_extError("read_bit16");
+    if (SDL_RWread(src, &data, 2, 1) < 1)
+        Sys_extError("read_bit16");
 
-	data = SDL_SwapLE16(data);
+    data = SDL_SwapLE16(data);
 
-	return data;
+    return data;
 }
 
 /** \brief reads unsigned 16-bit value.
@@ -86,17 +86,17 @@ int16_t TR_Level::read_bit16(SDL_RWops * const src)
   */
 uint16_t TR_Level::read_bitu16(SDL_RWops * const src)
 {
-	uint16_t data;
+    uint16_t data;
 
-	if (src == NULL)
-                Sys_extError("read_bitu16: src == NULL");
+    if (src == NULL)
+        Sys_extError("read_bitu16: src == NULL");
 
-	if (SDL_RWread(src, &data, 2, 1) < 1)
-		Sys_extError("read_bitu16");
+    if (SDL_RWread(src, &data, 2, 1) < 1)
+        Sys_extError("read_bitu16");
 
-	data = SDL_SwapLE16(data);
+    data = SDL_SwapLE16(data);
 
-	return data;
+    return data;
 }
 
 /** \brief reads signed 32-bit value.
@@ -105,17 +105,17 @@ uint16_t TR_Level::read_bitu16(SDL_RWops * const src)
   */
 int32_t TR_Level::read_bit32(SDL_RWops * const src)
 {
-	int32_t data;
+    int32_t data;
 
-	if (src == NULL)
-                Sys_extError("read_bit32: src == NULL");
+    if (src == NULL)
+        Sys_extError("read_bit32: src == NULL");
 
-	if (SDL_RWread(src, &data, 4, 1) < 1)
-                Sys_extError("read_bit32");
+    if (SDL_RWread(src, &data, 4, 1) < 1)
+        Sys_extError("read_bit32");
 
-	data = SDL_SwapLE32(data);
+    data = SDL_SwapLE32(data);
 
-	return data;
+    return data;
 }
 
 /** \brief reads unsigned 32-bit value.
@@ -124,17 +124,17 @@ int32_t TR_Level::read_bit32(SDL_RWops * const src)
   */
 uint32_t TR_Level::read_bitu32(SDL_RWops * const src)
 {
-	uint32_t data;
+    uint32_t data;
 
-	if (src == NULL)
-                Sys_extError("read_bitu32: src == NULL");
+    if (src == NULL)
+        Sys_extError("read_bitu32: src == NULL");
 
-	if (SDL_RWread(src, &data, 4, 1) < 1)
-                Sys_extError("read_bitu32");
+    if (SDL_RWread(src, &data, 4, 1) < 1)
+        Sys_extError("read_bitu32");
 
-	data = SDL_SwapLE32(data);
+    data = SDL_SwapLE32(data);
 
-	return data;
+    return data;
 }
 
 /** \brief reads float value.
@@ -143,15 +143,15 @@ uint32_t TR_Level::read_bitu32(SDL_RWops * const src)
   */
 float TR_Level::read_float(SDL_RWops * const src)
 {
-	float data;
+    float data;
 
-	if (src == NULL)
-                Sys_extError("read_float: src == NULL");
+    if (src == NULL)
+        Sys_extError("read_float: src == NULL");
 
-	if (SDL_RWread(src, &data, 4, 1) < 1)
-                Sys_extError("read_float");
+    if (SDL_RWread(src, &data, 4, 1) < 1)
+        Sys_extError("read_float");
 
-	data = SDL_SwapLE32(data);
+    data = SDL_SwapLE32(data);
 
-	return data;
+    return data;
 }

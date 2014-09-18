@@ -15,10 +15,10 @@ level = {};
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- 2 - Assign our level information
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
---Array		[1]	Level Name								[2] Level File Path										[3] Level Load Screen Path
+--Array       [1]    Level Name                 [2] Level File Path                             [3] Level Load Screen Path
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-level[01]  = { name = "Return to Egypt",				filepath = basepath .. "data/EGYPT.tub",         		picpath = basepath .. "pix/egyptloa.png"       	  };
-level[02]  = { name = "Temple of the Cat",				filepath = basepath .. "data/CAT.tub",   	      		picpath = basepath .. "pix/egyptloa.png"          };
-level[03]  = { name = "Atlantean Stronghold",			filepath = basepath .. "data/END.tub",  	    		picpath = basepath .. "pix/atlanloa.png" 	   	  };
-level[04]  = { name = "The Hive",						filepath = basepath .. "data/END2.tub",  		    	picpath = basepath .. "pix/atlanloa.png" 	   	  };
+level[01] = { name = "Return to Egypt",         filepath = basepath .. "data/EGYPT.tub",        picpath = basepath .. "pix/egyptloa.png" };
+level[02] = { name = "Temple of the Cat",       filepath = basepath .. "data/CAT.tub",          picpath = basepath .. "pix/egyptloa.png" };
+level[03] = { name = "Atlantean Stronghold",    filepath = basepath .. "data/END.tub",          picpath = basepath .. "pix/atlanloa.png" };
+level[04] = { name = "The Hive",                filepath = basepath .. "data/END2.tub",         picpath = basepath .. "pix/atlanloa.png" };
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
