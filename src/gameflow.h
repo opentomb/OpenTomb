@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "engine.h"
 
 #define TR_GAMEFLOW_MAX_SECRETS 256
 
 typedef struct gameflow_manager_s
 {
-    const char* Script;
-    const char* CurrentLevelName;
-    const char* CurrentLevelPath;
+    char        Script[MAX_ENGINE_PATCH];                                       ///@PARANOID: copy LUA string to the external buffer; I do not know, how much time returned LUA's string pointer is valid;
+    char        CurrentLevelName[LEVEL_NAME_MAX_LEN];
+    char        CurrentLevelPath[MAX_ENGINE_PATCH];
     uint8_t     CurrentLevelID;
 
     uint8_t     Opcode;
@@ -16,7 +17,7 @@ typedef struct gameflow_manager_s
 
     bool        NextAction;
 
-    char        SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS]; //Info for what secrets have been triggered in a level
+    char        SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
     
 } gameflow_manager_t, *gameflow_manager_p;
 

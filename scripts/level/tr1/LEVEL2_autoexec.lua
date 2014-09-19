@@ -92,4 +92,4 @@ entity_funcs[56] = {}; entity_funcs[56].activate = activate_trap_axes;
 entity_funcs[57] = {}; entity_funcs[57].activate = activate_trap_axes;
 entity_funcs[58] = {}; entity_funcs[58].activate = activate_trap_axes;
 
-print("LEVEL2_trigger.lua loaded");
+print("LEVEL2_autoexec.lua loaded");

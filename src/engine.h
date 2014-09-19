@@ -10,7 +10,7 @@
 #include "controls.h"
 
 #define LEVEL_NAME_MAX_LEN                      (64)
-#define MAX_ENGINE_PATCH                        (255)
+#define MAX_ENGINE_PATCH                        (1024)
 
 #define OBJECT_STATIC_MESH                      (0x0001)
 #define OBJECT_ROOM_BASE                        (0x0002)

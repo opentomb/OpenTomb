@@ -1,6 +1,9 @@
 -- OPENTOMB TRIGGER SCRIPT
 -- FOR TOMB RAIDER 1, LEVEL2 - 
 
+-----------------it is a bad idea to use one script for difference maps: may be collisions between entities!
+
+--[[
 -- disable / enable entities
 -- Bats
 setEntityActivity(1, 0);
@@ -138,6 +141,7 @@ function activateEntity(object_id, activator_id)
         entity_funcs[object_id].activate(object_id, activator_id);
     end
 end
+--]]
 
 --print("==============  try to set pickables  =================");
 create_pickup_func(58, 1);
