@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="94">
+<configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -34,6 +34,15 @@
         <logicalFolder name="tr1" displayName="tr1" projectFiles="true">
           <itemPath>scripts/level/tr1/GYM.lua</itemPath>
           <itemPath>scripts/level/tr1/LEVEL1.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL10B_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL10C_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL1_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL2_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL6_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL7A_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL8A_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL8B_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr1/LEVEL8C_autoexec.lua</itemPath>
         </logicalFolder>
         <logicalFolder name="tr2" displayName="tr2" projectFiles="true">
           <itemPath>scripts/level/tr2/ASSAULT.lua</itemPath>
@@ -1133,6 +1142,51 @@
       <item path="scripts/level/tr1/GYM.lua" ex="false" tool="3" flavor2="0">
       </item>
       <item path="scripts/level/tr1/LEVEL1.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL10B_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL10C_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL1_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL2_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL6_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL7A_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL8A_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL8B_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL8C_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr2/ASSAULT.lua" ex="false" tool="3" flavor2="0">
       </item>
@@ -4016,6 +4070,51 @@
       <item path="scripts/level/tr1/GYM.lua" ex="false" tool="3" flavor2="0">
       </item>
       <item path="scripts/level/tr1/LEVEL1.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL10B_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL10C_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL1_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL2_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL6_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL7A_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL8A_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL8B_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr1/LEVEL8C_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr2/ASSAULT.lua" ex="false" tool="3" flavor2="0">
       </item>

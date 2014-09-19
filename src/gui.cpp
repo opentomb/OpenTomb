@@ -319,7 +319,7 @@ void Gui_Render()
    
     Gui_DrawCrosshair();
     Gui_DrawBars();
-    Gui_DrawFaders();
+    Gui_DrawFaders();                                                           ///@FIXME: there are cases when fader is permanently incomplete!
     Con_Draw();
     Gui_RenderStrings();
 

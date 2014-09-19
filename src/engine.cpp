@@ -1844,27 +1844,7 @@ int Engine_LoadMap(const char *name)
 
     renderer.world = NULL;
     
-    tr_level.read_level(name, trv);
-    tr_level.prepare_level();
-    
-    Gui_DrawLoadScreen(50);
-
-#if 0
-    tr_level.dump_textures();
-#endif
-    
-    Gui_DrawLoadScreen(100);
-
-    World_Empty(&engine_world);
-    World_Prepare(&engine_world);
-    
-    Gui_DrawLoadScreen(150);
-    
-    TR_GenWorld(&engine_world, &tr_level);
-    
-    engine_world.ID   = 0;
-    engine_world.name = 0;
-    engine_world.type = 0;
+    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATCH);         // it is needed for "not in the game" levels or correct saves loading.
     CVAR_set_val_s("game_level", name);
     CVAR_set_val_d("engine_version", (btScalar)trv);
 
@@ -1893,6 +1873,25 @@ int Engine_LoadMap(const char *name)
     strcat(sbuf, buf);
     strcat(sbuf, ".lua");
     CVAR_set_val_s("game_script", sbuf);
+    
+    tr_level.read_level(name, trv);
+    tr_level.prepare_level();
+    
+    Gui_DrawLoadScreen(50);
+    //tr_level.dump_textures();
+    
+    Gui_DrawLoadScreen(100);
+
+    World_Empty(&engine_world);
+    World_Prepare(&engine_world);
+    
+    Gui_DrawLoadScreen(150);
+    
+    TR_GenWorld(&engine_world, &tr_level);
+    
+    engine_world.ID   = 0;
+    engine_world.name = 0;
+    engine_world.type = 0;
     
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);

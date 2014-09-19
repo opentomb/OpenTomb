@@ -53,14 +53,17 @@ end;
 ---------------------------------------------------------------------------------------------------------------------------------------
 function NextLevelNum(currentlevel, operand)
     local nextlevel;
-    
+    if(numlevels == nil) then
+        numlevels = 0;
+    end;
+
     if(operand == 0) then    -- If zero we just get the next level (TR1/2/3/5)
         nextlevel = currentlevel + 1;
     else
         nextlevel = operand; -- Or we load the level id from the level end triggers operand (TR4)
     end;
 
-    if((nextlevel == gameflow_lara_home_index) and (level[0] ~= nil)) then    -- Load Lara's Home level, if exist.
+    if((nextlevel == gameflow_lara_home_index) and (level[0] ~= nil)) then      -- Load Lara's Home level, if exist.
         nextlevel = 0;
     elseif(nextlevel > numlevels) then -- No Lara's Home, load first level instead.
         nextlevel = 1;
@@ -83,6 +86,10 @@ end;
 -- Get next level's loading screen.
 ---------------------------------------------------------------------------------------------------------------------------------------
 function GetLoadingScreen(currentlevel, operand)
-    local level_number = NextLevelNum(currentlevel, operand);
-    return level[level_number].picpath;
+    if(level ~= nil) then
+        local level_number = NextLevelNum(currentlevel, operand);
+        return level[level_number].picpath;
+    else
+        return "NULL";
+    end;
 end;
