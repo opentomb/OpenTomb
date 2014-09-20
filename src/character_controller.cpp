@@ -584,7 +584,8 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
         fc->ceiling_obj = (btCollisionObject*)cb->m_collisionObject;
     }
     
-    if(!fc->floor_hit && fc->ceiling_hit)
+    /// may be really delete that commented code???
+    /*if(!fc->floor_hit && fc->ceiling_hit)
     {
         from = fc->ceiling_point;
         from.m_floats[2] -= 64.0;
@@ -615,7 +616,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
                 fc->floor_normale = cb->m_hitNormalWorld;
             }
         }
-    }
+    }*/
 }
 
 /**

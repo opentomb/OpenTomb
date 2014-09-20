@@ -1722,9 +1722,9 @@ int Engine_GetLevelVersion(const char *name)
                 ret = TR_II;                                                    // TR_II
             }
             else if((check[0] == 0x38 || check[0] == 0x34) &&
-                     check[1] == 0x00 &&
-                    (check[2] == 0x18 || check[2] == 0x08)&&
-                     check[3] == 0xFF)
+                    (check[1] == 0x00) &&
+                    (check[2] == 0x18 || check[2] == 0x08) &&
+                    (check[3] == 0xFF))
             {
                 ret = TR_III;                                                   // TR_III
             }

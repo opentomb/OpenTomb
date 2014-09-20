@@ -571,7 +571,7 @@ void Game_UpdateCharacters()
     }
 }
 
-btScalar Game_Tick(btScalar *game_logic_time)
+__inline btScalar Game_Tick(btScalar *game_logic_time)
 {
     int t;
     t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
