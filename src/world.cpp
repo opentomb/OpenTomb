@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL.h>
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
@@ -305,8 +306,8 @@ void World_Empty(world_p world)
     Engine_LuaClearTasks();
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
-
-    // Now we can delete all other
+    SDL_Delay(500);                                                             ///@FIXME: find correct time, or way to waiting ALL audio tracks stopping and destroing.
+    // Now we can delete all other. Be carefull: OpenAL uses multithreading!
     for(i=0;i<world->room_count;i++)
     {
         Room_Empty(world->rooms+i);

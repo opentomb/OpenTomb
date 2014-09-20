@@ -32,7 +32,7 @@ void Gameflow_Do()
     switch(gameflow_manager.Opcode)
     {
         case TR_GAMEFLOW_OP_LEVELCOMPLETE:
-            //if(Gui_FadeCheck(FADER_LOADSCREEN) == TR_FADER_STATUS_COMPLETE)     // Switch level only when fade is complete!
+            if(Gui_FadeCheck(FADER_LOADSCREEN) == TR_FADER_STATUS_COMPLETE)     // Switch level only when fade is complete!
             {
                 // Get our script filepath from game_script cvar!
                 strncpy(gameflow_manager.Script, CVAR_get_val_s("game_script"), MAX_ENGINE_PATCH);
@@ -64,13 +64,12 @@ void Gameflow_Do()
                     Con_Printf("Fatal Error: Failed to call GetNextLevel(); from LUA script: %s", gameflow_manager.Script);
                 }
             }
-            /*else
+            else
             {
                 // If fadeout is in the process, we block level loading until it is complete.
                 // It is achieved by not resetting action marker and exiting the function instead.
                 return;
-
-            } */  // end if(Gui_FadeCheck(FADER_LOADSCREEN))
+            }   // end if(Gui_FadeCheck(FADER_LOADSCREEN))
             break;
 
         default:

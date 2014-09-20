@@ -319,7 +319,7 @@ void Gui_Render()
    
     Gui_DrawCrosshair();
     Gui_DrawBars();
-    Gui_DrawFaders();                                                           ///@FIXME: there are cases when fader is permanently incomplete!
+    Gui_DrawFaders();
     Con_Draw();
     Gui_RenderStrings();
 
@@ -523,19 +523,19 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         glBegin(GL_POLYGON);
 
             glColor4fv(colorUpperLeft);     // Upper left
-            glTexCoord2i( 0, 0 );     // Upper left
+            glTexCoord2i( 0, 0 );           // Upper left
             glVertex2f(x, y + height);
 
             glColor4fv(colorUpperRight);    // Upper right
-            glTexCoord2i( 1, 0 );     // Upper right
+            glTexCoord2i( 1, 0 );           // Upper right
             glVertex2f(x + width, y + height);
 
             glColor4fv(colorLowerRight);    // Lower right
-            glTexCoord2i( 1, 1 );     // Lower right
+            glTexCoord2i( 1, 1 );           // Lower right
             glVertex2f(x + width, y);
 
             glColor4fv(colorLowerLeft);     // Lower left
-            glTexCoord2i( 0, 1 );     // Lower left
+            glTexCoord2i( 0, 1 );           // Lower left
             glVertex2f(x, y);
 
         glEnd();
@@ -581,9 +581,58 @@ bool Gui_FadeStart(int fader, int fade_direction)
 
 bool Gui_FadeAssignPic(int fader, const char* pic_name)
 {
+    char buf[MAX_ENGINE_PATCH];
+    size_t len = strlen(pic_name);
+    size_t ext_len = 0;
+    
+    ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
+    strncpy(buf, pic_name, MAX_ENGINE_PATCH);
+    if(!Engine_FileFound(buf, false))
+    {
+        for(;ext_len+1<len;ext_len++)
+        {
+            if(buf[len-ext_len-1] == '.')
+            {
+                break;
+            }
+        }
+        
+        if(ext_len + 1 == len)
+        {
+            return false;
+        }
+        
+        buf[len - ext_len + 0] = 'b';
+        buf[len - ext_len + 1] = 'm';
+        buf[len - ext_len + 2] = 'p';
+        buf[len - ext_len + 3] = 0;
+        if(!Engine_FileFound(buf, false))
+        {
+            buf[len - ext_len + 0] = 'j';
+            buf[len - ext_len + 1] = 'p';
+            buf[len - ext_len + 2] = 'g';
+            if(!Engine_FileFound(buf, false))
+            {
+                buf[len - ext_len + 0] = 'p';
+                buf[len - ext_len + 1] = 'n';
+                buf[len - ext_len + 2] = 'g';
+                if(!Engine_FileFound(buf, false))
+                {
+                    buf[len - ext_len + 0] = 't';
+                    buf[len - ext_len + 1] = 'g';
+                    buf[len - ext_len + 2] = 'a';
+                    if(!Engine_FileFound(buf, false))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    
     if(fader < FADER_LASTINDEX)
     {
-        return Fader[fader].SetTexture(pic_name);
+        return Fader[fader].SetTexture(buf);
     }
     else
     {
@@ -838,11 +887,14 @@ void gui_Fader::Cut()
 void gui_Fader::Show()
 {
     if(!mActive)
-        return; // If fader is not active, don't render it.
-    
-    if(mDirection == TR_FADER_DIR_IN)       // Fade in case
     {
-        if(mCurrentAlpha > 0.0)     // If alpha is more than zero, continue to fade.
+        mComplete = true;
+        return;                                 // If fader is not active, don't render it.
+    }
+    
+    if(mDirection == TR_FADER_DIR_IN)           // Fade in case
+    {
+        if(mCurrentAlpha > 0.0)                 // If alpha is more than zero, continue to fade.
         {
             mCurrentAlpha -= engine_frame_time * mSpeed;
         }
