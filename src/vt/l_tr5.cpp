@@ -114,7 +114,7 @@ void TR_Level::read_tr5_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & v
 void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 {
     uint32_t room_data_size;
-    uint32_t portal_offset;
+    uint32_t portal_offset;                         ///@FIXME: set, but not used
     uint32_t sector_data_offset;
     uint32_t static_meshes_offset;
     uint32_t layer_offset;
@@ -122,7 +122,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     uint32_t poly_offset;
     uint32_t poly_offset2;
     uint32_t vertices_size;
-    uint32_t light_size;
+    uint32_t light_size;                            ///@FIXME: set, but not used
 
     SDL_RWops *newsrc = NULL;
     uint32_t temp;
@@ -371,7 +371,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 
     {
         uint32_t vertex_index = 0;
-        int temp1;
+        int temp1;                          ///@FIXME: set, but not used
 
         room.num_vertices = vertices_size / 28;
         temp1 = room_data_size - (208 + vertices_offset + vertices_size);
@@ -598,10 +598,10 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
     for (i = 0; i < this->rooms_count; i++)
         read_tr5_room(src, this->rooms[i]);
 
-    this->floor_data_size = read_bitu32(src); 
+    this->floor_data_size = read_bitu32(src);
     this->floor_data = (uint16_t*)malloc(this->floor_data_size * sizeof(uint16_t));
     for(i = 0; i < this->floor_data_size; i++)
-        this->floor_data[i] = read_bitu16(src); 
+        this->floor_data[i] = read_bitu16(src);
 
     read_mesh_data(src);
 
@@ -795,7 +795,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
         this->sound_details[i].flags_2 = read_bitu8(src);
     }
-                    
+
     this->sample_indices_count = read_bitu32(src);
     this->sample_indices = (uint32_t*)malloc(this->sample_indices_count * sizeof(uint32_t));
     for(i=0; i < this->sample_indices_count; i++)

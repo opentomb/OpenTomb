@@ -84,7 +84,7 @@ typedef struct render_settings_s
     int8_t    texture_border;
     int8_t    z_depth;
     int8_t    fog_enabled;
-    GLfloat   fog_color[3];
+    GLfloat   fog_color[4];
     float     fog_start_depth;
     float     fog_end_depth;
 }render_settings_t, *render_settings_p;
@@ -92,11 +92,11 @@ typedef struct render_settings_s
 typedef struct render_s
 {
     int8_t                      blocked;
-    uint32_t                    style;                                          // 
+    uint32_t                    style;                                          //
     struct world_s             *world;
     struct camera_s            *cam;
     struct render_settings_s    settings;
-    
+
     uint32_t                    r_list_size;
     uint32_t                    r_list_active_count;
     struct render_list_s       *r_list;

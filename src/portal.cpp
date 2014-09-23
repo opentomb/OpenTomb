@@ -322,7 +322,7 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
     int i, ins, bz;
     btScalar *n, *v;
     frustum_p receiver = portal->dest_room->frustum;
-    frustum_p prev, current_gen = receiver;
+    frustum_p prev = NULL, current_gen = receiver;
     btScalar *tmp;
 
     if(vec3_plane_dist(portal->norm, render->cam->pos) < -SPLIT_EPSILON)        // Портал вырожден в линию или не лицевой
@@ -331,7 +331,7 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
            (render->cam->pos[1] > portal->dest_room->bb_min[1]) && (render->cam->pos[1] < portal->dest_room->bb_max[1]) &&
            (render->cam->pos[2] > portal->dest_room->bb_min[2]) && (render->cam->pos[2] < portal->dest_room->bb_max[2]))
         {
-            return emitter;                                                     // Данная проверка введена из за возможности наложения сосених комнат друг на друга
+            return emitter;                                                     // Данная проверка введена из за возможности наложения соседних комнат друг на друга
         }
         return NULL;
     }
@@ -366,9 +366,9 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
         prev = current_gen;
         current_gen = current_gen->next;
     }
-    if(current_gen == NULL)                                                     // There is no free frustums in this room
+    if((current_gen == NULL) && (prev != NULL))                            // There is no free frustums in this room
     {
-        current_gen = prev->next = Frustum_Create();                            // generate new frustum
+        current_gen = prev->next = Frustum_Create();                            // generate new frustum.
     }
     Frustum_SplitPrepare(current_gen, portal);                                  // prepare to the clipping
 

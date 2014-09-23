@@ -10,7 +10,7 @@ void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null);
 RedBlackNode_p RB_SearchNode(void *key, RedBlackHeader_p header)
 {
     RedBlackNode_p current = header->root;
-    
+
     while(current != NULL)
     {
         if(header->rb_compEQ(key, current->key))                                                       //data1 == data2
@@ -37,13 +37,13 @@ void rotateLeft(RedBlackHeader_p header, RedBlackNode_p x)
     {
         y->left->parent = x;
     }
-    
+
     /* establish y->parent link */
     if(y != NULL)
     {
         y->parent = x->parent;
     }
-    
+
     if(x->parent)
     {
         if(x == x->parent->left)
@@ -54,7 +54,7 @@ void rotateLeft(RedBlackHeader_p header, RedBlackNode_p x)
         {
             x->parent->right = y;
         }
-    } 
+    }
     else
     {
         header->root = y;
@@ -100,7 +100,7 @@ void rotateRight(RedBlackHeader_p header, RedBlackNode_p x)
         {
             x->parent->left = y;
         }
-    } 
+    }
     else
     {
         header->root = y;
@@ -125,7 +125,7 @@ RedBlackHeader_p RB_Init()
     p->root = NULL;
     p->height = 0;
     p->node_count = 0;
-    
+
     return p;
 }
 
@@ -182,7 +182,7 @@ void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
                 y->color = RBC_BLACK;
                 x->parent->parent->color = RBC_RED;
                 x = x->parent->parent;
-            } 
+            }
             else
             {
 
@@ -199,7 +199,7 @@ void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
                 x->parent->parent->color = RBC_RED;
                 rotateRight(p, x->parent->parent);                              //rotateRight(x->parent->parent)
             }
-        } 
+        }
         else
         {
             /* mirror image of above code */
@@ -211,7 +211,7 @@ void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
                 y->color = RBC_BLACK;
                 x->parent->parent->color = RBC_RED;
                 x = x->parent->parent;
-            } 
+            }
             else
             {
                 /* uncle is Black */
@@ -274,7 +274,7 @@ RedBlackNode_p RB_InsertIgnore(void *key, void *data, RedBlackHeader_p header)
         {
             parent->right = x;
         }
-    } 
+    }
     else
     {
         header->root = x;
@@ -337,7 +337,7 @@ RedBlackNode_p RB_InsertReplace(void *key, void *data, RedBlackHeader_p header)
         {
             parent->right = x;
         }
-    } 
+    }
     else
     {
         header->root = x;
@@ -375,7 +375,7 @@ void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null)
             {
                 w->color = RBC_RED;
                 x = x->parent;
-            } 
+            }
             else
             {
                 if(w->right == NULL || w->right->color == RBC_BLACK)
@@ -391,7 +391,7 @@ void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null)
                 rotateLeft (header, x->parent);
                 x = header->root;
             }
-        } 
+        }
         else
         {
             RedBlackNode_p w = x->parent->left;
@@ -407,7 +407,7 @@ void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null)
             {
                 w->color = RBC_RED;
                 x = x->parent;
-            } 
+            }
             else
             {
                 if (w->left == NULL || w->left->color == RBC_BLACK)
@@ -432,7 +432,7 @@ void deleteFixup(RedBlackHeader_p header, RedBlackNode_p x, char x_null)
 
 void RB_Delete(RedBlackHeader_p header, RedBlackNode_p z)
 {
-    RedBlackNode_p x, y, w;
+    RedBlackNode_p x, y, w = NULL;
     void *data = NULL;
     char x_null = 0;
    /*****************************
@@ -461,7 +461,7 @@ void RB_Delete(RedBlackHeader_p header, RedBlackNode_p z)
     {
         /* y has a NULL node as a child */
         y = z;
-    } 
+    }
     else
     {
         /* find tree successor with a NULL node as a child */
@@ -478,7 +478,7 @@ void RB_Delete(RedBlackHeader_p header, RedBlackNode_p z)
     {
         x = y->right;
     }
-    
+
     /* remove y from the parent chain */
 
     if(y->parent)
@@ -515,7 +515,7 @@ void RB_Delete(RedBlackHeader_p header, RedBlackNode_p z)
     {
         x->parent = y->parent;
     }
-    
+
     if(y != z)
     {
         z->data = y->data;

@@ -219,8 +219,7 @@
 @@ luai_writestringerror defines how to print error messages.
 ** (A format string with one argument is enough for Lua...)
 */
-//#define luai_writestringerror(s,p) \
-//	(fprintf(stderr, (s), (p)), fflush(stderr))
+//#define luai_writestringerror(s,p)    (fprintf(stderr, (s), (p)), fflush(stderr))
 
 
 /*

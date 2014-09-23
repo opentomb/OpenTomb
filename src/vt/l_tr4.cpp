@@ -42,7 +42,7 @@ void TR_Level::read_tr4_textile32(SDL_RWops * const src, tr4_textile32_t & texti
             Sys_extError("read_tr4_textile32");
 
         for (int j = 0; j < 256; j++)
-            textile.pixels[i][j] = SDL_SwapLE32(textile.pixels[i][j] & 0xff00ff00 | ((textile.pixels[i][j] & 0x00ff0000) >> 16) | ((textile.pixels[i][j] & 0x000000ff) << 16));
+            textile.pixels[i][j] = SDL_SwapLE32((textile.pixels[i][j] & 0xff00ff00) | ((textile.pixels[i][j] & 0x00ff0000) >> 16) | ((textile.pixels[i][j] & 0x000000ff) << 16));
     }
 }
 
@@ -248,7 +248,7 @@ void TR_Level::read_tr4_object_texture(SDL_RWops * const src, tr4_object_texture
 void TR_Level::read_tr4_sprite_texture(SDL_RWops * const src, tr_sprite_texture_t & sprite_texture)
 {
     int tx, ty, tw, th, tleft, tright, ttop, tbottom;
-        
+
     sprite_texture.tile = read_bitu16(src);
     if (sprite_texture.tile > 128)
         Sys_extWarn("sprite_texture.tile > 128");
@@ -261,7 +261,7 @@ void TR_Level::read_tr4_sprite_texture(SDL_RWops * const src, tr_sprite_texture_
     ttop = read_bit16(src);
     tright = read_bit16(src);
     tbottom = read_bit16(src);
-        
+
     sprite_texture.x0 = tleft;
     sprite_texture.x1 = tright;
     sprite_texture.y0 = tbottom;
@@ -286,17 +286,17 @@ void TR_Level::read_tr4_mesh(SDL_RWops * const src, tr4_mesh_t & mesh)
         read_tr_vertex16(src, mesh.vertices[i]);
 
     mesh.num_normals = read_bit16(src);
-    if (mesh.num_normals >= 0) 
+    if (mesh.num_normals >= 0)
     {
         mesh.num_lights = 0;
         mesh.normals = (tr5_vertex_t*)malloc(mesh.num_normals * sizeof(tr5_vertex_t));
         for (i = 0; i < mesh.num_normals; i++)
             read_tr_vertex16(src, mesh.normals[i]);
-    } 
-    else 
+    }
+    else
     {
         mesh.num_lights = -mesh.num_normals;
-        mesh.num_normals = 0;                
+        mesh.num_normals = 0;
         mesh.lights = (int16_t*)malloc(mesh.num_lights * sizeof(int16_t));
         for (i = 0; i < mesh.num_lights; i++)
             mesh.lights[i] = read_bit16(src);
@@ -382,7 +382,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             Sys_extError("read_tr4_level: textiles32 uncomp_size == 0");
 
         comp_size = read_bitu32(src);
-        if (comp_size > 0) 
+        if (comp_size > 0)
         {
             uncomp_buffer = new uint8_t[uncomp_size];
 
@@ -420,9 +420,9 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             Sys_extError("read_tr4_level: textiles16 uncomp_size == 0");
 
         comp_size = read_bitu32(src);
-        if (comp_size > 0) 
+        if (comp_size > 0)
         {
-            if (this->textile32_count == 0) 
+            if (this->textile32_count == 0)
             {
                 uncomp_buffer = new uint8_t[uncomp_size];
 
@@ -452,8 +452,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
                 delete [] uncomp_buffer;
 
                 uncomp_buffer = NULL;
-            } 
-            else 
+            }
+            else
             {
                 SDL_RWseek(src, comp_size, SEEK_CUR);
             }
@@ -464,7 +464,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             Sys_extError("read_tr4_level: textiles32d uncomp_size == 0");
 
         comp_size = read_bitu32(src);
-        if (comp_size > 0) 
+        if (comp_size > 0)
         {
             uncomp_buffer = new uint8_t[uncomp_size];
 
@@ -539,10 +539,10 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     for (i = 0; i < this->rooms_count; i++)
         read_tr4_room(newsrc, this->rooms[i]);
 
-    this->floor_data_size = read_bitu32(newsrc); 
+    this->floor_data_size = read_bitu32(newsrc);
     this->floor_data = (uint16_t*)malloc(this->floor_data_size * sizeof(uint16_t));
     for(i = 0; i < this->floor_data_size; i++)
-        this->floor_data[i] = read_bitu16(newsrc); 
+        this->floor_data[i] = read_bitu16(newsrc);
 
     read_mesh_data(newsrc);
 
@@ -676,7 +676,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
 
     if (read_bit8(newsrc) != 'X')
         Sys_extError("read_tr4_level: '\\0TEX' not found");
-    
+
     this->object_textures_count = read_bitu32(newsrc);
     this->object_textures = (tr4_object_texture_t*)malloc(this->object_textures_count * sizeof(tr4_object_texture_t));
     for (i = 0; i < this->object_textures_count; i++)
@@ -731,7 +731,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             this->sound_details[i].flags_2 = read_bitu8(newsrc);
         }
     }
-        
+
     // IMPORTANT NOTE: Sample indices ARE NOT USED in TR4 engine, but are parsed anyway.
     i = read_bitu32(newsrc);
     if(i)

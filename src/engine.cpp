@@ -191,7 +191,7 @@ void Engine_Init()
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-    
+
     Sys_Init();
     Com_Init();
     Render_Init();
@@ -246,7 +246,7 @@ void Engine_Init()
 int lua_SetModelCollisionMapSize(lua_State * lua)
 {
     int size, id, top;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                      ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     if(id < 0 || id > engine_world.skeletal_model_count - 1)
@@ -268,7 +268,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
 int lua_SetModelCollisionMap(lua_State * lua)
 {
     int arg, val, id, top;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                      ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     if(id < 0 || id > engine_world.skeletal_model_count - 1)
@@ -371,7 +371,7 @@ int lua_GetModelID(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);              ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -394,7 +394,7 @@ int lua_GetActivationOffset(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                  ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -475,7 +475,7 @@ int lua_AddItem(lua_State * lua)
 {
     int top, entity_id, item_id, count;
     top = lua_gettop(lua);
-    
+
     if(top < 3)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id, item_id, items_count)");
@@ -484,14 +484,14 @@ int lua_AddItem(lua_State * lua)
     entity_id = lua_tointeger(lua, 1);
     item_id = lua_tointeger(lua, 2);
     count = lua_tointeger(lua, 3);
-    
+
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", entity_id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, Character_AddItem(ent, item_id, count));
     return 1;
 }
@@ -501,7 +501,7 @@ int lua_RemoveItem(lua_State * lua)
 {
     int top, entity_id, item_id, count;
     top = lua_gettop(lua);
-    
+
     if(top < 3)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id, item_id, items_count)");
@@ -510,14 +510,14 @@ int lua_RemoveItem(lua_State * lua)
     entity_id = lua_tointeger(lua, 1);
     item_id = lua_tointeger(lua, 2);
     count = lua_tointeger(lua, 3);
-    
+
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", entity_id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, Character_RemoveItem(ent, item_id, count));
     return 1;
 }
@@ -527,21 +527,21 @@ int lua_PrintItems(lua_State * lua)
 {
     int top, entity_id;
     top = lua_gettop(lua);
-    
+
     if(top < 1)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id)");
         return 0;
     }
     entity_id = lua_tointeger(lua, 1);
-    
+
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", entity_id);
         return 0;
     }
-    
+
     if(ent->character)
     {
         inventory_node_p i = ent->character->inventory;
@@ -558,7 +558,7 @@ int lua_GetItemsCount(lua_State * lua)
 {
     int top, entity_id, item_id;
     top = lua_gettop(lua);
-    
+
     if(top < 2)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id, item_id)");
@@ -566,14 +566,14 @@ int lua_GetItemsCount(lua_State * lua)
     }
     entity_id = lua_tointeger(lua, 1);
     item_id = lua_tointeger(lua, 2);
-    
+
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", entity_id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, Character_GetItemsCount(ent, item_id));
     return 1;
 }
@@ -583,33 +583,33 @@ int lua_SetStateChangeRange(lua_State * lua)
 {
     int top, id, anim, state, dispath, frame_low, frame_high;
     top = lua_gettop(lua);
-    
+
     if(top < 6)
     {
         Con_Printf("Wrong arguments count. Must be (model_id, anim_num, state_id, dispath_num, start_frame, end_frame (, next_anim, next_frame)");
         return 0;
     }
-    
+
     id = lua_tointeger(lua, 1);
     anim = lua_tointeger(lua, 2);
     state = lua_tointeger(lua, 3);
     dispath = lua_tointeger(lua, 4);
     frame_low = lua_tointeger(lua, 5);
     frame_high = lua_tointeger(lua, 6);
-    
+
     skeletal_model_p model = World_FindModelByID(&engine_world, id);
     if(model == NULL)
     {
         Con_Printf("can not find skeletal model with id = %d", id);
         return 0;
     }
-    
+
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
         Con_Printf("wrong anim number");
         return 0;
     }
-    
+
     animation_frame_p af = model->animations + anim;
     for(int i=0;i<af->state_change_count;i++)
     {
@@ -632,7 +632,7 @@ int lua_SetStateChangeRange(lua_State * lua)
             break;
         }
     }
-    
+
     return 0;
 }
 
@@ -641,7 +641,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 {
     int top, id, anim, frame;
     top = lua_gettop(lua);
-    
+
     if(top < 3)
     {
         Con_Printf("Wrong arguments count. Must be (model_id, anim_num, frame_num");
@@ -650,36 +650,36 @@ int lua_GetAnimCommandTransform(lua_State * lua)
     id = lua_tointeger(lua, 1);
     anim = lua_tointeger(lua, 2);
     frame = lua_tointeger(lua, 3);
-    
+
     skeletal_model_p model = World_FindModelByID(&engine_world, id);
     if(model == NULL)
     {
         Con_Printf("can not find skeletal model with id = %d", id);
         return 0;
     }
-    
+
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
         Con_Printf("wrong anim number");
         return 0;
     }
-    
+
     if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
     {
         frame = (int)model->animations[anim].frames_count + frame;
     }
-    
+
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
         Con_Printf("wrong frame number");
         return 0;
     }
-    
+
     lua_pushinteger(lua, model->animations[anim].frames[frame].command);
     lua_pushnumber(lua, model->animations[anim].frames[frame].move[0]);
     lua_pushnumber(lua, model->animations[anim].frames[frame].move[1]);
     lua_pushnumber(lua, model->animations[anim].frames[frame].move[2]);
-    
+
     return 4;
 }
 
@@ -688,7 +688,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 {
     int top, id, anim, frame;
     top = lua_gettop(lua);
-    
+
     if(top < 4)
     {
         Con_Printf("Wrong arguments count. Must be (model_id, anim_num, frame_num, flag, (option: dx, dy, dz))");
@@ -697,31 +697,31 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     id = lua_tointeger(lua, 1);
     anim = lua_tointeger(lua, 2);
     frame = lua_tointeger(lua, 3);
-    
+
     skeletal_model_p model = World_FindModelByID(&engine_world, id);
     if(model == NULL)
     {
         Con_Printf("can not find skeletal model with id = %d", id);
         return 0;
     }
-    
+
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
         Con_Printf("wrong anim number");
         return 0;
     }
-    
+
     if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
     {
         frame = (int)model->animations[anim].frames_count + frame;
     }
-    
+
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
         Con_Printf("wrong frame number");
         return 0;
     }
-    
+
     model->animations[anim].frames[frame].command = 0x00ff & lua_tointeger(lua, 4);
     if(top >= 7)
     {
@@ -729,6 +729,8 @@ int lua_SetAnimCommandTransform(lua_State * lua)
         model->animations[anim].frames[frame].move[1] = lua_tonumber(lua, 6);
         model->animations[anim].frames[frame].move[2] = lua_tonumber(lua, 7);
     }
+
+    return 0;
 }
 
 /*
@@ -738,7 +740,7 @@ int lua_GetEntityVector(lua_State * lua)
 {
     int id, top;
     entity_p e1, e2;
-    
+
     top = lua_gettop(lua);
     if(top < 2)
     {
@@ -881,7 +883,7 @@ int lua_MoveEntityLocal(lua_State * lua)
     int id, top;
     entity_p ent;
     btScalar dx, dy, dz;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                      ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -964,7 +966,7 @@ int lua_SetEntityAnim(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                          ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -984,7 +986,7 @@ int lua_GetEntityAnim(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                          ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1061,7 +1063,7 @@ int lua_SetEntityVisibility(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                              ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1081,7 +1083,7 @@ int lua_GetEntityActivity(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                              ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1101,7 +1103,7 @@ int lua_SetEntityActivity(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);              ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1121,7 +1123,7 @@ int lua_GetEntityOCB(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                      ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1141,7 +1143,7 @@ int lua_GetEntityFlag(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                              ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1161,7 +1163,7 @@ int lua_SetEntityFlag(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                  ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1180,7 +1182,7 @@ int lua_GetEntityActivationMask(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                  ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1200,7 +1202,7 @@ int lua_SetEntityActivationMask(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                      ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1219,7 +1221,7 @@ int lua_GetEntityState(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);
+    top = lua_gettop(lua);                          ///@FIXME: top are not used!
     id = lua_tointeger(lua, 1);
 
     ent = World_GetEntityByID(&engine_world, id);
@@ -1236,16 +1238,15 @@ int lua_GetEntityState(lua_State * lua)
 
 int lua_SetEntityMeshswap(lua_State * lua)
 {
-    int top     = lua_gettop(lua);
+    int top     = lua_gettop(lua);                      ///@FIXME: top are not used!
     int id_src  = lua_tointeger(lua, 2);
     int id_dest = lua_tointeger(lua, 1);
 
     entity_p         ent_dest;
-    skeletal_model_p model_src, model_dest;
+    skeletal_model_p model_src;
 
     ent_dest   = World_GetEntityByID(&engine_world, id_dest);
     model_src  = World_FindModelByID(&engine_world, id_src );
-    model_dest = (skeletal_model_p)ent_dest->model;
 
     int meshes_to_copy = (ent_dest->bf.bone_tag_count > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->bf.bone_tag_count);
 
@@ -1254,13 +1255,13 @@ int lua_SetEntityMeshswap(lua_State * lua)
         ent_dest->bf.bone_tags[i].mesh  = model_src->mesh_tree[i].mesh;
         ent_dest->bf.bone_tags[i].mesh2 = model_src->mesh_tree[i].mesh2;
     }
-
+    return 0;
 }
 
 int lua_SetEntityState(lua_State * lua)
 {
     int id, top;
-    entity_p ent;
+    entity_p ent;                       ///@FIXME: top are not used!
     top = lua_gettop(lua);
     id = lua_tointeger(lua, 1);
 
@@ -1386,7 +1387,7 @@ int lua_SetLevel(lua_State *lua)
 
     Game_LevelTransition(id);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
-    
+
     return 0;
 }
 
@@ -1418,14 +1419,14 @@ int lua_SetGame(lua_State *lua)
         lua_pushnumber(lua, id);                                       // add to stack first argument
         lua_pcall(lua, 1, 0, 0);                                       // call that function
         lua_settop(lua, top);                                          // restore LUA stack
-        
+
         Con_Printf("Changing game to Tomb Raider %.1f", id);
-        
+
         Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, 1);
-        
+
         return 1;
     }
-    
+
     lua_settop(lua, top);   // restore LUA stack
     return 0;
 }
@@ -1445,7 +1446,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      * register globals
      */
     luaL_dostring(lua, CVAR_LUA_TABLE_NAME" = {};");
-    
+
     /*
      * register functions
      */
@@ -1462,7 +1463,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
     lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
-    
+
     lua_register(lua, "addItem", lua_AddItem);
     lua_register(lua, "removeItem", lua_RemoveItem);
     lua_register(lua, "printItems", lua_PrintItems);
@@ -1573,7 +1574,7 @@ void Engine_Shutdown(int val)
 
     IMG_Quit();
     SDL_Quit();
-    
+
     //printf("\nSDL_Quit...");
     exit(val);
 }
@@ -1596,7 +1597,7 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     va_start(argptr, fmt);
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
-    
+
     // Write it to target file
     fwrite(buf, 1, ret, f);
 
@@ -1796,7 +1797,7 @@ void Engine_GetLevelName(char *name, const char *path)
         name[0] = 0x00;
         return;
     }
-    
+
     ext = len = strlen(path);
     start = 0;
 
@@ -1843,7 +1844,7 @@ int Engine_LoadMap(const char *name)
     }
 
     renderer.world = NULL;
-    
+
     strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATCH);         // it is needed for "not in the game" levels or correct saves loading.
     CVAR_set_val_s("game_level", name);
     CVAR_set_val_d("engine_version", (btScalar)trv);
@@ -1873,35 +1874,35 @@ int Engine_LoadMap(const char *name)
     strcat(sbuf, buf);
     strcat(sbuf, ".lua");
     CVAR_set_val_s("game_script", sbuf);
-    
+
     tr_level.read_level(name, trv);
     tr_level.prepare_level();
-    
+
     Gui_DrawLoadScreen(50);
     //tr_level.dump_textures();
-    
+
     Gui_DrawLoadScreen(100);
 
     World_Empty(&engine_world);
     World_Prepare(&engine_world);
-    
+
     Gui_DrawLoadScreen(150);
-    
+
     TR_GenWorld(&engine_world, &tr_level);
-    
+
     engine_world.ID   = 0;
     engine_world.name = 0;
     engine_world.type = 0;
-    
+
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
     luaL_dofile(engine_lua, "scripts/autoexec.lua");
 
     Game_Prepare();
-    
+
     Render_SetWorld(&engine_world);
-    
+
     return 1;
 }
 
