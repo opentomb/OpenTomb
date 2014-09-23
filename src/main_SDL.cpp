@@ -440,7 +440,7 @@ void Engine_InitSDLImage()
     int flags = IMG_INIT_JPG | IMG_INIT_PNG;
     int init  = IMG_Init(flags);
 
-    if(init & flags != flags)
+    if((init & flags) != flags)
     {
         Sys_DebugLog(LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
     }
@@ -488,7 +488,7 @@ int main(int argc, char **argv)
     Engine_Init();
     Engine_InitGlobals();
     Engine_LoadConfig();
-    
+
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
     Engine_InitSDLImage();
@@ -733,7 +733,7 @@ void Engine_Frame(btScalar time)
 
 void ShowDebugInfo()
 {
-    room_sector_p rs = NULL;
+    room_sector_p rs = NULL;        ///@FIXME: set, but not used
     entity_p ent;
     btScalar tr[16];
     btTransform trans;

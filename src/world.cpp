@@ -659,7 +659,7 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
 void Room_Enable(room_p room)
 {
     int i;
-    engine_container_p cont;
+    //engine_container_p cont;
 
     if(room->active)
     {
@@ -753,7 +753,7 @@ void Room_SwapAlternate(room_p room)
 
 bool Room_IsAlternate(room_p room)
 {
-    bool is_alternate;
+    bool is_alternate = false;
 
     if(room->alternate_room)//If alternate room exists it's obviously not an alternate room!
     {

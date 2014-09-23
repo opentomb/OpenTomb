@@ -515,7 +515,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 break;
 
             case TR_ANIMCOMMAND_PLAYSOUND:
-                bool    surface_flag[2];
+                bool    surface_flag[2];            ///@FIXME: set, but not used!
                 int16_t sound_index;
 
                 if(entity->current_frame == *++pointer)
@@ -670,8 +670,8 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
 
 int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 {
-    uint16_t function, sub_function, b3, FD_function, operands;
-    uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;
+    uint16_t function, sub_function, b3, FD_function, operands = 0x0000;
+    uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;        ///@FIXME: set, but not used!
     int16_t slope_t01, slope_t00;
     int i, ret = 0;
     uint16_t *entry, *end_p, end_bit, cont_bit;
@@ -969,7 +969,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                 }
                 break;
-
+///@FIXME: check operands... is it mistake in variable using???
             case TR_FD_FUNC_TRIGGERER_MARK:
                 Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
                 break;
@@ -1000,7 +1000,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     {
         return;
     }
-    
+
     animation = (animation < 0)?(0):(animation);
 
     if(entity->character)
@@ -1179,7 +1179,7 @@ void Entity_DoAnimMove(entity_p entity)
     if(entity->model)
     {
         btScalar tr[3];
-        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;  
+        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
             Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
@@ -1232,7 +1232,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     if(anim != entity->current_animation)
     {
         entity->last_animation = entity->current_animation;
-        
+
         ret = 2;
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);
@@ -1250,8 +1250,8 @@ int Entity_Frame(entity_p entity, btScalar time)
         {
             entity->last_animation = entity->current_animation;
         }
-            
-        
+
+
         ret = 1;
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);

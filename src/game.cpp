@@ -576,6 +576,7 @@ __inline btScalar Game_Tick(btScalar *game_logic_time)
     int t;
     t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
     *game_logic_time -= (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+    return *game_logic_time;
 }
 
 void Game_Frame(btScalar time)
@@ -641,15 +642,15 @@ void Game_Frame(btScalar time)
 void Game_Prepare()
 {
     // Set character values to default.
-    
+
     Character_SetHealth(engine_world.Character, CHARACTER_OPTION_HEALTH_MAX);
     Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
     Character_SetSprint(engine_world.Character, CHARACTER_OPTION_SPRINT_MAX);
-    
+
     // Set gameflow parameters to default.
-    
+
     // Reset secret trigger map.
-    
+
     memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
 }
 

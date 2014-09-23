@@ -71,7 +71,7 @@ lua_State *level_script;
 int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
 {
     uint16_t function, sub_function, b3, FD_function, operands;
-    uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;
+    uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;             ///@FIXME: set, but not used
     int16_t slope_t01, slope_t00;
     int i, argn, ret = 0;
     uint16_t *entry, *end_p, end_bit, cont_bit;
@@ -1039,7 +1039,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
     strcat(buf, map);
     strcat(buf, "_autoexec.lua");
-    
+
     luaL_dofile(engine_lua, buf);
 
     // Set loadscreen fader to fade-in state.
@@ -1460,7 +1460,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     uint16_t *pointer;
     uint16_t  i, j, num_sequences, num_uvrotates;
     uint16_t  block_size = tr->animated_textures_count; // This is actually whole anim textures block size.
-    int32_t   uvrotate_script;
+    int32_t   uvrotate_script = 0;
 
     pointer       = tr->animated_textures;
     num_uvrotates = tr->animated_textures_uv_count;
@@ -2338,7 +2338,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
     tr_animation_t *tr_animation;
 
     uint32_t frame_offset, frame_step;
-    uint16_t *frame, temp1, temp2;
+    uint16_t *frame, temp1, temp2;              ///@FIXME: "frame" set, but not used
     float ang;
     btScalar rot[3];
 
