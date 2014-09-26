@@ -733,7 +733,6 @@ void Engine_Frame(btScalar time)
 
 void ShowDebugInfo()
 {
-    room_sector_p rs = NULL;        ///@FIXME: set, but not used
     entity_p ent;
     btScalar tr[16];
     btTransform trans;
@@ -776,7 +775,6 @@ void ShowDebugInfo()
 
 #if !SKELETAL_TEST
 
-    rs = NULL;
     ent = engine_world.Character;
     if(ent && ent->character)
     {
@@ -823,7 +821,7 @@ void ShowDebugInfo()
             //txt->show_rect = 1;
         }
 
-        Gui_OutTextXY(20, 68, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->last_animation, ent->current_animation, ent->next_animation, ent->last_state, ent->next_state);
+        Gui_OutTextXY(20, 68, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
         if(last_rmb)
         {
             Gui_OutTextXY(20, 48, "ent_rmb_ID = %d", last_rmb->ID);
@@ -1073,14 +1071,14 @@ void DebugKeys(int button, int state)
             case SDLK_e:
                 if(last_rmb)
                 {
-                    Entity_SetAnimation(last_rmb, last_rmb->current_animation + 1, 0);   // next anim
+                    Entity_SetAnimation(last_rmb, last_rmb->bf.current_animation + 1, 0);   // next anim
                 }
                 break;
 
             case SDLK_q:
                 if(last_rmb)
                 {
-                    Entity_SetAnimation(last_rmb, last_rmb->current_animation - 1, 0);   // previous anim
+                    Entity_SetAnimation(last_rmb, last_rmb->bf.current_animation - 1, 0);   // previous anim
                 }
                 break;
 

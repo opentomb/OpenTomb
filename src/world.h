@@ -139,11 +139,12 @@ typedef struct world_s
     uint32_t                    skeletal_model_count;   // number of base skeletal models
     struct skeletal_model_s    *skeletal_models;        // base skeletal models data
 
-    struct entity_s            *Character;              // this is an unique Lara pointer =)
+    struct entity_s            *Character;              // this is an unique Lara's pointer =)
     struct skeletal_model_s    *sky_box;                // global skybox
 
     struct RedBlackHeader_s    *entity_tree;            // tree of world active objects
-
+    struct RedBlackHeader_s    *items_tree;             // tree of world items [key].ss_bone_frame
+    
     uint32_t                    type;
 
     uint32_t                    floor_data_size;
@@ -177,7 +178,9 @@ void World_Empty(world_p world);
 int compEntityEQ(void *x, void *y);
 int compEntityLT(void *x, void *y);
 void RBEntityFree(void *x);
+void RBItemFree(void *x);
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
+struct ss_bone_frame_s *World_GetItemSSBFByID(world_p world, uint32_t id);
 
 void Room_Empty(room_p room);
 void Room_AddEntity(room_p room, struct entity_s *entity);
@@ -208,6 +211,8 @@ int Room_IsInNearRoomsList(room_p room, room_p r);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
 int World_DeleteEntity(world_p world, struct entity_s *entity);
+int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id);
+int World_DeleteItem(world_p world, uint32_t item_id);
 struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world);
 struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id);           // binary search the model by ID
 

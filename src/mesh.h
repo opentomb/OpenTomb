@@ -184,12 +184,27 @@ typedef struct ss_bone_tag_s
  */
 typedef struct ss_bone_frame_s
 {
+    uint32_t                    id;                                             // that structure is unique for entityes and items
     uint16_t                    bone_tag_count;                                 // number of bones
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
     btScalar                    pos[3];                                         // position (base offset)
     btScalar                    bb_min[3];                                      // bounding box min coordinates
     btScalar                    bb_max[3];                                      // bounding box max coordinates
     btScalar                    centre[3];                                      // bounding box centre
+    
+    int16_t                     last_state;
+    int16_t                     next_state;
+    int16_t                     last_animation;
+    int16_t                     current_animation;                              // 
+    int16_t                     next_animation;                                 // 
+    int16_t                     current_frame;                                  // 
+    int16_t                     next_frame;                                     // 
+    
+    btScalar                    period;                                         // one frame change period
+    btScalar                    frame_time;                                     // current time 
+    btScalar                    lerp;
+    
+    struct skeletal_model_s    *model;                                          // 
 }__attribute__((aligned(4))) ss_bone_frame_t, *ss_bone_frame_p;
 
 /*

@@ -37,7 +37,7 @@
 #include <GL/glu.h>     /* Header File For The GLU Library */
 #endif
 
-#define SAFE_GET_PROC( func, type, name) func = (type) SDL_GL_GetProcAddress( name)
+#define SAFE_GET_PROC( func, type, name) func = (type) SDL_GL_GetProcAddress(name)
 
 //extern char *engine_gl_ext_str;
 #ifndef GL_GLEXT_PROTOTYPES
@@ -135,8 +135,8 @@ extern PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB;
 extern PFNGLGETBUFFERPARAMETERIVARBPROC glGetBufferParameterivARB;
 extern PFNGLGETBUFFERPOINTERVARBPROC glGetBufferPointervARB;
 
-/*NEW*/
-extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
+/*ANT menu library GL funcs*/
+/*extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
 extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArray;
 extern PFNGLGENVERTEXARRAYSPROC glGenVertexArray;
 extern PFNGLISVERTEXARRAYPROC glIsVertexArray;
@@ -149,7 +149,7 @@ extern PFNGLBLENDFUNCSEPARATEPROC glBlendFuncSeparate;
 extern PFNGLBLENDEQUATIONPROC glBlendEquation;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
 extern PFNGLGETVERTEXATTRIBIVPROC glGetVertexAttribiv;
-extern PFNGLGETVERTEXATTRIBFVPROC glGetVertexAttribfv;
+extern PFNGLGETVERTEXATTRIBFVPROC glGetVertexAttribfv;*/
 
 #endif
 

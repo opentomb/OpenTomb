@@ -366,7 +366,7 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
         prev = current_gen;
         current_gen = current_gen->next;
     }
-    if((current_gen == NULL) && (prev != NULL))                            // There is no free frustums in this room
+    if((current_gen == NULL) && (prev != NULL))                                 // There is no free frustums in this room
     {
         current_gen = prev->next = Frustum_Create();                            // generate new frustum.
     }

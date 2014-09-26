@@ -23,9 +23,8 @@
 entity_p Entity_Create()
 {
     entity_p ret = (entity_p)calloc(1, sizeof(entity_t));
-    ret->frame_time = 0.0;
+    
     ret->move_type = MOVE_ON_FLOOR;
-    ret->next_state = 0;
     Mat4_E(ret->transform);
     ret->active = 1;
 
@@ -42,14 +41,17 @@ entity_p Entity_Create()
     ret->smooth_anim = 1;
     ret->current_sector = NULL;
     ret->onAnimChange = NULL;
+    ret->bf.id = 0x00;
+    ret->bf.model = NULL;
+    ret->bf.frame_time = 0.0;
+    ret->bf.next_state = 0;
+    ret->bf.lerp = 0.0;
+    ret->bf.current_animation = 0;
+    ret->bf.current_frame = 0;
+    ret->bf.next_animation = 0;
+    ret->bf.next_frame = 0;
 
-    ret->lerp = 0.0;
-    ret->current_animation = 0;
-    ret->current_frame = 0;
-    ret->next_animation = 0;
-    ret->next_frame = 0;
-
-    ret->bf.bone_tag_count = 0;;
+    ret->bf.bone_tag_count = 0;
     ret->bf.bone_tags = 0;
     vec3_set_zero(ret->bf.bb_max);
     vec3_set_zero(ret->bf.bb_min);
@@ -78,9 +80,9 @@ void Entity_Clear(entity_p entity)
             entity->bv = NULL;
         }
 
-        if(entity->model && entity->bt_body)
+        if(entity->bf.model && entity->bt_body)
         {
-            for(int i=0;i<entity->model->mesh_count;i++)
+            for(int i=0;i<entity->bf.model->mesh_count;i++)
             {
                 btRigidBody *body = entity->bt_body[i];
                 if(body)
@@ -205,7 +207,7 @@ void Entity_UpdateRigidBody(entity_p ent)
     btTransform bt_tr;
     room_p old_room;
 
-    if(!ent->model || !ent->bt_body || ((ent->model->animations->frames_count == 1) && (ent->model->animation_count == 1)))
+    if(!ent->bf.model || !ent->bt_body || ((ent->bf.model->animations->frames_count == 1) && (ent->bf.model->animation_count == 1)))
     {
         return;
     }
@@ -237,7 +239,7 @@ void Entity_UpdateRigidBody(entity_p ent)
     }
 #endif
 
-    for(i=0;i<ent->model->mesh_count;i++)
+    for(i=0;i<ent->bf.model->mesh_count;i++)
     {
         if(ent->bt_body[i])
         {
@@ -334,24 +336,24 @@ void Entity_UpdateRotation(entity_p entity)
 }
 
 
-void Entity_UpdateCurrentBoneFrame(entity_p entity)
+void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
 {
     long int k, stack_use;
     btScalar cmd_tr[3], tr[3];
-    ss_bone_tag_p btag = entity->bf.bone_tags;
+    ss_bone_tag_p btag = bf->bone_tags;
     bone_tag_p src_btag, next_btag;
     btScalar *stack, *sp, t;
-    skeletal_model_p model = entity->model;
+    skeletal_model_p model = bf->model;
     bone_frame_p curr_bf, next_bf;
 
-    next_bf = model->animations[entity->next_animation].frames + entity->next_frame;
-    curr_bf = model->animations[entity->current_animation].frames + entity->current_frame;
+    next_bf = model->animations[bf->next_animation].frames + bf->next_frame;
+    curr_bf = model->animations[bf->current_animation].frames + bf->current_frame;
 
-    t = 1.0 - entity->lerp;
-    if(curr_bf->command & ANIM_CMD_MOVE)
+    t = 1.0 - bf->lerp;
+    if(etr && (curr_bf->command & ANIM_CMD_MOVE))
     {
-        Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
-        vec3_mul_scalar(cmd_tr, tr, entity->lerp);
+        Mat4_vec3_rot_macro(tr, etr, curr_bf->move);
+        vec3_mul_scalar(cmd_tr, tr, bf->lerp);
     }
     else
     {
@@ -359,20 +361,20 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
         vec3_set_zero(cmd_tr);
     }
 
-    vec3_interpolate_macro(entity->bf.bb_max, curr_bf->bb_max, next_bf->bb_max, entity->lerp, t);
-    vec3_add(entity->bf.bb_max, entity->bf.bb_max, cmd_tr);
-    vec3_interpolate_macro(entity->bf.bb_min, curr_bf->bb_min, next_bf->bb_min, entity->lerp, t);
-    vec3_add(entity->bf.bb_min, entity->bf.bb_min, cmd_tr);
-    vec3_interpolate_macro(entity->bf.centre, curr_bf->centre, next_bf->centre, entity->lerp, t);
-    vec3_add(entity->bf.centre, entity->bf.centre, cmd_tr);
+    vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->lerp, t);
+    vec3_add(bf->bb_max, bf->bb_max, cmd_tr);
+    vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->lerp, t);
+    vec3_add(bf->bb_min, bf->bb_min, cmd_tr);
+    vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->lerp, t);
+    vec3_add(bf->centre, bf->centre, cmd_tr);
 
-    vec3_interpolate_macro(entity->bf.pos, curr_bf->pos, next_bf->pos, entity->lerp, t);
-    vec3_add(entity->bf.pos, entity->bf.pos, cmd_tr);
+    vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->lerp, t);
+    vec3_add(bf->pos, bf->pos, cmd_tr);
     next_btag = next_bf->bone_tags;
     src_btag = curr_bf->bone_tags;
     for(k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
     {
-        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, entity->lerp, t);
+        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->lerp, t);
         vec3_copy(btag->transform+12, btag->offset);
         btag->transform[15] = 1.0;
         if(k == 0)
@@ -386,20 +388,20 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
                 tq[2] = next_btag->qrotate[3];  // +  +
                 tq[3] =-next_btag->qrotate[2];  // -  -
 
-                btag->transform[12 + 0] -= entity->bf.pos[0];
-                btag->transform[12 + 1] -= entity->bf.pos[1];
-                btag->transform[12 + 2] += entity->bf.pos[2];
+                btag->transform[12 + 0] -= bf->pos[0];
+                btag->transform[12 + 1] -= bf->pos[1];
+                btag->transform[12 + 2] += bf->pos[2];
             }
             else
             {
                 vec4_copy(tq, next_btag->qrotate);
-                vec3_add(btag->transform+12, btag->transform+12, entity->bf.pos);
+                vec3_add(btag->transform+12, btag->transform+12, bf->pos);
             }
-            vec4_slerp(btag->qrotate, src_btag->qrotate, tq, entity->lerp);
+            vec4_slerp(btag->qrotate, src_btag->qrotate, tq, bf->lerp);
         }
         else
         {
-            vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, entity->lerp);
+            vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, bf->lerp);
         }
         Mat4_set_qrotation(btag->transform, btag->qrotate);
     }
@@ -410,7 +412,7 @@ void Entity_UpdateCurrentBoneFrame(entity_p entity)
     sp = stack = GetTempbtScalar(model->mesh_count * 16);
     stack_use = 0;
 
-    btag = entity->bf.bone_tags;
+    btag = bf->bone_tags;
 
     Mat4_Copy(btag->full_transform, btag->transform);
     Mat4_Copy(sp, btag->transform);
@@ -474,12 +476,12 @@ int  Entity_GetWaterState(entity_p entity)
 void Entity_DoAnimCommands(entity_p entity, int changing)
 {
     if((engine_world.anim_commands_count == 0) ||
-       (entity->model->animations[entity->current_animation].num_anim_commands > 255))
+       (entity->bf.model->animations[entity->bf.current_animation].num_anim_commands > 255))
     {
         return;  // If no anim commands or current anim has more than 255 (according to TRosettaStone).
     }
 
-    animation_frame_p af  = entity->model->animations + entity->current_animation;
+    animation_frame_p af  = entity->bf.model->animations + entity->bf.current_animation;
     uint32_t count        = af->num_anim_commands;
     int16_t *pointer      = engine_world.anim_commands + af->anim_command;
     int8_t   random_value = 0;
@@ -504,7 +506,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
 
             case TR_ANIMCOMMAND_KILL:
                 // This command executes ONLY at the end of animation.
-                if(entity->current_frame == af->frames_count - 1)
+                if(entity->bf.current_frame == af->frames_count - 1)
                 {
                     if(entity->character)
                     {
@@ -515,10 +517,9 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 break;
 
             case TR_ANIMCOMMAND_PLAYSOUND:
-                bool    surface_flag[2];            ///@FIXME: set, but not used!
                 int16_t sound_index;
 
-                if(entity->current_frame == *++pointer)
+                if(entity->bf.current_frame == *++pointer)
                 {
                     sound_index = *++pointer & 0x3FFF;
 
@@ -548,7 +549,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 // Effects (flipeffects) are various non-typical actions which vary
                 // across different TR game engine versions. There are common ones,
                 // however, and currently only these are supported.
-                if(entity->current_frame == *++pointer)
+                if(entity->bf.current_frame == *++pointer)
                 {
                     switch(*++pointer & 0x3FFF)
                     {
@@ -996,7 +997,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     long int t;
     btScalar dt;
 
-    if(!entity || !entity->model || (animation >= entity->model->animation_count))
+    if(!entity || !entity->bf.model || (animation >= entity->bf.model->animation_count))
     {
         return;
     }
@@ -1008,26 +1009,26 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
         entity->character->no_fix = 0x00;
     }
 
-    entity->lerp = 0.0;
-    anim = &entity->model->animations[animation];
+    entity->bf.lerp = 0.0;
+    anim = &entity->bf.model->animations[animation];
     frame %= anim->frames_count;
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
-    entity->period = 1.0 / 30.0;
+    entity->bf.period = 1.0 / 30.0;
 
-    entity->last_state = anim->state_id;
-    entity->next_state = anim->state_id;
+    entity->bf.last_state = anim->state_id;
+    entity->bf.next_state = anim->state_id;
     entity->current_speed = anim->speed;
-    entity->current_animation = animation;
-    entity->current_frame = frame;
-    entity->next_animation = animation;
-    entity->next_frame = frame;
+    entity->bf.current_animation = animation;
+    entity->bf.current_frame = frame;
+    entity->bf.next_animation = animation;
+    entity->bf.next_frame = frame;
 
-    entity->frame_time = (btScalar)frame * entity->period;
-    t = (entity->frame_time) / entity->period;
-    dt = entity->frame_time - (btScalar)t * entity->period;
-    entity->frame_time = (btScalar)frame * entity->period + dt;
+    entity->bf.frame_time = (btScalar)frame * entity->bf.period;
+    t = (entity->bf.frame_time) / entity->bf.period;
+    dt = entity->bf.frame_time - (btScalar)t * entity->bf.period;
+    entity->bf.frame_time = (btScalar)frame * entity->bf.period + dt;
 
-    Entity_UpdateCurrentBoneFrame(entity);
+    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity);
 }
 
@@ -1079,10 +1080,10 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 }
 
 
-int Entity_GetAnimDispatchCase(struct entity_s *ent, int id)
+int Entity_GetAnimDispatchCase(struct entity_s *entity, int id)
 {
     int i, j;
-    animation_frame_p anim = ent->model->animations + ent->current_animation;
+    animation_frame_p anim = entity->bf.model->animations + entity->bf.current_animation;
     state_change_p stc = anim->state_change;
     anim_dispath_p disp;
 
@@ -1098,8 +1099,8 @@ int Entity_GetAnimDispatchCase(struct entity_s *ent, int id)
             disp = stc->anim_dispath;
             for(j=0;j<stc->anim_dispath_count;j++,disp++)
             {
-                if((disp->frame_high >= disp->frame_low) && (ent->current_frame >= disp->frame_low) && (ent->current_frame <= disp->frame_high))// ||
-                   //(disp->frame_high <  disp->frame_low) && ((ent->current_frame >= disp->frame_low) || (ent->current_frame <= disp->frame_high)))
+                if((disp->frame_high >= disp->frame_low) && (entity->bf.current_frame >= disp->frame_low) && (entity->bf.current_frame <= disp->frame_high))// ||
+                   //(disp->frame_high <  disp->frame_low) && ((entity->bf.current_frame >= disp->frame_low) || (entity->bf.current_frame <= disp->frame_high)))
                 {
                     return j;
                 }
@@ -1113,25 +1114,25 @@ int Entity_GetAnimDispatchCase(struct entity_s *ent, int id)
 /*
  * Next frame and next anim calculation function.
  */
-void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim)
+void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
 {
-    animation_frame_p curr_anim = entity->model->animations + entity->current_animation;
+    animation_frame_p curr_anim = bf->model->animations + bf->current_animation;
     anim_dispath_p disp;
     int i;
 
-    *frame = (entity->frame_time + time) / entity->period;
+    *frame = (bf->frame_time + time) / bf->period;
     *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
-    *anim  = entity->current_animation;
+    *anim  = bf->current_animation;
 
     /*
      * Flag has a highest priority
      */
-    if(entity->anim_flags == ANIM_LOOP_LAST_FRAME)
+    if(anim_flags == ANIM_LOOP_LAST_FRAME)
     {
         if(*frame >= curr_anim->frames_count - 1)
         {
             *frame = curr_anim->frames_count - 1;
-            *anim  = entity->current_animation;                                  // paranoid dublicate
+            *anim  = bf->current_animation;                                     // paranoid dublicate
         }
         return;
     }
@@ -1149,7 +1150,7 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
         }
 
         *frame %= curr_anim->frames_count;
-        *anim   = entity->current_animation;                                      // paranoid dublicate
+        *anim   = bf->current_animation;                                      // paranoid dublicate
         return;
     }
 
@@ -1161,12 +1162,11 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
         disp = stc->anim_dispath;
         for(i=0;i<stc->anim_dispath_count;i++,disp++)
         {
-            if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))// ||
-               //(disp->frame_high <  disp->frame_low) && ((*frame >= disp->frame_low) || (*frame <= disp->frame_high)))
+            if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
             {
                 *anim  = disp->next_anim;
                 *frame = disp->next_frame;
-                //*frame = (disp->next_frame + (*frame - disp->frame_low)) % entity->model->animations[disp->next_anim].frames_count;
+                //*frame = (disp->next_frame + (*frame - disp->frame_low)) % bf->model->animations[disp->next_anim].frames_count;
                 return;                                                         // anim was changed
             }
         }
@@ -1176,10 +1176,10 @@ void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_chan
 
 void Entity_DoAnimMove(entity_p entity)
 {
-    if(entity->model)
+    if(entity->bf.model)
     {
         btScalar tr[3];
-        bone_frame_p curr_bf = entity->model->animations[entity->current_animation].frames + entity->current_frame;
+        bone_frame_p curr_bf = entity->bf.model->animations[entity->bf.current_animation].frames + entity->bf.current_frame;
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
             Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
@@ -1221,17 +1221,17 @@ int Entity_Frame(entity_p entity, btScalar time)
     animation_frame_p af;
     state_change_p stc;
 
-    if(!entity || !entity->active || !entity->model || !entity->model->animations || ((entity->model->animations->frames_count == 1) && (entity->model->animation_count == 1)))
+    if(!entity || !entity->active || !entity->bf.model || !entity->bf.model->animations || ((entity->bf.model->animations->frames_count == 1) && (entity->bf.model->animation_count == 1)))
     {
         return 0;
     }
 
-    entity->lerp = 0.0;
-    stc = Anim_FindStateChangeByID(entity->model->animations + entity->current_animation, entity->next_state);
-    Entity_GetNextFrame(entity, time, stc, &frame, &anim);
-    if(anim != entity->current_animation)
+    entity->bf.lerp = 0.0;
+    stc = Anim_FindStateChangeByID(entity->bf.model->animations + entity->bf.current_animation, entity->bf.next_state);
+    Entity_GetNextFrame(&entity->bf, time, stc, &frame, &anim, entity->anim_flags);
+    if(anim != entity->bf.current_animation)
     {
-        entity->last_animation = entity->current_animation;
+        entity->bf.last_animation = entity->bf.current_animation;
 
         ret = 2;
         Entity_DoAnimCommands(entity, ret);
@@ -1242,30 +1242,29 @@ int Entity_Frame(entity_p entity, btScalar time)
             entity->onAnimChange(entity);
             entity->onAnimChange = NULL;
         }
-        stc = Anim_FindStateChangeByID(entity->model->animations + entity->current_animation, entity->next_state);
+        stc = Anim_FindStateChangeByID(entity->bf.model->animations + entity->bf.current_animation, entity->bf.next_state);
     }
-    else if(entity->current_frame != frame)
+    else if(entity->bf.current_frame != frame)
     {
-        if(entity->current_frame == 0)
+        if(entity->bf.current_frame == 0)
         {
-            entity->last_animation = entity->current_animation;
+            entity->bf.last_animation = entity->bf.current_animation;
         }
-
 
         ret = 1;
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);
-        entity->current_frame = frame;
+        entity->bf.current_frame = frame;
     }
 
-    af = entity->model->animations + entity->current_animation;
-    entity->frame_time += time;
+    af = entity->bf.model->animations + entity->bf.current_animation;
+    entity->bf.frame_time += time;
 
-    t = (entity->frame_time) / entity->period;
-    dt = entity->frame_time - (btScalar)t * entity->period;
-    entity->frame_time = (btScalar)frame * entity->period + dt;
-    entity->lerp = (entity->smooth_anim)?(dt / entity->period):(0.0);
-    Entity_GetNextFrame(entity, entity->period, stc, &entity->next_frame, &entity->next_animation);
+    t = (entity->bf.frame_time) / entity->bf.period;
+    dt = entity->bf.frame_time - (btScalar)t * entity->bf.period;
+    entity->bf.frame_time = (btScalar)frame * entity->bf.period + dt;
+    entity->bf.lerp = (entity->smooth_anim)?(dt / entity->bf.period):(0.0);
+    Entity_GetNextFrame(&entity->bf, entity->bf.period, stc, &entity->bf.next_frame, &entity->bf.next_animation, entity->anim_flags);
 
     /*
      * Update acceleration
@@ -1275,7 +1274,7 @@ int Entity_Frame(entity_p entity, btScalar time)
         entity->current_speed += time * entity->character->speed_mult * (btScalar)af->accel_hi;
     }
 
-    Entity_UpdateCurrentBoneFrame(entity);
+    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity);
     if(ret)
     {
@@ -1290,7 +1289,7 @@ int Entity_Frame(entity_p entity, btScalar time)
  */
 void Entity_RebuildBV(entity_p ent)
 {
-    if(!ent || !ent->model)
+    if(!ent || !ent->bf.model)
     {
         return;
     }
@@ -1358,7 +1357,7 @@ void Entity_CheckActivators(struct entity_s *ent)
             {
                 v = e->transform + 12;
                 if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                                 (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
+                                  (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
                 {
                     lua_ActivateEntity(engine_lua, e->ID, ent->ID);
                 }

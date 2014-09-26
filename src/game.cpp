@@ -191,7 +191,7 @@ void Save_Entity(FILE **f, entity_p ent)
     fprintf(*f, "\n{");
     fprintf(*f, "\n\tpos \t%f\t%f\t%f", ent->transform[12], ent->transform[13], ent->transform[14]);
     fprintf(*f, "\n\tangles \t%f\t%f\t%f", ent->angles[0], ent->angles[1], ent->angles[2]);
-    fprintf(*f, "\n\tanim \t%d\t%d\t%f", ent->current_animation, ent->current_frame, ent->frame_time);
+    fprintf(*f, "\n\tanim \t%d\t%d\t%f", ent->bf.current_animation, ent->bf.current_frame, ent->bf.frame_time);
     r = -1;
     x = -1;
     y = -1;

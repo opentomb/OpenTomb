@@ -267,6 +267,7 @@ void World_Prepare(world_p world)
     world->textures = NULL;
     world->type = 0;
     world->entity_tree = NULL;
+    world->items_tree = NULL;
     world->Character = NULL;
 
     world->audio_sources = NULL;
@@ -334,6 +335,10 @@ void World_Empty(world_p world)
     RB_Free(world->entity_tree);
     world->entity_tree = NULL;
 
+    /*items empty*/
+    RB_Free(world->items_tree);
+    world->items_tree = NULL;
+    
     if(world->Character)
     {
         Entity_Clear(world->Character);
@@ -451,6 +456,13 @@ void RBEntityFree(void *x)
 }
 
 
+void RBItemFree(void *x)
+{
+    free(((ss_bone_frame_p)x)->bone_tags);
+    free(x);
+}
+
+
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
 {
     entity_p ent = NULL;
@@ -468,6 +480,24 @@ struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
     }
 
     return ent;
+}
+
+
+struct ss_bone_frame_s *World_GetItemSSBFByID(world_p world, uint32_t id)
+{
+    ss_bone_frame_p bf = NULL;
+    RedBlackNode_p node;
+
+    if(world && world->items_tree)
+    {
+        node = RB_SearchNode(&id, world->items_tree);
+        if(node)
+        {
+            bf = (ss_bone_frame_p)node->data;
+        }
+    }
+    
+    return bf;
 }
 
 
@@ -832,6 +862,58 @@ int World_AddEntity(world_p world, struct entity_s *entity)
 int World_DeleteEntity(world_p world, struct entity_s *entity)
 {
     RB_Delete(world->entity_tree, RB_SearchNode(&entity->ID, world->entity_tree));
+    return 1;
+}
+
+
+int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id)
+{
+    skeletal_model_p model = World_FindModelByID(world, model_id);
+    if((model == NULL) || (world->items_tree == NULL))
+    {
+        return 0;
+    }
+    
+    ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
+    bf->id = item_id;
+    vec3_set_zero(bf->bb_min);
+    vec3_set_zero(bf->bb_max);
+    vec3_set_zero(bf->centre);
+    vec3_set_zero(bf->pos);
+    bf->id = 0x00;
+    bf->frame_time = 0.0;
+    bf->period = 1.0 / 30.0;
+    bf->next_state = 0;
+    bf->lerp = 0.0;
+    bf->current_animation = 0;
+    bf->current_frame = 0;
+    bf->next_animation = 0;
+    bf->next_frame = 0;
+    
+    bf->model = model;
+    bf->bone_tag_count = model->mesh_count;
+    bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
+    for(int j=0;j<bf->bone_tag_count;j++)
+    {
+        bf->bone_tags[j].flag = bf->model->mesh_tree[j].flag;
+        bf->bone_tags[j].overrided = bf->model->mesh_tree[j].overrided;
+        bf->bone_tags[j].mesh = bf->model->mesh_tree[j].mesh;
+        bf->bone_tags[j].mesh2 = bf->model->mesh_tree[j].mesh2;
+
+        vec3_copy(bf->bone_tags[j].offset, bf->model->mesh_tree[j].offset);
+        vec4_set_zero(bf->bone_tags[j].qrotate);
+        Mat4_E_macro(bf->bone_tags[j].transform);
+        Mat4_E_macro(bf->bone_tags[j].full_transform);
+    }
+    
+    RB_InsertReplace(&bf->id, bf, world->items_tree);
+    return 1;
+}
+
+
+int World_DeleteItem(world_p world, uint32_t item_id)
+{
+    RB_Delete(world->items_tree, RB_SearchNode(&item_id, world->items_tree));
     return 1;
 }
 

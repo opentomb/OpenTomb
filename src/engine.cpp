@@ -246,9 +246,15 @@ void Engine_Init()
 int lua_SetModelCollisionMapSize(lua_State * lua)
 {
     int size, id, top;
-    top = lua_gettop(lua);                      ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
+    
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (id, value)");
+        return 0;
+    }
 
+    id = lua_tointeger(lua, 1);
     if(id < 0 || id > engine_world.skeletal_model_count - 1)
     {
         Con_Printf("there are not models with id = %d", id);
@@ -268,9 +274,15 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
 int lua_SetModelCollisionMap(lua_State * lua)
 {
     int arg, val, id, top;
-    top = lua_gettop(lua);                      ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
+    
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (id, map_index, value)");
+        return 0;
+    }
 
+    id = lua_tointeger(lua, 1);
     if(id < 0 || id > engine_world.skeletal_model_count - 1)
     {
         Con_Printf("there are not models with id = %d", id);
@@ -371,9 +383,15 @@ int lua_GetModelID(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);              ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
+    
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
 
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -381,9 +399,9 @@ int lua_GetModelID(lua_State * lua)
         return 0;
     }
 
-    if(ent->model)
+    if(ent->bf.model)
     {
-        lua_pushinteger(lua, ent->model->ID);
+        lua_pushinteger(lua, ent->bf.model->ID);
         return 1;
     }
     return 0;
@@ -394,9 +412,15 @@ int lua_GetActivationOffset(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                  ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
+    
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
 
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -520,6 +544,41 @@ int lua_RemoveItem(lua_State * lua)
 
     lua_pushinteger(lua, Character_RemoveItem(ent, item_id, count));
     return 1;
+}
+
+
+int lua_CreateBaseItem(lua_State * lua)
+{
+    int top, item_id, model_id;
+    top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (item_id, model_id)");
+        return 0;
+    }
+    item_id = lua_tointeger(lua, 1);
+    model_id = lua_tointeger(lua, 2);
+    World_CreateItem(&engine_world, item_id, model_id);
+    
+    return 0;
+}
+
+
+int lua_DeleteBaseItem(lua_State * lua)
+{
+    int top, item_id;
+    top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (item_idt)");
+        return 0;
+    }
+    
+    item_id = lua_tointeger(lua, 1);
+    World_DeleteItem(&engine_world, item_id);
+    return 0;
 }
 
 
@@ -794,6 +853,7 @@ int lua_GetEntityPosition(lua_State * lua)
     lua_pushnumber(lua, ent->angles[0]);
     lua_pushnumber(lua, ent->angles[1]);
     lua_pushnumber(lua, ent->angles[2]);
+
     return 6;
 }
 
@@ -883,9 +943,15 @@ int lua_MoveEntityLocal(lua_State * lua)
     int id, top;
     entity_p ent;
     btScalar dx, dy, dz;
-    top = lua_gettop(lua);                      ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
+    
+    if(top < 4)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, dx, dy, dz)");
+        return 0;
+    }
 
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -966,9 +1032,15 @@ int lua_SetEntityAnim(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                          ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
+    
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, anim_id)");
+        return 0;
+    }
 
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -986,9 +1058,15 @@ int lua_GetEntityAnim(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                          ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
+    
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
 
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -996,9 +1074,9 @@ int lua_GetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->current_animation);
-    lua_pushinteger(lua, ent->current_frame);
-    lua_pushinteger(lua, ent->model->animations[ent->current_animation].frames_count);
+    lua_pushinteger(lua, ent->bf.current_animation);
+    lua_pushinteger(lua, ent->bf.current_frame);
+    lua_pushinteger(lua, ent->bf.model->animations[ent->bf.current_animation].frames_count);
 
     return 3;
 }
@@ -1063,9 +1141,15 @@ int lua_SetEntityVisibility(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                              ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1083,9 +1167,15 @@ int lua_GetEntityActivity(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                              ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1103,9 +1193,15 @@ int lua_SetEntityActivity(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);              ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1123,9 +1219,15 @@ int lua_GetEntityOCB(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                      ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1143,9 +1245,15 @@ int lua_GetEntityFlag(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                              ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1163,9 +1271,15 @@ int lua_SetEntityFlag(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                  ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1182,9 +1296,15 @@ int lua_GetEntityActivationMask(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                  ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1202,9 +1322,15 @@ int lua_SetEntityActivationMask(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                      ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1221,9 +1347,15 @@ int lua_GetEntityState(lua_State * lua)
 {
     int id, top;
     entity_p ent;
-    top = lua_gettop(lua);                          ///@FIXME: top are not used!
-    id = lua_tointeger(lua, 1);
+    top = lua_gettop(lua);
 
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1231,16 +1363,23 @@ int lua_GetEntityState(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->next_state);
+    lua_pushinteger(lua, ent->bf.next_state);
 
     return 1;
 }
 
 int lua_SetEntityMeshswap(lua_State * lua)
 {
-    int top     = lua_gettop(lua);                      ///@FIXME: top are not used!
-    int id_src  = lua_tointeger(lua, 2);
-    int id_dest = lua_tointeger(lua, 1);
+    int id_src, id_dest, top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (id_dest, id_src)");
+        return 0;
+    }
+
+    id_dest = lua_tointeger(lua, 1);
+    id_src = lua_tointeger(lua, 2);
 
     entity_p         ent_dest;
     skeletal_model_p model_src;
@@ -1261,10 +1400,16 @@ int lua_SetEntityMeshswap(lua_State * lua)
 int lua_SetEntityState(lua_State * lua)
 {
     int id, top;
-    entity_p ent;                       ///@FIXME: top are not used!
+    entity_p ent;
     top = lua_gettop(lua);
-    id = lua_tointeger(lua, 1);
 
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
     ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1272,7 +1417,7 @@ int lua_SetEntityState(lua_State * lua)
         return 0;
     }
 
-    ent->next_state = lua_tointeger(lua, 2);
+    ent->bf.next_state = lua_tointeger(lua, 2);
 
     return 0;
 }
@@ -1283,17 +1428,16 @@ int lua_SetEntityState(lua_State * lua)
 
 int lua_PlayStream(lua_State *lua)
 {
-        int id, top;
+    int id, top;
 
     top = lua_gettop(lua);
-    id  = lua_tointeger(lua, 1);
-
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
 
+    id  = lua_tointeger(lua, 1);
     if(id < 0)
     {
         Con_Printf("Wrong stream ID. Must be more or equal to 0.");
@@ -1466,6 +1610,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "addItem", lua_AddItem);
     lua_register(lua, "removeItem", lua_RemoveItem);
+    lua_register(lua, "createBaseItem", lua_CreateBaseItem);
+    lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
+    
     lua_register(lua, "printItems", lua_PrintItems);
     lua_register(lua, "getItemsCount", lua_GetItemsCount);
     lua_register(lua, "getEntityVector", lua_GetEntityVector);

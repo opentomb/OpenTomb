@@ -13,6 +13,7 @@
 #include "system.h"
 #include "console.h"
 #include "vmath.h"
+#include "camera.h"
 
 #define MAX_TEMP_LINES   (128)
 #define TEMP_LINE_LENGHT (128)
@@ -303,6 +304,13 @@ gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...)
 
 void Gui_Render()
 {
+/*    btScalar v[3];
+    vec3_add_mul(v, engine_camera.pos, engine_camera.view_dir, 400.0);
+    glPushMatrix();
+    glTranslatef(v[0], v[1], v[2]);
+    Gui_RenderItem(0, 650.0, NULL);
+    glPopMatrix();*/
+    
     Gui_SwitchGLMode(1);
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
@@ -326,7 +334,7 @@ void Gui_Render()
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
     glPopAttrib();
-
+    
     Gui_SwitchGLMode(0);
 }
 
@@ -384,6 +392,99 @@ void Gui_RenderStrings()
     }
     temp_lines_used = 0;
 }
+
+
+/**
+ * That function updates item animation and rebuilds skeletal matrices;
+ * @param bf - extended bone frame of the item;
+ */
+void Item_Frame(struct ss_bone_frame_s *bf)
+{
+    int16_t frame, anim;
+    long int t;
+    btScalar dt;
+    animation_frame_p af;
+    state_change_p stc;
+
+    bf->lerp = 0.0;
+    stc = Anim_FindStateChangeByID(bf->model->animations + bf->current_animation, bf->next_state);
+    Entity_GetNextFrame(bf, engine_frame_time, stc, &frame, &anim, 0x00);
+    if(anim != bf->current_animation)
+    {
+        bf->last_animation = bf->current_animation;
+        /*frame %= bf->model->animations[anim].frames_count;
+        frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames_count - 1 + frame);
+
+        bf->last_state = bf->model->animations[anim].state_id;
+        bf->next_state = bf->model->animations[anim].state_id;
+        bf->current_animation = anim;
+        bf->current_frame = frame;
+        bf->next_animation = anim;
+        bf->next_frame = frame;*/
+        stc = Anim_FindStateChangeByID(bf->model->animations + bf->current_animation, bf->next_state);
+    }
+    else if(bf->current_frame != frame)
+    {
+        if(bf->current_frame == 0)
+        {
+            bf->last_animation = bf->current_animation;
+        }
+        bf->current_frame = frame;
+    }
+
+    af = bf->model->animations + bf->current_animation;
+    bf->frame_time += engine_frame_time;
+
+    t = (bf->frame_time) / bf->period;
+    dt = bf->frame_time - (btScalar)t * bf->period;
+    bf->frame_time = (btScalar)frame * bf->period + dt;
+    bf->lerp = dt / bf->period;
+    Entity_GetNextFrame(bf, bf->period, stc, &bf->next_frame, &bf->next_animation, 0x00);
+    Entity_UpdateCurrentBoneFrame(bf, NULL);
+}
+
+
+/**
+ * The base function, that draws one item by them id. Items may be animated. 
+ * This time for correct time calculation that function must be called every frame.
+ * @param item_id - the base item id;
+ * @param size - the item size on the screen;
+ * @param str - item description - shows near / under item model;
+ */
+void Gui_RenderItem(uint32_t item_id, btScalar size, const char *str)
+{
+    ss_bone_frame_p bf = World_GetItemSSBFByID(&engine_world, item_id);
+    if(bf == NULL)
+    {
+        return;
+    }
+    ///@TODO: add lighting for inventory rendering;
+    /*btScalar bb[3];
+    vec3_sub(bb, bf->bb_max, bf->bb_min);
+    if(bb[0] >= bb[1])
+    {
+        size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
+    }
+    else
+    {
+        size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
+    }*/
+    
+    Item_Frame(bf);
+    
+    //glPushMatrix();
+    // if(size < 1.0)  // only reduce items size...
+    //glScalef(size, size, size);
+    Render_SkeletalModel(bf);
+    //glPopMatrix();
+    
+    if(str && str[0])
+    {
+        ///@TODO: add here text output
+    }
+    //Gui_OutTextXY(100, 100, "ITEM ID = %d", item_id);
+}
+
 
 void Gui_SwitchGLMode(char is_gui)
 {
