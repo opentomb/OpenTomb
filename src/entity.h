@@ -15,6 +15,7 @@ struct room_s;
 struct room_sector_s;
 struct bounding_volume_s;
 struct character_s;
+struct ss_bone_frame_s;
 
 #define ENTITY_IS_ACTIVE                          (0x00000001)
 #define ENTITY_CAN_TRIGGER                        (0x00000002)                      
@@ -132,19 +133,7 @@ typedef struct entity_s
     struct bounding_volume_s           *bv;                                     // oriented bounding volume - only for OCC test
     
     void                              (*onAnimChange)(struct entity_s *ent);
-    int16_t                             last_state;
-    int16_t                             next_state;
-    int16_t                             last_animation;
-    int16_t                             current_animation;                      // 
-    int16_t                             next_animation;                         // 
-    int16_t                             current_frame;                          // 
-    int16_t                             next_frame;                             // 
     struct room_sector_s               *current_sector;
-    btScalar                            period;                                 // one frame change period
-    btScalar                            frame_time;                             // current time 
-    btScalar                            lerp;
-    
-    struct skeletal_model_s            *model;                                  // 
     
     struct engine_container_s          *self;
     
@@ -165,8 +154,8 @@ void Entity_UpdateRigidBody(entity_p ent);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, int id);
-int  Entity_GetAnimDispatchCase(struct entity_s *ent, int id);
-void Entity_GetNextFrame(const entity_p entity, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim);
+int  Entity_GetAnimDispatchCase(struct entity_s *entity, int id);
+void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
 int  Entity_Frame(entity_p entity, btScalar time);                 // frame + trying to chabge state
 
 void Entity_RebuildBV(entity_p ent);
@@ -175,7 +164,7 @@ void Entity_CheckActivators(struct entity_s *ent);
 
 int  Entity_GetWaterState(entity_p entity);
 
-void Entity_UpdateCurrentBoneFrame(entity_p entity);
+void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
 void Entity_DoAnimCommands(entity_p entity, int changing);
 int  Entity_ParseFloorData(struct entity_s *ent, struct world_s *world);
 void Entity_SetAnimation(entity_p entity, int animation, int frame);

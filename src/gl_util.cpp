@@ -140,7 +140,9 @@ char *engine_gl_ext_str = NULL;
  */
 void InitGLExtFuncs()
 {
-    engine_gl_ext_str = (char*)glGetString(GL_EXTENSIONS);
+    const char* buf = (const char*)glGetString(GL_EXTENSIONS);                  ///@PARANOID: I do not know exactly, how much time returned string pointer is valid, so I made a copy;
+    engine_gl_ext_str = (char*)malloc(strlen(buf) + 1);
+    strcpy(engine_gl_ext_str, buf);
     
 #ifndef GL_GLEXT_PROTOTYPES        
     /// VBO funcs
@@ -245,7 +247,7 @@ void InitGLExtFuncs()
     }
     
     /*ANT menu library GL funcs*/
-    SAFE_GET_PROC(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
+    /*SAFE_GET_PROC(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
     SAFE_GET_PROC(glDeleteVertexArray, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArray");
     SAFE_GET_PROC(glGenVertexArray, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArray");
     SAFE_GET_PROC(glIsVertexArray, PFNGLISVERTEXARRAYPROC, "glIsVertexArray");
@@ -258,7 +260,7 @@ void InitGLExtFuncs()
     SAFE_GET_PROC(glBlendEquation, PFNGLBLENDEQUATIONPROC, "glBlendEquation");
     SAFE_GET_PROC(glDisableVertexAttribArray, PFNGLDISABLEVERTEXATTRIBARRAYPROC, "glDisableVertexAttribArray");
     SAFE_GET_PROC(glGetVertexAttribiv, PFNGLGETVERTEXATTRIBIVPROC, "glGetVertexAttribiv");
-    SAFE_GET_PROC(glGetVertexAttribfv, PFNGLGETVERTEXATTRIBFVPROC, "glGetVertexAttribfv");
+    SAFE_GET_PROC(glGetVertexAttribfv, PFNGLGETVERTEXATTRIBFVPROC, "glGetVertexAttribfv");*/
 #endif
 }
 

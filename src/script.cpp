@@ -299,15 +299,15 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
 
     if(lua)
     {
-        top = lua_gettop(lua);                                             // save LUA stack
-        lua_getglobal(lua, "GetGlobalSound");                              // add to the up of stack LUA's function
+        top = lua_gettop(lua);                                                  // save LUA stack
+        lua_getglobal(lua, "GetGlobalSound");                                   // add to the up of stack LUA's function
 
-        if(lua_isfunction(lua, -1))                                        // If function exists...
+        if(lua_isfunction(lua, -1))                                             // If function exists...
         {
-            lua_pushinteger(lua, engine_world.version);                    // add to stack first argument
+            lua_pushinteger(lua, engine_world.version);                         // add to stack first argument
             lua_pushinteger(lua, global_sound_id);
-            lua_pcall(lua, 2, 1, 0);                                       // call that function
-            sound_id = lua_tointeger(lua, -1);                         // get returned value 1
+            lua_pcall(lua, 2, 1, 0);                                            // call that function
+            sound_id = lua_tointeger(lua, -1);                                  // get returned value 1
         }
 
         lua_settop(lua, top);
@@ -323,17 +323,17 @@ int lua_GetSecretTrackNumber(lua_State *lua)
 
     if(lua)
     {
-        top = lua_gettop(lua);                                             // save LUA stack
-        lua_getglobal(lua, "GetSecretTrackNumber");                        // add to the up of stack LUA's function
+        top = lua_gettop(lua);                                                  // save LUA stack
+        lua_getglobal(lua, "GetSecretTrackNumber");                             // add to the up of stack LUA's function
 
-        if(lua_isfunction(lua, -1))                                        // If function exists...
+        if(lua_isfunction(lua, -1))                                             // If function exists...
         {
-            lua_pushinteger(lua, engine_world.version);                    // add to stack first argument
-            lua_pcall(lua, 1, 1, 0);                                       // call that function
-            track_number = lua_tointeger(lua, -1);                         // get returned value 1
+            lua_pushinteger(lua, engine_world.version);                         // add to stack first argument
+            lua_pcall(lua, 1, 1, 0);                                            // call that function
+            track_number = lua_tointeger(lua, -1);                              // get returned value 1
         }
 
-        lua_settop(lua, top);                                              // restore LUA stack
+        lua_settop(lua, top);                                                   // restore LUA stack
     }
 
     return (int)track_number;
@@ -444,18 +444,18 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 
     if(lua)
     {
-        top = lua_gettop(lua);                                             // save LUA stack
+        top = lua_gettop(lua);                                                  // save LUA stack
 
-        lua_getglobal(lua, "GetTrackInfo");                                // add to the up of stack LUA's function
+        lua_getglobal(lua, "GetTrackInfo");                                     // add to the up of stack LUA's function
 
-        if(lua_isfunction(lua, -1))                                        // If function exists...
+        if(lua_isfunction(lua, -1))                                             // If function exists...
         {
-            lua_pushinteger(lua, engine_world.version);                    // add to stack first argument
-            lua_pushinteger(lua, track_index);                             // add to stack second argument
+            lua_pushinteger(lua, engine_world.version);                         // add to stack first argument
+            lua_pushinteger(lua, track_index);                                  // add to stack second argument
 
-            lua_pcall(lua, 2, 3, 0);                                       // call that function
+            lua_pcall(lua, 2, 3, 0);                                            // call that function
 
-            real_path   = lua_tolstring(lua, -3, &string_length);          // get returned value 1
+            real_path   = lua_tolstring(lua, -3, &string_length);               // get returned value 1
            *stream_type = (int)lua_tointeger(lua, -2);                          // get returned value 2
            *load_method = (int)lua_tointeger(lua, -1);                          // get returned value 3
 
@@ -464,14 +464,14 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 
             strcpy(file_path, real_path);
 
-            lua_settop(lua, top);                                          // restore LUA stack
+            lua_settop(lua, top);                                               // restore LUA stack
 
             if(*stream_type != -1)
-                return true;        // Entry extracted, success!
+                return true;                                                    // Entry extracted, success!
         }
         else
         {
-            lua_settop(lua, top);   // restore LUA stack
+            lua_settop(lua, top);                                               // restore LUA stack
         }
     }
 
@@ -492,32 +492,32 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, int next_level, char 
 
     if(lua)
     {
-        top = lua_gettop(lua);                                             // save LUA stack
+        top = lua_gettop(lua);                                                  // save LUA stack
 
-        lua_getglobal(lua, "GetLoadingScreen");                                // add to the up of stack LUA's function
+        lua_getglobal(lua, "GetLoadingScreen");                                 // add to the up of stack LUA's function
 
-        if(lua_isfunction(lua, -1))                                        // If function exists...
+        if(lua_isfunction(lua, -1))                                             // If function exists...
         {
-            lua_pushinteger(lua, level_index);                    // add to stack first argument
-            lua_pushinteger(lua, next_level);                    // add to stack first argument
+            lua_pushinteger(lua, level_index);                                  // add to stack first argument
+            lua_pushinteger(lua, next_level);                                   // add to stack first argument
 
 
-            lua_pcall(lua, 2, 1, 0);                                       // call that function
+            lua_pcall(lua, 2, 1, 0);                                            // call that function
 
-            real_path   = lua_tolstring(lua, -1, &string_length);          // get returned value 1
+            real_path   = lua_tolstring(lua, -1, &string_length);               // get returned value 1
 
             // For some reason, Lua returns constant string pointer, which we can't assign to
             // provided argument; so we need to straightly copy it.
 
             strcpy(pic_path, real_path);
 
-            lua_settop(lua, top);                                          // restore LUA stack
+            lua_settop(lua, top);                                               // restore LUA stack
 
             return true;
         }
         else
         {
-            lua_settop(lua, top);   // restore LUA stack
+            lua_settop(lua, top);                                               // restore LUA stack
         }
     }
 
@@ -841,7 +841,7 @@ int SC_ParseEntity(char **ch, struct entity_s *ent)
     btScalar v[3];
 
     (*ch) = parse_token(*ch, token);
-    if(strcmp(token,"{"))                                                       //если не открывающая фигурная скобка, то что-то не так
+    if(strcmp(token,"{"))                                                       // the syntax: entity data must be inside { ... }
     {
         Sys_DebugLog(LOG_FILENAME, "Parse error: Expected '{'");
         return -1;
@@ -849,16 +849,16 @@ int SC_ParseEntity(char **ch, struct entity_s *ent)
 
     if(ent == NULL)
     {
-        while(strcmp(token,"}")&&(*ch != NULL))                                 //пока не дошли до конца файла, или до закрывающей скобки
+        while(strcmp(token,"}")&&(*ch != NULL))
         {
             (*ch) = parse_token(*ch, token);
         }
         return 0;
     }
 
-    ent->move_type = MOVE_FREE_FALLING;                                         // дефолтное свойство
+    ent->move_type = MOVE_FREE_FALLING;                                         // default state
 
-    while(strcmp(token, "}")&&(*ch != NULL))                                    //пока не дошли до конца файла, или до закрывающей скобки
+    while(strcmp(token, "}")&&(*ch != NULL))
     {
         ret++;
         (*ch) = parse_token(*ch, token);
@@ -876,10 +876,10 @@ int SC_ParseEntity(char **ch, struct entity_s *ent)
         }
         else if(!strcmp(token, "anim"))
         {
-            ent->current_animation = SC_ParseInt(ch);
-            ent->current_frame = SC_ParseInt(ch);
-            Entity_SetAnimation(ent, ent->current_animation, ent->current_frame);
-            ent->frame_time = SC_ParseFloat(ch);
+            ent->bf.current_animation = SC_ParseInt(ch);
+            ent->bf.current_frame = SC_ParseInt(ch);
+            Entity_SetAnimation(ent, ent->bf.current_animation, ent->bf.current_frame);
+            ent->bf.frame_time = SC_ParseFloat(ch);
         }
         else if(!strcmp(token, "move"))
         {

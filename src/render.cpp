@@ -566,7 +566,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
 
 void Render_Entity(struct entity_s *entity)
 {
-    if(entity->was_rendered || entity->hide || (entity->model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if(entity->was_rendered || entity->hide || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -669,7 +669,7 @@ void Render_Entity(struct entity_s *entity)
         }
     }
 
-    if(entity->model && entity->model->animations)
+    if(entity->bf.model && entity->bf.model->animations)
     {
         glPushMatrix();
         // base frame offset
@@ -1348,7 +1348,7 @@ void Render_Entity_DebugLines(struct entity_s *entity)
         return;
     }
 
-    if(entity->hide || (entity->model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if(entity->hide || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -1359,7 +1359,7 @@ void Render_Entity_DebugLines(struct entity_s *entity)
         Render_BV(entity->bv);
     }
 
-    if(entity->model && entity->model->animations)
+    if(entity->bf.model && entity->bf.model->animations)
     {
         glPushMatrix();
         // base frame offset

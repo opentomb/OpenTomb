@@ -1,6 +1,8 @@
 -- OPENTOMB TRIGGER SCRIPT
 -- FOR TOMB RAIDER 1, LEVEL2 - 
 
+createBaseItem(0, 72);          -- test item draw
+
 -----------------it is a bad idea to use one script for difference maps: may be collisions between entities!
 
 --[[

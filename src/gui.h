@@ -259,6 +259,12 @@ void Gui_RenderStringLine(gui_text_line_p l);
 void Gui_RenderStrings();
 
 /**
+ * Inventory rendering / manipulation functions
+ */
+void Item_Frame(struct ss_bone_frame_s *bf);
+void Gui_RenderItem(uint32_t item_id, btScalar size, const char *str);
+
+/**
  * Calculates rect coordinates around the text
  */
 gui_text_line_p Gui_StringAutoRect(gui_text_line_p l);

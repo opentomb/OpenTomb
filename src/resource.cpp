@@ -499,17 +499,17 @@ void Gen_EntityRigidBody(entity_p ent)
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
-    if(!ent->model)
+    if(!ent->bf.model)
     {
         return;
     }
 
-    ent->bt_body = (btRigidBody**)malloc(ent->model->mesh_count * sizeof(btRigidBody*));
+    ent->bt_body = (btRigidBody**)malloc(ent->bf.model->mesh_count * sizeof(btRigidBody*));
 
-    for(i=0;i<ent->model->mesh_count;i++)
+    for(i=0;i<ent->bf.model->mesh_count;i++)
     {
         ent->bt_body[i] = NULL;
-        cshape = MeshToBTCS(ent->model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
+        cshape = MeshToBTCS(ent->bf.model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
         if(cshape)
         {
             Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -689,6 +689,11 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->entity_tree->rb_compLT = compEntityLT;
     world->entity_tree->rb_free_data = RBEntityFree;
 
+    world->items_tree = RB_Init();
+    world->items_tree->rb_compEQ = compEntityEQ;
+    world->items_tree->rb_compLT = compEntityLT;
+    world->items_tree->rb_free_data = RBItemFree;
+    
     uc_rect_count = 0;
     uc_rect_list = NULL;
 
@@ -2908,24 +2913,24 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         entity->anim_flags = 0x0000;
         entity->flags = 0x00000000;
         entity->move_type = 0x0000;
-        entity->current_animation = 0;
-        entity->current_frame = 0;
-        entity->frame_time = 0.0;
+        entity->bf.current_animation = 0;
+        entity->bf.current_frame = 0;
+        entity->bf.frame_time = 0.0;
         entity->inertia = 0.0;
         entity->move_type = 0;
 
-        entity->model = World_FindModelByID(world, tr_item->object_id);
+        entity->bf.model = World_FindModelByID(world, tr_item->object_id);
 
         if(ent_ID_override)
         {
-            if(entity->model == NULL)
+            if(entity->bf.model == NULL)
             {
                 top = lua_gettop(ent_ID_override);                                         // save LUA stack
                 lua_getglobal(ent_ID_override, "GetOverridedID");                          // add to the up of stack LUA's function
                 lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
                 lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
                 lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
-                entity->model = World_FindModelByID(world, lua_tointeger(ent_ID_override, -1));
+                entity->bf.model = World_FindModelByID(world, lua_tointeger(ent_ID_override, -1));
                 lua_settop(ent_ID_override, top);                                          // restore LUA stack
             }
 
@@ -2941,14 +2946,14 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             {
                 skeletal_model_s* replace_anim_model = World_FindModelByID(world, replace_anim_id);
 
-                entity->model->animations = replace_anim_model->animations;
-                entity->model->animation_count = replace_anim_model->animation_count;
+                entity->bf.model->animations = replace_anim_model->animations;
+                entity->bf.model->animation_count = replace_anim_model->animation_count;
             }
 
             lua_settop(ent_ID_override, top);
         }
 
-        if(entity->model == NULL)
+        if(entity->bf.model == NULL)
         {
             // SPRITE LOADING
             sprite_p sp = World_FindSpriteByID(tr_item->object_id, world);
@@ -2977,16 +2982,16 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             continue;
         }
 
-        entity->bf.bone_tag_count = entity->model->mesh_count;
+        entity->bf.bone_tag_count = entity->bf.model->mesh_count;
         entity->bf.bone_tags = (ss_bone_tag_p)malloc(entity->bf.bone_tag_count * sizeof(ss_bone_tag_t));
         for(j=0;j<entity->bf.bone_tag_count;j++)
         {
-            entity->bf.bone_tags[j].flag = entity->model->mesh_tree[j].flag;
-            entity->bf.bone_tags[j].overrided = entity->model->mesh_tree[j].overrided;
-            entity->bf.bone_tags[j].mesh = entity->model->mesh_tree[j].mesh;
-            entity->bf.bone_tags[j].mesh2 = entity->model->mesh_tree[j].mesh2;
+            entity->bf.bone_tags[j].flag = entity->bf.model->mesh_tree[j].flag;
+            entity->bf.bone_tags[j].overrided = entity->bf.model->mesh_tree[j].overrided;
+            entity->bf.bone_tags[j].mesh = entity->bf.model->mesh_tree[j].mesh;
+            entity->bf.bone_tags[j].mesh2 = entity->bf.model->mesh_tree[j].mesh2;
 
-            vec3_copy(entity->bf.bone_tags[j].offset, entity->model->mesh_tree[j].offset);
+            vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.model->mesh_tree[j].offset);
             vec4_set_zero(entity->bf.bone_tags[j].qrotate);
             Mat4_E_macro(entity->bf.bone_tags[j].transform);
             Mat4_E_macro(entity->bf.bone_tags[j].full_transform);
@@ -2999,9 +3004,9 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             entity->move_type = MOVE_ON_FLOOR;
             world->Character = entity;
             entity->self->collide_flag = ENTITY_ACTOR_COLLISION;
-            entity->model->hide = 0;
+            entity->bf.model->hide = 0;
             entity->flags = ENTITY_IS_ACTIVE | ENTITY_CAN_TRIGGER;
-            LM = (skeletal_model_p)entity->model;
+            LM = (skeletal_model_p)entity->bf.model;
             BV_InitBox(entity->bv, NULL, NULL);
 
             switch(tr->game_version)
@@ -3051,8 +3056,8 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
 
             for(j=0;j<entity->bf.bone_tag_count;j++)
             {
-                entity->bf.bone_tags[j].mesh = entity->model->mesh_tree[j].mesh;
-                entity->bf.bone_tags[j].mesh2 = entity->model->mesh_tree[j].mesh2;
+                entity->bf.bone_tags[j].mesh = entity->bf.model->mesh_tree[j].mesh;
+                entity->bf.bone_tags[j].mesh2 = entity->bf.model->mesh_tree[j].mesh2;
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Gen_EntityRigidBody(entity);
@@ -3064,7 +3069,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
         Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
 
         entity->self->collide_flag = 0x0000;
-        entity->model->hide = 0;
+        entity->bf.model->hide = 0;
 
         if(collide_flags_conf)
         {
@@ -3074,7 +3079,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             lua_pushinteger(collide_flags_conf, tr_item->object_id);                            // add to stack second argument
             lua_pcall(collide_flags_conf, 2, 2, 0);                                             // call that function
             entity->self->collide_flag = 0xff & lua_tointeger(collide_flags_conf, -2);          // get returned value
-            entity->model->hide = lua_tointeger(collide_flags_conf, -1);                        // get returned value
+            entity->bf.model->hide = lua_tointeger(collide_flags_conf, -1);                        // get returned value
             lua_settop(collide_flags_conf, top);                                                // restore LUA stack
         }
 
@@ -3089,7 +3094,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
                 lua_pushinteger(level_script, tr_item->object_id);                      // add to stack second argument
                 lua_pcall(level_script, 2, 2, 0);                                       // call that function
                 entity->self->collide_flag = 0xff & lua_tointeger(level_script, -2);    // get returned value
-                entity->model->hide = lua_tointeger(level_script, -1);                  // get returned value
+                entity->bf.model->hide = lua_tointeger(level_script, -1);                  // get returned value
             }
             lua_settop(level_script, top);                                              // restore LUA stack
         }
