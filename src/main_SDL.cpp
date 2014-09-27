@@ -1,3 +1,7 @@
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
@@ -5,12 +9,14 @@
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
+
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
+#include "vt/vt_level.h"
 
+#include "bounding_volume.h"
+#include "anim_state_control.h"
+#include "character_controller.h"
 #include "main_SDL.h"
 #include "gl_util.h"
 #include "script.h"
@@ -32,11 +38,6 @@
 #include "entity.h"
 #include "audio.h"
 #include "gameflow.h"
-
-#include "vt/vt_level.h"
-#include "bounding_volume.h"
-#include "anim_state_control.h"
-#include "character_controller.h"
 
 #if defined(__MACOSX__)
 #include "FindConfigFile.h"
@@ -563,7 +564,7 @@ void Engine_Display()
         glPopClientAttrib();
         Render_DrawList_DebugLines();
 
-        //ShowDebugInfo();
+        ShowDebugInfo();
 
         glPolygonMode(GL_FRONT, GL_FILL);
         glFrontFace(GL_CCW);
