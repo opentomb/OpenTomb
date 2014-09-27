@@ -23,6 +23,7 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_opengl.h>
 #include <string.h>
+#include <stdlib.h>
 #include "gl_util.h"
 
 #ifndef GL_GLEXT_PROTOTYPES

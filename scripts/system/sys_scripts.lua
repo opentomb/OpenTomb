@@ -164,12 +164,32 @@ function create_pickup_func(id, item_id)
         print("you try to pick up object ".. object_id);
 
         setEntityState(activator_id, pickup_state);         -- set the pick up animation.
+		
+		local px, py, pz = getEntityPos(object_id);
+		setEntityPos(activator_id, px, py, pz);
+		
         addTask(
         function()
-            local a, f, c = getEntityAnim(actor_id);
-            if(f < c - 1) then
-                return true;
-            end;
+            local a, f, c = getEntityAnim(activator_id);
+			local ver = getGameVersion();
+			
+			if(a == 135) then
+				if(ver < TR_IV) then
+					if(f < 40) then
+						return true;
+					end;
+				else
+					if(f < 16) then
+						return true;
+					end;
+				end;
+			else
+				if(f < c - 1) then	-- FIXME: Add conditions for UW/PEDESTAL/HOLE/etc pickups
+					return true;
+				end;
+			end;
+			
+			
             addItem(activator_id, item_id, 1);
             setEntityFlag(object_id, 0x00);                 -- disable entity
             setEntityVisibility(object_id, 0x00);

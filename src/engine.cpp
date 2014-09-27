@@ -466,6 +466,13 @@ int lua_SetActivationOffset(lua_State * lua)
 }
 
 
+int lua_GetGameVersion(lua_State *lua)
+{
+    lua_pushinteger(lua, engine_world.version);
+    return 1;
+}
+
+
 int lua_BindKey(lua_State * lua)
 {
     int act, top;
@@ -1607,6 +1614,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
     lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
+    lua_register(lua, "getGameVersion", lua_GetGameVersion);
 
     lua_register(lua, "addItem", lua_AddItem);
     lua_register(lua, "removeItem", lua_RemoveItem);
