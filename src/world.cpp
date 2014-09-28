@@ -880,7 +880,6 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id)
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
-    bf->id = 0x00;
     bf->frame_time = 0.0;
     bf->period = 1.0 / 30.0;
     bf->next_state = 0;

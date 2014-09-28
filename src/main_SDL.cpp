@@ -561,15 +561,8 @@ void Engine_Display()
 #else
         SkeletalModelTestDraw();
 #endif
-        glPopClientAttrib();
-        Render_DrawList_DebugLines();
-
-        ShowDebugInfo();
-
-        glPolygonMode(GL_FRONT, GL_FILL);
-        glFrontFace(GL_CCW);
+        
         //glDisable(GL_CULL_FACE);
-        glBindTexture(GL_TEXTURE_2D, 0);
         //Render_DrawAxis(10000.0);
         /*if(engine_world.Character)
         {
@@ -578,7 +571,27 @@ void Engine_Display()
             Render_DrawAxis(1000.0);
             glPopMatrix();
         }*/
+        
+        Gui_SwitchGLMode(1);
+        {
+            GLfloat lp[] = {250.0, 120.0, 0.0, 0.0};
+            glEnable(GL_LIGHTING);
+            glEnable(GL_LIGHT0);
+            glEnable(GL_BLEND);
+            glEnable(GL_ALPHA_TEST);
+            glLightfv(GL_LIGHT0, GL_POSITION, lp);
+            glColor3f(1.0, 1.0, 1.0);
+            if(engine_world.Character && engine_world.Character->character)
+            {
+                Gui_RenderInventory(engine_world.Character->character->inventory);
+            }
+        }
+        glPopClientAttrib();
         Gui_Render();
+        Gui_SwitchGLMode(0);
+        
+        Render_DrawList_DebugLines();
+        ShowDebugInfo();
         SDL_GL_SwapWindow(sdl_window);
     }
 }
