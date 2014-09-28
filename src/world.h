@@ -63,7 +63,7 @@ typedef struct room_sprite_s
 
 typedef struct room_s
 {
-    uint32_t                    ID;                                             // room's ID
+    uint32_t                    id;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
     uint8_t                     reverb_info;                                    // room reverb type
     uint8_t                     extra_param;
@@ -113,7 +113,7 @@ typedef struct room_s
 typedef struct world_s
 {
     char                       *name;
-    uint32_t                    ID;
+    uint32_t                    id;
     uint32_t                    version;
 
     uint32_t                    room_count;
@@ -211,7 +211,7 @@ int Room_IsInNearRoomsList(room_p room, room_p r);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
 int World_DeleteEntity(world_p world, struct entity_s *entity);
-int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id);
+int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id);
 int World_DeleteItem(world_p world, uint32_t item_id);
 struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world);
 struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id);           // binary search the model by ID

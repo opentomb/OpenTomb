@@ -1,4 +1,6 @@
 
+dofile("scripts/items.lua");
+
 -------- Lara's model-------
 --           .=.
 --          | 14|
