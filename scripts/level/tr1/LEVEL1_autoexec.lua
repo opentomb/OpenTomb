@@ -1,7 +1,9 @@
 -- OPENTOMB TRIGGER SCRIPT
 -- FOR TOMB RAIDER 1, LEVEL2 - 
 
-createBaseItem(0, 72);          -- test item draw
+createBaseItem(0, 72);           -- test item: compas
+createBaseItem(1, 108);          -- test item: little medkit
+createBaseItem(2, 109);          -- test item: large medkit
 
 -----------------it is a bad idea to use one script for difference maps: may be collisions between entities!
 
@@ -149,5 +151,6 @@ end
 create_pickup_func(58, 1);
 create_pickup_func(48, 1);
 create_pickup_func(34, 1);
+addItem(0, 0, 1);               -- add compas
 
 print("autoexec level script loaded");

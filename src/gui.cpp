@@ -304,18 +304,12 @@ gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...)
 
 void Gui_Render()
 {
-/*    btScalar v[3];
-    vec3_add_mul(v, engine_camera.pos, engine_camera.view_dir, 400.0);
-    glPushMatrix();
-    glTranslatef(v[0], v[1], v[2]);
-    Gui_RenderItem(0, 650.0, NULL);
-    glPopMatrix();*/
-    
-    Gui_SwitchGLMode(1);
-
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPolygonMode(GL_FRONT, GL_FILL);
+    glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_LIGHTING);
@@ -334,8 +328,6 @@ void Gui_Render()
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
     glPopAttrib();
-    
-    Gui_SwitchGLMode(0);
 }
 
 void Gui_RenderStringLine(gui_text_line_p l)
@@ -451,15 +443,15 @@ void Item_Frame(struct ss_bone_frame_s *bf)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(uint32_t item_id, btScalar size, const char *str)
+void Gui_RenderItem(uint32_t item_id, btScalar size)
 {
     ss_bone_frame_p bf = World_GetItemSSBFByID(&engine_world, item_id);
     if(bf == NULL)
     {
         return;
     }
-    ///@TODO: add lighting for inventory rendering;
-    /*btScalar bb[3];
+
+    btScalar bb[3];
     vec3_sub(bb, bf->bb_max, bf->bb_min);
     if(bb[0] >= bb[1])
     {
@@ -468,21 +460,38 @@ void Gui_RenderItem(uint32_t item_id, btScalar size, const char *str)
     else
     {
         size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
-    }*/
+    }
     
     Item_Frame(bf);
     
-    //glPushMatrix();
-    // if(size < 1.0)  // only reduce items size...
-    //glScalef(size, size, size);
+    glPushMatrix();
+    if(size < 1.0)          // only reduce items size...
+        glScalef(size, size, size);
     Render_SkeletalModel(bf);
-    //glPopMatrix();
+    glPopMatrix();
+}
+
+
+void Gui_RenderInventory(struct inventory_node_s *inv)
+{
+    int inv_cells_x = 4;
+    int inv_cells_y = 2;
+    int inv_width = 512;
+    int inv_height = 256;
+    int cell_size = 128;
+    int cx, cy, i;
     
-    if(str && str[0])
+    for(i=0;inv;inv=inv->next,i++)
     {
-        ///@TODO: add here text output
+        cx = i % inv_cells_x;
+        cy = i / inv_cells_x;
+        glPushMatrix();
+            glTranslatef(cell_size/2 + cell_size * cx, screen_info.h - cell_size/2 + cell_size * cy, -2048.0);
+            glRotatef(180.0, 0.0, 0.0, 1.0);
+            glRotatef(45.0 , 1.0, 0.0, 0.0);
+            Gui_RenderItem(inv->id, (btScalar)cell_size);
+        glPopMatrix();
     }
-    //Gui_OutTextXY(100, 100, "ITEM ID = %d", item_id);
 }
 
 
@@ -497,7 +506,7 @@ void Gui_SwitchGLMode(char is_gui)
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
-        glOrtho(0.0, (GLdouble)screen_info.w, 0.0, (GLdouble)screen_info.h, -1.0, 1.0);
+        glOrtho(0.0, (GLdouble)screen_info.w, 0.0, (GLdouble)screen_info.h, -1.0, 4096.0);
         glMatrixMode(GL_MODELVIEW);
 
         curr_mode = is_gui;
