@@ -79,6 +79,7 @@
         <itemPath>scripts/system/sys_scripts.lua</itemPath>
       </logicalFolder>
       <itemPath>scripts/autoexec.lua</itemPath>
+      <itemPath>scripts/items.lua</itemPath>
     </logicalFolder>
     <logicalFolder name="src" displayName="src" projectFiles="true">
       <logicalFolder name="al" displayName="al" projectFiles="true">
@@ -1138,6 +1139,8 @@
       <item path="scripts/gameflow/TR5.lua" ex="false" tool="3" flavor2="0">
       </item>
       <item path="scripts/gameflow/gameflow.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/items.lua" ex="false" tool="3" flavor2="0">
       </item>
       <item path="scripts/level/tr1/GYM.lua" ex="false" tool="3" flavor2="0">
       </item>
@@ -4066,6 +4069,8 @@
       <item path="scripts/gameflow/TR5.lua" ex="false" tool="3" flavor2="0">
       </item>
       <item path="scripts/gameflow/gameflow.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/items.lua" ex="false" tool="3" flavor2="0">
       </item>
       <item path="scripts/level/tr1/GYM.lua" ex="false" tool="3" flavor2="0">
       </item>

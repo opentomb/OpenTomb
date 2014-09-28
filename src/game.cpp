@@ -197,7 +197,7 @@ void Save_Entity(FILE **f, entity_p ent)
     y = -1;
     if(ent->self->room)
     {
-        r = ent->self->room->ID;
+        r = ent->self->room->id;
     }
     x = 1;
     y = 1;

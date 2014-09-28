@@ -42,6 +42,7 @@ extern "C" {
 #include "audio.h"
 #include "character_controller.h"
 #include "gameflow.h"
+#include "redblack.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
@@ -401,7 +402,7 @@ int lua_GetModelID(lua_State * lua)
 
     if(ent->bf.model)
     {
-        lua_pushinteger(lua, ent->bf.model->ID);
+        lua_pushinteger(lua, ent->bf.model->id);
         return 1;
     }
     return 0;
@@ -556,17 +557,18 @@ int lua_RemoveItem(lua_State * lua)
 
 int lua_CreateBaseItem(lua_State * lua)
 {
-    int top, item_id, model_id;
+    int top, item_id, model_id, world_model_id;
     top = lua_gettop(lua);
 
-    if(top < 2)
+    if(top < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (item_id, model_id)");
+        Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id)");
         return 0;
     }
     item_id = lua_tointeger(lua, 1);
     model_id = lua_tointeger(lua, 2);
-    World_CreateItem(&engine_world, item_id, model_id);
+    world_model_id = lua_tointeger(lua, 3);
+    World_CreateItem(&engine_world, item_id, model_id, world_model_id);
     
     return 0;
 }
@@ -679,7 +681,7 @@ int lua_SetStateChangeRange(lua_State * lua)
     animation_frame_p af = model->animations + anim;
     for(int i=0;i<af->state_change_count;i++)
     {
-        if(af->state_change[i].ID == state)
+        if(af->state_change[i].id == state)
         {
             if((dispath >= 0) && (dispath < af->state_change[i].anim_dispath_count))
             {
@@ -1977,6 +1979,41 @@ void Engine_GetLevelName(char *name, const char *path)
 }
 
 
+void Items_CheckEntities(RedBlackNode_p n);
+
+void Items_CheckEntities(RedBlackNode_p n)
+{
+    ss_bone_frame_p bf = (ss_bone_frame_p)n->data;
+    
+    for(int i=0;i<engine_world.room_count;i++)
+    {
+        engine_container_p cont = engine_world.rooms[i].containers;
+        for(;cont;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p ent = (entity_p)cont->object;
+                if(ent->bf.model->id == bf->world_id)
+                {
+                    char buf[256] = {0};
+                    snprintf(buf, 256, "create_pickup_func(%d, %d);", ent->id, bf->id);
+                    luaL_dostring(engine_lua, buf);
+                }
+            }
+        }
+    }
+    
+    if(n->right)
+    {
+        Items_CheckEntities(n->right);
+    }
+    
+    if(n->left)
+    {
+        Items_CheckEntities(n->left);
+    }
+}
+
 int Engine_LoadMap(const char *name)
 {
     int trv;
@@ -2045,7 +2082,7 @@ int Engine_LoadMap(const char *name)
 
     TR_GenWorld(&engine_world, &tr_level);
 
-    engine_world.ID   = 0;
+    engine_world.id   = 0;
     engine_world.name = 0;
     engine_world.type = 0;
 
@@ -2053,7 +2090,12 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
     luaL_dofile(engine_lua, "scripts/autoexec.lua");
-
+    
+    if(engine_world.items_tree && engine_world.items_tree->root)
+    {
+        Items_CheckEntities(engine_world.items_tree->root);
+    }
+    
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
@@ -2241,7 +2283,7 @@ int Engine_ExecCmd(char *ch)
             if(r)
             {
                 sect = Room_GetSectorXYZ(r, renderer.cam->pos);
-                Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->ID, r->sectors_x, r->sectors_y);
+                Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {
                     Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
@@ -2255,7 +2297,7 @@ int Engine_ExecCmd(char *ch)
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             entity_p e = (entity_p)cont->object;
-                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform[12+0], (int)e->transform[12+1], (int)e->transform[12+2], e->ID);
+                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform[12+0], (int)e->transform[12+1], (int)e->transform[12+2], e->id);
                         }
                     }
                 }

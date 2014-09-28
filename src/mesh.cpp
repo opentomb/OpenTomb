@@ -226,7 +226,7 @@ void SkeletalModel_Clear(skeletal_model_p model)
                         anim->state_change[j].anim_dispath_count = 0;
                         free(anim->state_change[j].anim_dispath);
                         anim->state_change[j].anim_dispath = NULL;
-                        anim->state_change[j].ID = 0;
+                        anim->state_change[j].id = 0;
                     }
                     anim->state_change_count = 0;
                     free(anim->state_change);
@@ -414,7 +414,7 @@ void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count
     //Sys_DebugLog(LOG_FILENAME, "tree_1:");
     for(i=0;i<tags_count;i++)
     {
-        //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->ID);
+        //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->id);
         dst[i].mesh = src[i].mesh;
     }
 }
@@ -425,7 +425,7 @@ void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_coun
     //Sys_DebugLog(LOG_FILENAME, "tree_2:");
     for(i=0;i<tags_count;i++)
     {
-        //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->ID);
+        //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->id);
         dst[i].mesh2 = src[i].mesh;
     }
 }

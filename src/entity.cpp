@@ -42,6 +42,7 @@ entity_p Entity_Create()
     ret->current_sector = NULL;
     ret->onAnimChange = NULL;
     ret->bf.id = 0x00;
+    ret->bf.world_id = 0x00;
     ret->bf.model = NULL;
     ret->bf.frame_time = 0.0;
     ret->bf.next_state = 0;
@@ -526,16 +527,16 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
                     {
                         if(Entity_GetWaterState(entity) == ENTITY_WATER_SHALLOW)
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                     }
                     else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
                     {
                         if(Entity_GetWaterState(entity) != ENTITY_WATER_SHALLOW)
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                     }
                     else
                     {
-                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                     }
 
                 }
@@ -578,68 +579,68 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 switch(entity->current_sector->box_index & 0x0F)
                                 {
                                     case 0:                                     // Mud
-                                        Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 1:                                     // Snow - TR3 & TR5 only
                                         if(engine_world.version != TR_IV)
                                         {
-                                            Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                            Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         }
                                         break;
 
                                     case 2:                                     // Sand - same as grass
-                                        Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 3:                                     // Gravel
-                                        Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 4:                                     // Ice - TR3 & TR5 only
                                         if(engine_world.version != TR_IV)
                                         {
-                                            Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                            Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         }
                                         break;
 
                                     case 5:                                     // Water
-                                        // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 6:                                     // Stone - DEFAULT SOUND, BYPASS!
-                                        Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 7:                                     // Wood
-                                        Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 8:                                     // Metal
-                                        Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 9:                                     // Marble - TR4 only
                                         if(engine_world.version == TR_IV)
                                         {
-                                            Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                            Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         }
                                         break;
 
                                     case 10:                                    // Grass - same as sand
-                                        Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 11:                                    // Concrete - DEFAULT SOUND, BYPASS!
-                                        Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 12:                                    // Old wood - same as wood
-                                        Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
                                     case 13:                                    // Old metal - same as metal
-                                        Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                        Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
                                 }
                             }
@@ -650,7 +651,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             random_value = rand() % 100;
                             if(random_value > 60)
                             {
-                                Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->ID);
+                                Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
                             }
                             break;
 
@@ -821,8 +822,8 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             ent->activation_mask ^= trigger_mask;
                             if((skip == 0) && (ent->activation_mask == 0x1F))
                             {
-                                Con_Printf("Activate %d, %d", operands, ent->ID);
-                                lua_ActivateEntity(engine_lua, operands, ent->ID);
+                                Con_Printf("Activate %d, %d", operands, ent->id);
+                                lua_ActivateEntity(engine_lua, operands, ent->id);
                             }
                             break;
 
@@ -1070,7 +1071,7 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 
     for(i=0;i<anim->state_change_count;i++,ret++)
     {
-        if(ret->ID == id)
+        if(ret->id == id)
         {
             return ret;
         }
@@ -1094,7 +1095,7 @@ int Entity_GetAnimDispatchCase(struct entity_s *entity, int id)
 
     for(i=0;i<anim->state_change_count;i++,stc++)
     {
-        if(stc->ID == id)
+        if(stc->id == id)
         {
             disp = stc->anim_dispath;
             for(j=0;j<stc->anim_dispath_count;j++,disp++)
@@ -1145,7 +1146,7 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
         if(curr_anim->next_anim)
         {
             *frame = curr_anim->next_frame;
-            *anim  = curr_anim->next_anim->ID;
+            *anim  = curr_anim->next_anim->id;
             return;
         }
 
@@ -1350,7 +1351,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
                    (vec3_dist_sq(ent->transform+12, pos) < r))
                 {
-                    lua_ActivateEntity(engine_lua, e->ID, ent->ID);
+                    lua_ActivateEntity(engine_lua, e->id, ent->id);
                 }
             }
             else if(e->flags & ENTITY_IS_PICKABLE)
@@ -1359,7 +1360,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                                   (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
                 {
-                    lua_ActivateEntity(engine_lua, e->ID, ent->ID);
+                    lua_ActivateEntity(engine_lua, e->id, ent->id);
                 }
             }
         }

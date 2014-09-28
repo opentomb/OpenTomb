@@ -29,7 +29,7 @@ struct vertex_s;
  */
 typedef struct base_mesh_s
 {
-    uint32_t              ID;                                                   // mesh's ID
+    uint32_t              id;                                                   // mesh's ID
     uint32_t              transparancy_flags;                                   // transparancy flags
 
     uint8_t               uses_vertex_colors;                                   // does this mesh have prebaked vertex lighting
@@ -61,7 +61,7 @@ typedef struct base_mesh_s
  */
 typedef struct sprite_s
 {
-    uint32_t            ID;                                                     // object's ID
+    uint32_t            id;                                                     // object's ID
     uint32_t            texture;                                                // texture number
     GLfloat             tex_coord[8];                                           // texture coordinates
     uint32_t            flag; 
@@ -185,6 +185,7 @@ typedef struct ss_bone_tag_s
 typedef struct ss_bone_frame_s
 {
     uint32_t                    id;                                             // that structure is unique for entityes and items
+    uint32_t                    world_id;                                             // that structure is unique for entityes and items
     uint16_t                    bone_tag_count;                                 // number of bones
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
     btScalar                    pos[3];                                         // position (base offset)
@@ -258,7 +259,7 @@ typedef struct anim_dispath_s
 
 typedef struct state_change_s
 {
-    uint32_t                    ID;
+    uint32_t                    id;
     uint16_t                    anim_dispath_count;
     struct anim_dispath_s      *anim_dispath;
 }__attribute__((aligned(4))) state_change_t, *state_change_p;
@@ -268,7 +269,7 @@ typedef struct state_change_s
  */
 typedef struct animation_frame_s                                                
 {
-    uint32_t                    ID;
+    uint32_t                    id;
     uint8_t                     original_frame_rate;
     int                         accel_hi;
     int                         accel_hi2;
@@ -297,7 +298,7 @@ typedef struct animation_frame_s
 
 typedef struct skeletal_model_s
 {
-    uint32_t                    ID;                                             // ID
+    uint32_t                    id;                                             // ID
     uint16_t                    transparancy_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
     uint16_t                    hide;                                           // do not render
     btScalar                    bbox_min[3];                                    // bbox info

@@ -371,7 +371,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
     {
         return;
     }
-    //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model->ID);
+    //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model->id);
     for(int anim = 0;anim < model->animation_count;anim++)
     {
         if(model->animations[anim].num_anim_commands > 255)
@@ -1046,7 +1046,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     strcat(buf, "_autoexec.lua");
 
     luaL_dofile(engine_lua, buf);
-
+    
     // Set loadscreen fader to fade-in state.
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_IN);
 }
@@ -1068,7 +1068,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     btTransform startTransform;
     btCollisionShape *cshape;
 
-    room->ID = room_index;
+    room->id = room_index;
     room->active = 1;
     room->portal_count = 0;
     room->portals = NULL;
@@ -1442,7 +1442,7 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
 
         BorderedTextureAtlas_GetSpriteCoordinates(world->tex_atlas, i, &s->texture, s->tex_coord);
         s->flag = 0x00;
-        s->ID = 0;
+        s->id = 0;
     }
 
     for(i=0;i<tr->sprite_sequences_count;i++)
@@ -1450,7 +1450,7 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
         if(tr->sprite_sequences[i].offset >= 0 && tr->sprite_sequences[i].offset < world->sprites_count)
         {
             id = tr->sprite_sequences[i].object_id;
-            world->sprites[tr->sprite_sequences[i].offset].ID = id;
+            world->sprites[tr->sprite_sequences[i].offset].id = id;
         }
     }
 }
@@ -1641,7 +1641,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      */
 
     tr_mesh = &tr->meshes[mesh_index];
-    mesh->ID = mesh_index;
+    mesh->id = mesh_index;
     mesh->centre[0] = tr_mesh->centre.x;
     mesh->centre[1] =-tr_mesh->centre.z;
     mesh->centre[2] = tr_mesh->centre.y;
@@ -2110,7 +2110,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     }
 
     mesh = room->mesh = (base_mesh_p)malloc(sizeof(base_mesh_t));
-    mesh->ID = room_index;
+    mesh->id = room_index;
     mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
     mesh->elements = NULL;
     mesh->element_count_per_texture = NULL;
@@ -2399,7 +2399,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         model->animations->frames = (bone_frame_p)malloc(model->animations->frames_count * sizeof(bone_frame_t));
         bone_frame = model->animations->frames;
 
-        model->animations->ID = 0;
+        model->animations->id = 0;
         model->animations->next_anim = NULL;
         model->animations->next_frame = 0;
         model->animations->state_change = NULL;
@@ -2460,7 +2460,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         frame_step = tr_animation->frame_size;
 
         //Sys_DebugLog(LOG_FILENAME, "frame_step = %d", frame_step);
-        anim->ID = i;
+        anim->id = i;
         anim->next_anim = NULL;
         anim->next_frame = 0;
         anim->original_frame_rate = tr_animation->frame_rate;
@@ -2678,7 +2678,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
                 anim->next_frame = 0;
             }
 #if LOG_ANIM_DISPATCHES
-            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, anim->next_anim->ID, anim->next_frame);
+            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, anim->next_anim->id, anim->next_frame);
 #endif
         }
         else
@@ -2694,7 +2694,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         {
             state_change_p sch_p;
 #if LOG_ANIM_DISPATCHES
-            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?(anim->next_anim->ID):(-1), anim->next_frame);
+            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?(anim->next_anim->id):(-1), anim->next_frame);
 #endif
             anim->state_change_count = tr_animation->num_state_changes;
             sch_p = anim->state_change = (state_change_p)malloc(tr_animation->num_state_changes * sizeof(state_change_t));
@@ -2703,7 +2703,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
             {
                 tr_state_change_t *tr_sch;
                 tr_sch = &tr->state_changes[j+tr_animation->state_change_offset];
-                sch_p->ID = tr_sch->state_id;
+                sch_p->id = tr_sch->state_id;
                 sch_p->anim_dispath = NULL;
                 sch_p->anim_dispath_count = 0;
                 for(l=0;l<tr_sch->num_anim_dispatches;l++)
@@ -2868,7 +2868,7 @@ void GenSkeletalModels(struct world_s *world, class VT_Level *tr)
     for(i=0;i<world->skeletal_model_count;i++,smodel++)
     {
         tr_moveable = &tr->moveables[i];
-        smodel->ID = tr_moveable->object_id;
+        smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
         m_offset = tr->mesh_indices[tr_moveable->starting_mesh];
         smodel->mesh_offset = world->meshes + m_offset;                         // base mesh offset
@@ -2889,7 +2889,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
     {
         tr_item = &tr->items[i];
         entity = Entity_Create();
-        entity->ID = i;
+        entity->id = i;
         entity->transform[12] = tr_item->pos.x;
         entity->transform[13] =-tr_item->pos.z;
         entity->transform[14] = tr_item->pos.y;

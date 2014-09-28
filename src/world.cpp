@@ -196,7 +196,7 @@ int Room_RemoveEntity(room_p room, struct entity_s *entity)
 
 void Room_AddToNearRoomsList(room_p room, room_p r)
 {
-    if(room && r && !Room_IsInNearRoomsList(room, r) && room->ID != r->ID && !Room_IsOverlapped(room, r) && room->near_room_list_size < 64)
+    if(room && r && !Room_IsInNearRoomsList(room, r) && room->id != r->id && !Room_IsOverlapped(room, r) && room->near_room_list_size < 64)
     {
         room->near_room_list[room->near_room_list_size++] = r;
     }
@@ -209,7 +209,7 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
 
     if(r0 && r1)
     {
-        if(r0->ID == r1->ID)
+        if(r0->id == r1->id)
         {
             return 1;
         }
@@ -218,7 +218,7 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
         {
             for(i=0;i<r0->near_room_list_size;i++)
             {
-                if(r0->near_room_list[i]->ID == r1->ID)
+                if(r0->near_room_list[i]->id == r1->id)
                 {
                     return 1;
                 }
@@ -228,7 +228,7 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
         {
             for(i=0;i<r1->near_room_list_size;i++)
             {
-                if(r1->near_room_list[i]->ID == r0->ID)
+                if(r1->near_room_list[i]->id == r0->id)
                 {
                     return 1;
                 }
@@ -255,7 +255,7 @@ int Room_IsOverlapped(room_p r0, room_p r1)
 
 void World_Prepare(world_p world)
 {
-    world->ID = 0;
+    world->id = 0;
     world->name = NULL;
     world->type = 0x00;
     world->meshes = NULL;
@@ -468,7 +468,7 @@ struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
     entity_p ent = NULL;
     RedBlackNode_p node;
 
-    if(world->Character && (world->Character->ID == id))
+    if(world->Character && (world->Character->id == id))
     {
         return world->Character;
     }
@@ -613,7 +613,7 @@ room_p Room_GetByID(world_p w, unsigned int ID)
     room_p r = w->rooms;
     for(i=0;i<w->room_count;i++,r++)
     {
-        if(ID == r->ID)
+        if(ID == r->id)
         {
             return r;
         }
@@ -776,7 +776,7 @@ void Room_SwapAlternate(room_p room)
         }
         else
         {
-            Con_Printf("Fatal Error: Room %d has no alternate room to enable!", room->ID);
+            Con_Printf("Fatal Error: Room %d has no alternate room to enable!", room->id);
         }
     }
 }
@@ -810,10 +810,10 @@ void Room_SwapPortals(room_p room, room_p dest_room)
     {
         for(int j=0;j<engine_world.rooms[i].portal_count;j++)//For every portal in this room
         {
-            if(engine_world.rooms[i].portals[j].dest_room->ID == room->ID)//If a portal is linked to the input room
+            if(engine_world.rooms[i].portals[j].dest_room->id == room->id)//If a portal is linked to the input room
             {
                 engine_world.rooms[i].portals[j].dest_room = dest_room;//The portal destination room is the destination room!
-                //Con_Printf("The current room %d! has room %d joined to it!", room->ID, i);
+                //Con_Printf("The current room %d! has room %d joined to it!", room->id, i);
             }
         }
          Room_BuildNearRoomsList(&engine_world.rooms[i]);//Rebuild room near list!
@@ -824,9 +824,9 @@ void Room_SwapPortals(room_p room, room_p dest_room)
    {
         for(int j=0;j<room->portals[i].dest_room->portal_count;j++)//For each portal in the destination room from a portal in the input room
         {
-            if(engine_world.rooms[room->portals[i].dest_room->ID].portals[j].dest_room->ID == room->ID)//If the portal in the input room's, destination room is the input room, this is the one we want to update!
+            if(engine_world.rooms[room->portals[i].dest_room->id].portals[j].dest_room->id == room->id)//If the portal in the input room's, destination room is the input room, this is the one we want to update!
             {
-                engine_world.rooms[room->portals[i].dest_room->ID].portals[j].dest_room = parent_room;//Update portal destination room to the alternate room
+                engine_world.rooms[room->portals[i].dest_room->id].portals[j].dest_room = parent_room;//Update portal destination room to the alternate room
             }
         }
     }*/
@@ -844,7 +844,7 @@ void Room_SwapItems(room_p room, room_p dest_room)
 
         if(ent)
         {
-            if(ent->self->room->ID == room->ID)//If the item is in the room
+            if(ent->self->room->id == room->id)//If the item is in the room
             {
                 ent->self->room = dest_room;
             }
@@ -854,19 +854,19 @@ void Room_SwapItems(room_p room, room_p dest_room)
 
 int World_AddEntity(world_p world, struct entity_s *entity)
 {
-    RB_InsertIgnore(&entity->ID, entity, world->entity_tree);
+    RB_InsertIgnore(&entity->id, entity, world->entity_tree);
     return 1;
 }
 
 
 int World_DeleteEntity(world_p world, struct entity_s *entity)
 {
-    RB_Delete(world->entity_tree, RB_SearchNode(&entity->ID, world->entity_tree));
+    RB_Delete(world->entity_tree, RB_SearchNode(&entity->id, world->entity_tree));
     return 1;
 }
 
 
-int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id)
+int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id)
 {
     skeletal_model_p model = World_FindModelByID(world, model_id);
     if((model == NULL) || (world->items_tree == NULL))
@@ -876,6 +876,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id)
     
     ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
     bf->id = item_id;
+    bf->world_id = world_model_id;
     vec3_set_zero(bf->bb_min);
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
@@ -923,23 +924,23 @@ struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id)
 
     min = 0;
     max = w->skeletal_model_count - 1;
-    if(w->skeletal_models[min].ID == id)
+    if(w->skeletal_models[min].id == id)
     {
         return w->skeletal_models + min;
     }
-    if(w->skeletal_models[max].ID == id)
+    if(w->skeletal_models[max].id == id)
     {
         return w->skeletal_models + max;
     }
     do
     {
         i = (min + max) / 2;
-        if(w->skeletal_models[i].ID == id)
+        if(w->skeletal_models[i].id == id)
         {
             return w->skeletal_models + i;
         }
 
-        if(w->skeletal_models[i].ID < id)
+        if(w->skeletal_models[i].id < id)
         {
             min = i;
         }
@@ -966,7 +967,7 @@ struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world)
     sp = world->sprites;
     for(i=0;i<world->sprites_count;i++,sp++)
     {
-        if(sp->ID == ID)
+        if(sp->id == ID)
         {
             return sp;
         }
@@ -989,7 +990,7 @@ int Room_IsJoined(room_p r1, room_p r2)
         p = r1->portals;
         for(i=0;i<r1->portal_count;i++,p++)
         {
-            if(p->dest_room->ID == r2->ID)
+            if(p->dest_room->id == r2->id)
             {
                 return 1;
             }
@@ -1000,7 +1001,7 @@ int Room_IsJoined(room_p r1, room_p r2)
         p = r2->portals;
         for(i=0;i<r2->portal_count;i++,p++)
         {
-            if(p->dest_room->ID == r1->ID)
+            if(p->dest_room->id == r1->id)
             {
                 return 1;
             }

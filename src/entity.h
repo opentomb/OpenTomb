@@ -108,7 +108,7 @@ struct ss_bone_frame_s;
 
 typedef struct entity_s
 {
-    uint32_t                            ID;                                     // ID
+    uint32_t                            id;                                     // ID
     int32_t                             OCB;
     uint32_t                            activation_mask;
     

@@ -197,9 +197,9 @@ void SkeletalModelTestDraw()
     bframe = smodel->animations[anim].frames + frame;
 
     glColor3b(0, 0, 0);
-    Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->ID, mesh);
-    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->ID, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
-    Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->ID):-1, af->next_frame, af->state_change_count);
+    Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
+    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
+    Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
     Gui_OutTextXY(screen_info.w-632, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
     Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
     Gui_OutTextXY(screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
@@ -211,7 +211,7 @@ void SkeletalModelTestDraw()
         {
             adsp = af->state_change[i].anim_dispath + j;
             Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
-                          i, j, af->state_change[i].ID, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
+                          i, j, af->state_change[i].id, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
             y -= 24;
         }
     }
@@ -577,7 +577,7 @@ void Engine_Display()
             GLfloat lp[] = {250.0, 120.0, 0.0, 0.0};
             glEnable(GL_LIGHTING);
             glEnable(GL_LIGHT0);
-            glEnable(GL_BLEND);
+            //glEnable(GL_BLEND);
             glEnable(GL_ALPHA_TEST);
             glLightfv(GL_LIGHT0, GL_POSITION, lp);
             glColor3f(1.0, 1.0, 1.0);
@@ -838,7 +838,7 @@ void ShowDebugInfo()
         Gui_OutTextXY(20, 68, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
         if(last_rmb)
         {
-            Gui_OutTextXY(20, 48, "ent_rmb_ID = %d", last_rmb->ID);
+            Gui_OutTextXY(20, 48, "ent_rmb_ID = %d", last_rmb->id);
         }
         Gui_OutTextXY(20, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Character->character->cmd.rot[0], engine_world.Character->character->cmd.rot[1], (btScalar)engine_world.Character->angles[1]);
     }
@@ -846,7 +846,7 @@ void ShowDebugInfo()
     if(engine_world.Character && engine_world.Character->self->room)
     {
         Gui_OutTextXY(20, 128, "Level Name: %s", gameflow_manager.CurrentLevelName);
-        Gui_OutTextXY(20, 28, "room = %d, co = %d", engine_world.Character->self->room->ID, bt_engine_dynamicsWorld->getNumCollisionObjects());
+        Gui_OutTextXY(20, 28, "room = %d, co = %d", engine_world.Character->self->room->id, bt_engine_dynamicsWorld->getNumCollisionObjects());
     }
 
     //Gui_OutTextXY(screen_info.w-380, 68, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
