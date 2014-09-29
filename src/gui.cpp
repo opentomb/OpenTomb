@@ -485,9 +485,6 @@ void Gui_RenderItem(uint32_t item_id, btScalar size)
 
 void Gui_RenderInventory(struct inventory_node_s *inv)
 {
-    
-    return;
-    
     int inv_cells_x = 4;
     int inv_cells_y = 2;
     int inv_width = 512;
@@ -1670,18 +1667,18 @@ void gui_ProgressBar::Show(float value)
 
 gui_ItemNotifier::gui_ItemNotifier()
 {
-    SetPos(250, 250);
+    SetPos(850, 850);
     SetRot(0,0);
-    SetSize(1);
+    SetSize(1.0);
     SetRotateTime(1000.0);
     
     mItem   = 0;
     mActive = false;
 }
 
-void gui_ItemNotifier::Start(int item, int time)
+void gui_ItemNotifier::Start(int item, float time)
 {
-    Clear();
+    Reset();
     
     mItem     = item;
     mShowTime = time;
@@ -1732,18 +1729,17 @@ void gui_ItemNotifier::Animate()
             mCurrPosX  = (mCurrPosX > mStartPosX)?(mStartPosX):(mCurrPosX);
             
             if(mCurrPosX == mStartPosX)
-                Clear();
+                Reset();
         }
     }
 }
 
-void gui_ItemNotifier::Clear()
+void gui_ItemNotifier::Reset()
 {
     mActive = false;
     mCurrTime = 0.0;
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
-    
     
     mEndPosX = ((float)screen_info.w / TR_GUI_SCREEN_METERING_RESOLUTION) * mAbsPosX;
     mPosY    = ((float)screen_info.h / TR_GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;

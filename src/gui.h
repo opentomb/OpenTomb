@@ -276,8 +276,8 @@ class gui_ItemNotifier
 public:
     gui_ItemNotifier();
     
-    void    Start(int item, int time);
-    void    Clear();
+    void    Start(int item, float time);
+    void    Reset();
     void    Animate();
     void    Draw();
     
