@@ -37,13 +37,13 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     }
 
     ret = (character_p)malloc(sizeof(character_t));
-    ret->platform = NULL;
+    //ret->platform = NULL;
     ret->state_func = NULL;
     ret->inventory = NULL;
     ret->ent = ent;
     ent->character = ret;
     ent->dir_flag = ENT_STAY;
-    Mat4_E_macro(ret->local_platform);
+    //Mat4_E_macro(ret->local_platform);
 
     ret->cmd.action = 0x00;
     ret->cmd.vertical_collide = 0x00;
@@ -427,6 +427,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
  */
 void Character_UpdatePlatformPreStep(struct entity_s *ent)
 {
+#if 0
     if(ent->character->platform)
     {
         engine_container_p cont = (engine_container_p)ent->character->platform->getUserPointer();
@@ -443,6 +444,7 @@ void Character_UpdatePlatformPreStep(struct entity_s *ent)
 #endif
         }
     }
+#endif
 }
 
 /*
@@ -450,6 +452,7 @@ void Character_UpdatePlatformPreStep(struct entity_s *ent)
  */
 void Character_UpdatePlatformPostStep(struct entity_s *ent)
 {   
+#if 0
     switch(ent->move_type)
     {
         case MOVE_ON_FLOOR:
@@ -486,6 +489,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
             ent->character->platform = NULL;
         }
     }
+#endif
 }
 
 
