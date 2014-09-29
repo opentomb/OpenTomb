@@ -223,10 +223,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
         return 0;
     }
     
-    if(ent->id == 0)
-    {
-        Gui_StartNotifier(item_id);
-    }
+    Gui_StartNotifier(item_id);
     
     inventory_node_p i = ent->character->inventory;
     
