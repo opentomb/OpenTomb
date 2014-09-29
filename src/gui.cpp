@@ -500,7 +500,7 @@ void Gui_RenderInventory(struct inventory_node_s *inv)
         cx = i % inv_cells_x;
         cy = i / inv_cells_x;
         glPushMatrix();
-            glTranslatef(cell_size/2 + cell_size * cx, screen_info.h - cell_size/2 + cell_size * cy, -2048.0);
+            glTranslatef(cell_size/2 + cell_size * cx, screen_info.h - cell_size/2 - cell_size * cy, -2048.0);
             glRotatef(180.0, 0.0, 0.0, 1.0);
             glRotatef(45.0 , 1.0, 0.0, 0.0);
             Gui_RenderItem(inv->id, (btScalar)cell_size);

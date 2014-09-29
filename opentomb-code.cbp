@@ -35,7 +35,7 @@
 			<Add option='-I&quot;src\bullet&quot; -I&quot;src\freetype2&quot;' />
 		</Compiler>
 		<Linker>
-			<Add option='-static -lmingw32 -limagee -lSDL2main -lSDL2.dll -L&quot;lib\.&quot; -lbullete -lfreetype2e -lglu32 -lopengl32 -limm32 -lkernel32 -lole32 -loleaut32 -luuid -lversion -lwinmm -lgdi32 -lz -lpthread &quot;res/resource.o&quot;' />
+			<Add option='-static -lmingw32 -limagee -lSDL2main -lSDL2.dll -L&quot;lib\.&quot; -lbullete -lfreetype2e -lglu32 -lopengl32 -limm32 -lkernel32 -lole32 -loleaut32 -luuid -lversion -lwinmm -lgdi32 -lz -lpthread' />
 		</Linker>
 		<Unit filename="config.lua" />
 		<Unit filename="scripts/audio/common_sounds.lua" />
