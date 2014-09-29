@@ -581,6 +581,9 @@ void Engine_Display()
             glEnable(GL_ALPHA_TEST);
             glLightfv(GL_LIGHT0, GL_POSITION, lp);
             glColor3f(1.0, 1.0, 1.0);
+            
+            Gui_DrawNotifier();
+            
             if(engine_world.Character && engine_world.Character->character)
             {
                 Gui_RenderInventory(engine_world.Character->character->inventory);

@@ -247,11 +247,75 @@ private:
     int           mLastScrHeight;
 };
 
+
+enum NotifierAnimType
+{
+    ANIMTYPE_NONE,
+    ANIMTYPE_SLIDELEFT,
+    ANIMTYPE_SLIDERIGHT,
+    ANIMTYPE_SLIDETOP,
+    ANIMTYPE_SLIDEBOTTOM,
+    ANIMTYPE_ZOOM,
+    ANIMTYPE_FADE
+};
+
+// Offscreen divider specifies how far item notifier will be placed from
+// the final slide position. Usually it's enough to be 1/8 of the screen
+// width, but if you want to increase or decrease notifier size, you must
+// change this value properly.
+
+#define TR_GUI_OFFSCREEN_DIVIDER 8.0
+
+// Notifier show time is a time notifier stays on screen (excluding slide
+// effect). Maybe it's better to move it to script later.
+
+#define TR_GUI_NOTIFIER_SHOWTIME 2.0
+
+class gui_ItemNotifier
+{
+public:
+    gui_ItemNotifier();
+    
+    void    Start(int item, int time);
+    void    Clear();
+    void    Animate();
+    void    Draw();
+    
+    void    SetPos(float X, float Y);
+    void    SetRot(float X, float Y);
+    void    SetSize(float size);
+    void    SetRotateTime(float time);
+        
+private:
+    bool    mActive;
+    int     mItem;
+
+    float   mAbsPosY;
+    float   mAbsPosX;
+
+    float   mPosY;
+    float   mStartPosX;
+    float   mEndPosX;
+    float   mCurrPosX;
+    
+    float   mRotX;
+    float   mRotY;
+    float   mCurrRotX;
+    float   mCurrRotY;
+    
+    float   mSize;
+    
+    float   mShowTime;
+    float   mCurrTime;
+    float   mRotateTime;
+};
+
 void Gui_Init();
 void Gui_Destroy();
 
 void Gui_InitBars();
 void Gui_InitFaders();
+void Gui_InitNotifier();
 
 void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);
@@ -332,7 +396,14 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeAssignPic(int fader, const char* pic_name);
 int  Gui_FadeCheck(int fader);
-                  
+
+/**
+ * Draw item notifier.
+ */
+ 
+void Gui_StartNotifier(int item);
+void Gui_DrawNotifier();
+    
 /**
  * General GUI drawing routines.
  */

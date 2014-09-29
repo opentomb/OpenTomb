@@ -26,6 +26,7 @@ uint16_t            temp_lines_used = 0;
 
 gui_ProgressBar     Bar[BAR_LASTINDEX];
 gui_Fader           Fader[FADER_LASTINDEX];
+gui_ItemNotifier    Notifier;
 
 void Gui_Init()
 {
@@ -54,6 +55,7 @@ void Gui_Init()
     
     Gui_InitBars();
     Gui_InitFaders();
+    Gui_InitNotifier();
 }
 
 void Gui_InitBars()
@@ -192,6 +194,14 @@ void Gui_InitFaders()
                 }
         }
     }
+}
+
+void Gui_InitNotifier()
+{
+    Notifier.SetPos(850.0, 850.0);
+    Notifier.SetRot(180.0, 270.0);
+    Notifier.SetSize(1.0);
+    Notifier.SetRotateTime(1000.0);
 }
 
 void Gui_Destroy()
@@ -462,11 +472,12 @@ void Gui_RenderItem(uint32_t item_id, btScalar size)
         size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
     }
     
-    Item_Frame(bf);
+    //Item_Frame(bf);
     
     glPushMatrix();
     if(size < 1.0)          // only reduce items size...
         glScalef(size, size, size);
+        
     Render_SkeletalModel(bf);
     glPopMatrix();
 }
@@ -474,6 +485,9 @@ void Gui_RenderItem(uint32_t item_id, btScalar size)
 
 void Gui_RenderInventory(struct inventory_node_s *inv)
 {
+    
+    return;
+    
     int inv_cells_x = 4;
     int inv_cells_y = 2;
     int inv_width = 512;
@@ -560,6 +574,17 @@ void Gui_DrawBars()
         Bar[BAR_SPRINT].Show(engine_world.Character->character->opt.sprint);
         Bar[BAR_HEALTH].Show(engine_world.Character->character->opt.health);
     }
+}
+
+void Gui_StartNotifier(int item)
+{
+    Notifier.Start(item, TR_GUI_NOTIFIER_SHOWTIME);
+}
+
+void Gui_DrawNotifier()
+{
+    Notifier.Draw();
+    Notifier.Animate();
 }
 
 void Gui_DrawLoadScreen(int value)
@@ -1640,6 +1665,123 @@ void gui_ProgressBar::Show(float value)
 }
 
 // ===================================================================================
-// ===================== END OF PROGRESS BAR CLASS IMPLEMENTATION ====================
+// ======================== ITEM NOTIFIER CLASS IMPLEMENTATION =======================
 // ===================================================================================
 
+gui_ItemNotifier::gui_ItemNotifier()
+{
+    SetPos(250, 250);
+    SetRot(0,0);
+    SetSize(1);
+    SetRotateTime(1000.0);
+    
+    mItem   = 0;
+    mActive = false;
+}
+
+void gui_ItemNotifier::Start(int item, int time)
+{
+    Clear();
+    
+    mItem     = item;
+    mShowTime = time;
+    mActive   = true;
+    
+}
+
+void gui_ItemNotifier::Animate()
+{
+    if(!mActive)
+    {
+        return;
+    }
+    else
+    {
+        if(mRotateTime)
+        {
+            mCurrRotX += (engine_frame_time * mRotateTime);
+            //mCurrRotY += (engine_frame_time * mRotateTime);
+            
+            mCurrRotX = (mCurrRotX > 360.0)?(mCurrRotX - 360.0):(mCurrRotX);
+            //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
+        }
+        
+        float step = 0;
+        
+        if(mCurrTime == 0)
+        {
+            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4);
+            step = (step <= 0.5)?(0.5):(step);
+            
+            mCurrPosX -= step;
+            mCurrPosX  = (mCurrPosX < mEndPosX)?(mEndPosX):(mCurrPosX);
+            
+            if(mCurrPosX == mEndPosX)
+                mCurrTime += engine_frame_time;
+        }
+        else if(mCurrTime < mShowTime)
+        {
+            mCurrTime += engine_frame_time;
+        }
+        else
+        {
+            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4);
+            step = (step <= 0.5)?(0.5):(step);
+            
+            mCurrPosX += step;
+            mCurrPosX  = (mCurrPosX > mStartPosX)?(mStartPosX):(mCurrPosX);
+            
+            if(mCurrPosX == mStartPosX)
+                Clear();
+        }
+    }
+}
+
+void gui_ItemNotifier::Clear()
+{
+    mActive = false;
+    mCurrTime = 0.0;
+    mCurrRotX = 0.0;
+    mCurrRotY = 0.0;
+    
+    
+    mEndPosX = ((float)screen_info.w / TR_GUI_SCREEN_METERING_RESOLUTION) * mAbsPosX;
+    mPosY    = ((float)screen_info.h / TR_GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;
+    mCurrPosX = screen_info.w + ((float)screen_info.w / TR_GUI_OFFSCREEN_DIVIDER * mSize);
+    mStartPosX = mCurrPosX;    // Equalize current and start positions.
+}
+
+void gui_ItemNotifier::Draw()
+{
+    if(mActive)
+    {
+        glPushMatrix();
+            glTranslatef(mCurrPosX, mPosY, -2048.0);
+            glRotatef(mCurrRotX + mRotX, 0.0, 1.0, 0.0);
+            glRotatef(mCurrRotY + mRotY, 1.0, 0.0, 0.0);
+            Gui_RenderItem(mItem, mSize);
+        glPopMatrix();
+    }
+}
+
+void gui_ItemNotifier::SetPos(float X, float Y)
+{
+    mAbsPosX = X;
+    mAbsPosY = 1000.0 - Y;
+}
+
+void gui_ItemNotifier::SetRot(float X, float Y)
+{
+    mRotX = X;
+    mRotY = Y;
+}
+
+void gui_ItemNotifier::SetSize(float size)
+{
+    mSize = size;
+}
+
+void gui_ItemNotifier::SetRotateTime(float time)
+{
+    mRotateTime = (time / 1000.0) * 360.0;
+}

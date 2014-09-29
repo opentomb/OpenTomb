@@ -513,6 +513,7 @@ int lua_AddItem(lua_State * lua)
         Con_Printf("Wrong arguments count. Must be (entity_id, item_id, items_count)");
         return 0;
     }
+    
     entity_id = lua_tointeger(lua, 1);
     item_id = lua_tointeger(lua, 2);
     count = lua_tointeger(lua, 3);
