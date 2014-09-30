@@ -326,7 +326,7 @@ void Gui_RenderStrings();
  * Inventory rendering / manipulation functions
  */
 void Item_Frame(struct ss_bone_frame_s *bf);
-void Gui_RenderItem(uint32_t item_id, btScalar size);
+void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size);
 void Gui_RenderInventory(struct inventory_node_s *inv);
 
 /**

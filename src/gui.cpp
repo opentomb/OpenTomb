@@ -453,9 +453,8 @@ void Item_Frame(struct ss_bone_frame_s *bf)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(uint32_t item_id, btScalar size)
+void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 {
-    ss_bone_frame_p bf = World_GetItemSSBFByID(&engine_world, item_id);
     if(bf == NULL)
     {
         return;
@@ -472,7 +471,7 @@ void Gui_RenderItem(uint32_t item_id, btScalar size)
         size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
     }
     
-    //Item_Frame(bf);
+    Item_Frame(bf);
     
     glPushMatrix();
     if(size < 1.0)          // only reduce items size...
@@ -500,7 +499,7 @@ void Gui_RenderInventory(struct inventory_node_s *inv)
             glTranslatef(cell_size/2 + cell_size * cx, screen_info.h - cell_size/2 - cell_size * cy, -2048.0);
             glRotatef(180.0, 0.0, 0.0, 1.0);
             glRotatef(45.0 , 1.0, 0.0, 0.0);
-            Gui_RenderItem(inv->id, (btScalar)cell_size);
+            Gui_RenderItem(World_GetItemSSBFByID(&engine_world, inv->id), (btScalar)cell_size);
         glPopMatrix();
     }
 }
