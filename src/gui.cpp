@@ -201,7 +201,7 @@ void Gui_InitNotifier()
     Notifier.SetPos(850.0, 850.0);
     Notifier.SetRot(180.0, 270.0);
     Notifier.SetSize(1.0);
-    Notifier.SetRotateTime(1000.0);
+    Notifier.SetRotateTime(2500.0);
 }
 
 void Gui_Destroy()
@@ -1779,5 +1779,5 @@ void gui_ItemNotifier::SetSize(float size)
 
 void gui_ItemNotifier::SetRotateTime(float time)
 {
-    mRotateTime = (time / 1000.0) * 360.0;
+    mRotateTime = (1000.0 / time) * 360.0;
 }
