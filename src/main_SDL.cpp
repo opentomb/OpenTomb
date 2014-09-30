@@ -583,10 +583,9 @@ void Engine_Display()
             glColor3f(1.0, 1.0, 1.0);
             
             Gui_DrawNotifier();
-            
             if(engine_world.Character && engine_world.Character->character)
             {
-                Gui_RenderInventory(engine_world.Character->character->inventory);
+                main_inventory_menu.Render(engine_world.Character->character->inventory);
             }
         }
         glPopClientAttrib();

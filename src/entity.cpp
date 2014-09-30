@@ -58,7 +58,6 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf.bb_min);
     vec3_set_zero(ret->bf.centre);
     vec3_set_zero(ret->bf.pos);
-    vec4_set_zero(ret->collision_offset.m_floats);                              // not an error, really btVector3 has 4 elements in array
     vec4_set_zero(ret->speed.m_floats);
 
     ret->activation_offset[0] = 0.0;
@@ -174,11 +173,14 @@ void Entity_Disable(entity_p ent)
 
 void Entity_UpdateRoomPos(entity_p ent)
 {
-    btScalar pos[3], *v;
+    btScalar pos[3], v[3];
     room_p new_room;
     room_sector_p new_sector;
 
-    v = ent->collision_offset.m_floats;
+    vec3_add(v, ent->bf.bb_min, ent->bf.bb_max);
+    v[0] /= 2.0;
+    v[1] /= 2.0;
+    v[2] /= 2.0;
     Mat4_vec3_mul_macro(pos, ent->transform, v);
     new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
     if(new_room)
@@ -214,13 +216,6 @@ void Entity_UpdateRigidBody(entity_p ent)
     }
 
     old_room = ent->self->room;
-    if(!ent->character)
-    {
-        vec3_add(ent->collision_offset.m_floats, ent->bf.bb_min, ent->bf.bb_max);
-        ent->collision_offset.m_floats[0] /= 2.0;
-        ent->collision_offset.m_floats[1] /= 2.0;
-        ent->collision_offset.m_floats[2] /= 2.0;
-    }
     Entity_UpdateRoomPos(ent);
 
 #if 1
