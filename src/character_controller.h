@@ -14,6 +14,8 @@
 #include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
 #include "engine.h"
 
+#define CHARACTER_USE_COMPLEX_COLLISION         (0)
+
 // Lara's character behavior constants
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
@@ -178,19 +180,19 @@ typedef struct character_s
     btScalar                     ry;                     // base character radius Y
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
+#if CHARACTER_USE_COMPLEX_COLLISION
     uint8_t                      complex_collision;      // use complex collision flag
     btCollisionShape           **shapes;
+#endif
     btCollisionShape            *shapeZ;                 // running / jumping
     btCapsuleShape              *shapeY;                 // swimming / crocodile
 
-    btBoxShape                  *shapeBox;               // simple (128, 128, 128) sized box shape
     btSphereShape               *sphere;                 // needs to height calculation
     btSphereShape               *climb_sensor;
     btPairCachingGhostObject    *ghostObject;            // like Bullet character controller for penetration resolving.
     btManifoldArray             *manifoldArray;          // keep track of the contact manifolds
     
-    //btCollisionObject           *platform;
-    //btScalar                     local_platform[16];
+    btScalar                     collision_transform[16];
     struct height_info_s         height_info;
     struct climb_info_s          climb;
     
