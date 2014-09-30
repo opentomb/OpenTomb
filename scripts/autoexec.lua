@@ -1,5 +1,5 @@
-
-dofile("scripts/items.lua");
+dofile("scripts/inventory/item_list.lua")
+dofile("scripts/inventory/items.lua");
 
 -------- Lara's model-------
 --           .=.

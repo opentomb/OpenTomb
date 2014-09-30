@@ -49,20 +49,22 @@ enum ACTIONS {
     ACT_WEAPON6,                // 28
     ACT_WEAPON7,                // 29
     ACT_WEAPON8,                // 30
-    ACT_BINOCULARS,             // 31
-    ACT_PLS,                    // 32 Not in original, reserved for future
+    ACT_WEAPON9,                // 31
+    ACT_WEAPON10,               // 32
+    ACT_BINOCULARS,             // 33
+    ACT_PLS,                    // 34 Not in original, reserved for future
     // Interface keys
-    ACT_PAUSE,                  // 33
-    ACT_INVENTORY,              // 34
-    ACT_DIARY,                  // 35 Not in original, reserved for future
-    ACT_MAP,                    // 36 Not in original, reserved for future
-    ACT_LOADGAME,               // 37
-    ACT_SAVEGAME,               // 38
+    ACT_PAUSE,                  // 35
+    ACT_INVENTORY,              // 36
+    ACT_DIARY,                  // 37 Not in original, reserved for future
+    ACT_MAP,                    // 38 Not in original, reserved for future
+    ACT_LOADGAME,               // 39
+    ACT_SAVEGAME,               // 40
     // Service keys
-    ACT_CONSOLE,                // 39
-    ACT_SCREENSHOT,             // 40
+    ACT_CONSOLE,                // 41
+    ACT_SCREENSHOT,             // 42
     // Last action index. This should ALWAYS remain last entry!
-    ACT_LASTINDEX               // 41
+    ACT_LASTINDEX               // 43
 };
 
 enum AXES {
