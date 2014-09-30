@@ -158,7 +158,8 @@ function create_pickup_func(id, item_id)
             pickup_state = 137;                             -- FIXME: warious states for difference items relative Z positions
         end;
 
-        if(getEntityState(activator_id) == pickup_state) then
+        local st = getEntityState(activator_id);
+        if(st == pickup_state) or (st ~= 2) then        -- Disable picking up, if Lara isn't idle.
             return;
         end;
         print("you try to pick up object ".. object_id);
