@@ -27,6 +27,7 @@ uint16_t            temp_lines_used = 0;
 gui_ProgressBar     Bar[BAR_LASTINDEX];
 gui_Fader           Fader[FADER_LASTINDEX];
 gui_ItemNotifier    Notifier;
+gui_InventoryMenu   main_inventory_menu;
 
 void Gui_Init()
 {
@@ -200,7 +201,7 @@ void Gui_InitNotifier()
 {
     Notifier.SetPos(850.0, 850.0);
     Notifier.SetRot(180.0, 270.0);
-    Notifier.SetSize(1.0);
+    Notifier.SetSize(128.0);                            // why here was 1.0???
     Notifier.SetRotateTime(2500.0);
 }
 
@@ -460,7 +461,8 @@ void Gui_RenderItem(uint32_t item_id, btScalar size)
     {
         return;
     }
-
+    
+    Item_Frame(bf);
     btScalar bb[3];
     vec3_sub(bb, bf->bb_max, bf->bb_min);
     if(bb[0] >= bb[1])
@@ -472,35 +474,36 @@ void Gui_RenderItem(uint32_t item_id, btScalar size)
         size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
     }
     
-    //Item_Frame(bf);
-    
     glPushMatrix();
     if(size < 1.0)          // only reduce items size...
         glScalef(size, size, size);
-        
     Render_SkeletalModel(bf);
     glPopMatrix();
 }
 
 
-void Gui_RenderInventory(struct inventory_node_s *inv)
+void gui_InventoryMenu::Render(struct inventory_node_s *inv)
 {
-    int inv_cells_x = 4;
-    int inv_cells_y = 2;
-    int inv_width = 512;
-    int inv_height = 256;
-    int cell_size = 128;
-    int cx, cy, i;
+    int cx, cy, i, min, max, x0, y0;
     
-    for(i=0;inv;inv=inv->next,i++)
+    min = mCells_x * mRowOffset;
+    max = min + mCells_x * mCells_y;
+    x0 = mCellSize/2 + ((mLeft >= 0)?(mLeft):(screen_info.w + mLeft - mWidth));
+    y0 = - mCellSize/2 + ((mTop >= 0)?(screen_info.h - mTop):(mHeight + mTop));
+    
+    for(i=0;inv && (i < max);inv=inv->next,i++)
     {
-        cx = i % inv_cells_x;
-        cy = i / inv_cells_x;
+        if(i < min)
+        {
+            continue;
+        }
+        cx = i % mCells_x;
+        cy = i / mCells_x - mRowOffset;
         glPushMatrix();
-            glTranslatef(cell_size/2 + cell_size * cx, screen_info.h - cell_size/2 - cell_size * cy, -2048.0);
+            glTranslatef(x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
             glRotatef(180.0, 0.0, 0.0, 1.0);
             glRotatef(45.0 , 1.0, 0.0, 0.0);
-            Gui_RenderItem(inv->id, (btScalar)cell_size);
+            Gui_RenderItem(inv->id, (btScalar)mCellSize);
         glPopMatrix();
     }
 }
@@ -1674,6 +1677,10 @@ gui_ItemNotifier::gui_ItemNotifier()
     
     mItem   = 0;
     mActive = false;
+    
+    mFrame  = 0;
+    mAnim   = 0;
+    mTime   = 0.0;
 }
 
 void gui_ItemNotifier::Start(int item, float time)
@@ -1683,7 +1690,6 @@ void gui_ItemNotifier::Start(int item, float time)
     mItem     = item;
     mShowTime = time;
     mActive   = true;
-    
 }
 
 void gui_ItemNotifier::Animate()
@@ -1707,7 +1713,7 @@ void gui_ItemNotifier::Animate()
         
         if(mCurrTime == 0)
         {
-            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4);
+            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
             step = (step <= 0.5)?(0.5):(step);
             
             mCurrPosX -= step;
@@ -1722,7 +1728,7 @@ void gui_ItemNotifier::Animate()
         }
         else
         {
-            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4);
+            step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
             step = (step <= 0.5)?(0.5):(step);
             
             mCurrPosX += step;
@@ -1745,18 +1751,41 @@ void gui_ItemNotifier::Reset()
     mPosY    = ((float)screen_info.h / TR_GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;
     mCurrPosX = screen_info.w + ((float)screen_info.w / TR_GUI_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
+    
+    mAnim = 0;
+    mFrame = 0;
+    mTime = 0.0;
 }
 
 void gui_ItemNotifier::Draw()
 {
     if(mActive)
     {
-        glPushMatrix();
-            glTranslatef(mCurrPosX, mPosY, -2048.0);
-            glRotatef(mCurrRotX + mRotX, 0.0, 1.0, 0.0);
-            glRotatef(mCurrRotY + mRotY, 1.0, 0.0, 0.0);
-            Gui_RenderItem(mItem, mSize);
-        glPopMatrix();
+        ss_bone_frame_p bf = World_GetItemSSBFByID(&engine_world, mItem);
+        if(bf)
+        {
+            int anim = bf->current_animation;
+            int frame = bf->current_frame;
+            btScalar time = bf->frame_time;
+
+            bf->current_animation = mAnim;
+            bf->current_frame = mFrame;
+            bf->frame_time = mTime;
+
+            glPushMatrix();
+                glTranslatef(mCurrPosX, mPosY, -2048.0);
+                glRotatef(mCurrRotX + mRotX, 0.0, 1.0, 0.0);
+                glRotatef(mCurrRotY + mRotY, 1.0, 0.0, 0.0);
+                Gui_RenderItem(mItem, mSize);
+            glPopMatrix();
+
+            mAnim = bf->current_animation;
+            mFrame = bf->current_frame;
+            mTime = bf->frame_time;
+            bf->current_animation = anim;
+            bf->current_frame = frame;
+            bf->frame_time = time;
+        }
     }
 }
 
