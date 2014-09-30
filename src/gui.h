@@ -308,6 +308,10 @@ private:
     float   mShowTime;
     float   mCurrTime;
     float   mRotateTime;
+    
+    int     mFrame;
+    int     mAnim;
+    float   mTime;
 };
 
 void Gui_Init();
@@ -327,7 +331,67 @@ void Gui_RenderStrings();
  */
 void Item_Frame(struct ss_bone_frame_s *bf);
 void Gui_RenderItem(uint32_t item_id, btScalar size);
-void Gui_RenderInventory(struct inventory_node_s *inv);
+
+class gui_InventoryMenu
+{
+private:
+    int mCells_x;
+    int mCells_y;
+    int mWidth;
+    int mHeight;
+    int mLeft;
+    int mTop;
+    int mCellSize;    // x, y...
+    int mRowOffset;
+    // font
+    // background settings
+public:
+    gui_InventoryMenu()
+    {
+        mCells_x = 4;
+        mCells_y = 2;
+        mWidth = 512;
+        mHeight = 256;
+        mLeft = 0;
+        mTop = 0;
+        mCellSize = 128;
+        mRowOffset = 0;
+    }
+    
+    void SetPosition(int left, int top)
+    {
+        mLeft = left;
+        mTop = top;
+    }
+    
+    void SetSize(int width, int height)
+    {
+        mWidth = width;
+        mHeight = height;
+    }
+    
+    void SetTableSize(int cells_x, int cells_y)
+    {
+        mCells_x = cells_x;
+        mCells_y = cells_y;
+    }
+    
+    void SetCellSize(int size)
+    {
+        mCellSize = size;
+    }
+    
+    void SetRowOffset(int dy)               /// Scrolling inventory
+    {
+        mRowOffset = dy;
+    }
+    
+    void Render(struct inventory_node_s *inv);
+    // inventory parameters calculation
+    // mouse callback
+};
+
+extern gui_InventoryMenu      main_inventory_menu;
 
 /**
  * Calculates rect coordinates around the text
@@ -344,7 +408,6 @@ gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...);
  *
  * Either changes to 2D matrix state (is_gui = 1) or away from it (is_gui = 0). Does not do any drawing.
  */
- 
 void Gui_SwitchGLMode(char is_gui);
 
 /**
@@ -371,14 +434,12 @@ void Gui_SwitchGLMode(char is_gui);
  *  - Current color will be arbitray (set by console)
  *  - Blend mode will be SRC_ALPHA, ONE_MINUS_SRC_ALPHA (set by console)
  */
- 
 void Gui_Render();
 
 /**
  *  Draw simple rectangle.
  *  Only state it changes is the blend mode, according to blendMode value.
  */
-
 void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat &width, const GLfloat &height,
                   const GLfloat colorUpperLeft[], const GLfloat colorUpperRight[],
@@ -392,22 +453,19 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
  *  state check, and when second argument is present, it will immediately engage
  *  corresponding fader.
  */
-
 bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeAssignPic(int fader, const char* pic_name);
 int  Gui_FadeCheck(int fader);
-
+                  
 /**
  * Draw item notifier.
  */
- 
 void Gui_StartNotifier(int item);
 void Gui_DrawNotifier();
-    
+ 
 /**
  * General GUI drawing routines.
  */
- 
 void Gui_DrawCrosshair();
 void Gui_DrawFaders();
 void Gui_DrawBars();

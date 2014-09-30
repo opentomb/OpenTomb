@@ -128,7 +128,7 @@ typedef struct entity_s
     btScalar                            inertia;
     struct ss_bone_frame_s              bf;                                     // current boneframe with full frame information 
     btScalar                            angles[3];
-    btScalar                            transform[16];                          // GL transformation matrix
+    btScalar                            transform[16];                          // GL transformation matrix               
     
     struct bounding_volume_s           *bv;                                     // oriented bounding volume - only for OCC test
     
@@ -138,8 +138,7 @@ typedef struct entity_s
     struct engine_container_s          *self;
     
     btScalar                            activation_offset[4];                   // where we can activate object (dx, dy, dz, r)
-    btVector3                           collision_offset;                       // current centre
-    btRigidBody                       **bt_body;                                // FIXME - there are more complex objects
+    btRigidBody                       **bt_body;
     struct character_s                 *character;
 }entity_t, *entity_p;
 
