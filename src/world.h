@@ -23,6 +23,16 @@ struct entity_s;
 struct skeletal_model_s;
 struct render_object_list_s;
 struct RedBlackHeader_s;
+struct ss_bone_frame_s;
+
+
+typedef struct base_item_s
+{
+    uint32_t                    id;
+    uint32_t                    world_model_id;
+    char                        name[64];
+    struct ss_bone_frame_s     *bf;
+}base_item_t, *base_item_p;
 
 typedef struct room_box_s
 {
@@ -180,7 +190,7 @@ int compEntityLT(void *x, void *y);
 void RBEntityFree(void *x);
 void RBItemFree(void *x);
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
-struct ss_bone_frame_s *World_GetItemSSBFByID(world_p world, uint32_t id);
+struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id);
 
 void Room_Empty(room_p room);
 void Room_AddEntity(room_p room, struct entity_s *entity);

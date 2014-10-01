@@ -1983,7 +1983,7 @@ void Items_CheckEntities(RedBlackNode_p n);
 
 void Items_CheckEntities(RedBlackNode_p n)
 {
-    ss_bone_frame_p bf = (ss_bone_frame_p)n->data;
+    base_item_p item = (base_item_p)n->data;
     
     for(int i=0;i<engine_world.room_count;i++)
     {
@@ -1993,10 +1993,10 @@ void Items_CheckEntities(RedBlackNode_p n)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if(ent->bf.model->id == bf->world_id)
+                if(ent->bf.model->id == item->world_model_id)
                 {
                     char buf[256] = {0};
-                    snprintf(buf, 256, "create_pickup_func(%d, %d);", ent->id, bf->id);
+                    snprintf(buf, 256, "create_pickup_func(%d, %d);", ent->id, item->id);
                     luaL_dostring(engine_lua, buf);
                 }
             }
