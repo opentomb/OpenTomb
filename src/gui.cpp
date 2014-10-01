@@ -1782,6 +1782,7 @@ void gui_ItemNotifier::Draw()
             mAnim = bf->current_animation;
             mFrame = bf->current_frame;
             mTime = bf->frame_time;
+            
             bf->current_animation = anim;
             bf->current_frame = frame;
             bf->frame_time = time;
