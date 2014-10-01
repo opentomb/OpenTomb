@@ -29,7 +29,7 @@ if(ver < TR_II) then
     createBaseItem(ITEM_LARGE_MEDIPACK, 109, 109);          -- item: large MEDIPACK
 
     addItem(0, ITEM_COMPASS, 1);                            -- add compas
-    
+
 elseif(ver < TR_III) then
     createBaseItem(ITEM_PASSPORT, 120, 120);                -- item: journal
     createBaseItem(ITEM_COMPASS, 121, 121);                 -- item: compas or timer?
@@ -57,7 +57,7 @@ elseif(ver < TR_III) then
     createBaseItem(ITEM_LARGE_MEDIPACK, 172, 172);          -- item: large MEDIPACK
     createBaseItem(ITEM_FLARES, 173, 173);                  -- item: flares
 
-    addItem(20, ITEM_COMPASS, 1);                           -- add compas
+    addItem(player, ITEM_COMPASS, 1);                       -- add compas
     
 elseif(ver < TR_IV) then
     createBaseItem(ITEM_PASSPORT, 145, 145);                -- item: journal
@@ -88,7 +88,7 @@ elseif(ver < TR_IV) then
     createBaseItem(ITEM_LARGE_MEDIPACK, 202, 177);          -- item: large MEDIPACK
     createBaseItem(ITEM_FLARES, 203, 178);                  -- item: flares
 
-    addItem(3, ITEM_COMPASS, 1);                            -- add compas
+    addItem(player, ITEM_COMPASS, 1);                       -- add compas
     
 elseif(ver < TR_V) then
     createBaseItem(ITEM_COMPASS, 375, 375);                 -- item: compas
@@ -121,7 +121,8 @@ elseif(ver < TR_V) then
     createBaseItem(ITEM_BINOCULARS, 371, 371);              -- item: binocle
     createBaseItem(ITEM_SINGLE_FLARE, 372, 372);            -- item: one flare
     createBaseItem(ITEM_FLARES, 373, 373);                  -- item: flares
-    --addItem(51, 1, 1);                                    -- add compas Lara has different id in different levels =(
+    
+	addItem(player, ITEM_COMPASS, 1);                       -- add compas
     
 elseif(ver == TR_V) then
     createBaseItem(ITEM_COMPASS, 356, 356);                 -- item: timer
@@ -152,6 +153,50 @@ elseif(ver == TR_V) then
 
     createBaseItem(ITEM_SINGLE_FLARE, 354, 354);            -- item: one flare
     createBaseItem(ITEM_FLARES, 355, 355);                  -- item: flares
+	
+	addItem(player, ITEM_COMPASS, 1);                       -- add compas
 end
+
+-- test TR_ITEMS
+addItem(player, ITEM_COMPASS, 1);
+addItem(player, ITEM_PASSPORT, 1);
+addItem(player, ITEM_VIDEO, 1);
+addItem(player, ITEM_AUDIO, 1);
+addItem(player, ITEM_CONTROLS, 1);
+addItem(player, ITEM_LOAD, 1);
+addItem(player, ITEM_SAVE, 1);
+addItem(player, ITEM_SMALL_MEDIPACK, 1);
+addItem(player, ITEM_LARGE_MEDIPACK, 1);
+addItem(player, ITEM_PISTOLS, 1);
+addItem(player, ITEM_SHOTGUN, 1);
+addItem(player, ITEM_MAGNUMS, 1);
+addItem(player, ITEM_UZIS, 1);
+addItem(player, ITEM_M16, 1);
+addItem(player, ITEM_GRENADEGUN, 1);
+addItem(player, ITEM_ROCKETGUN, 1);
+addItem(player, ITEM_HARPOONGUN, 1);
+addItem(player, ITEM_CROSSBOW, 1);
+addItem(player, ITEM_GRAPPLEGUN, 1);
+addItem(player, ITEM_LASERSIGHT, 1);
+addItem(player, ITEM_BINOCULARS, 1);
+
+addItem(player, ITEM_PISTOL_AMMO, 1);
+addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1);
+addItem(player, ITEM_SHOTGUN_WIDESHOT_AMMO, 1);
+addItem(player, ITEM_MAGNUM_AMMO, 1);
+addItem(player, ITEM_UZI_AMMO, 1);
+addItem(player, ITEM_M16_AMMO, 1);
+addItem(player, ITEM_GRENADEGUN_NORMAL_AMMO, 1);
+addItem(player, ITEM_GRENADEGUN_SUPER_AMMO, 1);
+addItem(player, ITEM_GRENADEGUN_FLASH_AMMO, 1);
+addItem(player, ITEM_ROCKETGUN_AMMO, 1);
+addItem(player, ITEM_HARPOONGUN_AMMO, 1);
+addItem(player, ITEM_CROSSBOW_NORMAL_AMMO, 1);
+addItem(player, ITEM_CROSSBOW_POISON_AMMO, 1);
+addItem(player, ITEM_CROSSBOW_EXPLOSIVE_AMMO, 1);
+addItem(player, ITEM_GRAPPLEGUN_AMMO, 1);
+
+addItem(player, ITEM_FLARES, 1);
+addItem(player, ITEM_SINGLE_FLARE, 1);
 
 print("items script loaded");

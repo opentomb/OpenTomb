@@ -401,7 +401,7 @@ void Gui_RenderStrings()
  * That function updates item animation and rebuilds skeletal matrices;
  * @param bf - extended bone frame of the item;
  */
-void Item_Frame(struct ss_bone_frame_s *bf)
+void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
 {
     int16_t frame, anim;
     long int t;
@@ -411,7 +411,7 @@ void Item_Frame(struct ss_bone_frame_s *bf)
 
     bf->lerp = 0.0;
     stc = Anim_FindStateChangeByID(bf->model->animations + bf->current_animation, bf->next_state);
-    Entity_GetNextFrame(bf, engine_frame_time, stc, &frame, &anim, 0x00);
+    Entity_GetNextFrame(bf, time, stc, &frame, &anim, 0x00);
     if(anim != bf->current_animation)
     {
         bf->last_animation = bf->current_animation;
@@ -436,7 +436,7 @@ void Item_Frame(struct ss_bone_frame_s *bf)
     }
 
     af = bf->model->animations + bf->current_animation;
-    bf->frame_time += engine_frame_time;
+    bf->frame_time += time;
 
     t = (bf->frame_time) / bf->period;
     dt = bf->frame_time - (btScalar)t * bf->period;
@@ -454,15 +454,8 @@ void Item_Frame(struct ss_bone_frame_s *bf)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(uint32_t item_id, btScalar size)
+void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 {
-    ss_bone_frame_p bf = World_GetItemSSBFByID(&engine_world, item_id);
-    if(bf == NULL)
-    {
-        return;
-    }
-    
-    Item_Frame(bf);
     btScalar bb[3];
     vec3_sub(bb, bf->bb_max, bf->bb_min);
     if(bb[0] >= bb[1])
@@ -473,6 +466,7 @@ void Gui_RenderItem(uint32_t item_id, btScalar size)
     {
         size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
     }
+    size *= 0.8;
     
     glPushMatrix();
     if(size < 1.0)          // only reduce items size...
@@ -482,30 +476,109 @@ void Gui_RenderItem(uint32_t item_id, btScalar size)
 }
 
 
+void gui_InventoryMenu::UpdateSelectionOffset()
+{
+    int min, max;
+    min = mRowOffset * mCells_x;
+    max = min + mCells_x * mCells_y;
+    if(mSelected < min)
+    {
+        mRowOffset = mSelected / mCells_x;
+    }
+    if(mSelected >= max)
+    {
+        mRowOffset = mSelected / mCells_x - mCells_y + 1;
+    }
+    
+    mAng = 0.0;
+}
+
+
+void gui_InventoryMenu::MoveSelectHorisontal(int dx)
+{
+    mSelected += dx;
+    mSelected = (mSelected >= mMaxItems)?(mMaxItems-1):(mSelected);
+    mSelected = (mSelected < 0)?(0.0):(mSelected);
+    UpdateSelectionOffset();
+}
+
+
+void gui_InventoryMenu::MoveSelectVertical(int dy)
+{
+    mSelected += dy * mCells_x;
+    mSelected = (mSelected >= mMaxItems)?(mMaxItems-1):(mSelected);
+    mSelected = (mSelected < 0)?(0.0):(mSelected);
+    UpdateSelectionOffset();
+}
+
+
 void gui_InventoryMenu::Render(struct inventory_node_s *inv)
 {
     int cx, cy, i, min, max, x0, y0;
     
     min = mCells_x * mRowOffset;
     max = min + mCells_x * mCells_y;
-    x0 = mCellSize/2 + ((mLeft >= 0)?(mLeft):(screen_info.w + mLeft - mWidth));
-    y0 = - mCellSize/2 + ((mTop >= 0)?(screen_info.h - mTop):(mHeight + mTop));
+    x0 = 0.5 * mCellSize + mLeft;
+    y0 = - 0.5 * mCellSize + screen_info.h - mTop;
     
-    for(i=0;inv && (i < max);inv=inv->next,i++)
+    for(i=0;inv;inv=inv->next,i++)
     {
-        if(i < min)
+        if((i < min) || (i >= max))
         {
             continue;
         }
+        
+        ss_bone_frame_p bf = World_GetItemSSBFByID(&engine_world, inv->id);
+        if(bf == NULL)
+        {
+            continue;
+        }
+        
+        /*int anim = bf->current_animation;
+        int frame = bf->current_frame;
+        btScalar time = bf->frame_time;
+        bf->current_animation = mAnim;
+        bf->current_frame = mFrame;
+        bf->frame_time = mTime;
+        Item_Frame(bf, engine_frame_time);
+        mAnim = bf->current_animation;
+        mFrame = bf->current_frame;
+        mTime = bf->frame_time;
+        bf->current_animation = anim;
+        bf->current_frame = frame;
+        bf->frame_time = time;*/
+
+        Item_Frame(bf, 0.0);
         cx = i % mCells_x;
         cy = i / mCells_x - mRowOffset;
         glPushMatrix();
             glTranslatef(x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
             glRotatef(180.0, 0.0, 0.0, 1.0);
-            glRotatef(45.0 , 1.0, 0.0, 0.0);
-            Gui_RenderItem(inv->id, (btScalar)mCellSize);
+            glRotatef(60.0 , 1.0, 0.0, 0.0);
+            if(i == mSelected)
+            {
+                mAng += engine_frame_time * 30.0;
+                glRotatef(mAng, 0.0, 0.0, 1.0);
+            }
+            Gui_RenderItem(bf, (btScalar)mCellSize);
         glPopMatrix();
     }
+    
+    cx = mSelected % mCells_x; 
+    cy = mSelected / mCells_x - mRowOffset;
+    x0 = mLeft + mCellSize * cx;
+    y0 = screen_info.h - mTop - mCellSize * cy;
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glColor3f(1.0, 0.0, 0.0);
+    glBegin(GL_LINE_LOOP);
+        glVertex2f(x0, y0);
+        glVertex2f(x0 + mCellSize, y0);
+        glVertex2f(x0 + mCellSize, y0 - mCellSize);
+        glVertex2f(x0, y0 - mCellSize);
+    glEnd();
+    
+    mMaxItems = i;
 }
 
 
@@ -1677,10 +1750,6 @@ gui_ItemNotifier::gui_ItemNotifier()
     
     mItem   = 0;
     mActive = false;
-    
-    mFrame  = 0;
-    mAnim   = 0;
-    mTime   = 0.0;
 }
 
 void gui_ItemNotifier::Start(int item, float time)
@@ -1751,10 +1820,6 @@ void gui_ItemNotifier::Reset()
     mPosY    = ((float)screen_info.h / TR_GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;
     mCurrPosX = screen_info.w + ((float)screen_info.w / TR_GUI_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
-    
-    mAnim = 0;
-    mFrame = 0;
-    mTime = 0.0;
 }
 
 void gui_ItemNotifier::Draw()
@@ -1768,20 +1833,17 @@ void gui_ItemNotifier::Draw()
             int frame = bf->current_frame;
             btScalar time = bf->frame_time;
 
-            bf->current_animation = mAnim;
-            bf->current_frame = mFrame;
-            bf->frame_time = mTime;
-
+            bf->current_animation = 0;
+            bf->current_frame = 0;
+            bf->frame_time = 0.0;
+            
+            Item_Frame(bf, 0.0);
             glPushMatrix();
                 glTranslatef(mCurrPosX, mPosY, -2048.0);
                 glRotatef(mCurrRotX + mRotX, 0.0, 1.0, 0.0);
                 glRotatef(mCurrRotY + mRotY, 1.0, 0.0, 0.0);
-                Gui_RenderItem(mItem, mSize);
+                Gui_RenderItem(bf, mSize);
             glPopMatrix();
-
-            mAnim = bf->current_animation;
-            mFrame = bf->current_frame;
-            mTime = bf->frame_time;
             
             bf->current_animation = anim;
             bf->current_frame = frame;

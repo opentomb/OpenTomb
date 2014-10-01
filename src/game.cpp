@@ -531,16 +531,21 @@ void Game_UpdateAI()
     }
 }
 
+
 void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
 {
     entity_p ent = (entity_p)x->data;
 
-    if(ent->character && ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+    if(ent && ent->character)
     {
-        Entity_CheckActivators(ent);
-    }
-    if(ent->character)
-    {
+        if(ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+        {
+            Entity_CheckActivators(ent);
+        }
+        if(ent->character->opt.health <= 0.0)
+        {
+            ent->character->cmd.kill = 1;                                       // Kill, if no HP.
+        }
         Character_ApplyCommands(ent, &ent->character->cmd);
     }
 
@@ -559,10 +564,12 @@ void Game_UpdateCharacters()
 {
     entity_p ent = engine_world.Character;
 
-    if(ent->character)
+    if(ent && ent->character)
     {
         if(ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+        {
             Entity_CheckActivators(ent);
+        }
 
         if(ent->character->opt.health <= 0.0)
         {
@@ -575,6 +582,7 @@ void Game_UpdateCharacters()
         Game_UpdateCharactersTree(engine_world.entity_tree->root);
     }
 }
+
 
 __inline btScalar Game_Tick(btScalar *game_logic_time)
 {

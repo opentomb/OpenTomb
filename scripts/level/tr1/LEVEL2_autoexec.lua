@@ -19,10 +19,15 @@ setEntityActivity(44, 0);
 setEntityActivity(56, 0);
 setEntityActivity(57, 0);
 setEntityActivity(58, 0);
+setEntityAnim(56, 2, 0);
+setEntityAnim(57, 2, 0);
+setEntityAnim(58, 2, 0);
 
 -- autoopen doors (in level start)
 setEntityActivity(92, 0);
+setEntityState(92, 1);
 setEntityActivity(94, 0);
+setEntityState(94, 1);
 
 --------------------------------------------------------------------------------
 -------------------- ADDITIONAL SWITCHES FUNCTIONS -----------------------------
@@ -41,40 +46,8 @@ function switch_84(state)                       -- trapdoors switch
     end
 end
 
---------------------------------------------------------------------------------
---------------------------- auto open doors ------------------------------------
---------------------------------------------------------------------------------
-function activate_doors(object_id, activator_id)
-    if(object_id == nil or getEntityActivity(object_id) >= 1) then
-        return;
-    end
-    setEntityAnim(object_id, 3, 0);
-    setEntityActivity(object_id, 1);
-end
-
---woolves
-function activate_wolves(object_id, activator_id)
-    if(object_id == nil or getEntityActivity(object_id) >= 1) then
-        return;
-    end
-    setEntityAnim(object_id, 1, 0);
-    setEntityActivity(object_id, 1);
-end
-
--- trap axes
-function activate_trap_axes(object_id, activator_id)
-    if(object_id == nil or getEntityActivity(object_id) >= 1) then
-        return;
-    end
-    setEntityAnim(object_id, 2, 0);
-    setEntityActivity(object_id, 1);
-end
-
 
 create_switch_func(84, {59}, switch_84); -- stop traps switch; there are additional funcs
-
-entity_funcs[92] = {}; entity_funcs[92].activate = activate_doors;
-entity_funcs[94] = {}; entity_funcs[94].activate = activate_doors;
 
 entity_funcs[6] =  {}; entity_funcs[6].activate  = activate_wolves;
 entity_funcs[13] = {}; entity_funcs[13].activate = activate_wolves;

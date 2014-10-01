@@ -3009,6 +3009,11 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             LM = (skeletal_model_p)entity->bf.model;
             BV_InitBox(entity->bv, NULL, NULL);
 
+            top = lua_gettop(engine_lua);
+            lua_pushinteger(engine_lua, entity->id);
+            lua_setglobal(engine_lua, "player");
+            lua_settop(engine_lua, top);
+
             switch(tr->game_version)
             {
                 case TR_I:

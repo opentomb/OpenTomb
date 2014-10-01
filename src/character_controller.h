@@ -19,7 +19,7 @@
 // Lara's character behavior constants
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
-#define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0 + 32.0)                         ///@FIXME: check original
+#define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0 + 32.0)                  ///@FIXME: check original
 #define DEFAULT_FALL_DAWN_HEIGHT                (320.0)                         ///@FIXME: check original
 #define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
