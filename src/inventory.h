@@ -14,7 +14,7 @@
 #define ITEM_SHOTGUN    11  // Exists in all game versions
 #define ITEM_MAGNUMS    12  // Aka Automags in TR2, Desert Eagle in TR3/5, Revolver in TR4/5.
 #define ITEM_UZIS       13  // Exists in all game versions
-#define ITEM_M16        14  // Exists since TR2, aka MP5 in TR3, Sniper Rifle in TR5
+#define ITEM_M16        14  // Exists since TR2, aka MP5 in TR3, aka H&K in TR5
 #define ITEM_GRENADEGUN 15  // Exists since TR2, through all game versions
 #define ITEM_ROCKETGUN  16  // Exists in TR3 only
 #define ITEM_HARPOONGUN 17  // Exists in TR2-3 only
