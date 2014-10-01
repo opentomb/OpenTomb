@@ -97,7 +97,7 @@ function create_keyhole_func(id, doors, func, mask)
             moveEntityLocal(activator_id, 0.0, 256.0, 0.0);
             --
             trigger_activate(object_id, activator_id, 
-            function(state)                                                     -- вырезать жёсткий активатор, заменить коллбэком!!!!!
+            function(state)
                 for k, v in ipairs(doors) do
                     door_activate(v, mask);
                     setEntityActivity(v, 1);
@@ -199,7 +199,7 @@ function create_pickup_func(id, item_id)
     end;
 end
 
-function activateEntity(object_id, activator_id, trigger_mask)
+function activateEntity(object_id, activator_id)
     --print("try to activate "..object_id.." by "..activator_id)
     if((activator_id == nil) or (object_id == nil)) then
         return;

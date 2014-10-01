@@ -308,10 +308,6 @@ private:
     float   mShowTime;
     float   mCurrTime;
     float   mRotateTime;
-    
-    int     mFrame;
-    int     mAnim;
-    float   mTime;
 };
 
 void Gui_Init();
@@ -329,8 +325,8 @@ void Gui_RenderStrings();
 /**
  * Inventory rendering / manipulation functions
  */
-void Item_Frame(struct ss_bone_frame_s *bf);
-void Gui_RenderItem(uint32_t item_id, btScalar size);
+void Item_Frame(struct ss_bone_frame_s *bf, btScalar time);
+void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size);
 
 class gui_InventoryMenu
 {
@@ -343,6 +339,13 @@ private:
     int mTop;
     int mCellSize;    // x, y...
     int mRowOffset;
+    int mSelected;
+    int mMaxItems;
+    
+    int mFrame;
+    int mAnim;
+    float mTime;
+    float mAng;
     // font
     // background settings
 public:
@@ -356,6 +359,13 @@ public:
         mTop = 0;
         mCellSize = 128;
         mRowOffset = 0;
+        mSelected = 0;
+        mMaxItems = 0;
+        
+        mFrame = 0;
+        mAnim = 0;
+        mTime = 0.0;
+        mAng = 0.0;
     }
     
     void SetPosition(int left, int top)
@@ -385,6 +395,10 @@ public:
     {
         mRowOffset = dy;
     }
+    
+    void UpdateSelectionOffset();
+    void MoveSelectHorisontal(int dx);
+    void MoveSelectVertical(int dy);
     
     void Render(struct inventory_node_s *inv);
     // inventory parameters calculation

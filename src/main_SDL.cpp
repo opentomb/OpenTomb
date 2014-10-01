@@ -976,6 +976,22 @@ void DebugKeys(int button, int state)
     {
         switch(button)
         {
+            case SDLK_UP:
+                main_inventory_menu.MoveSelectVertical(-1);
+                break;
+                
+            case SDLK_DOWN:
+                main_inventory_menu.MoveSelectVertical(1);
+                break;
+                
+            case SDLK_LEFT:
+                main_inventory_menu.MoveSelectHorisontal(-1);
+                break;
+                
+            case SDLK_RIGHT:
+                main_inventory_menu.MoveSelectHorisontal(1);
+                break;
+                
                 /*models switching*/
             case SDLK_p:
                 model++;

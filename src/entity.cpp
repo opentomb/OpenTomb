@@ -764,6 +764,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                         //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_KEY");
                         break;
                     case TR_FD_TRIGTYPE_PICKUP:
+                        skip = 1;
                         Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PICKUP");
                         break;
                     case TR_FD_TRIGTYPE_HEAVY:
@@ -813,16 +814,21 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
                     switch(FD_function)
                     {
-                        case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
+                        case TR_FD_TRIGFUNC_OBJECT:                             // ACTIVATE / DEACTIVATE item
                             ent->activation_mask ^= trigger_mask;
                             if((skip == 0) && (ent->activation_mask == 0x1F))
                             {
-                                Con_Printf("Activate %d, %d", operands, ent->id);
-                                lua_ActivateEntity(engine_lua, operands, ent->id);
+                                entity_p e = World_GetEntityByID(&engine_world, operands);
+                                if(e)// && !(e->flags & ENTITY_IS_PICKABLE))    /// ENTITY_IS_PICKABLE flag does not works %/
+                                {
+                                    Con_Printf("Activate %d, %d", operands, ent->id);
+                                    //lua_ActivateEntity(engine_lua, operands, ent->id);   /// prevents to Lara pick up items, that she should not;
+                                    e->active = 0x01;
+                                }
                             }
                             break;
 
-                        case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH
+                        case TR_FD_TRIGFUNC_CAMERATARGET:                       // CAMERA SWITCH
                             {
                                 uint8_t cam_index = (*entry) & 0x007F;
                                 entry++;
