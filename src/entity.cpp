@@ -41,8 +41,6 @@ entity_p Entity_Create()
     ret->smooth_anim = 1;
     ret->current_sector = NULL;
     ret->onAnimChange = NULL;
-    ret->bf.id = 0x00;
-    ret->bf.world_id = 0x00;
     ret->bf.model = NULL;
     ret->bf.frame_time = 0.0;
     ret->bf.next_state = 0;

@@ -160,13 +160,16 @@ end
 -- test TR_ITEMS
 addItem(player, ITEM_COMPASS, 1);
 addItem(player, ITEM_PASSPORT, 1);
+addItem(player, ITEM_SMALL_MEDIPACK, 1);
+addItem(player, ITEM_LARGE_MEDIPACK, 1);
+
+--[[
 addItem(player, ITEM_VIDEO, 1);
 addItem(player, ITEM_AUDIO, 1);
 addItem(player, ITEM_CONTROLS, 1);
 addItem(player, ITEM_LOAD, 1);
 addItem(player, ITEM_SAVE, 1);
-addItem(player, ITEM_SMALL_MEDIPACK, 1);
-addItem(player, ITEM_LARGE_MEDIPACK, 1);
+
 addItem(player, ITEM_PISTOLS, 1);
 addItem(player, ITEM_SHOTGUN, 1);
 addItem(player, ITEM_MAGNUMS, 1);
@@ -198,5 +201,5 @@ addItem(player, ITEM_GRAPPLEGUN_AMMO, 1);
 
 addItem(player, ITEM_FLARES, 1);
 addItem(player, ITEM_SINGLE_FLARE, 1);
-
+--]]
 print("items script loaded");

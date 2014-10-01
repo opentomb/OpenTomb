@@ -184,8 +184,6 @@ typedef struct ss_bone_tag_s
  */
 typedef struct ss_bone_frame_s
 {
-    uint32_t                    id;                                             // that structure is unique for entityes and items
-    uint32_t                    world_id;                                             // that structure is unique for entityes and items
     uint16_t                    bone_tag_count;                                 // number of bones
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
     btScalar                    pos[3];                                         // position (base offset)

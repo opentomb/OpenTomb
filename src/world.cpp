@@ -458,7 +458,8 @@ void RBEntityFree(void *x)
 
 void RBItemFree(void *x)
 {
-    free(((ss_bone_frame_p)x)->bone_tags);
+    free(((base_item_p)x)->bf->bone_tags);
+    free(((base_item_p)x)->bf);
     free(x);
 }
 
@@ -483,9 +484,9 @@ struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
 }
 
 
-struct ss_bone_frame_s *World_GetItemSSBFByID(world_p world, uint32_t id)
+struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id)
 {
-    ss_bone_frame_p bf = NULL;
+    base_item_p item = NULL;
     RedBlackNode_p node;
 
     if(world && world->items_tree)
@@ -493,11 +494,11 @@ struct ss_bone_frame_s *World_GetItemSSBFByID(world_p world, uint32_t id)
         node = RB_SearchNode(&id, world->items_tree);
         if(node)
         {
-            bf = (ss_bone_frame_p)node->data;
+            item = (base_item_p)node->data;
         }
     }
     
-    return bf;
+    return item;
 }
 
 
@@ -875,8 +876,6 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     }
     
     ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
-    bf->id = item_id;
-    bf->world_id = world_model_id;
     vec3_set_zero(bf->bb_min);
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
@@ -906,7 +905,13 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
         Mat4_E_macro(bf->bone_tags[j].full_transform);
     }
     
-    RB_InsertReplace(&bf->id, bf, world->items_tree);
+    base_item_p item = (base_item_p)malloc(sizeof(base_item_t));
+    item->id = item_id;
+    item->world_model_id = world_model_id;
+    item->name[0] = 0;
+    item->bf = bf;
+    
+    RB_InsertReplace(&item->id, item, world->items_tree);
     return 1;
 }
 

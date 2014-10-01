@@ -469,6 +469,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
     size *= 0.8;
     
     glPushMatrix();
+    glTranslatef(0.0, 0.0, -bf->centre[2]);
     if(size < 1.0)          // only reduce items size...
         glScalef(size, size, size);
     Render_SkeletalModel(bf);
@@ -528,8 +529,8 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
             continue;
         }
         
-        ss_bone_frame_p bf = World_GetItemSSBFByID(&engine_world, inv->id);
-        if(bf == NULL)
+        base_item_p item = World_GetBaseItemByID(&engine_world, inv->id);
+        if(item == NULL)
         {
             continue;
         }
@@ -548,7 +549,7 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         bf->current_frame = frame;
         bf->frame_time = time;*/
 
-        Item_Frame(bf, 0.0);
+        Item_Frame(item->bf, 0.0);
         cx = i % mCells_x;
         cy = i / mCells_x - mRowOffset;
         glPushMatrix();
@@ -560,7 +561,7 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
                 mAng += engine_frame_time * 30.0;
                 glRotatef(mAng, 0.0, 0.0, 1.0);
             }
-            Gui_RenderItem(bf, (btScalar)mCellSize);
+            Gui_RenderItem(item->bf, (btScalar)mCellSize);
         glPopMatrix();
     }
     
@@ -1826,28 +1827,28 @@ void gui_ItemNotifier::Draw()
 {
     if(mActive)
     {
-        ss_bone_frame_p bf = World_GetItemSSBFByID(&engine_world, mItem);
-        if(bf)
+        base_item_p item = World_GetBaseItemByID(&engine_world, mItem);
+        if(item)
         {
-            int anim = bf->current_animation;
-            int frame = bf->current_frame;
-            btScalar time = bf->frame_time;
+            int anim = item->bf->current_animation;
+            int frame = item->bf->current_frame;
+            btScalar time = item->bf->frame_time;
 
-            bf->current_animation = 0;
-            bf->current_frame = 0;
-            bf->frame_time = 0.0;
+            item->bf->current_animation = 0;
+            item->bf->current_frame = 0;
+            item->bf->frame_time = 0.0;
             
-            Item_Frame(bf, 0.0);
+            Item_Frame(item->bf, 0.0);
             glPushMatrix();
                 glTranslatef(mCurrPosX, mPosY, -2048.0);
                 glRotatef(mCurrRotX + mRotX, 0.0, 1.0, 0.0);
                 glRotatef(mCurrRotY + mRotY, 1.0, 0.0, 0.0);
-                Gui_RenderItem(bf, mSize);
+                Gui_RenderItem(item->bf, mSize);
             glPopMatrix();
             
-            bf->current_animation = anim;
-            bf->current_frame = frame;
-            bf->frame_time = time;
+            item->bf->current_animation = anim;
+            item->bf->current_frame = frame;
+            item->bf->frame_time = time;
         }
     }
 }
