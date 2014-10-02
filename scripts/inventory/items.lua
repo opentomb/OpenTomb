@@ -28,8 +28,6 @@ if(ver < TR_II) then
     createBaseItem(ITEM_SMALL_MEDIPACK, 108, 108);          -- item: little MEDIPACK
     createBaseItem(ITEM_LARGE_MEDIPACK, 109, 109);          -- item: large MEDIPACK
 
-    addItem(0, ITEM_COMPASS, 1);                            -- add compas
-
 elseif(ver < TR_III) then
     createBaseItem(ITEM_PASSPORT, 120, 120);                -- item: journal
     createBaseItem(ITEM_COMPASS, 121, 121);                 -- item: compas or timer?
@@ -56,8 +54,6 @@ elseif(ver < TR_III) then
     createBaseItem(ITEM_SMALL_MEDIPACK, 171, 171);          -- item: little MEDIPACK
     createBaseItem(ITEM_LARGE_MEDIPACK, 172, 172);          -- item: large MEDIPACK
     createBaseItem(ITEM_FLARES, 173, 173);                  -- item: flares
-
-    addItem(player, ITEM_COMPASS, 1);                       -- add compas
     
 elseif(ver < TR_IV) then
     createBaseItem(ITEM_PASSPORT, 145, 145);                -- item: journal
@@ -87,8 +83,6 @@ elseif(ver < TR_IV) then
     createBaseItem(ITEM_SMALL_MEDIPACK, 201, 176);          -- item: little MEDIPACK
     createBaseItem(ITEM_LARGE_MEDIPACK, 202, 177);          -- item: large MEDIPACK
     createBaseItem(ITEM_FLARES, 203, 178);                  -- item: flares
-
-    addItem(player, ITEM_COMPASS, 1);                       -- add compas
     
 elseif(ver < TR_V) then
     createBaseItem(ITEM_COMPASS, 375, 375);                 -- item: compas
@@ -122,8 +116,6 @@ elseif(ver < TR_V) then
     createBaseItem(ITEM_SINGLE_FLARE, 372, 372);            -- item: one flare
     createBaseItem(ITEM_FLARES, 373, 373);                  -- item: flares
     
-	addItem(player, ITEM_COMPASS, 1);                       -- add compas
-    
 elseif(ver == TR_V) then
     createBaseItem(ITEM_COMPASS, 356, 356);                 -- item: timer
     createBaseItem(ITEM_LOAD, 357, 357);                    -- item: load 1
@@ -153,15 +145,14 @@ elseif(ver == TR_V) then
 
     createBaseItem(ITEM_SINGLE_FLARE, 354, 354);            -- item: one flare
     createBaseItem(ITEM_FLARES, 355, 355);                  -- item: flares
-	
-	addItem(player, ITEM_COMPASS, 1);                       -- add compas
+
 end
 
 -- test TR_ITEMS
 addItem(player, ITEM_COMPASS, 1);
 addItem(player, ITEM_PASSPORT, 1);
-addItem(player, ITEM_SMALL_MEDIPACK, 1);
-addItem(player, ITEM_LARGE_MEDIPACK, 1);
+addItem(player, ITEM_SMALL_MEDIPACK, 999);
+addItem(player, ITEM_LARGE_MEDIPACK, 999);
 
 --[[
 addItem(player, ITEM_VIDEO, 1);
