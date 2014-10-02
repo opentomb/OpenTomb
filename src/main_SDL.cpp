@@ -197,12 +197,12 @@ void SkeletalModelTestDraw()
     bframe = smodel->animations[anim].frames + frame;
 
     glColor3b(0, 0, 0);
-    Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
-    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
-    Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
-    Gui_OutTextXY(screen_info.w-632, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
-    Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
-    Gui_OutTextXY(screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
+    Gui_OutTextXY(NULL, screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
+    Gui_OutTextXY(NULL, screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
+    Gui_OutTextXY(NULL, screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
+    Gui_OutTextXY(NULL, screen_info.w-632, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
+    Gui_OutTextXY(NULL, screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
+    Gui_OutTextXY(NULL, screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
 
     y = screen_info.h - 24;
     for(i=0;i<af->state_change_count;i++)
@@ -210,7 +210,7 @@ void SkeletalModelTestDraw()
         for(j=0;j<af->state_change[i].anim_dispath_count;j++)
         {
             adsp = af->state_change[i].anim_dispath + j;
-            Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
+            Gui_OutTextXY(NULL, 8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
                           i, j, af->state_change[i].id, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
             y -= 24;
         }
@@ -583,9 +583,9 @@ void Engine_Display()
             glColor3f(1.0, 1.0, 1.0);
             
             Gui_DrawNotifier();
-            if(engine_world.Character && engine_world.Character->character)
+            if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
             {
-                main_inventory_menu.Render(engine_world.Character->character->inventory);
+                main_inventory_menu->Render(engine_world.Character->character->inventory);
             }
         }
         glPopClientAttrib();
@@ -795,7 +795,7 @@ void ShowDebugInfo()
     if(ent && ent->character)
     {
        height_info_t *fc = &ent->character->height_info;
-        Gui_OutTextXY(20, 108, "is water = %d, level = %.1f", fc->water, fc->water_level);
+        Gui_OutTextXY(NULL, 20, 108, "is water = %d, level = %.1f", fc->water, fc->water_level);
 
 #if 0
         glPushMatrix();
@@ -826,7 +826,7 @@ void ShowDebugInfo()
 
         glPopMatrix();
 #endif
-        txt = Gui_OutTextXY(20, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
+        txt = Gui_OutTextXY(NULL, 20, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         if(txt)
         {
             Gui_StringAutoRect(txt);
@@ -837,18 +837,18 @@ void ShowDebugInfo()
             //txt->show_rect = 1;
         }
 
-        Gui_OutTextXY(20, 68, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
+        Gui_OutTextXY(NULL, 20, 68, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
         if(last_rmb)
         {
-            Gui_OutTextXY(20, 48, "ent_rmb_ID = %d", last_rmb->id);
+            Gui_OutTextXY(NULL, 20, 48, "ent_rmb_ID = %d", last_rmb->id);
         }
-        Gui_OutTextXY(20, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Character->character->cmd.rot[0], engine_world.Character->character->cmd.rot[1], (btScalar)engine_world.Character->angles[1]);
+        Gui_OutTextXY(NULL, 20, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Character->character->cmd.rot[0], engine_world.Character->character->cmd.rot[1], (btScalar)engine_world.Character->angles[1]);
     }
 
     if(engine_world.Character && engine_world.Character->self->room)
     {
-        Gui_OutTextXY(20, 128, "Level Name: %s", gameflow_manager.CurrentLevelName);
-        Gui_OutTextXY(20, 28, "room = %d, co = %d", engine_world.Character->self->room->id, bt_engine_dynamicsWorld->getNumCollisionObjects());
+        Gui_OutTextXY(NULL, 20, 128, "Level Name: %s", gameflow_manager.CurrentLevelName);
+        Gui_OutTextXY(NULL, 20, 28, "room = %d, co = %d", engine_world.Character->self->room->id, bt_engine_dynamicsWorld->getNumCollisionObjects());
     }
 
     //Gui_OutTextXY(screen_info.w-380, 68, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
@@ -977,19 +977,19 @@ void DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_UP:
-                main_inventory_menu.MoveSelectVertical(-1);
+                main_inventory_menu->MoveSelectVertical(-1);
                 break;
                 
             case SDLK_DOWN:
-                main_inventory_menu.MoveSelectVertical(1);
+                main_inventory_menu->MoveSelectVertical(1);
                 break;
                 
             case SDLK_LEFT:
-                main_inventory_menu.MoveSelectHorisontal(-1);
+                main_inventory_menu->MoveSelectHorisontal(-1);
                 break;
                 
             case SDLK_RIGHT:
-                main_inventory_menu.MoveSelectHorisontal(1);
+                main_inventory_menu->MoveSelectHorisontal(1);
                 break;
                 
                 /*models switching*/

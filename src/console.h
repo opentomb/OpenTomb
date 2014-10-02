@@ -2,7 +2,6 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include "ftgl/FTGLBitmapFont.h"
 #include "ftgl/FTGLTextureFont.h"
 
 #include <stdint.h>
@@ -23,7 +22,7 @@
 typedef struct console_info_s
 {
     char                        font_path[255];             // Font file path
-    FTGLTextureFont            *font_texture;               // Texture font renderer
+    FTGLTextureFont            *font;                       // Texture font renderer
 
     uint16_t                    font_size;
     GLfloat                     font_color[4];

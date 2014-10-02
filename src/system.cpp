@@ -61,6 +61,7 @@ void Sys_Init()
     system_fps.show = 1;
     system_fps.show_rect = 0;
     system_fps.rect_border = 2.0;
+    system_fps.font = NULL;
     
     Gui_AddLine(&system_fps);
 }

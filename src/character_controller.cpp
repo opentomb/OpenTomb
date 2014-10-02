@@ -940,7 +940,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
 {
     climb_info_t ret;
-    btVector3 from, to, point;
+    btVector3 from, to;
     btTransform tr1, tr2;
     btScalar wn2[2], t, *pos = ent->transform + 12;
     bt_engine_ClosestConvexResultCallback *ccb = ent->character->convex_cb;
@@ -1112,8 +1112,8 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
                 {
                     t = pt.m_normalWorldOnB * dist * directionSign * PENETRATION_PART_KOEF;
                     pos += t;
-                    correction[0] += t.m_floats[0];
-                    correction[1] += t.m_floats[1];
+                    correction[0] += 1.1 * t.m_floats[0];
+                    correction[1] += 1.1 * t.m_floats[1];
                     correction[2] += t.m_floats[2];
                     ret = 1;
                 }

@@ -2,7 +2,7 @@
 #ifndef ENGINE_GUI_H
 #define ENGINE_GUI_H
 
-
+#include "ftgl/FTGLTextureFont.h"
 #include "entity.h"
 #include "render.h"
 #include "character_controller.h"
@@ -21,7 +21,8 @@ typedef struct gui_text_line_s
     GLfloat                     font_color[4];
     GLfloat                     rect_border;
     GLfloat                     rect[4];                                        //x0, yo, x1, y1
-
+    
+    FTGLTextureFont            *font;
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;
 } gui_text_line_t, *gui_text_line_p;
@@ -331,24 +332,28 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size);
 class gui_InventoryMenu
 {
 private:
-    int mCells_x;
-    int mCells_y;
-    int mWidth;
-    int mHeight;
-    int mLeft;
-    int mTop;
-    int mCellSize;    // x, y...
-    int mRowOffset;
-    int mSelected;
-    int mMaxItems;
+    int                         mCells_x;
+    int                         mCells_y;
+    int                         mWidth;
+    int                         mHeight;
+    int                         mLeft;
+    int                         mTop;
+    int                         mCellSize;    // x, y...
+    int                         mRowOffset;
+    int                         mSelected;
+    int                         mMaxItems;
     
-    int mFrame;
-    int mAnim;
-    float mTime;
-    float mAng;
-    // font
+    int                         mFrame;
+    int                         mAnim;
+    float                       mTime;
+    float                       mAng;
+    
+    int                         mFontSize;
+    int                         mFontHeight;
     // background settings
 public:
+    FTGLTextureFont            *mFont;               // Texture font renderer
+    
     gui_InventoryMenu()
     {
         mCells_x = 4;
@@ -366,24 +371,36 @@ public:
         mAnim = 0;
         mTime = 0.0;
         mAng = 0.0;
+        
+        mFontSize = 18;
+        mFontHeight = 12;
+        
+        mFont = NULL;
+    }
+    
+    ~gui_InventoryMenu()
+    {
+        if(mFont)
+        {
+            delete mFont;
+            mFont = NULL;
+        }
+    }
+    
+    void InitFont(const char *path);
+    void SetFontSize(int size);
+    void SetSize(int width, int height);
+    void SetTableSize(int cells_x, int cells_y);
+    
+    int GetFontSize()
+    {
+        return mFontSize;
     }
     
     void SetPosition(int left, int top)
     {
         mLeft = left;
         mTop = top;
-    }
-    
-    void SetSize(int width, int height)
-    {
-        mWidth = width;
-        mHeight = height;
-    }
-    
-    void SetTableSize(int cells_x, int cells_y)
-    {
-        mCells_x = cells_x;
-        mCells_y = cells_y;
     }
     
     void SetCellSize(int size)
@@ -405,7 +422,7 @@ public:
     // mouse callback
 };
 
-extern gui_InventoryMenu      main_inventory_menu;
+extern gui_InventoryMenu     *main_inventory_menu;
 
 /**
  * Calculates rect coordinates around the text
@@ -415,7 +432,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l);
 /**
  * Draws text using a current console font.
  */
-gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...);
+gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *fmt, ...);
 
 /**
  * Helper method to setup OpenGL state for console drawing.

@@ -43,8 +43,8 @@ void Con_Init()
         Sys_Error("Console: could not find font = \"%s\"", con_base.font_path);
     }
     
-    con_base.font_texture = new FTGLTextureFont(con_base.font_path);
-    con_base.font_texture->FaceSize(con_base.font_size);
+    con_base.font = new FTGLTextureFont(con_base.font_path);
+    con_base.font->FaceSize(con_base.font_size);
     
     con_base.shown_lines = (char**) malloc(con_base.shown_lines_count*sizeof(char*));
     for(long i=0;i<con_base.shown_lines_count;i++)
@@ -58,7 +58,7 @@ void Con_Init()
         con_base.log_lines[i] = (char*) calloc(con_base.line_size*sizeof(char), 1);
     }
 
-    con_base.line_height = con_base.spacing * con_base.font_texture->Ascender();
+    con_base.line_height = con_base.spacing * con_base.font->Ascender();
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -74,9 +74,9 @@ void Con_Destroy()
     int i;
     if(con_base.inited)
     {
-        if(con_base.font_texture)
+        if(con_base.font)
         {
-            delete con_base.font_texture;
+            delete con_base.font;
         }
 
         for(i=0;i<con_base.shown_lines_count;i++)
@@ -104,8 +104,8 @@ void Con_SetFontSize(int size)
 
     con_base.inited = 0;
     con_base.font_size = size;
-    con_base.font_texture->FaceSize(con_base.font_size);
-    con_base.line_height = con_base.spacing * con_base.font_texture->Ascender();
+    con_base.font->FaceSize(con_base.font_size);
+    con_base.line_height = con_base.spacing * con_base.font->Ascender();
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -126,7 +126,7 @@ void Con_SetLineInterval(float interval)
 
     con_base.inited = 0;
     con_base.spacing = interval;
-    con_base.line_height = con_base.spacing * con_base.font_texture->Ascender();
+    con_base.line_height = con_base.spacing * con_base.font->Ascender();
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -153,7 +153,7 @@ void Con_Draw()
             y += con_base.line_height;
             glPushMatrix();
             glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
-            con_base.font_texture->RenderRaw(con_base.shown_lines[i]);
+            con_base.font->RenderRaw(con_base.shown_lines[i]);
             glPopMatrix();
         }
         Con_DrawCursor();
@@ -324,7 +324,7 @@ void Con_CalcCursorPosition()
 {
     char ch = con_base.shown_lines[0][con_base.cursor_pos];
     con_base.shown_lines[0][con_base.cursor_pos] = 0;
-    con_base.cursor_x = 8 + 1 + con_base.font_texture->Advance(con_base.shown_lines[0]);
+    con_base.cursor_x = 8 + 1 + con_base.font->Advance(con_base.shown_lines[0]);
     con_base.shown_lines[0][con_base.cursor_pos] = ch;
 }
 
