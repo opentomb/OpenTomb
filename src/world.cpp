@@ -867,7 +867,7 @@ int World_DeleteEntity(world_p world, struct entity_s *entity)
 }
 
 
-int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id)
+int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, const char *name)
 {
     skeletal_model_p model = World_FindModelByID(world, model_id);
     if((model == NULL) || (world->items_tree == NULL))
@@ -909,6 +909,10 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     item->id = item_id;
     item->world_model_id = world_model_id;
     item->name[0] = 0;
+    if(name)
+    {
+        strncpy(item->name, name, 64);
+    }
     item->bf = bf;
     
     RB_InsertReplace(&item->id, item, world->items_tree);

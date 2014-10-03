@@ -61,7 +61,8 @@ void Gui_Init()
     Gui_InitNotifier();
     
     main_inventory_menu = new gui_InventoryMenu();
-    main_inventory_menu->SetTableSize(6, 3);
+    main_inventory_menu->SetSize(512, 512/6);
+    main_inventory_menu->SetTableSize(6, 1);
     main_inventory_menu->InitFont(con_base.font_path);
 }
 
@@ -491,7 +492,6 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
     size *= 0.8;
     
     glPushMatrix();
-    glTranslatef(0.0, 0.0, -bf->centre[2]);
     if(size < 1.0)          // only reduce items size...
         glScalef(size, size, size);
     Render_SkeletalModel(bf);
@@ -625,13 +625,18 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         Gui_OutTextXY(mFont, mLeft + mCellSize * cx, screen_info.h - mCellSize * cy - mFontHeight, "%d", inv->count);
         glPushMatrix();
             glTranslatef(x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
-            glRotatef(180.0, 0.0, 0.0, 1.0);
-            glRotatef(60.0 , 1.0, 0.0, 0.0);
+            glRotatef(-60.0 , 1.0, 0.0, 0.0);
+            glRotatef(180.0, 0.0, 0.0, 1.0); 
             if(i == mSelected)
             {
                 mAng += engine_frame_time * 30.0;
                 glRotatef(mAng, 0.0, 0.0, 1.0);
+                if(item->name[0])
+                {
+                    Gui_OutTextXY(mFont, mLeft, screen_info.h - mHeight - mFontHeight, "%s", item->name);
+                }
             }
+            glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
             Gui_RenderItem(item->bf, (btScalar)mCellSize);
         glPopMatrix();
     }
@@ -644,10 +649,18 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
     glBindTexture(GL_TEXTURE_2D, 0);
     glColor3f(1.0, 0.0, 0.0);
     glBegin(GL_LINE_LOOP);
-        glVertex2f(x0, y0);
-        glVertex2f(x0 + mCellSize, y0);
+        glVertex2f(x0            , y0            );
+        glVertex2f(x0 + mCellSize, y0            );
         glVertex2f(x0 + mCellSize, y0 - mCellSize);
-        glVertex2f(x0, y0 - mCellSize);
+        glVertex2f(x0            , y0 - mCellSize);
+    glEnd();
+    
+    glColor3f(0.0, 0.0, 1.0);
+    glBegin(GL_LINE_LOOP);
+        glVertex2f(mLeft         , screen_info.h - mTop          );
+        glVertex2f(mLeft + mWidth, screen_info.h - mTop          );
+        glVertex2f(mLeft + mWidth, screen_info.h - mTop - mHeight);
+        glVertex2f(mLeft         , screen_info.h - mTop - mHeight);
     glEnd();
     
     mMaxItems = i;
