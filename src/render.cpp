@@ -850,8 +850,10 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render)
 #else
             glTranslatef(v[0], v[1], v[2]);
 #endif
-
-            Render_Sprite(room->sprites[i].sprite);
+            if(room->sprites[i].sprite)
+            {
+                Render_Sprite(room->sprites[i].sprite);
+            }
             glPopMatrix();
         }
         room->sprites[i].was_rendered = 1;

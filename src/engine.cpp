@@ -562,13 +562,13 @@ int lua_CreateBaseItem(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id)");
+        Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id, (name))");
         return 0;
     }
     item_id = lua_tointeger(lua, 1);
     model_id = lua_tointeger(lua, 2);
     world_model_id = lua_tointeger(lua, 3);
-    World_CreateItem(&engine_world, item_id, model_id, world_model_id);
+    World_CreateItem(&engine_world, item_id, model_id, world_model_id, lua_tostring(lua, 4));
     
     return 0;
 }
