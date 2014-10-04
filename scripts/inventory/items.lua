@@ -10,23 +10,23 @@
 local ver = getGameVersion();
 
 if(ver < TR_II) then
-    createBaseItem(ITEM_PASSPORT, 71, 71);                  -- item: journal
-    createBaseItem(ITEM_COMPASS, 72, 72);                   -- item: compas (in difference levels model id's may be differet)
-    createBaseItem(ITEM_VIDEO, 95, 95);                     -- item: video
-    createBaseItem(ITEM_AUDIO, 96, 96);                     -- item: audio
-    createBaseItem(ITEM_CONTROLS, 97, 97);                  -- item: control
+    createBaseItem(ITEM_PASSPORT, 71, 71, ITEM_NAME_PASSPORT);
+    createBaseItem(ITEM_COMPASS, 72, 72, ITEM_NAME_COMPASS);
+    createBaseItem(ITEM_VIDEO, 95, 95, ITEM_NAME_VIDEO);
+    createBaseItem(ITEM_AUDIO, 96, 96, ITEM_NAME_AUDIO); 
+    createBaseItem(ITEM_CONTROLS, 97, 97, ITEM_NAME_CONTROLS);
 
-    createBaseItem(ITEM_PISTOLS, 99, 99);                   -- item: pistols
-    createBaseItem(ITEM_SHOTGUN, 100, 100);                 -- item: shotgun
-    createBaseItem(ITEM_MAGNUMS, 101, 101);                 -- item: automatic pistols
-    createBaseItem(ITEM_UZIS, 102, 102);                    -- item: uzi
-    createBaseItem(ITEM_PISTOL_AMMO, 103, 103);             -- item: pistols ammo
-    createBaseItem(ITEM_SHOTGUN_NORMAL_AMMO, 104, 104);     -- item: shotgun ammo
-    createBaseItem(ITEM_MAGNUM_AMMO, 105, 105);             -- item: automatic pistols ammo
-    createBaseItem(ITEM_UZI_AMMO, 106, 106);                -- item: uzi ammo
+    createBaseItem(ITEM_PISTOLS, 99, 99, ITEM_NAME_PISTOLS);
+    createBaseItem(ITEM_SHOTGUN, 100, 100, ITEM_NAME_SHOTGUN);
+    createBaseItem(ITEM_MAGNUMS, 101, 101, ITEM_NAME_MAGNUMS);
+    createBaseItem(ITEM_UZIS, 102, 102, ITEM_NAME_UZIS);
+    createBaseItem(ITEM_PISTOL_AMMO, 103, 103, ITEM_NAME_PISTOL_AMMO);             -- item: pistols ammo
+    createBaseItem(ITEM_SHOTGUN_NORMAL_AMMO, 104, 104, ITEM_NAME_SHOTGUN_AMMO);     -- item: shotgun ammo
+    createBaseItem(ITEM_MAGNUM_AMMO, 105, 105, ITEM_NAME_MAGNUM_AMMO);             -- item: automatic pistols ammo
+    createBaseItem(ITEM_UZI_AMMO, 106, 106, ITEM_NAME_UZI_AMMO);                -- item: uzi ammo
 
-    createBaseItem(ITEM_SMALL_MEDIPACK, 108, 108, "little medpack");            -- item: little MEDIPACK
-    createBaseItem(ITEM_LARGE_MEDIPACK, 109, 109, "large medpack");             -- item: large MEDIPACK
+    createBaseItem(ITEM_SMALL_MEDIPACK, 108, 108, ITEM_NAME_SMALL_MEDIPACK);
+    createBaseItem(ITEM_LARGE_MEDIPACK, 109, 109, ITEM_NAME_LARGE_MEDIPACK);
 
 elseif(ver < TR_III) then
     createBaseItem(ITEM_PASSPORT, 120, 120);                -- item: journal
@@ -51,8 +51,8 @@ elseif(ver < TR_III) then
     createBaseItem(ITEM_M16_AMMO, 169, 169);                -- item: M16 ammo
     createBaseItem(ITEM_GRENADEGUN_AMMO, 170, 170);         -- item: grenade launcher ammo
 
-    createBaseItem(ITEM_SMALL_MEDIPACK, 171, 171, "little medpack");            -- item: little MEDIPACK
-    createBaseItem(ITEM_LARGE_MEDIPACK, 172, 172, "large medpack");             -- item: large MEDIPACK
+    createBaseItem(ITEM_SMALL_MEDIPACK, 171, 171, ITEM_NAME_SMALL_MEDIPACK);
+    createBaseItem(ITEM_LARGE_MEDIPACK, 172, 172, ITEM_NAME_LARGE_MEDIPACK);
     createBaseItem(ITEM_FLARES, 173, 173);                  -- item: flares
     
 elseif(ver < TR_IV) then
@@ -80,8 +80,8 @@ elseif(ver < TR_IV) then
     createBaseItem(ITEM_ROCKETGUN, 199, 174);               -- item: quake III arena ammo
     createBaseItem(ITEM_GRENADEGUN, 200, 175);              -- item: grenade launcher ammo
 
-    createBaseItem(ITEM_SMALL_MEDIPACK, 201, 176, "little medpack");            -- item: little MEDIPACK
-    createBaseItem(ITEM_LARGE_MEDIPACK, 202, 177, "large medpack");             -- item: large MEDIPACK
+    createBaseItem(ITEM_SMALL_MEDIPACK, 201, 176, ITEM_NAME_SMALL_MEDIPACK);            -- item: little MEDIPACK
+    createBaseItem(ITEM_LARGE_MEDIPACK, 202, 177, ITEM_NAME_LARGE_MEDIPACK);             -- item: large MEDIPACK
     createBaseItem(ITEM_FLARES, 203, 178);                  -- item: flares
     
 elseif(ver < TR_V) then
@@ -109,8 +109,8 @@ elseif(ver < TR_V) then
     createBaseItem(ITEM_MAGNUMS, 366, 366);                 -- item: colt
     createBaseItem(ITEM_MAGNUM_AMMO, 367, 367);             -- item: colt ammo
 
-    createBaseItem(ITEM_LARGE_MEDIPACK, 368, 368, "large medpack");             -- item: large MEDIPACK
-    createBaseItem(ITEM_SMALL_MEDIPACK, 369, 369, "little medpack");            -- item: little MEDIPACK
+    createBaseItem(ITEM_LARGE_MEDIPACK, 368, 368, ITEM_NAME_LARGE_MEDIPACK);             -- item: large MEDIPACK
+    createBaseItem(ITEM_SMALL_MEDIPACK, 369, 369, ITEM_NAME_SMALL_MEDIPACK);            -- item: little MEDIPACK
     createBaseItem(ITEM_LASERSIGHT, 370, 370);              -- item: optic target
     createBaseItem(ITEM_BINOCULARS, 371, 371);              -- item: binocle
     createBaseItem(ITEM_SINGLE_FLARE, 372, 372);            -- item: one flare
@@ -138,8 +138,8 @@ elseif(ver == TR_V) then
     createBaseItem(ITEM_MAGNUMS, 347, 347);                 -- item: colt / desert eagle
     createBaseItem(ITEM_MAGNUM_AMMO, 348, 348);             -- item: colt / desert eagle ammo
 
-    createBaseItem(ITEM_LARGE_MEDIPACK, 349, 349, "large medpack");             -- item: large MEDIPACK
-    createBaseItem(ITEM_SMALL_MEDIPACK, 350, 350, "little medpack");            -- item: little MEDIPACK
+    createBaseItem(ITEM_LARGE_MEDIPACK, 349, 349, ITEM_NAME_LARGE_MEDIPACK);             -- item: large MEDIPACK
+    createBaseItem(ITEM_SMALL_MEDIPACK, 350, 350, ITEM_NAME_SMALL_MEDIPACK);            -- item: little MEDIPACK
     createBaseItem(ITEM_LASERSIGHT, 351, 351);              -- item: optic target
     createBaseItem(ITEM_BINOCULARS, 352, 352);              -- item: binocle
 
