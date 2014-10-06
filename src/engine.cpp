@@ -557,18 +557,19 @@ int lua_RemoveItem(lua_State * lua)
 
 int lua_CreateBaseItem(lua_State * lua)
 {
-    int top, item_id, model_id, world_model_id;
+    int top, item_id, model_id, type, world_model_id;
     top = lua_gettop(lua);
 
-    if(top < 3)
+    if(top < 4)
     {
-        Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id, (name))");
+        Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id, type, (name))");
         return 0;
     }
     item_id = lua_tointeger(lua, 1);
     model_id = lua_tointeger(lua, 2);
     world_model_id = lua_tointeger(lua, 3);
-    World_CreateItem(&engine_world, item_id, model_id, world_model_id, lua_tostring(lua, 4));
+    type = lua_tointeger(lua, 4);
+    World_CreateItem(&engine_world, item_id, model_id, world_model_id, type, lua_tostring(lua, 5));
     
     return 0;
 }
@@ -615,7 +616,7 @@ int lua_PrintItems(lua_State * lua)
         inventory_node_p i = ent->character->inventory;
         for(;i;i=i->next)
         {
-            Con_Printf("item[id = %d]: count = %d, type = %d", i->id, i->count, i->type);
+            Con_Printf("item[id = %d]: count = %d, type = %d", i->id, i->count);
         }
     }
     return 0;
