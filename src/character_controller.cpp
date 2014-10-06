@@ -124,7 +124,6 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
 void Character_Clean(struct entity_s *ent)
 {
     character_p actor = ent->character;
-    int i;
     
     if(actor == NULL)
     {
@@ -193,7 +192,7 @@ void Character_Clean(struct entity_s *ent)
 #if CHARACTER_USE_COMPLEX_COLLISION
     if(actor->shapes)
     {
-        for(i=0;i<ent->bf.model->mesh_count;i++)
+        for(int i=0;i<ent->bf.model->mesh_count;i++)
         {
             delete ent->character->shapes[i];
         }
@@ -217,7 +216,7 @@ void Character_Clean(struct entity_s *ent)
     ent->character = NULL;
 }
 
-int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)    // returns items count after in the function's end
+int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
     if(ent->character == NULL)
     {
@@ -241,7 +240,6 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     i = (inventory_node_p)malloc(sizeof(inventory_node_t));
     i->id = item_id;
     i->count = count;
-    i->type = 0;
     i->next = ent->character->inventory;
     ent->character->inventory = i;
     return count;
@@ -352,10 +350,13 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
     btScalar t, *ctr = ent->character->collision_transform;
     
     Mat4_Copy(ctr, ent->transform);
-    //Mat4_Mat4_mul_macro(ctr, ent->transform, ent->bf.bone_tags->transform);
-    if(ent->move_type == MOVE_CLIMBING)                                         ///@FIXME: stick;
+    if(ent->move_type == MOVE_CLIMBING)                                         ///@FIXME: this time is a little stick;
     {
-        vec3_sub_mul(ctr+12, ctr+12, ctr+4, ent->character->ry);
+        btScalar t1 = ent->character->ry - ent->bf.bb_max[1];
+        t = ent->character->ry + ent->bf.bb_min[1];
+        t = (t > t1)?(t):(t1);
+        t += 8.0;
+        vec3_sub_mul(ctr+12, ctr+12, ctr+4, t);
     }
     
     t = (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / (ent->bf.bb_max[1] - ent->bf.bb_min[1]);

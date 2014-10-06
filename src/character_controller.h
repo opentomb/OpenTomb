@@ -152,7 +152,6 @@ typedef struct inventory_node_s
 {
     uint32_t                    id;
     int32_t                     count;
-    int16_t                     type;
     struct inventory_node_s    *next;
 }inventory_node_t, *inventory_node_p;
 
