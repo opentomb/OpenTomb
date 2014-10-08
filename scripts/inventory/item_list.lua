@@ -2,6 +2,18 @@
 -- by Lwmte, Sep 2014
 
 --------------------------------------------------------------------------------
+-- CLASSIFICATION OF ITEMS
+-- Basically, all TR items could be separated into three big groups - supplies
+-- (weapons, ammo, medkits etc.), quest items (keys, puzzle pieces, artifacts)
+-- and system items (passport, settings, load/save items). This classification
+-- is needed for further implementation of ring inventory categorization.
+--------------------------------------------------------------------------------
+
+ITEM_TYPE_SYSTEM = 0
+ITEM_TYPE_SUPPLY = 1
+ITEM_TYPE_QUEST  = 2
+
+--------------------------------------------------------------------------------
 -- Defines menu items.
 -- In first three TR games, menu items were integrated into inventory ring.
 -- As TR community tends to like ring menu more than TR4-5 system, we opt for
