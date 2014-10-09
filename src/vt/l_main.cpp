@@ -99,7 +99,7 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
     //buffer = new bitu8[frame_data_size];
 
     this->frame_data_size = read_bitu32(src);
-    this->frame_data = new uint16_t[this->frame_data_size];
+    this->frame_data = (uint16_t*)malloc(this->frame_data_size * sizeof(uint16_t));
 
     if (SDL_RWread(src, this->frame_data, sizeof(uint16_t), this->frame_data_size) < (int)frame_data_size)
         Sys_extError("read_tr_level: frame_data: SDL_RWread(buffer)");

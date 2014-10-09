@@ -401,7 +401,7 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
         this->sound_details[i].num_samples_and_flags_1 = read_bitu8(src);
         this->sound_details[i].flags_2 = read_bitu8(src);
         this->sound_details[i].sound_range = TR_AUDIO_DEFAULT_RANGE;
-        this->sound_details[i].pitch = TR_AUDIO_DEFAULT_PITCH;
+        this->sound_details[i].pitch = (int16_t)TR_AUDIO_DEFAULT_PITCH;
     }
 
     this->sample_indices_count = read_bitu32(src);

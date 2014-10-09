@@ -38,8 +38,8 @@ void TR_Level::read_tr3_room_light(SDL_RWops * const src, tr5_room_light_t & lig
 
     light.intensity = 1.0f;
 
-    light.r_outer = light.fade1;
-    light.r_inner = light.fade1 / 2;
+    light.r_outer = (float)light.fade1;
+    light.r_inner = (float)light.fade1 / 2.0;
 
     light.light_type = 0x01; // Point light
 }

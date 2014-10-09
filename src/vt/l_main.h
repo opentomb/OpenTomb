@@ -19,7 +19,7 @@ class TR_Level {
         TR_Level()
         {
             this->game_version = TR_UNKNOWN;
-            snprintf(this->sfx_path, 256, "MAIN.SFX");                          ///@PARANOID: sprintf is absolutely correct
+            strncpy(this->sfx_path, "MAIN.SFX", 256);
             
             this->textile8_count = 0;
             this->textile16_count = 0;

@@ -33,10 +33,10 @@ void TR_Level::read_tr5_room_light(SDL_RWops * const src, tr5_room_light_t & lig
 
     read_tr4_vertex_float(src, light.pos);
     //read_tr_colour(src, light.color);
-    light.color.r = read_float(src) * 255;    // r
-    light.color.g = read_float(src) * 255;    // g
-    light.color.b = read_float(src) * 255;    // b
-    light.color.a = read_float(src) * 255;    // a
+    light.color.r = read_float(src) * 255.0;    // r
+    light.color.g = read_float(src) * 255.0;    // g
+    light.color.b = read_float(src) * 255.0;    // b
+    light.color.a = read_float(src) * 255.0;    // a
     light.color.a = 1.0f;
 /*
     if ((temp != 0) && (temp != 0xCDCDCDCD))
