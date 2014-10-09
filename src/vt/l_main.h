@@ -4,6 +4,7 @@
 #include <SDL2/SDL_rwops.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "tr_types.h"
 #include "tr_versions.h"
 
