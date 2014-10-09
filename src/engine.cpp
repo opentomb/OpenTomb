@@ -552,14 +552,23 @@ int lua_AddItem(lua_State * lua)
     int top, entity_id, item_id, count;
     top = lua_gettop(lua);
 
-    if(top < 3)
+    if(top < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, item_id, items_count)");
+        Con_Printf("Wrong arguments count. Must be (entity_id, item_id, (items_count))");
         return 0;
     }
+    
+    if(top >= 3)
+    {
+        count = lua_tointeger(lua, 3);
+    }
+    else
+    {
+        count = -1;
+    }
+    
     entity_id = lua_tointeger(lua, 1);
     item_id = lua_tointeger(lua, 2);
-    count = lua_tointeger(lua, 3);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
@@ -601,19 +610,22 @@ int lua_RemoveItem(lua_State * lua)
 
 int lua_CreateBaseItem(lua_State * lua)
 {
-    int top, item_id, model_id, type, world_model_id;
+    int top, item_id, model_id, type, world_model_id, count;
     top = lua_gettop(lua);
 
-    if(top < 4)
+    if(top < 5)
     {
-        Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id, type, (name))");
+        Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id, type, count, (name))");
         return 0;
     }
-    item_id = lua_tointeger(lua, 1);
-    model_id = lua_tointeger(lua, 2);
-    world_model_id = lua_tointeger(lua, 3);
-    type = lua_tointeger(lua, 4);
-    World_CreateItem(&engine_world, item_id, model_id, world_model_id, type, lua_tostring(lua, 5));
+    
+    item_id         = lua_tointeger(lua, 1);
+    model_id        = lua_tointeger(lua, 2);
+    world_model_id  = lua_tointeger(lua, 3);
+    type            = lua_tointeger(lua, 4);
+    count          = lua_tointeger(lua, 5);
+    
+    World_CreateItem(&engine_world, item_id, model_id, world_model_id, type, count, lua_tostring(lua, 6));
     
     return 0;
 }

@@ -267,6 +267,7 @@ function trigger_activate(trig_id, actor_id, func)
         if(tr2_triggers[m_id] ~= nil) then
             on       = tr2_triggers[m_id].on;
             off      = tr2_triggers[m_id].off;
+            key      = tr2_key[m_id];
             meshswap = tr2_puzzlehole_meshswap[m_id];
         else
             return;
@@ -275,6 +276,7 @@ function trigger_activate(trig_id, actor_id, func)
         if(tr3_triggers[m_id] ~= nil) then
             on       = tr3_triggers[m_id].on;
             off      = tr3_triggers[m_id].off;
+            key      = tr3_key[m_id];
             meshswap = tr3_puzzlehole_meshswap[m_id];
         else
             return;
@@ -283,6 +285,7 @@ function trigger_activate(trig_id, actor_id, func)
         if(tr4_triggers[m_id] ~= nil) then
             on       = tr4_triggers[m_id].on;
             off      = tr4_triggers[m_id].off;
+            key      = tr4_key[m_id];
             meshswap = tr4_puzzlehole_meshswap[m_id];
         else
             return;
@@ -319,6 +322,7 @@ function trigger_activate(trig_id, actor_id, func)
         else
             on       = tr5_triggers[m_id].on;
             off      = tr5_triggers[m_id].off;
+            key      = tr5_key[m_id];
             meshswap = tr5_puzzlehole_meshswap[m_id];
         end
     end

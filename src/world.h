@@ -31,6 +31,7 @@ typedef struct base_item_s
     uint32_t                    id;
     uint32_t                    world_model_id;
     uint16_t                    type;
+    uint16_t                    count;
     char                        name[64];
     struct ss_bone_frame_s     *bf;
 }base_item_t, *base_item_p;
@@ -222,7 +223,7 @@ int Room_IsInNearRoomsList(room_p room, room_p r);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
 int World_DeleteEntity(world_p world, struct entity_s *entity);
-int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, const char *name);
+int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
 int World_DeleteItem(world_p world, uint32_t item_id);
 struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world);
 struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id);           // binary search the model by ID

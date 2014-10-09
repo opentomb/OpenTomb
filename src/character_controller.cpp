@@ -225,7 +225,10 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     
     Gui_StartNotifier(item_id);
     
-    inventory_node_p i = ent->character->inventory;
+    base_item_p item    = World_GetBaseItemByID(&engine_world, item_id);
+    inventory_node_p i  = ent->character->inventory;
+
+    count = (count == -1)?(item->count):(count);
     
     while(i)
     {
