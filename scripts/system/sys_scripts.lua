@@ -191,7 +191,7 @@ function create_pickup_func(id, item_id)
             end;
             
             
-            addItem(activator_id, item_id, 1);
+            addItem(activator_id, item_id);
             setEntityFlag(object_id, 0x00);                 -- disable entity
             setEntityVisibility(object_id, 0x00);
             getEntityActivity(object_id, 0x00);
