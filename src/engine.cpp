@@ -465,6 +465,50 @@ int lua_SetActivationOffset(lua_State * lua)
 
     return 0;
 }
+    
+int lua_GetActionState(lua_State *lua)
+{
+    int act, top;
+
+    top = lua_gettop(lua);
+    act = lua_tointeger(lua, 1);
+    if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
+    {
+        Con_Printf("wrong action number");
+        return 0;
+    }
+    else if(top == 1)
+    {
+        lua_pushinteger(lua, (int)(control_mapper.action_map[act].state));
+        return 1;
+    }
+
+    Con_Printf("wrong arguments number, must be 1");
+    return 0;
+}
+
+
+int lua_GetActionChange(lua_State *lua)
+{
+    int act, top;
+
+    top = lua_gettop(lua);
+    act = lua_tointeger(lua, 1);
+    
+    if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
+    {
+        Con_Printf("wrong action number");
+        return 0;
+    }
+    else if(top == 1)
+    {
+        lua_pushinteger(lua, (int)(control_mapper.action_map[act].already_pressed));
+        return 1;
+    }
+    
+    Con_Printf("wrong arguments number, must be 1");
+    return 0;
+}
 
 
 int lua_GetGameVersion(lua_State *lua)
@@ -1604,6 +1648,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     /*
      * register functions
      */
+     
     lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "stopsound", lua_StopSound);
 
@@ -1652,6 +1697,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
+    
+    lua_register(lua, "getActionState", lua_GetActionState);
+    lua_register(lua, "getActionChange", lua_GetActionChange);
 
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
     lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
