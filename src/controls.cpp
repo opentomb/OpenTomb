@@ -133,14 +133,14 @@ void Controls_Key(int32_t button, int state)
                     {
                         Game_Load("qsave.txt");
                     }
-                    return;
+                    break;
 
                 default:
                     // control_states.move_forward = state;
                     return;
             }
             
-            control_mapper.action_map[i].already_pressed = state;
+            control_mapper.action_map[i].state = state;
         }
     }
 }
@@ -548,6 +548,21 @@ int Controls_KeyConsoleFilter(int32_t key, int kmod_states)
             }
     }
     return 0;
+}
+
+void Controls_RefreshStates()
+{
+    for(int i = 0; i < ACT_LASTINDEX; i++)
+    {
+        if(control_mapper.action_map[i].state)
+        {
+            control_mapper.action_map[i].already_pressed = true;
+        }
+        else
+        {
+            control_mapper.action_map[i].already_pressed = false;
+        }
+    }
 }
 
 void Controls_InitGlobals()

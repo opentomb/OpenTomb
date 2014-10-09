@@ -80,6 +80,7 @@ typedef struct control_action_s
 {
     int      primary;
     int      secondary;
+    bool     state;
     bool     already_pressed;
 }control_action_t, *control_action_p;
 
@@ -119,6 +120,7 @@ void Controls_WrapGameControllerAxis(int axis, Sint16 value);
 void Controls_JoyAxis(int axis, Sint16 value);
 void Controls_JoyHat(int value);
 void Controls_JoyRumble(float power, int time);
+void Controls_RefreshStates();
 void Controls_InitGlobals();
 
 int  Controls_KeyConsoleFilter(int32_t key, int kmod_states);

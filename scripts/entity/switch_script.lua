@@ -252,11 +252,13 @@ function trigger_activate(trig_id, actor_id, func)
     end
     local on  = {};
     local off = {};
+    local key = nil;
 
     if(cvars.engine_version < TR_II) then
         if(tr1_triggers[m_id] ~= nil) then
             on       = tr1_triggers[m_id].on;
             off      = tr1_triggers[m_id].off;
+            key      = tr1_key[m_id];
             meshswap = tr1_puzzlehole_meshswap[m_id];
         else
             return;
@@ -323,6 +325,18 @@ function trigger_activate(trig_id, actor_id, func)
 
     local t = getEntityAnim(trig_id);
     if(on.ready_anim < 0 or on.ready_anim == t) then
+    
+        if(key ~= nil) then
+            if(getItemsCount(player, key) <= 0) then
+                if(getActionChange(act.action) == 0) then
+                    playsound(2);
+                end;
+                return;
+            else
+                removeItem(player, key, 1);
+            end;
+        end;
+        
         setEntityAnim(trig_id, on.trig_anim, 0);
         setEntityAnim(actor_id, on.actor_anim, 0);
         setEntityActivity(trig_id, 1);
