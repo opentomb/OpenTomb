@@ -153,6 +153,31 @@ elseif(ver < TR_V) then
     createBaseItem(ITEM_SINGLE_FLARE, 372, 372, ITEM_TYPE_SUPPLY, 1);
     createBaseItem(ITEM_TORCH, 247, 247, ITEM_TYPE_SUPPLY, 1);
     
+    createBaseItem(ITEM_KEY_1, 203, 203, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_2, 204, 204, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_3, 205, 205, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_4, 206, 206, ITEM_TYPE_QUEST, 1);    
+    createBaseItem(ITEM_KEY_5, 207, 207, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_6, 208, 208, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_7, 209, 209, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_8, 210, 210, ITEM_TYPE_QUEST, 1);    
+    createBaseItem(ITEM_KEY_9, 211, 211, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_10, 212, 212, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_11, 213, 213, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_KEY_12, 214, 214, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_1, 175, 175, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_2, 176, 176, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_3, 177, 177, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_4, 178, 178, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_5, 179, 179, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_6, 180, 180, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_7, 181, 181, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_8, 182, 182, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_9, 183, 183, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_10, 184, 184, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_11, 185, 185, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_PUZZLE_12, 186, 186, ITEM_TYPE_QUEST, 1);
+    
 elseif(ver == TR_V) then
     createBaseItem(ITEM_COMPASS, 356, 356, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_COMPASS);
     createBaseItem(ITEM_LOAD, 357, 357, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LOAD);
