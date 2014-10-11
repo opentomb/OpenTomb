@@ -49,6 +49,10 @@ ITEM_ROCKETGUN = 16
 ITEM_HARPOONGUN = 17
 ITEM_CROSSBOW = 18      -- TR5: Grappling gun
 
+ITEM_MAGNUMS_LASERSIGHT      =  1220    -- Extra item index for revolver + lasersight (TR4-5)
+ITEM_CROSSBOW_LASERSIGHT     =  1820    -- Extra item index for crossbow + lasersight (TR4)
+ITEM_M16_LASERSIGHT          =  1420    -- Extra item index for H&K gun + lasersight (TR5)
+
 ITEM_LASERSIGHT = 20    -- Exist only in TR4-5.
 ITEM_BINOCULARS = 21    -- Exist only in TR4-5.
 ITEM_SILENCER   = 22    -- Exist only in TR5, not used.
@@ -222,3 +226,9 @@ ITEM_CROWBAR = 190
 ITEM_EXAMINE_1 = 200
 ITEM_EXAMINE_2 = 201
 ITEM_EXAMINE_3 = 202
+
+-- Chloroform and cloth is only present in TR5.
+
+ITEM_CHLOROFORM       = 210
+ITEM_CLOTH            = 211
+ITEM_CHLOROFORM_CLOTH = 212

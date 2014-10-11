@@ -8,11 +8,15 @@
 -- combining patterns in future.
 --------------------------------------------------------------------------------
 
-tr1_key = {};   -- Technically, both puzzle pieces and keys are keys.
+tr1_key = {};       -- Technically, both puzzle pieces and keys are keys.
 tr2_key = {};
 tr3_key = {};
 tr4_key = {};
 tr5_key = {};
+
+tr4_combine  = {};  -- Combine and separate maps for TR4-5.
+tr5_combine  = {};
+
 
 tr1_key[118] = ITEM_PUZZLE_1;           -- TR1 puzzleholes
 tr1_key[119] = ITEM_PUZZLE_2;
@@ -107,3 +111,88 @@ tr5_key[262] = ITEM_KEY_5;
 tr5_key[263] = ITEM_KEY_6;
 tr5_key[264] = ITEM_KEY_7;
 tr5_key[265] = ITEM_KEY_8;
+
+
+-- Combine / separate maps for TR4.
+
+tr4_combine[0]  = {a = ITEM_PUZZLE_1_COMBO_A, b = ITEM_PUZZLE_1_COMBO_B, result = ITEM_PUZZLE_1};
+tr4_combine[1]  = {a = ITEM_PUZZLE_2_COMBO_A, b = ITEM_PUZZLE_2_COMBO_B, result = ITEM_PUZZLE_2};
+tr4_combine[2]  = {a = ITEM_PUZZLE_3_COMBO_A, b = ITEM_PUZZLE_3_COMBO_B, result = ITEM_PUZZLE_3};
+tr4_combine[3]  = {a = ITEM_PUZZLE_4_COMBO_A, b = ITEM_PUZZLE_4_COMBO_B, result = ITEM_PUZZLE_4};
+tr4_combine[4]  = {a = ITEM_PUZZLE_5_COMBO_A, b = ITEM_PUZZLE_5_COMBO_B, result = ITEM_PUZZLE_5};
+tr4_combine[5]  = {a = ITEM_PUZZLE_6_COMBO_A, b = ITEM_PUZZLE_6_COMBO_B, result = ITEM_PUZZLE_6};
+tr4_combine[6]  = {a = ITEM_PUZZLE_7_COMBO_A, b = ITEM_PUZZLE_7_COMBO_B, result = ITEM_PUZZLE_7};
+tr4_combine[7]  = {a = ITEM_PUZZLE_8_COMBO_A, b = ITEM_PUZZLE_8_COMBO_B, result = ITEM_PUZZLE_8};
+tr4_combine[8]  = {a = ITEM_KEY_1_COMBO_A, b = ITEM_KEY_1_COMBO_B, result = ITEM_KEY_1};
+tr4_combine[9]  = {a = ITEM_KEY_2_COMBO_A, b = ITEM_KEY_2_COMBO_B, result = ITEM_KEY_2};
+tr4_combine[10] = {a = ITEM_KEY_3_COMBO_A, b = ITEM_KEY_3_COMBO_B, result = ITEM_KEY_3};
+tr4_combine[11] = {a = ITEM_KEY_4_COMBO_A, b = ITEM_KEY_4_COMBO_B, result = ITEM_KEY_4};
+tr4_combine[12] = {a = ITEM_KEY_5_COMBO_A, b = ITEM_KEY_5_COMBO_B, result = ITEM_KEY_5};
+tr4_combine[13] = {a = ITEM_KEY_6_COMBO_A, b = ITEM_KEY_6_COMBO_B, result = ITEM_KEY_6};
+tr4_combine[14] = {a = ITEM_KEY_7_COMBO_A, b = ITEM_KEY_7_COMBO_B, result = ITEM_KEY_7};
+tr4_combine[15] = {a = ITEM_KEY_8_COMBO_A, b = ITEM_KEY_8_COMBO_B, result = ITEM_KEY_8};
+tr4_combine[16] = {a = ITEM_PICKUP_1_COMBO_A, b = ITEM_PICKUP_1_COMBO_B, result = ITEM_PICKUP_1};
+tr4_combine[17] = {a = ITEM_PICKUP_2_COMBO_A, b = ITEM_PICKUP_2_COMBO_B, result = ITEM_PICKUP_2};
+tr4_combine[18] = {a = ITEM_PICKUP_3_COMBO_A, b = ITEM_PICKUP_3_COMBO_B, result = ITEM_PICKUP_3};
+tr4_combine[19] = {a = ITEM_PICKUP_4_COMBO_A, b = ITEM_PICKUP_4_COMBO_B, result = ITEM_PICKUP_4};
+
+tr4_combine[20] = {a = ITEM_WATERSKIN_LARGE_5, b = ITEM_WATERSKIN_SMALL_0, result = ITEM_WATERSKIN_LARGE_2, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[21] = {a = ITEM_WATERSKIN_LARGE_5, b = ITEM_WATERSKIN_SMALL_1, result = ITEM_WATERSKIN_LARGE_3, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[22] = {a = ITEM_WATERSKIN_LARGE_5, b = ITEM_WATERSKIN_SMALL_2, result = ITEM_WATERSKIN_LARGE_4, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[23] = {a = ITEM_WATERSKIN_LARGE_4, b = ITEM_WATERSKIN_SMALL_0, result = ITEM_WATERSKIN_LARGE_1, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[24] = {a = ITEM_WATERSKIN_LARGE_4, b = ITEM_WATERSKIN_SMALL_1, result = ITEM_WATERSKIN_LARGE_2, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[25] = {a = ITEM_WATERSKIN_LARGE_4, b = ITEM_WATERSKIN_SMALL_2, result = ITEM_WATERSKIN_LARGE_3, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[26] = {a = ITEM_WATERSKIN_LARGE_3, b = ITEM_WATERSKIN_SMALL_0, result = ITEM_WATERSKIN_LARGE_0, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[27] = {a = ITEM_WATERSKIN_LARGE_3, b = ITEM_WATERSKIN_SMALL_1, result = ITEM_WATERSKIN_LARGE_1, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[28] = {a = ITEM_WATERSKIN_LARGE_3, b = ITEM_WATERSKIN_SMALL_2, result = ITEM_WATERSKIN_LARGE_2, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[29] = {a = ITEM_WATERSKIN_LARGE_2, b = ITEM_WATERSKIN_SMALL_0, result = ITEM_WATERSKIN_LARGE_0, result2 = ITEM_WATERSKIN_SMALL_2};
+tr4_combine[30] = {a = ITEM_WATERSKIN_LARGE_2, b = ITEM_WATERSKIN_SMALL_1, result = ITEM_WATERSKIN_LARGE_0, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[31] = {a = ITEM_WATERSKIN_LARGE_2, b = ITEM_WATERSKIN_SMALL_2, result = ITEM_WATERSKIN_LARGE_1, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[32] = {a = ITEM_WATERSKIN_LARGE_1, b = ITEM_WATERSKIN_SMALL_0, result = ITEM_WATERSKIN_LARGE_0, result2 = ITEM_WATERSKIN_SMALL_1};
+tr4_combine[33] = {a = ITEM_WATERSKIN_LARGE_1, b = ITEM_WATERSKIN_SMALL_1, result = ITEM_WATERSKIN_LARGE_0, result2 = ITEM_WATERSKIN_SMALL_2};
+tr4_combine[34] = {a = ITEM_WATERSKIN_LARGE_1, b = ITEM_WATERSKIN_SMALL_2, result = ITEM_WATERSKIN_LARGE_0, result2 = ITEM_WATERSKIN_SMALL_3};
+tr4_combine[35] = {a = ITEM_WATERSKIN_SMALL_3, b = ITEM_WATERSKIN_LARGE_0, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_3};
+tr4_combine[36] = {a = ITEM_WATERSKIN_SMALL_3, b = ITEM_WATERSKIN_LARGE_1, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_4};
+tr4_combine[37] = {a = ITEM_WATERSKIN_SMALL_3, b = ITEM_WATERSKIN_LARGE_2, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_5};
+tr4_combine[38] = {a = ITEM_WATERSKIN_SMALL_3, b = ITEM_WATERSKIN_LARGE_3, result = ITEM_WATERSKIN_SMALL_1, result2 = ITEM_WATERSKIN_LARGE_5};
+tr4_combine[39] = {a = ITEM_WATERSKIN_SMALL_3, b = ITEM_WATERSKIN_LARGE_4, result = ITEM_WATERSKIN_SMALL_2, result2 = ITEM_WATERSKIN_LARGE_5};
+tr4_combine[40] = {a = ITEM_WATERSKIN_SMALL_2, b = ITEM_WATERSKIN_LARGE_0, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_2};
+tr4_combine[41] = {a = ITEM_WATERSKIN_SMALL_2, b = ITEM_WATERSKIN_LARGE_1, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_3};
+tr4_combine[42] = {a = ITEM_WATERSKIN_SMALL_2, b = ITEM_WATERSKIN_LARGE_2, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_4};
+tr4_combine[43] = {a = ITEM_WATERSKIN_SMALL_2, b = ITEM_WATERSKIN_LARGE_3, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_5};
+tr4_combine[44] = {a = ITEM_WATERSKIN_SMALL_2, b = ITEM_WATERSKIN_LARGE_4, result = ITEM_WATERSKIN_SMALL_1, result2 = ITEM_WATERSKIN_LARGE_5};
+tr4_combine[45] = {a = ITEM_WATERSKIN_SMALL_1, b = ITEM_WATERSKIN_LARGE_0, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_1};
+tr4_combine[46] = {a = ITEM_WATERSKIN_SMALL_1, b = ITEM_WATERSKIN_LARGE_1, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_2};
+tr4_combine[47] = {a = ITEM_WATERSKIN_SMALL_1, b = ITEM_WATERSKIN_LARGE_2, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_3};
+tr4_combine[48] = {a = ITEM_WATERSKIN_SMALL_1, b = ITEM_WATERSKIN_LARGE_3, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_4};
+tr4_combine[49] = {a = ITEM_WATERSKIN_SMALL_1, b = ITEM_WATERSKIN_LARGE_4, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_5};
+
+tr4_combine[50] = {a = ITEM_MAGNUMS, b = ITEM_LASERSIGHT, result = ITEM_MAGNUMS_LASERSIGHT};
+tr4_combine[51] = {a = ITEM_CROSSBOW, b = ITEM_LASERSIGHT, result = ITEM_CROSSBOW_LASERSIGHT};
+
+
+-- Combine / separate maps for TR5.
+
+tr5_combine[0]  = {a = ITEM_PUZZLE_1_COMBO_A, b = ITEM_PUZZLE_1_COMBO_B, result = ITEM_PUZZLE_1};
+tr5_combine[1]  = {a = ITEM_PUZZLE_2_COMBO_A, b = ITEM_PUZZLE_2_COMBO_B, result = ITEM_PUZZLE_2};
+tr5_combine[2]  = {a = ITEM_PUZZLE_3_COMBO_A, b = ITEM_PUZZLE_3_COMBO_B, result = ITEM_PUZZLE_3};
+tr5_combine[3]  = {a = ITEM_PUZZLE_4_COMBO_A, b = ITEM_PUZZLE_4_COMBO_B, result = ITEM_PUZZLE_4};
+tr5_combine[4]  = {a = ITEM_PUZZLE_5_COMBO_A, b = ITEM_PUZZLE_5_COMBO_B, result = ITEM_PUZZLE_5};
+tr5_combine[5]  = {a = ITEM_PUZZLE_6_COMBO_A, b = ITEM_PUZZLE_6_COMBO_B, result = ITEM_PUZZLE_6};
+tr5_combine[6]  = {a = ITEM_PUZZLE_7_COMBO_A, b = ITEM_PUZZLE_7_COMBO_B, result = ITEM_PUZZLE_7};
+tr5_combine[7]  = {a = ITEM_PUZZLE_8_COMBO_A, b = ITEM_PUZZLE_8_COMBO_B, result = ITEM_PUZZLE_8};
+tr5_combine[8]  = {a = ITEM_KEY_1_COMBO_A, b = ITEM_KEY_1_COMBO_B, result = ITEM_KEY_1};
+tr5_combine[9]  = {a = ITEM_KEY_2_COMBO_A, b = ITEM_KEY_2_COMBO_B, result = ITEM_KEY_2};
+tr5_combine[10] = {a = ITEM_KEY_3_COMBO_A, b = ITEM_KEY_3_COMBO_B, result = ITEM_KEY_3};
+tr5_combine[11] = {a = ITEM_KEY_4_COMBO_A, b = ITEM_KEY_4_COMBO_B, result = ITEM_KEY_4};
+tr5_combine[12] = {a = ITEM_KEY_5_COMBO_A, b = ITEM_KEY_5_COMBO_B, result = ITEM_KEY_5};
+tr5_combine[13] = {a = ITEM_KEY_6_COMBO_A, b = ITEM_KEY_6_COMBO_B, result = ITEM_KEY_6};
+tr5_combine[14] = {a = ITEM_KEY_7_COMBO_A, b = ITEM_KEY_7_COMBO_B, result = ITEM_KEY_7};
+tr5_combine[15] = {a = ITEM_KEY_8_COMBO_A, b = ITEM_KEY_8_COMBO_B, result = ITEM_KEY_8};
+tr5_combine[16] = {a = ITEM_PICKUP_1_COMBO_A, b = ITEM_PICKUP_1_COMBO_B, result = ITEM_PICKUP_1};
+tr5_combine[17] = {a = ITEM_PICKUP_2_COMBO_A, b = ITEM_PICKUP_2_COMBO_B, result = ITEM_PICKUP_2};
+tr5_combine[18] = {a = ITEM_PICKUP_3_COMBO_A, b = ITEM_PICKUP_3_COMBO_B, result = ITEM_PICKUP_3};
+tr5_combine[19] = {a = ITEM_PICKUP_4_COMBO_A, b = ITEM_PICKUP_4_COMBO_B, result = ITEM_PICKUP_4};
+
+tr5_combine[20] = {a = ITEM_MAGNUMS, b = ITEM_LASERSIGHT, result = ITEM_MAGNUMS_LASERSIGHT};
+tr5_combine[21] = {a = ITEM_M16, b = ITEM_LASERSIGHT, result = ITEM_M16_LASERSIGHT};
