@@ -197,8 +197,9 @@ tr5_combine[19] = {a = ITEM_PICKUP_4_COMBO_A, b = ITEM_PICKUP_4_COMBO_B, result 
 tr5_combine[20] = {a = ITEM_MAGNUM, b = ITEM_LASERSIGHT, result = ITEM_MAGNUM_LASERSIGHT};
 tr5_combine[21] = {a = ITEM_M16, b = ITEM_LASERSIGHT, result = ITEM_M16_LASERSIGHT};
 
-function combineItems(a, b)
+function combineItems(a, b, oneway)
     
+    oneway    = oneway or 0;    
     local ver = getGameVersion();
     local map = {};
     local i   = 0;
@@ -222,7 +223,7 @@ function combineItems(a, b)
     
     while(map[i] ~= nil) do
         if(((a == map[i].a) and (b == map[i].b))  or
-           ((b == map[i].a) and (a == map[i].b))) then
+           ((b == map[i].a) and (a == map[i].b) and (oneway == 0))) then
             removeItem(player, a, 1);
             removeItem(player, b, 1);
             addItem(player, map[i].result, 1);
