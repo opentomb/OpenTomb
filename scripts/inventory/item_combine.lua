@@ -196,3 +196,81 @@ tr5_combine[19] = {a = ITEM_PICKUP_4_COMBO_A, b = ITEM_PICKUP_4_COMBO_B, result 
 
 tr5_combine[20] = {a = ITEM_MAGNUMS, b = ITEM_LASERSIGHT, result = ITEM_MAGNUMS_LASERSIGHT};
 tr5_combine[21] = {a = ITEM_M16, b = ITEM_LASERSIGHT, result = ITEM_M16_LASERSIGHT};
+
+function combineItems(a, b)
+    
+    local ver = getGameVersion();
+    local map = {};
+    local i   = 0;
+    local j   = 0;
+    
+    if(ver < TR_IV) then
+        print("Wrong game version.");
+        return;
+    elseif(ver < TR_V) then
+        map = tr4_combine;
+    elseif(ver == TR_V) then
+        map = tr5_combine;
+    else
+        return;
+    end;
+    
+    if(getItemsCount(player, a) == 0 or getItemsCount(player, b) == 0) then
+        print("No specified item(s) in inventory!");
+        return;
+    end;
+    
+    while(map[i] ~= nil) do
+        if((a == map[i].a) or (a == map[i].b)) then
+            while(map[j] ~= nil) do
+                if((b == map[j].a) or (b == map[j].b)) then
+                    removeItem(player, a, 1);
+                    removeItem(player, b, 1);
+                    addItem(player, map[j].result, 1);
+                    playsound(GetGlobalSound(ver, GLOBALID_MENUCLANG));
+                    print("Items successfully combined!");
+                    return;
+                end;
+                j = j + 1;
+            end;
+        end;
+        i = i + 1;
+    end;
+    
+    print("Something went wrong. Really wrong.");
+    
+end
+
+function separateItems(a)
+    
+    local ver = getGameVersion();
+    local map = {};
+    local i   = 0;
+    local j   = 0;
+    
+    if(ver < TR_IV) then
+        print("Wrong game version.");
+        return;
+    elseif(ver < TR_V) then
+        map = tr4_combine;
+    elseif(ver == TR_V) then
+        map = tr5_combine;
+    end;
+    
+    if(getItemsCount(player, a) <= 0) then
+        print("No specified item in inventory!");
+        return;
+    end;
+    
+    while(map[i] ~= nil) do
+        if(a == map[i].result) then
+            addItem(player, map[i].a, 1);
+            addItem(player, map[i].b, 1);
+            removeItem(player, a, 1);
+            playsound(GetGlobalSound(ver, GLOBALID_MENUCLANG));
+            print("Items successfully separated!");
+        end;
+        i = i + 1;
+    end;
+    
+end

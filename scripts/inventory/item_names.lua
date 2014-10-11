@@ -39,6 +39,10 @@ ITEM_NAME_LASERSIGHT = "Lasersight"
 ITEM_NAME_BINOCULARS = "Binoculars"
 ITEM_NAME_SILENCER   = "Silencer"
 
+ITEM_NAME_REVOLVER_LASERSIGHT = "Revolver + Lasersight"
+ITEM_NAME_CROSSBOW_LASERSIGHT = "Crossbow + Lasersight"
+ITEM_NAME_HK_LASERSIGHT       = "H&K Gun + Lasersight"
+
 -- We don't need to specify each ammo name, as usually one weapon
 -- has one type of ammo. This was changed since TR4, for which we
 -- specify some ammo names explicitly.
