@@ -167,7 +167,7 @@ tr4_combine[47] = {a = ITEM_WATERSKIN_SMALL_1, b = ITEM_WATERSKIN_LARGE_2, resul
 tr4_combine[48] = {a = ITEM_WATERSKIN_SMALL_1, b = ITEM_WATERSKIN_LARGE_3, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_4};
 tr4_combine[49] = {a = ITEM_WATERSKIN_SMALL_1, b = ITEM_WATERSKIN_LARGE_4, result = ITEM_WATERSKIN_SMALL_0, result2 = ITEM_WATERSKIN_LARGE_5};
 
-tr4_combine[50] = {a = ITEM_MAGNUMS, b = ITEM_LASERSIGHT, result = ITEM_MAGNUMS_LASERSIGHT};
+tr4_combine[50] = {a = ITEM_MAGNUM, b = ITEM_LASERSIGHT, result = ITEM_MAGNUM_LASERSIGHT};
 tr4_combine[51] = {a = ITEM_CROSSBOW, b = ITEM_LASERSIGHT, result = ITEM_CROSSBOW_LASERSIGHT};
 
 
@@ -194,7 +194,7 @@ tr5_combine[17] = {a = ITEM_PICKUP_2_COMBO_A, b = ITEM_PICKUP_2_COMBO_B, result 
 tr5_combine[18] = {a = ITEM_PICKUP_3_COMBO_A, b = ITEM_PICKUP_3_COMBO_B, result = ITEM_PICKUP_3};
 tr5_combine[19] = {a = ITEM_PICKUP_4_COMBO_A, b = ITEM_PICKUP_4_COMBO_B, result = ITEM_PICKUP_4};
 
-tr5_combine[20] = {a = ITEM_MAGNUMS, b = ITEM_LASERSIGHT, result = ITEM_MAGNUMS_LASERSIGHT};
+tr5_combine[20] = {a = ITEM_MAGNUM, b = ITEM_LASERSIGHT, result = ITEM_MAGNUM_LASERSIGHT};
 tr5_combine[21] = {a = ITEM_M16, b = ITEM_LASERSIGHT, result = ITEM_M16_LASERSIGHT};
 
 function combineItems(a, b)
@@ -216,28 +216,27 @@ function combineItems(a, b)
     end;
     
     if(getItemsCount(player, a) == 0 or getItemsCount(player, b) == 0) then
-        print("No specified item(s) in inventory!");
+        print("Combine: no specified item(s) in inventory!");
         return;
     end;
     
     while(map[i] ~= nil) do
-        if((a == map[i].a) or (a == map[i].b)) then
-            while(map[j] ~= nil) do
-                if((b == map[j].a) or (b == map[j].b)) then
-                    removeItem(player, a, 1);
-                    removeItem(player, b, 1);
-                    addItem(player, map[j].result, 1);
-                    playsound(GetGlobalSound(ver, GLOBALID_MENUCLANG));
-                    print("Items successfully combined!");
-                    return;
-                end;
-                j = j + 1;
+        if(((a == map[i].a) and (b == map[i].b))  or
+           ((b == map[i].a) and (a == map[i].b))) then
+            removeItem(player, a, 1);
+            removeItem(player, b, 1);
+            addItem(player, map[i].result, 1);
+            if(map[i].result2 ~= nil) then
+                addItem(player, map[i].result2, 1);
             end;
+            playsound(GetGlobalSound(ver, GLOBALID_MENUCLANG));
+            print("Combine: items successfully combined!");
+            return;
         end;
         i = i + 1;
     end;
     
-    print("Something went wrong. Really wrong.");
+    print("Combine: no items combined. Wrong combo or item name(s)?");
     
 end
 
@@ -258,7 +257,7 @@ function separateItems(a)
     end;
     
     if(getItemsCount(player, a) <= 0) then
-        print("No specified item in inventory!");
+        print("Separate: no specified item in inventory!");
         return;
     end;
     
@@ -268,9 +267,12 @@ function separateItems(a)
             addItem(player, map[i].b, 1);
             removeItem(player, a, 1);
             playsound(GetGlobalSound(ver, GLOBALID_MENUCLANG));
-            print("Items successfully separated!");
+            print("Separate: items successfully separated!");
+            return;
         end;
         i = i + 1;
     end;
+    
+    print("Separate: no items separated. Wrong item name(s)?");
     
 end

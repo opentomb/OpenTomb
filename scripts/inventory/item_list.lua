@@ -35,21 +35,21 @@ ITEM_MAP = 8        -- Not used in TR1-3, but exist as model. Not used in TR4.
 -- Since different versions of TR feature different weapons yet originating from
 -- the previous one (e. g., Automags originating from Magnums, MP5 originating
 -- from M16, etc.), it unifies similar weapons from various games under ancestor
--- name. For example, ITEM_MAGNUMS count either for magnums, automags, desert
+-- name. For example, ITEM_MAGNUM count either for magnums, automags, desert
 -- eagle and revolver.
 --------------------------------------------------------------------------------
 
-ITEM_PISTOLS = 10
+ITEM_PISTOL = 10
 ITEM_SHOTGUN = 11
-ITEM_MAGNUMS = 12       -- TR2: Automags, TR3/5: Desert eagle, TR4/5: Revolver
-ITEM_UZIS = 13
+ITEM_MAGNUM = 12        -- TR2: Automags, TR3/5: Desert eagle, TR4/5: Revolver
+ITEM_UZI = 13
 ITEM_M16 = 14           -- TR3: MP5, TR5: H&K
 ITEM_GRENADEGUN = 15
 ITEM_ROCKETGUN = 16
 ITEM_HARPOONGUN = 17
 ITEM_CROSSBOW = 18      -- TR5: Grappling gun
 
-ITEM_MAGNUMS_LASERSIGHT      =  1220    -- Extra item index for revolver + lasersight (TR4-5)
+ITEM_MAGNUM_LASERSIGHT       =  1220    -- Extra item index for revolver + lasersight (TR4-5)
 ITEM_CROSSBOW_LASERSIGHT     =  1820    -- Extra item index for crossbow + lasersight (TR4)
 ITEM_M16_LASERSIGHT          =  1420    -- Extra item index for H&K gun + lasersight (TR5)
 
