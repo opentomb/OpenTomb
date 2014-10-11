@@ -275,6 +275,7 @@ end
 -- test TR_ITEMS
 
 addItem(player, ITEM_COMPASS, 1);
+addItem(player, ITEM_PISTOL, 1);
 addItem(player, ITEM_SMALL_MEDIPACK, 3);
 addItem(player, ITEM_LARGE_MEDIPACK, 1);
 
