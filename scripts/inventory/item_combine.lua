@@ -206,13 +206,14 @@ function combineItems(a, b, oneway)
     local j   = 0;
     
     if(ver < TR_IV) then
-        print("Wrong game version.");
+        print("Combine: wrong game version.");
         return;
     elseif(ver < TR_V) then
         map = tr4_combine;
     elseif(ver == TR_V) then
         map = tr5_combine;
     else
+        print("Combine: unknown game version.");
         return;
     end;
     
@@ -222,7 +223,7 @@ function combineItems(a, b, oneway)
     end;
     
     while(map[i] ~= nil) do
-        if(((a == map[i].a) and (b == map[i].b))  or
+        if(((a == map[i].a) and (b == map[i].b)) or
            ((b == map[i].a) and (a == map[i].b) and (oneway == 0))) then
             removeItem(player, a, 1);
             removeItem(player, b, 1);
