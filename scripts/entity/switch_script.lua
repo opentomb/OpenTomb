@@ -333,7 +333,7 @@ function trigger_activate(trig_id, actor_id, func)
         if(key ~= nil) then
             if(getItemsCount(player, key) <= 0) then
                 if(getActionChange(act.action) == 0) then
-                    playsound(2);
+                    playsound(SOUND_NO);
                 end;
                 return;
             else

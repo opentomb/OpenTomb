@@ -2,6 +2,39 @@
 -- by Lwmte, May 2014
 
 --------------------------------------------------------------------------------
+-- All TR games shared some sound sample indexes. Mostly, it's generic and menu
+-- sounds. While sound samples themselves may have changed, index always remain
+-- the same. Here, all these effects are explicitly defined, to ease out
+-- future scripting life.
+--------------------------------------------------------------------------------
+
+SOUND_NO          = 2
+SOUND_LANDING     = 4
+SOUND_HOLSTEROUT  = 6
+SOUND_HOLSTERIN   = 7
+SOUND_SHOTPISTOLS = 8
+SOUND_RELOAD      = 9
+SOUND_RICOCHET    = 10
+SOUND_LARASCREAM  = 30
+SOUND_LARAINJURY  = 31
+SOUND_SPLASH      = 33
+SOUND_FROMWATER   = 34
+SOUND_SWIM        = 35
+SOUND_LARABREATH  = 36
+SOUND_BUBBLE      = 37
+SOUND_USEKEY      = 39
+SOUND_SHOTUZI     = 43
+SOUND_SHOTSHOTGUN = 45
+SOUND_UNDERWATER  = 60
+SOUND_MENUROTATE  = 108
+SOUND_MENUSELECT  = 109
+SOUND_MENUOPEN    = 111
+SOUND_MENUCLOSE   = 112  -- Only used in TR1-3.
+SOUND_MENUCLANG   = 114
+SOUND_MENUPAGE    = 115
+SOUND_MEDIPACK    = 116
+
+--------------------------------------------------------------------------------
 -- Certain sound effect indexes were changed across different TR versions,
 -- despite remaining the same - mostly, it happened with menu sounds and some
 -- general sounds. For such effects, we need this remap script, which will
