@@ -153,20 +153,28 @@ function create_pickup_func(id, item_id)
         end
         
         local dx, dy, dz = getEntityVector(object_id, activator_id);
-        local pickup_state = 39;
-        if(dz < -256.0) then
-            pickup_state = 137;                             -- FIXME: warious states for difference items relative Z positions
-        end;
+        --if(dz < -256.0) then
+        --    pickup_state = 137;                             -- FIXME: warious states for difference items relative Z positions
+        --end;
 
-        local st = getEntityState(activator_id);
-        if(st == pickup_state) or (st ~= 2) then        -- Disable picking up, if Lara isn't idle.
-            return;
+        local curr_anim = getEntityAnim(activator_id);
+        
+        if(curr_anim == 103) then               -- Stay idle
+            setEntityAnim(activator_id, 135);   -- Stay pickup      
+        elseif(curr_anim == 222) then           -- Crouch idle
+            setEntityAnim(activator_id, 291);   -- Crouch pickup
+        elseif(curr_anim == 263) then           -- Crawl idle
+            setEntityAnim(activator_id, 292);   -- Crawl pickup
+        elseif(curr_anim == 108) then           -- Swim idle
+            setEntityAnim(activator_id, 130);   -- Swim pickup
+        else
+            return;     -- Disable picking up, if Lara isn't idle.
         end;
+        
         print("you try to pick up object ".. object_id);
-
-        setEntityState(activator_id, pickup_state);         -- set the pick up animation.
         
         local px, py, pz = getEntityPos(object_id);
+        if(curr_anim == 108) then pz = pz + 128.0 end;  -- Shift offset for swim pickup.
         setEntityPos(activator_id, px, py, pz);
         
         addTask(
@@ -174,27 +182,24 @@ function create_pickup_func(id, item_id)
             local a, f, c = getEntityAnim(activator_id);
             local ver = getGameVersion();
             
-            if(a == 135) then
-                if(ver < TR_IV) then
-                    if(f < 40) then
-                        return true;
-                    end;
-                else
-                    if(f < 16) then
-                        return true;
-                    end;
+            -- Standing pickup anim makes action on frame 40 in TR1-3, in TR4-5
+            -- it was generalized with all rest animations by frame 16.
+            
+            if((a == 135) and (ver < TR_IV)) then
+                if(f < 40) then
+                    return true;
                 end;
             else
-                if(f < c - 1) then    -- FIXME: Add conditions for UW/PEDESTAL/HOLE/etc pickups
+                if(f < 16) then
                     return true;
                 end;
             end;
-            
             
             addItem(activator_id, item_id);
             setEntityFlag(object_id, 0x00);                 -- disable entity
             setEntityVisibility(object_id, 0x00);
             getEntityActivity(object_id, 0x00);
+            
         end);
     end;
 end

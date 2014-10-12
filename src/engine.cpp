@@ -623,7 +623,7 @@ int lua_CreateBaseItem(lua_State * lua)
     model_id        = lua_tointeger(lua, 2);
     world_model_id  = lua_tointeger(lua, 3);
     type            = lua_tointeger(lua, 4);
-    count          = lua_tointeger(lua, 5);
+    count           = lua_tointeger(lua, 5);
     
     World_CreateItem(&engine_world, item_id, model_id, world_model_id, type, count, lua_tostring(lua, 6));
     

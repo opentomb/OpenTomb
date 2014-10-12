@@ -2291,10 +2291,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->bf.next_state = TR_STATE_LARA_CROUCH_ROLL;// Crouch roll
             }
-            else if(cmd->action)
-            {
-                ent->bf.next_state = TR_STATE_LARA_PICKUP;     // Pick up item 67
-            }
             else
             {
                 if(engine_world.version > TR_III)
