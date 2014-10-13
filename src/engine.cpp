@@ -1580,6 +1580,12 @@ int lua_StopSound(lua_State *lua)
     return 0;
 }
 
+int lua_GetLevel(lua_State *lua)
+{
+    lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
+    return 1;
+}
+
 int lua_SetLevel(lua_State *lua)
 {
     int id, top;
@@ -1667,14 +1673,16 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "playstream", lua_PlayStream);
 
     lua_register(lua, "setlevel", lua_SetLevel);
+    lua_register(lua, "getlevel", lua_GetLevel);
+    
     lua_register(lua, "setgame", lua_SetGame);
+    lua_register(lua, "getGameVersion", lua_GetGameVersion);
 
     lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
     lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
     lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
-    lua_register(lua, "getGameVersion", lua_GetGameVersion);
 
     lua_register(lua, "addItem", lua_AddItem);
     lua_register(lua, "removeItem", lua_RemoveItem);

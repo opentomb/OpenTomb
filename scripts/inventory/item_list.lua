@@ -129,14 +129,14 @@ ITEM_PICKUP_6 = 105
 -- slot may share several items which were removed from inventory
 -- before.
 
-QUEST_ITEM_1 = 110
-QUEST_ITEM_2 = 111
-QUEST_ITEM_3 = 112
-QUEST_ITEM_4 = 113
-QUEST_ITEM_5 = 114
-QUEST_ITEM_6 = 115
-QUEST_ITEM_7 = 116
-QUEST_ITEM_8 = 117
+ITEM_QUEST_1 = 110
+ITEM_QUEST_2 = 111
+ITEM_QUEST_3 = 112
+ITEM_QUEST_4 = 113
+ITEM_QUEST_5 = 114
+ITEM_QUEST_6 = 115
+ITEM_QUEST_7 = 116
+ITEM_QUEST_8 = 117
 
 -- Secret items only exist in TR2 and TR5, plus they appear in first
 -- level of TR4. In TR2, there are three secret items, while in TR4 and

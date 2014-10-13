@@ -135,7 +135,7 @@ function create_switch_func(id, doors, func, mask)
                     setEntityActivity(v, 1);
                 end
                 if(func ~= nil) then
-                    func(state);
+                    func();
                 end
             end);
     end;
