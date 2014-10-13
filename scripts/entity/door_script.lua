@@ -18,6 +18,16 @@ function door_activate(id, mask)
     local m_id = getModelID(id);
     
     local door_mask = getEntityActivationMask(id);
+    
+    -- In TR3's Temple Ruins, certain lock at the end of the level has dublicated
+    -- trigger entry, meaning activation mask set and immediately unset. For some
+    -- reason, it worked correctly in original TR3, but for our engine, we need
+    -- an override.
+    
+    if((getGameVersion() == TR_III) and (getlevel() == 2) and (id == 205)) then
+        if((door_mask >= 24) and (mask == 24)) then mask = 0 end;
+    end;
+    
     door_mask = bit32.bxor(door_mask, mask);
     setEntityActivationMask(id, door_mask);
     

@@ -31,6 +31,8 @@ if(ver < TR_II) then
     createBaseItem(ITEM_SMALL_MEDIPACK, 108, 108, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_SMALL_MEDIPACK);
     createBaseItem(ITEM_LARGE_MEDIPACK, 109, 109, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_LARGE_MEDIPACK);
     
+    createBaseItem(ITEM_PICKUP_1, 127, 127, ITEM_TYPE_QUEST, 1);    -- Lead bar
+    
     createBaseItem(ITEM_PUZZLE_1, 114, 114, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_PUZZLE_2, 115, 115, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_PUZZLE_3, 116, 116, ITEM_TYPE_QUEST, 1);
@@ -39,6 +41,10 @@ if(ver < TR_II) then
     createBaseItem(ITEM_KEY_2, 134, 134, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_KEY_3, 135, 135, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_KEY_4, 136, 136, ITEM_TYPE_QUEST, 1);
+    
+    createBaseItem(ITEM_QUEST_1, 145, 145, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_QUEST_2, 146, 146, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_QUEST_3, 150, 150, ITEM_TYPE_QUEST, 1);
     
 elseif(ver < TR_III) then
     createBaseItem(ITEM_PASSPORT, 120, 120, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
@@ -78,6 +84,10 @@ elseif(ver < TR_III) then
     createBaseItem(ITEM_KEY_2, 198, 198, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_KEY_3, 199, 199, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_KEY_4, 200, 200, ITEM_TYPE_QUEST, 1);
+    
+    createBaseItem(ITEM_SECRET_1, 120, 120, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_SECRET_2, 121, 121, ITEM_TYPE_QUEST, 1);
+    createBaseItem(ITEM_SECRET_3, 133, 133, ITEM_TYPE_QUEST, 1);
     
 elseif(ver < TR_IV) then
     createBaseItem(ITEM_PASSPORT, 145, 145, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
@@ -234,6 +244,8 @@ elseif(ver < TR_V) then
     createBaseItem(ITEM_WATERSKIN_LARGE_3, 303, 303, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_WATERSKIN_LARGE_4, 304, 304, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_WATERSKIN_LARGE_5, 305, 305, ITEM_TYPE_QUEST, 1);
+    
+    createBaseItem(ITEM_SECRET_1, 120, 120, ITEM_TYPE_QUEST, 1);
     
 elseif(ver == TR_V) then
     createBaseItem(ITEM_COMPASS, 356, 356, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_COMPASS);
