@@ -180,7 +180,7 @@ function create_pickup_func(id, item_id)
         addTask(
         function()
             local a, f, c = getEntityAnim(activator_id);
-            local ver = getGameVersion();
+            local ver = getLevelVersion();
             
             -- Standing pickup anim makes action on frame 40 in TR1-3, in TR4-5
             -- it was generalized with all rest animations by frame 16.

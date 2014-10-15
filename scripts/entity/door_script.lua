@@ -24,7 +24,7 @@ function door_activate(id, mask)
     -- reason, it worked correctly in original TR3, but for our engine, we need
     -- an override.
     
-    if((getGameVersion() == TR_III) and (getlevel() == 2) and (id == 205)) then
+    if((getLevelVersion() == TR_III) and (getlevel() == 2) and (id == 205)) then
         if((door_mask >= 24) and (mask == 24)) then mask = 0 end;
     end;
     

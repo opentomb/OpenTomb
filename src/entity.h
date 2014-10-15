@@ -109,8 +109,8 @@ struct ss_bone_frame_s;
 typedef struct entity_s
 {
     uint32_t                            id;                                     // ID
-    int32_t                             OCB;
-    uint32_t                            activation_mask;
+    int32_t                             OCB;                                    // Object code bit (since TR4)
+    uint32_t                            activation_mask;                        // 0x1F means ACTIVATE.
     
     uint32_t                            flags;
     uint8_t                             active;

@@ -7,7 +7,7 @@
 -- NOT quest items, keys, puzzles and other level-specific pickups.
 --------------------------------------------------------------------------------
 
-local ver = getGameVersion();
+local ver = getLevelVersion();
 
 if(ver < TR_II) then
     createBaseItem(ITEM_PASSPORT, 71, 71, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);

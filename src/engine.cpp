@@ -465,7 +465,115 @@ int lua_SetActivationOffset(lua_State * lua)
 
     return 0;
 }
+
+int lua_GetCharacterParam(lua_State * lua)
+{
+    int id, top, parameter;
+    entity_p ent;
     
+    top = lua_gettop(lua);
+    
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id), (param)");
+        return 0;
+    }
+
+    if(parameter >= PARAM_LASTINDEX)
+    {    
+        Con_Printf("Wrong option index.");
+        return 0;
+    }
+    
+    id         = lua_tointeger(lua, 1);
+    parameter  = lua_tointeger(lua, 2);
+    ent        = World_GetEntityByID(&engine_world, id);
+    
+    if(!IsCharacter(ent))
+    {
+        Con_Printf("No entity or no character for entity #%d", id);
+        return 0;
+    }
+    else
+    {
+        lua_pushnumber(lua, Character_GetParam(ent, parameter));
+        return 1;
+    }
+}
+
+
+int lua_SetCharacterParam(lua_State * lua)
+{
+    int id, top, parameter;
+    float value;
+    entity_p ent;
+    
+    top = lua_gettop(lua);
+    
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id), (param), (value)");
+        return 0;
+    }
+    
+    if(parameter >= PARAM_LASTINDEX)
+    {    
+        Con_Printf("Wrong option index.");
+        return 0;
+    }
+
+    id        = lua_tointeger(lua, 1);
+    parameter = lua_tointeger(lua, 2);
+    value     = lua_tonumber (lua, 3);
+    ent       = World_GetEntityByID(&engine_world, id);
+    
+    if(!IsCharacter(ent))
+    {
+        Con_Printf("No entity or no character for entity #%d", id);
+        return 0;
+    }
+    else
+    {
+        return Character_SetParam(ent, parameter, value);
+    }
+}
+
+int lua_ChangeCharacterParam(lua_State * lua)
+{
+    int id, top, parameter;
+    float value;
+    entity_p ent;
+    
+    top = lua_gettop(lua);
+    
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id), (param), (value)");
+        return 0;
+    }
+    
+    if(parameter >= PARAM_LASTINDEX)
+    {    
+        Con_Printf("Wrong option index.");
+        return 0;
+    }
+
+    id         = lua_tointeger(lua, 1);
+    parameter  = lua_tointeger(lua, 2);
+    value      = lua_tonumber(lua, 3);
+    ent        = World_GetEntityByID(&engine_world, id);
+    
+    if(!IsCharacter(ent))
+    {
+        Con_Printf("No entity or no character for entity #%d", id);
+        return 0;
+    }
+    else
+    {
+        return Character_ChangeParam(ent, parameter, value);
+    }
+}
+
 int lua_GetActionState(lua_State *lua)
 {
     int act, top;
@@ -511,14 +619,14 @@ int lua_GetActionChange(lua_State *lua)
 }
 
 
-int lua_GetGameVersion(lua_State *lua)
+int lua_GetLevelVersion(lua_State *lua)
 {
     lua_pushinteger(lua, engine_world.version);
     return 1;
 }
 
 
-int lua_BindKey(lua_State * lua)
+int lua_BindKey(lua_State *lua)
 {
     int act, top;
 
@@ -1694,15 +1802,22 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      */
      
     lua_register(lua, "playsound", lua_PlaySound);
+    lua_register(lua, "playSound", lua_PlaySound);
     lua_register(lua, "stopsound", lua_StopSound);
+    lua_register(lua, "stopSound", lua_StopSound);
 
     lua_register(lua, "playstream", lua_PlayStream);
+    lua_register(lua, "playStream", lua_PlayStream);
 
     lua_register(lua, "setlevel", lua_SetLevel);
+    lua_register(lua, "setLevel", lua_SetLevel);
     lua_register(lua, "getlevel", lua_GetLevel);
+    lua_register(lua, "getLevel", lua_GetLevel);
+    
+    lua_register(lua, "getLevelVersion", lua_GetLevelVersion);
     
     lua_register(lua, "setgame", lua_SetGame);
-    lua_register(lua, "getGameVersion", lua_GetGameVersion);
+    lua_register(lua, "setGame", lua_SetGame);
 
     lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
@@ -1744,6 +1859,10 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
+    
+    lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
+    lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
+    lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
     
     lua_register(lua, "getActionState", lua_GetActionState);
     lua_register(lua, "getActionChange", lua_GetActionChange);
