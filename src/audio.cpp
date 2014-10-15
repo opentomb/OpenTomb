@@ -1219,6 +1219,10 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     audio_effect_p  effect = NULL;
     AudioSource    *source = NULL;
 
+    // If audio is blocked, don't process.
+    
+    if(audio_blocked) return TR_AUDIO_SEND_IGNORED;
+
     // Remap global engine effect ID to local effect ID.
 
     if((effect_ID < 0) || (effect_ID >= engine_world.audio_map_count))
@@ -1232,7 +1236,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
 
-    if((effect_ID == -1) || audio_blocked)
+    if(effect_ID == -1)
     {
         return TR_AUDIO_SEND_NOSAMPLE;
     }
