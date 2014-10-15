@@ -59,13 +59,29 @@
 #define CLIMB_ALT_HEIGHT                        (0x02)
 #define CLIMB_FULL_HEIGHT                       (0x03)
 
+// CHARACTER PARAMETERS TYPES
+
+enum CharParameters
+{
+    PARAM_HEALTH,
+    PARAM_AIR,
+    PARAM_STAMINA,
+    PARAM_WARMTH,
+    PARAM_EXTRA1,
+    PARAM_EXTRA2,
+    PARAM_EXTRA3,
+    PARAM_EXTRA4,
+    PARAM_LASTINDEX
+};
 
 // CHARACTER PARAMETERS DEFAULTS
 
-#define CHARACTER_OPTION_HEALTH_MAX             (1000.0)      // 30 secs of air
-#define CHARACTER_OPTION_AIR_MAX                (1800.0)      // 30 secs of air
-#define CHARACTER_OPTION_SPRINT_MAX             (120.0)       // 4  secs of sprint
-#define CHARACTER_OPTION_FREEZE_MAX             (240.0)       // 8  secs of freeze
+#define PARAM_ABSOLUTE_MAX                (-1)
+
+#define LARA_PARAM_HEALTH_MAX             (1000.0)      // 30 secs of air
+#define LARA_PARAM_AIR_MAX                (1800.0)      // 30 secs of air
+#define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
+#define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
 struct entity_s;
 class bt_engine_ClosestConvexResultCallback;
@@ -140,13 +156,11 @@ typedef struct character_command_s
     int8_t      flags;
 }character_command_t, *character_command_p;
 
-typedef struct character_options_s
+typedef struct character_param_s
 {
-    float       health;
-    float       air;
-    float       sprint;
-    float       freeze;
-}character_options_t, *character_options_p;
+    float       param[PARAM_LASTINDEX];
+    float       maximum[PARAM_LASTINDEX];
+}character_param_t, *character_param_p;
 
 typedef struct inventory_node_s
 {
@@ -159,8 +173,8 @@ typedef struct character_s
 {
     struct entity_s             *ent;                    // actor entity
     struct character_command_s   cmd;                    // character control commands
-    struct character_options_s   opt;
     struct inventory_node_s     *inventory;
+    struct character_param_s     parameters;
     
     int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
     int16_t                      max_move_iterations;
@@ -235,20 +249,13 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);
 
 void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd);
-void Character_UpdateValues(struct entity_s *ent);
+void Character_UpdateParams(struct entity_s *ent);
 
-bool Character_IncreaseAir(struct entity_s *ent, float value);
-bool Character_DecreaseAir(struct entity_s *ent, float value);
-void Character_SetAir(struct entity_s *ent, float value);
+float Character_GetParam(struct entity_s *ent, int parameter);
+int   Character_SetParam(struct entity_s *ent, int parameter, float value);
+int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
+int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
 
-bool Character_IncreaseHealth(struct entity_s *ent, float value);
-bool Character_DecreaseHealth(struct entity_s *ent, float value);
-void Character_SetHealth(struct entity_s *ent, float value);
-
-bool Character_IncreaseSprint(struct entity_s *ent, float value);
-bool Character_DecreaseSprint(struct entity_s *ent, float value);
-void Character_SetSprint(struct entity_s *ent, float value);
-
-
+bool IsCharacter(struct entity_s *ent);
 
 #endif  // CHARACTER_CONTROLLER_H

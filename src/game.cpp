@@ -361,13 +361,15 @@ void Game_ApplyControls(struct entity_s *ent)
         ent->character->cmd.shift = control_states.state_walk;
 
         ent->character->cmd.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);
-        ent->character->cmd.sprint = control_states.state_sprint;              // New commands only for TR3 and above
+        
+        // New commands only for TR3 and above
+        ent->character->cmd.sprint = control_states.state_sprint;
         ent->character->cmd.crouch = control_states.state_crouch;
 
         if(control_states.use_small_medi)
         {
             if((Character_GetItemsCount(ent, ITEM_SMALL_MEDIPACK) > 0) &&
-               (Character_IncreaseHealth(ent, 250)))
+               (Character_ChangeParam(ent, PARAM_HEALTH, 250)))
             {
                 Character_RemoveItem(ent, ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
@@ -379,7 +381,7 @@ void Game_ApplyControls(struct entity_s *ent)
         if(control_states.use_big_medi)
         {
             if((Character_GetItemsCount(ent, ITEM_LARGE_MEDIPACK) > 0) &&
-               (Character_IncreaseHealth(ent, CHARACTER_OPTION_HEALTH_MAX)))
+               (Character_ChangeParam(ent, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX)))
             {
                 Character_RemoveItem(ent, ITEM_LARGE_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
@@ -542,10 +544,11 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
         {
             Entity_CheckActivators(ent);
         }
-        if(ent->character->opt.health <= 0.0)
+        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
             ent->character->cmd.kill = 1;                                       // Kill, if no HP.
         }
+        
         Character_ApplyCommands(ent, &ent->character->cmd);
     }
 
@@ -570,8 +573,7 @@ void Game_UpdateCharacters()
         {
             Entity_CheckActivators(ent);
         }
-
-        if(ent->character->opt.health <= 0.0)
+        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
             ent->character->cmd.kill = 1;   // Kill, if no HP.
         }
@@ -621,7 +623,7 @@ void Game_Frame(btScalar time)
         Audio_Update();
         if(engine_world.Character)
         {
-            Character_UpdateValues(engine_world.Character);
+            Character_UpdateParams(engine_world.Character);
         }
 
         Game_Tick(&game_logic_time);
@@ -657,12 +659,16 @@ void Game_Prepare()
 {
     // Set character values to default.
 
-    Character_SetHealth(engine_world.Character, CHARACTER_OPTION_HEALTH_MAX);
-    Character_SetAir(engine_world.Character   , CHARACTER_OPTION_AIR_MAX);
-    Character_SetSprint(engine_world.Character, CHARACTER_OPTION_SPRINT_MAX);
+    Character_SetParamMaximum(engine_world.Character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+    Character_SetParam       (engine_world.Character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+    Character_SetParamMaximum(engine_world.Character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+    Character_SetParam       (engine_world.Character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+    Character_SetParamMaximum(engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+    Character_SetParam       (engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+    Character_SetParamMaximum(engine_world.Character, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
+    Character_SetParam       (engine_world.Character, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
 
     // Set gameflow parameters to default.
-
     // Reset secret trigger map.
 
     memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));

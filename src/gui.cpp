@@ -88,7 +88,7 @@ void Gui_InitBars()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(CHARACTER_OPTION_HEALTH_MAX, CHARACTER_OPTION_HEALTH_MAX / 3);
+                    Bar[i].SetValues(LARA_PARAM_HEALTH_MAX, LARA_PARAM_HEALTH_MAX / 3);
                     Bar[i].SetBlink(300);
                     Bar[i].SetExtrude(true, 100);
                     Bar[i].SetAutoshow(true, 2000, true, 400);
@@ -108,13 +108,13 @@ void Gui_InitBars()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(CHARACTER_OPTION_AIR_MAX, (CHARACTER_OPTION_AIR_MAX / 3));
+                    Bar[i].SetValues(LARA_PARAM_AIR_MAX, (LARA_PARAM_AIR_MAX / 3));
                     Bar[i].SetBlink(300);
                     Bar[i].SetExtrude(true, 100);
                     Bar[i].SetAutoshow(true, 2000, true, 400);
                 }
                 break;
-            case BAR_SPRINT:
+            case BAR_STAMINA:
                 {
                     Bar[i].Visible =      false;
                     Bar[i].Alternate =    false;
@@ -128,12 +128,12 @@ void Gui_InitBars()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 110, 110, 110, 100);
                     Bar[i].SetColor(BORDER_FADE, 60, 60, 60, 180);
-                    Bar[i].SetValues(120, 0);
+                    Bar[i].SetValues(LARA_PARAM_STAMINA_MAX, 0);
                     Bar[i].SetExtrude(true, 100);
                     Bar[i].SetAutoshow(true, 500, true, 300);
                 }
                 break;
-            case BAR_FREEZE:
+            case BAR_WARMTH:
                 {
                     Bar[i].Visible =      false;
                     Bar[i].Alternate =    false;
@@ -147,7 +147,7 @@ void Gui_InitBars()
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
-                    Bar[i].SetValues(CHARACTER_OPTION_FREEZE_MAX, CHARACTER_OPTION_FREEZE_MAX / 3);
+                    Bar[i].SetValues(LARA_PARAM_WARMTH_MAX, LARA_PARAM_WARMTH_MAX / 3);
                     Bar[i].SetBlink(200);
                     Bar[i].SetExtrude(true, 60);
                     Bar[i].SetAutoshow(true, 500, true, 300);
@@ -728,9 +728,10 @@ void Gui_DrawBars()
 {
     if(engine_world.Character && engine_world.Character->character)
     {
-        Bar[BAR_AIR].Show(engine_world.Character->character->opt.air);
-        Bar[BAR_SPRINT].Show(engine_world.Character->character->opt.sprint);
-        Bar[BAR_HEALTH].Show(engine_world.Character->character->opt.health);
+        Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));
+        Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
+        Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
+        Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
     }
 }
 

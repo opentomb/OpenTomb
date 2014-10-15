@@ -1,3 +1,4 @@
+dofile("scripts/entity/character.lua")
 dofile("scripts/inventory/item_list.lua")
 dofile("scripts/inventory/item_names.lua")
 dofile("scripts/inventory/item_combine.lua")

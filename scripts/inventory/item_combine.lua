@@ -200,7 +200,7 @@ tr5_combine[21] = {a = ITEM_M16, b = ITEM_LASERSIGHT, result = ITEM_M16_LASERSIG
 function combineItems(a, b, oneway)
     
     oneway    = oneway or 0;    
-    local ver = getGameVersion();
+    local ver = getLevelVersion();
     local map = {};
     local i   = 0;
     local j   = 0;
@@ -244,7 +244,7 @@ end
 
 function separateItems(a)
     
-    local ver = getGameVersion();
+    local ver = getLevelVersion();
     local map = {};
     local i   = 0;
     local j   = 0;

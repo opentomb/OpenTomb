@@ -138,8 +138,8 @@ enum Bars
 {
     BAR_HEALTH,     // TR 1-5
     BAR_AIR,        // TR 1-5, alternate state - gas (TR5)
-    BAR_SPRINT,     // TR 3-5
-    BAR_FREEZE,     // TR 3 only
+    BAR_STAMINA,    // TR 3-5
+    BAR_WARMTH,     // TR 3 only
     BAR_LOADING,
     BAR_LASTINDEX
 };
