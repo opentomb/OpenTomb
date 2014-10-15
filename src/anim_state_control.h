@@ -36,12 +36,14 @@ struct character_command_s;
 #define MOVE_STATIC_POS         0
 #define MOVE_ON_FLOOR           1
 #define MOVE_WADE               2
-#define MOVE_ON_WATER           3
-#define MOVE_UNDER_WATER        4
-#define MOVE_FREE_FALLING       5
-#define MOVE_CLIMBING           6
-#define MOVE_CEILING_CLMB       7
-#define MOVE_WALLS_CLMB         8
+#define MOVE_QUICKSAND          3
+#define MOVE_ON_WATER           4
+#define MOVE_UNDER_WATER        5
+#define MOVE_FREE_FALLING       6
+#define MOVE_CLIMBING           7
+#define MOVE_MONKEYSWING        8
+#define MOVE_WALLS_CLIMB        9
+#define MOVE_DOZY               10
 
 /*
  *  ====== LARA'S ANIMATIONS ======

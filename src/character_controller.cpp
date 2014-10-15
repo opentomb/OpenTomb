@@ -2197,11 +2197,11 @@ void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *c
             Character_Climbing(ent, cmd);
             break;
 
-        case MOVE_CEILING_CLMB:
+        case MOVE_MONKEYSWING:
             Character_MonkeyClimbing(ent, cmd);
             break;
             
-        case MOVE_WALLS_CLMB:
+        case MOVE_WALLS_CLIMB:
             Character_WallsClimbing(ent, cmd);
             break;
             
@@ -2229,8 +2229,8 @@ void Character_UpdateValues(struct entity_s *ent)
         case MOVE_ON_FLOOR:
         case MOVE_FREE_FALLING:
         case MOVE_CLIMBING:
-        case MOVE_CEILING_CLMB:
-        case MOVE_WALLS_CLMB:
+        case MOVE_MONKEYSWING:
+        case MOVE_WALLS_CLIMB:
             Character_SetAir(ent, CHARACTER_OPTION_AIR_MAX);
             if((ent->bf.last_state == TR_STATE_LARA_SPRINT) ||
                (ent->bf.last_state == TR_STATE_LARA_SPRINT_ROLL))

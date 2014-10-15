@@ -1409,6 +1409,31 @@ int lua_SetEntityActivationMask(lua_State * lua)
     return 0;
 }
 
+int lua_GetEntityMoveType(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+
+    lua_pushinteger(lua, ent->move_type);
+
+    return 1;
+}
+
 int lua_GetEntityState(lua_State * lua)
 {
     int id, top;
@@ -1433,6 +1458,32 @@ int lua_GetEntityState(lua_State * lua)
 
     return 1;
 }
+
+int lua_SetEntityState(lua_State * lua)
+{
+    int id, top;
+    entity_p ent;
+    top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+
+    ent->bf.next_state = lua_tointeger(lua, 2);
+
+    return 0;
+}
+
 
 int lua_SetEntityMeshswap(lua_State * lua)
 {
@@ -1460,31 +1511,6 @@ int lua_SetEntityMeshswap(lua_State * lua)
         ent_dest->bf.bone_tags[i].mesh  = model_src->mesh_tree[i].mesh;
         ent_dest->bf.bone_tags[i].mesh2 = model_src->mesh_tree[i].mesh2;
     }
-    return 0;
-}
-
-int lua_SetEntityState(lua_State * lua)
-{
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 2)
-    {
-        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", id);
-        return 0;
-    }
-
-    ent->bf.next_state = lua_tointeger(lua, 2);
-
     return 0;
 }
 
@@ -1681,16 +1707,16 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
     lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
-    lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
     lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
-
+    lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
+    
     lua_register(lua, "addItem", lua_AddItem);
     lua_register(lua, "removeItem", lua_RemoveItem);
     lua_register(lua, "createBaseItem", lua_CreateBaseItem);
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
-    
     lua_register(lua, "printItems", lua_PrintItems);
     lua_register(lua, "getItemsCount", lua_GetItemsCount);
+    
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
@@ -1714,6 +1740,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityActivationMask", lua_SetEntityActivationMask);
     lua_register(lua, "getEntityState", lua_GetEntityState);
     lua_register(lua, "setEntityState", lua_SetEntityState);
+    lua_register(lua, "getEntityMoveType", lua_GetEntityMoveType);
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
