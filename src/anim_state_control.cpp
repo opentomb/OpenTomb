@@ -67,7 +67,7 @@ void ent_set_free_falling(entity_p ent)
     ent->move_type = MOVE_FREE_FALLING;
 }
 
-void ent_set_smd_slide(entity_p ent)
+void ent_set_cmd_slide(entity_p ent)
 {
     ent->character->cmd.slide = 0x01;
 }
@@ -990,6 +990,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
             }
+            else if(curr_fc->water && (curr_fc->floor_point.m_floats[2] + ent->character->Height < curr_fc->water_level))
+            {
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_ONWATER_SWIM_BACK, 0);
+                ent->bf.next_state = TR_STATE_LARA_ONWATER_BACK;
+                ent->move_type = MOVE_ON_WATER;
+            }
             else if((i < CHARACTER_STEP_DOWN_BIG) || (i > CHARACTER_STEP_UP_BIG))
             {
                 ent->dir_flag = ENT_STAY;
@@ -1128,7 +1134,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->slide != 0 && cmd->jump == 1)
             {
                 ent->bf.next_state = TR_STATE_LARA_JUMP_BACK;
-                ent->onAnimChange = ent_set_smd_slide;
+                ent->onAnimChange = ent_set_cmd_slide;
             }
             break;
 
@@ -2029,6 +2035,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(curr_fc->floor_hit && curr_fc->water && (curr_fc->water_level - curr_fc->floor_point.m_floats[2] <= ent->character->max_step_up_height))
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_UNDERWATER_TO_WADE, 0); // go to the air
+                ent->bf.next_state = TR_STATE_LARA_STOP;
+                vec3_copy(ent->character->climb.point, curr_fc->floor_point.m_floats);  ///@FIXME: without it Lara are pulled high up, but this string was not been here.
                 ent->move_type = MOVE_ON_FLOOR;
             }
             else if(cmd->roll)

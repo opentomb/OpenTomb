@@ -353,7 +353,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
     btScalar t, *ctr = ent->character->collision_transform;
     
     Mat4_Copy(ctr, ent->transform);
-    if(ent->move_type == MOVE_CLIMBING)                                         ///@FIXME: this time is a little stick;
+    if(ent->move_type == MOVE_CLIMBING)                                         ///@FIXME: this time it is a little stick;
     {
         btScalar t1 = ent->character->ry - ent->bf.bb_max[1];
         t = ent->character->ry + ent->bf.bb_min[1];
