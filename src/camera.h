@@ -8,6 +8,9 @@ struct frustum_s;
 
 #include "bullet/LinearMath/btScalar.h"
 
+#define TR_CAM_MAX_SHAKE_DISTANCE   8192.0
+#define TR_CAM_DEFAULT_SHAKE_POWER  100.0
+
 typedef struct camera_s
 {
     btScalar                    pos[3];                                         // camera position
@@ -28,6 +31,9 @@ typedef struct camera_s
     btScalar                    h;
     btScalar                    w;
     
+    btScalar                    shake_value;
+    btScalar                    shake_time;
+    
     struct room_s               *current_room;
 }camera_t, *camera_p;
 
@@ -37,6 +43,7 @@ void Cam_SetFovAspect(camera_p cam, btScalar fov, btScalar aspect);
 void Cam_MoveAlong(camera_p cam, btScalar dist);
 void Cam_MoveStrafe(camera_p cam, btScalar dist);
 void Cam_MoveVertical(camera_p cam, btScalar dist);
+void Cam_Shake(camera_p cam, btScalar power, btScalar time);                    // make camera shake
 void Cam_DeltaRotation(camera_p cam, btScalar angles[3]);                       // rotate camera around current camera coordinate system
 void Cam_SetRotation(camera_p cam, btScalar angles[3]);                         // set orientation by angles
 void Cam_RecalcClipPlanes(camera_p cam);                                        // recalculation of camera frustum clipplanes 

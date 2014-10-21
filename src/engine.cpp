@@ -1623,6 +1623,26 @@ int lua_SetEntityMeshswap(lua_State * lua)
 }
 
 /*
+ * Camera functions
+ */
+ 
+int lua_CamShake(lua_State *lua)
+{
+    if(lua_gettop(lua) != 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (power), (time).");
+        return 0;
+    }
+
+    float power = lua_tonumber(lua, 1);
+    float time  = lua_tonumber(lua, 2);
+
+    Cam_Shake(renderer.cam, power, time);
+
+    return 1;
+}
+
+/*
  * General gameplay functions
  */
 
@@ -1808,6 +1828,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "playstream", lua_PlayStream);
     lua_register(lua, "playStream", lua_PlayStream);
+    
+    lua_register(lua, "camShake", lua_CamShake);
 
     lua_register(lua, "setlevel", lua_SetLevel);
     lua_register(lua, "setLevel", lua_SetLevel);

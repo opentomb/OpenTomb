@@ -53,6 +53,9 @@ void Cam_Init(camera_p cam)
     cam->up_dir[1] = 1.0;
     cam->up_dir[2] = 0.0;
     cam->up_dir[3] = 0.0;
+    
+    cam->shake_value    = 0.0;
+    cam->shake_time     = 0.0;
 
     cam->current_room = NULL;
 }
@@ -96,6 +99,12 @@ void Cam_MoveVertical(camera_p cam, btScalar dist)
     cam->pos[0] += cam->up_dir[0] * dist;
     cam->pos[1] += cam->up_dir[1] * dist;
     cam->pos[2] += cam->up_dir[2] * dist;
+}
+
+void Cam_Shake(camera_p cam, btScalar power, btScalar time)
+{
+    cam->shake_value = power;
+    cam->shake_time  = time;
 }
 
 void Cam_DeltaRotation(camera_p cam, btScalar angles[3])                        //angles = {OX, OY, OZ} 

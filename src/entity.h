@@ -171,4 +171,8 @@ void Entity_MoveForward(struct entity_s *ent, btScalar dist);
 void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);
 void Entity_MoveVertical(struct entity_s *ent, btScalar dist);
 
+// Helper functions
+
+btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2);
+
 #endif

@@ -5,6 +5,7 @@
 #include "mesh.h"
 #include "entity.h"
 #include "render.h"
+#include "camera.h"
 #include "world.h"
 #include "engine.h"
 #include "console.h"
@@ -467,6 +468,17 @@ int  Entity_GetWaterState(entity_p entity)
     }
 }
 
+btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2)
+{
+    float    vec1[3] = {0.0, 0.0, 0.0};
+    float    vec2[3] = {0.0, 0.0, 0.0};
+
+    vec3_copy(vec1, entity_1->transform + 12);
+    vec3_copy(vec2, entity_2->transform + 12);
+
+    return sqrt(vec3_dist_sq(vec1, vec2));
+}
+
 void Entity_DoAnimCommands(entity_p entity, int changing)
 {
     if((engine_world.anim_commands_count == 0) ||
@@ -547,6 +559,16 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 {
                     switch(*++pointer & 0x3FFF)
                     {
+                        case TR_EFFECT_SHAKESCREEN:
+                            if(engine_world.Character)
+                            {
+                                btScalar dist = Entity_FindDistance(engine_world.Character, entity);
+                                dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
+                                if(dist > 0)
+                                    Cam_Shake(renderer.cam, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
+                            }
+                            break;
+                            
                         case TR_EFFECT_CHANGEDIRECTION:
                             break;
 

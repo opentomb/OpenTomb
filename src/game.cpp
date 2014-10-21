@@ -422,9 +422,27 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     bt_engine_ClosestConvexResultCallback *cb;
 
     vec3_copy(old_pos.m_floats, cam->pos);
-    cam_pos.m_floats[0] = ent->transform[12] - 32.0 * ent->transform[4 + 0];
-    cam_pos.m_floats[1] = ent->transform[13] - 32.0 * ent->transform[4 + 1];
-    cam_pos.m_floats[2] = ent->transform[14] + 0.5 * (ent->bf.bb_max[2] /*+ ent->bf.bb_min[2]*/);
+    
+    cam_pos.m_floats[0] = (ent->transform[12] - 32.0 *  ent->transform[4 + 0]);
+    cam_pos.m_floats[1] = (ent->transform[13] - 32.0 *  ent->transform[4 + 1]);
+    cam_pos.m_floats[2] = (ent->transform[14] + 0.5  * (ent->bf.bb_max[2]))   ;
+    
+    float shake_value   = renderer.cam->shake_value;
+    float shake_time    = renderer.cam->shake_time;
+        
+    if((shake_time > 0.0) && (shake_value > 0.0))
+    {
+        float shake_value_x = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
+        float shake_value_y = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
+        float shake_value_z = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
+        
+        cam_pos.m_floats[0] += shake_value_x;
+        cam_pos.m_floats[1] += shake_value_y;
+        cam_pos.m_floats[2] += shake_value_z;
+        
+        renderer.cam->shake_time -= engine_frame_time;
+        renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time);
+    }
 
     cameraFrom.setIdentity();
     cameraFrom.setOrigin(cam_pos);
