@@ -98,7 +98,6 @@ void Sys_Warn(const char *warning, ...)
     Sys_DebugLog(LOG_FILENAME, "Warning: %s", string);
 }
 
-
 void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
     va_list argptr; 
@@ -143,10 +142,9 @@ void Sys_Strtime(char *buf, size_t buf_size)
 void Sys_StrRunSec(char *buf, size_t buf_size)
 {
     struct              timeval tp;
-    struct              timezone tzp; 
     static long int     secbase = 0; 
     
-    gettimeofday(&tp, &tzp);  
+    gettimeofday(&tp, NULL);  
     
     if(!secbase)
     {
@@ -159,10 +157,9 @@ void Sys_StrRunSec(char *buf, size_t buf_size)
 btScalar Sys_FloatTime (void)
 {
     struct              timeval tp;
-    struct              timezone tzp; 
     static long int     secbase = 0; 
     
-    gettimeofday(&tp, &tzp);  
+    gettimeofday(&tp, NULL);
 
     if (!secbase)
     {
@@ -170,6 +167,6 @@ btScalar Sys_FloatTime (void)
         return tp.tv_usec * 1.0e-6;
     }
 
-    return (tp.tv_sec - secbase) + tp.tv_usec * 1.0e-6;
+    return (btScalar)(tp.tv_sec - secbase) + (btScalar)tp.tv_usec * 1.0e-6;
 }
 

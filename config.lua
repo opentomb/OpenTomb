@@ -107,8 +107,8 @@ cvars.free_look_speed = 2500;
 
 
 -- AUTOEXEC LINES
-setgame(1.5);
-setlevel(1);
+setgame(4);
+setlevel(9);        -- sacred lake
 
 gravity(0, 0, -5700.0);
 mlook(1);

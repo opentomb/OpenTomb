@@ -593,7 +593,7 @@ void Engine_Display()
         Gui_SwitchGLMode(0);
         
         Render_DrawList_DebugLines();
-        //ShowDebugInfo();
+        ShowDebugInfo();
         SDL_GL_SwapWindow(sdl_window);
     }
 }
