@@ -3,7 +3,6 @@
 #include <SDL2/SDL_image.h>
 
 #include "gl_util.h"
-#include "ftgl/FTGLBitmapFont.h"
 #include "ftgl/FTGLTextureFont.h"
 
 #include "gui.h"
