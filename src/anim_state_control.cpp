@@ -2131,16 +2131,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->bf.next_state = TR_STATE_LARA_WATER_DEATH;
             }
-            else if(cmd->jump == 1)
-            {
-                t = pos[2];
-                Character_GetHeightInfo(pos, &next_fc);
-                Character_FixPenetrations(ent, cmd, NULL);
-                pos[2] = t;
-                ent->bf.next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
-                ent->onAnimChange = ent_set_underwater;                         // dive
-            }
-            else if(cmd->move[0] == 1)
+            else if((cmd->move[0] == 1) || (cmd->jump == 1))                    // dive works correct only after TR_STATE_LARA_ONWATER_FORWARD
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 ent->bf.next_state = TR_STATE_LARA_ONWATER_FORWARD;

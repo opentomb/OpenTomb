@@ -363,17 +363,7 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
     }
     
     t = (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / (ent->bf.bb_max[1] - ent->bf.bb_min[1]);
-    if((t >= 1.6) || ((ent->move_type == MOVE_ON_FLOOR || ent->move_type == MOVE_CLIMBING) && (t > 1.0)))
-    {
-        //Z_CAPSULE
-        tv.m_floats[0] = ent->character->rx / CHARACTER_BASE_RADIUS;
-        tv.m_floats[1] = ent->character->ry / CHARACTER_BASE_RADIUS;
-        tv.m_floats[2] = (ent->bf.bb_max[2] - ent->bf.bb_min[2] - z_factor) / CHARACTER_BASE_HEIGHT;
-        ent->character->shapeZ->setLocalScaling(tv);
-        ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
-        ctr[12+2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2] - z_factor) + z_factor;
-    }
-    else if((t <= 1.0 / 1.6))// || (ent->move_type != MOVE_CLIMBING))
+    if((t < 1.0) && (ent->move_type != MOVE_ON_FLOOR) && (ent->move_type != MOVE_CLIMBING))
     {
         //Y_CAPSULE
         tv.m_floats[0] = ent->character->ry / CHARACTER_BASE_RADIUS;
@@ -385,14 +375,13 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
     }
     else
     {
-        //tv.m_floats[0] = 0.5 * (ent->bf.bb_max[0] - ent->bf.bb_min[0]) / CHARACTER_BASE_RADIUS;
-        //tv.m_floats[1] = 0.5 * (ent->bf.bb_max[1] - ent->bf.bb_min[1]) / CHARACTER_BASE_RADIUS;
+        //Z_CAPSULE
         tv.m_floats[0] = ent->character->rx / CHARACTER_BASE_RADIUS;
         tv.m_floats[1] = ent->character->ry / CHARACTER_BASE_RADIUS;
-        tv.m_floats[2] = 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / CHARACTER_BASE_HEIGHT;
+        tv.m_floats[2] = (ent->bf.bb_max[2] - ent->bf.bb_min[2] - z_factor) / CHARACTER_BASE_HEIGHT;
         ent->character->shapeZ->setLocalScaling(tv);
         ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
-        ctr[12+2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
+        ctr[12+2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2] - z_factor) + z_factor;
     }
 }
 
