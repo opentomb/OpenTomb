@@ -594,7 +594,7 @@ void Render_Entity(struct entity_s *entity)
         ambient_component[2] = room->ambient_lighting[2];
         ambient_component[3] = 1.0f;
 
-        if(room->flags & 0x01)
+        if(room->flags & TR_ROOM_FLAG_WATER)
         {
             Render_CalculateWaterTint(ambient_component, 0);
         }
@@ -624,7 +624,7 @@ void Render_Entity(struct entity_s *entity)
                 directional_component[3] = current_light->colour[3];
 
 
-                if(room->flags & 0x01)
+                if(room->flags & TR_ROOM_FLAG_WATER)
                 {
                     Render_CalculateWaterTint(directional_component, 0);
                 }
@@ -695,7 +695,7 @@ void Render_StaticMesh(struct static_mesh_s *static_mesh, struct room_s *room)
     tint[2] = static_mesh->tint[2];
     tint[3] = static_mesh->tint[3];
 
-    if(room->flags & 0x01)
+    if(room->flags & TR_ROOM_FLAG_WATER)
     {
         Render_CalculateWaterTint(tint, 0);
     }
@@ -736,7 +736,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
         glPushMatrix();
         glMultMatrixbt(room->transform);
 
-        if(room->flags & 0x01)
+        if(room->flags & TR_ROOM_FLAG_WATER)
         {
             btScalar tint[4];
 
@@ -790,7 +790,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
         {
             glDisableClientState(GL_COLOR_ARRAY);
 
-            if(room->flags & 0x01)
+            if(room->flags & TR_ROOM_FLAG_WATER)
             {
                 btScalar tint[4];
                 tint[0] = room->static_mesh[i].tint[0];

@@ -2066,7 +2066,7 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
 
     if(cam->current_room)
     {
-        if(cam->current_room->flags & 0x01)
+        if(cam->current_room->flags & TR_ROOM_FLAG_WATER)
         {
             fxManager.current_room_type = TR_AUDIO_FX_WATER;
         }
@@ -2075,9 +2075,9 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
             fxManager.current_room_type = cam->current_room->reverb_info;
         }
 
-        if(fxManager.water_state != (cam->current_room->flags & 0x01))
+        if(fxManager.water_state != (cam->current_room->flags & TR_ROOM_FLAG_WATER))
         {
-            fxManager.water_state = cam->current_room->flags & 0x01;
+            fxManager.water_state = cam->current_room->flags & TR_ROOM_FLAG_WATER;
 
             if(fxManager.water_state)
             {

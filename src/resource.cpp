@@ -41,8 +41,11 @@ lua_State *ent_ID_override;
 lua_State *level_script;
 
 
-
-/*  OY                            OZ
+/*
+ * BASIC SECTOR COLLISION LAYOUT
+ * 
+ *
+ *  OY                            OZ
  *  ^   0 ___________ 1            ^  1  ___________  2
  *  |    |           |             |    |           |
  *  |    |           |             |    |   tween   |
@@ -52,7 +55,8 @@ lua_State *level_script;
  *  |-------------------> OX       |--------------------> OXY    
  */
 
-void SetTweenFloorConfig(struct sector_tween_s *tween)
+
+void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 {
     if((tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2]) && 
        (tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2]))
@@ -73,7 +77,7 @@ void SetTweenFloorConfig(struct sector_tween_s *tween)
     }
 }
 
-void SetTweenCeilingConfig(struct sector_tween_s *tween)
+void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
 {
     if((tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2]) && 
        (tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2]))
@@ -94,7 +98,7 @@ void SetTweenCeilingConfig(struct sector_tween_s *tween)
     }
 }
 
-int IsWall(room_sector_p ws, room_sector_p ns)
+int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 {
     if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
     {
@@ -114,7 +118,7 @@ int IsWall(room_sector_p ws, room_sector_p ns)
     return 0;
 }
 
-room_sector_p CheckPortalPointer(room_sector_p rs)
+room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs)
 {
     if((rs != NULL) && (rs->portal_to_room >= 0))
     {
@@ -127,7 +131,7 @@ room_sector_p CheckPortalPointer(room_sector_p rs)
     return rs;
 }
 
-void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
+void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 {
     for(int h = 0; h < room->sectors_y-1; h++)
     {
@@ -184,22 +188,22 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
             {
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))                                                           // Init X-plane tween [ | ]
                 {
-                    if(IsWall(next_heightmap, current_heightmap))
+                    if(TR_Sector_IsWall(next_heightmap, current_heightmap))
                     {
                         room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
                         room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                        SetTweenFloorConfig(room_tween);
+                        TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                     }
-                    else if(IsWall(current_heightmap, next_heightmap))
+                    else if(TR_Sector_IsWall(current_heightmap, next_heightmap))
                     {
                         room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                         room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
-                        SetTweenFloorConfig(room_tween);
+                        TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                     }
                     else
@@ -207,8 +211,8 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         /************************** SECTION WITH DROPS CALCULATIONS **********************/
                         if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
                         {
-                            current_heightmap = CheckPortalPointer(current_heightmap);
-                            next_heightmap = CheckPortalPointer(next_heightmap);
+                            current_heightmap = TR_Sector_CheckPortalPointer(current_heightmap);
+                            next_heightmap = TR_Sector_CheckPortalPointer(next_heightmap);
                             if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -217,7 +221,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                                     room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
                                     room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                                    SetTweenFloorConfig(room_tween);
+                                    TR_Sector_SetTweenFloorConfig(room_tween);
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
@@ -225,7 +229,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                                     room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
                                     room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                                    SetTweenCeilingConfig(room_tween);
+                                    TR_Sector_SetTweenCeilingConfig(room_tween);
                                 }
                             }
                         }
@@ -239,7 +243,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = CheckPortalPointer(next_heightmap);
+                        next_heightmap = TR_Sector_CheckPortalPointer(next_heightmap);
                         if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
                         {
                             valid = 1;
@@ -257,7 +261,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = CheckPortalPointer(current_heightmap);
+                        current_heightmap = TR_Sector_CheckPortalPointer(current_heightmap);
                         if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
                         {
                             valid = 1;
@@ -279,13 +283,13 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                        SetTweenFloorConfig(room_tween);
+                        TR_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
             }
             
             /*****************************************************************************************************
-             ********************************   CENTRE  OF  THE  ALGORITM   **************************************
+             ********************************   CENTRE  OF  THE  ALGORITHM   *************************************
              *****************************************************************************************************/
             
             room_tween++;
@@ -296,22 +300,22 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                 {
                     // Init Y-plane tween  [ - ]
-                    if(IsWall(next_heightmap, current_heightmap))
+                    if(TR_Sector_IsWall(next_heightmap, current_heightmap))
                     {
                         room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
                         room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
-                        SetTweenFloorConfig(room_tween);
+                        TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                     }
-                    else if(IsWall(current_heightmap, next_heightmap))
+                    else if(TR_Sector_IsWall(current_heightmap, next_heightmap))
                     {
                         room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
                         room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                        SetTweenFloorConfig(room_tween);
+                        TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                     }
                     else
@@ -319,8 +323,8 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         /************************** BIG SECTION WITH DROPS CALCULATIONS **********************/
                         if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
                         {
-                            current_heightmap = CheckPortalPointer(current_heightmap);
-                            next_heightmap = CheckPortalPointer(next_heightmap);
+                            current_heightmap = TR_Sector_CheckPortalPointer(current_heightmap);
+                            next_heightmap = TR_Sector_CheckPortalPointer(next_heightmap);
                             if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -329,7 +333,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
                                     room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                                     room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
-                                    SetTweenFloorConfig(room_tween);
+                                    TR_Sector_SetTweenFloorConfig(room_tween);
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
@@ -337,7 +341,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
                                     room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                                     room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
-                                    SetTweenCeilingConfig(room_tween);
+                                    TR_Sector_SetTweenCeilingConfig(room_tween);
                                 }
                             }
                         }
@@ -349,7 +353,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = CheckPortalPointer(next_heightmap);
+                        next_heightmap = TR_Sector_CheckPortalPointer(next_heightmap);
                         if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
                         {
                             valid = 1;
@@ -367,7 +371,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = CheckPortalPointer(current_heightmap);
+                        current_heightmap = TR_Sector_CheckPortalPointer(current_heightmap);
                         if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
                         {
                             valid = 1;
@@ -389,7 +393,7 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
-                        SetTweenFloorConfig(room_tween);
+                        TR_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
             }
@@ -397,14 +401,14 @@ void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
     }    ///END for
 }
 
-int BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
+int TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
 {
     int m1 = (v1 > v2)?(v1):(v2);
     int m2 = (v3 > v4)?(v3):(v4);
     return (m1 > m2)?(m1):(m2);
 }
 
-int TranslateFloorData(room_sector_p sector, struct world_s *world)
+int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
 {
     uint16_t function, function_value, sub_function, trigger_function, operands, cont_bit, end_bit;
     
@@ -754,7 +758,7 @@ int TranslateFloorData(room_sector_p sector, struct world_s *world)
 
                     entry++;
                 
-                    float overall_adjustment = (float)BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13) * TR_METERING_STEP;
+                    float overall_adjustment = (float)TR_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13) * TR_METERING_STEP;
                  
                     if( (function == TR_FD_FUNC_FLOORTRIANGLE_NW)           ||
                         (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
@@ -941,7 +945,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
 }
 
 
-void Gen_EntityRigidBody(entity_p ent)
+void BT_GenEntityRigidBody(entity_p ent)
 {
     int i;
     btScalar tr[16];
@@ -958,7 +962,7 @@ void Gen_EntityRigidBody(entity_p ent)
     for(i=0;i<ent->bf.model->mesh_count;i++)
     {
         ent->bt_body[i] = NULL;
-        cshape = MeshToBTCS(ent->bf.model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
+        cshape = BT_CSfromMesh(ent->bf.model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
         if(cshape)
         {
             Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -973,7 +977,7 @@ void Gen_EntityRigidBody(entity_p ent)
 }
 
 
-void RoomCalculateSectorData(struct world_s *world, class VT_Level *tr, long int room_index)
+void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index)
 {
     int i, j;
     room_sector_p sector;
@@ -1320,10 +1324,42 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     
     for(i=0;i<world->room_count;i++)
     {
-        RoomCalculateSectorData(world, tr, i);
+        TR_Sector_Calculate(world, tr, i);
     }
 
     r = world->rooms;
+
+#if TR_MESH_ROOM_COLLISION
+
+
+    for(i=0;i<world->room_count;i++,r++)
+    {
+        r->bt_body = NULL;
+        
+        if(r->mesh)
+        {
+            cshape = BT_CSfromMesh(r->mesh, true, true, COLLISION_TRIMESH);
+            
+            if(cshape)
+            {
+                startTransform.setFromOpenGLMatrix(r->transform);
+                btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+                r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+                bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+                r->bt_body->setUserPointer(room->self);
+                r->self->collide_flag = COLLISION_TRIMESH;                   // meshtree
+                if(!r->active)
+                {
+                    Room_Disable(r);
+                }
+            }
+            
+            SortPolygonsInMesh(r->mesh);
+        }
+    }
+    
+#else
+
     for(i=0;i<world->room_count;i++,r++)
     {
         // Inbetween polygons array is later filled by loop which scans adjacent
@@ -1345,10 +1381,15 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             room_tween[j].ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
             room_tween[j].floor_tween_type   = TR_SECTOR_TWEEN_TYPE_NONE;
         }
+        
+        // Most difficult task with converting floordata collision to trimesh collision is
+        // building inbetween polygons which will block out gaps between sector heights.   
 
-        GenerateTweens(r, room_tween);
+        TR_Sector_GenTweens(r, room_tween);
 
-        btCollisionShape *cshape = HeightmapToBTCS(r->sectors, num_heightmaps, room_tween, num_tweens, true, true);
+        // Final step is sending actual sectors to Bullet collision model. We do it here.
+
+        btCollisionShape *cshape = BT_CSfromHeightmap(r->sectors, num_heightmaps, room_tween, num_tweens, true, true);
 
         if(cshape)
         {
@@ -1366,8 +1407,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             }
         }
 
-        // Final step is sending actual sectors to Bullet collision model. We do it here.
-
         delete[] room_tween;
         
         if(r->mesh)
@@ -1376,37 +1415,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
     
-    /*
-     * sector data parsing
-     */
+#endif
+
+    // Generate links to the near rooms.
     
-    for(i=0;i<world->room_count;i++,room++)
-    {
-        //room->bt_body = NULL;
-        if(room->mesh)
-        {
-            /*
-            cshape = MeshToBTCS(room, true, true, COLLISION_TRIMESH);
-            
-            if(cshape)
-            {
-                startTransform.setFromOpenGLMatrix(room->transform);
-                btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-                room->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                bt_engine_dynamicsWorld->addRigidBody(room->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-                room->bt_body->setUserPointer(room->self);
-                room->self->collide_flag = COLLISION_TRIMESH;                   // meshtree
-                if(!room->active)
-                {
-                    Room_Disable(room);
-                }
-            }
-            
-            SortPolygonsInMesh(room->mesh);
-            */
-        }
-    }
-    // generate links to the near rooms
     r = world->rooms;
     for(i=0;i<world->room_count;i++,r++)
     {
@@ -1418,14 +1430,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     /*
      * build all skeletal models
      */
-    GenSkeletalModels(world, tr);
+    TR_GenSkeletalModels(world, tr);
 
     Gui_DrawLoadScreen(850);
 
     /*
      * build all moveables
      */
-    GenEntitys(world, tr);
+    TR_GenEntities(world, tr);
 
     r = world->rooms;
     if(tr->game_version < TR_V)
@@ -1446,6 +1458,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     Audio_Init(TR_AUDIO_MAX_CHANNELS, tr);
 
     Gui_DrawLoadScreen(950);
+    
+    // Find and set skybox.
 
     switch(tr->game_version)
     {
@@ -1471,6 +1485,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             world->sky_box = NULL;
             break;
     }
+    
+    // Load entity collision flags and ID overrides from script.
 
     if(collide_flags_conf)
     {
@@ -1487,6 +1503,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_close(level_script);
         level_script = NULL;
     }
+
+    // Generate VBOs for meshes.
 
     for(i=0;i<world->meshs_count;i++)
     {
@@ -1512,6 +1530,9 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
     buf[0] = 0;
+    
+    // Process level script loading.
+    ///@FIXME: Re-assign script paths via script itself!
 
     strcat(buf, "scripts/level/");
     if(tr->game_version < TR_II)
@@ -1593,7 +1614,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->self->object_type = OBJECT_ROOM_BASE;
 
     TR_GenRoomMesh(world, room_index, room, tr);
-    /*if(room->mesh && room->flags & 0x01)
+    
+    /*if(room->mesh && room->flags & TR_ROOM_FLAG_WATER)
     {
         Mesh_MullColors(room->mesh, vater_color);
     }*/
@@ -1696,7 +1718,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         if(r_static->self->collide_flag != 0x0000)
         {
-            cshape = MeshToBTCS(r_static->mesh, true, true, r_static->self->collide_flag);
+            cshape = BT_CSfromMesh(r_static->mesh, true, true, r_static->self->collide_flag);
             if(cshape)
             {
                 startTransform.setFromOpenGLMatrix(r_static->transform);
@@ -1761,6 +1783,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         sector->owner_room = room;
         sector->box_index  = tr_room->sector_list[i].box_index;
+        
         if(sector->box_index == 65535)
         {
             sector->box_index = -1;
@@ -1769,8 +1792,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         sector->floor    = -256 * (int)tr_room->sector_list[i].floor;
         sector->ceiling  = -256 * (int)tr_room->sector_list[i].ceiling;
         sector->fd_index = tr_room->sector_list[i].fd_index;        ///@FIXME: GET RID OF THIS NONSENSE SOME DAY!
-                  
-        Sys_DebugLog("grid.txt", "SECTOR %d / %d : FH: %d", sector->index_x, sector->index_y, sector->floor);
                
         // BUILDING CEILING HEIGHTMAP.
         
@@ -1795,11 +1816,16 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
         }
         
+        // Reset some sector parameters to avoid garbaged memory issues.
+        
+        room->sectors[i].portal_to_room = -1;
+        room->sectors[i].ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
+        room->sectors[i].floor_diagonal_type   = TR_SECTOR_DIAGONAL_TYPE_NONE;
+        
         // Now, we define heightmap cells position and draft (flat) height.
         // Draft height is derived from sector's floor and ceiling values, which are
         // copied into heightmap cells Y coordinates. As result, we receive flat
         // heightmap cell, which will be operated later with floordata.
-        room->sectors[i].portal_to_room = -1;
         
         room->sectors[i].ceiling_corners[0].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
         room->sectors[i].ceiling_corners[0].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
@@ -1857,11 +1883,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         
         // (Actually, floordata should never be copied into final map, when this is finished.)
             
-        TranslateFloorData(sector, world);
+        TR_Sector_TranslateFloorData(sector, world);
     }
-    
-    // Most difficult task with converting floordata collision to trimesh collision is
-    // building intermediate polygons which will block out gaps between sector heights.    
     
     /*
      *  load lights
@@ -2880,7 +2903,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
 }
 
 
-long int GetOriginalAnimationFrameOffset(long int offset, long int anim, class VT_Level *tr)
+long int TR_GetOriginalAnimationFrameOffset(long int offset, long int anim, class VT_Level *tr)
 {
     tr_animation_t *tr_animation;
 
@@ -2909,7 +2932,7 @@ long int GetOriginalAnimationFrameOffset(long int offset, long int anim, class V
 }
 
 
-void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_model_s *model, class VT_Level *tr)
+void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_model_s *model, class VT_Level *tr)
 {
     int i, j, k, l, l_start;
     tr_moveable_t *tr_moveable;
@@ -3001,7 +3024,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         return;
     }
     //Sys_DebugLog(LOG_FILENAME, "model = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
-    model->animation_count = GetNumAnimationsForMoveable(tr, model_num);
+    model->animation_count = TR_GetNumAnimationsForMoveable(tr, model_num);
     if(model->animation_count <= 0)
     {
         /*
@@ -3048,8 +3071,8 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
         anim->state_id = tr_animation->state_id;
         anim->unknown = tr_animation->unknown;
         anim->unknown2 = tr_animation->unknown2;
-        anim->frames_count = GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
-        //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, GetNumFramesForAnimation(tr, tr_moveable->animation_index));
+        anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
+        //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
         // Parse AnimCommands
         // Max. amount of AnimCommands is 255, larger numbers are considered as 0.
@@ -3114,7 +3137,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
             bone_frame->v_Horizontal = 0.0;
             bone_frame->v_Vertical = 0.0;
             bone_frame->command = 0x00;
-            GetBFrameBB_Pos(tr, frame_offset, bone_frame);
+            TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset < 0 || frame_offset >= tr->frame_data_size)
             {
@@ -3313,7 +3336,7 @@ void GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_m
     }
 }
 
-int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
+int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
 {
     int ret;
     tr_moveable_t *curr_moveable, *next_moveable;
@@ -3361,7 +3384,7 @@ int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
 /*
  * It returns real animation count
  */
-int GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
+int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
 {
     tr_animation_t *curr_anim, *next_anim;
     int ret;
@@ -3386,7 +3409,7 @@ int GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
     return ret;
 }
 
-void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame)
+void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame)
 {
     unsigned short int *frame;
 
@@ -3429,7 +3452,7 @@ void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_
     }
 }
 
-void GenSkeletalModels(struct world_s *world, class VT_Level *tr)
+void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
 {
     uint32_t i, m_offset;
     skeletal_model_p smodel;
@@ -3445,13 +3468,13 @@ void GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         smodel->mesh_count = tr_moveable->num_meshes;
         m_offset = tr->mesh_indices[tr_moveable->starting_mesh];
         smodel->mesh_offset = world->meshes + m_offset;                         // base mesh offset
-        GenSkeletalModel(world, i, smodel, tr);
+        TR_GenSkeletalModel(world, i, smodel, tr);
         SkeletonModel_FillTransparancy(smodel);
     }
 }
 
 
-void GenEntitys(struct world_s *world, class VT_Level *tr)
+void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 {
     int i, j, top;
 
@@ -3638,7 +3661,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
                 entity->bf.bone_tags[j].mesh2 = entity->bf.model->mesh_tree[j].mesh2;
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
-            Gen_EntityRigidBody(entity);
+            BT_GenEntityRigidBody(entity);
             Character_Create(entity, 128.0, 60.0, 780.0);
             entity->character->state_func = State_Control_Lara;
             continue;
@@ -3657,7 +3680,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
             lua_pushinteger(collide_flags_conf, tr_item->object_id);                            // add to stack second argument
             lua_pcall(collide_flags_conf, 2, 2, 0);                                             // call that function
             entity->self->collide_flag = 0xff & lua_tointeger(collide_flags_conf, -2);          // get returned value
-            entity->bf.model->hide = lua_tointeger(collide_flags_conf, -1);                        // get returned value
+            entity->bf.model->hide = lua_tointeger(collide_flags_conf, -1);                     // get returned value
             lua_settop(collide_flags_conf, top);                                                // restore LUA stack
         }
 
@@ -3679,7 +3702,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
 
         if(entity->self->collide_flag != 0x0000)
         {
-            Gen_EntityRigidBody(entity);
+            BT_GenEntityRigidBody(entity);
         }
 
         BV_InitBox(entity->bv, NULL, NULL);
@@ -3690,7 +3713,7 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
 }
 
 
-btCollisionShape *HeightmapToBTCS(struct room_sector_s *heightmap, int heightmap_size, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
+btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, int heightmap_size, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
     btTriangleMesh *trimesh = new btTriangleMesh;
@@ -3703,7 +3726,16 @@ btCollisionShape *HeightmapToBTCS(struct room_sector_s *heightmap, int heightmap
         {   
             if( (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
                 (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
-            {
+            {                
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[3],
+                                         heightmap[i].floor_corners[2],
+                                         heightmap[i].floor_corners[0],
+                                         true);
+                    cnt++;
+                }
+                
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
                     trimesh->addTriangle(heightmap[i].floor_corners[2],
@@ -3712,32 +3744,23 @@ btCollisionShape *HeightmapToBTCS(struct room_sector_s *heightmap, int heightmap
                                          true);
                     cnt++;
                 }
-                
+            }
+            else
+            {                
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
                     trimesh->addTriangle(heightmap[i].floor_corners[3],
                                          heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[0],
+                                         heightmap[i].floor_corners[1],
                                          true);
                     cnt++;
                 }
-            }
-            else
-            {
+                
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
                     trimesh->addTriangle(heightmap[i].floor_corners[3],
                                          heightmap[i].floor_corners[1],
                                          heightmap[i].floor_corners[0],
-                                         true);
-                    cnt++;
-                }
-                
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[1],
                                          true);
                     cnt++;
                 }
@@ -3749,12 +3772,12 @@ btCollisionShape *HeightmapToBTCS(struct room_sector_s *heightmap, int heightmap
         {   
             if( (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
                 (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
-            {
+            {                
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
                     trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[1],
                                          heightmap[i].ceiling_corners[2],
+                                         heightmap[i].ceiling_corners[3],
                                          true);
                     cnt++;
                 }
@@ -3762,8 +3785,8 @@ btCollisionShape *HeightmapToBTCS(struct room_sector_s *heightmap, int heightmap
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
                     trimesh->addTriangle(heightmap[i].ceiling_corners[0],
+                                         heightmap[i].ceiling_corners[1],
                                          heightmap[i].ceiling_corners[2],
-                                         heightmap[i].ceiling_corners[3],
                                          true);
                     cnt++;
                 }
@@ -3859,13 +3882,13 @@ btCollisionShape *HeightmapToBTCS(struct room_sector_s *heightmap, int heightmap
         delete trimesh;
         return NULL;
     }
-    
+
     ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
     return ret;
 }
 
 
-btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag)
+btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag)
 {
     uint32_t i, j, cnt = 0;
     polygon_p p;

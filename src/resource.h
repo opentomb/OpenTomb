@@ -2,35 +2,61 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
+// Here you can specify the way OpenTomb processes room collision - 
+// in a classic TR way (floor data collision) or in a modern way
+// (derived from actual room mesh).
+
+#define TR_MESH_ROOM_COLLISION 0
+
+// Metering step and sector size are basic Tomb Raider world metrics.
+// Use these defines at all times, when you're referencing classic TR
+// dimensions and terrain manipulations.
+
 #define TR_METERING_STEP        (256.0)
 #define TR_METERING_SECTORSIZE  (1024.0)
 
-#define TR_PENETRATION_CONFIG_SOLID             0
-#define TR_PENETRATION_CONFIG_DOOR_VERTICAL_A   1
-#define TR_PENETRATION_CONFIG_DOOR_VERTICAL_B   2
-#define TR_PENETRATION_CONFIG_WALL              3
-#define TR_PENETRATION_CONFIG_GHOST             4
+// Penetration configuration specifies collision type for floor and ceiling
+// sectors (squares).
+
+#define TR_PENETRATION_CONFIG_SOLID             0   // Ordinary sector.
+#define TR_PENETRATION_CONFIG_DOOR_VERTICAL_A   1   // TR3-5 triangulated door.
+#define TR_PENETRATION_CONFIG_DOOR_VERTICAL_B   2   // TR3-5 triangulated door.
+#define TR_PENETRATION_CONFIG_WALL              3   // Wall (0x81 == 32512)
+#define TR_PENETRATION_CONFIG_GHOST             4   // No collision.
+
+// There are two types of diagonal splits - we call them north-east (NE) and
+// north-west (NW). In case there is no diagonal in sector (TR1-2 classic sector),
+// then NONE type is used.
 
 #define TR_SECTOR_DIAGONAL_TYPE_NONE            0
 #define TR_SECTOR_DIAGONAL_TYPE_NE              1
 #define TR_SECTOR_DIAGONAL_TYPE_NW              2
 
-#define TR_SECTOR_TWEEN_TYPE_NONE               0
-#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1
-#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2
-#define TR_SECTOR_TWEEN_TYPE_QUAD               3
+// Tween is a short word for "inbeTWEEN vertical polygon", which is needed to fill
+// the gap between two sectors with different heights. If adjacent sector heights are
+// similar, it means that tween is degenerated (doesn't exist physically) - in that
+// case we use NONE type. If only one of two heights' pairs is similar, then tween is
+// either right or left pointed triangle (where "left" or "right" is derived by viewing
+// triangle from front side). If none of the heights are similar, we need quad tween.
 
+#define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
+#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
+#define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
+#define TR_SECTOR_TWEEN_TYPE_QUAD               3 
+
+///@FIXME: Move skybox item IDs to script!
 
 #define TR_ITEM_SKYBOX_TR2 254
 #define TR_ITEM_SKYBOX_TR3 355
 #define TR_ITEM_SKYBOX_TR4 459
 #define TR_ITEM_SKYBOX_TR5 454
 
+///@FIXME: Move Lara skin item IDs to script!
+
 #define TR_ITEM_LARA_SKIN_ALTERNATE_TR1    5
 #define TR_ITEM_LARA_SKIN_TR3            315
 #define TR_ITEM_LARA_SKIN_TR45             8
 #define TR_ITEM_LARA_SKIN_JOINTS_TR45      9
-
 
 #define LOG_ANIM_DISPATCHES 0
 
@@ -42,46 +68,57 @@ struct room_sector_s;
 struct sector_tween_s;
 struct bordered_texture_atlas_s;
 
+// Functions generating native OpenTomb structs from legacy TR structs.
+
 void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr);
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr);
-void GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class VT_Level *tr);
-void GenSkeletalModels(struct world_s *world, class VT_Level *tr);
-void GenEntitys(struct world_s *world, class VT_Level *tr);
+void TR_GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class VT_Level *tr);
+void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr);
+void TR_GenEntities(struct world_s *world, class VT_Level *tr);
 void TR_GenSprites(struct world_s *world, class VT_Level *tr);
 void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr);
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr);
 void TR_GenWorld(struct world_s *world, class VT_Level *tr);
 
-//----
-
-btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag);
-btCollisionShape *HeightmapToBTCS(struct room_sector_s *heightmap, int heightmap_size, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
-
-void Gen_EntityRigidBody(entity_p ent);
+// Helper functions to convert legacy TR structs to native OpenTomb structs.
 
 void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v);
 void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c);
 
+// Functions for getting various parameters from legacy TR structs.
+
+void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame);
+int      TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
+int      TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
+long int TR_GetOriginalAnimationFrameOffset(long int offset, long int anim, class VT_Level *tr);
+
+// Bullet entity rigid body generating.
+
+void BT_GenEntityRigidBody(entity_p ent);
+
+// Bullet collision shape (BT_CS) generating functions.
+
+btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag);
+btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, int heightmap_size, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
+
+// Main function which is used to translate legacy TR floor data
+// to native OpenTomb structs.
+
+int  TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world);
+
+// All functions related to generating heightmap from sector floor data.
+
+void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
+void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index);
+int  TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
+void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
+void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
+int  TR_Sector_IsWall(room_sector_p ws, room_sector_p ns);
+room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs);
+
+// Miscellaneous functions.
+
 void SortPolygonsInMesh(struct base_mesh_s *mesh);
-
-void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame);
-int  GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
-int  GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
-void RoomCalculateSectorData(struct world_s *world, class VT_Level *tr, long int room_index);
-
-
-void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween);
-
-//-----
-
-bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world);
-int  ParseFloorData(struct room_sector_s *sector, struct world_s *world);
-
-
-// Helper function to extract biggest triangulated sector corner.
-// It's needed, as TRosettaStone algorhithm for ceiling height calculation is wrong.
-
-int BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
+bool Polygon_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world);
 
 #endif
-
