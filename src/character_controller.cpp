@@ -491,12 +491,12 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     if(r)
     {
         rs = Room_GetSectorXYZ(r, pos);                                         // if r != NULL then rs can not been NULL!!!
-        if(r->flags & 0x01)                                                     // in water - go up
+        if(r->flags & TR_ROOM_FLAG_WATER)                                       // in water - go up
         {
             while(rs->sector_above)
             {
                 rs = rs->sector_above;
-                if((rs->owner_room->flags & 0x01) == 0x00)                      // find air
+                if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->water_level = (btScalar)rs->floor;
                     fc->water = 0x01;
@@ -509,7 +509,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
             while(rs->sector_below)
             {
                 rs = rs->sector_below;
-                if((rs->owner_room->flags & 0x01) != 0x00)                      // find water
+                if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->water_level = (btScalar)rs->ceiling;
                     fc->water = 0x01;
@@ -1660,7 +1660,8 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     move /= (btScalar)iter;
     
     Character_UpdateCurrentHeight(ent);
-    if(ent->self->room && (ent->self->room->flags & 0x01))
+    
+    if(ent->self->room && (ent->self->room->flags & TR_ROOM_FLAG_WATER))
     {
         if(ent->speed.m_floats[2] < 0.0)
         {
@@ -1999,7 +2000,7 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
     /*
      * check current place
      */
-    if(ent->self->room && !(ent->self->room->flags & 0x01))
+    if(ent->self->room && !(ent->self->room->flags & TR_ROOM_FLAG_WATER))
     {
         ent->move_type = MOVE_FREE_FALLING;
         return 2;

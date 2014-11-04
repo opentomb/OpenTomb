@@ -6,10 +6,10 @@
 #include <SDL2/SDL_opengl.h>
 #include "bullet/LinearMath/btScalar.h"
 
-#define SPLIT_FRONT 0x00
-#define SPLIT_BACK 0x01
+#define SPLIT_FRONT    0x00
+#define SPLIT_BACK     0x01
 #define SPLIT_IN_PLANE 0x02
-#define SPLIT_IN_BOTH 0x03
+#define SPLIT_IN_BOTH  0x03
 
 #define SPLIT_EPSILON (0.2)
 
@@ -43,9 +43,10 @@ typedef struct polygon_s
  * polygons functions
  */
 polygon_p Polygon_CreateArray(unsigned int pcount);
+
 void Polygon_Resize(polygon_p p, unsigned int count);
 void Polygon_Clear(polygon_p p);
-int Polygon_IsBroken(polygon_p p);
+int  Polygon_IsBroken(polygon_p p);
 void Polygon_Copy(polygon_p dst, polygon_p src);
 
 void Polygon_MoveSelf(polygon_p p, btScalar move[3]);
@@ -55,11 +56,11 @@ void Polygon_Transform(polygon_p ret, polygon_p src, btScalar tr[16]);
 void Polygon_TransformSelf(polygon_p p, btScalar tr[16]);
 
 void Polygon_FindNormale(polygon_p p);
-int Polygon_VerticalRayIntersect(polygon_p p, btScalar dot[3]);
-int Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t);            // тест на пересечение луча и выпуклого полигона в 3д
-int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2);
+int  Polygon_VerticalRayIntersect(polygon_p p, btScalar dot[3]);
+int  Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t);            // тест на пересечение луча и выпуклого полигона в 3д
+int  Polygon_IntersectPolygon(polygon_p p1, polygon_p p2);
 
-int Polygon_SplitClassify(polygon_p p, btScalar n[4]);
+int  Polygon_SplitClassify(polygon_p p, btScalar n[4]);
 void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back);
 void Polygon_AddVertex(polygon_p p, struct vertex_s *v);
 
