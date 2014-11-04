@@ -7,6 +7,8 @@
 #include "audio.h"
 #include "bordered_texture_atlas.h"
 #include "bullet/LinearMath/btScalar.h"
+#include "bullet/LinearMath/btVector3.h"
+
 
 class btCollisionShape;
 class btRigidBody;
@@ -48,13 +50,13 @@ typedef struct room_box_s
 
 typedef struct room_sector_s
 {
+    uint32_t                    fd_index;                                       // offset to the floor data
     int32_t                     box_index;
+    
     int32_t                     floor;
     int32_t                     ceiling;
-
-    uint16_t                    fd_index;                                       // offset to the floor data
-
-    struct room_sector_s        *sector_below;
+    
+    struct room_sector_s        *sector_below;  
     struct room_sector_s        *sector_above;
     struct room_s               *owner_room;                                    // room htat contain this sector
 
@@ -62,7 +64,34 @@ typedef struct room_sector_s
     int16_t                     index_y;
     btScalar                    pos_x;
     btScalar                    pos_y;
+    
+    btVector3                   ceiling_corners[4];
+    uint8_t                     ceiling_diagonal_type;
+    uint8_t                     ceiling_penetration_config;
+    
+    btVector3                   floor_corners[4];
+    uint8_t                     floor_diagonal_type;
+    uint8_t                     floor_penetration_config;
+    
+    int32_t                     portal_to_room;
 }room_sector_t, *room_sector_p;
+
+
+/*typedef struct sector_heightmap_s
+{
+
+    
+    
+}sector_heightmap_t, *sector_heightmap_p;*/
+
+typedef struct sector_tween_s
+{
+    btVector3                   floor_corners[4];
+    uint8_t                     floor_tween_type;
+    
+    btVector3                   ceiling_corners[4];
+    uint8_t                     ceiling_tween_type;
+}sector_tween_t, *sector_tween_p;
 
 
 typedef struct room_sprite_s
@@ -108,7 +137,7 @@ typedef struct room_s
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;
     struct room_sector_s       *sectors;
-
+    
     uint16_t                    active_frustums;                                // current number of this room active frustums
     struct frustum_s           *frustum;
     struct frustum_s           *last_frustum;
@@ -220,6 +249,7 @@ void Room_BuildNearRoomsList(room_p room);
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);
 int Room_IsInNearRoomsList(room_p room, room_p r);
+int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
 int World_DeleteEntity(world_p world, struct entity_s *entity);

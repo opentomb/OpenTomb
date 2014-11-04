@@ -40,25 +40,25 @@ struct ss_bone_frame_s;
 
 // TR floor data functions
 
-#define TR_FD_FUNC_PORTALSECTOR         0x01
-#define TR_FD_FUNC_FLOORSLANT           0x02
-#define TR_FD_FUNC_CEILINGSLANT         0x03
-#define TR_FD_FUNC_TRIGGER              0x04
-#define TR_FD_FUNC_DEATH                0x05
-#define TR_FD_FUNC_CLIMB                0x06
-#define TR_FD_FUNC_SLOPE1               0x07
-#define TR_FD_FUNC_SLOPE2               0x08
-#define TR_FD_FUNC_SLOPE3               0x09
-#define TR_FD_FUNC_SLOPE4               0x0A
-#define TR_FD_FUNC_SLOPE5               0x0B
-#define TR_FD_FUNC_SLOPE6               0x0C
-#define TR_FD_FUNC_SLOPE7               0x0D
-#define TR_FD_FUNC_SLOPE8               0x0E
-#define TR_FD_FUNC_SLOPE9               0x0F
-#define TR_FD_FUNC_SLOPE10              0x10
-#define TR_FD_FUNC_SLOPE11              0x11
-#define TR_FD_FUNC_SLOPE12              0x12
-#define TR_FD_FUNC_MONKEY               0x13
+#define TR_FD_FUNC_PORTALSECTOR                 0x01
+#define TR_FD_FUNC_FLOORSLANT                   0x02
+#define TR_FD_FUNC_CEILINGSLANT                 0x03
+#define TR_FD_FUNC_TRIGGER                      0x04
+#define TR_FD_FUNC_DEATH                        0x05
+#define TR_FD_FUNC_CLIMB                        0x06
+#define TR_FD_FUNC_FLOORTRIANGLE_NW             0x07    //  [_\_]
+#define TR_FD_FUNC_FLOORTRIANGLE_NE             0x08    //  [_/_]
+#define TR_FD_FUNC_CEILINGTRIANGLE_NW           0x09    //  [_/_]
+#define TR_FD_FUNC_CEILINGTRIANGLE_NE           0x0A    //  [_\_]
+#define TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW   0x0B    //  [P\_]
+#define TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE   0x0C    //  [_\P]
+#define TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE   0x0D    //  [_/P]
+#define TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW   0x0E    //  [P/_]
+#define TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW 0x0F    //  [P\_]
+#define TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE 0x10    //  [_\P]
+#define TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW 0x11    //  [P/_]
+#define TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE 0x12    //  [_/P]
+#define TR_FD_FUNC_MONKEY                       0x13
 
 #define TR_FD_FUNC_MINECART_LEFT        0x14    // In TR3 only.
 #define TR_FD_FUNC_MINECART_RIGHT       0x15    // In TR3 only.

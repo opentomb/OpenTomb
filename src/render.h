@@ -3,7 +3,10 @@
 #define RENDER_H
 
 #include <stdint.h>
+#include <SDL2/SDL_opengl.h>
 #include "bullet/LinearMath/btScalar.h"
+#include "bullet/btBulletDynamicsCommon.h"
+#include "bullet/LinearMath/btIDebugDraw.h"
 
 #define R_DRAW_WIRE             0x00000001                                      // провволочная отрисовка
 #define R_DRAW_ROOMBOXES        0x00000002                                      // показывать границы комнаты
@@ -17,6 +20,9 @@
 #define R_SKIP_ENTITIES         0x00000200                                      // hide entities
 #define R_DRAW_NULLMESHES       0x00000400                                      // draw nullmesh entities
 #define R_DRAW_DUMMY_STATICS    0x00000800                                      // draw empty static meshes
+#define R_DRAW_COLL             0x00001000                                      // draw Bullet physics world
+
+#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (1024 * 1024)
 
 #ifdef BT_USE_DOUBLE_PRECISION
     #define glMultMatrixbt glMultMatrixd
@@ -25,6 +31,27 @@
     #define glMultMatrixbt glMultMatrixf
     #define GL_BT_SCALAR GL_FLOAT
 #endif
+
+class render_DebugDrawer:public btIDebugDraw
+{
+    int m_debugMode;
+    int m_max_lines;
+    int m_lines;
+    
+    GLfloat *m_lines_buf;
+    GLfloat *m_color_buf;
+    
+    public:
+        render_DebugDrawer();
+        ~render_DebugDrawer();
+        void render();
+        virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
+        virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color);
+        virtual void   reportErrorWarning(const char* warningString);
+        virtual void   draw3dText(const btVector3& location, const char* textString);
+        virtual void   setDebugMode(int debugMode);
+        virtual int    getDebugMode() const {return m_debugMode;}
+};
 
 
 // Native TR blending modes.
@@ -150,6 +177,7 @@ void Render_Mesh_DebugLines(struct base_mesh_s *mesh, const btScalar *overrideVe
 void Render_Room_DebugLines(struct room_s *room, struct render_s *render);
 void Render_DrawAxis(btScalar r);
 void Render_BBox(btScalar bb_min[3], btScalar bb_max[3]);
+void Render_Sector(btScalar corner1[3], btScalar corner2[3], btScalar corner3[3], btScalar corner4[3]);
 void Render_SectorBorders(struct room_sector_s *sector);
 void Render_BV(struct bounding_volume_s *bv);
 

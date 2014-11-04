@@ -36,45 +36,381 @@ extern "C" {
 #include "render.h"
 #include "redblack.h"
 
-#define LOG_ANIM_DISPATCHES 0
-
-typedef struct uncollision_tex_rect_s
-{
-    GLint   tile;
-    GLint   min_xy[2];
-    GLint   max_xy[2];
-}uncollision_tex_rect_t, *uncollision_tex_rect_p;
-
-btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag);
-void Gen_EntityRigidBody(entity_p ent);
-
-void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v);
-void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c);
-
-void SortPolygonsInMesh(struct base_mesh_s *mesh);
-
-void GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame);
-int GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
-int GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
-void RoomCalculateSectorData(struct world_s *world, class VT_Level *tr, long int room_index);
-int IsInUCRectFace3(tr4_object_texture_t *tex);
-int IsInUCRectFace4(tr4_object_texture_t *tex);
-
-uncollision_tex_rect_p          uc_rect_list;
-int32_t                         uc_rect_count;
-
 lua_State *collide_flags_conf;
 lua_State *ent_ID_override;
 lua_State *level_script;
 
 
-int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
+
+/*  OY                            OZ
+ *  ^   0 ___________ 1            ^  1  ___________  2
+ *  |    |           |             |    |           |
+ *  |    |           |             |    |   tween   |
+ *  |    |   SECTOR  |             |    |  corners  |
+ *  |    |           |             |    |           |
+ *  |   3|___________|2            |  0 |___________| 3
+ *  |-------------------> OX       |--------------------> OXY    
+ */
+
+void SetTweenFloorConfig(struct sector_tween_s *tween)
 {
-    uint16_t function, sub_function, b3, FD_function, operands;
-    uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;             ///@FIXME: set, but not used
-    int16_t slope_t01, slope_t00;
-    int i, argn, ret = 0;
-    uint16_t *entry, *end_p, end_bit, cont_bit;
+    if((tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2]) && 
+       (tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2]))
+    {
+        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
+    }
+    else if(tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2])
+    {
+        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT;
+    }
+    else if(tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2])
+    {
+        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT;
+    }
+    else
+    {
+        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+    }
+}
+
+void SetTweenCeilingConfig(struct sector_tween_s *tween)
+{
+    if((tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2]) && 
+       (tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2]))
+    {
+        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
+    }
+    else if(tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2])
+    {
+        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT;
+    }
+    else if(tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2])
+    {
+        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT;
+    }
+    else
+    {
+        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+    }
+}
+
+int IsWall(room_sector_p ws, room_sector_p ns)
+{
+    if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
+    {
+        return 1;
+    }
+    
+    if((ns->portal_to_room < 0) && (ns->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (ws->portal_to_room >= 0))
+    {
+        btScalar pos[] = {ws->pos_x, ws->pos_y, 0.0};
+        ws = Room_GetSector(engine_world.rooms + ws->portal_to_room, pos);
+        if(((ws->owner_room->bb_min[2] >= ns->owner_room->bb_max[2]) || (ws->owner_room->bb_max[2] < ns->owner_room->bb_min[2])) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+        {
+            return 1;
+        }
+    }
+    
+    return 0;
+}
+
+room_sector_p CheckPortalPointer(room_sector_p rs)
+{
+    if((rs != NULL) && (rs->portal_to_room >= 0))
+    {
+        room_p r = engine_world.rooms + rs->portal_to_room;
+        int ind_x = (rs->pos_x - r->transform[12 + 0]) / 1024.0;
+        int ind_y = (rs->pos_y - r->transform[12 + 1]) / 1024.0;
+        rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+    }
+    
+    return rs;
+}
+
+void GenerateTweens(struct room_s *room, struct sector_tween_s *room_tween)
+{
+    for(int h = 0; h < room->sectors_y-1; h++)
+    {
+        for(int w = 0; w < room->sectors_x-1; w++, room_tween++)
+        {
+            // Init X-plane tween [ | ]
+            
+            room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
+            room_sector_p next_heightmap    = current_heightmap + 1;
+            
+            /* XY corners coordinates must be calculated from native room sector */
+            room_tween->floor_corners[0].m_floats[1] = current_heightmap->floor_corners[0].m_floats[1];
+            room_tween->floor_corners[1].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
+            room_tween->floor_corners[2].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
+            room_tween->floor_corners[3].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
+            room_tween->floor_corners[0].m_floats[0] = current_heightmap->floor_corners[0].m_floats[0];
+            room_tween->floor_corners[1].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
+            room_tween->floor_corners[2].m_floats[0] = current_heightmap->floor_corners[1].m_floats[0];
+            room_tween->floor_corners[3].m_floats[0] = room_tween->floor_corners[2].m_floats[0];
+            
+            room_tween->ceiling_corners[0].m_floats[1] = current_heightmap->ceiling_corners[0].m_floats[1];
+            room_tween->ceiling_corners[1].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
+            room_tween->ceiling_corners[2].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
+            room_tween->ceiling_corners[3].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
+            room_tween->ceiling_corners[0].m_floats[0] = current_heightmap->ceiling_corners[0].m_floats[0];
+            room_tween->ceiling_corners[1].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
+            room_tween->ceiling_corners[2].m_floats[0] = current_heightmap->ceiling_corners[1].m_floats[0];
+            room_tween->ceiling_corners[3].m_floats[0] = room_tween->ceiling_corners[2].m_floats[0];
+            
+            (room_tween+1)->floor_corners[0].m_floats[0] = current_heightmap->floor_corners[1].m_floats[0];
+            (room_tween+1)->floor_corners[1].m_floats[0] = (room_tween+1)->floor_corners[0].m_floats[0];
+            (room_tween+1)->floor_corners[2].m_floats[0] = (room_tween+1)->floor_corners[0].m_floats[0];
+            (room_tween+1)->floor_corners[3].m_floats[0] = (room_tween+1)->floor_corners[0].m_floats[0];
+            (room_tween+1)->floor_corners[0].m_floats[1] = current_heightmap->floor_corners[1].m_floats[1];
+            (room_tween+1)->floor_corners[1].m_floats[1] = (room_tween+1)->floor_corners[0].m_floats[1];
+            (room_tween+1)->floor_corners[2].m_floats[1] = current_heightmap->floor_corners[2].m_floats[1];
+            (room_tween+1)->floor_corners[3].m_floats[1] = (room_tween+1)->floor_corners[2].m_floats[1];
+            
+            (room_tween+1)->ceiling_corners[0].m_floats[0] = current_heightmap->ceiling_corners[1].m_floats[0];
+            (room_tween+1)->ceiling_corners[1].m_floats[0] = (room_tween+1)->ceiling_corners[0].m_floats[0];
+            (room_tween+1)->ceiling_corners[2].m_floats[0] = (room_tween+1)->ceiling_corners[0].m_floats[0];
+            (room_tween+1)->ceiling_corners[3].m_floats[0] = (room_tween+1)->ceiling_corners[0].m_floats[0];
+            (room_tween+1)->ceiling_corners[0].m_floats[1] = current_heightmap->ceiling_corners[1].m_floats[1];
+            (room_tween+1)->ceiling_corners[1].m_floats[1] = (room_tween+1)->ceiling_corners[0].m_floats[1];
+            (room_tween+1)->ceiling_corners[2].m_floats[1] = current_heightmap->ceiling_corners[2].m_floats[1];
+            (room_tween+1)->ceiling_corners[3].m_floats[1] = (room_tween+1)->ceiling_corners[2].m_floats[1];
+            
+            /*if((room->id == 123)  && (w == 6) && (h == 7))                      // TR3, MAP 1
+            {
+                Con_AddLine("AHTUNG!");
+            }*/
+                    
+            if(w > 0)
+            {
+                if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))                                                           // Init X-plane tween [ | ]
+                {
+                    if(IsWall(next_heightmap, current_heightmap))
+                    {
+                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        SetTweenFloorConfig(room_tween);
+                        room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                    }
+                    else if(IsWall(current_heightmap, next_heightmap))
+                    {
+                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
+                        SetTweenFloorConfig(room_tween);
+                        room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                    }
+                    else
+                    {
+                        /************************** SECTION WITH DROPS CALCULATIONS **********************/
+                        if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
+                        {
+                            current_heightmap = CheckPortalPointer(current_heightmap);
+                            next_heightmap = CheckPortalPointer(next_heightmap);
+                            if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                            {
+                                if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                                {
+                                    room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
+                                    room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                                    room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
+                                    room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                                    SetTweenFloorConfig(room_tween);
+                                }
+                                if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                                {
+                                    room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
+                                    room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
+                                    room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
+                                    room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                                    SetTweenCeilingConfig(room_tween);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                current_heightmap = room->sectors + (w * room->sectors_y + h);
+                next_heightmap    = current_heightmap + 1;
+                if((room_tween->floor_tween_type == TR_SECTOR_TWEEN_TYPE_NONE) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                {
+                    char valid = 0;
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    {
+                        next_heightmap = CheckPortalPointer(next_heightmap);
+                        if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
+                        {
+                            valid = 1;
+                        }
+                        if(valid == 0)
+                        {
+                            btScalar pos[] = {next_heightmap->pos_x, next_heightmap->pos_y, 0.0};
+                            room_sector_p rs = Room_GetSector(current_heightmap->sector_above->owner_room, pos);
+                            if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
+                            {
+                                valid = 1;
+                            }
+                        }
+                    }
+                    
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    {
+                        current_heightmap = CheckPortalPointer(current_heightmap);
+                        if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
+                        {
+                            valid = 1;
+                        }
+                        if(valid == 0)
+                        {
+                            btScalar pos[] = {current_heightmap->pos_x, current_heightmap->pos_y, 0.0};
+                            room_sector_p rs = Room_GetSector(next_heightmap->sector_above->owner_room, pos);
+                            if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
+                            {
+                                valid = 1;
+                            }
+                        }
+                    }
+                    
+                    if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                    {
+                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        SetTweenFloorConfig(room_tween);
+                    }
+                }
+            }
+            
+            /*****************************************************************************************************
+             ********************************   CENTRE  OF  THE  ALGORITM   **************************************
+             *****************************************************************************************************/
+            
+            room_tween++;
+            current_heightmap = room->sectors + (w * room->sectors_y + h);
+            next_heightmap = room->sectors + ((w + 1) * room->sectors_y + h);
+            if(h > 0)
+            {
+                if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                {
+                    // Init Y-plane tween  [ - ]
+                    if(IsWall(next_heightmap, current_heightmap))
+                    {
+                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                        SetTweenFloorConfig(room_tween);
+                        room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                    }
+                    else if(IsWall(current_heightmap, next_heightmap))
+                    {
+                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                        SetTweenFloorConfig(room_tween);
+                        room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                    }
+                    else
+                    {
+                        /************************** BIG SECTION WITH DROPS CALCULATIONS **********************/
+                        if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
+                        {
+                            current_heightmap = CheckPortalPointer(current_heightmap);
+                            next_heightmap = CheckPortalPointer(next_heightmap);
+                            if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                            {
+                                if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                                {
+                                    room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                                    room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
+                                    room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                                    room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                                    SetTweenFloorConfig(room_tween);
+                                }
+                                if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                                {
+                                    room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                                    room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
+                                    room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
+                                    room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
+                                    SetTweenCeilingConfig(room_tween);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if((room_tween->floor_tween_type == TR_SECTOR_TWEEN_TYPE_NONE) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                {
+                    char valid = 0;
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    {
+                        next_heightmap = CheckPortalPointer(next_heightmap);
+                        if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
+                        {
+                            valid = 1;
+                        }
+                        if(valid == 0)
+                        {
+                            btScalar pos[] = {next_heightmap->pos_x, next_heightmap->pos_y, 0.0};
+                            room_sector_p rs = Room_GetSector(current_heightmap->sector_above->owner_room, pos);
+                            if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
+                            {
+                                valid = 1;
+                            }
+                        }
+                    }
+                    
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    {
+                        current_heightmap = CheckPortalPointer(current_heightmap);
+                        if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
+                        {
+                            valid = 1;
+                        }
+                        if(valid == 0)
+                        {
+                            btScalar pos[] = {current_heightmap->pos_x, current_heightmap->pos_y, 0.0};
+                            room_sector_p rs = Room_GetSector(next_heightmap->sector_above->owner_room, pos);
+                            if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
+                            {
+                                valid = 1;
+                            }
+                        }
+                    }
+                    
+                    if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                    {
+                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                        SetTweenFloorConfig(room_tween);
+                    }
+                }
+            }
+        }    ///END for
+    }    ///END for
+}
+
+int BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
+{
+    int m1 = (v1 > v2)?(v1):(v2);
+    int m2 = (v3 > v4)?(v3):(v4);
+    return (m1 > m2)?(m1):(m2);
+}
+
+int TranslateFloorData(room_sector_p sector, struct world_s *world)
+{
+    uint16_t function, function_value, sub_function, trigger_function, operands, cont_bit, end_bit;
+    
+    int       argn, ret = 0;
+    uint16_t *entry, *end_p;
+    
     char script[4096], buf[64];
 
     // Trigger options.
@@ -95,18 +431,18 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
     entry = world->floor_data + sector->fd_index;
     script[0] = 0;
     argn = 0;
+    
     do
     {
-        end_bit = ((*entry) & 0x8000) >> 15;            // 0b10000000 00000000
-
         // TR_I - TR_II
         //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
         //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
         //TR_III+, but works with TR_I - TR_II
-        function = (*entry) & 0x001F;                   // 0b00000000 00011111
-        sub_function = ((*entry) & 0x3FF0) >> 8;        // 0b01111111 11100000
-        b3 = ((*entry) & 0x00E0) >> 5;                  // 0b00000000 11100000  TR_III+
+        function       = ((*entry) & 0x001F);             // 0b00000000 00011111
+        function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
+        sub_function   = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
+        end_bit        = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
 
         entry++;
 
@@ -115,13 +451,47 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
-                    i = *(entry++);
+                    if((*entry >= 0) && (*entry < engine_world.room_count))
+                    {
+                        sector->portal_to_room = *entry;
+                        sector->floor_penetration_config   = TR_PENETRATION_CONFIG_GHOST;
+                        sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
+                    }
+                    entry ++;
                 }
                 break;
 
             case TR_FD_FUNC_FLOORSLANT:          // FLOOR SLANT
                 if(sub_function == 0x00)
                 {
+                    int8_t raw_y_slant =  (*entry & 0x00FF);
+                    int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
+                    
+                    sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
+                    sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                    
+                    if(raw_x_slant > 0)
+                    {
+                        sector->floor_corners[2].m_floats[2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);                    
+                        sector->floor_corners[3].m_floats[2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
+                    }
+                    else if(raw_x_slant < 0)
+                    {
+                        sector->floor_corners[0].m_floats[2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1].m_floats[2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);        
+                    }
+                    
+                    if(raw_y_slant > 0)
+                    {
+                        sector->floor_corners[0].m_floats[2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->floor_corners[3].m_floats[2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
+                    }
+                    else if(raw_y_slant < 0)
+                    {
+                        sector->floor_corners[1].m_floats[2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2].m_floats[2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                    }
+                    
                     entry++;
                 }
                 break;
@@ -129,6 +499,34 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
             case TR_FD_FUNC_CEILINGSLANT:          // CEILING SLANT
                 if(sub_function == 0x00)
                 {
+                    int8_t raw_y_slant =  (*entry & 0x00FF);
+                    int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
+                    
+                    sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
+                    sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                    
+                    if(raw_x_slant > 0)
+                    {
+                        sector->ceiling_corners[3].m_floats[2] += ((btScalar)raw_x_slant * TR_METERING_STEP);                    
+                        sector->ceiling_corners[2].m_floats[2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
+                    }
+                    else if(raw_x_slant < 0)
+                    {
+                        sector->ceiling_corners[1].m_floats[2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0].m_floats[2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);        
+                    }
+                    
+                    if(raw_y_slant > 0)
+                    {
+                        sector->ceiling_corners[1].m_floats[2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[2].m_floats[2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
+                    }
+                    else if(raw_y_slant < 0)
+                    {
+                        sector->ceiling_corners[0].m_floats[2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3].m_floats[2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                    }
+                                        
                     entry++;
                 }
                 break;
@@ -202,10 +600,10 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                 {
                     entry++;
                     cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-                    FD_function = (((*entry) & 0x7C00)) >> 10;                  // 0b01111100 00000000
+                    trigger_function = (((*entry) & 0x7C00)) >> 10;                  // 0b01111100 00000000
                     operands = (*entry) & 0x03FF;                               // 0b00000011 11111111
 
-                    switch(FD_function)
+                    switch(trigger_function)
                     {
                         case TR_FD_TRIGFUNC_OBJECT:          // ACTIVATE / DEACTIVATE item
                             if(argn == 0)
@@ -296,6 +694,7 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                     };
                 }
                 while(!cont_bit && entry < end_p);
+                
                 if(script[0])
                 {
                     if((sub_function == TR_FD_TRIGTYPE_SWITCH) || (sub_function == TR_FD_TRIGTYPE_KEY))
@@ -307,7 +706,6 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                     }
                     script[0] = 0;
                 }
-
                 break;
 
             case TR_FD_FUNC_DEATH:          // KILL LARA
@@ -316,29 +714,6 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
 
             case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
                 //Con_Printf("Climbable walls! sub = %d, b3 = %d", sub_function, b3);
-                break;
-
-            case TR_FD_FUNC_SLOPE1:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE2:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE3:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE4:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE5:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE6:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE7:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE8:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE9:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE10:          // TR3 SLANT
-            case TR_FD_FUNC_SLOPE11:          // TR3 SLANT
-            case TR_FD_FUNC_SLOPE12:          // TR3 SLANT
-                cont_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
-                slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
-                slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
-                slope_func = ((*entry) & 0x001F);           // 0b00000000 00011111
-                entry++;
-                slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
-                slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
-                slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
-                slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
                 break;
 
             case TR_FD_FUNC_MONKEY:          // Climbable ceiling
@@ -353,14 +728,150 @@ int GenerateFloorDataScript(room_sector_p sector, struct world_s *world)
                 //Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
                 break;
 
-            default:
-                //Con_Printf("UNKNOWN function id = %d, sub = %d, b3 = %d", function, sub_function, b3);
+            default:                
+                if( (function >= TR_FD_FUNC_FLOORTRIANGLE_NW) &&
+                    (function <= TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE) )
+                {
+                    entry--;    // Go back, since these functions are parsed differently.
+
+                    end_bit = ((*entry) & 0x8000) >> 15;      // 0b10000000 00000000
+
+                    int16_t  slope_t01  = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
+                    int16_t  slope_t00  = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
+                    uint16_t slope_func = ((*entry) & 0x001F);            // 0b00000000 00011111
+
+                    // t01/t02 are 5-bit values, where sign is specified by 0x10 mask.
+
+                    if(slope_t01 & 0x10) slope_t01 |= 0xFFF0;
+                    if(slope_t00 & 0x10) slope_t00 |= 0xFFF0;
+
+                    entry++;
+
+                    uint16_t slope_t13  = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
+                    uint16_t slope_t12  = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
+                    uint16_t slope_t11  = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
+                    uint16_t slope_t10  = ((*entry) & 0x000F);            // 0b00000000 00001111
+
+                    entry++;
+                
+                    float overall_adjustment = (float)BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13) * TR_METERING_STEP;
+                 
+                    if( (function == TR_FD_FUNC_FLOORTRIANGLE_NW)           ||
+                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
+                        (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE)  )
+                    {
+                        sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
+                    
+                        sector->floor_corners[0].m_floats[2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1].m_floats[2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2].m_floats[2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3].m_floats[2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        
+                        if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
+                        {
+                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
+                        }
+                        else if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE)
+                        {
+                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
+                        }
+                        else
+                        {
+                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                        }
+                    }
+                    else if( (function == TR_FD_FUNC_FLOORTRIANGLE_NE)           ||
+                             (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW) ||
+                             (function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE)  )
+                    {
+                        sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
+                    
+                        sector->floor_corners[0].m_floats[2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1].m_floats[2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2].m_floats[2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3].m_floats[2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        
+                        if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
+                        {
+                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
+                        }
+                        else if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE)
+                        {
+                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
+                        }
+                        else
+                        {
+                            sector->floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                        }
+                    }
+                    else if( (function == TR_FD_FUNC_CEILINGTRIANGLE_NW)           ||
+                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW) ||
+                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)  )
+                    {
+                        sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
+                    
+                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment-(btScalar)(slope_t11)* TR_METERING_STEP;
+                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment-(btScalar)(slope_t10)* TR_METERING_STEP;
+                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment-(btScalar)(slope_t13)* TR_METERING_STEP ;
+                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment-(btScalar)(slope_t12)* TR_METERING_STEP ;
+                        
+                        if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
+                        {
+                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
+                        }
+                        else if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)
+                        {
+                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
+                        }
+                        else
+                        {
+                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                        }
+                    }
+                    else if( (function == TR_FD_FUNC_CEILINGTRIANGLE_NE)           ||
+                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW) ||
+                             (function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE)  )
+                    {
+                        sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
+                    
+                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment-(btScalar)(slope_t11)* TR_METERING_STEP;
+                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment-(btScalar)(slope_t10)* TR_METERING_STEP;
+                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment-(btScalar)(slope_t13)* TR_METERING_STEP ;
+                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment-(btScalar)(slope_t12)* TR_METERING_STEP ;
+                        
+                        if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
+                        {
+                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_A;
+                        }
+                        else if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE)
+                        {
+                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_DOOR_VERTICAL_B;
+                        }
+                        else
+                        {
+                            sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+                        }
+                    }
+                }
+                else
+                {
+                    // Unknown floordata function!
+                }
                 break;
         };
         ret++;
     }
     while(!end_bit && entry < end_p);
 
+    if(sector->floor == 32512)
+    {
+        sector->floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
+    }
+    if(sector->ceiling == 32512)
+    {
+        sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
+    }
+    
     return ret;
 }
 
@@ -430,68 +941,6 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
 }
 
 
-int IsInUCRectFace3(tr4_object_texture_t *tex)
-{
-    int32_t i;
-    uncollision_tex_rect_p uc = uc_rect_list;
-    GLint v0[2], v1[2], v2[2], tile = (tex->tile_and_flag & 0x7FFF);
-    //return 0;
-    v0[0] = tex->vertices[0].xpixel + tex->vertices[0].xcoordinate * 0.5;
-    v0[1] = tex->vertices[0].ypixel + tex->vertices[0].ycoordinate * 0.5;
-
-    v1[0] = tex->vertices[1].xpixel + tex->vertices[1].xcoordinate * 0.5;
-    v1[1] = tex->vertices[1].ypixel + tex->vertices[1].ycoordinate * 0.5;
-
-    v2[0] = tex->vertices[2].xpixel + tex->vertices[2].xcoordinate * 0.5;
-    v2[1] = tex->vertices[2].ypixel + tex->vertices[2].ycoordinate * 0.5;
-
-    for(i=0;i<uc_rect_count;i++,uc++)
-    {
-        if((tile == uc->tile) &&
-           (v0[0] >= uc->min_xy[0] && v0[0] <= uc->max_xy[0] && v0[1] >= uc->min_xy[1] && v0[1] <= uc->max_xy[1]) &&
-           (v1[0] >= uc->min_xy[0] && v1[0] <= uc->max_xy[0] && v1[1] >= uc->min_xy[1] && v1[1] <= uc->max_xy[1]) &&
-           (v2[0] >= uc->min_xy[0] && v2[0] <= uc->max_xy[0] && v2[1] >= uc->min_xy[1] && v2[1] <= uc->max_xy[1]))
-        {
-            return 1;                                                           // skip water texture
-        }
-    }
-
-    return 0;
-}
-
-int IsInUCRectFace4(tr4_object_texture_t *tex)
-{
-    int32_t i;
-    uncollision_tex_rect_p uc = uc_rect_list;
-    GLint v0[2], v1[2], v2[2], v3[2], tile = (tex->tile_and_flag & 0x7FFF);
-
-    v0[0] = tex->vertices[0].xpixel + tex->vertices[0].xcoordinate * 0.5;
-    v0[1] = tex->vertices[0].ypixel + tex->vertices[0].ycoordinate * 0.5;
-
-    v1[0] = tex->vertices[1].xpixel + tex->vertices[1].xcoordinate * 0.5;
-    v1[1] = tex->vertices[1].ypixel + tex->vertices[1].ycoordinate * 0.5;
-
-    v2[0] = tex->vertices[2].xpixel + tex->vertices[2].xcoordinate * 0.5;
-    v2[1] = tex->vertices[2].ypixel + tex->vertices[2].ycoordinate * 0.5;
-
-    v3[0] = tex->vertices[3].xpixel + tex->vertices[3].xcoordinate * 0.5;
-    v3[1] = tex->vertices[3].ypixel + tex->vertices[3].ycoordinate * 0.5;
-
-    for(i=0;i<uc_rect_count;i++,uc++)
-    {
-        if((tile == uc->tile) &&
-           (v0[0] >= uc->min_xy[0] && v0[0] <= uc->max_xy[0] && v0[1] >= uc->min_xy[1] && v0[1] <= uc->max_xy[1]) &&
-           (v1[0] >= uc->min_xy[0] && v1[0] <= uc->max_xy[0] && v1[1] >= uc->min_xy[1] && v1[1] <= uc->max_xy[1]) &&
-           (v2[0] >= uc->min_xy[0] && v2[0] <= uc->max_xy[0] && v2[1] >= uc->min_xy[1] && v2[1] <= uc->max_xy[1]) &&
-           (v3[0] >= uc->min_xy[0] && v3[0] <= uc->max_xy[0] && v3[1] >= uc->min_xy[1] && v3[1] <= uc->max_xy[1]))
-        {
-            return 1;                                                           // skip water texture
-        }
-    }
-
-    return 0;
-}
-
 void Gen_EntityRigidBody(entity_p ent)
 {
     int i;
@@ -528,7 +977,7 @@ void RoomCalculateSectorData(struct world_s *world, class VT_Level *tr, long int
 {
     int i, j;
     room_sector_p sector;
-    room_p r, room = world->rooms + room_index;
+    room_p room = world->rooms + room_index;
     tr5_room_t *tr_room = &tr->rooms[room_index];
     btScalar pos[3];
 
@@ -550,15 +999,38 @@ void RoomCalculateSectorData(struct world_s *world, class VT_Level *tr, long int
         sector->sector_below = NULL;
         if(j >= 0 && j < world->room_count && j != 255)
         {
-            r = world->rooms + j;
-            sector->sector_below = Room_GetSector(r, pos);
-        }
+            sector->sector_below = Room_GetSector(world->rooms + j, pos);
+        }   
         j = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
         if(j >= 0 && j < world->room_count && j != 255)
         {
-            r = world->rooms + j;
-            sector->sector_above = Room_GetSector(r, pos);
+            sector->sector_above = Room_GetSector(world->rooms + j, pos);
+        }
+        
+        if(sector->portal_to_room >= 0)
+        {
+            if(((sector->index_y > 0) && (sector->index_y < room->sectors_y - 1) && (sector->index_x == 0)) ||  /**** OX *****/
+               ((sector->index_y > 0) && (sector->index_y < room->sectors_y - 1) && (sector->index_x == room->sectors_x - 1)) ||
+               ((sector->index_x > 0) && (sector->index_x < room->sectors_x - 1) && (sector->index_y == 0)) ||  /**** OY *****/
+               ((sector->index_x > 0) && (sector->index_x < room->sectors_x - 1) && (sector->index_y == room->sectors_y - 1)))     
+            {
+                portal_p p = room->portals;
+                for(j=0;j<room->portal_count;j++,p++)
+                {
+                    if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
+                    {
+                        room_sector_p dst = Room_GetSector(p->dest_room, pos);
+                        room_sector_p orig_dst = Room_GetSector(engine_world.rooms + sector->portal_to_room, pos);
+                        if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != 32512) && (dst->ceiling != 32512) && (sector->portal_to_room != p->dest_room->id) && (dst->floor < orig_dst->floor))
+                        {
+                            sector->portal_to_room = p->dest_room->id;
+                            orig_dst = dst;
+                            //break;
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -693,9 +1165,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->items_tree->rb_compEQ = compEntityEQ;
     world->items_tree->rb_compLT = compEntityLT;
     world->items_tree->rb_free_data = RBItemFree;
-    
-    uc_rect_count = 0;
-    uc_rect_list = NULL;
 
     /*
      * Generate OGL textures
@@ -728,31 +1197,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
     Gui_DrawLoadScreen(500);
-
-    if(level_script)
-    {
-        top = lua_gettop(level_script);
-        lua_getglobal(level_script, "uc_tex_count");
-        uc_rect_count = lua_tointeger(level_script, -1);
-        lua_settop(level_script, top);                                          // restore LUA stack
-        if(uc_rect_count)
-        {
-            uc_rect_list = (uncollision_tex_rect_p)malloc(uc_rect_count * sizeof(uncollision_tex_rect_t));
-            for(i=0;i<uc_rect_count;i++)
-            {
-                lua_getglobal(level_script, "GetUCTexture");   // add to the up of stack LUA's function
-                lua_pushinteger(level_script, i);                               // add to stack first argument
-                lua_pcall(level_script, 1, 5, 0);                               // call that function
-
-                uc_rect_list[i].tile = lua_tointeger(level_script, -5);         // get 1st argument
-                uc_rect_list[i].min_xy[0] = lua_tointeger(level_script, -4);    // get 2nd argument
-                uc_rect_list[i].min_xy[1] = lua_tointeger(level_script, -3);    // get 3rd argument
-                uc_rect_list[i].max_xy[0] = lua_tointeger(level_script, -2);    // get 4th argument
-                uc_rect_list[i].max_xy[1] = lua_tointeger(level_script, -1);    // get 5th argument
-                lua_settop(level_script, top);                                  // restore LUA stack
-            }
-        }
-    }
 
     world->tex_count = (uint32_t) BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
     world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
@@ -872,18 +1316,78 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         TR_GenRoom(i, r, world, tr);
         r->frustum = Frustum_Create();
     }
+    
+    
+    for(i=0;i<world->room_count;i++)
+    {
+        RoomCalculateSectorData(world, tr, i);
+    }
 
+    r = world->rooms;
+    for(i=0;i<world->room_count;i++,r++)
+    {
+        // Inbetween polygons array is later filled by loop which scans adjacent
+        // sector heightmaps and fills the gaps between them, thus creating inbetween
+        // polygon. Inbetweens can be either quad (if all four corner heights are
+        // different), triangle (if one corner height is similar to adjacent) or
+        // ghost (if corner heights are completely similar). In case of quad inbetween,
+        // two triangles are added to collisional trimesh, in case of triangle inbetween,
+        // we add only one, and in case of ghost inbetween, we ignore it.
+    
+        int num_heightmaps = (r->sectors_x * r->sectors_y);
+        int num_tweens = (num_heightmaps * 4);
+        sector_tween_s *room_tween   = new sector_tween_s[num_tweens];
+
+        // Clear tween array.
+
+        for(int j=0;j<num_tweens;j++)
+        {
+            room_tween[j].ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+            room_tween[j].floor_tween_type   = TR_SECTOR_TWEEN_TYPE_NONE;
+        }
+
+        GenerateTweens(r, room_tween);
+
+        btCollisionShape *cshape = HeightmapToBTCS(r->sectors, num_heightmaps, room_tween, num_tweens, true, true);
+
+        if(cshape)
+        {
+            btVector3 localInertia(0, 0, 0);
+            btTransform tr;
+            tr.setFromOpenGLMatrix(r->transform);
+            btDefaultMotionState* motionState = new btDefaultMotionState(tr);
+            r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+            bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+            r->bt_body->setUserPointer(r->self);
+            r->self->collide_flag = COLLISION_TRIMESH;                          // meshtree
+            if(!r->active)
+            {
+                Room_Disable(r);
+            }
+        }
+
+        // Final step is sending actual sectors to Bullet collision model. We do it here.
+
+        delete[] room_tween;
+        
+        if(r->mesh)
+        {
+            SortPolygonsInMesh(r->mesh);
+        }
+    }
+    
     /*
      * sector data parsing
      */
-    room = world->rooms;
+    
     for(i=0;i<world->room_count;i++,room++)
     {
-        RoomCalculateSectorData(world, tr, i);
-        room->bt_body = NULL;
+        //room->bt_body = NULL;
         if(room->mesh)
         {
-            cshape = MeshToBTCS(room->mesh, true, true, COLLISION_TRIMESH);
+            /*
+            cshape = MeshToBTCS(room, true, true, COLLISION_TRIMESH);
+            
             if(cshape)
             {
                 startTransform.setFromOpenGLMatrix(room->transform);
@@ -897,7 +1401,9 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
                     Room_Disable(room);
                 }
             }
+            
             SortPolygonsInMesh(room->mesh);
+            */
         }
     }
     // generate links to the near rooms
@@ -994,10 +1500,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     for(i=0;i<world->room_count;i++)
     {
-        for(int j=0;j<world->rooms[i].sectors_count;j++)
-        {
-            GenerateFloorDataScript(world->rooms[i].sectors+j, world);
-        }
         if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count))
         {
             Mesh_GenVBO(world->rooms[i].mesh);
@@ -1007,13 +1509,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     for(i=0;i<world->meshs_count;i++)
     {
         SortPolygonsInMesh(world->meshes + i);
-    }
-
-    if(uc_rect_count)
-    {
-        uc_rect_count = 0;
-        free(uc_rect_list);
-        uc_rect_list = NULL;
     }
 
     buf[0] = 0;
@@ -1063,7 +1558,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     tr_room_portal_t *tr_portal;
     room_sector_p sector;
     btScalar pos[3];
-    float vater_color[] = {0.7, 0.75, 1.0, 1.0};
+    //float vater_color[] = {0.7, 0.75, 1.0, 1.0};
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
@@ -1102,7 +1597,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     {
         Mesh_MullColors(room->mesh, vater_color);
     }*/
-
+    
     room->bt_body = NULL;
     /*
      *  let us load static room meshes
@@ -1245,31 +1740,129 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->sectors = (room_sector_p)malloc(room->sectors_count * sizeof(room_sector_t));
 
     /*
-     * base sectors information loading
+     * base sectors information loading and collisional mesh creation
      */
+    
+    // To avoid manipulating with unnecessary information, we declare temporary
+    // heightmap here, which will be operated with sector and floordata parsing,
+    // then vertical inbetween polys will be constructed, and Bullet collisional
+    // object will be created. Afterwards, we delete heightmap.
+
     sector = room->sectors;
     for(i=0;i<room->sectors_count;i++,sector++)
     {
-        /*
-         * filling base sectors information
-         */
+        // Filling base sectors information.
+        
         sector->index_x = i / room->sectors_y;
         sector->index_y = i % room->sectors_y;
 
-        sector->pos_x = room->transform[12] + sector->index_x * 1024.0 + 512.0;
-        sector->pos_y = room->transform[13] + sector->index_y * 1024.0 + 512.0;
+        sector->pos_x = room->transform[12] + sector->index_x * TR_METERING_SECTORSIZE + 512.0;
+        sector->pos_y = room->transform[13] + sector->index_y * TR_METERING_SECTORSIZE + 512.0;
 
         sector->owner_room = room;
-        sector->box_index = tr_room->sector_list[i].box_index;
+        sector->box_index  = tr_room->sector_list[i].box_index;
         if(sector->box_index == 65535)
         {
             sector->box_index = -1;
         }
-        sector->floor = -256 * (int)tr_room->sector_list[i].floor;
-        sector->ceiling = -256 * (int)tr_room->sector_list[i].ceiling;
-        sector->fd_index = tr_room->sector_list[i].fd_index;
+        
+        sector->floor    = -256 * (int)tr_room->sector_list[i].floor;
+        sector->ceiling  = -256 * (int)tr_room->sector_list[i].ceiling;
+        sector->fd_index = tr_room->sector_list[i].fd_index;        ///@FIXME: GET RID OF THIS NONSENSE SOME DAY!
+                  
+        Sys_DebugLog("grid.txt", "SECTOR %d / %d : FH: %d", sector->index_x, sector->index_y, sector->floor);
+               
+        // BUILDING CEILING HEIGHTMAP.
+        
+        // Penetration config is used later to build inbetween vertical collision polys.
+        // If sector's penetration config is a wall, we simply build a vertical plane to
+        // isolate this sector from top to bottom. Also, this allows to trick out wall
+        // sectors inside another wall sectors to be ignored completely when building
+        // collisional mesh.
+        // Door penetration config means that we should either ignore sector collision
+        // completely (classic door) or ignore one of the triangular sector parts (TR3+).
+        
+        if(sector->ceiling == 32512)
+        {
+            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
+        }
+        else if(tr_room->sector_list[i].room_above != 255)
+        {
+            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
+        }
+        else
+        {
+            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+        }
+        
+        // Now, we define heightmap cells position and draft (flat) height.
+        // Draft height is derived from sector's floor and ceiling values, which are
+        // copied into heightmap cells Y coordinates. As result, we receive flat
+        // heightmap cell, which will be operated later with floordata.
+        room->sectors[i].portal_to_room = -1;
+        
+        room->sectors[i].ceiling_corners[0].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0].m_floats[2] = (btScalar)sector->ceiling;
+        
+        room->sectors[i].ceiling_corners[1].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1].m_floats[2] = (btScalar)sector->ceiling;
+        
+        room->sectors[i].ceiling_corners[2].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2].m_floats[2] = (btScalar)sector->ceiling;
+        
+        room->sectors[i].ceiling_corners[3].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3].m_floats[2] = (btScalar)sector->ceiling;
+            
+        // BUILDING FLOOR HEIGHTMAP.
+        
+        // Features same steps as for the ceiling.
+        
+        if(sector->floor == 32512)
+        {
+            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
+        }
+        else if(tr_room->sector_list[i].room_below != 255)
+        {
+            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_GHOST;
+        }
+        else
+        {
+            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+        }
+        
+        room->sectors[i].floor_corners[0].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0].m_floats[2] = (btScalar)sector->floor;
+        
+        room->sectors[i].floor_corners[1].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1].m_floats[2] = (btScalar)sector->floor;
+        
+        room->sectors[i].floor_corners[2].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2].m_floats[2] = (btScalar)sector->floor;
+        
+        room->sectors[i].floor_corners[3].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3].m_floats[2] = (btScalar)sector->floor;
+        
+        // Now, when building basic heightmap is finished, we can parse floordata
+        // to load actual slant height values into it, plus fill out Lua script on the way.
+        // These two tasks are joined here, because it allows to parse through floordata
+        // once and for all, and then safely destroy it.
+        
+        // (Actually, floordata should never be copied into final map, when this is finished.)
+            
+        TranslateFloorData(sector, world);
     }
-
+    
+    // Most difficult task with converting floordata collision to trimesh collision is
+    // building intermediate polygons which will block out gaps between sector heights.    
+    
     /*
      *  load lights
      */
@@ -1676,7 +2269,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
 
         Polygon_Resize(p, 3);
-        p->type = !IsInUCRectFace3(tex);
 
         //p->double_side = face3->texture >> 15;    // CORRECT, BUT WRONG IN TR3-5
         if(tr->game_version < TR_III)
@@ -1757,7 +2349,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         Polygon_Resize(p, 3);
         p->tex_index = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas);
         p->transparency = 0;
-        p->type = 0x0001;
         p->anim_id = 0;
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[0]]);
@@ -1835,7 +2426,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         face4 = &tr_mesh->textured_rectangles[i];
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         Polygon_Resize(p, 4);
-        p->type = !IsInUCRectFace4(tex);
 
         //p->double_side = face3->texture >> 15;    // CORRECT, BUT WRONG IN TR3-5
         if(tr->game_version < TR_III)
@@ -1931,7 +2521,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         Polygon_Resize(p, 4);
         p->tex_index = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas);
         p->transparency = 0;
-        p->type = 0x0001;
         p->anim_id = 0;
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face4->vertices[0]]);
@@ -2162,14 +2751,6 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         Polygon_Resize(p, 3);
 
         p->transparency = tex->transparency_flags;
-        if((p->transparency < 0x0002) || (p->transparency == BM_ANIMATED_TEX))
-        {
-            p->type = !IsInUCRectFace3(tex);
-        }
-        else
-        {
-            p->type = 0x0000;
-        }
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_room->vertices[face3->vertices[0]].vertex);
         TR_vertex_to_arr(p->vertices[1].position, &tr_room->vertices[face3->vertices[1]].vertex);
@@ -2219,15 +2800,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         Polygon_Resize(p, 4);
 
         p->transparency = tex->transparency_flags;
-        if((p->transparency < 0x0002) || (p->transparency == BM_ANIMATED_TEX))
-        {
-            p->type = !IsInUCRectFace4(tex);
-        }
-        else
-        {
-            p->type = 0x0000;
-        }
-
+        
         TR_vertex_to_arr(p->vertices[0].position, &tr_room->vertices[face4->vertices[0]].vertex);
         TR_vertex_to_arr(p->vertices[1].position, &tr_room->vertices[face4->vertices[1]].vertex);
         TR_vertex_to_arr(p->vertices[2].position, &tr_room->vertices[face4->vertices[2]].vertex);
@@ -3117,6 +3690,181 @@ void GenEntitys(struct world_s *world, class VT_Level *tr)
 }
 
 
+btCollisionShape *HeightmapToBTCS(struct room_sector_s *heightmap, int heightmap_size, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
+{
+    uint32_t cnt = 0;
+    btTriangleMesh *trimesh = new btTriangleMesh;
+    btCollisionShape* ret;
+
+    for(int i = 0; i < heightmap_size; i++)
+    {
+        if( (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
+            (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
+        {   
+            if( (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
+                (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
+            {
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[2],
+                                         heightmap[i].floor_corners[1],
+                                         heightmap[i].floor_corners[0],
+                                         true);
+                    cnt++;
+                }
+                
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[3],
+                                         heightmap[i].floor_corners[2],
+                                         heightmap[i].floor_corners[0],
+                                         true);
+                    cnt++;
+                }
+            }
+            else
+            {
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[3],
+                                         heightmap[i].floor_corners[1],
+                                         heightmap[i].floor_corners[0],
+                                         true);
+                    cnt++;
+                }
+                
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[3],
+                                         heightmap[i].floor_corners[2],
+                                         heightmap[i].floor_corners[1],
+                                         true);
+                    cnt++;
+                }
+            }
+        }
+        
+        if( (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
+            (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
+        {   
+            if( (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
+                (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
+            {
+                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
+                                         heightmap[i].ceiling_corners[1],
+                                         heightmap[i].ceiling_corners[2],
+                                         true);
+                    cnt++;
+                }
+                
+                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+                {
+                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
+                                         heightmap[i].ceiling_corners[2],
+                                         heightmap[i].ceiling_corners[3],
+                                         true);
+                    cnt++;
+                }
+            }
+            else
+            {
+                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
+                                         heightmap[i].ceiling_corners[1],
+                                         heightmap[i].ceiling_corners[3],
+                                         true);
+                    cnt++;
+                }
+                
+                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+                {
+                    trimesh->addTriangle(heightmap[i].ceiling_corners[1],
+                                         heightmap[i].ceiling_corners[2],
+                                         heightmap[i].ceiling_corners[3],
+                                         true);
+                    cnt++;
+                }
+            }
+        }
+    }
+    
+    for(int i=0; i<tweens_size; i++)
+    {   
+        
+        if(tweens[i].ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT)
+        {
+            trimesh->addTriangle(tweens[i].ceiling_corners[0],
+                                 tweens[i].ceiling_corners[1],
+                                 tweens[i].ceiling_corners[3],
+                                 true);
+            cnt++;
+        }
+        if(tweens[i].ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT)
+        {
+            trimesh->addTriangle(tweens[i].ceiling_corners[2],
+                                 tweens[i].ceiling_corners[1],
+                                 tweens[i].ceiling_corners[3],
+                                 true);
+            cnt++;
+        }
+        else if(tweens[i].ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_QUAD)
+        {
+            trimesh->addTriangle(tweens[i].ceiling_corners[0],
+                                 tweens[i].ceiling_corners[1],
+                                 tweens[i].ceiling_corners[3],
+                                 true);
+            trimesh->addTriangle(tweens[i].ceiling_corners[2],
+                                 tweens[i].ceiling_corners[1],
+                                 tweens[i].ceiling_corners[3],
+                                 true);
+            cnt += 2;
+        }
+        
+        
+        if(tweens[i].floor_tween_type == TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT)
+        {
+            trimesh->addTriangle(tweens[i].floor_corners[0],
+                                 tweens[i].floor_corners[1],
+                                 tweens[i].floor_corners[3],
+                                 true);
+            cnt++;
+        }
+        else if(tweens[i].floor_tween_type == TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT)
+        {
+            trimesh->addTriangle(tweens[i].floor_corners[2],
+                                 tweens[i].floor_corners[1],
+                                 tweens[i].floor_corners[3],
+                                 true);
+            cnt++;
+        }
+        else if(tweens[i].floor_tween_type == TR_SECTOR_TWEEN_TYPE_QUAD)
+        {
+            trimesh->addTriangle(tweens[i].floor_corners[0],
+                                 tweens[i].floor_corners[1],
+                                 tweens[i].floor_corners[3],
+                                 true);
+            trimesh->addTriangle(tweens[i].floor_corners[2],
+                                 tweens[i].floor_corners[1],
+                                 tweens[i].floor_corners[3],
+                                 true);
+            cnt += 2;
+        }
+    }
+
+    if(cnt == 0)
+    {
+        delete trimesh;
+        return NULL;
+    }
+    
+    ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+    return ret;
+}
+
+
 btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag)
 {
     uint32_t i, j, cnt = 0;
@@ -3133,7 +3881,7 @@ btCollisionShape *MeshToBTCS(struct base_mesh_s *mesh, bool useCompression, bool
             p = mesh->polygons;
             for(i=0;i<mesh->poly_count;i++,p++)
             {
-                if(p->type == 0x0000 || Polygon_IsBroken(p))
+                if(Polygon_IsBroken(p))
                 {
                     continue;
                 }

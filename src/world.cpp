@@ -57,7 +57,7 @@ void Room_Empty(room_p room)
         free(room->mesh);
         room->mesh = NULL;
     }
-
+    
     if(room->static_mesh_count)
     {
         for(i=0;i<room->static_mesh_count;i++)
@@ -123,7 +123,7 @@ void Room_Empty(room_p room)
         room->sectors_x = 0;
         room->sectors_y = 0;
     }
-
+   
     if(room->sprites_count)
     {
         free(room->sprites);
@@ -236,6 +236,52 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
         }
     }
 
+    return 0;
+}
+
+
+int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
+{   
+    btScalar pos[3];
+    if(s1->portal_to_room >= 0)
+    {
+        pos[0] = s1->pos_x;
+        pos[1] = s1->pos_y;
+        s1 = Room_GetSector(engine_world.rooms + s1->portal_to_room, pos);
+    }
+    if(s2->portal_to_room >= 0)
+    {
+        pos[0] = s2->pos_x;
+        pos[1] = s2->pos_y;
+        s2 = Room_GetSector(engine_world.rooms + s2->portal_to_room, pos);
+    }
+    
+    if(/*(s1 == NULL) || (s2 == NULL) ||*/ (s1->owner_room == s2->owner_room) || !Room_IsJoined(s1->owner_room, s2->owner_room))
+    {
+        return 0;
+    }    
+    
+    pos[0] = s1->pos_x;
+    pos[1] = s1->pos_y;
+    room_sector_p s1p = Room_GetSector(s2->owner_room, pos);
+    if((s1p == NULL) || (s1p->portal_to_room < 0))
+    {
+        return 0;
+    }
+    
+    pos[0] = s2->pos_x;
+    pos[1] = s2->pos_y;
+    room_sector_p s2p = Room_GetSector(s1->owner_room, pos);
+    if((s2p == NULL) || (s2p->portal_to_room < 0))
+    {
+        return 0;
+    }
+    
+    if((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room))
+    {
+        return 1;
+    }
+    
     return 0;
 }
 

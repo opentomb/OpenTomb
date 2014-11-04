@@ -342,7 +342,7 @@ btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n)
         v[4] = v[1];
         v[5] =-size[2];
     }
-    
+
     ret = new btConvexHullShape(data, 2*n + 2, 3 * sizeof(btScalar));
     free(data);
     return ret;
