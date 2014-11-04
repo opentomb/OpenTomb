@@ -1,4 +1,5 @@
 
+//#include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL_opengl.h>
 #include "gl_util.h"
@@ -6,6 +7,7 @@
 #include "bullet/LinearMath/btScalar.h"
 
 #include "render.h"
+#include "console.h"
 #include "world.h"
 #include "portal.h"
 #include "frustum.h"
@@ -19,6 +21,7 @@
 #include "bounding_volume.h"
 
 render_t renderer;
+extern render_DebugDrawer debugDrawer;
 
 int R_List_Less(const void *v1, const void *v2);
 int R_List_Great(const void *v1, const void *v2);
@@ -1044,7 +1047,7 @@ void Render_DrawList_DebugLines()
 {
     uint32_t i;
 
-    if (!renderer.world || !(renderer.style & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS)))
+    if (!renderer.world || !(renderer.style & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL)))
     {
         return;
     }
@@ -1063,6 +1066,17 @@ void Render_DrawList_DebugLines()
     {
         Render_Room_DebugLines(renderer.r_list[i].room, &renderer);
     }
+    
+    if(renderer.style & R_DRAW_COLL)
+    {
+        glEnableClientState(GL_COLOR_ARRAY);                                    ///@FIXME: render things things only from r_list.
+        if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        glPointSize( 6.0f );
+        glLineWidth( 3.0f );
+        bt_engine_dynamicsWorld->debugDrawWorld();
+        debugDrawer.render();
+        glDisableClientState(GL_COLOR_ARRAY);
+    }   
 }
 
 /**
@@ -1227,6 +1241,10 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
     {
         glColor3f(0.0, 0.1, 0.9);
         Render_BBox(room->bb_min, room->bb_max);
+        for(int s=0;s<room->sectors_count;s++)
+        {
+            Render_SectorBorders(&room->sectors[s]);
+        }
     }
 
     flag = render->style & R_DRAW_PORTALS;
@@ -1519,30 +1537,58 @@ void Render_BBox(btScalar bb_min[3], btScalar bb_max[3])
     }
 }
 
+void Render_Sector(btScalar corner1[3], btScalar corner2[3], btScalar corner3[3], btScalar corner4[3])
+{
+    btScalar vertices[12] =
+    {
+        corner1[0], corner1[1], corner1[2],
+        corner2[0], corner2[1], corner2[2],
+        corner3[0], corner3[1], corner3[2],
+        corner4[0], corner4[1], corner4[2]
+    };
+
+    const GLushort indices[8] =
+    {
+        0, 1,
+        1, 2,
+        2, 3,
+        3, 0
+    };
+
+    static GLuint indicesVBO = 0;
+
+    if((indicesVBO == 0) && glGenBuffersARB)
+    {
+        glGenBuffersARB(1, &indicesVBO);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
+        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(indices), indices, GL_STATIC_DRAW_ARB);
+    }
+
+    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertices[0]) * 3, vertices);
+    if(indicesVBO)
+    {
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
+        glDrawElements(GL_LINES, 4, GL_UNSIGNED_SHORT, NULL);
+    }
+    else
+    {
+        glDrawElements(GL_LINES, 4, GL_UNSIGNED_SHORT, indices);
+    }
+}
+
 /**
  * sector's borders rendering
  */
 void Render_SectorBorders(struct room_sector_s *sector)
 {
-    btScalar bb_min[3], bb_max[3];
+    btScalar corner1[3], corner2[3], corner3[3], corner4[3];
 
     if(sector->floor == 32512 || sector->ceiling == 32512)
     {
         return;
     }
 
-    bb_min[2] = (btScalar)sector->floor;
-    bb_max[2] = (btScalar)sector->ceiling;
-
-    bb_min[0] = sector->owner_room->transform[12];
-    bb_min[0] += 1024.0 * (btScalar) sector->index_x;
-    bb_min[1] = sector->owner_room->transform[13];
-    bb_min[1] += 1024.0 * (btScalar) sector->index_y;
-
-    bb_max[0] = bb_min[0] + 1024.0;
-    bb_max[1] = bb_min[1] + 1024.0;
-
-    Render_BBox(bb_min, bb_max);
+    // Render_Sector(corner1,corner2,corner3,corner4);
 }
 
 void Render_BV(struct bounding_volume_s *bv)
@@ -1607,4 +1653,83 @@ void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour)
             tint[3] = 1.0f;
         }
     }
+}
+
+render_DebugDrawer::render_DebugDrawer()
+:m_debugMode(0)
+{
+    m_lines_buf = (GLfloat*)malloc(3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
+    m_color_buf = (GLfloat*)malloc(3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
+    
+    m_max_lines = DEBUG_DRAWER_DEFAULT_BUFFER_SIZE;
+    m_lines = 0;
+}
+
+render_DebugDrawer::~render_DebugDrawer()
+{
+    free(m_lines_buf);
+    free(m_color_buf);
+}
+
+void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+{      
+    GLfloat *v1, *v2;
+
+    if(m_lines < m_max_lines - 1)
+    {
+        v1 = m_lines_buf + 3 * 2 * m_lines;
+        v2 = v1 + 3;
+        vec3_copy(v1, from.m_floats);
+        vec3_copy(v2, to.m_floats);
+        
+        v1 = m_color_buf + 3 * 2 * m_lines;
+        v2 = v1 + 3;
+        vec3_copy(v1, color.m_floats);
+        vec3_copy(v2, color.m_floats);
+        m_lines++;
+    }
+}
+
+void render_DebugDrawer::setDebugMode(int debugMode)
+{
+   m_debugMode = debugMode;
+}
+
+void render_DebugDrawer::draw3dText(const btVector3& location, const char* textString)
+{
+   //glRasterPos3f(location.x(),  location.y(),  location.z());
+   //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
+}
+
+void render_DebugDrawer::reportErrorWarning(const char* warningString)
+{
+   Con_Printf(warningString);
+}
+
+void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
+{
+   {
+      //btVector3 to=pointOnB+normalOnB*distance;
+      //const btVector3&from = pointOnB;
+      //glColor4f(color.getX(), color.getY(), color.getZ(), 1.0f);   
+      
+      //GLDebugDrawer::drawLine(from, to, color);
+      
+      //glRasterPos3f(from.x(),  from.y(),  from.z());
+      //char buf[12];
+      //sprintf(buf," %d",lifeTime);
+      //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),buf);
+   }
+}
+
+void render_DebugDrawer::render()
+{
+    if(m_lines != 0)
+    {
+        glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [3]), m_lines_buf);
+        glColorPointer(3, GL_FLOAT, sizeof(GLfloat [3]),  m_color_buf);
+        glDrawArrays(GL_POINTS, 0, 2 * m_lines);
+        glDrawArrays(GL_LINES, 0, 2 * m_lines);
+    }
+    m_lines = 0;
 }

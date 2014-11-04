@@ -842,7 +842,7 @@ void ShowDebugInfo()
         {
             Gui_OutTextXY(NULL, 20, 48, "ent_rmb_ID = %d", last_rmb->id);
         }
-        Gui_OutTextXY(NULL, 20, 8, "rot[0] = %2.2f, rot[1] = %2.2f, angles[1] = %2.2f", engine_world.Character->character->cmd.rot[0], engine_world.Character->character->cmd.rot[1], (btScalar)engine_world.Character->angles[1]);
+        Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
     if(engine_world.Character && engine_world.Character->self->room)

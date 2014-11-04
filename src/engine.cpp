@@ -75,6 +75,9 @@ btSequentialImpulseConstraintSolver     *bt_engine_solver ;
 btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 btOverlapFilterCallback                 *bt_engine_filterCallback;
 
+render_DebugDrawer                       debugDrawer;
+
+
 void RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
 
@@ -224,6 +227,9 @@ void Engine_Init()
     bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
     bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
+    
+    debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+    bt_engine_dynamicsWorld->setDebugDrawer(&debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 
     engine_lua = luaL_newstate();
@@ -2467,6 +2473,11 @@ int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "r_wireframe"))
         {
             renderer.style ^= R_DRAW_WIRE;
+            return 1;
+        }
+        else if(!strcmp(token, "r_coll"))
+        {
+            renderer.style ^= R_DRAW_COLL;
             return 1;
         }
         else if(!strcmp(token, "r_normals"))

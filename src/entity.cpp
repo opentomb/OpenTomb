@@ -470,13 +470,10 @@ int  Entity_GetWaterState(entity_p entity)
 
 btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2)
 {
-    float    vec1[3] = {0.0, 0.0, 0.0};
-    float    vec2[3] = {0.0, 0.0, 0.0};
+    btScalar *v1 = entity_1->transform + 12;
+    btScalar *v2 = entity_2->transform + 12;
 
-    vec3_copy(vec1, entity_1->transform + 12);
-    vec3_copy(vec2, entity_2->transform + 12);
-
-    return sqrt(vec3_dist_sq(vec1, vec2));
+    return vec3_dist(v1, v2);
 }
 
 void Entity_DoAnimCommands(entity_p entity, int changing)
@@ -958,18 +955,18 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 }
                 break;
 
-            case TR_FD_FUNC_SLOPE1:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE2:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE3:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE4:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE5:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE6:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE7:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE8:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE9:           // TR3 SLANT
-            case TR_FD_FUNC_SLOPE10:          // TR3 SLANT
-            case TR_FD_FUNC_SLOPE11:          // TR3 SLANT
-            case TR_FD_FUNC_SLOPE12:          // TR3 SLANT
+            case TR_FD_FUNC_FLOORTRIANGLE_NW:                       // TR3 SLANT
+            case TR_FD_FUNC_FLOORTRIANGLE_NE:                       // TR3 SLANT
+            case TR_FD_FUNC_CEILINGTRIANGLE_NW:                     // TR3 SLANT
+            case TR_FD_FUNC_CEILINGTRIANGLE_NE:                     // TR3 SLANT
+            case TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW:             // TR3 SLANT
+            case TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE:             // TR3 SLANT
+            case TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE:             // TR3 SLANT
+            case TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW:             // TR3 SLANT
+            case TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW:           // TR3 SLANT
+            case TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE:           // TR3 SLANT
+            case TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW:           // TR3 SLANT
+            case TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE:           // TR3 SLANT
                 cont_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
                 slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
                 slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000

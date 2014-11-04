@@ -149,10 +149,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     ent->anim_flags = ANIM_NORMAL_CONTROL;
     Character_UpdateCurrentHeight(ent);
 
-    // last frame is a stick... but is some cases works absolute correctly
-    //char   last_frame = ent->bf.model->animations[ent->bf.current_animation].frames_count <= ent->bf.current_frame + 1;
-    int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height));
-
+    int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height - LARA_HANG_VERTICAL_EPSILON));
     
     if(cmd->kill)   // Stop any music, if Lara is dead.
     {
@@ -180,7 +177,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             Character_Lean(ent, cmd, 0.0);
 
             if( (climb->can_hang &&
-                (climb->next_z_space >= ent->character->Height) &&
+                (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON) &&
                 (ent->move_type == MOVE_CLIMBING)) ||
                 (ent->bf.current_animation == TR_ANIMATION_LARA_STAY_SOLID) )
             {
@@ -295,10 +292,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     offset[2] += DEFAULT_CLIMB_UP_HEIGHT;
                     *climb = Character_CheckClimbability(ent, offset, &next_fc, DEFAULT_CLIMB_UP_HEIGHT);
 
-                    if(  climb->edge_hit                                                         &&
-                        (climb->next_z_space >= ent->character->Height)                          &&
-                        (pos[2] + ent->character->max_step_up_height < next_fc.floor_point[2])   &&
-                        (pos[2] + 2944.0 >= next_fc.floor_point[2])                              &&
+                    if(  climb->edge_hit                                                                &&
+                        (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON)    &&
+                        (pos[2] + ent->character->max_step_up_height < next_fc.floor_point[2])          &&
+                        (pos[2] + 2944.0 >= next_fc.floor_point[2])                                     &&
                         (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component)  ) // trying to climb on
                     {
                         if(pos[2] + 640.0 >= next_fc.floor_point[2])
@@ -1501,12 +1498,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(cmd->move[0] == 1)
                 {
-                    if(climb->edge_hit && (climb->next_z_space >= 512.0) && ((climb->next_z_space < ent->character->Height) || (cmd->crouch == 1)))
+                    if(climb->edge_hit && (climb->next_z_space >= 512.0) && ((climb->next_z_space < ent->character->Height - LARA_HANG_VERTICAL_EPSILON) || (cmd->crouch == 1)))
                     {
                         vec3_copy(climb->point, climb->edge_point.m_floats);
                         ent->bf.next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;         // crawlspace climb
                     }
-                    else if(climb->edge_hit && (climb->next_z_space >= ent->character->Height))
+                    else if(climb->edge_hit && (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON))
                     {
                         vec3_copy(climb->point, climb->edge_point.m_floats);
                         ent->bf.next_state = (cmd->shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_GRABBING);               // climb up
@@ -2100,7 +2097,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                    *climb = Character_CheckClimbability(ent, offset, &next_fc, 0.0);
                 }
 
-                if(climb->edge_hit && (climb->next_z_space >= ent->character->Height))// && (climb->edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))   // max_step_up_height is not correct value here
+                if(climb->edge_hit && (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON))// && (climb->edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))   // max_step_up_height is not correct value here
                 {
                     ent->dir_flag = ENT_STAY;
                     ent->move_type = MOVE_CLIMBING;

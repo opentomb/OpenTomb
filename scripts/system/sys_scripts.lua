@@ -152,15 +152,17 @@ function create_pickup_func(id, item_id)
             return;
         end
         
-        local dx, dy, dz = getEntityVector(object_id, activator_id);
-        --if(dz < -256.0) then
-        --    pickup_state = 137;                             -- FIXME: warious states for difference items relative Z positions
-        --end;
-
+        local need_set_pos = true;
         local curr_anim = getEntityAnim(activator_id);
         
         if(curr_anim == 103) then               -- Stay idle
-            setEntityAnim(activator_id, 135);   -- Stay pickup      
+            local dx, dy, dz = getEntityVector(object_id, activator_id);
+            if(dz < -256.0) then
+                need_set_pos = false;
+                setEntityAnim(activator_id, 425);   -- Stay pickup, test version
+            else
+                setEntityAnim(activator_id, 135);   -- Stay pickup  
+            end;
         elseif(curr_anim == 222) then           -- Crouch idle
             setEntityAnim(activator_id, 291);   -- Crouch pickup
         elseif(curr_anim == 263) then           -- Crawl idle
@@ -174,9 +176,14 @@ function create_pickup_func(id, item_id)
         print("you try to pick up object ".. object_id);
         
         local px, py, pz = getEntityPos(object_id);
-        if(curr_anim == 108) then pz = pz + 128.0 end;  -- Shift offset for swim pickup.
-        setEntityPos(activator_id, px, py, pz);
+        if(curr_anim == 108) then 
+            pz = pz + 128.0                     -- Shift offset for swim pickup.
+        end;  
         
+        if(need_set_pos) then
+            setEntityPos(activator_id, px, py, pz);
+        end;
+
         addTask(
         function()
             local a, f, c = getEntityAnim(activator_id);

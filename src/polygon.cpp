@@ -79,7 +79,6 @@ void Polygon_Copy(polygon_p dst, polygon_p src)
     dst->vertex_count = src->vertex_count;
     dst->transparency = src->transparency;
     dst->double_side  = src->double_side;
-    dst->type = src->type;
     dst->tex_index = src->tex_index;
     dst->anim_id = src->anim_id;
     dst->anim_offset = src->anim_offset;
