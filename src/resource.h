@@ -110,7 +110,7 @@ int  TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world);
 
 void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
 void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index);
-int  TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
+uint32_t TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
 void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
 void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
 int  TR_Sector_IsWall(room_sector_p ws, room_sector_p ns);
