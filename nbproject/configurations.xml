@@ -57,15 +57,36 @@
         </logicalFolder>
         <logicalFolder name="tr3" displayName="tr3" projectFiles="true">
           <itemPath>scripts/level/tr3/ANTARC.lua</itemPath>
+          <itemPath>scripts/level/tr3/ANTARC_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/AREA51.lua</itemPath>
+          <itemPath>scripts/level/tr3/AREA51_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/CHAMBER.lua</itemPath>
+          <itemPath>scripts/level/tr3/CHAMBER_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/CITY.lua</itemPath>
+          <itemPath>scripts/level/tr3/CITY_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/COMPOUND.lua</itemPath>
+          <itemPath>scripts/level/tr3/COMPOUND_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/CRASH.lua</itemPath>
+          <itemPath>scripts/level/tr3/CRASH_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/HOUSE.lua</itemPath>
+          <itemPath>scripts/level/tr3/HOUSE_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/JUNGLE_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/MINES.lua</itemPath>
+          <itemPath>scripts/level/tr3/MINES_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/NEVADA.lua</itemPath>
+          <itemPath>scripts/level/tr3/NEVADA_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/OFFICE_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/QUADCHAS_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/RAPIDS_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/ROOFS_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/ROOFS_trigger.lua</itemPath>
+          <itemPath>scripts/level/tr3/SEWER_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/SHORE_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/STPAUL_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/TEMPLE_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/TONYBOSS_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/TOWER_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/TRIBOSS_autoexec.lua</itemPath>
         </logicalFolder>
         <logicalFolder name="tr4" displayName="tr4" projectFiles="true">
           <itemPath>scripts/level/tr4/ALEXHUB.lua</itemPath>
@@ -1208,23 +1229,128 @@
       </item>
       <item path="scripts/level/tr3/ANTARC.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/ANTARC_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/AREA51.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/AREA51_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr3/CHAMBER.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/CHAMBER_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/CITY.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/CITY_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr3/COMPOUND.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/COMPOUND_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/CRASH.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/CRASH_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr3/HOUSE.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/HOUSE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/JUNGLE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/MINES.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/MINES_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr3/NEVADA.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/NEVADA_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/OFFICE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/QUADCHAS_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/RAPIDS_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/ROOFS_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/ROOFS_trigger.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/SEWER_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/SHORE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/STPAUL_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/TEMPLE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/TONYBOSS_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/TOWER_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/TRIBOSS_autoexec.lua"
             ex="false"
             tool="3"
             flavor2="0">
@@ -4140,23 +4266,128 @@
       </item>
       <item path="scripts/level/tr3/ANTARC.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/ANTARC_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/AREA51.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/AREA51_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr3/CHAMBER.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/CHAMBER_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/CITY.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/CITY_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr3/COMPOUND.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/COMPOUND_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/CRASH.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/CRASH_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr3/HOUSE.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/HOUSE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/JUNGLE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/MINES.lua" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/MINES_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="scripts/level/tr3/NEVADA.lua" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="scripts/level/tr3/NEVADA_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/OFFICE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/QUADCHAS_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/RAPIDS_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/ROOFS_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="scripts/level/tr3/ROOFS_trigger.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/SEWER_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/SHORE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/STPAUL_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/TEMPLE_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/TONYBOSS_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/TOWER_autoexec.lua"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/TRIBOSS_autoexec.lua"
             ex="false"
             tool="3"
             flavor2="0">
