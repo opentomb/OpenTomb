@@ -61,6 +61,16 @@ void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
     if((tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2]) && 
        (tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2]))
     {
+        if(tween->floor_corners[0].m_floats[2] < tween->floor_corners[1].m_floats[2])
+        {
+            btScalar temp_height_1 = tween->floor_corners[0].m_floats[2];
+            tween->floor_corners[0].m_floats[2] = tween->floor_corners[1].m_floats[2];
+            tween->floor_corners[1].m_floats[2] = temp_height_1;
+            
+            btScalar temp_height_2 = tween->floor_corners[2].m_floats[2];
+            tween->floor_corners[2].m_floats[2] = tween->floor_corners[3].m_floats[2];
+            tween->floor_corners[3].m_floats[2] = temp_height_2;
+        }        
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
     }
     else if(tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2])
@@ -82,6 +92,16 @@ void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
     if((tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2]) && 
        (tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2]))
     {
+        if(tween->ceiling_corners[0].m_floats[2] > tween->ceiling_corners[1].m_floats[2])
+        {
+            btScalar temp_height_1 = tween->ceiling_corners[0].m_floats[2];
+            tween->ceiling_corners[0].m_floats[2] = tween->ceiling_corners[1].m_floats[2];
+            tween->ceiling_corners[1].m_floats[2] = temp_height_1;
+            
+            btScalar temp_height_2 = tween->ceiling_corners[2].m_floats[2];
+            tween->ceiling_corners[2].m_floats[2] = tween->ceiling_corners[3].m_floats[2];
+            tween->ceiling_corners[3].m_floats[2] = temp_height_2;
+        }        
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
     }
     else if(tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2])
@@ -813,11 +833,11 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                              (function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE)  )
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
-                    
-                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment-(btScalar)(slope_t11)* TR_METERING_STEP;
-                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment-(btScalar)(slope_t10)* TR_METERING_STEP;
-                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment-(btScalar)(slope_t13)* TR_METERING_STEP ;
-                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment-(btScalar)(slope_t12)* TR_METERING_STEP ;
+                 
+                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
                         
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                         {
@@ -838,10 +858,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
                     
-                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment-(btScalar)(slope_t11)* TR_METERING_STEP;
-                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment-(btScalar)(slope_t10)* TR_METERING_STEP;
-                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment-(btScalar)(slope_t13)* TR_METERING_STEP ;
-                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment-(btScalar)(slope_t12)* TR_METERING_STEP ;
+                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
                         
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                         {
