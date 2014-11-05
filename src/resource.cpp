@@ -1163,6 +1163,89 @@ void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c)
     v[3] = tr_c->a * 2;
 }
 
+room_sector_p TR_GetRoomSector(int room_id, int sx, int sy)
+{
+    room_p room;
+    if((room_id < 0) || (room_id >= engine_world.room_count))
+    {
+        return NULL;
+    }
+    
+    room = engine_world.rooms + room_id;
+    if((sx < 0) || (sx >= room->sectors_x) || (sy < 0) || (sy >= room->sectors_y))
+    {
+        return NULL;
+    }
+    
+    return room->sectors + sx * room->sectors_y + sy;
+}
+
+int lua_SetSectorFloorConfig(lua_State * lua)
+{
+    int id, sx, sy, top;
+    
+    top = lua_gettop(lua);
+    
+    if(top < 10)
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)");
+        return 0;
+    }
+    
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
+    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    if(rs == NULL)
+    {
+        Con_AddLine("wrong sector info");
+        return 0;
+    }
+
+    rs->floor_penetration_config = lua_tointeger(lua, 4);
+    rs->floor_diagonal_type = lua_tointeger(lua, 5);
+    rs->floor = lua_tonumber(lua, 6);
+    rs->floor_corners[0].m_floats[2] = lua_tonumber(lua, 7);
+    rs->floor_corners[1].m_floats[2] = lua_tonumber(lua, 8);
+    rs->floor_corners[2].m_floats[2] = lua_tonumber(lua, 9);
+    rs->floor_corners[3].m_floats[2] = lua_tonumber(lua, 10);
+    
+    return 0;
+}
+
+int lua_SetSectorCeilingConfig(lua_State * lua)
+{
+    int id, sx, sy, top;
+    
+    top = lua_gettop(lua);
+    
+    if(top < 10)
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)");
+        return 0;
+    }
+    
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
+    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    if(rs == NULL)
+    {
+        Con_AddLine("wrong sector info");
+        return 0;
+    }
+
+    rs->ceiling_penetration_config = lua_tointeger(lua, 4);
+    rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
+    rs->ceiling = lua_tonumber(lua, 6);
+    rs->ceiling_corners[0].m_floats[2] = lua_tonumber(lua, 7);
+    rs->ceiling_corners[1].m_floats[2] = lua_tonumber(lua, 8);
+    rs->ceiling_corners[2].m_floats[2] = lua_tonumber(lua, 9);
+    rs->ceiling_corners[3].m_floats[2] = lua_tonumber(lua, 10);
+    
+    return 0;
+}
+
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
     int32_t i;
@@ -1211,6 +1294,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     if(level_script != NULL)
     {
         luaL_openlibs(level_script);
+        lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
+        lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
         lua_err = luaL_loadfile(level_script, buf);
         lua_pcall(level_script, 0, 0, 0);
         if(lua_err)
@@ -1490,6 +1575,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     
 #else
 
+    if(level_script)
+    {
+        top = lua_gettop(level_script);
+        lua_getglobal(level_script, "doTuneSector");
+        lua_pcall(level_script, 0, 0, 0);
+        lua_settop(level_script, top);
+    }
+    
     for(i=0;i<world->room_count;i++,r++)
     {
         // Inbetween polygons array is later filled by loop which scans adjacent
