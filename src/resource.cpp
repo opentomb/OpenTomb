@@ -60,13 +60,10 @@ void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 {
     btScalar t;
     
-    if(tween->floor_corners[0].m_floats[2] > tween->floor_corners[1].m_floats[2])
+    if(tween->floor_corners[0].m_floats[2] < tween->floor_corners[1].m_floats[2])
     {
         SWAPT(tween->floor_corners[0].m_floats[2], tween->floor_corners[1].m_floats[2], t);
-    }
-    if(tween->floor_corners[2].m_floats[2] < tween->floor_corners[3].m_floats[2])
-    {
-        SWAPT(tween->floor_corners[0].m_floats[2], tween->floor_corners[1].m_floats[2], t);
+        SWAPT(tween->floor_corners[2].m_floats[2], tween->floor_corners[3].m_floats[2], t);
     }
     
     if((tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2]) && 
@@ -95,10 +92,7 @@ void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
     if(tween->ceiling_corners[0].m_floats[2] > tween->ceiling_corners[1].m_floats[2])
     {
         SWAPT(tween->ceiling_corners[0].m_floats[2], tween->ceiling_corners[1].m_floats[2], t);
-    }
-    if(tween->ceiling_corners[2].m_floats[2] < tween->ceiling_corners[3].m_floats[2])
-    {
-        SWAPT(tween->ceiling_corners[0].m_floats[2], tween->ceiling_corners[1].m_floats[2], t);
+        SWAPT(tween->ceiling_corners[2].m_floats[2], tween->ceiling_corners[3].m_floats[2], t);
     }
     
     if((tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2]) && 
