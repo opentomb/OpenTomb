@@ -752,7 +752,6 @@ void ShowDebugInfo()
     entity_p ent;
     btScalar tr[16];
     btTransform trans;
-    gui_text_line_p txt;
     vec3_copy(light_position, engine_camera.pos);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
@@ -765,7 +764,7 @@ void ShowDebugInfo()
 #if !SKELETAL_TEST
 
     glColor3f(0.0, 0.0, 0.0);
-    for (int j=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
+    for(int j=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
     {
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[j];
         btRigidBody* body = btRigidBody::upcast(obj);
@@ -794,38 +793,7 @@ void ShowDebugInfo()
     ent = engine_world.Character;
     if(ent && ent->character)
     {
-       height_info_t *fc = &ent->character->height_info;
-        Gui_OutTextXY(NULL, 20, 108, "is water = %d, level = %.1f", fc->water, fc->water_level);
-
-#if 0
-        glPushMatrix();
-        trans.setFromOpenGLMatrix(ent->transform);
-        trans.getOrigin() += ent->character->curr_offset;
-
-            r = ent->character->Radius;
-            h = ent->character->shapeZ->getHalfHeight() / ent->character->shapeZ->getLocalScaling().getZ();
-            gluQuadricDrawStyle(dbgSphere, GLU_LINE);
-            gluQuadricDrawStyle(dbgCyl, GLU_LINE);
-            glColor3f(1.0, 1.0, 1.0);
-            trans.getOpenGLMatrix(tr);
-
-            glPushMatrix();
-            glMultMatrixf(tr);
-            glScalef(ent->character->base_scale.m_floats[0], ent->character->base_scale.m_floats[1], ent->character->shapeZ->getLocalScaling().getZ());
-            glTranslatef(0.0, 0.0, -h);
-            gluSphere(dbgSphere, r, 12, 12);
-            gluCylinder(dbgCyl, r, r, 2.0 * h, 12, 12);
-            glPopMatrix();
-
-            glPushMatrix();
-            glMultMatrixf(tr);
-            glScalef(ent->character->base_scale.m_floats[0], ent->character->base_scale.m_floats[1], ent->character->shapeZ->getLocalScaling().getZ());
-            glTranslatef(0.0, 0.0, h);
-            gluSphere(dbgSphere, r, 12, 12);
-            glPopMatrix();
-
-        glPopMatrix();
-#endif
+        /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(NULL, 20, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         if(txt)
         {
@@ -842,17 +810,19 @@ void ShowDebugInfo()
         {
             Gui_OutTextXY(NULL, 20, 48, "ent_rmb_ID = %d", last_rmb->id);
         }
-        Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+        Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);*/
     }
 
-    if(engine_world.Character && engine_world.Character->self->room)
+    if(engine_camera.current_room != NULL)
     {
-        Gui_OutTextXY(NULL, 20, 128, "Level Name: %s", gameflow_manager.CurrentLevelName);
-        Gui_OutTextXY(NULL, 20, 28, "room = %d, co = %d", engine_world.Character->self->room->id, bt_engine_dynamicsWorld->getNumCollisionObjects());
+        room_sector_p rs = Room_GetSector(engine_camera.current_room, engine_camera.pos);
+        if(rs != NULL)
+        {
+            Gui_OutTextXY(NULL, 20, 68, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
+            Gui_OutTextXY(NULL, 20, 44, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
+        }
     }
-
-    //Gui_OutTextXY(screen_info.w-380, 68, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
-    //Gui_OutTextXY(screen_info.w-380, 68, "r_room_active = %d", renderer.r_list_active_count);
+    Gui_OutTextXY(NULL, 20, 20, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
 #endif
 }
 

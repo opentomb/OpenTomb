@@ -41,7 +41,6 @@ struct base_mesh_s;
 struct static_mesh_s;
 struct entity_s;
 struct skeletal_model_s;
-struct render_object_list_s;
 struct RedBlackHeader_s;
 struct ss_bone_frame_s;
 
@@ -80,8 +79,7 @@ typedef struct room_sector_s
 
     int16_t                     index_x;
     int16_t                     index_y;
-    btScalar                    pos_x;
-    btScalar                    pos_y;
+    btScalar                    pos[3];
     
     btVector3                   ceiling_corners[4];
     uint8_t                     ceiling_diagonal_type;
@@ -94,13 +92,6 @@ typedef struct room_sector_s
     int32_t                     portal_to_room;
 }room_sector_t, *room_sector_p;
 
-
-/*typedef struct sector_heightmap_s
-{
-
-    
-    
-}sector_heightmap_t, *sector_heightmap_p;*/
 
 typedef struct sector_tween_s
 {
