@@ -124,7 +124,7 @@ int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
     if((ns->portal_to_room < 0) && (ns->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (ws->portal_to_room >= 0))
     {
         ws = Room_GetSector(engine_world.rooms + ws->portal_to_room, ws->pos);
-        if((ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || ((ws->owner_room->bb_min[2] >= ns->owner_room->bb_max[2]) || (ws->owner_room->bb_max[2] < ns->owner_room->bb_min[2])) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+        if((ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || (0 == Sectors_Is2SidePortals(ns, ws)) || ((ws->owner_room->bb_min[2] >= ns->owner_room->bb_max[2]) || (ws->owner_room->bb_max[2] < ns->owner_room->bb_min[2])) /*&& (ws->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID)*/)
         {
             return 1;
         }
@@ -205,19 +205,19 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                 {
                     if(TR_Sector_IsWall(next_heightmap, current_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->owner_room->bb_min[2];//current_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->owner_room->bb_max[2];//current_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->owner_room->bb_max[2];//current_heightmap->ceiling_corners[1].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->owner_room->bb_min[2];//current_heightmap->floor_corners[1].m_floats[2];
+                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
                         TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                     }
                     else if(TR_Sector_IsWall(current_heightmap, next_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->owner_room->bb_min[2];//next_heightmap->floor_corners[3].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->owner_room->bb_max[2];//next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->owner_room->bb_max[2];//next_heightmap->ceiling_corners[2].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->owner_room->bb_min[2];//next_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
                         TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                     }
@@ -315,19 +315,19 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     // Init Y-plane tween  [ - ]
                     if(TR_Sector_IsWall(next_heightmap, current_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->owner_room->bb_min[2];//current_heightmap->floor_corners[1].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->owner_room->bb_max[2];//current_heightmap->ceiling_corners[1].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->owner_room->bb_max[2];//current_heightmap->ceiling_corners[2].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->owner_room->bb_min[2];//current_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
                         TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                     }
                     else if(TR_Sector_IsWall(current_heightmap, next_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->owner_room->bb_max[2];//next_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->owner_room->bb_min[2];//next_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->owner_room->bb_min[2];//next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->owner_room->bb_max[2];//next_heightmap->floor_corners[3].m_floats[2];
+                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
+                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
+                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
+                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                         TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                     }
@@ -1196,9 +1196,9 @@ int lua_SetSectorFloorConfig(lua_State * lua)
         return 0;
     }
 
-    rs->floor_penetration_config = lua_tointeger(lua, 4);
-    rs->floor_diagonal_type = lua_tointeger(lua, 5);
-    rs->floor = lua_tonumber(lua, 6);
+    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
+    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
+    if(!lua_isnil(lua, 6))  rs->floor = lua_tonumber(lua, 6);
     rs->floor_corners[0].m_floats[2] = lua_tonumber(lua, 7);
     rs->floor_corners[1].m_floats[2] = lua_tonumber(lua, 8);
     rs->floor_corners[2].m_floats[2] = lua_tonumber(lua, 9);
@@ -1229,13 +1229,74 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
         return 0;
     }
 
-    rs->ceiling_penetration_config = lua_tointeger(lua, 4);
-    rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
-    rs->ceiling = lua_tonumber(lua, 6);
+    if(!lua_isnil(lua, 4))  rs->ceiling_penetration_config = lua_tointeger(lua, 4);
+    if(!lua_isnil(lua, 5))  rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
+    if(!lua_isnil(lua, 6))  rs->ceiling = lua_tonumber(lua, 6);
     rs->ceiling_corners[0].m_floats[2] = lua_tonumber(lua, 7);
     rs->ceiling_corners[1].m_floats[2] = lua_tonumber(lua, 8);
     rs->ceiling_corners[2].m_floats[2] = lua_tonumber(lua, 9);
     rs->ceiling_corners[3].m_floats[2] = lua_tonumber(lua, 10);
+    
+    return 0;
+}
+
+int lua_SetSectorPortal(lua_State * lua)
+{
+    int id, sx, sy, top, p;
+    
+    top = lua_gettop(lua);
+    
+    if(top < 4)
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)");
+        return 0;
+    }
+    
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
+    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    if(rs == NULL)
+    {
+        Con_AddLine("wrong sector info");
+        return 0;
+    }
+
+    p = lua_tointeger(lua, 4);
+    if(p < engine_world.room_count)
+    {
+        rs->portal_to_room = p;
+    }
+    
+    return 0;
+}
+
+int lua_SetSectorFlags(lua_State * lua)
+{
+    int id, sx, sy, top;
+    
+    top = lua_gettop(lua);
+    
+    if(top < 7)
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)");
+        return 0;
+    }
+    
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
+    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    if(rs == NULL)
+    {
+        Con_AddLine("wrong sector info");
+        return 0;
+    }
+
+    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
+    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
+    if(!lua_isnil(lua, 6))  rs->ceiling_penetration_config = lua_tointeger(lua, 6);
+    if(!lua_isnil(lua, 7))  rs->ceiling_diagonal_type = lua_tointeger(lua, 7);
     
     return 0;
 }
@@ -1290,6 +1351,9 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         luaL_openlibs(level_script);
         lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
         lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
+        lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
+        lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
+                
         lua_err = luaL_loadfile(level_script, buf);
         lua_pcall(level_script, 0, 0, 0);
         if(lua_err)

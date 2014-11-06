@@ -19,7 +19,7 @@
 -- test sector geometry tuning
 function doTuneSector()
     -- (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)
-    setSectorFloorConfig(4, 7, 2, 0, 0, 512, 512, 512, 512, 512)
-    setSectorCeilingConfig(4, 7, 2, 0, 0, 512, 2048, 2048, 2048, 2048)
+    setSectorFloorConfig(4, 7, 2, nil, nil, nil, 512, 512, 512, 512)
+    setSectorCeilingConfig(4, 7, 2, nil, nil, nil, 2048, 2048, 2048, 2048)
     print("test sectors config");
 end
