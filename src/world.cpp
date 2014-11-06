@@ -251,7 +251,7 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
         s2 = Room_GetSector(engine_world.rooms + s2->portal_to_room, s2->pos);
     }
     
-    if(/*(s1 == NULL) || (s2 == NULL) ||*/ (s1->owner_room == s2->owner_room) || !Room_IsJoined(s1->owner_room, s2->owner_room))
+    if((s1->owner_room == s2->owner_room) || !Room_IsJoined(s1->owner_room, s2->owner_room))
     {
         return 0;
     }    

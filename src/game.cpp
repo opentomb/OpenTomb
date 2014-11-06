@@ -512,7 +512,13 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
 
     vec3_copy(cam->pos, cam_pos.m_floats);
     Cam_SetRotation(cam, cam_angles);
-
+    cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
+    if((cam->current_room) != NULL && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
+    {
+        cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 16.0;
+    }
+    cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
+    
     if(!ent->character)
     {
         delete[] cb;
