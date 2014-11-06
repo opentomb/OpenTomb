@@ -70,6 +70,7 @@
           <itemPath>scripts/level/tr3/CRASH_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/HOUSE.lua</itemPath>
           <itemPath>scripts/level/tr3/HOUSE_autoexec.lua</itemPath>
+          <itemPath>scripts/level/tr3/JUNGLE.lua</itemPath>
           <itemPath>scripts/level/tr3/JUNGLE_autoexec.lua</itemPath>
           <itemPath>scripts/level/tr3/MINES.lua</itemPath>
           <itemPath>scripts/level/tr3/MINES_autoexec.lua</itemPath>
@@ -1275,6 +1276,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/JUNGLE.lua" ex="false" tool="3" flavor2="0">
       </item>
       <item path="scripts/level/tr3/JUNGLE_autoexec.lua"
             ex="false"
@@ -4312,6 +4315,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="scripts/level/tr3/JUNGLE.lua" ex="false" tool="3" flavor2="0">
       </item>
       <item path="scripts/level/tr3/JUNGLE_autoexec.lua"
             ex="false"
