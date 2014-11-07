@@ -132,8 +132,9 @@ typedef struct height_info_s
     int16_t                                     ceiling_hit;
     btCollisionObject                          *ceiling_obj;
     
-    btScalar                                    water_level;
+    btScalar                                    transition_level;
     int16_t                                     water;
+    int16_t                                     quicksand;
 }height_info_t, *height_info_p;
 
 typedef struct character_command_s
@@ -221,7 +222,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
 int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
 int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id);                // returns items count
 
-void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc);
+void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset = 0.0);
 int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc);
 int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
