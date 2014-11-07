@@ -1,6 +1,6 @@
 -- LUA config file
 
-screen = 
+screen =
 {
     x = 50;
     y = 20;
@@ -10,7 +10,7 @@ screen =
     fov = 75.0;
 }
 
-audio = 
+audio =
 {
     sound_volume = 0.9;
     music_volume = 0.7;
@@ -19,7 +19,7 @@ audio =
     stream_buffer_size = 128;
 }
 
-render = 
+render =
 {
     mipmap_mode = 3;
     mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
@@ -31,7 +31,7 @@ render =
     texture_border = 16;
 }
 
-controls = 
+controls =
 {
     mouse_sensitivity = 25.0;
 
@@ -54,7 +54,7 @@ controls =
     joy_look_deadzone = 1500;
 }
 
-console = 
+console =
 {
     font_path = "VeraMono.ttf";
     font_color = {r = 255, g = 255, b = 255};
@@ -68,7 +68,7 @@ console =
     showing_lines = 128;
     spacing = 1.5;
     show_cursor_period = 0.5;
-    show = 0; 
+    show = 0;
 }
 
 -- Keys binding
@@ -102,7 +102,7 @@ bind(act.smallmedi, KEY_5);
 bind(act.bigmedi, KEY_6);
 
 -- CVAR's section. here you can create and delete CVAR's
-cvars.show_fps = 1; 
+cvars.show_fps = 1;
 cvars.free_look_speed = 2500;
 
 

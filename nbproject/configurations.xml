@@ -1122,7 +1122,7 @@
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
-          <commandLine>-static -lmingw32 -limagee -lSDL2main -lSDL2.dll -L"lib\." -lbullete -lfreetype2e -lglu32 -lopengl32 -limm32 -lkernel32 -lole32 -loleaut32 -luuid -lversion -lwinmm -lgdi32 -lz -lpthread "res/resource.o"</commandLine>
+          <commandLine>-static -lmingw32 -limagee -lSDL2main -lSDL2.dll -L"lib\." -lbullete -lfreetype2e -lglu32 -lopengl32 -lz -lpthread "res/resource.o"</commandLine>
         </linkerTool>
       </compileType>
       <item path="scripts/audio/common_sounds.lua" ex="false" tool="3" flavor2="0">
@@ -4161,7 +4161,7 @@
         </asmTool>
         <linkerTool>
           <stripSymbols>true</stripSymbols>
-          <commandLine>-static -lmingw32 -limagee -lSDL2main -lSDL2.dll -L"lib\." -lbullete -lfreetype2e -lglu32 -lopengl32 -limm32 -lkernel32 -lole32 -loleaut32 -luuid -lversion -lwinmm -lgdi32 -lz -lpthread "res/resource.o"</commandLine>
+          <commandLine>-static -lmingw32 -limagee -lSDL2main -lSDL2.dll -L"lib\." -lbullete -lfreetype2e -lglu32 -lopengl32 -lz -lpthread "res/resource.o"</commandLine>
         </linkerTool>
       </compileType>
       <item path="scripts/audio/common_sounds.lua" ex="false" tool="3" flavor2="0">

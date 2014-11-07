@@ -41,28 +41,28 @@ void Sys_Init()
     screen_info.h = 600;
     screen_info.FS_flag = 0;
     screen_info.fov = 75.0;
-    
+
     system_fps.buf_size = 16;
     system_fps.text = (char*)malloc(system_fps.buf_size * sizeof(char));
     system_fps.text[0] = 0;
-    system_fps.font_color[0] = 1.0; 
+    system_fps.font_color[0] = 1.0;
     system_fps.font_color[1] = 0.0;
     system_fps.font_color[2] = 0.0;
     system_fps.font_color[3] = 1.0;
-    
+
     system_fps.rect_color[0] = 0.0;
     system_fps.rect_color[1] = 1.0;
     system_fps.rect_color[2] = 0.0;
     system_fps.rect_color[3] = 0.15;
-    
+
     system_fps.x = -96;
     system_fps.y = -con_base.line_height - 8;
-    
+
     system_fps.show = 1;
     system_fps.show_rect = 0;
     system_fps.rect_border = 2.0;
     system_fps.font = NULL;
-    
+
     Gui_AddLine(&system_fps);
 }
 
@@ -75,7 +75,7 @@ void Sys_Destroy()
 }
 
 void Sys_Error(const char *error, ...)
-{ 
+{
     va_list     argptr;
     char        string[4096];
 
@@ -85,13 +85,13 @@ void Sys_Error(const char *error, ...)
 
     Sys_DebugLog(LOG_FILENAME, "System error: %s", string);
     Engine_Shutdown(1);
-} 
+}
 
 void Sys_Warn(const char *warning, ...)
-{ 
+{
     va_list     argptr;
     char        string[4096];
-    
+
     va_start (argptr, warning);
     vsnprintf (string, 4096, warning, argptr);
     va_end (argptr);
@@ -100,10 +100,10 @@ void Sys_Warn(const char *warning, ...)
 
 void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
-    va_list argptr; 
+    va_list argptr;
     static char data[4096];
     FILE *fp;
-    
+
     va_start(argptr, fmt);
     sprintf(data, "\n");
     vsnprintf(&data[1], 4095, fmt, argptr);
@@ -132,33 +132,33 @@ void Sys_Strtime(char *buf, size_t buf_size)
 {
     struct tm *tm_;
     static time_t t_;
-  
+
     time(&t_);
     tm_=gmtime(&t_);
-    
+
     snprintf(buf, buf_size, "%02d:%02d:%02d",tm_->tm_hour,tm_->tm_min,tm_->tm_sec);
 }
 
 void Sys_StrRunSec(char *buf, size_t buf_size)
 {
     struct              timeval tp;
-    static long int     secbase = 0; 
-    
-    gettimeofday(&tp, NULL);  
-    
+    static long int     secbase = 0;
+
+    gettimeofday(&tp, NULL);
+
     if(!secbase)
     {
         secbase = tp.tv_sec;
     }
-    
-    snprintf(buf, buf_size, "%06d.%0.3d", tp.tv_sec-secbase, (int)(tp.tv_usec/1000));
+
+    snprintf(buf, buf_size, "%06d.%0.3d", (int)tp.tv_sec-secbase, (int)(tp.tv_usec/1000));
 }
 
 btScalar Sys_FloatTime (void)
 {
     struct              timeval tp;
-    static long int     secbase = 0; 
-    
+    static long int     secbase = 0;
+
     gettimeofday(&tp, NULL);
 
     if (!secbase)

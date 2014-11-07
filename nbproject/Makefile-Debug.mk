@@ -212,7 +212,7 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/opentomb-code.exe: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/opentomb-code ${OBJECTFILES} ${LDLIBSOPTIONS} -static -lmingw32 -limagee -lSDL2main -lSDL2.dll -L"lib\." -lbullete -lfreetype2e -lglu32 -lopengl32 -limm32 -lkernel32 -lole32 -loleaut32 -luuid -lversion -lwinmm -lgdi32 -lz -lpthread "res/resource.o"
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/opentomb-code ${OBJECTFILES} ${LDLIBSOPTIONS} -static -lmingw32 -limagee -lSDL2main -lSDL2.dll -L"lib\." -lbullete -lfreetype2e -lglu32 -lopengl32 -lz -lpthread "res/resource.o"
 
 ${OBJECTDIR}/src/al/Alc/ALc.o: nbproject/Makefile-${CND_CONF}.mk src/al/Alc/ALc.c 
 	${MKDIR} -p ${OBJECTDIR}/src/al/Alc

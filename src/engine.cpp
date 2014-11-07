@@ -227,7 +227,7 @@ void Engine_Init()
     bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
     bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
-    
+
     debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
     bt_engine_dynamicsWorld->setDebugDrawer(&debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
@@ -254,7 +254,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
 {
     int size, id, top;
     top = lua_gettop(lua);
-    
+
     if(top < 2)
     {
         Con_Printf("Wrong arguments count. Must be (id, value)");
@@ -282,7 +282,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
 {
     int arg, val, id, top;
     top = lua_gettop(lua);
-    
+
     if(top < 3)
     {
         Con_Printf("Wrong arguments count. Must be (id, map_index, value)");
@@ -391,7 +391,7 @@ int lua_GetModelID(lua_State * lua)
     int id, top;
     entity_p ent;
     top = lua_gettop(lua);
-    
+
     if(top < 1)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id)");
@@ -420,7 +420,7 @@ int lua_GetActivationOffset(lua_State * lua)
     int id, top;
     entity_p ent;
     top = lua_gettop(lua);
-    
+
     if(top < 1)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id)");
@@ -476,25 +476,24 @@ int lua_GetCharacterParam(lua_State * lua)
 {
     int id, top, parameter;
     entity_p ent;
-    
+
     top = lua_gettop(lua);
-    
+
     if(top < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id), (param)");
+        Con_Printf("Wrong arguments count. Must be (entity_id, param)");
         return 0;
     }
 
-    if(parameter >= PARAM_LASTINDEX)
-    {    
-        Con_Printf("Wrong option index.");
-        return 0;
-    }
-    
     id         = lua_tointeger(lua, 1);
     parameter  = lua_tointeger(lua, 2);
     ent        = World_GetEntityByID(&engine_world, id);
-    
+
+    if(parameter >= PARAM_LASTINDEX)
+    {
+        Con_Printf("Wrong option index.");
+        return 0;
+    }
     if(!IsCharacter(ent))
     {
         Con_Printf("No entity or no character for entity #%d", id);
@@ -513,18 +512,12 @@ int lua_SetCharacterParam(lua_State * lua)
     int id, top, parameter;
     float value;
     entity_p ent;
-    
+
     top = lua_gettop(lua);
-    
+
     if(top < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id), (param), (value)");
-        return 0;
-    }
-    
-    if(parameter >= PARAM_LASTINDEX)
-    {    
-        Con_Printf("Wrong option index.");
+        Con_Printf("Wrong arguments count. Must be (entity_id, param, value)");
         return 0;
     }
 
@@ -532,7 +525,12 @@ int lua_SetCharacterParam(lua_State * lua)
     parameter = lua_tointeger(lua, 2);
     value     = lua_tonumber (lua, 3);
     ent       = World_GetEntityByID(&engine_world, id);
-    
+
+    if(parameter >= PARAM_LASTINDEX)
+    {
+        Con_Printf("Wrong option index.");
+        return 0;
+    }
     if(!IsCharacter(ent))
     {
         Con_Printf("No entity or no character for entity #%d", id);
@@ -549,18 +547,12 @@ int lua_ChangeCharacterParam(lua_State * lua)
     int id, top, parameter;
     float value;
     entity_p ent;
-    
+
     top = lua_gettop(lua);
-    
+
     if(top < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id), (param), (value)");
-        return 0;
-    }
-    
-    if(parameter >= PARAM_LASTINDEX)
-    {    
-        Con_Printf("Wrong option index.");
+        Con_Printf("Wrong arguments count. Must be (entity_id, param, value)");
         return 0;
     }
 
@@ -568,7 +560,12 @@ int lua_ChangeCharacterParam(lua_State * lua)
     parameter  = lua_tointeger(lua, 2);
     value      = lua_tonumber(lua, 3);
     ent        = World_GetEntityByID(&engine_world, id);
-    
+
+    if(parameter >= PARAM_LASTINDEX)
+    {
+        Con_Printf("Wrong option index.");
+        return 0;
+    }
     if(!IsCharacter(ent))
     {
         Con_Printf("No entity or no character for entity #%d", id);
@@ -608,7 +605,7 @@ int lua_GetActionChange(lua_State *lua)
 
     top = lua_gettop(lua);
     act = lua_tointeger(lua, 1);
-    
+
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
         Con_Printf("wrong action number");
@@ -619,7 +616,7 @@ int lua_GetActionChange(lua_State *lua)
         lua_pushinteger(lua, (int)(control_mapper.action_map[act].already_pressed));
         return 1;
     }
-    
+
     Con_Printf("wrong arguments number, must be 1");
     return 0;
 }
@@ -671,7 +668,7 @@ int lua_AddItem(lua_State * lua)
         Con_Printf("Wrong arguments count. Must be (entity_id, item_id, (items_count))");
         return 0;
     }
-    
+
     if(top >= 3)
     {
         count = lua_tointeger(lua, 3);
@@ -680,7 +677,7 @@ int lua_AddItem(lua_State * lua)
     {
         count = -1;
     }
-    
+
     entity_id = lua_tointeger(lua, 1);
     item_id = lua_tointeger(lua, 2);
 
@@ -732,15 +729,15 @@ int lua_CreateBaseItem(lua_State * lua)
         Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id, type, count, (name))");
         return 0;
     }
-    
+
     item_id         = lua_tointeger(lua, 1);
     model_id        = lua_tointeger(lua, 2);
     world_model_id  = lua_tointeger(lua, 3);
     type            = lua_tointeger(lua, 4);
     count           = lua_tointeger(lua, 5);
-    
+
     World_CreateItem(&engine_world, item_id, model_id, world_model_id, type, count, lua_tostring(lua, 6));
-    
+
     return 0;
 }
 
@@ -755,7 +752,7 @@ int lua_DeleteBaseItem(lua_State * lua)
         Con_Printf("Wrong arguments count. Must be (item_idt)");
         return 0;
     }
-    
+
     item_id = lua_tointeger(lua, 1);
     World_DeleteItem(&engine_world, item_id);
     return 0;
@@ -1124,7 +1121,7 @@ int lua_MoveEntityLocal(lua_State * lua)
     entity_p ent;
     btScalar dx, dy, dz;
     top = lua_gettop(lua);
-    
+
     if(top < 4)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id, dx, dy, dz)");
@@ -1213,7 +1210,7 @@ int lua_SetEntityAnim(lua_State * lua)
     int id, top;
     entity_p ent;
     top = lua_gettop(lua);
-    
+
     if(top < 2)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id, anim_id)");
@@ -1239,7 +1236,7 @@ int lua_GetEntityAnim(lua_State * lua)
     int id, top;
     entity_p ent;
     top = lua_gettop(lua);
-    
+
     if(top < 1)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id)");
@@ -1631,7 +1628,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
 /*
  * Camera functions
  */
- 
+
 int lua_CamShake(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
@@ -1826,7 +1823,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     /*
      * register functions
      */
-     
+
     lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "playSound", lua_PlaySound);
     lua_register(lua, "stopsound", lua_StopSound);
@@ -1834,16 +1831,16 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "playstream", lua_PlayStream);
     lua_register(lua, "playStream", lua_PlayStream);
-    
+
     lua_register(lua, "camShake", lua_CamShake);
 
     lua_register(lua, "setlevel", lua_SetLevel);
     lua_register(lua, "setLevel", lua_SetLevel);
     lua_register(lua, "getlevel", lua_GetLevel);
     lua_register(lua, "getLevel", lua_GetLevel);
-    
+
     lua_register(lua, "getLevelVersion", lua_GetLevelVersion);
-    
+
     lua_register(lua, "setgame", lua_SetGame);
     lua_register(lua, "setGame", lua_SetGame);
 
@@ -1852,14 +1849,14 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
     lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
-    
+
     lua_register(lua, "addItem", lua_AddItem);
     lua_register(lua, "removeItem", lua_RemoveItem);
     lua_register(lua, "createBaseItem", lua_CreateBaseItem);
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
     lua_register(lua, "printItems", lua_PrintItems);
     lua_register(lua, "getItemsCount", lua_GetItemsCount);
-    
+
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
@@ -1887,11 +1884,11 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
-    
+
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
-    
+
     lua_register(lua, "getActionState", lua_GetActionState);
     lua_register(lua, "getActionChange", lua_GetActionChange);
 
@@ -2227,7 +2224,7 @@ void Items_CheckEntities(RedBlackNode_p n);
 void Items_CheckEntities(RedBlackNode_p n)
 {
     base_item_p item = (base_item_p)n->data;
-    
+
     for(int i=0;i<engine_world.room_count;i++)
     {
         engine_container_p cont = engine_world.rooms[i].containers;
@@ -2245,12 +2242,12 @@ void Items_CheckEntities(RedBlackNode_p n)
             }
         }
     }
-    
+
     if(n->right)
     {
         Items_CheckEntities(n->right);
     }
-    
+
     if(n->left)
     {
         Items_CheckEntities(n->left);
@@ -2333,12 +2330,12 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
     luaL_dofile(engine_lua, "scripts/autoexec.lua");
-    
+
     if(engine_world.items_tree && engine_world.items_tree->root)
     {
         Items_CheckEntities(engine_world.items_tree->root);
     }
-    
+
     Game_Prepare();
 
     Render_SetWorld(&engine_world);

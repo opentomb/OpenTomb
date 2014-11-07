@@ -351,7 +351,7 @@ void Engine_InitSDLControls()
         SDL_Init(init_flags);
 
         NumJoysticks = SDL_NumJoysticks();
-        if( (NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number) )
+        if((NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number))
         {
             Sys_DebugLog(LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
             return;
@@ -561,7 +561,7 @@ void Engine_Display()
 #else
         SkeletalModelTestDraw();
 #endif
-        
+
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);
         /*if(engine_world.Character)
@@ -571,7 +571,7 @@ void Engine_Display()
             Render_DrawAxis(1000.0);
             glPopMatrix();
         }*/
-        
+
         Gui_SwitchGLMode(1);
         {
             GLfloat lp[] = {250.0, 120.0, 0.0, 0.0};
@@ -581,7 +581,7 @@ void Engine_Display()
             glEnable(GL_ALPHA_TEST);
             glLightfv(GL_LIGHT0, GL_POSITION, lp);
             glColor3f(1.0, 1.0, 1.0);
-            
+
             Gui_DrawNotifier();
             if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
             {
@@ -591,7 +591,7 @@ void Engine_Display()
         glPopClientAttrib();
         Gui_Render();
         Gui_SwitchGLMode(0);
-        
+
         Render_DrawList_DebugLines();
         ShowDebugInfo();
         SDL_GL_SwapWindow(sdl_window);
@@ -949,19 +949,19 @@ void DebugKeys(int button, int state)
             case SDLK_UP:
                 main_inventory_menu->MoveSelectVertical(-1);
                 break;
-                
+
             case SDLK_DOWN:
                 main_inventory_menu->MoveSelectVertical(1);
                 break;
-                
+
             case SDLK_LEFT:
                 main_inventory_menu->MoveSelectHorisontal(-1);
                 break;
-                
+
             case SDLK_RIGHT:
                 main_inventory_menu->MoveSelectHorisontal(1);
                 break;
-                
+
                 /*models switching*/
             case SDLK_p:
                 model++;

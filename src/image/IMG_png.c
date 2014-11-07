@@ -68,7 +68,7 @@
 #include <png.h>
 
 /* Check for the older version of libpng */
-#if (PNG_LIBPNG_VER_MAJOR == 1) 
+#if (PNG_LIBPNG_VER_MAJOR == 1)
 #if (PNG_LIBPNG_VER_MINOR < 4)
 #define LIBPNG_VERSION_12
 typedef png_bytep png_const_bytep;
@@ -615,7 +615,7 @@ int IMG_SavePNG_RW(SDL_Surface *surface, SDL_RWops *dst, int freedst)
         static const Uint32 png_format = SDL_PIXELFORMAT_RGBA8888;
 #endif
         size_t size;
-        void *png;
+        void *png = NULL;
 
         if (surface->format->format == png_format) {
             png = tdefl_write_image_to_png_file_in_memory(surface->pixels, surface->w, surface->h, surface->pitch, surface->format->BytesPerPixel, &size);
