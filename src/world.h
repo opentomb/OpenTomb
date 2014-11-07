@@ -15,12 +15,12 @@
 // be performed in such rooms.
 
 #define TR_ROOM_FLAG_WATER          0x0001
+#define TR_ROOM_FLAG_QUICKSAND      0x0002  // Moved from 0x0080 to avoid confusion with NL.
 #define TR_ROOM_FLAG_SKYBOX         0x0008
 #define TR_ROOM_FLAG_UNKNOWN1       0x0010
 #define TR_ROOM_FLAG_WIND           0x0020
 #define TR_ROOM_FLAG_UNKNOWN2       0x0040  ///@FIXME: Find what it means!!! Always set by Dxtre3d.
-#define TR_ROOM_FLAG_QUICKSAND      0x0080  // In TR3.
-#define TR_ROOM_FLAG_NO_LENSFLARE   0x0080  // In TR4-5.
+#define TR_ROOM_FLAG_NO_LENSFLARE   0x0080  // In TR4-5. Was quicksand in TR3.
 #define TR_ROOM_FLAG_MIST           0x0100  ///@FIXME: Unknown meaning in TR1!!!
 #define TR_ROOM_FLAG_CAUSTICS       0x0200
 #define TR_ROOM_FLAG_UNKNOWN3       0x0400

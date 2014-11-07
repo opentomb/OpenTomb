@@ -149,6 +149,12 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
 
     room.alternate_room = read_bit16(src);
     room.flags = read_bitu16(src);
+    
+    if(room.flags & 0x0080)
+    {
+        room.flags |= 0x0002;   // Move quicksand flag to another bit to avoid confusion with NL flag.
+        room.flags ^= 0x0080;
+    }
 
     // Only in TR3-5
 

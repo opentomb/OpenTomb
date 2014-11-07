@@ -29,10 +29,11 @@ struct ss_bone_frame_s;
 #define ENTITY_ACTOR_COLLISION                    4                             // actor, enemies, NPC, animals
 #define ENTITY_VEHICLE_COLLISION                  5                             // car, moto, bike
 
-#define ENTITY_WATER_NONE                         0
-#define ENTITY_WATER_SHALLOW                      1
-#define ENTITY_WATER_WADE                         2
-#define ENTITY_WATER_SWIM                         3
+#define ENTITY_SUBSTANCE_NONE                     0
+#define ENTITY_SUBSTANCE_WATER_SHALLOW            1
+#define ENTITY_SUBSTANCE_WATER_WADE               2
+#define ENTITY_SUBSTANCE_WATER_SWIM               3
+#define ENTITY_SUBSTANCE_QUICKSAND                4
 
 #define COLLISION_NONE                            (0x00000000)
 #define COLLISION_TRIMESH                         (0x00000001)
@@ -161,7 +162,7 @@ void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateRotation(entity_p entity);
 void Entity_CheckActivators(struct entity_s *ent);
 
-int  Entity_GetWaterState(entity_p entity);
+int  Entity_GetSubstanceState(entity_p entity);
 
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
 void Entity_DoAnimCommands(entity_p entity, int changing);

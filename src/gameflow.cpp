@@ -35,7 +35,7 @@ void Gameflow_Do()
             if(Gui_FadeCheck(FADER_LOADSCREEN) == TR_FADER_STATUS_COMPLETE)     // Switch level only when fade is complete!
             {
                 // Get our script filepath from game_script cvar!
-                strncpy(gameflow_manager.Script, CVAR_get_val_s("game_script"), MAX_ENGINE_PATCH);
+                strncpy(gameflow_manager.Script, CVAR_get_val_s("game_script"), MAX_ENGINE_PATH);
                 if(Engine_FileFound(gameflow_manager.Script))                   // If the lua file exists...
                 {
                     luaL_dofile(engine_lua, gameflow_manager.Script);
@@ -54,7 +54,7 @@ void Gameflow_Do()
                     lua_pop(engine_lua, 1); // Pop stack to get next value
                     strncpy(gameflow_manager.CurrentLevelName, lua_tostring(engine_lua, -1), LEVEL_NAME_MAX_LEN); // Second value in stack is level name
                     lua_pop(engine_lua, 1); // Pop stack to get next value
-                    strncpy(gameflow_manager.CurrentLevelPath, lua_tostring(engine_lua, -1), MAX_ENGINE_PATCH); // Third value in stack is level path
+                    strncpy(gameflow_manager.CurrentLevelPath, lua_tostring(engine_lua, -1), MAX_ENGINE_PATH); // Third value in stack is level path
 
                     // Now, load the level!
                     Engine_LoadMap(lua_tostring(engine_lua, -1));
