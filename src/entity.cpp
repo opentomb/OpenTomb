@@ -440,31 +440,35 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
 }
 
 
-int  Entity_GetWaterState(entity_p entity)
+int  Entity_GetSubstanceState(entity_p entity)
 {
     if((!entity) || (!entity->character))
     {
-        return false;
+        return 0;
     }
 
-    if(!entity->character->height_info.water)
+    if(entity->character->height_info.quicksand)
     {
-        return ENTITY_WATER_NONE;
+        return ENTITY_SUBSTANCE_QUICKSAND;
+    }
+    else if(!entity->character->height_info.water)
+    {
+        return ENTITY_SUBSTANCE_NONE;
     }
     else if( entity->character->height_info.water &&
-            (entity->character->height_info.water_level > entity->transform[12 + 2]) &&
-            (entity->character->height_info.water_level < entity->transform[12 + 2] + entity->character->wade_depth) )
+            (entity->character->height_info.transition_level > entity->transform[12 + 2]) &&
+            (entity->character->height_info.transition_level < entity->transform[12 + 2] + entity->character->wade_depth) )
     {
-        return ENTITY_WATER_SHALLOW;
+        return ENTITY_SUBSTANCE_WATER_SHALLOW;
     }
     else if( entity->character->height_info.water &&
-            (entity->character->height_info.water_level > entity->transform[12 + 2] + entity->character->wade_depth) )
+            (entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->wade_depth) )
     {
-        return ENTITY_WATER_WADE;
+        return ENTITY_SUBSTANCE_WATER_WADE;
     }
     else
     {
-        return ENTITY_WATER_SWIM;
+        return ENTITY_SUBSTANCE_WATER_SWIM;
     }
 }
 
@@ -525,15 +529,19 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 if(entity->bf.current_frame == *++pointer)
                 {
                     sound_index = *++pointer & 0x3FFF;
-
+                    
+                    // Quick workaround for TR3 quicksand.
+                    if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND)
+                       sound_index = 18;
+                        
                     if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
                     {
-                        if(Entity_GetWaterState(entity) == ENTITY_WATER_SHALLOW)
+                        if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
                             Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                     }
                     else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
                     {
-                        if(Entity_GetWaterState(entity) != ENTITY_WATER_SHALLOW)
+                        if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
                             Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                     }
                     else
@@ -581,7 +589,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             // Please note that we bypass land/water mask, as TR3-5 tends to ignore
                             // this flag and play step sound in any case on land, ignoring it
                             // completely in water rooms.
-                            if(!Entity_GetWaterState(entity))
+                            if(!Entity_GetSubstanceState(entity))
                             {
                                 // TR3-5 footstep map.
                                 // We define it here as a magic numbers array, because TR3-5 versions
