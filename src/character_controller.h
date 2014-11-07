@@ -231,7 +231,7 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
 void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
 
-void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz);
+void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
 void Character_UpdatePlatformPostStep(struct entity_s *ent);
