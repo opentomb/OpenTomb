@@ -248,7 +248,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_mul_scalar(offset, ent->transform + 4, WALK_FORWARD_OFFSET);
                     offset[2] += ent->bf.bb_max[2];
                     vec3_add(offset, offset, pos);
-                    Character_GetHeightInfo(offset, &next_fc, ent->character->Height);
+                    Character_GetHeightInfo(offset, &next_fc);
                     if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
                     {
                         ent->move_type = MOVE_ON_FLOOR;
@@ -343,7 +343,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     vec3_mul_scalar(offset, ent->transform + 4, -WALK_FORWARD_OFFSET);
                     offset[2] += ent->bf.bb_max[2];
                     vec3_add(offset, offset, pos);
-                    Character_GetHeightInfo(offset, &next_fc, ent->character->Height);
+                    Character_GetHeightInfo(offset, &next_fc);
                     if((cmd->horizontal_collide == 0) && (next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height)))
                     {
                         ent->dir_flag = ENT_MOVE_BACKWARD;
@@ -1087,7 +1087,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 0, -RUN_FORWARD_OFFSET);  // not an error - RUN_... more correct here
                 offset[2] += ent->bf.bb_max[2];
                 vec3_add(offset, offset, pos);
-                Character_GetHeightInfo(offset, &next_fc, ent->character->Height);
+                Character_GetHeightInfo(offset, &next_fc);
                 if(next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height))
                 {
                     if(!curr_fc->water || (curr_fc->floor_point.m_floats[2] + ent->character->Height > curr_fc->transition_level)) // if (floor_hit == 0) then we went to MOVE_FREE_FALLING.
@@ -1124,7 +1124,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 vec3_mul_scalar(offset, ent->transform + 0, RUN_FORWARD_OFFSET);// not an error - RUN_... more correct here
                 offset[2] += ent->bf.bb_max[2];
                 vec3_add(offset, offset, pos);
-                Character_GetHeightInfo(offset, &next_fc, ent->character->Height);
+                Character_GetHeightInfo(offset, &next_fc);
                 if(next_fc.floor_hit && (next_fc.floor_point.m_floats[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_point.m_floats[2] <= pos[2] + ent->character->max_step_up_height))
                 {
                     if(!curr_fc->water || (curr_fc->floor_point.m_floats[2] + ent->character->Height > curr_fc->transition_level)) // if (floor_hit == 0) then we went to MOVE_FREE_FALLING.
@@ -1873,7 +1873,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
-                if(curr_fc->quicksand)
+                if(ent->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_STAY_IDLE, 0);
                 }
@@ -1963,7 +1963,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
-                if(curr_fc->quicksand)
+                if(ent->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_STAY_IDLE, 0);
                     Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->id);
