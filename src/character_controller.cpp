@@ -2256,7 +2256,8 @@ void Character_UpdateParams(struct entity_s *ent)
         case MOVE_MONKEYSWING:
         case MOVE_WALLS_CLIMB:
             
-            if(ent->character->height_info.quicksand == 0x02)
+            if((ent->character->height_info.quicksand == 0x02) &&
+               (ent->move_type == MOVE_ON_FLOOR))
             {
                 if(!Character_ChangeParam(ent, PARAM_AIR, -3.0))
                     Character_ChangeParam(ent, PARAM_HEALTH, -3.0);
