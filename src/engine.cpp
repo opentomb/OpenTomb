@@ -2280,7 +2280,7 @@ int Engine_LoadMap(const char *name)
 
     renderer.world = NULL;
 
-    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATCH);         // it is needed for "not in the game" levels or correct saves loading.
+    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);         // it is needed for "not in the game" levels or correct saves loading.
     CVAR_set_val_s("game_level", name);
     CVAR_set_val_d("engine_version", (btScalar)trv);
 
