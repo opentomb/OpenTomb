@@ -507,15 +507,14 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
 
     if(control_states.mouse_look == 0)//If mouse look is off
     {
-        cam_angles[0] = (ent->angles[0] * (M_PI/180)); //TEMPORARY We convert the current entity's angle to radians!
+        cam_angles[0] = (ent->angles[0] * (M_PI/180.0)); //TEMPORARY We convert the current entity's angle to radians!
     }
 
-    btVector3 next_cam_pos;
     vec3_copy(cam->pos, cam_pos.m_floats);
-    vec3_copy(next_cam_pos, cam->pos);
     
-    next_cam_pos.m_floats[2] -= 2.0 * 64.0;
-    cam->current_room = Room_FindPosCogerrence(&engine_world, next_cam_pos, cam->current_room);
+    cam->pos[2] -= 128.0;
+    cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
+    cam->pos[2] += 128.0;
     
     if((cam->current_room) != NULL && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
