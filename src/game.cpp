@@ -510,13 +510,20 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         cam_angles[0] = (ent->angles[0] * (M_PI/180)); //TEMPORARY We convert the current entity's angle to radians!
     }
 
+    btVector3 next_cam_pos;
     vec3_copy(cam->pos, cam_pos.m_floats);
-    Cam_SetRotation(cam, cam_angles);
-    cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
+    vec3_copy(next_cam_pos, cam->pos);
+    
+    next_cam_pos.m_floats[2] -= 2.0 * 64.0;
+    cam->current_room = Room_FindPosCogerrence(&engine_world, next_cam_pos, cam->current_room);
+    
     if((cam->current_room) != NULL && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
-        cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 16.0;
+        cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
     }
+    
+    Cam_SetRotation(cam, cam_angles);
+    
     cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
     
     if(!ent->character)

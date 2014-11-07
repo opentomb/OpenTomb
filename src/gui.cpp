@@ -874,12 +874,12 @@ bool Gui_FadeStart(int fader, int fade_direction)
 
 bool Gui_FadeAssignPic(int fader, const char* pic_name)
 {
-    char buf[MAX_ENGINE_PATCH];
+    char buf[MAX_ENGINE_PATH];
     size_t len = strlen(pic_name);
     size_t ext_len = 0;
     
     ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
-    strncpy(buf, pic_name, MAX_ENGINE_PATCH);
+    strncpy(buf, pic_name, MAX_ENGINE_PATH);
     if(!Engine_FileFound(buf, false))
     {
         for(;ext_len+1<len;ext_len++)
