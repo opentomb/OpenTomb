@@ -1963,9 +1963,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
-                if(curr_fc->quicksand == 0x01)
+                if(curr_fc->quicksand)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_STAY_IDLE, 0);
+                    Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
                 else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_MAXSAFE)
                 {
@@ -1973,15 +1974,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     {
                         cmd->kill = 1;
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_LANDING_DEATH, 0);
-                        
-                        if(curr_fc->quicksand == 0x02)
-                        {
-                            Character_SetParam(ent, PARAM_AIR, 0.0);
-                        }
-                        else
-                        {
-                            Controls_JoyRumble(200.0, 500);
-                        }
+                        Controls_JoyRumble(200.0, 500);
                     }
                     else
                     {

@@ -447,9 +447,13 @@ int  Entity_GetSubstanceState(entity_p entity)
         return 0;
     }
 
-    if(entity->character->height_info.quicksand)
+    if(entity->character->height_info.quicksand == 0x01)
     {
-        return ENTITY_SUBSTANCE_QUICKSAND;
+        return ENTITY_SUBSTANCE_QUICKSAND_SHALLOW;
+    }
+    else if(entity->character->height_info.quicksand == 0x02)
+    {
+        return ENTITY_SUBSTANCE_QUICKSAND_CONSUMED;
     }
     else if(!entity->character->height_info.water)
     {
@@ -531,8 +535,11 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                     sound_index = *++pointer & 0x3FFF;
                     
                     // Quick workaround for TR3 quicksand.
-                    if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND)
-                       sound_index = 18;
+                    if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
+                       (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
+                    {
+                        sound_index = 18;
+                    }
                         
                     if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
                     {

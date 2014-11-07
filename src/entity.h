@@ -33,7 +33,9 @@ struct ss_bone_frame_s;
 #define ENTITY_SUBSTANCE_WATER_SHALLOW            1
 #define ENTITY_SUBSTANCE_WATER_WADE               2
 #define ENTITY_SUBSTANCE_WATER_SWIM               3
-#define ENTITY_SUBSTANCE_QUICKSAND                4
+#define ENTITY_SUBSTANCE_QUICKSAND_SHALLOW        4
+#define ENTITY_SUBSTANCE_QUICKSAND_CONSUMED       5
+
 
 #define COLLISION_NONE                            (0x00000000)
 #define COLLISION_TRIMESH                         (0x00000001)
