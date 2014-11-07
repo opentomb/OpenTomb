@@ -2014,11 +2014,13 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
      * base sectors information loading and collisional mesh creation
      */
 
-    // To avoid manipulating with unnecessary information, we declare temporary
+    // To avoid manipulating with unnecessary information, we declare simple
     // heightmap here, which will be operated with sector and floordata parsing,
     // then vertical inbetween polys will be constructed, and Bullet collisional
-    // object will be created. Afterwards, we delete heightmap.
-
+    // object will be created. Afterwards, this heightmap also can be used to
+    // quickly detect slopes for pushable blocks and other entities that rely on
+    // floor level.
+    
     sector = room->sectors;
     for(i=0;i<room->sectors_count;i++,sector++)
     {

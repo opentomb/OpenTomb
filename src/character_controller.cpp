@@ -396,7 +396,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     t[0] = t[1] = 0.0;
     t[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
     Mat4_vec3_mul_macro(pos, ent->transform, t);
-    Character_GetHeightInfo(pos, &ent->character->height_info); 
+    Character_GetHeightInfo(pos, &ent->character->height_info, ent->character->Height); 
 }
 
 /*
@@ -473,7 +473,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
 /**
  * Start position are taken from ent->transform
  */
-void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
+void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset)
 {
     btVector3 from, to;
     btTransform tr1, tr2;
@@ -485,7 +485,8 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
     fc->floor_hit = 0x00;
     fc->ceiling_hit = 0x00;
     fc->water = 0x00;
-    fc->water_level = 32512.0;
+    fc->quicksand = 0x00;
+    fc->transition_level = 32512.0;
     
     r = Room_FindPosCogerrence(&engine_world, pos, r);
     if(r)
@@ -498,8 +499,28 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
                 rs = rs->sector_above;
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
-                    fc->water_level = (btScalar)rs->floor;
+                    fc->transition_level = (btScalar)rs->floor;
                     fc->water = 0x01;
+                    break;
+                }
+            }
+        }
+        else if(r->flags & TR_ROOM_FLAG_QUICKSAND)
+        {
+            while(rs->sector_above)
+            {
+                rs = rs->sector_above;
+                if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)        // find air
+                {
+                    fc->transition_level = (btScalar)rs->floor;
+                    if(fc->transition_level - fc->floor_point.m_floats[2] > v_offset)
+                    {
+                        fc->quicksand = 0x02;
+                    }
+                    else
+                    {
+                        fc->quicksand = 0x01;
+                    }
                     break;
                 }
             }
@@ -511,8 +532,21 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc)
                 rs = rs->sector_below;
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
-                    fc->water_level = (btScalar)rs->ceiling;
+                    fc->transition_level = (btScalar)rs->ceiling;
                     fc->water = 0x01;
+                    break;
+                }
+                else if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)        // find water
+                {
+                    fc->transition_level = (btScalar)rs->ceiling;
+                    if(fc->transition_level - fc->floor_point.m_floats[2] > v_offset)
+                    {
+                        fc->quicksand = 0x02;
+                    }
+                    else
+                    {
+                        fc->quicksand = 0x01;
+                    }
                     break;
                 }
             }
@@ -1670,7 +1704,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
             ent->speed.m_floats[1] = 0.0;
         } 
         
-        if(!ent->character->height_info.water || (pos[2] + ent->character->Height < ent->character->height_info.water_level))
+        if(!ent->character->height_info.water || (pos[2] + ent->character->Height < ent->character->height_info.transition_level))
         {
             ent->move_type = MOVE_UNDER_WATER;
             return 2;
@@ -2048,17 +2082,17 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
         Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
 
         Entity_UpdateRoomPos(ent);
-        if(ent->character->height_info.water && (pos[2] + ent->bf.bb_max[2] >= ent->character->height_info.water_level))
+        if(ent->character->height_info.water && (pos[2] + ent->bf.bb_max[2] >= ent->character->height_info.transition_level))
         {
             if(/*(spd.m_floats[2] > 0.0)*/ent->transform[4 + 2] > 0.67)         ///@FIXME: magick!
             {
                 ent->move_type = MOVE_ON_WATER;
-                //pos[2] = fc.water_level;
+                //pos[2] = fc.transition_level;
                 return 2;
             }
-            if(!ent->character->height_info.floor_hit || (ent->character->height_info.water_level - ent->character->height_info.floor_point.m_floats[2] >= ent->character->Height))
+            if(!ent->character->height_info.floor_hit || (ent->character->height_info.transition_level - ent->character->height_info.floor_point.m_floats[2] >= ent->character->Height))
             {
-                pos[2] = ent->character->height_info.water_level - ent->bf.bb_max[2];
+                pos[2] = ent->character->height_info.transition_level - ent->bf.bb_max[2];
             }
         }
     }
@@ -2116,7 +2150,7 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
         Entity_UpdateRoomPos(ent);
         if(ent->character->height_info.water)
         {
-            pos[2] = ent->character->height_info.water_level;
+            pos[2] = ent->character->height_info.transition_level;
         }
         else
         {
@@ -2148,7 +2182,7 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
         Entity_UpdateRoomPos(ent);
         if(ent->character->height_info.water)
         {
-            pos[2] = ent->character->height_info.water_level;
+            pos[2] = ent->character->height_info.transition_level;
         }
         else
         {
@@ -2221,7 +2255,22 @@ void Character_UpdateParams(struct entity_s *ent)
         case MOVE_CLIMBING:
         case MOVE_MONKEYSWING:
         case MOVE_WALLS_CLIMB:
-            Character_SetParam(ent, PARAM_AIR, PARAM_ABSOLUTE_MAX);
+            
+            if(ent->character->height_info.quicksand == 0x02)
+            {
+                if(!Character_ChangeParam(ent, PARAM_AIR, -3.0))
+                    Character_ChangeParam(ent, PARAM_HEALTH, -3.0);
+            }
+            else if(ent->character->height_info.quicksand == 0x01)
+            {
+                Character_ChangeParam(ent, PARAM_AIR, 3.0);
+            }
+            else
+            {
+                Character_SetParam(ent, PARAM_AIR, PARAM_ABSOLUTE_MAX);
+            }
+            
+            
             if((ent->bf.last_state == TR_STATE_LARA_SPRINT) ||
                (ent->bf.last_state == TR_STATE_LARA_SPRINT_ROLL))
             {
