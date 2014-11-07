@@ -794,7 +794,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->current_speed = 0.0;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_STAY_IDLE, 0);       ///@FIXME: maybe RUN_TO_STAY
             }
-            else if((ent->move_type == MOVE_CLIMBING) || ((i > CHARACTER_STEP_HORIZONTAL) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component)))  // trying to climb on
+            else if((next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_UP_BIG))
             {
                 ent->bf.next_state = TR_STATE_LARA_RUN_FORWARD;     // Interrupt sprint
             }
