@@ -447,13 +447,16 @@ int  Entity_GetSubstanceState(entity_p entity)
         return 0;
     }
 
-    if(entity->character->height_info.quicksand == 0x01)
+    if(entity->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
     {
-        return ENTITY_SUBSTANCE_QUICKSAND_SHALLOW;
-    }
-    else if(entity->character->height_info.quicksand == 0x02)
-    {
-        return ENTITY_SUBSTANCE_QUICKSAND_CONSUMED;
+        if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->Height)
+        {
+            return ENTITY_SUBSTANCE_QUICKSAND_CONSUMED;
+        }
+        else
+        {
+            return ENTITY_SUBSTANCE_QUICKSAND_SHALLOW;
+        }
     }
     else if(!entity->character->height_info.water)
     {
