@@ -115,9 +115,13 @@ void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
     }
 }
+
 ///@TODO: add alternate room checking in algorithm! This time alternate rooms has WALLS everywhere
 int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 {
+    //ws = TR_Sector_CheckBaseRoom(ws);
+    //ns = TR_Sector_CheckBaseRoom(ns);
+
     if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
     {
         return 1;
@@ -126,26 +130,13 @@ int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
     if((ns->portal_to_room < 0) && (ns->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (ws->portal_to_room >= 0))
     {
         ws = TR_Sector_CheckPortalPointer(ws);
-        if((ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || (0 == Sectors_Is2SidePortals(ns, ws)) || ((ws->owner_room->bb_min[2] >= ns->owner_room->bb_max[2]) || (ws->owner_room->bb_max[2] < ns->owner_room->bb_min[2])))
+        if((ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || (0 == Sectors_Is2SidePortals(ns, ws)))
         {
             return 1;
         }
     }
 
     return 0;
-}
-
-room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs)
-{
-    if((rs != NULL) && (rs->portal_to_room >= 0))
-    {
-        room_p r = engine_world.rooms + rs->portal_to_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
-        rs = r->sectors + (ind_x * r->sectors_y + ind_y);
-    }
-
-    return rs;
 }
 
 void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
@@ -206,7 +197,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
                         {
                             current_heightmap = TR_Sector_CheckPortalPointer(current_heightmap);
-                            next_heightmap = TR_Sector_CheckPortalPointer(next_heightmap);
+                            next_heightmap    = TR_Sector_CheckPortalPointer(next_heightmap);
                             if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -286,7 +277,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 
             room_tween++;
             current_heightmap = room->sectors + (w * room->sectors_y + h);
-            next_heightmap = room->sectors + ((w + 1) * room->sectors_y + h);
+            next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
             room_tween->floor_corners[0].m_floats[0] = current_heightmap->floor_corners[1].m_floats[0];
             room_tween->floor_corners[1].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
             room_tween->floor_corners[2].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
@@ -334,7 +325,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
                         {
                             current_heightmap = TR_Sector_CheckPortalPointer(current_heightmap);
-                            next_heightmap = TR_Sector_CheckPortalPointer(next_heightmap);
+                            next_heightmap    = TR_Sector_CheckPortalPointer(next_heightmap);
                             if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -1583,6 +1574,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     r = world->rooms;
     for(i=0;i<world->room_count;i++,r++)
     {
+        if(r->alternate_room != NULL)
+        {
+            r->alternate_room->base_room = r;
+        }
         // Now, when building basic heightmap is finished, we can parse floordata
         // to load actual slant height values into it, plus fill out Lua script on the way.
         // These two tasks are joined here, because it allows to parse through floordata
@@ -1640,6 +1635,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     for(i=0;i<world->room_count;i++,r++)
     {
+        /*if((r->base_room != NULL) && (r->base_room->base_room != NULL))
+        {
+            Sys_DebugLog("rooms.txt", "AHTUNG! CYCLED ALTERNATE ROOMS!!!\n");
+        }*/
         // Inbetween polygons array is later filled by loop which scans adjacent
         // sector heightmaps and fills the gaps between them, thus creating inbetween
         // polygon. Inbetweens can be either quad (if all four corner heights are
@@ -2020,7 +2019,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     // object will be created. Afterwards, this heightmap also can be used to
     // quickly detect slopes for pushable blocks and other entities that rely on
     // floor level.
-    
+
     sector = room->sectors;
     for(i=0;i<room->sectors_count;i++,sector++)
     {
@@ -2265,6 +2264,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
      * alternate room pointer calculation if one exists.
      */
     room->alternate_room = NULL;
+    room->base_room = NULL;
     if(tr_room->alternate_room >= 0 && tr_room->alternate_room < tr->rooms_count)
     {
         room->alternate_room = world->rooms + tr_room->alternate_room;

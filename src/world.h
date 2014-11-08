@@ -69,26 +69,26 @@ typedef struct room_sector_s
 {
     uint32_t                    fd_index;                                       // offset to the floor data
     int32_t                     box_index;
-    
+
     int32_t                     floor;
     int32_t                     ceiling;
-    
-    struct room_sector_s        *sector_below;  
+
+    struct room_sector_s        *sector_below;
     struct room_sector_s        *sector_above;
     struct room_s               *owner_room;                                    // room htat contain this sector
 
     int16_t                     index_x;
     int16_t                     index_y;
     btScalar                    pos[3];
-    
+
     btVector3                   ceiling_corners[4];
     uint8_t                     ceiling_diagonal_type;
     uint8_t                     ceiling_penetration_config;
-    
+
     btVector3                   floor_corners[4];
     uint8_t                     floor_diagonal_type;
     uint8_t                     floor_penetration_config;
-    
+
     int32_t                     portal_to_room;
 }room_sector_t, *room_sector_p;
 
@@ -97,7 +97,7 @@ typedef struct sector_tween_s
 {
     btVector3                   floor_corners[4];
     uint8_t                     floor_tween_type;
-    
+
     btVector3                   ceiling_corners[4];
     uint8_t                     ceiling_tween_type;
 }sector_tween_t, *sector_tween_p;
@@ -141,12 +141,13 @@ typedef struct room_s
     uint16_t                    portal_count;                                   // number of room portals
     struct portal_s            *portals;                                        // room portals array
     struct room_s              *alternate_room;                                 // alternative room pointer
+    struct room_s              *base_room;                                      // base room == room->alternate_room->base_room
 
     uint32_t                    sectors_count;
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;
     struct room_sector_s       *sectors;
-    
+
     uint16_t                    active_frustums;                                // current number of this room active frustums
     struct frustum_s           *frustum;
     struct frustum_s           *last_frustum;
@@ -194,7 +195,7 @@ typedef struct world_s
 
     struct RedBlackHeader_s    *entity_tree;            // tree of world active objects
     struct RedBlackHeader_s    *items_tree;             // tree of world items [key].ss_bone_frame
-    
+
     uint32_t                    type;
 
     uint32_t                    floor_data_size;
@@ -258,6 +259,8 @@ void Room_BuildNearRoomsList(room_p room);
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);
 int Room_IsInNearRoomsList(room_p room, room_p r);
+room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs);
+room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs);
 int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
 
 int World_AddEntity(world_p world, struct entity_s *entity);

@@ -2,7 +2,7 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-// Here you can specify the way OpenTomb processes room collision - 
+// Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way
 // (derived from actual room mesh).
 
@@ -42,7 +42,7 @@
 #define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
 #define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
 #define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_QUAD               3 
+#define TR_SECTOR_TWEEN_TYPE_QUAD               3
 
 ///@FIXME: Move skybox item IDs to script!
 
@@ -114,7 +114,6 @@ uint32_t TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4
 void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
 void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
 int  TR_Sector_IsWall(room_sector_p ws, room_sector_p ns);
-room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs);
 
 // Miscellaneous functions.
 
