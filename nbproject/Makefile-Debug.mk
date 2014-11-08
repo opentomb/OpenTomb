@@ -75,7 +75,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/anim_state_control.o \
 	${OBJECTDIR}/src/audio.o \
 	${OBJECTDIR}/src/bordered_texture_atlas.o \
-	${OBJECTDIR}/src/bounding_volume.o \
 	${OBJECTDIR}/src/bsp_tree_2d.o \
 	${OBJECTDIR}/src/cache.o \
 	${OBJECTDIR}/src/camera.o \
@@ -146,6 +145,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/lua/lzio.o \
 	${OBJECTDIR}/src/main_SDL.o \
 	${OBJECTDIR}/src/mesh.o \
+	${OBJECTDIR}/src/obb.o \
 	${OBJECTDIR}/src/ogg/libogg/bitwise.o \
 	${OBJECTDIR}/src/ogg/libogg/framing.o \
 	${OBJECTDIR}/src/ogg/libvorbis/analysis.o \
@@ -413,11 +413,6 @@ ${OBJECTDIR}/src/bordered_texture_atlas.o: nbproject/Makefile-${CND_CONF}.mk src
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/bordered_texture_atlas.o src/bordered_texture_atlas.cpp
-
-${OBJECTDIR}/src/bounding_volume.o: nbproject/Makefile-${CND_CONF}.mk src/bounding_volume.cpp 
-	${MKDIR} -p ${OBJECTDIR}/src
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/bounding_volume.o src/bounding_volume.cpp
 
 ${OBJECTDIR}/src/bsp_tree_2d.o: nbproject/Makefile-${CND_CONF}.mk src/bsp_tree_2d.c 
 	${MKDIR} -p ${OBJECTDIR}/src
@@ -768,6 +763,11 @@ ${OBJECTDIR}/src/mesh.o: nbproject/Makefile-${CND_CONF}.mk src/mesh.cpp
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/mesh.o src/mesh.cpp
+
+${OBJECTDIR}/src/obb.o: nbproject/Makefile-${CND_CONF}.mk src/obb.cpp 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/obb.o src/obb.cpp
 
 ${OBJECTDIR}/src/ogg/libogg/bitwise.o: nbproject/Makefile-${CND_CONF}.mk src/ogg/libogg/bitwise.c 
 	${MKDIR} -p ${OBJECTDIR}/src/ogg/libogg

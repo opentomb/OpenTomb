@@ -13,7 +13,7 @@ class btRigidBody;
 
 struct room_s;
 struct room_sector_s;
-struct bounding_volume_s;
+struct obb_s;
 struct character_s;
 struct ss_bone_frame_s;
 
@@ -133,7 +133,7 @@ typedef struct entity_s
     btScalar                            angles[3];
     btScalar                            transform[16];                          // GL transformation matrix               
     
-    struct bounding_volume_s           *bv;                                     // oriented bounding volume - only for OCC test
+    struct obb_s                       *obb;                                    // oriented bounding box
     
     void                              (*onAnimChange)(struct entity_s *ent);
     struct room_sector_s               *current_sector;

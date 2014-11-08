@@ -228,6 +228,7 @@
 		<Unit filename="scripts/level/tr3/HOUSE_autoexec.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="scripts/level/tr3/JUNGLE.lua" />
 		<Unit filename="scripts/level/tr3/JUNGLE_autoexec.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -634,10 +635,6 @@
 		</Unit>
 		<Unit filename="src/bordered_texture_atlas.cpp" />
 		<Unit filename="src/bordered_texture_atlas.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bounding_volume.cpp" />
-		<Unit filename="src/bounding_volume.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/bsp_tree_2d.c">
@@ -3160,6 +3157,10 @@
 		</Unit>
 		<Unit filename="src/mesh.cpp" />
 		<Unit filename="src/mesh.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/obb.cpp" />
+		<Unit filename="src/obb.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/ogg/codec.h">

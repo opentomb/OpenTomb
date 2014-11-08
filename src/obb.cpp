@@ -3,19 +3,19 @@
 #include <stdlib.h>
 
 #include "vmath.h"
-#include "bounding_volume.h"
+#include "obb.h"
 #include "polygon.h"
+#include "entity.h"
 
 #include "bullet/LinearMath/btScalar.h"
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 
-bounding_volume_p BV_Create()
+obb_p OBB_Create()
 {
-    bounding_volume_p ret;
+    obb_p ret;
 
-    ret = (bounding_volume_p)malloc(sizeof(bounding_volume_t));
-    ret->bv_type = BV_EMPTY;
+    ret = (obb_p)malloc(sizeof(obb_t));
     ret->base_polygons = NULL;
     ret->polygons = NULL;
     ret->polygons_count = 0;
@@ -25,117 +25,61 @@ bounding_volume_p BV_Create()
 }
 
 
-void BV_Clear(bounding_volume_p bv)
+void OBB_Clear(obb_p obb)
 {
     int i;
 
-    if(bv)
+    if(obb)
     {
-        if(bv->polygons_count > 0)
+        if(obb->polygons_count > 0)
         {
-            for(i=0;i<bv->polygons_count;i++)
+            for(i=0;i<obb->polygons_count;i++)
             {
-                Polygon_Clear(bv->polygons + i);
-                Polygon_Clear(bv->base_polygons + i);
+                Polygon_Clear(obb->polygons + i);
+                Polygon_Clear(obb->base_polygons + i);
             }
 
-            bv->polygons_count = 0;
-            free(bv->polygons);
-            free(bv->base_polygons);
+            obb->polygons_count = 0;
+            free(obb->polygons);
+            free(obb->base_polygons);
         }
-        bv->bv_type = BV_EMPTY;
     }
 }
 
-/**
- * cyl - rx, ry, h1, h2
- * n - sides count
- * base cylinder is Z oriented
- */
-void BV_InitCylinder(bounding_volume_p bv, btScalar  cyl[4], int n)
-{
-    int i;
-    btScalar fi, dfi;
-
-    bv->polygons_count = n;
-    bv->base_polygons = (polygon_p)calloc(n, sizeof(polygon_t));
-    bv->polygons = (polygon_p)calloc(n, sizeof(polygon_t));
-    bv->r = (cyl[0] > cyl[1])?(cyl[0]):(cyl[1]);
-    fi = 0.0;
-    dfi = 2.0 * M_PI / (btScalar)n;
-
-    for(i=0;i<n;i++)
-    {
-        Polygon_Resize(bv->base_polygons+i, 4);
-        Polygon_Resize(bv->polygons+i, 4);
-
-        bv->base_polygons[i].vertices[0].position[0] = cyl[0] * cos(fi);
-        bv->base_polygons[i].vertices[0].position[1] = cyl[1] * sin(fi);
-        bv->base_polygons[i].vertices[0].position[2] = cyl[3];
-        bv->base_polygons[i].vertices[1].position[0] = bv->base_polygons[i].vertices[0].position[0];
-        bv->base_polygons[i].vertices[1].position[1] = bv->base_polygons[i].vertices[0].position[1];
-        bv->base_polygons[i].vertices[1].position[2] = cyl[2];
-
-        bv->base_polygons[i].vertices[2].position[0] = cyl[0] * cos(fi + dfi);
-        bv->base_polygons[i].vertices[2].position[1] = cyl[1] * sin(fi + dfi);
-        bv->base_polygons[i].vertices[2].position[2] = cyl[2];
-        bv->base_polygons[i].vertices[3].position[0] = bv->base_polygons[i].vertices[2].position[0];
-        bv->base_polygons[i].vertices[3].position[1] = bv->base_polygons[i].vertices[2].position[1];
-        bv->base_polygons[i].vertices[3].position[2] = cyl[3];
-
-        Polygon_FindNormale(bv->base_polygons + i);
-
-        fi += dfi;
-    }
-
-    bv->bv_type = BV_CYLINDER;
-}
-
-
-void BV_InitBox(bounding_volume_p bv, btScalar bb_min[3], btScalar bb_max[3])
+void OBB_Init(obb_p obb, btScalar bb_min[3], btScalar bb_max[3])
 {
     int i;
 
-    bv->polygons_count = 6;
-    bv->base_polygons = (polygon_p)calloc(6, sizeof(polygon_t));
-    bv->polygons = (polygon_p)calloc(6, sizeof(polygon_t));
-    bv->bv_type = BV_BOX;
+    obb->polygons_count = 6;
+    obb->base_polygons = (polygon_p)calloc(6, sizeof(polygon_t));
+    obb->polygons = (polygon_p)calloc(6, sizeof(polygon_t));
 
     for(i=0;i<6;i++)
     {
-        Polygon_Resize(bv->base_polygons+i, 4);
-        Polygon_Resize(bv->polygons+i, 4);
+        Polygon_Resize(obb->base_polygons+i, 4);
+        Polygon_Resize(obb->polygons+i, 4);
     }
 
     if(bb_min != NULL && bb_max != NULL)
     {
-        BV_RebuildBox(bv, bb_min, bb_max);
+        OBB_Rebuild(obb, bb_min, bb_max);
     }
 }
 
 
-void BV_RebuildBox(bounding_volume_p bv, btScalar bb_min[3], btScalar bb_max[3])
+void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3])
 {
-    btScalar sx, sy, sz;
     polygon_p p, p_up, p_down;
     vertex_p v;
 
-    if(bv->bv_type != BV_BOX)
-    {
-        return;
-    }
+    vec3_sub(obb->extent, bb_max, bb_min);
+    vec3_mul_scalar(obb->extent, obb->extent, 0.5);
 
-    vec3_add(bv->base_centre, bb_min, bb_max);
-    bv->base_centre[0] /= 2.0;
-    bv->base_centre[1] /= 2.0;
-    bv->base_centre[2] /= 2.0;
+    vec3_add(obb->base_centre, bb_min, bb_max);
+    vec3_mul_scalar(obb->base_centre, obb->base_centre, 0.5);
+    obb->r = vec3_abs(obb->extent);
 
-    sx = bb_max[0] - bb_min[0];
-    sy = bb_max[1] - bb_min[1];
-    sz = bb_max[2] - bb_min[2];
-    bv->r = 0.5 * sqrt(sx*sx + sy*sy + sz*sz);
-
-    p = bv->base_polygons;
+    p = obb->base_polygons;
     // UP
     p_up = p;
     v = p->vertices;
@@ -269,41 +213,177 @@ void BV_RebuildBox(bounding_volume_p bv, btScalar bb_min[3], btScalar bb_max[3])
 }
 
 
-void BV_Transform(bounding_volume_p bv)
+void OBB_Transform(obb_p obb)
 {
     int i;
 
-    for(i=0;i<bv->polygons_count;i++)
+    for(i=0;i<obb->polygons_count;i++)
     {
-        Polygon_vTransform(bv->polygons+i, bv->base_polygons+i, bv->transform);
+        Polygon_vTransform(obb->polygons+i, obb->base_polygons+i, obb->transform);
     }
 
-    Mat4_vec3_mul_macro(bv->centre, bv->transform, bv->base_centre);
+    Mat4_vec3_mul_macro(obb->centre, obb->transform, obb->base_centre);
 }
 
-void BV_TransformZZ(bounding_volume_p bv, btScalar z1, btScalar z2)
+/*
+ * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
+ */
+int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
 {
-    int i;
-    polygon_p p;
+    //translation, in parent frame
+    btScalar v[3], T[3];
+    vec3_sub(v, e2->obb->centre, e1->obb->centre);
+    //translation, in A's frame
+    T[0] = vec3_dot(v, e1->transform + 0);
+    T[0] = vec3_dot(v, e1->transform + 4);
+    T[0] = vec3_dot(v, e1->transform + 8);
 
-    if(bv->bv_type == BV_CYLINDER)
+    btScalar *a = e1->obb->extent;
+    btScalar *b = e2->obb->extent;
+
+    //B's basis with respect to A's local frame
+    btScalar R[3][3];
+    btScalar ra, rb, t;
+    int i, k;
+
+    //calculate rotation matrix
+    for(i=0 ; i<3 ; i++)
     {
-        p = bv->base_polygons;
-        for(i=0;i<bv->polygons_count;i++,p++)
+        for(k=0 ; k<3 ; k++)
         {
-            p->vertices[0].position[2] = z1;
-            p->vertices[1].position[2] = z2;
-            p->vertices[2].position[2] = z2;
-            p->vertices[3].position[2] = z1;
-            Polygon_vTransform(bv->polygons+i, p, bv->transform);
+            btScalar *e1b = e1->transform + 4 * i;
+            btScalar *e2b = e2->transform + 4 * k;
+            R[i][k] = vec3_dot(e1b, e2b);
         }
-
-        bv->base_centre[0] = 0.0;
-        bv->base_centre[1] = 0.0;
-        bv->base_centre[2] = (z1 + z2) / 2.0;
-        Mat4_vec3_mul_macro(bv->centre, bv->transform, bv->base_centre);
     }
+
+    /*ALGORITHM: Use the separating axis test for all 15 potential
+    separating axes. If a separating axis could not be found, the two
+    boxes overlap. */
+
+    //A's basis vectors
+    for(i=0;i<3;i++)
+    {
+        ra = a[i];
+        rb = b[0]*fabs(R[i][0]) + b[1]*fabs(R[i][1]) + b[2]*fabs(R[i][2]);
+        t = fabs(T[i]);
+
+        if(t > ra + rb)
+        {
+            return 0;
+        }
+    }
+
+    //B's basis vectors
+    for(k=0;k<3;k++)
+    {
+        ra = a[0]*fabs(R[0][k]) + a[1]*fabs(R[1][k]) + a[2]*fabs(R[2][k]);
+        rb = b[k];
+        t = fabs(T[0]*R[0][k] + T[1]*R[1][k] + T[2]*R[2][k]);
+        if(t > ra + rb)
+        {
+            return 0;
+        }
+    }
+
+    //9 cross products
+    //L = A0 x B0
+    ra = a[1]*fabs(R[2][0]) + a[2]*fabs(R[1][0]);
+    rb = b[1]*fabs(R[0][2]) + b[2]*fabs(R[0][1]);
+    t = fabs(T[2]*R[1][0] - T[1]*R[2][0]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+    //L = A0 x B1
+    ra = a[1]*fabs(R[2][1]) + a[2]*fabs(R[1][1]);
+    rb = b[0]*fabs(R[0][2]) + b[2]*fabs(R[0][0]);
+    t = fabs(T[2]*R[1][1] - T[1]*R[2][1]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+    //L = A0 x B2
+    ra = a[1]*fabs(R[2][2]) + a[2]*fabs(R[1][2]);
+    rb = b[0]*fabs(R[0][1]) + b[1]*fabs(R[0][0]);
+    t = fabs(T[2]*R[1][2] - T[1]*R[2][2]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+    //L = A1 x B0
+    ra = a[0]*fabs(R[2][0]) + a[2]*fabs(R[0][0]);
+    rb = b[1]*fabs(R[1][2]) + b[2]*fabs(R[1][1]);
+    t = fabs(T[0]*R[2][0] - T[2]*R[0][0]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+    //L = A1 x B1
+    ra = a[0]*fabs(R[2][1]) + a[2]*fabs(R[0][1]);
+    rb = b[0]*fabs(R[1][2]) + b[2]*fabs(R[1][0]);
+    t = fabs(T[0]*R[2][1] - T[2]*R[0][1]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+    //L = A1 x B2
+    ra = a[0]*fabs(R[2][2]) + a[2]*fabs(R[0][2]);
+    rb = b[0]*fabs(R[1][1]) + b[1]*fabs(R[1][0]);
+    t = fabs(T[0]*R[2][2] - T[2]*R[0][2]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+    //L = A2 x B0
+    ra = a[0]*fabs(R[1][0]) + a[1]*fabs(R[0][0]);
+    rb = b[1]*fabs(R[2][2]) + b[2]*fabs(R[2][1]);
+    t = fabs(T[1]*R[0][0] - T[0]*R[1][0]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+
+    //L = A2 x B1
+    ra = a[0]*fabs(R[1][1]) + a[1]*fabs(R[0][1]);
+    rb = b[0] *fabs(R[2][2]) + b[2]*fabs(R[2][0]);
+    t = fabs(T[1]*R[0][1] - T[0]*R[1][1]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+    //L = A2 x B2
+    ra = a[0]*fabs(R[1][2]) + a[1]*fabs(R[0][2]);
+    rb = b[0]*fabs(R[2][1]) + b[1]*fabs(R[2][0]);
+    t = fabs(T[1]*R[0][2] - T[0]*R[1][2]);
+
+    if(t > ra + rb)
+    {
+        return 0;
+    }
+
+    /*no separating axis found,
+    the two boxes overlap */
+    return 1;
 }
+
+
 
 /**
  * Creates Z capsule - convex shape; Uses for full 3d scaling;

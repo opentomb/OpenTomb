@@ -14,7 +14,7 @@
 #include "bullet/btBulletDynamicsCommon.h"
 #include "vt/vt_level.h"
 
-#include "bounding_volume.h"
+#include "obb.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "main_SDL.h"

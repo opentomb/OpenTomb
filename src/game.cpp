@@ -26,7 +26,7 @@ extern "C" {
 #include "script.h"
 #include "console.h"
 #include "anim_state_control.h"
-#include "bounding_volume.h"
+#include "obb.h"
 #include "character_controller.h"
 #include "redblack.h"
 #include "gameflow.h"
@@ -361,7 +361,7 @@ void Game_ApplyControls(struct entity_s *ent)
         ent->character->cmd.shift = control_states.state_walk;
 
         ent->character->cmd.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);
-        
+
         // New commands only for TR3 and above
         ent->character->cmd.sprint = control_states.state_sprint;
         ent->character->cmd.crouch = control_states.state_crouch;
@@ -422,24 +422,24 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     bt_engine_ClosestConvexResultCallback *cb;
 
     vec3_copy(old_pos.m_floats, cam->pos);
-    
+
     cam_pos.m_floats[0] = (ent->transform[12] - 32.0 *  ent->transform[4 + 0]);
     cam_pos.m_floats[1] = (ent->transform[13] - 32.0 *  ent->transform[4 + 1]);
     cam_pos.m_floats[2] = (ent->transform[14] + 0.5  * (ent->bf.bb_max[2]))   ;
-    
+
     float shake_value   = renderer.cam->shake_value;
     float shake_time    = renderer.cam->shake_time;
-        
+
     if((shake_time > 0.0) && (shake_value > 0.0))
     {
         float shake_value_x = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
         float shake_value_y = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
         float shake_value_z = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
-        
+
         cam_pos.m_floats[0] += shake_value_x;
         cam_pos.m_floats[1] += shake_value_y;
         cam_pos.m_floats[2] += shake_value_z;
-        
+
         renderer.cam->shake_time -= engine_frame_time;
         renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time);
     }
@@ -511,20 +511,20 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     }
 
     vec3_copy(cam->pos, cam_pos.m_floats);
-    
+
     cam->pos[2] -= 128.0;
     cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
     cam->pos[2] += 128.0;
-    
-    if((cam->current_room) != NULL && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
+
+    if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
         cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
     }
-    
+
     Cam_SetRotation(cam, cam_angles);
-    
+
     cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
-    
+
     if(!ent->character)
     {
         delete[] cb;
@@ -578,7 +578,7 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
         {
             ent->character->cmd.kill = 1;                                       // Kill, if no HP.
         }
-        
+
         Character_ApplyCommands(ent, &ent->character->cmd);
     }
 
@@ -680,7 +680,7 @@ void Game_Frame(btScalar time)
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
     }
-    
+
     Controls_RefreshStates();
     Render_UpdateAnimTextures();
 }

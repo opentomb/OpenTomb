@@ -1031,8 +1031,6 @@
       <itemPath>src/audio.h</itemPath>
       <itemPath>src/bordered_texture_atlas.cpp</itemPath>
       <itemPath>src/bordered_texture_atlas.h</itemPath>
-      <itemPath>src/bounding_volume.cpp</itemPath>
-      <itemPath>src/bounding_volume.h</itemPath>
       <itemPath>src/bsp_tree_2d.c</itemPath>
       <itemPath>src/bsp_tree_2d.h</itemPath>
       <itemPath>src/cache.cpp</itemPath>
@@ -1065,6 +1063,8 @@
       <itemPath>src/main_SDL.h</itemPath>
       <itemPath>src/mesh.cpp</itemPath>
       <itemPath>src/mesh.h</itemPath>
+      <itemPath>src/obb.cpp</itemPath>
+      <itemPath>src/obb.h</itemPath>
       <itemPath>src/polygon.cpp</itemPath>
       <itemPath>src/polygon.h</itemPath>
       <itemPath>src/portal.cpp</itemPath>
@@ -1499,10 +1499,6 @@
       <item path="src/bordered_texture_atlas.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/bordered_texture_atlas.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="src/bounding_volume.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="src/bounding_volume.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/bsp_tree_2d.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -3887,6 +3883,10 @@
       <item path="src/mesh.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/mesh.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/obb.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/obb.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/ogg/codec.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -4539,10 +4539,6 @@
       </item>
       <item path="src/bordered_texture_atlas.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="src/bounding_volume.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="src/bounding_volume.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="src/bsp_tree_2d.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/bsp_tree_2d.h" ex="false" tool="3" flavor2="0">
@@ -6926,6 +6922,10 @@
       <item path="src/mesh.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/mesh.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/obb.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="src/obb.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/ogg/codec.h" ex="false" tool="3" flavor2="0">
       </item>
