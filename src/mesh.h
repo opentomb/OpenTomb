@@ -21,7 +21,7 @@ class btCollisionShape;
 struct polygon_s;
 struct room_s;
 struct engine_container_s;
-struct bounding_volume_s;
+struct obb_s;
 struct vertex_s;
 
 /*
@@ -37,11 +37,11 @@ typedef struct base_mesh_s
     uint32_t              transparancy_count;                                   // number of transparancy polygons
     uint32_t              poly_count;                                           // number of all mesh's polygons
     struct polygon_s     *polygons;                                             // polygons data
-    
+
     uint32_t num_texture_pages;                                                 // face without structure wrapping
     uint32_t *element_count_per_texture;                                        //
     uint32_t *elements;                                                         //
-    
+
     uint32_t              vertex_count;                                         // number of mesh's vertices
     struct vertex_s      *vertices;
 
@@ -64,7 +64,7 @@ typedef struct sprite_s
     uint32_t            id;                                                     // object's ID
     uint32_t            texture;                                                // texture number
     GLfloat             tex_coord[8];                                           // texture coordinates
-    uint32_t            flag; 
+    uint32_t            flag;
     btScalar            left;                                                   // world sprite's gabarites
     btScalar            right;
     btScalar            top;
@@ -107,11 +107,11 @@ typedef struct anim_seq_s
 {
     int8_t      type;             // 0 = normal, 1 = back, 2 = reverse.
     bool        type_flag;        // Used only with type 2 to identify current animation direction.
-    
+
     bool        blend;            // Blend flag.  Reserved for future use!
     btScalar    blend_rate;       // Blend rate.  Reserved for future use!
     btScalar    blend_time;       // Blend value. Reserved for future use!
-    
+
     bool        uvrotate;         // UVRotate mode flag.
     int8_t      uvrotate_type;    // 0 = normal, 1 = back, 2 = reverse.
     bool        uvrotate_flag;    // Used only with type 2 to identify current animation direction.
@@ -119,7 +119,7 @@ typedef struct anim_seq_s
     btScalar    uvrotate_time;    // Time passed since last UVRotate update.
     btScalar    uvrotate_max;     // Reference value used to restart rotation.
     btScalar    current_uvrotate; // Current coordinate window position.
-    
+
     uint32_t    current_frame;    // Current frame for this sequence.
     btScalar    frame_rate;       // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
     btScalar    frame_time;       // Time passed since last update.
@@ -146,11 +146,11 @@ typedef struct static_mesh_s
     btScalar                    vbb_max[3];
     btScalar                    cbb_min[3];                                     // collision bounding box
     btScalar                    cbb_max[3];
-    
+
     btScalar                    transform[16];                                  // gl transformation matrix
-    struct bounding_volume_s   *bv;
+    struct obb_s               *obb;
     struct engine_container_s  *self;
-    
+
     struct base_mesh_s         *mesh;                                           // base model
     btRigidBody                *bt_body;
 }static_mesh_t, *static_mesh_p;
@@ -170,11 +170,11 @@ typedef struct ss_bone_tag_s
     base_mesh_p         mesh;                                                   // base mesh - pointer to the first mesh in array
     base_mesh_p         mesh2;                                                  // base skinned mesh for ТР4+
     btScalar            offset[3];                                              // model position offset
- 
+
     btScalar            qrotate[4];                                             // quaternion rotation
     btScalar            transform[16];                                          // 4x4 OpenGL matrix for stack usage
     btScalar            full_transform[16];                                     // 4x4 OpenGL matrix for global usage
-    
+
     uint16_t            flag;                                                   // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
     uint16_t            overrided;                                              // flag for shoot / guns animations
 }ss_bone_tag_t, *ss_bone_tag_p;
@@ -190,20 +190,20 @@ typedef struct ss_bone_frame_s
     btScalar                    bb_min[3];                                      // bounding box min coordinates
     btScalar                    bb_max[3];                                      // bounding box max coordinates
     btScalar                    centre[3];                                      // bounding box centre
-    
+
     int16_t                     last_state;
     int16_t                     next_state;
     int16_t                     last_animation;
-    int16_t                     current_animation;                              // 
-    int16_t                     next_animation;                                 // 
-    int16_t                     current_frame;                                  // 
-    int16_t                     next_frame;                                     // 
-    
+    int16_t                     current_animation;                              //
+    int16_t                     next_animation;                                 //
+    int16_t                     current_frame;                                  //
+    int16_t                     next_frame;                                     //
+
     btScalar                    period;                                         // one frame change period
-    btScalar                    frame_time;                                     // current time 
+    btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
-    
-    struct skeletal_model_s    *model;                                          // 
+
+    struct skeletal_model_s    *model;                                          //
 }ss_bone_frame_t, *ss_bone_frame_p;
 
 /*
@@ -227,7 +227,7 @@ typedef struct bone_frame_s
     btScalar            bb_min[3];                                              // bounding box min coordinates
     btScalar            bb_max[3];                                              // bounding box max coordinates
     btScalar            centre[3];                                              // bounding box centre
-    btScalar            move[3];                                                // move command data 
+    btScalar            move[3];                                                // move command data
     btScalar            v_Vertical;                                             // jump command data
     btScalar            v_Horizontal;                                           // jump command data
 }bone_frame_t, *bone_frame_p ;
@@ -235,7 +235,7 @@ typedef struct bone_frame_s
 /*
  * mesh tree base element structure
  */
-typedef struct mesh_tree_tag_s                                                  
+typedef struct mesh_tree_tag_s
 {
     base_mesh_p                 mesh;                                           // base mesh - pointer to the first mesh in array
     base_mesh_p                 mesh2;                                          // base skinned mesh for ТР4+
@@ -249,8 +249,8 @@ typedef struct mesh_tree_tag_s
  */
 typedef struct anim_dispath_s
 {
-    uint16_t    next_anim;                                                      // "switch to" animation 
-    uint16_t    next_frame;                                                     // "switch to" frame 
+    uint16_t    next_anim;                                                      // "switch to" animation
+    uint16_t    next_frame;                                                     // "switch to" frame
     uint16_t    frame_low;                                                      // low border of state change condition
     uint16_t    frame_high;                                                     // high border of state change condition
 }anim_dispath_t, *anim_dispath_p;
@@ -265,7 +265,7 @@ typedef struct state_change_s
 /*
  * one animation frame structure
  */
-typedef struct animation_frame_s                                                
+typedef struct animation_frame_s
 {
     uint32_t                    id;
     uint8_t                     original_frame_rate;
@@ -282,10 +282,10 @@ typedef struct animation_frame_s
     int16_t                     unknown2;
     uint16_t                    frames_count;                                   // number of frames
     struct bone_frame_s        *frames;                                         // frames data
-    
+
     uint16_t                    state_change_count;                             // number of animation statechanges
     struct state_change_s      *state_change;                                   // animation statechanges data
-    
+
     struct animation_frame_s   *next_anim;                                      // next default animation
     int                         next_frame;                                     // next default frame
 }animation_frame_t, *animation_frame_p;
@@ -302,16 +302,16 @@ typedef struct skeletal_model_s
     btScalar                    bbox_min[3];                                    // bbox info
     btScalar                    bbox_max[3];
     btScalar                    centre[3];                                      // the centre of model
-        
+
     uint16_t                    animation_count;                                // number of animations
     struct animation_frame_s   *animations;                                     // animations data
-    
+
     uint16_t                    mesh_count;                                     // number of model meshes
     struct base_mesh_s         *mesh_offset;                                    // pointer to the first mesh in skeletal model mesh array
     struct mesh_tree_tag_s     *mesh_tree;                                      // base mesh tree.
     uint16_t                    collision_map_size;
     uint16_t                   *collision_map;
-}skeletal_model_t, *skeletal_model_p; 
+}skeletal_model_t, *skeletal_model_p;
 
 
 void BaseMesh_Clear(base_mesh_p mesh);

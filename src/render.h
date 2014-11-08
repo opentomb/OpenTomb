@@ -37,10 +37,10 @@ class render_DebugDrawer:public btIDebugDraw
     int m_debugMode;
     int m_max_lines;
     int m_lines;
-    
+
     GLfloat *m_lines_buf;
     GLfloat *m_color_buf;
-    
+
     public:
         render_DebugDrawer();
         ~render_DebugDrawer();
@@ -91,7 +91,7 @@ struct camera_s;
 struct entity_s;
 struct sprite_s;
 struct base_mesh_s;
-struct bounding_volume_s;
+struct obb_s;
 
 typedef struct render_list_s
 {
@@ -179,6 +179,6 @@ void Render_DrawAxis(btScalar r);
 void Render_BBox(btScalar bb_min[3], btScalar bb_max[3]);
 void Render_Sector(btScalar corner1[3], btScalar corner2[3], btScalar corner3[3], btScalar corner4[3]);
 void Render_SectorBorders(struct room_sector_s *sector);
-void Render_BV(struct bounding_volume_s *bv);
+void Render_OBB(struct obb_s *obb);
 
 #endif

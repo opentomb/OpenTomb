@@ -13,7 +13,7 @@
 #include "render.h"
 #include "world.h"
 #include "engine.h"
-#include "bounding_volume.h"
+#include "obb.h"
 
 frustum_p Frustum_Create()
 {
@@ -517,14 +517,14 @@ int Frustum_IsAABBVisible(btScalar bbmin[3], btScalar bbmax[3], struct frustum_s
 }
 
 
-int Frustum_IsBVVisible(struct bounding_volume_s *bv, struct frustum_s *frustum)
+int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
 {
     int i, ins = 1;
     btScalar t;
     polygon_p p;
 
-    p = bv->polygons;
-    for(i=0;i<bv->polygons_count;i++,p++)
+    p = obb->polygons;
+    for(i=0;i<obb->polygons_count;i++,p++)
     {
         t = vec3_plane_dist(p->plane, frustum->cam_pos);
         if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))
@@ -540,7 +540,7 @@ int Frustum_IsBVVisible(struct bounding_volume_s *bv, struct frustum_s *frustum)
     return ins;
 }
 
-int Frustum_IsBVVisibleInRoom(struct bounding_volume_s *bv, struct room_s *room)
+int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
 {
     int i, ins;
     polygon_p p;
@@ -551,8 +551,8 @@ int Frustum_IsBVVisibleInRoom(struct bounding_volume_s *bv, struct room_s *room)
     if(frustum->active == 0)                                                    // В комнате нет активного фрустума, значит применяем фрустум камеры
     {
         ins = 1;                                                                // считаем, что камера внутри OBB
-        p = bv->polygons;
-        for(i=0;i<bv->polygons_count;i++,p++)
+        p = obb->polygons;
+        for(i=0;i<obb->polygons_count;i++,p++)
         {
             t = vec3_plane_dist(p->plane, engine_camera.pos);
             if((t > 0.0) && Frustum_IsPolyVisible(p, engine_camera.frustum))
@@ -569,8 +569,8 @@ int Frustum_IsBVVisibleInRoom(struct bounding_volume_s *bv, struct room_s *room)
 
     for(;frustum && frustum->active;frustum=frustum->next)                      // Если хоть в одном активном фрустуме виден объект, то возвращаем 1
     {
-        p = bv->polygons;
-        for(i=0;i<bv->polygons_count;i++,p++)
+        p = obb->polygons;
+        for(i=0;i<obb->polygons_count;i++,p++)
         {
             t = vec3_plane_dist(p->plane, frustum->cam_pos);
             if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))
@@ -583,8 +583,3 @@ int Frustum_IsBVVisibleInRoom(struct bounding_volume_s *bv, struct room_s *room)
     return 0;
 }
 
-int Frustum_IsBSphereVisible(btScalar sphere[4], struct frustum_s *frustum)
-{
-
-    return 0;
-}

@@ -30,7 +30,7 @@ extern "C" {
 #include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
-#include "bounding_volume.h"
+#include "obb.h"
 #include "engine.h"
 #include "bordered_texture_atlas.h"
 #include "render.h"
@@ -116,12 +116,8 @@ void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
     }
 }
 
-///@TODO: add alternate room checking in algorithm! This time alternate rooms has WALLS everywhere
 int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 {
-    //ws = TR_Sector_CheckBaseRoom(ws);
-    //ns = TR_Sector_CheckBaseRoom(ns);
-
     if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
     {
         return 1;
@@ -1905,7 +1901,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
         r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
-        r_static->bv = BV_Create();
+        r_static->obb = OBB_Create();
 
         r_static->cbb_min[0] = tr_static->collision_box[0].x;
         r_static->cbb_min[1] =-tr_static->collision_box[0].z;
@@ -1923,14 +1919,14 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
 
-        r_static->bv->transform = room->static_mesh[i].transform;
-        r_static->bv->r = room->static_mesh[i].mesh->R;
+        r_static->obb->transform = room->static_mesh[i].transform;
+        r_static->obb->r = room->static_mesh[i].mesh->R;
         Mat4_E(r_static->transform);
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
-        BV_InitBox(r_static->bv, r_static->vbb_min, r_static->vbb_max);
-        BV_Transform(r_static->bv);
+        OBB_Init(r_static->obb, r_static->vbb_min, r_static->vbb_max);
+        OBB_Transform(r_static->obb);
 
         r_static->self->collide_flag = 0x0000;
         r_static->bt_body = NULL;
@@ -3846,7 +3842,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->bf.model->hide = 0;
             entity->flags = ENTITY_IS_ACTIVE | ENTITY_CAN_TRIGGER;
             LM = (skeletal_model_p)entity->bf.model;
-            BV_InitBox(entity->bv, NULL, NULL);
+            OBB_Init(entity->obb, NULL, NULL);
 
             top = lua_gettop(engine_lua);
             lua_pushinteger(engine_lua, entity->id);
@@ -3948,7 +3944,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             BT_GenEntityRigidBody(entity);
         }
 
-        BV_InitBox(entity->bv, NULL, NULL);
+        OBB_Init(entity->obb, NULL, NULL);
         Entity_RebuildBV(entity);
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
@@ -4138,7 +4134,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
     btVector3 v0, v1, v2;
-    bounding_volume_p bv;
+    obb_p obb;
 
     switch(cflag)
     {
@@ -4176,9 +4172,9 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
             break;*/
 
         case COLLISION_BOX:                                                     // the box with deviated centre
-            bv = BV_Create();
-            BV_InitBox(bv, mesh->bb_min, mesh->bb_max);
-            p = bv->base_polygons;
+            obb = OBB_Create();
+            OBB_Init(obb, mesh->bb_min, mesh->bb_max);
+            p = obb->base_polygons;
             for(i=0;i<6;i++,p++)
             {
                 if(Polygon_IsBroken(p))
@@ -4202,8 +4198,8 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
             }
 
             ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
-            BV_Clear(bv);
-            free(bv);
+            OBB_Clear(obb);
+            free(obb);
             break;
 
         case COLLISION_NONE:

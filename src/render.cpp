@@ -18,7 +18,7 @@
 #include "mesh.h"
 #include "entity.h"
 #include "engine.h"
-#include "bounding_volume.h"
+#include "obb.h"
 
 render_t renderer;
 extern render_DebugDrawer debugDrawer;
@@ -770,7 +770,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
 
     for(i=0; i<room->static_mesh_count; i++)
     {
-        if(room->static_mesh[i].was_rendered || !Frustum_IsBVVisibleInRoom(room->static_mesh[i].bv, room))
+        if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
         {
             continue;
         }
@@ -824,7 +824,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
             ent = (entity_p)cont->object;
             if(ent->was_rendered == 0)
             {
-                if(Frustum_IsBVVisibleInRoom(ent->bv, room))
+                if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                 {
                     Render_Entity(ent);
                 }
@@ -1066,7 +1066,7 @@ void Render_DrawList_DebugLines()
     {
         Render_Room_DebugLines(renderer.r_list[i].room, &renderer);
     }
-    
+
     if(renderer.style & R_DRAW_COLL)
     {
         glEnableClientState(GL_COLOR_ARRAY);                                    ///@FIXME: render things things only from r_list.
@@ -1076,7 +1076,7 @@ void Render_DrawList_DebugLines()
         bt_engine_dynamicsWorld->debugDrawWorld();
         debugDrawer.render();
         glDisableClientState(GL_COLOR_ARRAY);
-    }   
+    }
 }
 
 /**
@@ -1287,9 +1287,9 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
         if(flag)
         {
             glColor3f(0.0, 1.0, 0.1);
-            Render_BV(room->static_mesh[i].bv);
+            Render_OBB(room->static_mesh[i].obb);
         }
-        if(room->static_mesh[i].was_rendered_lines || !Frustum_IsBVVisibleInRoom(room->static_mesh[i].bv, room))
+        if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
         {
             continue;
         }
@@ -1319,7 +1319,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
             ent = (entity_p)cont->object;
             if(ent->was_rendered_lines == 0)
             {
-                if(Frustum_IsBVVisibleInRoom(ent->bv, room))
+                if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                 {
                     Render_Entity_DebugLines(ent);
                 }
@@ -1376,7 +1376,7 @@ void Render_Entity_DebugLines(struct entity_s *entity)
     if(renderer.style & R_DRAW_BOXES)
     {
         glColor3f(0.0, 0.0, 1.0);
-        Render_BV(entity->bv);
+        Render_OBB(entity->obb);
     }
 
     if(entity->bf.model && entity->bf.model->animations)
@@ -1591,13 +1591,13 @@ void Render_SectorBorders(struct room_sector_s *sector)
     // Render_Sector(corner1,corner2,corner3,corner4);
 }
 
-void Render_BV(struct bounding_volume_s *bv)
+void Render_OBB(struct obb_s *obb)
 {
     uint16_t i;
     polygon_p p;
 
-    p = bv->polygons;
-    for(i=0; i<bv->polygons_count; i++,p++)
+    p = obb->polygons;
+    for(i=0; i<obb->polygons_count; i++,p++)
     {
         glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices);
         glDrawArrays(GL_LINE_LOOP, 0, p->vertex_count);
@@ -1660,7 +1660,7 @@ render_DebugDrawer::render_DebugDrawer()
 {
     m_lines_buf = (GLfloat*)malloc(3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
     m_color_buf = (GLfloat*)malloc(3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
-    
+
     m_max_lines = DEBUG_DRAWER_DEFAULT_BUFFER_SIZE;
     m_lines = 0;
 }
@@ -1672,7 +1672,7 @@ render_DebugDrawer::~render_DebugDrawer()
 }
 
 void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
-{      
+{
     GLfloat *v1, *v2;
 
     if(m_lines < m_max_lines - 1)
@@ -1681,7 +1681,7 @@ void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, co
         v2 = v1 + 3;
         vec3_copy(v1, from.m_floats);
         vec3_copy(v2, to.m_floats);
-        
+
         v1 = m_color_buf + 3 * 2 * m_lines;
         v2 = v1 + 3;
         vec3_copy(v1, color.m_floats);
@@ -1711,10 +1711,10 @@ void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVect
    {
       //btVector3 to=pointOnB+normalOnB*distance;
       //const btVector3&from = pointOnB;
-      //glColor4f(color.getX(), color.getY(), color.getZ(), 1.0f);   
-      
+      //glColor4f(color.getX(), color.getY(), color.getZ(), 1.0f);
+
       //GLDebugDrawer::drawLine(from, to, color);
-      
+
       //glRasterPos3f(from.x(),  from.y(),  from.z());
       //char buf[12];
       //sprintf(buf," %d",lifeTime);

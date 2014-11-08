@@ -7,18 +7,18 @@
 
 struct room_s;
 struct portal_s;
-struct bounding_volume_s;
+struct obb_s;
 
 typedef struct frustum_s
 {
     uint16_t            count;                                                  // количество вершин фрустума
     int8_t              active;                                                 // статус фрустума.
-    
+
     btScalar            *planes;                                                // плоскости отсечения
     btScalar            *vertex;                                                // вершины портала
     btScalar            *cam_pos;
     btScalar            norm[4];                                                // нормаль фрустума
-    
+
     uint16_t            parents_count;
     struct frustum_s    *parent;                                                // кем был сгенерирован фрустум. если NULL - то камерой.
     struct frustum_s    *next;                                                  // следующий по списку фрустум
@@ -59,8 +59,7 @@ void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam);                  
 
 int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum);
 int Frustum_IsAABBVisible(btScalar bbmin[3], btScalar bbmax[3], struct frustum_s *frustum);
-int Frustum_IsBVVisible(struct bounding_volume_s *bv, struct frustum_s *frustum);
-int Frustum_IsBVVisibleInRoom(struct bounding_volume_s *bv, struct room_s *room);
-int Frustum_IsBSphereVisible(btScalar sphere[4], struct frustum_s *frustum);
+int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum);
+int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room);
 
 #endif

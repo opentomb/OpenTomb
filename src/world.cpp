@@ -19,7 +19,7 @@
 #include "render.h"
 #include "engine.h"
 #include "script.h"
-#include "bounding_volume.h"
+#include "obb.h"
 #include "redblack.h"
 #include "console.h"
 #include "resource.h"
@@ -81,9 +81,9 @@ void Room_Empty(room_p room)
                 room->static_mesh[i].bt_body = NULL;
             }
 
-            BV_Clear(room->static_mesh[i].bv);
-            free(room->static_mesh[i].bv);
-            room->static_mesh[i].bv = NULL;
+            OBB_Clear(room->static_mesh[i].obb);
+            free(room->static_mesh[i].obb);
+            room->static_mesh[i].obb = NULL;
             if(room->static_mesh[i].self)
             {
                 free(room->static_mesh[i].self);

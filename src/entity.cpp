@@ -13,7 +13,7 @@
 #include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
-#include "bounding_volume.h"
+#include "obb.h"
 #include "gameflow.h"
 
 #include "bullet/btBulletCollisionCommon.h"
@@ -24,7 +24,7 @@
 entity_p Entity_Create()
 {
     entity_p ret = (entity_p)calloc(1, sizeof(entity_t));
-    
+
     ret->move_type = MOVE_ON_FLOOR;
     Mat4_E(ret->transform);
     ret->active = 1;
@@ -35,8 +35,8 @@ entity_p Entity_Create()
     ret->self->object_type = OBJECT_ENTITY;
     ret->self->room = NULL;
     ret->self->collide_flag = 0;
-    ret->bv = BV_Create();
-    ret->bv->transform = ret->transform;
+    ret->obb = OBB_Create();
+    ret->obb->transform = ret->transform;
     ret->bt_body = NULL;
     ret->character = NULL;
     ret->smooth_anim = 1;
@@ -72,11 +72,11 @@ void Entity_Clear(entity_p entity)
 {
     if(entity)
     {
-        if(entity->bv)
+        if(entity->obb)
         {
-            BV_Clear(entity->bv);
-            free(entity->bv);
-            entity->bv = NULL;
+            OBB_Clear(entity->obb);
+            free(entity->obb);
+            entity->obb = NULL;
         }
 
         if(entity->bf.model && entity->bt_body)
@@ -536,14 +536,14 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 if(entity->bf.current_frame == *++pointer)
                 {
                     sound_index = *++pointer & 0x3FFF;
-                    
+
                     // Quick workaround for TR3 quicksand.
                     if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
                        (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
                     {
                         sound_index = 18;
                     }
-                        
+
                     if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
                     {
                         if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
@@ -583,7 +583,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                     Cam_Shake(renderer.cam, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
                             }
                             break;
-                            
+
                         case TR_EFFECT_CHANGEDIRECTION:
                             break;
 
@@ -1326,37 +1326,14 @@ int Entity_Frame(entity_p entity, btScalar time)
  */
 void Entity_RebuildBV(entity_p ent)
 {
-    if(!ent || !ent->bf.model)
+    if((ent != NULL) && (ent->bf.model != NULL))
     {
-        return;
+        /*
+         * get current BB from animation
+         */
+        OBB_Rebuild(ent->obb, ent->bf.bb_min, ent->bf.bb_max);
+        OBB_Transform(ent->obb);
     }
-
-    /*
-     * get current BB from animation
-     */
-    switch(ent->bv->bv_type)
-    {
-        case BV_CYLINDER:
-            BV_TransformZZ(ent->bv, ent->bf.bb_min[2] + ent->bv->r, ent->bf.bb_max[2]);
-            return;
-
-        case BV_BOX:
-            BV_RebuildBox(ent->bv, ent->bf.bb_min, ent->bf.bb_max);
-            BV_Transform(ent->bv);
-            return;
-
-        case BV_SPHERE:
-            Mat4_vec3_mul_macro(ent->bv->centre, ent->bv->transform, ent->bv->base_centre);
-            return;
-
-        case BV_FREEFORM:
-            BV_Transform(ent->bv);
-            return;
-
-        case BV_EMPTY:
-        default:
-            return;
-    };
 }
 
 ///@TODO: rewrite it: use only dist or OBB-OBB check;
@@ -1383,9 +1360,9 @@ void Entity_CheckActivators(struct entity_s *ent)
             r *= r;
             if(e->flags & ENTITY_IS_TRIGGER)
             {
-                Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
+                //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
                 if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
-                   (vec3_dist_sq(ent->transform+12, pos) < r))
+                   (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
                 {
                     lua_ActivateEntity(engine_lua, e->id, ent->id);
                 }
