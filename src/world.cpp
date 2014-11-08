@@ -22,6 +22,7 @@
 #include "bounding_volume.h"
 #include "redblack.h"
 #include "console.h"
+#include "resource.h"
 
 void Room_Empty(room_p room)
 {
@@ -57,7 +58,7 @@ void Room_Empty(room_p room)
         free(room->mesh);
         room->mesh = NULL;
     }
-    
+
     if(room->static_mesh_count)
     {
         for(i=0;i<room->static_mesh_count;i++)
@@ -123,7 +124,7 @@ void Room_Empty(room_p room)
         room->sectors_x = 0;
         room->sectors_y = 0;
     }
-   
+
     if(room->sprites_count)
     {
         free(room->sprites);
@@ -240,8 +241,36 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
 }
 
 
+room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs)
+{
+    if((rs != NULL) && (rs->portal_to_room >= 0))
+    {
+        room_p r = engine_world.rooms + rs->portal_to_room;
+        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+    }
+
+    return rs;
+}
+
+
+room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs)
+{
+    if((rs != NULL) && (rs->owner_room->base_room != NULL))
+    {
+        room_p r = rs->owner_room->base_room;
+        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+    }
+
+    return rs;
+}
+
+
 int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
-{   
+{
     if(s1->portal_to_room >= 0)
     {
         s1 = Room_GetSector(engine_world.rooms + s1->portal_to_room, s1->pos);
@@ -250,29 +279,35 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
     {
         s2 = Room_GetSector(engine_world.rooms + s2->portal_to_room, s2->pos);
     }
-    
+
+    s1 = TR_Sector_CheckBaseRoom(s1);
+    s2 = TR_Sector_CheckBaseRoom(s2);
+
     if((s1->owner_room == s2->owner_room) || !Room_IsJoined(s1->owner_room, s2->owner_room))
     {
         return 0;
-    }    
-    
+    }
+
     room_sector_p s1p = Room_GetSector(s2->owner_room, s1->pos);
     if((s1p == NULL) || (s1p->portal_to_room < 0))
     {
         return 0;
     }
-    
+
     room_sector_p s2p = Room_GetSector(s1->owner_room, s2->pos);
     if((s2p == NULL) || (s2p->portal_to_room < 0))
     {
         return 0;
     }
-    
-    if((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room))
+
+    s1p = TR_Sector_CheckBaseRoom(s1p);
+    s2p = TR_Sector_CheckBaseRoom(s2p);
+
+    if(((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room)))
     {
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -375,7 +410,7 @@ void World_Empty(world_p world)
     /*items empty*/
     RB_Free(world->items_tree);
     world->items_tree = NULL;
-    
+
     if(world->Character)
     {
         Entity_Clear(world->Character);
@@ -534,7 +569,7 @@ struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id)
             item = (base_item_p)node->data;
         }
     }
-    
+
     return item;
 }
 
@@ -911,7 +946,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     {
         return 0;
     }
-    
+
     ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
     vec3_set_zero(bf->bb_min);
     vec3_set_zero(bf->bb_max);
@@ -925,7 +960,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     bf->current_frame = 0;
     bf->next_animation = 0;
     bf->next_frame = 0;
-    
+
     bf->model = model;
     bf->bone_tag_count = model->mesh_count;
     bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
@@ -941,7 +976,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
         Mat4_E_macro(bf->bone_tags[j].transform);
         Mat4_E_macro(bf->bone_tags[j].full_transform);
     }
-    
+
     base_item_p item = (base_item_p)malloc(sizeof(base_item_t));
     item->id = item_id;
     item->world_model_id = world_model_id;
@@ -953,7 +988,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
         strncpy(item->name, name, 64);
     }
     item->bf = bf;
-    
+
     RB_InsertReplace(&item->id, item, world->items_tree);
     return 1;
 }

@@ -51,14 +51,14 @@ void Gui_Init()
         gui_temp_lines[i].rect_color[1] = 1.0;
         gui_temp_lines[i].rect_color[2] = 0.0;
         gui_temp_lines[i].rect_color[3] = 0.5;
-        
+
         gui_temp_lines[i].font = NULL;
     }
-    
+
     Gui_InitBars();
     Gui_InitFaders();
     Gui_InitNotifier();
-    
+
     main_inventory_menu = new gui_InventoryMenu();
     main_inventory_menu->SetSize(512, 512/6);
     main_inventory_menu->SetTableSize(6, 1);
@@ -152,7 +152,7 @@ void Gui_InitBars()
                     Bar[i].SetAutoshow(true, 500, true, 300);
                 }
                 break;
-                
+
             case BAR_LOADING:
                 {
                     Bar[i].Visible =      true;
@@ -171,7 +171,7 @@ void Gui_InitBars()
                     Bar[i].SetExtrude(true, 70);
                     Bar[i].SetAutoshow(false, 500, false, 300);
                 }
-                break;      
+                break;
         } // end switch(i)
     } // end for(int i = 0; i < BAR_LASTINDEX; i++)
 }
@@ -191,7 +191,7 @@ void Gui_InitFaders()
                     Fader[i].SetScaleMode(TR_FADER_SCALE_ZOOM);
                 }
                 break;
-                
+
             case FADER_EFFECT:
                 {
                     Fader[i].SetAlpha(255);
@@ -220,14 +220,14 @@ void Gui_Destroy()
         free(gui_temp_lines[i].text);
         gui_temp_lines[i].text = NULL;
     }
- 
+
     for(int i = 0; i < FADER_LASTINDEX; i++)
     {
         Fader[i].Cut();
     }
-    
+
     temp_lines_used = MAX_TEMP_LINES;
-    
+
     if(main_inventory_menu)
     {
         delete main_inventory_menu;
@@ -284,7 +284,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
         l->rect[3] = ury + l->y;
         l->show_rect = 1;
     }
-    
+
     return l;
 }
 
@@ -299,7 +299,7 @@ gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *f
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;
         l->font = (font)?(font):(con_base.font);
-        
+
         va_start(argptr, fmt);
         vsnprintf(l->text, TEMP_LINE_LENGHT, fmt, argptr);
         va_end(argptr);
@@ -308,17 +308,17 @@ gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *f
         l->next = NULL;
         l->prev = NULL;
         l->rect_border = 2.0;
-        
+
         l->font_color[0] = 0.0;
         l->font_color[1] = 0.0;
         l->font_color[2] = 0.0;
         l->font_color[3] = 1.0;
-        
+
         l->rect_color[0] = 0.0;
         l->rect_color[1] = 1.0;
         l->rect_color[2] = 0.0;
         l->rect_color[3] = 0.25;
-        
+
         temp_lines_used ++;
         l->x = x;
         l->y = y;
@@ -326,7 +326,7 @@ gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *f
         l->show = 1;
         return l;
     }
-    
+
     return NULL;
 }
 
@@ -346,7 +346,7 @@ void Gui_Render()
 
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-   
+
     Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_DrawFaders();
@@ -362,7 +362,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
 {
     GLfloat x0, y0, x1, y1;
     GLfloat rectCoords[8];
-    
+
     glBindTexture(GL_TEXTURE_2D, 0);
     if(l->show_rect)
     {
@@ -378,14 +378,14 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glVertexPointer(2, GL_FLOAT, 0, rectCoords);
         glDrawArrays(GL_POLYGON, 0, 4);
     }
-    
+
     if(l->show)
-    {     
+    {
         if(l->font == NULL)
         {
             l->font = con_base.font;
         }
-        
+
         glColor4fv(l->font_color);
         glPushMatrix();
         glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
@@ -397,13 +397,13 @@ void Gui_RenderStringLine(gui_text_line_p l)
 void Gui_RenderStrings()
 {
     gui_text_line_p l = gui_base_lines;
-    
+
     while(l)
     {
         Gui_RenderStringLine(l);
         l = l->next;
     }
-    
+
     uint16_t i;
     l = gui_temp_lines;
     for(i=0;i<temp_lines_used;i++,l++)
@@ -470,7 +470,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
 
 
 /**
- * The base function, that draws one item by them id. Items may be animated. 
+ * The base function, that draws one item by them id. Items may be animated.
  * This time for correct time calculation that function must be called every frame.
  * @param item_id - the base item id;
  * @param size - the item size on the screen;
@@ -489,7 +489,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
         size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
     }
     size *= 0.8;
-    
+
     glPushMatrix();
     if(size < 1.0)          // only reduce items size...
         glScalef(size, size, size);
@@ -522,7 +522,7 @@ void gui_InventoryMenu::SetFontSize(int size)
     }
     mFontSize = size;
 }
- 
+
 
 void gui_InventoryMenu::SetSize(int width, int height)
 {
@@ -533,7 +533,7 @@ void gui_InventoryMenu::SetSize(int width, int height)
     y = height / mCells_y;
     mCellSize = (x > y)?(y):(x);
 }
-    
+
 
 void gui_InventoryMenu::SetTableSize(int cells_x, int cells_y)
 {
@@ -544,7 +544,7 @@ void gui_InventoryMenu::SetTableSize(int cells_x, int cells_y)
     y = mHeight / cells_y;
     mCellSize = (x > y)?(y):(x);
 }
-    
+
 
 void gui_InventoryMenu::UpdateSelectionOffset()
 {
@@ -559,7 +559,7 @@ void gui_InventoryMenu::UpdateSelectionOffset()
     {
         mRowOffset = mSelected / mCells_x - mCells_y + 1;
     }
-    
+
     mAng = 0.0;
 }
 
@@ -585,25 +585,25 @@ void gui_InventoryMenu::MoveSelectVertical(int dy)
 void gui_InventoryMenu::Render(struct inventory_node_s *inv)
 {
     int cx, cy, i, min, max, x0, y0;
-    
+
     min = mCells_x * mRowOffset;
     max = min + mCells_x * mCells_y;
     x0 = 0.5 * mCellSize + mLeft;
     y0 = - 0.5 * mCellSize + screen_info.h - mTop;
-    
+
     for(i=0;inv;inv=inv->next,i++)
     {
         if((i < min) || (i >= max))
         {
             continue;
         }
-        
+
         base_item_p item = World_GetBaseItemByID(&engine_world, inv->id);
         if(item == NULL)
         {
             continue;
         }
-        
+
         /*int anim = bf->current_animation;
         int frame = bf->current_frame;
         btScalar time = bf->frame_time;
@@ -625,7 +625,7 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         glPushMatrix();
             glTranslatef(x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
             glRotatef(-60.0 , 1.0, 0.0, 0.0);
-            glRotatef(180.0, 0.0, 0.0, 1.0); 
+            glRotatef(180.0, 0.0, 0.0, 1.0);
             if(i == mSelected)
             {
                 mAng += engine_frame_time * 30.0;
@@ -639,12 +639,12 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
             Gui_RenderItem(item->bf, (btScalar)mCellSize);
         glPopMatrix();
     }
-    
-    cx = mSelected % mCells_x; 
+
+    cx = mSelected % mCells_x;
     cy = mSelected / mCells_x - mRowOffset;
     x0 = mLeft + mCellSize * cx;
     y0 = screen_info.h - mTop - mCellSize * cy;
-    
+
     glBindTexture(GL_TEXTURE_2D, 0);
     glColor3f(1.0, 0.0, 0.0);
     glBegin(GL_LINE_LOOP);
@@ -653,7 +653,7 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         glVertex2f(x0 + mCellSize, y0 - mCellSize);
         glVertex2f(x0            , y0 - mCellSize);
     glEnd();
-    
+
     glColor3f(0.0, 0.0, 1.0);
     glBegin(GL_LINE_LOOP);
         glVertex2f(mLeft         , screen_info.h - mTop          );
@@ -661,7 +661,7 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         glVertex2f(mLeft + mWidth, screen_info.h - mTop - mHeight);
         glVertex2f(mLeft         , screen_info.h - mTop - mHeight);
     glEnd();
-    
+
     mMaxItems = i;
 }
 
@@ -701,7 +701,7 @@ void Gui_DrawCrosshair()
             (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f),
             (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f)
     };
-    
+
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);
@@ -748,7 +748,7 @@ void Gui_DrawNotifier()
 void Gui_DrawLoadScreen(int value)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
     Gui_SwitchGLMode(1);
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
@@ -764,7 +764,7 @@ void Gui_DrawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-    
+
     Fader[FADER_LOADSCREEN].Show();
     Bar[BAR_LOADING].Show(value);
 
@@ -773,7 +773,7 @@ void Gui_DrawLoadScreen(int value)
     glPopAttrib();
 
     Gui_SwitchGLMode(0);
-    
+
     SDL_GL_SwapWindow(sdl_window);
 }
 
@@ -808,11 +808,11 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    
+
     if(texture)
     {
         glBindTexture(GL_TEXTURE_2D, texture);
-        
+
         glBegin(GL_POLYGON);
 
             glColor4fv(colorUpperLeft);     // Upper left
@@ -832,7 +832,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             glVertex2f(x, y);
 
         glEnd();
-        
+
         glBindTexture(GL_TEXTURE_2D, 0);
     }
     else
@@ -853,14 +853,14 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
         glEnd();
     }
-    
+
 
 }
 
 bool Gui_FadeStart(int fader, int fade_direction)
-{    
+{
     // If fader exists, and is not active, we engage it.
-    
+
     if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != TR_FADER_STATUS_FADING))
     {
         Fader[fader].Engage(fade_direction);
@@ -877,7 +877,7 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
     char buf[MAX_ENGINE_PATH];
     size_t len = strlen(pic_name);
     size_t ext_len = 0;
-    
+
     ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
     strncpy(buf, pic_name, MAX_ENGINE_PATH);
     if(!Engine_FileFound(buf, false))
@@ -889,12 +889,12 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
                 break;
             }
         }
-        
+
         if(ext_len + 1 == len)
         {
             return false;
         }
-        
+
         buf[len - ext_len + 0] = 'b';
         buf[len - ext_len + 1] = 'm';
         buf[len - ext_len + 2] = 'p';
@@ -922,7 +922,7 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
             }
         }
     }
-    
+
     if(fader < FADER_LASTINDEX)
     {
         return Fader[fader].SetTexture(buf);
@@ -957,11 +957,11 @@ gui_Fader::gui_Fader()
     SetAlpha(255);
     SetSpeed(500);
     SetDelay(0);
-    
+
     mActive             = false;
     mComplete           = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
     mDirection          = TR_FADER_DIR_IN;
-    
+
     mTexture            = 0;
 }
 
@@ -977,12 +977,12 @@ void gui_Fader::SetScaleMode(uint8_t mode)
 
 void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
 {
-    
+
     // Each corner of the fader could be colored independently, thus allowing
     // to create gradient faders. It is nifty yet not so useful feature, so
     // it is completely optional - if you won't specify corner, color will be
     // set for the whole fader.
-    
+
     switch(corner)
     {
         case TR_FADER_CORNER_TOPLEFT:
@@ -990,32 +990,32 @@ void gui_Fader::SetColor(uint8_t R, uint8_t G, uint8_t B, int corner)
             mTopLeftColor[1] = (GLfloat)G / 255;
             mTopLeftColor[2] = (GLfloat)B / 255;
             break;
-            
+
         case TR_FADER_CORNER_TOPRIGHT:
             mTopRightColor[0] = (GLfloat)R / 255;
             mTopRightColor[1] = (GLfloat)G / 255;
             mTopRightColor[2] = (GLfloat)B / 255;
             break;
-            
+
         case TR_FADER_CORNER_BOTTOMLEFT:
             mBottomLeftColor[0] = (GLfloat)R / 255;
             mBottomLeftColor[1] = (GLfloat)G / 255;
             mBottomLeftColor[2] = (GLfloat)B / 255;
             break;
-            
+
         case TR_FADER_CORNER_BOTTOMRIGHT:
             mBottomRightColor[0] = (GLfloat)R / 255;
             mBottomRightColor[1] = (GLfloat)G / 255;
             mBottomRightColor[2] = (GLfloat)B / 255;
             break;
-            
+
         default:
             mTopRightColor[0] = (GLfloat)R / 255;
             mTopRightColor[1] = (GLfloat)G / 255;
             mTopRightColor[2] = (GLfloat)B / 255;
-            
+
             // Copy top right corner color to all other corners.
-            
+
             memcpy(mTopLeftColor,     mTopRightColor, sizeof(GLfloat) * 4);
             memcpy(mBottomRightColor, mTopRightColor, sizeof(GLfloat) * 4);
             memcpy(mBottomLeftColor,  mTopRightColor, sizeof(GLfloat) * 4);
@@ -1058,15 +1058,15 @@ void gui_Fader::SetAspect()
 
 bool gui_Fader::SetTexture(const char *texture_path)
 {
-    SDL_Surface *surface;
+    SDL_Surface *surface = IMG_Load(texture_path);
     GLenum       texture_format;
     GLint        color_depth;
-    
-    if(surface = IMG_Load(texture_path))
+
+    if(surface != NULL)
     {
         // Get the color depth of the SDL surface
         color_depth = surface->format->BytesPerPixel;
-        
+
         if(color_depth == 4)        // Contains an alpha channel
         {
             if(surface->format->Rmask == 0x000000ff)
@@ -1087,42 +1087,42 @@ bool gui_Fader::SetTexture(const char *texture_path)
             SDL_FreeSurface(surface);
             return false;
         }
- 
+
         // Drop previously assigned texture, if it exists.
         DropTexture();
 
         // Have OpenGL generate a texture object handle for us
         glGenTextures(1, &mTexture);
-     
+
         // Bind the texture object
         glBindTexture(GL_TEXTURE_2D, mTexture);
-     
+
         // Set the texture's stretching properties
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-     
+
         // Edit the texture object's image data using the information SDL_Surface gives us
         glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
                           texture_format, GL_UNSIGNED_BYTE, surface->pixels);
-    } 
+    }
     else
     {
         Con_Printf("SDL could not load %s: %s", texture_path, SDL_GetError());
         return false;
     }
-    
+
     // Unbind the texture - is it really necessary?
     // glBindTexture(GL_TEXTURE_2D, 0);
-     
+
     // Free the SDL_Surface only if it was successfully created
     if(surface)
     {
         // Set additional parameters
         mTextureWidth  = surface->w;
         mTextureHeight = surface->h;
-        
+
         SetAspect();
-        
+
         Con_Printf("Loaded fader picture: %s", texture_path);
         SDL_FreeSurface(surface);
         return true;
@@ -1156,7 +1156,7 @@ void gui_Fader::Engage(int fade_dir)
     mActive       = true;
     mComplete     = false;
     mCurrentTime  = 0.0;
-    
+
     if(mDirection == TR_FADER_DIR_IN)
     {
         mCurrentAlpha = mMaxAlpha;      // Fade in: set alpha to maximum.
@@ -1173,7 +1173,7 @@ void gui_Fader::Cut()
     mComplete      = false;
     mCurrentAlpha  = 0.0;
     mCurrentTime   = 0.0;
-    
+
     DropTexture();
 }
 
@@ -1184,7 +1184,7 @@ void gui_Fader::Show()
         mComplete = true;
         return;                                 // If fader is not active, don't render it.
     }
-    
+
     if(mDirection == TR_FADER_DIR_IN)           // Fade in case
     {
         if(mCurrentAlpha > 0.0)                 // If alpha is more than zero, continue to fade.
@@ -1210,7 +1210,7 @@ void gui_Fader::Show()
             // We've reached maximum alpha, so complete fader but leave it active.
             // This is needed for engine to receive proper callback in case some events are
             // delayed to the next frame - e.g., level loading.
-            
+
             mComplete = true;
             mCurrentAlpha = mMaxAlpha;
         }
@@ -1248,22 +1248,22 @@ void gui_Fader::Show()
             }
         }
     }
-    
+
     // Apply current alpha value to all vertices.
-    
+
     mTopLeftColor[3]     = mCurrentAlpha;
     mTopRightColor[3]    = mCurrentAlpha;
     mBottomLeftColor[3]  = mCurrentAlpha;
     mBottomRightColor[3] = mCurrentAlpha;
-    
+
     // Draw the rectangle.
     // We draw it from the very top left corner to the end of the screen.
-    
+
     if(mTexture)
     {
         // Texture is always modulated with alpha!
         GLfloat tex_color[4] = {mCurrentAlpha, mCurrentAlpha, mCurrentAlpha, mCurrentAlpha};
-        
+
         if(mTextureScaleMode == TR_FADER_SCALE_LETTERBOX)
         {
             if(mTextureWide)        // Texture is wider than the screen... Do letterbox.
@@ -1275,7 +1275,7 @@ void gui_Fader::Show()
                              (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
                              mBottomLeftColor, mBottomRightColor, mBottomLeftColor, mBottomRightColor,
                              mBlendingMode);
-                
+
                 // Draw texture.
                 Gui_DrawRect(0.0,
                              (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
@@ -1284,7 +1284,7 @@ void gui_Fader::Show()
                              tex_color, tex_color, tex_color, tex_color,
                              mBlendingMode,
                              mTexture);
-                
+
                 // Draw upper letterbox.
                 Gui_DrawRect(0.0,
                              screen_info.h - (screen_info.h - (screen_info.w * mTextureAspectRatio)) / 2,
@@ -1302,7 +1302,7 @@ void gui_Fader::Show()
                              screen_info.h,
                              mTopLeftColor, mTopLeftColor, mBottomLeftColor, mBottomLeftColor,
                              mBlendingMode);
-                
+
                 // Draw texture.
                 Gui_DrawRect((screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
                              0.0,
@@ -1311,7 +1311,7 @@ void gui_Fader::Show()
                              tex_color, tex_color, tex_color, tex_color,
                              mBlendingMode,
                              mTexture);
-                             
+
                 // Draw right pillarbox.
                 Gui_DrawRect(screen_info.w - (screen_info.w - (screen_info.h / mTextureAspectRatio)) / 2,
                              0.0,
@@ -1354,8 +1354,8 @@ void gui_Fader::Show()
                          mBlendingMode,
                          mTexture);
         }
-        
-        
+
+
     }
     else    // No texture, simply draw colored rect.
     {
@@ -1520,7 +1520,7 @@ void gui_ProgressBar::RecalculateSize()
 {
     mWidth  = mLastScrWidth  * ( (float)mAbsWidth  / TR_GUI_SCREEN_METERING_RESOLUTION );
     mHeight = mLastScrHeight * ( (float)mAbsHeight / TR_GUI_SCREEN_METERING_RESOLUTION );
-    
+
     mBorderWidth  = mLastScrWidth  * ( (float)mAbsBorderSize / TR_GUI_SCREEN_METERING_RESOLUTION );
     mBorderHeight = mLastScrHeight * ( (float)mAbsBorderSize / TR_GUI_SCREEN_METERING_RESOLUTION ) *
                     ((float)mLastScrWidth / (float)mLastScrHeight);
@@ -1832,7 +1832,7 @@ gui_ItemNotifier::gui_ItemNotifier()
     SetRot(0,0);
     SetSize(1.0);
     SetRotateTime(1000.0);
-    
+
     mItem   = 0;
     mActive = false;
 }
@@ -1840,7 +1840,7 @@ gui_ItemNotifier::gui_ItemNotifier()
 void gui_ItemNotifier::Start(int item, float time)
 {
     Reset();
-    
+
     mItem     = item;
     mShowTime = time;
     mActive   = true;
@@ -1858,21 +1858,21 @@ void gui_ItemNotifier::Animate()
         {
             mCurrRotX += (engine_frame_time * mRotateTime);
             //mCurrRotY += (engine_frame_time * mRotateTime);
-            
+
             mCurrRotX = (mCurrRotX > 360.0)?(mCurrRotX - 360.0):(mCurrRotX);
             //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
         }
-        
+
         float step = 0;
-        
+
         if(mCurrTime == 0)
         {
             step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
             step = (step <= 0.5)?(0.5):(step);
-            
+
             mCurrPosX -= step;
             mCurrPosX  = (mCurrPosX < mEndPosX)?(mEndPosX):(mCurrPosX);
-            
+
             if(mCurrPosX == mEndPosX)
                 mCurrTime += engine_frame_time;
         }
@@ -1884,10 +1884,10 @@ void gui_ItemNotifier::Animate()
         {
             step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
             step = (step <= 0.5)?(0.5):(step);
-            
+
             mCurrPosX += step;
             mCurrPosX  = (mCurrPosX > mStartPosX)?(mStartPosX):(mCurrPosX);
-            
+
             if(mCurrPosX == mStartPosX)
                 Reset();
         }
@@ -1900,7 +1900,7 @@ void gui_ItemNotifier::Reset()
     mCurrTime = 0.0;
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
-    
+
     mEndPosX = ((float)screen_info.w / TR_GUI_SCREEN_METERING_RESOLUTION) * mAbsPosX;
     mPosY    = ((float)screen_info.h / TR_GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;
     mCurrPosX = screen_info.w + ((float)screen_info.w / TR_GUI_OFFSCREEN_DIVIDER * mSize);
@@ -1921,7 +1921,7 @@ void gui_ItemNotifier::Draw()
             item->bf->current_animation = 0;
             item->bf->current_frame = 0;
             item->bf->frame_time = 0.0;
-            
+
             Item_Frame(item->bf, 0.0);
             glPushMatrix();
                 glTranslatef(mCurrPosX, mPosY, -2048.0);
@@ -1929,7 +1929,7 @@ void gui_ItemNotifier::Draw()
                 glRotatef(mCurrRotY + mRotY, 1.0, 0.0, 0.0);
                 Gui_RenderItem(item->bf, mSize);
             glPopMatrix();
-            
+
             item->bf->current_animation = anim;
             item->bf->current_frame = frame;
             item->bf->frame_time = time;

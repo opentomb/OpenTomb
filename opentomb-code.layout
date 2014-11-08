@@ -1,39 +1,39 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
-	<File name="src\system.cpp" open="0" top="0" tabpos="22" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\ftgl\FTExtrdGlyph.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3417" topLine="136" />
+			<Cursor1 position="2160" topLine="55" />
 		</Cursor>
 	</File>
-	<File name="src\bullet\BulletCollision\CollisionDispatch\btInternalEdgeUtility.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="config.lua" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="8503" topLine="290" />
+			<Cursor1 position="3047" topLine="86" />
 		</Cursor>
 	</File>
-	<File name="src\character_controller.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\gui.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="29262" topLine="847" />
+			<Cursor1 position="31715" topLine="1050" />
 		</Cursor>
 	</File>
-	<File name="src\frustum.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\image\IMG_png.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="3678" topLine="127" />
-		</Cursor>
-	</File>
-	<File name="src\engine.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="21404" topLine="713" />
-		</Cursor>
-	</File>
-	<File name="src\al\Alc\backends\backend.c" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6792" topLine="183" />
+			<Cursor1 position="976" topLine="219" />
 		</Cursor>
 	</File>
 	<File name="src\render.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="2979" topLine="68" />
+		</Cursor>
+	</File>
+	<File name="src\audio.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="62654" topLine="1983" />
+		</Cursor>
+	</File>
+	<File name="src\image\miniz.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="113469" topLine="2216" />
 		</Cursor>
 	</File>
 	<File name="src\bullet\BulletCollision\CollisionDispatch\btDefaultCollisionConfiguration.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -46,34 +46,24 @@
 			<Cursor1 position="1550" topLine="26" />
 		</Cursor>
 	</File>
-	<File name="src\common.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="417" topLine="0" />
-		</Cursor>
-	</File>
 	<File name="src\world.cpp" open="0" top="0" tabpos="25" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="17062" topLine="704" />
 		</Cursor>
 	</File>
-	<File name="src\entity.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\resource.cpp" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="23056" topLine="655" />
+			<Cursor1 position="8823" topLine="156" />
 		</Cursor>
 	</File>
-	<File name="src\resource.cpp" open="0" top="0" tabpos="20" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\game.cpp" open="1" top="1" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="54546" topLine="1520" />
+			<Cursor1 position="16487" topLine="519" />
 		</Cursor>
 	</File>
-	<File name="src\ftgl\FTExtrdGlyph.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\al\Alc\backends\backend.c" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2160" topLine="55" />
-		</Cursor>
-	</File>
-	<File name="src\lua\lauxlib.c" open="0" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="26578" topLine="913" />
+			<Cursor1 position="6792" topLine="183" />
 		</Cursor>
 	</File>
 	<File name="src\vt\l_tr5.cpp" open="0" top="0" tabpos="24" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -81,39 +71,19 @@
 			<Cursor1 position="4482" topLine="98" />
 		</Cursor>
 	</File>
-	<File name="scripts\autoexec.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\character_controller.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="302" topLine="0" />
+			<Cursor1 position="29262" topLine="847" />
 		</Cursor>
 	</File>
-	<File name="config.lua" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\resource.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="148" topLine="86" />
+			<Cursor1 position="5353" topLine="92" />
 		</Cursor>
 	</File>
-	<File name="src\gui.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\engine.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="23727" topLine="756" />
-		</Cursor>
-	</File>
-	<File name="src\al\Alc\ALc.c" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="28203" topLine="985" />
-		</Cursor>
-	</File>
-	<File name="src\lua\luaconf.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6419" topLine="203" />
-		</Cursor>
-	</File>
-	<File name="src\main_SDL.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="238" topLine="24" />
-		</Cursor>
-	</File>
-	<File name="src\ogg\libvorbis\lsp.c" open="0" top="0" tabpos="17" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="9131" topLine="293" />
+			<Cursor1 position="21404" topLine="713" />
 		</Cursor>
 	</File>
 	<File name="src\portal.cpp" open="0" top="0" tabpos="18" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -121,14 +91,64 @@
 			<Cursor1 position="11491" topLine="346" />
 		</Cursor>
 	</File>
-	<File name="src\audio.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="62654" topLine="1983" />
-		</Cursor>
-	</File>
 	<File name="src\script.cpp" open="0" top="0" tabpos="21" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="17922" topLine="653" />
+		</Cursor>
+	</File>
+	<File name="src\lua\lauxlib.c" open="0" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="26578" topLine="913" />
+		</Cursor>
+	</File>
+	<File name="src\lua\luaconf.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6419" topLine="203" />
+		</Cursor>
+	</File>
+	<File name="src\common.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="417" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\al\Alc\ALc.c" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="28203" topLine="985" />
+		</Cursor>
+	</File>
+	<File name="scripts\autoexec.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="302" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\main_SDL.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="238" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\entity.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="23056" topLine="655" />
+		</Cursor>
+	</File>
+	<File name="src\frustum.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3678" topLine="127" />
+		</Cursor>
+	</File>
+	<File name="src\ogg\libvorbis\lsp.c" open="0" top="0" tabpos="17" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9131" topLine="293" />
+		</Cursor>
+	</File>
+	<File name="src\redblack.cpp" open="0" top="0" tabpos="19" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="10927" topLine="423" />
+		</Cursor>
+	</File>
+	<File name="src\system.cpp" open="0" top="0" tabpos="22" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3417" topLine="136" />
 		</Cursor>
 	</File>
 	<File name="src\main_SDL.h" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -136,14 +156,9 @@
 			<Cursor1 position="371" topLine="2" />
 		</Cursor>
 	</File>
-	<File name="src\game.cpp" open="0" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\bullet\BulletCollision\CollisionDispatch\btInternalEdgeUtility.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="16852" topLine="560" />
-		</Cursor>
-	</File>
-	<File name="src\redblack.cpp" open="0" top="0" tabpos="19" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="10927" topLine="423" />
+			<Cursor1 position="8503" topLine="290" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>
