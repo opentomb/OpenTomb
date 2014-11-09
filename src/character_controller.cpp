@@ -15,6 +15,7 @@
 #include "mesh.h"
 #include "vmath.h"
 #include "polygon.h"
+#include "resource.h"
 
 
 #define CHARACTER_BOX_HALF_SIZE (128.0)
@@ -2160,6 +2161,111 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     return 1;
 }
 
+/**
+ *
+ * @param ch: character pointer
+ * @param obj: traversed object pointer
+ * @return: 0x01 if can traverse forvard; 0x02 if can traverse backvard; 0x03 can traverse in both directions; 0x00 - can't traverse
+ */
+int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
+{
+    room_sector_p ch_s, obj_s;
+
+    ch_s = Room_GetSector(ch->self->room, ch->transform + 12);
+    obj_s = Room_GetSector(obj->self->room, obj->transform + 12);
+
+    if((ch_s == NULL) || (obj_s == NULL))
+    {
+        return 0x00;
+    }
+
+    if((ch_s->floor != obj_s->floor) || (ch_s->floor_corners[0].m_floats[2] != obj_s->floor_corners[0].m_floats[2]) ||
+       (ch_s->floor_corners[0].m_floats[2] != ch_s->floor_corners[1].m_floats[2]) || (ch_s->floor_corners[0].m_floats[2] != ch_s->floor_corners[2].m_floats[2]) || (ch_s->floor_corners[0].m_floats[2] != ch_s->floor_corners[3].m_floats[2]) ||
+       (obj_s->floor_corners[0].m_floats[2] != obj_s->floor_corners[1].m_floats[2]) || (obj_s->floor_corners[0].m_floats[2] != obj_s->floor_corners[2].m_floats[2]) || (obj_s->floor_corners[0].m_floats[2] != obj_s->floor_corners[3].m_floats[2]))
+    {
+        return 0x00;
+    }
+
+    int ret = 0x00;
+    room_sector_p next_s = NULL;
+
+    /*
+     * PUSH MOVE CHECK
+     */
+    // OX move case
+    if(ch->transform[4 + 0] > 0.8)
+    {
+        btScalar pos[] = {obj_s->pos[0] + TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
+        next_s = Room_GetSector(obj_s->owner_room, pos);
+        next_s = TR_Sector_CheckPortalPointer(next_s);
+    }
+    else if(ch->transform[4 + 0] < -0.8)
+    {
+        btScalar pos[] = {obj_s->pos[0] - TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
+        next_s = Room_GetSector(obj_s->owner_room, pos);
+        next_s = TR_Sector_CheckPortalPointer(next_s);
+    }
+    // OY move case
+    else if(ch->transform[4 + 1] > 0.8)
+    {
+        btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
+        next_s = Room_GetSector(obj_s->owner_room, pos);
+        next_s = TR_Sector_CheckPortalPointer(next_s);
+    }
+    else if(ch->transform[4 + 1] < -0.8)
+    {
+        btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
+        next_s = Room_GetSector(obj_s->owner_room, pos);
+        next_s = TR_Sector_CheckPortalPointer(next_s);
+    }
+
+    if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE) &&
+       (next_s->floor == obj_s->floor) && (next_s->floor_corners[0].m_floats[2] == obj_s->floor_corners[0].m_floats[2]) &&
+       (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
+    {
+        ret |= 0x01;                                                            // can traverse forvard
+    }
+
+    /*
+     * PULL MOVE CHECK
+     */
+    next_s = NULL;
+    // OX move case
+    if(ch->transform[4 + 0] > 0.8)
+    {
+        btScalar pos[] = {ch_s->pos[0] - TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
+        next_s = Room_GetSector(ch_s->owner_room, pos);
+        next_s = TR_Sector_CheckPortalPointer(next_s);
+    }
+    else if(ch->transform[4 + 0] < -0.8)
+    {
+        btScalar pos[] = {ch_s->pos[0] + TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
+        next_s = Room_GetSector(ch_s->owner_room, pos);
+        next_s = TR_Sector_CheckPortalPointer(next_s);
+    }
+    // OY move case
+    else if(ch->transform[4 + 1] > 0.8)
+    {
+        btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
+        next_s = Room_GetSector(ch_s->owner_room, pos);
+        next_s = TR_Sector_CheckPortalPointer(next_s);
+    }
+    else if(ch->transform[4 + 1] < -0.8)
+    {
+        btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
+        next_s = Room_GetSector(ch_s->owner_room, pos);
+        next_s = TR_Sector_CheckPortalPointer(next_s);
+    }
+
+    if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE) &&
+       (next_s->floor == ch_s->floor) && (next_s->floor_corners[0].m_floats[2] == ch_s->floor_corners[0].m_floats[2]) &&
+       (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
+    {
+        ret |= 0x02;                                                            // can traverse backvard
+    }
+
+    return ret;
+}
 
 /**
  * Main character frame function

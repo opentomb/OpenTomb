@@ -249,6 +249,8 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd);
 int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);
 
+int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj);
+
 void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd);
 void Character_UpdateParams(struct entity_s *ent);
 

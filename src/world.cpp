@@ -706,7 +706,7 @@ room_sector_p Room_GetSector(room_p room, btScalar pos[3])
     int x, y;
     room_sector_p ret = NULL;
 
-    if(!room->active)
+    if((room == NULL) || !room->active)
     {
         return NULL;
     }

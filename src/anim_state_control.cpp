@@ -25,7 +25,7 @@
  * postframe do {if(out) {load pos; do command;}}
  */
 
-#define PENETRATION_TEST_OFFSET     (0.16 * ent->character->ry)
+#define PENETRATION_TEST_OFFSET     (0.20 * ent->character->ry)
 #define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
 #define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
 #define RUN_FORWARD_OFFSET          (128.0)       ///@FIXME: find real offset
@@ -1571,7 +1571,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(cmd->move[1] ==-1)
                 {
-                    vec3_mul_scalar(move, ent->transform + 0, -32.0);
+                    vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
                     Character_CheckNextPenetration(ent, cmd, move);
                     if(cmd->horizontal_collide == 0)                            //we only want lara to shimmy when last frame is reached!
                     {
@@ -1585,7 +1585,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(cmd->move[1] == 1)
                 {
-                    vec3_mul_scalar(move, ent->transform + 0, 32.0);
+                    vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
                     Character_CheckNextPenetration(ent, cmd, move);
                     if(cmd->horizontal_collide == 0)                            //we only want lara to shimmy when last frame is reached!
                     {
@@ -1790,8 +1790,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if(cmd->move[1] ==-1)
             {
-                t = engine_frame_time * ent->current_speed * ent->character->speed_mult;
-                vec3_mul_scalar(move, ent->transform + 0, -t);
+                //t = engine_frame_time * ent->current_speed * ent->character->speed_mult;
+                vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
                 if(cmd->horizontal_collide != 0)
                 {
@@ -1852,8 +1852,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if(cmd->move[1] == 1)
             {
-                t = engine_frame_time * ent->current_speed * ent->character->speed_mult;
-                vec3_mul_scalar(move, ent->transform + 0, t);
+                //t = engine_frame_time * ent->current_speed * ent->character->speed_mult;
+                vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
                 Character_CheckNextPenetration(ent, cmd, move);
                 if(cmd->horizontal_collide != 0)
                 {
