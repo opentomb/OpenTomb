@@ -194,8 +194,8 @@ OBJECTFILES= \
 CFLAGS=-I"src\bullet" -I"src\freetype2" -O2 -march=prescott
 
 # CC Compiler Flags
-CCFLAGS=-I"src\bullet" -I"src\freetype2" -O2 -march=prescott
-CXXFLAGS=-I"src\bullet" -I"src\freetype2" -O2 -march=prescott
+CCFLAGS=-I"src\bullet" -I"src\freetype2" -O2 -march=prescott -Wno-sign-compare
+CXXFLAGS=-I"src\bullet" -I"src\freetype2" -O2 -march=prescott -Wno-sign-compare
 
 # Fortran Compiler Flags
 FFLAGS=-s

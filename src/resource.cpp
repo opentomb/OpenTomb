@@ -1099,13 +1099,6 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
             near_sector = sector - 1;
         }
 
-        /*if((sector->portal_to_room < 0) && (near_sector != NULL))
-        {
-            sector->floor = 32512;
-            sector->ceiling = 32512;
-            sector->floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
-        }*/
-
         if((near_sector != NULL) && (sector->portal_to_room >= 0))
         {
             portal_p p = room->portals;
@@ -1690,15 +1683,12 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
 #endif
 
-    if(tr->game_version < TR_V)
+    r = world->rooms;
+    for(i=0;i<world->room_count;i++,r++)
     {
-        r = world->rooms;
-        for(i=0;i<world->room_count;i++,r++)
+        if(r->active && r->alternate_room)
         {
-            if(r->active && r->alternate_room)
-            {
-                Room_Disable(r->alternate_room);
-            }
+            Room_Disable(r->alternate_room);
         }
     }
 
@@ -2261,9 +2251,19 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
      */
     room->alternate_room = NULL;
     room->base_room = NULL;
-    if(tr_room->alternate_room >= 0 && tr_room->alternate_room < tr->rooms_count)
+    if(tr->game_version < TR_V)
     {
-        room->alternate_room = world->rooms + tr_room->alternate_room;
+        if((tr_room->alternate_room >= 0) && (tr_room->alternate_room < tr->rooms_count))
+        {
+            room->alternate_room = world->rooms + tr_room->alternate_room;
+        }
+    }
+    else                                                                        // in TR_V alternate room can't been zero room
+    {
+        if((tr_room->alternate_room > 0) && (tr_room->alternate_room < tr->rooms_count))
+        {
+            room->alternate_room = world->rooms + tr_room->alternate_room;
+        }
     }
 }
 
