@@ -248,7 +248,10 @@ room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs)
         room_p r = engine_world.rooms + rs->portal_to_room;
         int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
         int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
-        rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        {
+            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+        }
     }
 
     return rs;
@@ -262,7 +265,10 @@ room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs)
         room_p r = rs->owner_room->base_room;
         int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
         int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
-        rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        {
+            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+        }
     }
 
     return rs;

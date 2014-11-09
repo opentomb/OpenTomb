@@ -604,40 +604,6 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
         fc->ceiling_point.setInterpolate3(from, to, cb->m_closestHitFraction);
         fc->ceiling_obj = (btCollisionObject*)cb->m_collisionObject;
     }
-
-    /// may be really delete that commented code???
-    /*if(!fc->floor_hit && fc->ceiling_hit)
-    {
-        from = fc->ceiling_point;
-        from.m_floats[2] -= 64.0;
-        to = from;
-        to.m_floats[2] -= 4096.0;
-        tr1.setOrigin(from);
-        tr2.setOrigin(to);
-        ccb->m_closestHitFraction = 1.0;
-        ccb->m_hitCollisionObject = NULL;
-        bt_engine_dynamicsWorld->convexSweepTest(fc->sp, tr1, tr2, *ccb);
-        fc->floor_hit = (int)ccb->hasHit();
-        if(fc->floor_hit)
-        {
-            fc->floor_normale = cb->m_hitNormalWorld;
-            fc->floor_point = base_pos;
-            fc->floor_point.m_floats[2] = ccb->m_hitPointWorld.m_floats[2];
-            fc->floor_normale = ccb->m_hitNormalWorld;
-            fc->floor_obj = (btCollisionObject*)ccb->m_hitCollisionObject;
-
-            from.m_floats[0] = to.m_floats[0] = ccb->m_hitPointWorld.m_floats[0];
-            from.m_floats[1] = to.m_floats[1] = ccb->m_hitPointWorld.m_floats[1];
-            cb->m_closestHitFraction = 1.0;
-            cb->m_collisionObject = NULL;
-            //cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
-            bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-            if(cb->hasHit())
-            {
-                fc->floor_normale = cb->m_hitNormalWorld;
-            }
-        }
-    }*/
 }
 
 /**
