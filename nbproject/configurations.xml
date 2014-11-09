@@ -1100,6 +1100,7 @@
       <itemPath>nbproject/Makefile-variables.mk</itemPath>
       <itemPath>config.lua</itemPath>
       <itemPath>d_log.txt</itemPath>
+      <itemPath>room_dump.txt</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>

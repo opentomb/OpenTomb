@@ -249,6 +249,76 @@ void Engine_Init()
     luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
 }
 
+/*
+ * debug functions
+ */
+int lua_DumpRoom(lua_State * lua)
+{
+    room_p r = NULL;
+
+    if(lua_gettop(lua) == 0)
+    {
+        r = engine_camera.current_room;
+    }
+    else
+    {
+        int id = lua_tointeger(lua, 1);
+        if(id < 0 || id >= engine_world.room_count)
+        {
+            Con_Printf("wrong room id = %d", id);
+            return 0;
+        }
+        r = engine_world.rooms + id;
+    }
+
+    if(r != NULL)
+    {
+        room_sector_p rs = r->sectors;
+        Sys_DebugLog("room_dump.txt", "ROOM = %d, flag = 0x%x", r->id, r->flags);
+        for(int i=0;i<r->sectors_count;i++,rs++)
+        {
+            Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, rs->portal_to_room);
+        }
+    }
+
+    return 0;
+}
+
+
+int lua_SetRoomCollision(lua_State * lua)
+{
+    int val, id, top;
+    top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (id, value)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    if(id < 0 || id >= engine_world.room_count)
+    {
+        Con_Printf("wrong room id = %d", id);
+        return 0;
+    }
+
+    val = lua_tointeger(lua, 2);
+    if(val == 0)
+    {
+        Room_Disable(engine_world.rooms + id);
+    }
+    else
+    {
+        Room_Enable(engine_world.rooms + id);
+    }
+
+    return 0;
+}
+
+/*
+ * Base engine functions
+ */
 
 int lua_SetModelCollisionMapSize(lua_State * lua)
 {
@@ -1823,6 +1893,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     /*
      * register functions
      */
+
+    lua_register(lua, "dumpRoom", lua_DumpRoom);
+    lua_register(lua, "setRoomCollision", lua_SetRoomCollision);
 
     lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "playSound", lua_PlaySound);

@@ -137,6 +137,11 @@ int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 
 void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 {
+    //if(room->id >= 76 && room->id <= 76)
+    /*if((engine_world.version == TR_V) && (room->flags == TR_ROOM_FLAG_UNKNOWN2))
+    {
+        return;
+    }*/
     for(int h = 0; h < room->sectors_y-1; h++)
     {
         for(int w = 0; w < room->sectors_x-1; w++, room_tween++)
@@ -1563,6 +1568,37 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     r = world->rooms;
     for(i=0;i<world->room_count;i++,r++)
     {
+        ///@STICK! THE UGLIEST STICK FOR TR_V ALTERNATE ROOM CALCULATION!!! I DO NOT KNOW WHY THIS STICK WORKS (OR NOT WORKS?)!
+        if((world->version == TR_V) && (r->flags & TR_ROOM_FLAG_UNKNOWN2))
+        {
+            room_p alt_room = world->rooms;
+            for(int j=0;j<world->room_count;j++,alt_room++)
+            {
+                if((alt_room->alternate_room == NULL) && (alt_room->flags & TR_ROOM_FLAG_UNKNOWN2) && (r->sectors_x == alt_room->sectors_x) && (r->sectors_y == alt_room->sectors_y) &&
+                    (r->transform[12 + 0] == alt_room->transform[12 + 0]) && (r->transform[12 + 1] == alt_room->transform[12 + 1]) && (r->bb_max[2] == alt_room->bb_max[2])&& (r->bb_min[2] == alt_room->bb_min[2]))
+                {
+                    portal_p p = alt_room->portals;
+                    int cnt = 0;
+                    for(int jj=0;jj<alt_room->portal_count;jj++,p++)
+                    {
+                        for(int k=0;k<p->dest_room->portal_count;k++)
+                        {
+                            if(p->dest_room->portals[k].dest_room == alt_room)
+                            {
+                                cnt++;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(cnt != alt_room->portal_count)
+                    {
+                        r->alternate_room = alt_room;
+                    }
+                }
+            }
+        }
+
         if(r->alternate_room != NULL)
         {
             r->alternate_room->base_room = r;
@@ -2254,13 +2290,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     if(tr->game_version < TR_V)
     {
         if((tr_room->alternate_room >= 0) && (tr_room->alternate_room < tr->rooms_count))
-        {
-            room->alternate_room = world->rooms + tr_room->alternate_room;
-        }
-    }
-    else                                                                        // in TR_V alternate room can't been zero room
-    {
-        if((tr_room->alternate_room > 0) && (tr_room->alternate_room < tr->rooms_count))
         {
             room->alternate_room = world->rooms + tr_room->alternate_room;
         }
