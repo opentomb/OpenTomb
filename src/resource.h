@@ -99,7 +99,7 @@ void BT_GenEntityRigidBody(entity_p ent);
 // Bullet collision shape (BT_CS) generating functions.
 
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag);
-btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, int heightmap_size, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
 // Main function which is used to translate legacy TR floor data
 // to native OpenTomb structs.

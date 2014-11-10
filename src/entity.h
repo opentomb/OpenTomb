@@ -18,9 +18,10 @@ struct character_s;
 struct ss_bone_frame_s;
 
 #define ENTITY_IS_ACTIVE                          (0x00000001)
-#define ENTITY_CAN_TRIGGER                        (0x00000002)                      
+#define ENTITY_CAN_TRIGGER                        (0x00000002)
 #define ENTITY_IS_TRIGGER                         (0x00000004)
 #define ENTITY_IS_PICKABLE                        (0x00000008)
+#define ENTITY_IS_TRAVERSE                        (0x00000010)
 
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction
@@ -114,32 +115,32 @@ typedef struct entity_s
     uint32_t                            id;                                     // ID
     int32_t                             OCB;                                    // Object code bit (since TR4)
     uint32_t                            activation_mask;                        // 0x1F means ACTIVATE.
-    
+
     uint32_t                            flags;
     uint8_t                             active;
     uint8_t                             hide;
-    
+
     uint8_t                             dir_flag;                               // (move direction)
     uint16_t                            anim_flags;                             // additional animation control param
     uint16_t                            move_type;                              // on floor / free fall / swim ....
     uint8_t                             was_rendered;                           // render once per frame trigger
     uint8_t                             was_rendered_lines;                     // same for debug lines
     uint8_t                             smooth_anim;
-    
+
     btScalar                            current_speed;                          // current linear speed from animation info
     btVector3                           speed;                                  // speed of the entity XYZ
     btScalar                            inertia;
-    struct ss_bone_frame_s              bf;                                     // current boneframe with full frame information 
+    struct ss_bone_frame_s              bf;                                     // current boneframe with full frame information
     btScalar                            angles[3];
-    btScalar                            transform[16];                          // GL transformation matrix               
-    
+    btScalar                            transform[16];                          // GL transformation matrix
+
     struct obb_s                       *obb;                                    // oriented bounding box
-    
+
     void                              (*onAnimChange)(struct entity_s *ent);
     struct room_sector_s               *current_sector;
-    
+
     struct engine_container_s          *self;
-    
+
     btScalar                            activation_offset[4];                   // where we can activate object (dx, dy, dz, r)
     btRigidBody                       **bt_body;
     struct character_s                 *character;

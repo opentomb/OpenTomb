@@ -118,6 +118,8 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
 
+    ret->traversed_object = NULL;
+
     Character_CreateCollisionObject(ent);
 }
 
@@ -2161,6 +2163,64 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     return 1;
 }
 
+int Character_FindTraverse(struct entity_s *ch)
+{
+    room_sector_p ch_s, obj_s = NULL;
+    ch_s = Room_GetSector(ch->self->room, ch->transform + 12);
+
+    if(ch_s == NULL)
+    {
+        return 0;
+    }
+
+    ch->character->traversed_object = NULL;
+
+    // OX move case
+    if(ch->transform[4 + 0] > 0.9)
+    {
+        btScalar pos[] = {ch_s->pos[0] + TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
+        obj_s = Room_GetSector(ch_s->owner_room, pos);
+    }
+    else if(ch->transform[4 + 0] < -0.9)
+    {
+        btScalar pos[] = {ch_s->pos[0] - TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
+        obj_s = Room_GetSector(ch_s->owner_room, pos);
+    }
+    // OY move case
+    else if(ch->transform[4 + 1] > 0.9)
+    {
+        btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
+        obj_s = Room_GetSector(ch_s->owner_room, pos);
+    }
+    else if(ch->transform[4 + 1] < -0.9)
+    {
+        btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
+        obj_s = Room_GetSector(ch_s->owner_room, pos);
+    }
+
+    if(obj_s != NULL)
+    {
+        obj_s = TR_Sector_CheckPortalPointer(obj_s);
+        for(engine_container_p cont = obj_s->owner_room->containers;cont!=NULL;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p e = (entity_p)cont->object;
+                if((e->flags & ENTITY_IS_TRAVERSE) && (1 == OBB_OBB_Test(e, ch) && (e->transform[12 + 2] == ch->transform[12 + 2])))
+                {
+                    int oz = (ch->angles[0] + 45.0) / 90.0;
+                    ch->angles[0] = oz * 90.0;
+                    ch->character->traversed_object = e;
+                    Entity_UpdateRotation(ch);
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
 /**
  *
  * @param ch: character pointer
@@ -2197,28 +2257,25 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     {
         btScalar pos[] = {obj_s->pos[0] + TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
         next_s = Room_GetSector(obj_s->owner_room, pos);
-        next_s = TR_Sector_CheckPortalPointer(next_s);
     }
     else if(ch->transform[4 + 0] < -0.8)
     {
         btScalar pos[] = {obj_s->pos[0] - TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
         next_s = Room_GetSector(obj_s->owner_room, pos);
-        next_s = TR_Sector_CheckPortalPointer(next_s);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.8)
     {
         btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
         next_s = Room_GetSector(obj_s->owner_room, pos);
-        next_s = TR_Sector_CheckPortalPointer(next_s);
     }
     else if(ch->transform[4 + 1] < -0.8)
     {
         btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
         next_s = Room_GetSector(obj_s->owner_room, pos);
-        next_s = TR_Sector_CheckPortalPointer(next_s);
     }
 
+    next_s = TR_Sector_CheckPortalPointer(next_s);
     if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE) &&
        (next_s->floor == obj_s->floor) && (next_s->floor_corners[0].m_floats[2] == obj_s->floor_corners[0].m_floats[2]) &&
        (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
@@ -2235,28 +2292,25 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     {
         btScalar pos[] = {ch_s->pos[0] - TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
         next_s = Room_GetSector(ch_s->owner_room, pos);
-        next_s = TR_Sector_CheckPortalPointer(next_s);
     }
     else if(ch->transform[4 + 0] < -0.8)
     {
         btScalar pos[] = {ch_s->pos[0] + TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
         next_s = Room_GetSector(ch_s->owner_room, pos);
-        next_s = TR_Sector_CheckPortalPointer(next_s);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.8)
     {
         btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
         next_s = Room_GetSector(ch_s->owner_room, pos);
-        next_s = TR_Sector_CheckPortalPointer(next_s);
     }
     else if(ch->transform[4 + 1] < -0.8)
     {
         btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
         next_s = Room_GetSector(ch_s->owner_room, pos);
-        next_s = TR_Sector_CheckPortalPointer(next_s);
     }
 
+    next_s = TR_Sector_CheckPortalPointer(next_s);
     if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE) &&
        (next_s->floor == ch_s->floor) && (next_s->floor_corners[0].m_floats[2] == ch_s->floor_corners[0].m_floats[2]) &&
        (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))

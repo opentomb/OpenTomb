@@ -10,6 +10,7 @@
 #include "bullet/LinearMath/btScalar.h"
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
+#include "engine.h"
 
 obb_p OBB_Create()
 {
@@ -235,8 +236,8 @@ int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
     vec3_sub(v, e2->obb->centre, e1->obb->centre);
     //translation, in A's frame
     T[0] = vec3_dot(v, e1->transform + 0);
-    T[0] = vec3_dot(v, e1->transform + 4);
-    T[0] = vec3_dot(v, e1->transform + 8);
+    T[1] = vec3_dot(v, e1->transform + 4);
+    T[2] = vec3_dot(v, e1->transform + 8);
 
     btScalar *a = e1->obb->extent;
     btScalar *b = e2->obb->extent;

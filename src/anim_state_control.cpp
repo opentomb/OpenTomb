@@ -18,6 +18,7 @@
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "vt/tr_versions.h"
+#include "resource.h"
 
 /*
  * WALL CLIMB:
@@ -38,6 +39,17 @@
 #define LARA_HANG_SENSOR_Z          (800.0)       // It works more stable than 1024 (after collision critical fix, of course)
 
 #define OSCILLATE_HANG_USE 0
+
+void ent_stop_traverse(entity_p ent)
+{
+    btScalar *v = ent->character->traversed_object->transform + 12;
+    int i = v[0] / TR_METERING_SECTORSIZE;
+    v[0] = i * TR_METERING_SECTORSIZE + 512.0;
+    i = v[1] / TR_METERING_SECTORSIZE;
+    v[1] = i * TR_METERING_SECTORSIZE + 512.0;
+    Entity_UpdateRigidBody(ent->character->traversed_object);
+    ent->character->traversed_object = NULL;
+}
 
 void ent_set_on_floor(entity_p ent)
 {
@@ -235,10 +247,13 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 if(!curr_fc->quicksand)
                     ent->bf.next_state = TR_STATE_LARA_CROUCH_IDLE;
             }
-            /*else if(cmd->action)///@FIXME: Need to check if there is actually a block in front and also to activate it when pushed/pulled, don't push if next floor (after block) will not allow it!
+            else if(cmd->action && Character_FindTraverse(ent))
             {
                 ent->bf.next_state = TR_STATE_LARA_PUSHABLE_GRAB;
-            }*/
+                t = 512.0 + 72.0;
+                btScalar *v = ent->character->traversed_object->transform + 12;
+                vec3_sub_mul(pos, v, ent->transform + 4, t);
+            }
             else if(cmd->move[0] == 1)
             {
                 if(cmd->shift)
@@ -1197,12 +1212,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else
                 {
-                     ent->bf.next_state = TR_STATE_LARA_STOP;  // stop
+                     ent->bf.next_state = TR_STATE_LARA_STOP;                   // stop
                 }
             }
             else if(cmd->slide != 0 && cmd->jump == 1)
             {
-                ent->bf.next_state = TR_STATE_LARA_JUMP_FORWARD;       // jump
+                ent->bf.next_state = TR_STATE_LARA_JUMP_FORWARD;                // jump
             }
             break;
 
@@ -1210,45 +1225,124 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
              * Misk animations
              */
         case TR_STATE_LARA_PUSHABLE_GRAB:
-			ent->move_type = MOVE_ON_FLOOR;
+            ent->move_type = MOVE_ON_FLOOR;
+            ent->character->no_fix = 0x01;
+            cmd->rot[0] = 0.0;
 
             if(cmd->action == 1)//If Lara is grabbing the block
             {
-				ent->dir_flag = ENT_STAY;
-                ent->anim_flags = ANIM_LOOP_LAST_FRAME;         //We hold it (loop last frame)
+                int tf = Character_CheckTraverse(ent, ent->character->traversed_object);
+                ent->dir_flag = ENT_STAY;
+                ent->anim_flags = ANIM_LOOP_LAST_FRAME;                         //We hold it (loop last frame)
 
-                if(cmd->move[0] == 1)//If player press up push
+                if((cmd->move[0] == 1) && (tf & 0x01))                          //If player press up push
                 {
-					 ent->dir_flag = ENT_MOVE_FORWARD;
-                     ent->anim_flags = ANIM_NORMAL_CONTROL;
-                     ent->bf.next_state = TR_STATE_LARA_PUSHABLE_PUSH;
+                    ent->dir_flag = ENT_MOVE_FORWARD;
+                    ent->anim_flags = ANIM_NORMAL_CONTROL;
+                    ent->bf.next_state = TR_STATE_LARA_PUSHABLE_PUSH;
                 }
-                else if(cmd->move[0] == -1)//If player press down pull
+                else if((cmd->move[0] == -1) && (tf & 0x02))                    //If player press down pull
                 {
-					 ent->dir_flag = ENT_MOVE_BACKWARD;
-                     ent->anim_flags = ANIM_NORMAL_CONTROL;
-                     ent->bf.next_state = TR_STATE_LARA_PUSHABLE_PULL;
+                    ent->dir_flag = ENT_MOVE_BACKWARD;
+                    ent->anim_flags = ANIM_NORMAL_CONTROL;
+                    ent->bf.next_state = TR_STATE_LARA_PUSHABLE_PULL;
                 }
             }
             else//Lara has let go of the block
             {
-				ent->dir_flag = ENT_STAY;
-                ent->anim_flags = ANIM_NORMAL_CONTROL;          //We no longer loop last frame
-                ent->bf.next_state = TR_STATE_LARA_STOP;           //Switch to next Lara state
+                ent->dir_flag = ENT_STAY;
+                ent->anim_flags = ANIM_NORMAL_CONTROL;                          //We no longer loop last frame
+                ent->bf.next_state = TR_STATE_LARA_STOP;                        //Switch to next Lara state
             }
             break;
 
         case TR_STATE_LARA_PUSHABLE_PUSH:
-            if(cmd->action == 0)//For TOMB4/5 If Lara is pushing and action let go, don't push
+            ent->character->no_fix = 0x01;
+            ent->onAnimChange = ent_stop_traverse;
+            if(cmd->action == 0)                                                //For TOMB4/5 If Lara is pushing and action let go, don't push
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;
+            }
+            if((ent->character->traversed_object != NULL) && (ent->bf.current_frame > 16)) ///@FIXME: magick 16
+            {
+                if(ent->transform[4 + 0] > 0.9)
+                {
+                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 0];
+                    if(t > ent->character->traversed_object->transform[12 + 0])
+                    {
+                        ent->character->traversed_object->transform[12 + 0] = t;
+                    }
+                }
+                else if(ent->transform[4 + 0] < -0.9)
+                {
+                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 0];
+                    if(t < ent->character->traversed_object->transform[12 + 0])
+                    {
+                        ent->character->traversed_object->transform[12 + 0] = t;
+                    }
+                }
+                else if(ent->transform[4 + 1] > 0.9)
+                {
+                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 1];
+                    if(t > ent->character->traversed_object->transform[12 + 1])
+                    {
+                        ent->character->traversed_object->transform[12 + 1] = t;
+                    }
+                }
+                else if(ent->transform[4 + 1] < -0.9)
+                {
+                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 1];
+                    if(t < ent->character->traversed_object->transform[12 + 1])
+                    {
+                        ent->character->traversed_object->transform[12 + 1] = t;
+                    }
+                }
+                Entity_UpdateRigidBody(ent->character->traversed_object);
             }
             break;
 
         case TR_STATE_LARA_PUSHABLE_PULL:
-            if(cmd->action == 0)//For TOMB4/5 If Lara is pulling and action let go, don't pull
+            ent->character->no_fix = 0x01;
+            ent->onAnimChange = ent_stop_traverse;
+            if(cmd->action == 0)                                                //For TOMB4/5 If Lara is pulling and action let go, don't pull
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;
+            }
+            if((ent->character->traversed_object != NULL) && (ent->bf.current_frame > 16)) ///@FIXME: magick 16
+            {
+                if(ent->transform[4 + 0] > 0.9)
+                {
+                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 0];
+                    if(t < ent->character->traversed_object->transform[12 + 0])
+                    {
+                        ent->character->traversed_object->transform[12 + 0] = t;
+                    }
+                }
+                else if(ent->transform[4 + 0] < -0.9)
+                {
+                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 0];
+                    if(t > ent->character->traversed_object->transform[12 + 0])
+                    {
+                        ent->character->traversed_object->transform[12 + 0] = t;
+                    }
+                }
+                else if(ent->transform[4 + 1] > 0.9)
+                {
+                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 1];
+                    if(t < ent->character->traversed_object->transform[12 + 1])
+                    {
+                        ent->character->traversed_object->transform[12 + 1] = t;
+                    }
+                }
+                else if(ent->transform[4 + 1] < -0.9)
+                {
+                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 1];
+                    if(t > ent->character->traversed_object->transform[12 + 1])
+                    {
+                        ent->character->traversed_object->transform[12 + 1] = t;
+                    }
+                }
+                Entity_UpdateRigidBody(ent->character->traversed_object);
             }
             break;
 

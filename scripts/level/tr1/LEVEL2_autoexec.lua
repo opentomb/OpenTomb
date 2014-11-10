@@ -1,5 +1,7 @@
 -- OPENTOMB TRIGGER SCRIPT
--- FOR TOMB RAIDER 1, LEVEL2 - 
+-- FOR TOMB RAIDER 1, LEVEL2 -
+
+setEntityFlag(0, 0x10);     --set cube as a traverse object
 
 -- disable / enable entities
 -- wolves
