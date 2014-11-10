@@ -164,6 +164,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height - LARA_HANG_VERTICAL_EPSILON));
     int8_t last_frame = ent->bf.model->animations[ent->bf.current_animation].frames_count <= ent->bf.current_frame + 1;
 
+    ent->character->cam_follow_center = 0x00;
+
     if(cmd->kill)   // Stop any music, if Lara is dead.
     {
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
@@ -1259,15 +1261,19 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_PUSHABLE_PUSH:
             ent->character->no_fix = 0x01;
             ent->onAnimChange = ent_stop_traverse;
+            cmd->rot[0] = 0.0;
+            ent->character->cam_follow_center = 0x01;
+            i = ent->bf.model->animations[ent->bf.current_animation].frames_count;
+
             if(cmd->action == 0)                                                //For TOMB4/5 If Lara is pushing and action let go, don't push
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;
             }
-            if((ent->character->traversed_object != NULL) && (ent->bf.current_frame > 16)) ///@FIXME: magick 16
+            if((ent->character->traversed_object != NULL) && (ent->bf.current_frame > 16) && (ent->bf.current_frame < i - 16)) ///@FIXME: magick 16
             {
                 if(ent->transform[4 + 0] > 0.9)
                 {
-                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 0];
+                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0 - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
@@ -1275,7 +1281,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 0] < -0.9)
                 {
-                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 0];
+                    t = ent->transform[12 + 0] - (ent->bf.bb_max[1] + 512.0 - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
@@ -1283,7 +1289,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 1] > 0.9)
                 {
-                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 1];
+                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0 - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
@@ -1291,7 +1297,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 1] < -0.9)
                 {
-                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 1];
+                    t = ent->transform[12 + 1] - (ent->bf.bb_max[1] + 512.0 - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
@@ -1304,15 +1310,19 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_PUSHABLE_PULL:
             ent->character->no_fix = 0x01;
             ent->onAnimChange = ent_stop_traverse;
+            cmd->rot[0] = 0.0;
+            ent->character->cam_follow_center = 0x01;
+            i = ent->bf.model->animations[ent->bf.current_animation].frames_count;
+
             if(cmd->action == 0)                                                //For TOMB4/5 If Lara is pulling and action let go, don't pull
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;
             }
-            if((ent->character->traversed_object != NULL) && (ent->bf.current_frame > 16)) ///@FIXME: magick 16
+            if((ent->character->traversed_object != NULL) && (ent->bf.current_frame > 20) && (ent->bf.current_frame < i - 16)) ///@FIXME: magick 20
             {
                 if(ent->transform[4 + 0] > 0.9)
                 {
-                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 0];
+                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0 - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
@@ -1320,7 +1330,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 0] < -0.9)
                 {
-                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 0];
+                    t = ent->transform[12 + 0] - (ent->bf.bb_max[1] + 512.0 - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
@@ -1328,7 +1338,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 1] > 0.9)
                 {
-                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 1];
+                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0 - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
@@ -1336,7 +1346,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 1] < -0.9)
                 {
-                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0) * ent->transform[4 + 1];
+                    t = ent->transform[12 + 1] - (ent->bf.bb_max[1] + 512.0 - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
@@ -1712,6 +1722,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] = 0;
             ent->move_type = MOVE_WALLS_CLIMB;
             ent->dir_flag = ENT_STAY;
+            ent->character->cam_follow_center = 0x01;
             if(ent->move_type == MOVE_CLIMBING)
             {
                 ent->bf.next_state = TR_STATE_LARA_GRABBING;
@@ -1787,6 +1798,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_LADDER_UP:
             //ent->character->complex_collision = 0x01;
+            ent->character->cam_follow_center = 0x01;
             if(ent->move_type == MOVE_CLIMBING)
             {
                 ent->bf.next_state = TR_STATE_LARA_LADDER_IDLE;
@@ -1823,6 +1835,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_LADDER_DOWN:
             //ent->character->complex_collision = 0x01;
+            ent->character->cam_follow_center = 0x01;
             if(cmd->action && ent->character->climb.wall_hit && (cmd->move[1] < 0))
             {
                 if(ent->character->climb.wall_hit != 0x02)

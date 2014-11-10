@@ -180,7 +180,8 @@ typedef struct character_s
     int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
     int16_t                      max_move_iterations;
     int16_t                      no_fix;
-
+    int8_t                       cam_follow_center;
+            
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
