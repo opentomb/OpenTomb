@@ -114,6 +114,7 @@
 		<Unit filename="scripts/level/tr1/LEVEL2_autoexec.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="scripts/level/tr1/LEVEL4_autoexec.lua" />
 		<Unit filename="scripts/level/tr1/LEVEL6_autoexec.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

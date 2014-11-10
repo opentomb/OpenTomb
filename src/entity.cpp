@@ -233,7 +233,7 @@ void Entity_UpdateRigidBody(entity_p ent)
         }
     }
 #endif
-
+    
     for(i=0;i<ent->bf.model->mesh_count;i++)
     {
         if(ent->bt_body[i])
@@ -244,6 +244,8 @@ void Entity_UpdateRigidBody(entity_p ent)
             ent->bt_body[i]->setWorldTransform(bt_tr);
         }
     }
+    
+    Entity_RebuildBV(ent);
 }
 
 

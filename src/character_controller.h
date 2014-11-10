@@ -94,7 +94,7 @@ typedef struct climb_info_s
 {
     int8_t                         height_info;
     int8_t                         can_hang;
-    
+
     btScalar                       point[3];
     btScalar                       n[3];
     btScalar                       t[3];
@@ -102,7 +102,7 @@ typedef struct climb_info_s
     btScalar                       floor_limit;
     btScalar                       ceiling_limit;
     btScalar                       next_z_space;
-    
+
     int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
     int8_t                         edge_hit;
     btVector3                      edge_point;
@@ -117,43 +117,43 @@ typedef struct height_info_s
     bt_engine_ClosestRayResultCallback         *cb;
     bt_engine_ClosestConvexResultCallback      *ccb;
     btConvexShape                              *sp;
-    
+
     int8_t                                      ceiling_climb;
     int8_t                                      walls_climb;
     int8_t                                      walls_climb_dir;
-    
+
     btVector3                                   floor_normale;
     btVector3                                   floor_point;
     int16_t                                     floor_hit;
     btCollisionObject                          *floor_obj;
-    
+
     btVector3                                   ceiling_normale;
     btVector3                                   ceiling_point;
     int16_t                                     ceiling_hit;
     btCollisionObject                          *ceiling_obj;
-    
+
     btScalar                                    transition_level;
     int16_t                                     water;
     int16_t                                     quicksand;
 }height_info_t, *height_info_p;
 
 typedef struct character_command_s
-{    
+{
     btScalar    rot[3];
     int8_t      move[3];
-    
+
     int8_t      kill;
-    int8_t      vertical_collide;     
+    int8_t      vertical_collide;
     int8_t      horizontal_collide;
     int8_t      slide;
-    
+
     int8_t      roll;
     int8_t      jump;
     int8_t      crouch;
     int8_t      shift;
-    int8_t      action;    
+    int8_t      action;
     int8_t      sprint;
-    
+
     int8_t      flags;
 }character_command_t, *character_command_p;
 
@@ -176,11 +176,11 @@ typedef struct character_s
     struct character_command_s   cmd;                    // character control commands
     struct inventory_node_s     *inventory;
     struct character_param_s     parameters;
-    
+
     int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
     int16_t                      max_move_iterations;
     int16_t                      no_fix;
-    
+
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
@@ -190,7 +190,7 @@ typedef struct character_s
     btScalar                     critical_wall_component;
 
     btScalar                     climb_r;                // climbing sensor radius
-    btScalar                     rx;                     // base character radius X       
+    btScalar                     rx;                     // base character radius X
     btScalar                     ry;                     // base character radius Y
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
@@ -205,11 +205,13 @@ typedef struct character_s
     btSphereShape               *climb_sensor;
     btPairCachingGhostObject    *ghostObject;            // like Bullet character controller for penetration resolving.
     btManifoldArray             *manifoldArray;          // keep track of the contact manifolds
-    
+
     btScalar                     collision_transform[16];
     struct height_info_s         height_info;
     struct climb_info_s          climb;
-    
+
+    struct entity_s             *traversed_object;
+
     bt_engine_ClosestRayResultCallback                  *ray_cb;
     bt_engine_ClosestConvexResultCallback               *convex_cb;
 }character_t, *character_p;
@@ -249,6 +251,7 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd);
 int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);
 
+int Character_FindTraverse(struct entity_s *ch);
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj);
 
 void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd);

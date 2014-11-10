@@ -137,11 +137,6 @@ int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 
 void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 {
-    //if(room->id >= 76 && room->id <= 76)
-    /*if((engine_world.version == TR_V) && (room->flags == TR_ROOM_FLAG_UNKNOWN2))
-    {
-        return;
-    }*/
     for(int h = 0; h < room->sectors_y-1; h++)
     {
         for(int w = 0; w < room->sectors_x-1; w++, room_tween++)
@@ -170,7 +165,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
             room_tween->ceiling_corners[2].m_floats[0] = current_heightmap->ceiling_corners[1].m_floats[0];
             room_tween->ceiling_corners[3].m_floats[0] = room_tween->ceiling_corners[2].m_floats[0];
 
-            if(w > 0)
+            if((w > 0) && (current_heightmap->floor <= current_heightmap->ceiling) && (next_heightmap->floor <= next_heightmap->ceiling))     ///@STICK: TR_V CASE
             {
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))                                                           // Init X-plane tween [ | ]
                 {
@@ -270,6 +265,55 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         TR_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
+
+                /*current_heightmap = room->sectors + (w * room->sectors_y + h);
+                next_heightmap    = current_heightmap + 1;
+                if((room_tween->ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_NONE) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                {
+                    char valid = 0;
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    {
+                        next_heightmap = TR_Sector_CheckPortalPointer(next_heightmap);
+                        if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
+                        {
+                            valid = 1;
+                        }
+                        if(valid == 0)
+                        {
+                            room_sector_p rs = Room_GetSector(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
+                            {
+                                valid = 1;
+                            }
+                        }
+                    }
+
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    {
+                        current_heightmap = TR_Sector_CheckPortalPointer(current_heightmap);
+                        if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
+                        {
+                            valid = 1;
+                        }
+                        if(valid == 0)
+                        {
+                            room_sector_p rs = Room_GetSector(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
+                            {
+                                valid = 1;
+                            }
+                        }
+                    }
+
+                    if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                    {
+                        room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
+                        room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
+                        room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
+                        room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                        TR_Sector_SetTweenCeilingConfig(room_tween);
+                    }
+                }*/
             }
 
             /*****************************************************************************************************
@@ -297,7 +341,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
             room_tween->ceiling_corners[2].m_floats[1] = current_heightmap->ceiling_corners[2].m_floats[1];
             room_tween->ceiling_corners[3].m_floats[1] = room_tween->ceiling_corners[2].m_floats[1];
 
-            if(h > 0)
+            if((h > 0) && (current_heightmap->floor <= current_heightmap->ceiling) && (next_heightmap->floor <= next_heightmap->ceiling))     ///@STICK: TR_V CASE
             {
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                 {
@@ -396,6 +440,55 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         TR_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
+
+                /*current_heightmap = room->sectors + (w * room->sectors_y + h);
+                next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
+                if((room_tween->ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_NONE) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                {
+                    char valid = 0;
+                    if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    {
+                        next_heightmap = TR_Sector_CheckPortalPointer(next_heightmap);
+                        if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
+                        {
+                            valid = 1;
+                        }
+                        if(valid == 0)
+                        {
+                            room_sector_p rs = Room_GetSector(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
+                            {
+                                valid = 1;
+                            }
+                        }
+                    }
+
+                    if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    {
+                        current_heightmap = TR_Sector_CheckPortalPointer(current_heightmap);
+                        if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
+                        {
+                            valid = 1;
+                        }
+                        if(valid == 0)
+                        {
+                            room_sector_p rs = Room_GetSector(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
+                            {
+                                valid = 1;
+                            }
+                        }
+                    }
+
+                    if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
+                    {
+                        room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                        room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
+                        room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
+                        room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
+                        TR_Sector_SetTweenCeilingConfig(room_tween);
+                    }
+                }*/
             }
         }    ///END for
     }    ///END for
@@ -1568,14 +1661,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     r = world->rooms;
     for(i=0;i<world->room_count;i++,r++)
     {
-        ///@STICK! THE UGLIEST STICK FOR TR_V ALTERNATE ROOM CALCULATION!!! I DO NOT KNOW WHY THIS STICK WORKS (OR NOT WORKS?)!
-        if((world->version == TR_V) && (r->flags & TR_ROOM_FLAG_UNKNOWN2))
+        ///@STICK! THE STICK FOR TR_V ALTERNATE ROOM CALCULATION!!!
+        if(world->version == TR_V)
         {
             room_p alt_room = world->rooms;
             for(int j=0;j<world->room_count;j++,alt_room++)
             {
-                if((alt_room->alternate_room == NULL) && (alt_room->flags & TR_ROOM_FLAG_UNKNOWN2) && (r->sectors_x == alt_room->sectors_x) && (r->sectors_y == alt_room->sectors_y) &&
-                    (r->transform[12 + 0] == alt_room->transform[12 + 0]) && (r->transform[12 + 1] == alt_room->transform[12 + 1]) && (r->bb_max[2] == alt_room->bb_max[2])&& (r->bb_min[2] == alt_room->bb_min[2]))
+                if((j != i) && (alt_room->alternate_room == NULL) && (r->sectors_x == alt_room->sectors_x) && (r->sectors_y == alt_room->sectors_y) &&
+                    (r->transform[12 + 0] == alt_room->transform[12 + 0]) && (r->transform[12 + 1] == alt_room->transform[12 + 1]) && !((r->bb_max[2] <= alt_room->bb_min[2]) || (r->bb_min[2] >= alt_room->bb_max[2])))
                 {
                     portal_p p = alt_room->portals;
                     int cnt = 0;
@@ -1591,7 +1684,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
                         }
                     }
 
-                    if(cnt != alt_room->portal_count)
+                    if((cnt != alt_room->portal_count) || ((cnt == 0) && (world->room_count > 1)))
                     {
                         r->alternate_room = alt_room;
                     }
@@ -1691,7 +1784,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
 
-        btCollisionShape *cshape = BT_CSfromHeightmap(r->sectors, num_heightmaps, room_tween, num_tweens, true, true);
+        btCollisionShape *cshape = BT_CSfromHeightmap(r->sectors, room_tween, num_tweens, true, true);
 
         if(cshape)
         {
@@ -1725,6 +1818,11 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         if(r->active && r->alternate_room)
         {
             Room_Disable(r->alternate_room);
+        }
+
+        if((r->portal_count == 0) && (world->room_count > 1))
+        {
+            Room_Disable(r);
         }
     }
 
@@ -3981,14 +4079,20 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 }
 
 
-btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, int heightmap_size, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
+btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
+    room_p r = heightmap->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
 
-    for(int i = 0; i < heightmap_size; i++)
+    for(int i = 0; i < r->sectors_count; i++)
     {
+        if(heightmap->floor > heightmap->ceiling)
+        {
+            continue;
+        }
+
         if( (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
             (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
         {
