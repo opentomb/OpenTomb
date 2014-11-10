@@ -423,9 +423,16 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
 
     vec3_copy(old_pos.m_floats, cam->pos);
 
-    cam_pos.m_floats[0] = (ent->transform[12] - 32.0 *  ent->transform[4 + 0]);
-    cam_pos.m_floats[1] = (ent->transform[13] - 32.0 *  ent->transform[4 + 1]);
-    cam_pos.m_floats[2] = (ent->transform[14] + 0.5  * (ent->bf.bb_max[2]))   ;
+    if((ent->character != NULL) && (ent->character->cam_follow_center == 0x01))
+    {
+        vec3_copy(cam_pos.m_floats, ent->obb->centre);
+    }
+    else
+    {
+        cam_pos.m_floats[0] = (ent->transform[12] - 32.0 *  ent->transform[4 + 0]);
+        cam_pos.m_floats[1] = (ent->transform[13] - 32.0 *  ent->transform[4 + 1]);
+        cam_pos.m_floats[2] = (ent->transform[14] + 0.5  * (ent->bf.bb_max[2]));
+    }
 
     float shake_value   = renderer.cam->shake_value;
     float shake_time    = renderer.cam->shake_time;
