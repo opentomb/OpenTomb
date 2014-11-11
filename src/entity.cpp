@@ -209,7 +209,7 @@ void Entity_UpdateRigidBody(entity_p ent)
     btTransform bt_tr;
     room_p old_room;
 
-    if(!ent->bf.model || !ent->bt_body || ((ent->bf.model->animations->frames_count == 1) && (ent->bf.model->animation_count == 1)))
+    if((ent->bf.model == NULL) || (ent->bt_body == NULL))
     {
         return;
     }
@@ -233,7 +233,7 @@ void Entity_UpdateRigidBody(entity_p ent)
         }
     }
 #endif
-    
+
     for(i=0;i<ent->bf.model->mesh_count;i++)
     {
         if(ent->bt_body[i])
@@ -244,7 +244,7 @@ void Entity_UpdateRigidBody(entity_p ent)
             ent->bt_body[i]->setWorldTransform(bt_tr);
         }
     }
-    
+
     Entity_RebuildBV(ent);
 }
 
@@ -1315,10 +1315,6 @@ int Entity_Frame(entity_p entity, btScalar time)
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity);
-    if(ret)
-    {
-        Entity_RebuildBV(entity);
-    }
 
     return ret;
 }

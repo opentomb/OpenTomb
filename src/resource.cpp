@@ -2148,21 +2148,21 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         sector->index_x = i / room->sectors_y;
         sector->index_y = i % room->sectors_y;
 
-        sector->pos[0] = room->transform[12] + sector->index_x * TR_METERING_SECTORSIZE + 512.0;
-        sector->pos[1] = room->transform[13] + sector->index_y * TR_METERING_SECTORSIZE + 512.0;
+        sector->pos[0] = room->transform[12] + sector->index_x * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
+        sector->pos[1] = room->transform[13] + sector->index_y * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
         sector->pos[2] = 0.5 * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
         sector->box_index  = tr_room->sector_list[i].box_index;
 
-        if(sector->box_index == 65535)
+        if(sector->box_index == 0xFFFF)
         {
             sector->box_index = -1;
         }
 
-        sector->floor    = -256 * (int)tr_room->sector_list[i].floor;
-        sector->ceiling  = -256 * (int)tr_room->sector_list[i].ceiling;
-        sector->fd_index = tr_room->sector_list[i].fd_index;        ///@FIXME: GET RID OF THIS NONSENSE SOME DAY!
+        sector->floor    = -TR_METERING_STEP * (int)tr_room->sector_list[i].floor;
+        sector->ceiling  = -TR_METERING_STEP * (int)tr_room->sector_list[i].ceiling;
+        sector->fd_index = tr_room->sector_list[i].fd_index;                    ///@FIXME: GET RID OF THIS NONSENSE SOME DAY!
 
         // BUILDING CEILING HEIGHTMAP.
 
@@ -2178,7 +2178,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         {
             room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
         }
-        else if(tr_room->sector_list[i].room_above != 255)
+        else if(tr_room->sector_list[i].room_above != 0xFF)
         {
             room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
         }
@@ -2222,7 +2222,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         {
             room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
         }
-        else if(tr_room->sector_list[i].room_below != 255)
+        else if(tr_room->sector_list[i].room_below != 0xFF)
         {
             room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_GHOST;
         }
