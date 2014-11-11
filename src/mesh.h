@@ -191,6 +191,7 @@ typedef struct ss_bone_frame_s
     btScalar                    bb_max[3];                                      // bounding box max coordinates
     btScalar                    centre[3];                                      // bounding box centre
 
+    //int8_t                      need_update;
     int16_t                     last_state;
     int16_t                     next_state;
     int16_t                     last_animation;

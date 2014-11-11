@@ -423,9 +423,10 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
 
     vec3_copy(old_pos.m_floats, cam->pos);
 
-    if((ent->character != NULL) && (ent->character->cam_follow_center == 0x01))
+    if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
     {
         vec3_copy(cam_pos.m_floats, ent->obb->centre);
+        ent->character->cam_follow_center--;
     }
     else
     {

@@ -2235,6 +2235,32 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     ch_s = Room_GetSector(ch->self->room, ch->transform + 12);
     obj_s = Room_GetSector(obj->self->room, obj->transform + 12);
 
+    if(obj_s == ch_s)
+    {
+        if(ch->transform[4 + 0] > 0.8)
+        {
+            btScalar pos[] = {obj_s->pos[0] - TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
+            ch_s = Room_GetSector(obj_s->owner_room, pos);
+        }
+        else if(ch->transform[4 + 0] < -0.8)
+        {
+            btScalar pos[] = {obj_s->pos[0] + TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
+            ch_s = Room_GetSector(obj_s->owner_room, pos);
+        }
+        // OY move case
+        else if(ch->transform[4 + 1] > 0.8)
+        {
+            btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
+            ch_s = Room_GetSector(obj_s->owner_room, pos);
+        }
+        else if(ch->transform[4 + 1] < -0.8)
+        {
+            btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
+            ch_s = Room_GetSector(obj_s->owner_room, pos);
+        }
+        ch_s = TR_Sector_CheckPortalPointer(ch_s);
+    }
+
     if((ch_s == NULL) || (obj_s == NULL))
     {
         return 0x00;
@@ -2281,7 +2307,24 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
        (next_s->floor == obj_s->floor) && (next_s->floor_corners[0].m_floats[2] == obj_s->floor_corners[0].m_floats[2]) &&
        (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
     {
-        ret |= 0x01;                                                            // can traverse forvard
+        bt_engine_ClosestConvexResultCallback ccb(obj->self);
+        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
+        btVector3 v;
+        btTransform from, to;
+        v.m_floats[0] = obj_s->pos[0];
+        v.m_floats[1] = obj_s->pos[1];
+        v.m_floats[2] = obj_s->floor_corners[0].m_floats[2] + 0.5 * TR_METERING_SECTORSIZE;
+        from.setIdentity();
+        from.setOrigin(v);
+        v.m_floats[0] = next_s->pos[0];
+        v.m_floats[1] = next_s->pos[1];
+        to.setIdentity();
+        to.setOrigin(v);
+        bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+        if(!ccb.hasHit())
+        {
+            ret |= 0x01;                                                        // can traverse forvard
+        }
     }
 
     /*
@@ -2316,7 +2359,24 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
        (next_s->floor == ch_s->floor) && (next_s->floor_corners[0].m_floats[2] == ch_s->floor_corners[0].m_floats[2]) &&
        (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
     {
-        ret |= 0x02;                                                            // can traverse backvard
+        bt_engine_ClosestConvexResultCallback ccb(ch->self);
+        btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
+        btVector3 v;
+        btTransform from, to;
+        v.m_floats[0] = ch_s->pos[0];
+        v.m_floats[1] = ch_s->pos[1];
+        v.m_floats[2] = ch_s->floor_corners[0].m_floats[2] + 0.5 * TR_METERING_SECTORSIZE;
+        from.setIdentity();
+        from.setOrigin(v);
+        v.m_floats[0] = next_s->pos[0];
+        v.m_floats[1] = next_s->pos[1];
+        to.setIdentity();
+        to.setOrigin(v);
+        bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+        if(!ccb.hasHit())
+        {
+            ret |= 0x02;                                                        // can traverse backvard
+        }
     }
 
     return ret;
@@ -2369,7 +2429,7 @@ void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *c
             break;
     };
 
-    Entity_RebuildBV(ent);
+    Entity_UpdateRigidBody(ent);
     Character_UpdatePlatformPostStep(ent);
 }
 

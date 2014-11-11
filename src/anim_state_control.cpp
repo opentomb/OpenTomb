@@ -164,8 +164,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
     int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height - LARA_HANG_VERTICAL_EPSILON));
     int8_t last_frame = ent->bf.model->animations[ent->bf.current_animation].frames_count <= ent->bf.current_frame + 1;
 
-    ent->character->cam_follow_center = 0x00;
-
     if(cmd->kill)   // Stop any music, if Lara is dead.
     {
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
@@ -252,9 +250,29 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->action && Character_FindTraverse(ent))
             {
                 ent->bf.next_state = TR_STATE_LARA_PUSHABLE_GRAB;
-                t = 512.0 + 72.0;
+                if(ent->transform[4 + 0] > 0.9)
+                {
+                    t = -ent->character->traversed_object->bf.bb_min[0] + 72.0;
+                }
+                else if(ent->transform[4 + 0] < -0.9)
+                {
+                    t = ent->character->traversed_object->bf.bb_max[0] + 72.0;
+                }
+                else if(ent->transform[4 + 1] > 0.9)
+                {
+                    t = -ent->character->traversed_object->bf.bb_min[1] + 72.0;
+                }
+                else if(ent->transform[4 + 1] < -0.9)
+                {
+                    t = ent->character->traversed_object->bf.bb_max[1] + 72.0;
+                }
+                else
+                {
+                    t = 512.0 + 72.0;                                           ///@PARANOID
+                }
                 btScalar *v = ent->character->traversed_object->transform + 12;
-                vec3_sub_mul(pos, v, ent->transform + 4, t);
+                pos[0] = v[0] - ent->transform[4 + 0] * t;
+                pos[1] = v[1] - ent->transform[4 + 1] * t;
             }
             else if(cmd->move[0] == 1)
             {
@@ -1262,7 +1280,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->character->no_fix = 0x01;
             ent->onAnimChange = ent_stop_traverse;
             cmd->rot[0] = 0.0;
-            ent->character->cam_follow_center = 0x01;
+            ent->character->cam_follow_center = 64;
             i = ent->bf.model->animations[ent->bf.current_animation].frames_count;
 
             if(cmd->action == 0)                                                //For TOMB4/5 If Lara is pushing and action let go, don't push
@@ -1273,7 +1291,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(ent->transform[4 + 0] > 0.9)
                 {
-                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0 - 32.0);
+                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] - ent->character->traversed_object->bf.bb_min[0] - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
@@ -1281,7 +1299,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 0] < -0.9)
                 {
-                    t = ent->transform[12 + 0] - (ent->bf.bb_max[1] + 512.0 - 32.0);
+                    t = ent->transform[12 + 0] - (ent->bf.bb_max[1] + ent->character->traversed_object->bf.bb_max[0] - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
@@ -1289,7 +1307,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 1] > 0.9)
                 {
-                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0 - 32.0);
+                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] - ent->character->traversed_object->bf.bb_min[1] - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
@@ -1297,7 +1315,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 1] < -0.9)
                 {
-                    t = ent->transform[12 + 1] - (ent->bf.bb_max[1] + 512.0 - 32.0);
+                    t = ent->transform[12 + 1] - (ent->bf.bb_max[1] + ent->character->traversed_object->bf.bb_max[1] - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
@@ -1311,7 +1329,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->character->no_fix = 0x01;
             ent->onAnimChange = ent_stop_traverse;
             cmd->rot[0] = 0.0;
-            ent->character->cam_follow_center = 0x01;
+            ent->character->cam_follow_center = 64;
             i = ent->bf.model->animations[ent->bf.current_animation].frames_count;
 
             if(cmd->action == 0)                                                //For TOMB4/5 If Lara is pulling and action let go, don't pull
@@ -1322,7 +1340,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(ent->transform[4 + 0] > 0.9)
                 {
-                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] + 512.0 - 32.0);
+                    t = ent->transform[12 + 0] + (ent->bf.bb_max[1] - ent->character->traversed_object->bf.bb_min[0] - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
@@ -1330,7 +1348,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 0] < -0.9)
                 {
-                    t = ent->transform[12 + 0] - (ent->bf.bb_max[1] + 512.0 - 32.0);
+                    t = ent->transform[12 + 0] - (ent->bf.bb_max[1] + ent->character->traversed_object->bf.bb_max[0] - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
@@ -1338,7 +1356,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 1] > 0.9)
                 {
-                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] + 512.0 - 32.0);
+                    t = ent->transform[12 + 1] + (ent->bf.bb_max[1] - ent->character->traversed_object->bf.bb_min[1] - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
@@ -1346,7 +1364,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
                 else if(ent->transform[4 + 1] < -0.9)
                 {
-                    t = ent->transform[12 + 1] - (ent->bf.bb_max[1] + 512.0 - 32.0);
+                    t = ent->transform[12 + 1] - (ent->bf.bb_max[1] + ent->character->traversed_object->bf.bb_max[1] - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
@@ -1549,9 +1567,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->onAnimChange = ent_to_edge_climb;
 #if OSCILLATE_HANG_USE
                 vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
-                ent->collision_offset.m_floats[2] -= ent->character->max_step_up_height;
+                //ent->collision_offset.m_floats[2] -= ent->character->max_step_up_height;
                 Character_CheckNextPenetration(ent, cmd, move);
-                ent->collision_offset.m_floats[2] += ent->character->max_step_up_height;
+                //ent->collision_offset.m_floats[2] += ent->character->max_step_up_height;
                 if(!cmd->horizontal_collide)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_OSCILLATE_HANG_ON, 0);
@@ -1722,7 +1740,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] = 0;
             ent->move_type = MOVE_WALLS_CLIMB;
             ent->dir_flag = ENT_STAY;
-            ent->character->cam_follow_center = 0x01;
+            ent->character->cam_follow_center = 64;
             if(ent->move_type == MOVE_CLIMBING)
             {
                 ent->bf.next_state = TR_STATE_LARA_GRABBING;
@@ -1798,7 +1816,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_LADDER_UP:
             //ent->character->complex_collision = 0x01;
-            ent->character->cam_follow_center = 0x01;
+            ent->character->cam_follow_center = 64;
             if(ent->move_type == MOVE_CLIMBING)
             {
                 ent->bf.next_state = TR_STATE_LARA_LADDER_IDLE;
@@ -1835,7 +1853,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_LADDER_DOWN:
             //ent->character->complex_collision = 0x01;
-            ent->character->cam_follow_center = 0x01;
+            ent->character->cam_follow_center = 64;
             if(cmd->action && ent->character->climb.wall_hit && (cmd->move[1] < 0))
             {
                 if(ent->character->climb.wall_hit != 0x02)
