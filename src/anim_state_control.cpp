@@ -1527,13 +1527,13 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 }
             }
 
-            if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 64.0))
+            if(((ent->move_type != MOVE_ON_FLOOR)) && (cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 64.0))
             {
                 ent->bf.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
                 ent->onAnimChange = ent_to_monkey_swing;
                 break;
             }
-            else if((ent->move_type == MOVE_FREE_FALLING) && ((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR)))
+            if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;                        // middle landing
                 break;
@@ -2693,7 +2693,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
              */
         case TR_STATE_LARA_MONKEYSWING_IDLE:
             ent->dir_flag = ENT_STAY;
-            ///@FIXME: stick for TR_III+ monkey swing fix... something wrong with anim 150
+            ///@FIXME: stick for TR_III+ monkey swing fix... something wrong with anim 150 
             if((cmd->action == 1) && (ent->move_type != MOVE_MONKEYSWING) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 96.0))
             {
                 ent->move_type = MOVE_MONKEYSWING;
