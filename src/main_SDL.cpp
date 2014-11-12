@@ -803,10 +803,10 @@ void ShowDebugInfo()
             //txt->rect[2] = -20.0;
             //txt->rect[3] = 132.0;
             //txt->show_rect = 1;
-        }
+        }*/
 
-        Gui_OutTextXY(NULL, 20, 68, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
-        Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);*/
+        Gui_OutTextXY(NULL, 20, 116, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
+        //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
     if(last_rmb != NULL)

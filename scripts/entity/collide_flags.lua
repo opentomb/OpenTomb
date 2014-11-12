@@ -114,7 +114,7 @@ tr4_static_tbl[39] = {coll = 0x0002};
 tr4_static_tbl[40] = {coll = 0x0002};
 tr4_static_tbl[41] = {coll = 0x0002};
 tr4_static_tbl[42] = {coll = 0x0002};
-tr4_static_tbl[43] = {coll = 0x0002};  
+tr4_static_tbl[43] = {coll = 0x0002};
 tr4_static_tbl[44] = {coll = 0x0002};
 tr4_static_tbl[45] = {coll = 0x0002};
 tr4_static_tbl[46] = {coll = 0x0002};
@@ -405,7 +405,7 @@ tr1_entity_tbl[134] = {coll = 0x0002};                     -- Key 2
 tr1_entity_tbl[135] = {coll = 0x0002};                     -- Key 3
 tr1_entity_tbl[136] = {coll = 0x0002};                     -- Key 4
 
-tr1_entity_tbl[137] = {coll = 0x0002};                     -- Lock 1 
+tr1_entity_tbl[137] = {coll = 0x0002};                     -- Lock 1
 tr1_entity_tbl[138] = {coll = 0x0002};                     -- Lock 2
 tr1_entity_tbl[139] = {coll = 0x0002};                     -- Lock 3
 tr1_entity_tbl[140] = {coll = 0x0002};                     -- Lock 4

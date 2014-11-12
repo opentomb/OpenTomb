@@ -334,7 +334,7 @@ void Character_CreateCollisionObject(struct entity_s *ent)
     int i;
     btVector3 box;
 
-    if(!ent->character || !ent->bf.model || !ent->bf.model->mesh_count)
+    if((ent->character == NULL) || (ent->bf.model == NULL) || (ent->bf.model->mesh_count == 0))
     {
         return;
     }
@@ -1140,7 +1140,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
 
     vec3_set_zero(reaction);
 #if CHARACTER_USE_COMPLEX_COLLISION
-    if(ent->character->shapes && ent->character->complex_collision)              /* complex collision shape */
+    if((ent->character->shapes != NULL) && (ent->character->complex_collision != 0))              /* complex collision shape */
     {
         btScalar tr[16], *v, *ltr;
         btCollisionShape *shape = ent->character->ghostObject->getCollisionShape();
@@ -1190,7 +1190,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
     }
 
     vec3_add(pos.m_floats, ent->transform+12, reaction);
-    if(move && numPenetrationLoops > 0)
+    if((move != NULL) && (numPenetrationLoops > 0))
     {
         t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
         t2 = move[0] * move[0] + move[1] * move[1];
@@ -1203,7 +1203,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
                 cmd->horizontal_collide |= 0x01;
             }
         }
-        else
+        else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
         {
             if((reaction[2] > 0.0) && (move[2] < 0.0))
             {
@@ -1244,7 +1244,9 @@ void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cm
     btScalar t1, t2, reaction[3], *ctr;
 
     ctr = ent->character->collision_transform;
+    vec3_add(ctr+12, ctr+12, move);
     ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(ctr);
+    vec3_sub(ctr+12, ctr+12, move);
     cmd->horizontal_collide = 0x00;
 
     if(Character_RecoverFromPenetration(ent->character->ghostObject, ent->character->manifoldArray, reaction))
@@ -1766,6 +1768,7 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
      * resize collision model
      */
     Character_UpdateCollisionObject(ent, 0.0);
+    ent->speed.m_floats[2] = 0.0;
 
     cmd->slide = 0x00;
     cmd->horizontal_collide = 0x00;
@@ -1817,14 +1820,15 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
         vec3_add(pos, pos, move.m_floats);
         Character_FixPenetrations(ent, cmd, move.m_floats);                     // get horizontal collide
         Character_UpdateCurrentHeight(ent);
-        Entity_UpdateRoomPos(ent);
-        if(ent->character->height_info.ceiling_hit && (fabs(pos[2] + ent->bf.bb_max[2] - ent->character->height_info.ceiling_point.m_floats[2]) < 0.25 * ent->character->min_step_up_height))
+        ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
+        if(ent->character->height_info.ceiling_hit && (pos[2] + ent->bf.bb_max[2] - ent->character->height_info.ceiling_point.m_floats[2] > - 0.33 * ent->character->min_step_up_height))
         {
             pos[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->bf.bb_max[2];
         }
         else
         {
             ent->move_type = MOVE_FREE_FALLING;
+            Entity_UpdateRoomPos(ent);
             return 2;
         }
 
@@ -2303,7 +2307,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     }
 
     next_s = TR_Sector_CheckPortalPointer(next_s);
-    if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE) &&
+    if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE) && (next_s->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) &&
        (next_s->floor == obj_s->floor) && (next_s->floor_corners[0].m_floats[2] == obj_s->floor_corners[0].m_floats[2]) &&
        (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
     {
@@ -2355,7 +2359,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     }
 
     next_s = TR_Sector_CheckPortalPointer(next_s);
-    if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE) &&
+    if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE)  && (next_s->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) &&
        (next_s->floor == ch_s->floor) && (next_s->floor_corners[0].m_floats[2] == ch_s->floor_corners[0].m_floats[2]) &&
        (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
     {
@@ -2429,7 +2433,7 @@ void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *c
             break;
     };
 
-    Entity_UpdateRigidBody(ent);
+    Entity_UpdateRigidBody(ent, 1);
     Character_UpdatePlatformPostStep(ent);
 }
 

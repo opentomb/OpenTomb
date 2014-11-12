@@ -274,7 +274,8 @@ int lua_DumpRoom(lua_State * lua)
     if(r != NULL)
     {
         room_sector_p rs = r->sectors;
-        Sys_DebugLog("room_dump.txt", "ROOM = %d, flag = 0x%X, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->flags, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform[12 + 0], r->transform[12 + 1]);
+        Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform[12 + 0], r->transform[12 + 1]);
+        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL)?(r->alternate_room->id):(-1), (r->base_room != NULL)?(r->base_room->id):(-1));
         for(int i=0;i<r->sectors_count;i++,rs++)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, rs->portal_to_room);

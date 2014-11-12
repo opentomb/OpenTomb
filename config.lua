@@ -107,8 +107,8 @@ cvars.free_look_speed = 2500;
 
 
 -- AUTOEXEC LINES
-setgame(1);
-setlevel(2);
+setgame(4);
+setlevel(10);
 
 gravity(0, 0, -5700.0);
 mlook(1);

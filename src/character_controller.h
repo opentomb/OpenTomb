@@ -14,7 +14,7 @@
 #include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
 #include "engine.h"
 
-#define CHARACTER_USE_COMPLEX_COLLISION         (0)
+#define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
 // Lara's character behavior constants
 #define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
@@ -26,7 +26,7 @@
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (0.707)                         ///@FIXME: cos(alpha = 45 deg)
 #define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
-#define DEFAULT_CHARACTER_CLIMB_R               (48.0)
+#define DEFAULT_CHARACTER_CLIMB_R               (32.0)
 #define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
 
 // Speed limits

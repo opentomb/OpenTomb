@@ -545,7 +545,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 
     if(Entity_Frame(entity, engine_frame_time))
     {
-        Entity_UpdateRigidBody(entity);
+        Entity_UpdateRigidBody(entity, 0);
     }
 
     if(x->left != NULL)
@@ -679,10 +679,7 @@ void Game_Frame(btScalar time)
         Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
     }
 
-    if(engine_world.Character)
-    {
-        Game_UpdateCharacters();
-    }
+    Game_UpdateCharacters();
 
     if(engine_world.entity_tree && engine_world.entity_tree->root)
     {

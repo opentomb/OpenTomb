@@ -202,14 +202,14 @@ void Entity_UpdateRoomPos(entity_p ent)
 }
 
 
-void Entity_UpdateRigidBody(entity_p ent)
+void Entity_UpdateRigidBody(entity_p ent, int force)
 {
     int i;
     btScalar tr[16];
     btTransform bt_tr;
     room_p old_room;
 
-    if((ent->bf.model == NULL) || (ent->bt_body == NULL))
+    if((ent->bf.model == NULL) || (ent->bt_body == NULL) || ((force == 0) && (ent->bf.model->animation_count == 1) && (ent->bf.model->animations->frames_count == 1)))
     {
         return;
     }
@@ -1068,7 +1068,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     entity->bf.frame_time = (btScalar)frame * entity->bf.period + dt;
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-    Entity_UpdateRigidBody(entity);
+    Entity_UpdateRigidBody(entity, 0);
 }
 
 
@@ -1260,7 +1260,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     animation_frame_p af;
     state_change_p stc;
 
-    if(!entity || !entity->active || !entity->bf.model || !entity->bf.model->animations || ((entity->bf.model->animations->frames_count == 1) && (entity->bf.model->animation_count == 1)))
+    if((entity == NULL) || (entity->active == 0) || (entity->bf.model == NULL) /*|| !entity->bf.model->animations*/ || ((entity->bf.model->animation_count == 1) && (entity->bf.model->animations->frames_count == 1)))
     {
         return 0;
     }
@@ -1314,7 +1314,6 @@ int Entity_Frame(entity_p entity, btScalar time)
     }
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-    Entity_UpdateRigidBody(entity);
 
     return ret;
 }

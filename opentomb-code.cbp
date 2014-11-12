@@ -3444,7 +3444,10 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Extensions>
-			<code_completion />
+			<code_completion>
+				<search_path add="src\bullet" />
+				<search_path add="src\freetype2" />
+			</code_completion>
 			<envvars />
 			<debugger />
 			<lib_finder disable_auto="1" />

@@ -153,7 +153,7 @@ void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);
 
 void Entity_UpdateRoomPos(entity_p ent);
-void Entity_UpdateRigidBody(entity_p ent);
+void Entity_UpdateRigidBody(entity_p ent, int force);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, int id);
