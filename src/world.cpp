@@ -199,7 +199,8 @@ void Room_AddToNearRoomsList(room_p room, room_p r)
 {
     if(room && r && !Room_IsInNearRoomsList(room, r) && room->id != r->id && !Room_IsOverlapped(room, r) && room->near_room_list_size < 64)
     {
-        room->near_room_list[room->near_room_list_size++] = r;
+        room->near_room_list[room->near_room_list_size] = r;
+        room->near_room_list_size++;
     }
 }
 
@@ -309,7 +310,12 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
     s1p = TR_Sector_CheckBaseRoom(s1p);
     s2p = TR_Sector_CheckBaseRoom(s2p);
 
-    if(((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room)))
+    /*room_p r1 = engine_world.rooms + s1p->portal_to_room;
+    r1 = (r1->base_room != NULL)?(r1->base_room):(r1);
+    room_p r2 = engine_world.rooms + s2p->portal_to_room;
+    r2 = (r2->base_room != NULL)?(r2->base_room):(r2);*/
+
+    if((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room))
     {
         return 1;
     }
@@ -829,57 +835,23 @@ void Room_Disable(room_p room)
 
 void Room_SwapAlternate(room_p room)
 {
-    if(Room_IsAlternate(room))//If room is already an alternate room
+    if(room->base_room != NULL)                         //If room is already an alternate room
     {
+        Render_CleanList();
         //Find our original room
-        for(int i=0;i<engine_world.room_count;i++)//For every room in the world itself
-        {
-            if(engine_world.rooms[i].alternate_room == room)//If our input room matches a world's alternate room this room is our original room!
-            {
-                Room_Disable(room);//Disable current room
-                Room_Enable(&engine_world.rooms[i]);//Enable original room
-                Room_SwapPortals(room, &engine_world.rooms[i]);//Update portals to match this room
-                //Room_SwapItems(room, &engine_world.rooms[i]);//Update items to match this room
-                break;
-            }
-        }
+        Room_Disable(room);                             //Disable current room
+        Room_SwapPortals(room, room->base_room);        //Update portals to match this room
+        Room_Enable(room->base_room);                   //Enable original room
+        //Room_SwapItems(room, room->base_room);          //Update items to match this room
     }
-    else
+    else if(room->alternate_room != NULL)
     {
-        if(room->alternate_room)//If our input room has an alternate room
-        {
-            Room_Disable(room);//Disable current room
-            Room_Enable(room->alternate_room);//Enable alternate room
-            Room_SwapPortals(room, room->alternate_room);//Update portals to match this room
-            //Room_SwapItems(room, room->alternate_room);//Update items to match this room
-        }
-        else
-        {
-            Con_Printf("Fatal Error: Room %d has no alternate room to enable!", room->id);
-        }
+        Render_CleanList();
+        Room_Disable(room);                             //Disable current room
+        Room_SwapPortals(room, room->alternate_room);   //Update portals to match this room
+        Room_Enable(room->alternate_room);              //Enable alternate room
+        //Room_SwapItems(room, room->alternate_room);     //Update items to match this room
     }
-}
-
-bool Room_IsAlternate(room_p room)
-{
-    bool is_alternate = false;
-
-    if(room->alternate_room)//If alternate room exists it's obviously not an alternate room!
-    {
-        is_alternate = false;
-    }
-    else
-    {
-        for(int i=0;i<engine_world.room_count;i++)//For every room in the world itself
-        {
-            if(engine_world.rooms[i].alternate_room == room)//If our input room matches a world's alternate room it is already an alternate room itself!
-            {
-                is_alternate = true;
-                break;
-            }
-        }
-    }
-    return is_alternate;
 }
 
 void Room_SwapPortals(room_p room, room_p dest_room)
@@ -895,7 +867,7 @@ void Room_SwapPortals(room_p room, room_p dest_room)
                 //Con_Printf("The current room %d! has room %d joined to it!", room->id, i);
             }
         }
-         Room_BuildNearRoomsList(&engine_world.rooms[i]);//Rebuild room near list!
+        Room_BuildNearRoomsList(&engine_world.rooms[i]);//Rebuild room near list!
     }
 
  //Update portal adjoining rooms portals only (old code, might be more optimized for singular room swaps)
@@ -913,22 +885,8 @@ void Room_SwapPortals(room_p room, room_p dest_room)
 
 void Room_SwapItems(room_p room, room_p dest_room)
 {
-    ///@FIXME: This won't work :/
-    entity_p ent;
-
-    //Update items in room rooms
-    for(int i=0;i<engine_world.entity_tree->node_count;i++)//For every item in the world itself
-    {
-        ent = World_GetEntityByID(&engine_world, i);//Get entity
-
-        if(ent)
-        {
-            if(ent->self->room->id == room->id)//If the item is in the room
-            {
-                ent->self->room = dest_room;
-            }
-        }
-    }
+    engine_container_p t;
+    SWAPT(room->containers, dest_room->containers, t);
 }
 
 int World_AddEntity(world_p world, struct entity_s *entity)

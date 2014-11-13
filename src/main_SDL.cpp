@@ -281,26 +281,14 @@ void SkeletalModelTestDraw()
     glPopMatrix();
 }
 
-void TestGenScene()
-{
-    if(!Engine_LoadMap(CVAR_get_val_s("game_level")))
-    {
-        control_states.free_look = 1;
-    }
-
-    dbgSphere = gluNewQuadric();
-    dbgCyl = gluNewQuadric();
-    gluQuadricDrawStyle(dbgSphere, GLU_FILL);
-    gluQuadricTexture(dbgSphere, true);
-    gluQuadricDrawStyle(dbgCyl, GLU_FILL);
-    gluQuadricTexture(dbgCyl, true);
-}
-
-
 void Engine_PrepareOpenGL()
 {
     InitGLExtFuncs();
+#if SKELETAL_TEST
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+#else
     glClearColor(0.0, 0.0, 0.0, 1.0);
+#endif
     glShadeModel(GL_SMOOTH);
 
     glEnable(GL_DEPTH_TEST);
@@ -500,7 +488,6 @@ int main(int argc, char **argv)
     Engine_InitALAudio();
 
     World_Prepare(&engine_world);
-    // TestGenScene();
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
@@ -581,12 +568,13 @@ void Engine_Display()
             glEnable(GL_ALPHA_TEST);
             glLightfv(GL_LIGHT0, GL_POSITION, lp);
             glColor3f(1.0, 1.0, 1.0);
-
+#if !SKELETAL_TEST
             Gui_DrawNotifier();
             if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
             {
                 main_inventory_menu->Render(engine_world.Character->character->inventory);
             }
+#endif
         }
         glPopClientAttrib();
         Gui_Render();
@@ -738,7 +726,7 @@ void Engine_Frame(btScalar time)
     Engine_PollSDLInput();
 
 #if SKELETAL_TEST
-    Game_ApplyControls();
+    Game_ApplyControls(NULL);
 #else
     Game_Frame(time);
 #endif
@@ -1086,16 +1074,16 @@ void DebugKeys(int button, int state)
                 break;
 
                 /*
-                 * alternate rooms testing
+                 * alternate rooms testing: be carefull, something is wrong and engine may crash!
                  */
             case SDLK_r:
                 if(!con_base.show)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
-                        if(engine_world.rooms[i].alternate_room && engine_world.rooms[i].active)
+                        if(engine_world.rooms[i].alternate_room != NULL)
                         {
-                            Room_SwapAlternate(&engine_world.rooms[i]);
+                            Room_SwapAlternate(engine_world.rooms + i);
                         }
                     }
                 }
@@ -1105,9 +1093,9 @@ void DebugKeys(int button, int state)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
-                        if(Room_IsAlternate(&engine_world.rooms[i]) && engine_world.rooms[i].active)
+                        if(engine_world.rooms[i].base_room != NULL)
                         {
-                            Room_SwapAlternate(&engine_world.rooms[i]);
+                            Room_SwapAlternate(engine_world.rooms + i);
                         }
                     }
                 }

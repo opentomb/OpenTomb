@@ -22,8 +22,8 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
-#define NUM_PENETRATION_ITERATIONS      (4)
-#define PENETRATION_PART_KOEF           (0.25)
+#define NUM_PENETRATION_ITERATIONS      (6)
+#define PENETRATION_PART_KOEF           (0.20)
 
 void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h)
 {
@@ -82,7 +82,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
 #endif
     size[0] = CHARACTER_BASE_RADIUS;
     size[1] = CHARACTER_BASE_RADIUS;
-    size[2] = 0.38 * CHARACTER_BASE_HEIGHT;
+    size[2] = 0.5 * CHARACTER_BASE_HEIGHT - CHARACTER_BASE_RADIUS;
     size[3] = 0.5 * CHARACTER_BASE_HEIGHT;
     ret->shapeZ = BV_CreateBTCapsuleZ(size, 8);
     ret->shapeY = new btCapsuleShape(CHARACTER_BASE_RADIUS, CHARACTER_BASE_HEIGHT - 2.0 * CHARACTER_BASE_RADIUS);
@@ -351,23 +351,30 @@ void Character_CreateCollisionObject(struct entity_s *ent)
 }
 
 
-void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
+void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor, int alt_tr)
 {
     btVector3 tv;
     btScalar t, *ctr = ent->character->collision_transform;
 
-    Mat4_Copy(ctr, ent->transform);
+    if(alt_tr != 0)
+    {
+        Mat4_Mat4_mul_macro(ctr, ent->transform, ent->bf.bone_tags->transform);
+    }
+    else
+    {
+        Mat4_Copy(ctr, ent->transform);
+    }
     if(ent->move_type == MOVE_CLIMBING)                                         ///@FIXME: this time it is a little stick;
     {
         btScalar t1 = ent->character->ry - ent->bf.bb_max[1];
         t = ent->character->ry + ent->bf.bb_min[1];
         t = (t > t1)?(t):(t1);
         t += 8.0;
-        vec3_sub_mul(ctr+12, ctr+12, ctr+4, t);
+        vec3_sub_mul(ctr+12, ctr+12, ent->transform+4, t);
     }
 
     t = (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / (ent->bf.bb_max[1] - ent->bf.bb_min[1]);
-    if((t < 1.0) && (ent->move_type != MOVE_ON_FLOOR) && (ent->move_type != MOVE_CLIMBING))
+    if((t < 1.0) && /*(ent->move_type != MOVE_ON_FLOOR) &&*/ (ent->move_type != MOVE_CLIMBING) && (alt_tr == 0))
     {
         //Y_CAPSULE
         tv.m_floats[0] = ent->character->ry / CHARACTER_BASE_RADIUS;
@@ -382,10 +389,22 @@ void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor)
         //Z_CAPSULE
         tv.m_floats[0] = ent->character->rx / CHARACTER_BASE_RADIUS;
         tv.m_floats[1] = ent->character->ry / CHARACTER_BASE_RADIUS;
-        tv.m_floats[2] = (ent->bf.bb_max[2] - ent->bf.bb_min[2] - z_factor) / CHARACTER_BASE_HEIGHT;
-        ent->character->shapeZ->setLocalScaling(tv);
-        ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
-        ctr[12+2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2] - z_factor) + z_factor;
+        if(alt_tr != 0)
+        {
+            tv.m_floats[2] = (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+            t = (ent->bf.bb_max[1] - ent->bf.bb_min[1]);
+            tv.m_floats[2] = (tv.m_floats[2] > t)?(tv.m_floats[2]):(t);
+            tv.m_floats[2] /= CHARACTER_BASE_HEIGHT;
+            ent->character->shapeZ->setLocalScaling(tv);
+            ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
+        }
+        else
+        {
+            tv.m_floats[2] = (ent->bf.bb_max[2] - ent->bf.bb_min[2] - z_factor) / CHARACTER_BASE_HEIGHT;
+            ent->character->shapeZ->setLocalScaling(tv);
+            ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
+            ctr[12+2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2] - z_factor) + z_factor;
+        }
     }
 }
 
@@ -1464,7 +1483,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
     /*
      * resize collision model
      */
-    Character_UpdateCollisionObject(ent, 0.5 * (ent->character->max_step_up_height + ent->character->min_step_up_height));
+    Character_UpdateCollisionObject(ent, 0.5 * (ent->character->max_step_up_height + ent->character->min_step_up_height), 0);
 
     /*
      * init height info structure
@@ -1637,7 +1656,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     /*
      * resize collision model
      */
-    Character_UpdateCollisionObject(ent, 0.0);
+    Character_UpdateCollisionObject(ent, 0.0, 1);
 
     /*
      * init height info structure
@@ -1767,7 +1786,7 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
     /*
      * resize collision model
      */
-    Character_UpdateCollisionObject(ent, 0.0);
+    Character_UpdateCollisionObject(ent, 0.0, 0);
     ent->speed.m_floats[2] = 0.0;
 
     cmd->slide = 0x00;
@@ -1851,7 +1870,7 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
      * resize collision model
      */
     //vec3_copy(p0, pos);
-    Character_UpdateCollisionObject(ent, 0.0);
+    Character_UpdateCollisionObject(ent, 0.0, 0);
     cmd->slide = 0x00;
     cmd->horizontal_collide = 0x00;
     cmd->vertical_collide = 0x00;
@@ -1933,7 +1952,7 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
     /*
      * resize collision model
      */
-    Character_UpdateCollisionObject(ent, 0.0);
+    Character_UpdateCollisionObject(ent, 0.0, 0);
 
     cmd->slide = 0x00;
     cmd->horizontal_collide = 0x00;
@@ -2016,7 +2035,7 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
     /*
      * resize collision model
      */
-    Character_UpdateCollisionObject(ent, 0.0);
+    Character_UpdateCollisionObject(ent, 0.0, 1);
 
     cmd->slide = 0x00;
     cmd->horizontal_collide = 0x00;
@@ -2024,13 +2043,13 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
 
     Character_Inertia(ent, 64.0, 64.0, 64.0, cmd->jump);
     t = ent->inertia * ent->character->speed_mult;
-    
+
     if(!cmd->kill)   // Block controls if Lara is dead.
     {
         ent->angles[0] += cmd->rot[0];
         ent->angles[1] -= cmd->rot[1];
         ent->angles[2] = 0.0;
-        if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                     // Underwater angle limiter.
+        if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                 // Underwater angle limiter.
         {
            ent->angles[1] = 70.0;
         }
@@ -2038,9 +2057,9 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
         {
             ent->angles[1] = 270.0;
         }
-        Entity_UpdateRotation(ent);                                                 // apply rotations
-    
-        vec3_mul_scalar(spd.m_floats, ent->transform+4, t);                         // OY move only!
+        Entity_UpdateRotation(ent);                                             // apply rotations
+
+        vec3_mul_scalar(spd.m_floats, ent->transform+4, t);                     // OY move only!
         ent->speed = spd;
     }
 
@@ -2088,7 +2107,7 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     /*
      * resize collision model
      */
-    Character_UpdateCollisionObject(ent, 0.0);
+    Character_UpdateCollisionObject(ent, 0.0, 0);
 
     cmd->slide = 0x00;
     cmd->horizontal_collide = 0x00;
@@ -2499,14 +2518,7 @@ void Character_UpdateParams(struct entity_s *ent)
 
 bool IsCharacter(struct entity_s *ent)
 {
-    if((ent != NULL) && (ent->character != NULL))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return (ent != NULL) && (ent->character != NULL);
 }
 
 int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value)

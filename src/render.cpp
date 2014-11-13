@@ -1224,11 +1224,6 @@ void Render_SetWorld(struct world_s *world)
  */
 void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
 {
-    if (!(render->style & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS/* | R_DRAW_NULLMESHES | R_DRAW_DUMMY_STATICS*/)))
-    {
-        return;
-    }
-
     unsigned int i, flag;
     frustum_p frus;
     engine_container_p cont;
@@ -1243,7 +1238,7 @@ void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
         Render_BBox(room->bb_min, room->bb_max);
         for(int s=0;s<room->sectors_count;s++)
         {
-            Render_SectorBorders(&room->sectors[s]);
+            Render_SectorBorders(&room->sectors[s]);                            /// inline here all primitive functions!!!
         }
     }
 
@@ -1658,34 +1653,32 @@ void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour)
 render_DebugDrawer::render_DebugDrawer()
 :m_debugMode(0)
 {
-    m_lines_buf = (GLfloat*)malloc(3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
-    m_color_buf = (GLfloat*)malloc(3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
-
+    m_buffer = (GLfloat*)malloc(2 * 3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
     m_max_lines = DEBUG_DRAWER_DEFAULT_BUFFER_SIZE;
     m_lines = 0;
 }
 
 render_DebugDrawer::~render_DebugDrawer()
 {
-    free(m_lines_buf);
-    free(m_color_buf);
+    free(m_buffer);
+    m_buffer = NULL;
 }
 
 void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
 {
-    GLfloat *v1, *v2;
+    GLfloat *v;
 
     if(m_lines < m_max_lines - 1)
     {
-        v1 = m_lines_buf + 3 * 2 * m_lines;
-        v2 = v1 + 3;
-        vec3_copy(v1, from.m_floats);
-        vec3_copy(v2, to.m_floats);
+        v = m_buffer + 3 * 4 * m_lines;
 
-        v1 = m_color_buf + 3 * 2 * m_lines;
-        v2 = v1 + 3;
-        vec3_copy(v1, color.m_floats);
-        vec3_copy(v2, color.m_floats);
+        vec3_copy(v, from.m_floats);
+        v += 3;
+        vec3_copy(v, color.m_floats);
+        v += 3;
+        vec3_copy(v, to.m_floats);
+        v += 3;
+        vec3_copy(v, color.m_floats);
         m_lines++;
     }
 }
@@ -1726,10 +1719,9 @@ void render_DebugDrawer::render()
 {
     if(m_lines != 0)
     {
-        glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [3]), m_lines_buf);
-        glColorPointer(3, GL_FLOAT, sizeof(GLfloat [3]),  m_color_buf);
-        glDrawArrays(GL_POINTS, 0, 2 * m_lines);
-        glDrawArrays(GL_LINES, 0, 2 * m_lines);
+        glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), m_buffer);
+        glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]),  m_buffer + 3);
+        glDrawArrays(GL_LINES, 0, 4 * m_lines);
     }
     m_lines = 0;
 }
