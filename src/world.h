@@ -250,7 +250,9 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3]);
 
 void Room_Enable(room_p room);
 void Room_Disable(room_p room);
-void Room_SwapAlternate(room_p room);
+void Room_SwapToAlternate(room_p room);
+void Room_SwapToBase(room_p room);
+room_p Room_CheckActiveFlip(room_p r);
 void Room_SwapPortals(room_p room, room_p dest_room);//Swap room portals of input room to destination room
 void Room_SwapItems(room_p room, room_p dest_room);//Swap room items of input room to destination room
 void Room_BuildNearRoomsList(room_p room);

@@ -1081,9 +1081,9 @@ void DebugKeys(int button, int state)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
-                        if(engine_world.rooms[i].alternate_room != NULL)
+                        //if(engine_world.rooms[i].alternate_room != NULL)
                         {
-                            Room_SwapAlternate(engine_world.rooms + i);
+                            Room_SwapToAlternate(engine_world.rooms + i);
                         }
                     }
                 }
@@ -1093,9 +1093,9 @@ void DebugKeys(int button, int state)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
-                        if(engine_world.rooms[i].base_room != NULL)
+                        //if(engine_world.rooms[i].base_room != NULL)
                         {
-                            Room_SwapAlternate(engine_world.rooms + i);
+                            Room_SwapToBase(engine_world.rooms + i);
                         }
                     }
                 }

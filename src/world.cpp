@@ -833,25 +833,65 @@ void Room_Disable(room_p room)
     room->active = 0;
 }
 
-void Room_SwapAlternate(room_p room)
+void Room_SwapToBase(room_p room)
 {
-    if(room->base_room != NULL)                         //If room is already an alternate room
+    if((room->base_room != NULL) && (room->active == 1))                        //If room is active alternate room
     {
         Render_CleanList();
-        //Find our original room
         Room_Disable(room);                             //Disable current room
+        Room_Disable(room->base_room);                  //Paranoid
         Room_SwapPortals(room, room->base_room);        //Update portals to match this room
+        Room_SwapItems(room, room->base_room);          //Update items to match this room
         Room_Enable(room->base_room);                   //Enable original room
-        //Room_SwapItems(room, room->base_room);          //Update items to match this room
     }
-    else if(room->alternate_room != NULL)
+    else if((room->alternate_room != NULL) && (room->active == 0))              //If room is inactive base room
+    {
+        Render_CleanList();
+        Room_Disable(room);                             //Paranoid
+        Room_Disable(room->alternate_room);             //Disable alternate room
+        Room_SwapPortals(room->alternate_room, room);   //Update portals to match this room
+        Room_SwapItems(room->alternate_room, room);     //Update items to match this room
+        Room_Enable(room);                              //Enable base room
+    }
+}
+
+void Room_SwapToAlternate(room_p room)
+{
+    if((room->base_room != NULL) && (room->active == 0))                        //If room is inactive alternate room
+    {
+        Render_CleanList();
+        Room_Disable(room);                             //Paranoid
+        Room_Disable(room->base_room);                  //Disable base room
+        Room_SwapPortals(room->base_room, room);        //Update portals to match this room
+        Room_SwapItems(room->base_room, room);          //Update items to match this room
+        Room_Enable(room);                              //Enable alternate room
+    }
+    else if((room->alternate_room != NULL) && (room->active == 1))              //If room is active base room
     {
         Render_CleanList();
         Room_Disable(room);                             //Disable current room
+        Room_Disable(room->alternate_room);             //Paranoid
         Room_SwapPortals(room, room->alternate_room);   //Update portals to match this room
-        Room_Enable(room->alternate_room);              //Enable alternate room
-        //Room_SwapItems(room, room->alternate_room);     //Update items to match this room
+        Room_SwapItems(room, room->alternate_room);     //Update items to match this room
+        Room_Enable(room);                              //Enable base room
     }
+}
+
+room_p Room_CheckActiveFlip(room_p r)
+{
+    if((r != NULL) && (r->active == 0))
+    {
+        if((r->base_room != NULL) && (r->base_room->active))
+        {
+            r = r->base_room;
+        }
+        else if((r->alternate_room != NULL) && (r->alternate_room->active))
+        {
+            r = r->alternate_room;
+        }
+    }
+
+    return r;
 }
 
 void Room_SwapPortals(room_p room, room_p dest_room)
@@ -869,23 +909,22 @@ void Room_SwapPortals(room_p room, room_p dest_room)
         }
         Room_BuildNearRoomsList(&engine_world.rooms[i]);//Rebuild room near list!
     }
-
- //Update portal adjoining rooms portals only (old code, might be more optimized for singular room swaps)
- /*for(int i=0;i<room->portal_count;i++)//For each portal in the input room
-   {
-        for(int j=0;j<room->portals[i].dest_room->portal_count;j++)//For each portal in the destination room from a portal in the input room
-        {
-            if(engine_world.rooms[room->portals[i].dest_room->id].portals[j].dest_room->id == room->id)//If the portal in the input room's, destination room is the input room, this is the one we want to update!
-            {
-                engine_world.rooms[room->portals[i].dest_room->id].portals[j].dest_room = parent_room;//Update portal destination room to the alternate room
-            }
-        }
-    }*/
 }
 
 void Room_SwapItems(room_p room, room_p dest_room)
 {
     engine_container_p t;
+
+    for(t=room->containers;t!=NULL;t=t->next)
+    {
+        t->room = dest_room;
+    }
+
+    for(t=dest_room->containers;t!=NULL;t=t->next)
+    {
+        t->room = room;
+    }
+
     SWAPT(room->containers, dest_room->containers, t);
 }
 
