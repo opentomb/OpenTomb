@@ -209,11 +209,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             }
             else if(cmd->slide == CHARACTER_SLIDE_FRONT)
             {
+                Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                
                 if(cmd->jump)
                 {
                     ent->dir_flag = ENT_MOVE_FORWARD;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
-                    Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
                 else
                 {
@@ -1288,14 +1289,18 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;
             }
+            
             if((ent->character->traversed_object != NULL) && (ent->bf.current_frame > 16) && (ent->bf.current_frame < i - 16)) ///@FIXME: magick 16
             {
+                bool was_traversed = false;
+                
                 if(ent->transform[4 + 0] > 0.9)
                 {
                     t = ent->transform[12 + 0] + (ent->bf.bb_max[1] - ent->character->traversed_object->bf.bb_min[0] - 32.0);
                     if(t > ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
+                        was_traversed = true;
                     }
                 }
                 else if(ent->transform[4 + 0] < -0.9)
@@ -1304,6 +1309,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     if(t < ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
+                        was_traversed = true;
                     }
                 }
                 else if(ent->transform[4 + 1] > 0.9)
@@ -1312,6 +1318,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     if(t > ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
+                        was_traversed = true;
                     }
                 }
                 else if(ent->transform[4 + 1] < -0.9)
@@ -1320,9 +1327,39 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     if(t < ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
+                        was_traversed = true;
                     }
                 }
+                
+                if(engine_world.version > TR_III)
+                {
+                    if(was_traversed)
+                    {
+                        if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE,TR_AUDIO_EMITTER_ENTITY,ent->id) == -1)
+                            Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
+                    else
+                    {
+                        Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
+                }
+                else
+                {
+                    if( (ent->bf.current_frame == 49)   ||
+                        (ent->bf.current_frame == 110)  ||
+                        (ent->bf.current_frame == 142)   )
+                    {
+                        if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE,TR_AUDIO_EMITTER_ENTITY,ent->id) == -1)
+                            Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
+                }
+                
                 Entity_UpdateRigidBody(ent->character->traversed_object, 1);
+            }
+            else
+            {
+                if(engine_world.version > TR_III)
+                    Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, ent->id);
             }
             break;
 
@@ -1337,14 +1374,18 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;
             }
+
             if((ent->character->traversed_object != NULL) && (ent->bf.current_frame > 20) && (ent->bf.current_frame < i - 16)) ///@FIXME: magick 20
             {
+                bool was_traversed = false;
+                
                 if(ent->transform[4 + 0] > 0.9)
                 {
                     t = ent->transform[12 + 0] + (ent->bf.bb_max[1] - ent->character->traversed_object->bf.bb_min[0] - 32.0);
                     if(t < ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
+                        was_traversed = true;
                     }
                 }
                 else if(ent->transform[4 + 0] < -0.9)
@@ -1353,6 +1394,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     if(t > ent->character->traversed_object->transform[12 + 0])
                     {
                         ent->character->traversed_object->transform[12 + 0] = t;
+                        was_traversed = true;
                     }
                 }
                 else if(ent->transform[4 + 1] > 0.9)
@@ -1361,6 +1403,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     if(t < ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
+                        was_traversed = true;
                     }
                 }
                 else if(ent->transform[4 + 1] < -0.9)
@@ -1369,9 +1412,41 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     if(t > ent->character->traversed_object->transform[12 + 1])
                     {
                         ent->character->traversed_object->transform[12 + 1] = t;
+                        was_traversed = true;
                     }
                 }
+                
+                if(engine_world.version > TR_III)
+                {
+                    if(was_traversed)
+                    {
+                        if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE,TR_AUDIO_EMITTER_ENTITY,ent->id) == -1)
+                            
+                            Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
+                    else
+                    {
+                        Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
+                }
+                else
+                {
+                    if( (ent->bf.current_frame == 40)  ||
+                        (ent->bf.current_frame == 92)  ||
+                        (ent->bf.current_frame == 124) ||
+                        (ent->bf.current_frame == 156)  )
+                    {
+                        if(Audio_IsEffectPlaying(TR_AUDIO_SOUND_PUSHABLE,TR_AUDIO_EMITTER_ENTITY,ent->id) == -1)
+                            Audio_Send(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
+                }
+                
                 Entity_UpdateRigidBody(ent->character->traversed_object, 1);
+            }
+            else
+            {
+                if(engine_world.version > TR_III)
+                    Audio_Kill(TR_AUDIO_SOUND_PUSHABLE, TR_AUDIO_EMITTER_ENTITY, ent->id);
             }
             break;
 
@@ -2185,7 +2260,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_WATER_DEATH:
             if(ent->move_type != MOVE_ON_WATER)
             {
-                pos[2] += 1;                                                    // go to the air
+                pos[2] += TR_METERING_SECTORSIZE * engine_frame_time; // go to the air
             }
             break;
 
@@ -2762,7 +2837,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_MONKEYSWING_FORWARD:
             cmd->rot[0] *= 0.45;
             ent->dir_flag = ENT_MOVE_FORWARD;
-
             if((ent->move_type != MOVE_MONKEYSWING) || (!cmd->action))
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
