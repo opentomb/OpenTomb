@@ -2260,7 +2260,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
         case TR_STATE_LARA_WATER_DEATH:
             if(ent->move_type != MOVE_ON_WATER)
             {
-                pos[2] += TR_METERING_SECTORSIZE * engine_frame_time; // go to the air
+                pos[2] += (TR_METERING_SECTORSIZE / 4) * engine_frame_time; // go to the air
             }
             break;
 

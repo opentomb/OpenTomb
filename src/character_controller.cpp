@@ -2024,22 +2024,26 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
 
     Character_Inertia(ent, 64.0, 64.0, 64.0, cmd->jump);
     t = ent->inertia * ent->character->speed_mult;
-
-    ent->angles[0] += cmd->rot[0];
-    ent->angles[1] -= cmd->rot[1];
-    ent->angles[2] = 0.0;
-    if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                     // Underwater angle limiter.
+    
+    if(!cmd->kill)   // Block controls if Lara is dead.
     {
-       ent->angles[1] = 70.0;
+        ent->angles[0] += cmd->rot[0];
+        ent->angles[1] -= cmd->rot[1];
+        ent->angles[2] = 0.0;
+        if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                     // Underwater angle limiter.
+        {
+           ent->angles[1] = 70.0;
+        }
+        else if((ent->angles[1] > 180.0) && (ent->angles[1] < 270.0))
+        {
+            ent->angles[1] = 270.0;
+        }
+        Entity_UpdateRotation(ent);                                                 // apply rotations
+    
+        vec3_mul_scalar(spd.m_floats, ent->transform+4, t);                         // OY move only!
+        ent->speed = spd;
     }
-    else if((ent->angles[1] > 180.0) && (ent->angles[1] < 270.0))
-    {
-        ent->angles[1] = 270.0;
-    }
-    Entity_UpdateRotation(ent);                                                 // apply rotations
 
-    vec3_mul_scalar(spd.m_floats, ent->transform+4, t);                         // OY move only!
-    ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
     iter = 2.0 * t / ent->character->ry + 1;
