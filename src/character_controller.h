@@ -238,7 +238,7 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
 void Character_UpdatePlatformPostStep(struct entity_s *ent);
-void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor);
+void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor, int alt_tr);
 
 void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);

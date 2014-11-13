@@ -256,6 +256,11 @@ void Game_ApplyControls(struct entity_s *ent)
     int8_t move_logic[3];
     int8_t look_logic[3];
 
+    if(ent == NULL)                                                             ///@PARANOID
+    {
+        control_states.free_look = 1;
+    }
+    
     /*
      * MOVE KB LOGIC
      */
@@ -670,9 +675,12 @@ void Game_Frame(btScalar time)
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
 
-    Game_ApplyControls(engine_world.Character);
-
-    if(engine_world.Character && !control_states.noclip)
+    if(engine_world.Character != NULL)
+    {
+        Game_ApplyControls(engine_world.Character);
+    }
+                    
+    if((engine_world.Character != NULL) && !control_states.noclip)
     {
         Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
         Entity_Frame(engine_world.Character, engine_frame_time);
@@ -681,7 +689,7 @@ void Game_Frame(btScalar time)
 
     Game_UpdateCharacters();
 
-    if(engine_world.entity_tree && engine_world.entity_tree->root)
+    if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
     {
         Game_UpdateAllEntities(engine_world.entity_tree->root);
     }

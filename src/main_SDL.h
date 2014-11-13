@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 
-void TestGenScene();
 int KeyToChar(SDL_Event *event);
 
 void Engine_PrepareOpenGL();

@@ -1220,7 +1220,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     AudioSource    *source = NULL;
 
     // If audio is blocked, don't process.
-    
+
     if(audio_blocked) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
@@ -1229,7 +1229,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     {
         return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
-    
+
     int real_ID = (int)engine_world.audio_map[effect_ID];
 
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
@@ -1619,7 +1619,7 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     {
         engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
     }
-    
+
     // Reset last room type used for assigning reverb.
 
     fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;

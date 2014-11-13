@@ -38,8 +38,7 @@ class render_DebugDrawer:public btIDebugDraw
     int m_max_lines;
     int m_lines;
 
-    GLfloat *m_lines_buf;
-    GLfloat *m_color_buf;
+    GLfloat *m_buffer;
 
     public:
         render_DebugDrawer();
