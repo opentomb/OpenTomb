@@ -495,6 +495,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
 
 /**
  * Start position are taken from ent->transform
+ * @TODO: ADD ACTIVE FLIP CHECKS!!!
  */
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset)
 {
@@ -512,6 +513,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
     fc->transition_level = 32512.0;
 
     r = Room_FindPosCogerrence(&engine_world, pos, r);
+    r = Room_CheckActiveFlip(r);
     if(r)
     {
         rs = Room_GetSectorXYZ(r, pos);                                         // if r != NULL then rs can not been NULL!!!

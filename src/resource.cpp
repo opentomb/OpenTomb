@@ -1812,20 +1812,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
 #endif
 
-    r = world->rooms;
-    for(i=0;i<world->room_count;i++,r++)
-    {
-        if(r->active && r->alternate_room)
-        {
-            Room_Disable(r->alternate_room);
-        }
-
-        if((r->portal_count == 0) && (world->room_count > 1))
-        {
-            Room_Disable(r);
-        }
-    }
-
     Gui_DrawLoadScreen(900);
 
     // Initialize audio.
@@ -1936,6 +1922,20 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     strcat(buf, "_autoexec.lua");
 
     luaL_dofile(engine_lua, buf);
+
+    r = world->rooms;
+    for(i=0;i<world->room_count;i++,r++)
+    {
+        if(r->base_room != NULL)
+        {
+            Room_Disable(r);                             //Disable current room
+        }
+
+        if((r->portal_count == 0) && (world->room_count > 1))
+        {
+            Room_Disable(r);
+        }
+    }
 
     // Set loadscreen fader to fade-in state.
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_IN);
