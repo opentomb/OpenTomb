@@ -2659,15 +2659,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
 
         Polygon_Resize(p, 3);
 
-        //p->double_side = face3->texture >> 15;    // CORRECT, BUT WRONG IN TR3-5
-        if(tr->game_version < TR_III)
-        {
-            p->double_side = false;
-        }
-        else
-        {
-            p->double_side = true;
-        }
+        p->double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        
 
         SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
         if(p->anim_id > 0)
@@ -2816,15 +2809,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         Polygon_Resize(p, 4);
 
-        //p->double_side = face3->texture >> 15;    // CORRECT, BUT WRONG IN TR3-5
-        if(tr->game_version < TR_III)
-        {
-            p->double_side = false;
-        }
-        else
-        {
-            p->double_side = true;
-        }
+        p->double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        
 
         SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
         if(p->anim_id > 0)

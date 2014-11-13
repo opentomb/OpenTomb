@@ -1200,7 +1200,7 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
         {
             alGetSourcei(engine_world.audio_sources[i].source_index, AL_SOURCE_STATE, &state);
 
-            if(state == AL_PLAYING)
+            if((engine_world.audio_sources[i].IsActive()) || (state == AL_PLAYING))
             {
                 return i;
             }
@@ -1229,20 +1229,18 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     {
         return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
-    else
-    {
-        effect_ID = (int)engine_world.audio_map[effect_ID];
-    }
+    
+    int real_ID = (int)engine_world.audio_map[effect_ID];
 
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
 
-    if(effect_ID == -1)
+    if(real_ID == -1)
     {
         return TR_AUDIO_SEND_NOSAMPLE;
     }
     else
     {
-        effect = engine_world.audio_effects + effect_ID;
+        effect = engine_world.audio_effects + real_ID;
     }
 
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
@@ -1368,8 +1366,6 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
 int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
 {
-    effect_ID = (int)engine_world.audio_map[effect_ID];
-
     int playing_sound = Audio_IsEffectPlaying(effect_ID, entity_type, entity_ID);
 
     if(playing_sound != -1)
@@ -1623,7 +1619,7 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     {
         engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
     }
-
+    
     // Reset last room type used for assigning reverb.
 
     fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;
