@@ -23,6 +23,12 @@
 render_t renderer;
 extern render_DebugDrawer debugDrawer;
 
+bool btCollisionObjectIsVisible(btCollisionObject *colObj)
+{
+    engine_container_p cont = (engine_container_p)colObj->getUserPointer();
+    return (cont == NULL) || (cont->room->is_in_r_list);
+}
+
 int R_List_Less(const void *v1, const void *v2);
 int R_List_Great(const void *v1, const void *v2);
 
@@ -1067,7 +1073,7 @@ void Render_DrawList_DebugLines()
 
     if(renderer.style & R_DRAW_COLL)
     {
-        bt_engine_dynamicsWorld->debugDrawWorld();                              ///@FIXME: render things things only from r_list. Needs bullet little rewriting;
+        bt_engine_dynamicsWorld->debugDrawWorld();
     }
 
     if(!debugDrawer.IsEmpty())

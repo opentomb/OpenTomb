@@ -529,6 +529,6 @@ SIMD_FORCE_INLINE	int	btCollisionObject::calculateSerializeBufferSize() const
 	return sizeof(btCollisionObjectData);
 }
 
-
+bool btCollisionObjectIsVisible(btCollisionObject *colObj);
 
 #endif //BT_COLLISION_OBJECT_H
