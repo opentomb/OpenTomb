@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-struct polygon_s;
+#include "polygon.h"
 #include "bullet/LinearMath/btScalar.h"
 #include "bullet/btBulletCollisionCommon.h"
 
@@ -22,9 +22,8 @@ struct entity_s;
 
 typedef struct obb_s
 {
-    uint16_t             polygons_count;
-    struct polygon_s    *base_polygons;                  // bv base surface
-    struct polygon_s    *polygons;                       // bv world coordinate surface
+    struct polygon_s     base_polygons[6];               // bv base surface
+    struct polygon_s     polygons[6];                       // bv world coordinate surface
     btScalar            *transform;                      // Object transform matrix
     btScalar             r;
 
@@ -35,7 +34,7 @@ typedef struct obb_s
 
 obb_p OBB_Create();
 void OBB_Clear(obb_p bv);
-void OBB_Init(obb_p obb, btScalar bb_min[3], btScalar bb_max[3]);
+
 void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3]);
 void OBB_Transform(obb_p obb);
 int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2);

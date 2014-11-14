@@ -56,7 +56,6 @@ void Portal_Clear(portal_p p);
  *  - Current position will be arbitrary.
  *  - Vertex pointer will be arbitray.
  */
-void Portal_DrawVire(portal_p p);                                               // TEST
 
 // тут пошли реальные нешуточные функции
 int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector);

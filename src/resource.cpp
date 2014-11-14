@@ -2049,7 +2049,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
-        OBB_Init(r_static->obb, r_static->vbb_min, r_static->vbb_max);
+        OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
         OBB_Transform(r_static->obb);
 
         r_static->self->collide_flag = 0x0000;
@@ -3953,7 +3953,6 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->bf.model->hide = 0;
             entity->flags = ENTITY_IS_ACTIVE | ENTITY_CAN_TRIGGER;
             LM = (skeletal_model_p)entity->bf.model;
-            OBB_Init(entity->obb, NULL, NULL);
 
             top = lua_gettop(engine_lua);
             lua_pushinteger(engine_lua, entity->id);
@@ -4055,7 +4054,6 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             BT_GenEntityRigidBody(entity);
         }
 
-        OBB_Init(entity->obb, NULL, NULL);
         Entity_RebuildBV(entity);
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
@@ -4290,7 +4288,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
 
         case COLLISION_BOX:                                                     // the box with deviated centre
             obb = OBB_Create();
-            OBB_Init(obb, mesh->bb_min, mesh->bb_max);
+            OBB_Rebuild(obb, mesh->bb_min, mesh->bb_max);
             p = obb->base_polygons;
             for(i=0;i<6;i++,p++)
             {
