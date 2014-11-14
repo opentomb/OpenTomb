@@ -280,11 +280,11 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
 {
     if(s1->portal_to_room >= 0)
     {
-        s1 = Room_GetSector(engine_world.rooms + s1->portal_to_room, s1->pos);
+        s1 = Room_GetSectorRaw(engine_world.rooms + s1->portal_to_room, s1->pos);
     }
     if(s2->portal_to_room >= 0)
     {
-        s2 = Room_GetSector(engine_world.rooms + s2->portal_to_room, s2->pos);
+        s2 = Room_GetSectorRaw(engine_world.rooms + s2->portal_to_room, s2->pos);
     }
 
     s1 = TR_Sector_CheckBaseRoom(s1);
@@ -295,13 +295,13 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
         return 0;
     }
 
-    room_sector_p s1p = Room_GetSector(s2->owner_room, s1->pos);
+    room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
     if((s1p == NULL) || (s1p->portal_to_room < 0))
     {
         return 0;
     }
 
-    room_sector_p s2p = Room_GetSector(s1->owner_room, s2->pos);
+    room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
     if((s2p == NULL) || (s2p->portal_to_room < 0))
     {
         return 0;
@@ -707,7 +707,7 @@ room_p Room_GetByID(world_p w, unsigned int ID)
 }
 
 
-room_sector_p Room_GetSector(room_p room, btScalar pos[3])
+room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;
@@ -732,10 +732,76 @@ room_sector_p Room_GetSector(room_p room, btScalar pos[3])
 }
 
 
+room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3])
+{
+    int x, y;
+    room_sector_p ret = NULL;
+
+    if(room != NULL)
+    {
+        if(room->active == 0)
+        {
+            if((room->base_room != NULL) && (room->base_room->active))
+            {
+                room = room->base_room;
+            }
+            else if((room->alternate_room != NULL) && (room->alternate_room->active))
+            {
+                room = room->alternate_room;
+            }
+        }
+    }
+    else
+    {
+        return NULL;
+    }
+
+    if(!room->active)
+    {
+        return NULL;
+    }
+
+    x = (int)(pos[0] - room->transform[12]) / 1024;
+    y = (int)(pos[1] - room->transform[13]) / 1024;
+    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
+    {
+        return NULL;
+    }
+    /*
+     * column index system
+     * X - column number, Y - string number
+     */
+    ret = room->sectors + x * room->sectors_y + y;
+    return ret;
+}
+
+
+room_sector_p Sector_CheckFlip(room_sector_p rs)
+{
+    if((rs != NULL) && (rs->owner_room->active == 0))
+    {
+        if((rs->owner_room->base_room != NULL) && (rs->owner_room->base_room->active))
+        {
+            room_p r = rs->owner_room->base_room;
+            rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
+        }
+        else if((rs->owner_room->alternate_room != NULL) && (rs->owner_room->alternate_room->active))
+        {
+            room_p r = rs->owner_room->alternate_room;
+            rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
+        }
+    }
+
+    return rs;
+}
+
+
 room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;
+
+    room = Room_CheckFlip(room);
 
     if(!room->active)
     {
@@ -759,12 +825,12 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
      */
     if(ret->sector_below && (ret->sector_below->ceiling >= pos[2]))
     {
-        return ret->sector_below;
+        return Sector_CheckFlip(ret->sector_below);
     }
 
     if(ret->sector_above && (ret->sector_above->floor <= pos[2]))
     {
-        return ret->sector_above;
+        return Sector_CheckFlip(ret->sector_above);
     }
 
     return ret;
@@ -833,25 +899,65 @@ void Room_Disable(room_p room)
     room->active = 0;
 }
 
-void Room_SwapAlternate(room_p room)
+void Room_SwapToBase(room_p room)
 {
-    if(room->base_room != NULL)                         //If room is already an alternate room
+    if((room->base_room != NULL) && (room->active == 1))                        //If room is active alternate room
     {
         Render_CleanList();
-        //Find our original room
         Room_Disable(room);                             //Disable current room
+        Room_Disable(room->base_room);                  //Paranoid
         Room_SwapPortals(room, room->base_room);        //Update portals to match this room
+        Room_SwapItems(room, room->base_room);          //Update items to match this room
         Room_Enable(room->base_room);                   //Enable original room
-        //Room_SwapItems(room, room->base_room);          //Update items to match this room
     }
-    else if(room->alternate_room != NULL)
+    else if((room->alternate_room != NULL) && (room->active == 0))              //If room is inactive base room
+    {
+        Render_CleanList();
+        Room_Disable(room);                             //Paranoid
+        Room_Disable(room->alternate_room);             //Disable alternate room
+        Room_SwapPortals(room->alternate_room, room);   //Update portals to match this room
+        Room_SwapItems(room->alternate_room, room);     //Update items to match this room
+        Room_Enable(room);                              //Enable base room
+    }
+}
+
+void Room_SwapToAlternate(room_p room)
+{
+    if((room->base_room != NULL) && (room->active == 0))                        //If room is inactive alternate room
+    {
+        Render_CleanList();
+        Room_Disable(room);                             //Paranoid
+        Room_Disable(room->base_room);                  //Disable base room
+        Room_SwapPortals(room->base_room, room);        //Update portals to match this room
+        Room_SwapItems(room->base_room, room);          //Update items to match this room
+        Room_Enable(room);                              //Enable alternate room
+    }
+    else if((room->alternate_room != NULL) && (room->active == 1))              //If room is active base room
     {
         Render_CleanList();
         Room_Disable(room);                             //Disable current room
+        Room_Disable(room->alternate_room);             //Paranoid
         Room_SwapPortals(room, room->alternate_room);   //Update portals to match this room
-        Room_Enable(room->alternate_room);              //Enable alternate room
-        //Room_SwapItems(room, room->alternate_room);     //Update items to match this room
+        Room_SwapItems(room, room->alternate_room);     //Update items to match this room
+        Room_Enable(room);                              //Enable base room
     }
+}
+
+room_p Room_CheckFlip(room_p r)
+{
+    if((r != NULL) && (r->active == 0))
+    {
+        if((r->base_room != NULL) && (r->base_room->active))
+        {
+            r = r->base_room;
+        }
+        else if((r->alternate_room != NULL) && (r->alternate_room->active))
+        {
+            r = r->alternate_room;
+        }
+    }
+
+    return r;
 }
 
 void Room_SwapPortals(room_p room, room_p dest_room)
@@ -869,23 +975,22 @@ void Room_SwapPortals(room_p room, room_p dest_room)
         }
         Room_BuildNearRoomsList(&engine_world.rooms[i]);//Rebuild room near list!
     }
-
- //Update portal adjoining rooms portals only (old code, might be more optimized for singular room swaps)
- /*for(int i=0;i<room->portal_count;i++)//For each portal in the input room
-   {
-        for(int j=0;j<room->portals[i].dest_room->portal_count;j++)//For each portal in the destination room from a portal in the input room
-        {
-            if(engine_world.rooms[room->portals[i].dest_room->id].portals[j].dest_room->id == room->id)//If the portal in the input room's, destination room is the input room, this is the one we want to update!
-            {
-                engine_world.rooms[room->portals[i].dest_room->id].portals[j].dest_room = parent_room;//Update portal destination room to the alternate room
-            }
-        }
-    }*/
 }
 
 void Room_SwapItems(room_p room, room_p dest_room)
 {
     engine_container_p t;
+
+    for(t=room->containers;t!=NULL;t=t->next)
+    {
+        t->room = dest_room;
+    }
+
+    for(t=dest_room->containers;t!=NULL;t=t->next)
+    {
+        t->room = room;
+    }
+
     SWAPT(room->containers, dest_room->containers, t);
 }
 

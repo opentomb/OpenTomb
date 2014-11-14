@@ -17,9 +17,15 @@ obb_p OBB_Create()
     obb_p ret;
 
     ret = (obb_p)malloc(sizeof(obb_t));
-    ret->base_polygons = NULL;
-    ret->polygons = NULL;
-    ret->polygons_count = 0;
+    for(int i=0;i<6;i++)
+    {
+        ret->base_polygons[i].vertex_count = 0;
+        ret->polygons[i].vertex_count = 0;
+        ret->base_polygons[i].vertices = NULL;
+        ret->polygons[i].vertices = NULL;
+        Polygon_Resize(ret->base_polygons+i, 4);
+        Polygon_Resize(ret->polygons+i, 4);
+    }
     ret->transform = NULL;
 
     return ret;
@@ -32,38 +38,11 @@ void OBB_Clear(obb_p obb)
 
     if(obb)
     {
-        if(obb->polygons_count > 0)
+        for(i=0;i<6;i++)
         {
-            for(i=0;i<obb->polygons_count;i++)
-            {
-                Polygon_Clear(obb->polygons + i);
-                Polygon_Clear(obb->base_polygons + i);
-            }
-
-            obb->polygons_count = 0;
-            free(obb->polygons);
-            free(obb->base_polygons);
+            Polygon_Clear(obb->polygons + i);
+            Polygon_Clear(obb->base_polygons + i);
         }
-    }
-}
-
-void OBB_Init(obb_p obb, btScalar bb_min[3], btScalar bb_max[3])
-{
-    int i;
-
-    obb->polygons_count = 6;
-    obb->base_polygons = (polygon_p)calloc(6, sizeof(polygon_t));
-    obb->polygons = (polygon_p)calloc(6, sizeof(polygon_t));
-
-    for(i=0;i<6;i++)
-    {
-        Polygon_Resize(obb->base_polygons+i, 4);
-        Polygon_Resize(obb->polygons+i, 4);
-    }
-
-    if(bb_min != NULL && bb_max != NULL)
-    {
-        OBB_Rebuild(obb, bb_min, bb_max);
     }
 }
 
@@ -216,14 +195,22 @@ void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3])
 
 void OBB_Transform(obb_p obb)
 {
-    int i;
-
-    for(i=0;i<obb->polygons_count;i++)
+    if(obb->transform != NULL)
     {
-        Polygon_vTransform(obb->polygons+i, obb->base_polygons+i, obb->transform);
+        for(int i=0;i<6;i++)
+        {
+            Polygon_vTransform(obb->polygons+i, obb->base_polygons+i, obb->transform);
+        }
+        Mat4_vec3_mul_macro(obb->centre, obb->transform, obb->base_centre);
     }
-
-    Mat4_vec3_mul_macro(obb->centre, obb->transform, obb->base_centre);
+    else
+    {
+        for(int i=0;i<6;i++)
+        {
+            Polygon_Copy(obb->polygons+i, obb->base_polygons+i);
+        }
+        vec3_copy(obb->centre, obb->base_centre);
+    }
 }
 
 /*

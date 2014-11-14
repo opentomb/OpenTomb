@@ -1442,7 +1442,7 @@ void	btCollisionWorld::debugDrawWorld()
 		for (  i=0;i<m_collisionObjects.size();i++)
 		{
 			btCollisionObject* colObj = m_collisionObjects[i];
-			if ((colObj->getCollisionFlags() & btCollisionObject::CF_DISABLE_VISUALIZE_OBJECT)==0)
+			if (((colObj->getCollisionFlags() & btCollisionObject::CF_DISABLE_VISUALIZE_OBJECT)==0) && btCollisionObjectIsVisible(colObj))
 			{
 				if (getDebugDrawer() && (getDebugDrawer()->getDebugMode() & btIDebugDraw::DBG_DrawWireframe))
 				{

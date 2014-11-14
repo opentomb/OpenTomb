@@ -76,15 +76,6 @@ void Frustum_Copy(frustum_p p, frustum_p src)
     }
 }
 
-void Frustum_DrawVire(frustum_p p)
-{
-    if(p)
-    {
-        glVertexPointer(3, GL_BT_SCALAR, 0, p->vertex);
-        glDrawArrays(GL_LINE_LOOP, 0, p->count);
-    }
-}
-
 
 int Frustum_GetFrustumsCount(struct frustum_s *f)
 {
@@ -524,7 +515,7 @@ int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
     polygon_p p;
 
     p = obb->polygons;
-    for(i=0;i<obb->polygons_count;i++,p++)
+    for(i=0;i<6;i++,p++)
     {
         t = vec3_plane_dist(p->plane, frustum->cam_pos);
         if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))
@@ -552,7 +543,7 @@ int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
     {
         ins = 1;                                                                // считаем, что камера внутри OBB
         p = obb->polygons;
-        for(i=0;i<obb->polygons_count;i++,p++)
+        for(i=0;i<6;i++,p++)
         {
             t = vec3_plane_dist(p->plane, engine_camera.pos);
             if((t > 0.0) && Frustum_IsPolyVisible(p, engine_camera.frustum))
@@ -570,7 +561,7 @@ int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
     for(;frustum && frustum->active;frustum=frustum->next)                      // Если хоть в одном активном фрустуме виден объект, то возвращаем 1
     {
         p = obb->polygons;
-        for(i=0;i<obb->polygons_count;i++,p++)
+        for(i=0;i<6;i++,p++)
         {
             t = vec3_plane_dist(p->plane, frustum->cam_pos);
             if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))
