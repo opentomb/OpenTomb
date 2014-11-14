@@ -804,7 +804,7 @@ void ShowDebugInfo()
 
     if(engine_camera.current_room != NULL)
     {
-        room_sector_p rs = Room_GetSector(engine_camera.current_room, engine_camera.pos);
+        room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
         if(rs != NULL)
         {
             Gui_OutTextXY(NULL, 20, 68, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);

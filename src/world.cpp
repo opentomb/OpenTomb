@@ -280,11 +280,11 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
 {
     if(s1->portal_to_room >= 0)
     {
-        s1 = Room_GetSector(engine_world.rooms + s1->portal_to_room, s1->pos);
+        s1 = Room_GetSectorRaw(engine_world.rooms + s1->portal_to_room, s1->pos);
     }
     if(s2->portal_to_room >= 0)
     {
-        s2 = Room_GetSector(engine_world.rooms + s2->portal_to_room, s2->pos);
+        s2 = Room_GetSectorRaw(engine_world.rooms + s2->portal_to_room, s2->pos);
     }
 
     s1 = TR_Sector_CheckBaseRoom(s1);
@@ -295,13 +295,13 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
         return 0;
     }
 
-    room_sector_p s1p = Room_GetSector(s2->owner_room, s1->pos);
+    room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
     if((s1p == NULL) || (s1p->portal_to_room < 0))
     {
         return 0;
     }
 
-    room_sector_p s2p = Room_GetSector(s1->owner_room, s2->pos);
+    room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
     if((s2p == NULL) || (s2p->portal_to_room < 0))
     {
         return 0;
@@ -707,7 +707,7 @@ room_p Room_GetByID(world_p w, unsigned int ID)
 }
 
 
-room_sector_p Room_GetSector(room_p room, btScalar pos[3])
+room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;
@@ -732,10 +732,76 @@ room_sector_p Room_GetSector(room_p room, btScalar pos[3])
 }
 
 
+room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3])
+{
+    int x, y;
+    room_sector_p ret = NULL;
+
+    if(room != NULL)
+    {
+        if(room->active == 0)
+        {
+            if((room->base_room != NULL) && (room->base_room->active))
+            {
+                room = room->base_room;
+            }
+            else if((room->alternate_room != NULL) && (room->alternate_room->active))
+            {
+                room = room->alternate_room;
+            }
+        }
+    }
+    else
+    {
+        return NULL;
+    }
+
+    if(!room->active)
+    {
+        return NULL;
+    }
+
+    x = (int)(pos[0] - room->transform[12]) / 1024;
+    y = (int)(pos[1] - room->transform[13]) / 1024;
+    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
+    {
+        return NULL;
+    }
+    /*
+     * column index system
+     * X - column number, Y - string number
+     */
+    ret = room->sectors + x * room->sectors_y + y;
+    return ret;
+}
+
+
+room_sector_p Sector_CheckFlip(room_sector_p rs)
+{
+    if((rs != NULL) && (rs->owner_room->active == 0))
+    {
+        if((rs->owner_room->base_room != NULL) && (rs->owner_room->base_room->active))
+        {
+            room_p r = rs->owner_room->base_room;
+            rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
+        }
+        else if((rs->owner_room->alternate_room != NULL) && (rs->owner_room->alternate_room->active))
+        {
+            room_p r = rs->owner_room->alternate_room;
+            rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
+        }
+    }
+
+    return rs;
+}
+
+
 room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;
+
+    room = Room_CheckFlip(room);
 
     if(!room->active)
     {
@@ -759,12 +825,12 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
      */
     if(ret->sector_below && (ret->sector_below->ceiling >= pos[2]))
     {
-        return ret->sector_below;
+        return Sector_CheckFlip(ret->sector_below);
     }
 
     if(ret->sector_above && (ret->sector_above->floor <= pos[2]))
     {
-        return ret->sector_above;
+        return Sector_CheckFlip(ret->sector_above);
     }
 
     return ret;
@@ -877,7 +943,7 @@ void Room_SwapToAlternate(room_p room)
     }
 }
 
-room_p Room_CheckActiveFlip(room_p r)
+room_p Room_CheckFlip(room_p r)
 {
     if((r != NULL) && (r->active == 0))
     {

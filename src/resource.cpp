@@ -231,7 +231,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -248,7 +248,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -406,7 +406,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -423,7 +423,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -1167,13 +1167,13 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
         sector->sector_below = NULL;
         if(j >= 0 && j < world->room_count && j != 255)
         {
-            sector->sector_below = Room_GetSector(world->rooms + j, sector->pos);
+            sector->sector_below = Room_GetSectorRaw(world->rooms + j, sector->pos);
         }
         j = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
         if(j >= 0 && j < world->room_count && j != 255)
         {
-            sector->sector_above = Room_GetSector(world->rooms + j, sector->pos);
+            sector->sector_above = Room_GetSectorRaw(world->rooms + j, sector->pos);
         }
 
         room_sector_p near_sector = NULL;
@@ -1204,8 +1204,8 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
             {
                 if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
                 {
-                    room_sector_p dst = Room_GetSector(p->dest_room, sector->pos);
-                    room_sector_p orig_dst = Room_GetSector(engine_world.rooms + sector->portal_to_room, sector->pos);
+                    room_sector_p dst = Room_GetSectorRaw(p->dest_room, sector->pos);
+                    room_sector_p orig_dst = Room_GetSectorRaw(engine_world.rooms + sector->portal_to_room, sector->pos);
                     if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != 32512) && (dst->ceiling != 32512) && (sector->portal_to_room != p->dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
                         sector->portal_to_room = p->dest_room->id;
