@@ -1,7 +1,19 @@
--- OPENTOMB ENTITY COLLISION AND VISIBILITY FLAG OVERRIDE
+-- OPENTOMB ENTITY FLAG CONFIGURATION
 -- By TeslaRus, Lwmte 2013-2014
 
 --------------------------------------------------------------------------------
+-- [ hide ] flag values:
+
+--   0       - Object is visible.
+--   1       - Object is invisible.
+
+-- [ trav ] flag values:
+
+--   0       - Object is not pushable.
+--   1       - Object is pushable.
+
+-- [ coll ] flag values:
+
 --   0x0000  - Object has no collisions
 --   0x0001  - Object uses real mesh data for collision.
 --   0x0002  - Object uses bounding box for collision.
@@ -114,7 +126,7 @@ tr4_static_tbl[39] = {coll = 0x0002};
 tr4_static_tbl[40] = {coll = 0x0002};
 tr4_static_tbl[41] = {coll = 0x0002};
 tr4_static_tbl[42] = {coll = 0x0002};
-tr4_static_tbl[43] = {coll = 0x0002};
+tr4_static_tbl[43] = {coll = 0x0002};  
 tr4_static_tbl[44] = {coll = 0x0002};
 tr4_static_tbl[45] = {coll = 0x0002};
 tr4_static_tbl[46] = {coll = 0x0002};
@@ -315,10 +327,10 @@ tr1_entity_tbl[44] = {coll = 0x0001};                      -- Thor's hammer (han
 tr1_entity_tbl[45] = {coll = 0x0001};                      -- Thor's hammer (block)
 tr1_entity_tbl[46] = {coll = 0x0001};                      -- Thor's lightning ball
 tr1_entity_tbl[47] = {coll = 0x0001};                      -- Barricade
-tr1_entity_tbl[48] = {coll = 0x0002};                      -- Pushable block
-tr1_entity_tbl[49] = {coll = 0x0002};                      -- Pushable block
-tr1_entity_tbl[50] = {coll = 0x0002};                      -- Pushable block
-tr1_entity_tbl[51] = {coll = 0x0002};                      -- Pushable block
+tr1_entity_tbl[48] = {coll = 0x0002, trav = 1};            -- Pushable block
+tr1_entity_tbl[49] = {coll = 0x0002, trav = 1};            -- Pushable block
+tr1_entity_tbl[50] = {coll = 0x0002, trav = 1};            -- Pushable block
+tr1_entity_tbl[51] = {coll = 0x0002, trav = 1};            -- Pushable block
 tr1_entity_tbl[52] = {coll = 0x0001};                      -- Moving block
 tr1_entity_tbl[53] = {coll = 0x0002};                      -- Falling ceiling
 tr1_entity_tbl[54] = {coll = 0x0001};                      -- Sword of Damocles (unused?)
@@ -398,14 +410,14 @@ tr1_entity_tbl[124] = {coll = 0x0002};                     -- Slot 3 full
 tr1_entity_tbl[125] = {coll = 0x0002};                     -- Slot 4 full
 
 tr1_entity_tbl[127] = {coll = 0x0002};                     -- Puzzle item 1
-tr1_entity_tbl[128] = {coll = 0x0002, hide = 1};           -- Midas gold touch
+tr1_entity_tbl[128] = {coll = 0x0000, hide = 1};           -- Midas gold touch
 
 tr1_entity_tbl[133] = {coll = 0x0002};                     -- Key 1
 tr1_entity_tbl[134] = {coll = 0x0002};                     -- Key 2
 tr1_entity_tbl[135] = {coll = 0x0002};                     -- Key 3
 tr1_entity_tbl[136] = {coll = 0x0002};                     -- Key 4
 
-tr1_entity_tbl[137] = {coll = 0x0002};                     -- Lock 1
+tr1_entity_tbl[137] = {coll = 0x0002};                     -- Lock 1 
 tr1_entity_tbl[138] = {coll = 0x0002};                     -- Lock 2
 tr1_entity_tbl[139] = {coll = 0x0002};                     -- Lock 3
 tr1_entity_tbl[140] = {coll = 0x0002};                     -- Lock 4
@@ -424,13 +436,13 @@ tr1_entity_tbl[163] = {coll = 0x0001};                     -- Mutant egg
 -- SERVICE OBJECTS --
 
 tr1_entity_tbl[166] = {coll = 0x0000};                     -- Gunflash
-tr1_entity_tbl[169] = {coll = 0x0000, hide = 0x0001};      -- Camera target
-tr1_entity_tbl[170] = {coll = 0x0000, hide = 0x0001};      -- Waterfall mist
+tr1_entity_tbl[169] = {coll = 0x0000, hide = 1};           -- Camera target
+tr1_entity_tbl[170] = {coll = 0x0000, hide = 1};           -- Waterfall mist
 
 tr1_entity_tbl[172] = {coll = 0x0001};                     -- Mutant bullet
 tr1_entity_tbl[173] = {coll = 0x0001};                     -- Mutant grenade
 
-tr1_entity_tbl[177] = {coll = 0x0001, hide = 1};           -- Lava particle emitter
+tr1_entity_tbl[177] = {coll = 0x0000, hide = 1};           -- Lava particle emitter
 
 tr1_entity_tbl[179] = {coll = 0x0000, hide = 1};           -- Flame emitter
 tr1_entity_tbl[180] = {coll = 0x0000};                     -- Moving lava mass
@@ -507,10 +519,10 @@ tr2_entity_tbl[63] = {coll = 0x0001};                -- Drawbridge
 tr2_entity_tbl[64] = {coll = 0x0002};                -- Slamming door
 tr2_entity_tbl[65] = {coll = 0x0001};                -- Elevator
 tr2_entity_tbl[66] = {coll = 0x0002};                -- Minisub
-tr2_entity_tbl[67] = {coll = 0x0001};                -- Movable cubical block (pushable)
-tr2_entity_tbl[68] = {coll = 0x0001};                -- Movable cubical block (pushable)
-tr2_entity_tbl[69] = {coll = 0x0001};                -- Movable cubical block (pushable)
-tr2_entity_tbl[70] = {coll = 0x0001};                -- Movable cubical block (pushable)
+tr2_entity_tbl[67] = {coll = 0x0001, trav = 1};      -- Movable cubical block (pushable)
+tr2_entity_tbl[68] = {coll = 0x0001, trav = 1};      -- Movable cubical block (pushable)
+tr2_entity_tbl[69] = {coll = 0x0001, trav = 1};      -- Movable cubical block (pushable)
+tr2_entity_tbl[70] = {coll = 0x0001, trav = 1};      -- Movable cubical block (pushable)
 tr2_entity_tbl[71] = {coll = 0x0002};                -- Big bowl (Ice Palace)
 tr2_entity_tbl[72] = {coll = 0x0002};                -- Breakable window (can shoot out)
 tr2_entity_tbl[73] = {coll = 0x0002};                -- Breakable window (must jump through)
@@ -668,7 +680,7 @@ tr3_entity_tbl[20] = {coll = 0x0002};               -- Tribesman with spiked axe
 tr3_entity_tbl[21] = {coll = 0x0002};               -- Tribesman with poison-dart gun
 tr3_entity_tbl[22] = {coll = 0x0002};               -- Dog
 tr3_entity_tbl[23] = {coll = 0x0002};               -- Rat
-tr3_entity_tbl[24] = {coll = 0x0002, hide = 1};     -- Kill All Triggers
+tr3_entity_tbl[24] = {coll = 0x0000, hide = 1};     -- Kill All Triggers
 tr3_entity_tbl[25] = {coll = 0x0002};               -- Killer whale
 tr3_entity_tbl[26] = {coll = 0x0002};               -- Scuba diver
 tr3_entity_tbl[27] = {coll = 0x0002};               -- Crow
@@ -704,9 +716,9 @@ tr3_entity_tbl[62] = {coll = 0x0002};               -- Prisoner
 tr3_entity_tbl[63] = {coll = 0x0002};               -- MP with sighted gun and night sight
 tr3_entity_tbl[64] = {coll = 0x0002};               -- Gun turret
 tr3_entity_tbl[65] = {coll = 0x0002};               -- Dam guard
-tr3_entity_tbl[66] = {coll = 0x0002, hide = 1};     -- Kind of tripwire
-tr3_entity_tbl[67] = {coll = 0x0002, hide = 1};     -- Electrified wire
-tr3_entity_tbl[68] = {coll = 0x0002, hide = 1};     -- Killer tripwire
+tr3_entity_tbl[66] = {coll = 0x0000, hide = 1};     -- Kind of tripwire
+tr3_entity_tbl[67] = {coll = 0x0000, hide = 1};     -- Electrified wire
+tr3_entity_tbl[68] = {coll = 0x0000, hide = 1};     -- Killer tripwire
 tr3_entity_tbl[69] = {coll = 0x0002};               -- Cobra / Rattlesnake
 tr3_entity_tbl[70] = {coll = 0x0001};               -- Temple statue
 tr3_entity_tbl[71] = {coll = 0x0002};               -- Monkey
@@ -734,8 +746,8 @@ tr3_entity_tbl[89] = {coll = 0x0001};            -- Giant boulder (Temple of Pun
 tr3_entity_tbl[90] = {coll = 0x0001};            -- Disk (like dart)
 tr3_entity_tbl[91] = {coll = 0x0001};            -- Dart shooter
 tr3_entity_tbl[94] = {coll = 0x0001};            -- Spiked impaled skeleton / Slamming door
-tr3_entity_tbl[97] = {coll = 0x0001};            -- Movable cubical block (pushable)
-tr3_entity_tbl[98] = {coll = 0x0001};            -- Movable cubical block (pushable)
+tr3_entity_tbl[97] = {coll = 0x0001, trav = 1};  -- Movable cubical block (pushable)
+tr3_entity_tbl[98] = {coll = 0x0001, trav = 1};  -- Movable cubical block (pushable)
 tr3_entity_tbl[101] = {coll = 0x0001};           -- Destroyable boarded-up window
 tr3_entity_tbl[102] = {coll = 0x0001};           -- Destroyable boarded-up window / wall
 tr3_entity_tbl[106] = {coll = 0x0001};           -- Overhead pulley hook
@@ -1104,12 +1116,14 @@ tr4_entity_tbl[152] = {coll = 0x0002}; -- Raising block 2 - RESIZABLE MESH!
 tr4_entity_tbl[153] = {coll = 0x0002}; -- Expanding platform - RESIZABLE MESH!
 tr4_entity_tbl[154] = {coll = 0x0002}; -- Squishy block 1
 tr4_entity_tbl[155] = {coll = 0x0002}; -- Squishy block 2
-tr4_entity_tbl[156] = {coll = 0x0002}; -- Pushable object 1
-tr4_entity_tbl[157] = {coll = 0x0002}; -- Pushable object 2
-tr4_entity_tbl[158] = {coll = 0x0002}; -- Pushable object 3
-tr4_entity_tbl[159] = {coll = 0x0002}; -- Pushable object 4
-tr4_entity_tbl[160] = {coll = 0x0002}; -- Pushable object 5
-tr4_entity_tbl[161] = {coll = 0x0000}; -- Trip wire  - UNUSED
+
+tr4_entity_tbl[156] = {coll = 0x0002, trav = 1}; -- Pushable object 1
+tr4_entity_tbl[157] = {coll = 0x0002, trav = 1}; -- Pushable object 2
+tr4_entity_tbl[158] = {coll = 0x0002, trav = 1}; -- Pushable object 3
+tr4_entity_tbl[159] = {coll = 0x0002, trav = 1}; -- Pushable object 4
+tr4_entity_tbl[160] = {coll = 0x0002, trav = 1}; -- Pushable object 5
+
+tr4_entity_tbl[161] = {coll = 0x0000}; -- Tripwire  - UNUSED
 tr4_entity_tbl[162] = {coll = 0x0002}; -- Sentry gun
 tr4_entity_tbl[163] = {coll = 0x0002}; -- Mine
 tr4_entity_tbl[164] = {coll = 0x0000}; -- Mapper
@@ -1122,7 +1136,7 @@ tr4_entity_tbl[170] = {coll = 0x0001}; -- Moving blade
 tr4_entity_tbl[171] = {coll = 0x0001}; -- Plinth blade
 tr4_entity_tbl[172] = {coll = 0x0001}; -- Seth blade
 
-tr4_entity_tbl[173] = {coll = 0x0000, hide = 1}; -- Lighting conductor
+tr4_entity_tbl[173] = {coll = 0x0000, hide = 1}; -- Lightning conductor
 
 -- PICK-UP WALKTHROUGH ITEMS
 
@@ -1582,14 +1596,15 @@ tr5_entity_tbl[132] = {coll = 0x0001}; -- One block platform - UNUSED?
 tr5_entity_tbl[133] = {coll = 0x0001}; -- Two block platform - UNUSED?
 tr5_entity_tbl[134] = {coll = 0x0001}; -- Box 2 (Ex-RAISING_BLOCK1?)
 
-tr5_entity_tbl[135] = {coll = 0x0001, hide = 1}; -- Teleport (Ex-RAISING_BLOCK2?)
+tr5_entity_tbl[135] = {coll = 0x0000, hide = 1}; -- Teleport (Ex-RAISING_BLOCK2?)
 tr5_entity_tbl[136] = {coll = 0x0000, hide = 1}; -- Headset talk point (Ex-EXPANDING_PLATFORM?)
 
-tr5_entity_tbl[137] = {coll = 0x0001}; -- Pushable 1
-tr5_entity_tbl[138] = {coll = 0x0001}; -- Pushable 2
-tr5_entity_tbl[139] = {coll = 0x0001}; -- Pushable 3 - UNUSED?
-tr5_entity_tbl[140] = {coll = 0x0001}; -- Pushable 4 - UNUSED?
-tr5_entity_tbl[141] = {coll = 0x0001}; -- Pushable 5 - UNUSED?
+tr5_entity_tbl[137] = {coll = 0x0001, trav = 1}; -- Pushable 1
+tr5_entity_tbl[138] = {coll = 0x0001, trav = 1}; -- Pushable 2
+tr5_entity_tbl[139] = {coll = 0x0001, trav = 1}; -- Pushable 3 - UNUSED?
+tr5_entity_tbl[140] = {coll = 0x0001, trav = 1}; -- Pushable 4 - UNUSED?
+tr5_entity_tbl[141] = {coll = 0x0001, trav = 1}; -- Pushable 5 - UNUSED?
+
 tr5_entity_tbl[142] = {coll = 0x0000}; -- Robot arm (Ex-WRECKING BALL?)
 tr5_entity_tbl[142] = {coll = 0x0000}; -- Death slide - UNUSED?
 tr5_entity_tbl[144] = {coll = 0x0000}; -- Rocket item - TORPEDO
@@ -1976,12 +1991,12 @@ function GetEntityFlags(ver, id)
     elseif(ver < 9) then                -- TR_V
         tbl = tr5_entity_tbl;
     else
-        return 0, 0;
+        return 0, 0, 0;
     end;
 
     if(tbl[id] == nil) then
-        return nil, nil;
+        return nil, nil, nil;
     else
-        return tbl[id].coll, tbl[id].hide;
+        return tbl[id].coll, tbl[id].hide, tbl[id].trav;
     end;
 end;

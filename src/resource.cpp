@@ -36,7 +36,7 @@ extern "C" {
 #include "render.h"
 #include "redblack.h"
 
-lua_State *collide_flags_conf;
+lua_State *entity_flags_conf;
 lua_State *ent_ID_override;
 lua_State *level_script;
 
@@ -1440,18 +1440,18 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    collide_flags_conf = luaL_newstate();
-    if(collide_flags_conf != NULL)
+    entity_flags_conf = luaL_newstate();
+    if(entity_flags_conf != NULL)
     {
-        luaL_openlibs(collide_flags_conf);
-        lua_err = luaL_loadfile(collide_flags_conf, "scripts/entity/collide_flags.lua");
-        lua_pcall(collide_flags_conf, 0, 0, 0);
+        luaL_openlibs(entity_flags_conf);
+        lua_err = luaL_loadfile(entity_flags_conf, "scripts/entity/entity_flags.lua");
+        lua_pcall(entity_flags_conf, 0, 0, 0);
         if(lua_err)
         {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(collide_flags_conf, -1));
-            lua_pop(collide_flags_conf, 1);
-            lua_close(collide_flags_conf);
-            collide_flags_conf = NULL;
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(entity_flags_conf, -1));
+            lua_pop(entity_flags_conf, 1);
+            lua_close(entity_flags_conf);
+            entity_flags_conf = NULL;
         }
     }
 
@@ -1863,10 +1863,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     // Load entity collision flags and ID overrides from script.
 
-    if(collide_flags_conf)
+    if(entity_flags_conf)
     {
-        lua_close(collide_flags_conf);
-        collide_flags_conf = NULL;
+        lua_close(entity_flags_conf);
+        entity_flags_conf = NULL;
     }
     if(ent_ID_override)
     {
@@ -2056,16 +2056,16 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->bt_body = NULL;
         r_static->hide = 0;
 
-        if(collide_flags_conf)
+        if(entity_flags_conf)
         {
-            top = lua_gettop(collide_flags_conf);                                               // save LUA stack
-            lua_getglobal(collide_flags_conf, "GetStaticMeshFlags");                            // add to the up of stack LUA's function
-            lua_pushinteger(collide_flags_conf, tr->game_version);                              // add to stack first argument
-            lua_pushinteger(collide_flags_conf, r_static->object_id);                           // add to stack second argument
-            lua_pcall(collide_flags_conf, 2, 2, 0);                                             // call that function
-            r_static->self->collide_flag = 0xff & lua_tointeger(collide_flags_conf, -2);        // get returned value
-            r_static->hide = lua_tointeger(collide_flags_conf, -1);                             // get returned value
-            lua_settop(collide_flags_conf, top);                                                // restore LUA stack
+            top = lua_gettop(entity_flags_conf);                                               // save LUA stack
+            lua_getglobal(entity_flags_conf, "GetStaticMeshFlags");                            // add to the up of stack LUA's function
+            lua_pushinteger(entity_flags_conf, tr->game_version);                              // add to stack first argument
+            lua_pushinteger(entity_flags_conf, r_static->object_id);                           // add to stack second argument
+            lua_pcall(entity_flags_conf, 2, 2, 0);                                             // call that function
+            r_static->self->collide_flag = 0xff & lua_tointeger(entity_flags_conf, -2);        // get returned value
+            r_static->hide = lua_tointeger(entity_flags_conf, -1);                             // get returned value
+            lua_settop(entity_flags_conf, top);                                                // restore LUA stack
         }
 
         if(level_script)
@@ -4022,16 +4022,18 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->self->collide_flag = 0x0000;
         entity->bf.model->hide = 0;
 
-        if(collide_flags_conf)
+        if(entity_flags_conf)
         {
-            top = lua_gettop(collide_flags_conf);                                               // save LUA stack
-            lua_getglobal(collide_flags_conf, "GetEntityFlags");                                // add to the up of stack LUA's function
-            lua_pushinteger(collide_flags_conf, tr->game_version);                              // add to stack first argument
-            lua_pushinteger(collide_flags_conf, tr_item->object_id);                            // add to stack second argument
-            lua_pcall(collide_flags_conf, 2, 2, 0);                                             // call that function
-            entity->self->collide_flag = 0xff & lua_tointeger(collide_flags_conf, -2);          // get returned value
-            entity->bf.model->hide = lua_tointeger(collide_flags_conf, -1);                     // get returned value
-            lua_settop(collide_flags_conf, top);                                                // restore LUA stack
+            top = lua_gettop(entity_flags_conf);                                               // save LUA stack
+            lua_getglobal(entity_flags_conf, "GetEntityFlags");                                // add to the up of stack LUA's function
+            lua_pushinteger(entity_flags_conf, tr->game_version);                              // add to stack first argument
+            lua_pushinteger(entity_flags_conf, tr_item->object_id);                            // add to stack second argument
+            lua_pcall(entity_flags_conf, 2, 3, 0);                                             // call that function
+            entity->self->collide_flag = 0xff & lua_tointeger(entity_flags_conf, -3);          // get returned value
+            entity->bf.model->hide = lua_tointeger(entity_flags_conf, -2);                     // get returned value
+            if(lua_toboolean(entity_flags_conf, -1)) entity->flags |= 0x10;
+            
+            lua_settop(entity_flags_conf, top);                                                // restore LUA stack
         }
 
         if(level_script)
@@ -4043,9 +4045,10 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             {
                 lua_pushinteger(level_script, tr->game_version);                        // add to stack first argument
                 lua_pushinteger(level_script, tr_item->object_id);                      // add to stack second argument
-                lua_pcall(level_script, 2, 2, 0);                                       // call that function
-                entity->self->collide_flag = 0xff & lua_tointeger(level_script, -2);    // get returned value
-                entity->bf.model->hide = lua_tointeger(level_script, -1);                  // get returned value
+                lua_pcall(level_script, 2, 3, 0);                                       // call that function
+                entity->self->collide_flag = 0xff & lua_tointeger(level_script, -3);    // get returned value
+                entity->bf.model->hide = lua_tointeger(level_script, -2);                  // get returned value
+                if(lua_toboolean(level_script, -1)) entity->flags |= 0x10;
             }
             lua_settop(level_script, top);                                              // restore LUA stack
         }
