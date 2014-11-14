@@ -1052,11 +1052,9 @@ void Render_DrawList_DebugLines()
         return;
     }
 
-    glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
-    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     if(renderer.world->Character)
     {
-        Render_Entity_DebugLines(renderer.world->Character);
+        debugDrawer.drawEntityDebugLines(renderer.world->Character);
     }
 
     /*
@@ -1064,16 +1062,22 @@ void Render_DrawList_DebugLines()
      */
     for(i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room_DebugLines(renderer.r_list[i].room, &renderer);
+        debugDrawer.drawRoomDebugLines(renderer.r_list[i].room, &renderer);
     }
 
     if(renderer.style & R_DRAW_COLL)
     {
-        glEnableClientState(GL_COLOR_ARRAY);                                    ///@FIXME: render things things only from r_list.
+        bt_engine_dynamicsWorld->debugDrawWorld();                              ///@FIXME: render things things only from r_list. Needs bullet little rewriting;
+    }
+
+    if(!debugDrawer.IsEmpty())
+    {
+        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
+        glEnableClientState(GL_COLOR_ARRAY);
         if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
-        bt_engine_dynamicsWorld->debugDrawWorld();
         debugDrawer.render();
         glDisableClientState(GL_COLOR_ARRAY);
     }
@@ -1219,385 +1223,6 @@ void Render_SetWorld(struct world_s *world)
     }
 }
 
-/**
- * DEBUG PRIMITIVES RENDERING
- */
-void Render_Room_DebugLines(struct room_s *room, struct render_s *render)
-{
-    unsigned int i, flag;
-    frustum_p frus;
-    engine_container_p cont;
-    entity_p ent;
-
-    glPushAttrib(GL_LINE_BIT);
-    glLineWidth(4.0);
-    flag = render->style & R_DRAW_ROOMBOXES;
-    if(flag)
-    {
-        glColor3f(0.0, 0.1, 0.9);
-        Render_BBox(room->bb_min, room->bb_max);
-        for(int s=0;s<room->sectors_count;s++)
-        {
-            Render_SectorBorders(&room->sectors[s]);                            /// inline here all primitive functions!!!
-        }
-    }
-
-    flag = render->style & R_DRAW_PORTALS;
-    if(flag)
-    {
-        glColor3f(0.0, 0.0, 0.0);
-        glLineWidth(3.0f);
-        for(i=0; i<room->portal_count; i++)
-        {
-            Portal_DrawVire(room->portals+i);
-        }
-    }
-
-    flag = render->style & R_DRAW_FRUSTUMS;
-    if(flag)
-    {
-        glColor3f(1.0, 0.0, 0.0);
-        glLineWidth(3.0f);
-        for(frus=room->frustum; frus && frus->active; frus=frus->next)
-        {
-            Frustum_DrawVire(frus);
-        }
-    }
-    glPopAttrib();
-
-    if(!(renderer.style & R_SKIP_ROOM))
-    {
-        glPushMatrix();
-        glMultMatrixbt(room->transform);
-        if(room->mesh)
-        {
-            Render_Mesh_DebugLines(room->mesh, NULL, NULL);
-        }
-        glPopMatrix();
-    }
-
-    flag = render->style & R_DRAW_BOXES;
-    for(i=0; i<room->static_mesh_count; i++)
-    {
-        if(flag)
-        {
-            glColor3f(0.0, 1.0, 0.1);
-            Render_OBB(room->static_mesh[i].obb);
-        }
-        if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
-        {
-            continue;
-        }
-
-        if((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS))
-        {
-            continue;
-        }
-
-        glPushMatrix();
-        glMultMatrixbt(room->static_mesh[i].transform);
-        if(render->style & R_DRAW_AXIS)
-        {
-            Render_DrawAxis(1000.0);
-        }
-        Render_Mesh_DebugLines(room->static_mesh[i].mesh, NULL, NULL);
-        glPopMatrix();
-        room->static_mesh[i].was_rendered_lines = 1;
-    }
-
-    glEnable(GL_LIGHTING);
-    for(cont=room->containers; cont; cont=cont->next)
-    {
-        switch(cont->object_type)
-        {
-        case OBJECT_ENTITY:
-            ent = (entity_p)cont->object;
-            if(ent->was_rendered_lines == 0)
-            {
-                if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
-                {
-                    Render_Entity_DebugLines(ent);
-                }
-                ent->was_rendered_lines = 1;
-            }
-            break;
-        };
-    }
-    glDisable(GL_LIGHTING);
-}
-
-
-void Render_SkyBox_DebugLines()
-{
-    GLfloat tr[16];
-    btScalar *p;
-
-    if(!(renderer.style & R_DRAW_NORMALS))
-    {
-        return;
-    }
-
-    if(renderer.world != NULL && renderer.world->sky_box != NULL)
-    {
-        glDepthMask(GL_FALSE);
-        glPushMatrix();
-        tr[15] = 1.0;
-        p = renderer.world->sky_box->animations->frames->bone_tags->offset;
-        vec3_add(tr+12, renderer.cam->pos, p);
-        p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
-        Mat4_set_qrotation(tr, p);
-        glMultMatrixf(tr);
-
-        Render_Mesh_DebugLines(renderer.world->sky_box->mesh_offset, NULL, NULL);
-        glPopMatrix();
-
-        glDepthMask(GL_TRUE);
-    }
-}
-
-
-void Render_Entity_DebugLines(struct entity_s *entity)
-{
-    if(entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)))
-    {
-        return;
-    }
-
-    if(entity->hide || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
-    {
-        return;
-    }
-
-    if(renderer.style & R_DRAW_BOXES)
-    {
-        glColor3f(0.0, 0.0, 1.0);
-        Render_OBB(entity->obb);
-    }
-
-    if(entity->bf.model && entity->bf.model->animations)
-    {
-        glPushMatrix();
-        // base frame offset
-        glMultMatrixbt(entity->transform);
-        Render_SkeletalModel_DebugLines(&entity->bf);
-        glPopMatrix();
-    }
-
-    entity->was_rendered_lines = 1;
-}
-
-
-void Render_SkeletalModel_DebugLines(struct ss_bone_frame_s *bframe)
-{
-    if(!(renderer.style & (R_DRAW_NORMALS | R_DRAW_AXIS)))
-    {
-        return;
-    }
-
-    int i;
-    ss_bone_tag_p btag = bframe->bone_tags;
-
-    if(renderer.style & R_DRAW_AXIS)
-    {
-        // If this happens, the lines after this will get drawn with random colors. I don't care.
-        Render_DrawAxis(1000.0);
-    }
-    for(i=0; i<bframe->bone_tag_count; i++,btag++)
-    {
-        glPushMatrix();
-        glMultMatrixbt(btag->full_transform);
-        Render_Mesh_DebugLines(btag->mesh, NULL, NULL);
-
-        /*if(btag->mesh2)
-        {
-            Render_SkinMesh_DebugLines(btag->mesh2, btag->transform);
-        }*/
-        glPopMatrix();
-    }
-}
-
-
-void Render_Mesh_DebugLines(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
-{
-    uint32_t i;
-
-    if(renderer.style & R_DRAW_NORMALS)
-    {
-        btScalar *normalLines = GetTempbtScalar(3 * 2 * mesh->vertex_count);
-
-        if(overrideVertices)
-        {
-            for(i=0; i<mesh->vertex_count; i++)
-            {
-                memcpy(&normalLines[i*6], overrideVertices+3*i, sizeof(btScalar [3]));
-                normalLines[i*6 + 3] = (overrideVertices+3*i)[0] + (overrideNormals+3*i)[0] * 128.0;
-                normalLines[i*6 + 4] = (overrideVertices+3*i)[1] + (overrideNormals+3*i)[1] * 128.0;
-                normalLines[i*6 + 5] = (overrideVertices+3*i)[2] + (overrideNormals+3*i)[2] * 128.0;
-            }
-        }
-        else
-        {
-            for (i = 0; i < mesh->vertex_count; i++)
-            {
-                memcpy(&normalLines[i*6], mesh->vertices[i].position, sizeof(btScalar [3]));
-                normalLines[i*6 + 3] = mesh->vertices[i].position[0] + mesh->vertices[i].normal[0] * 128.0;
-                normalLines[i*6 + 4] = mesh->vertices[i].position[1] + mesh->vertices[i].normal[1] * 128.0;
-                normalLines[i*6 + 5] = mesh->vertices[i].position[2] + mesh->vertices[i].normal[2] * 128.0;
-            }
-        }
-
-        glVertexPointer(3, GL_BT_SCALAR, 0, normalLines);
-        glDrawArrays(GL_LINES, 0, mesh->vertex_count * 2);
-
-        ReturnTempbtScalar(3 * 2 * mesh->vertex_count);
-    }
-}
-
-
-void Render_DrawAxis(btScalar r)
-{
-    // debug local coordinate system axis drawing
-    const GLfloat vertexArray[] =
-    {
-        1.0, 0.0, 0.0,    0.0, 0.0, 0.0,
-        1.0, 0.0, 0.0,    r,   0.0, 0.0,
-        0.0, 1.0, 0.0,    0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0,    0.0, r,   0.0,
-        0.0, 0.0, 1.0,    0.0, 0.0, 0.0,
-        0.0, 0.0, 1.0,    0.0, 0.0, r
-    };
-
-    glEnableClientState(GL_COLOR_ARRAY);                                        ///@FIXME: reduce number of gl state changes
-    if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-    glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), &vertexArray[3]);
-    glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]), &vertexArray[0]);
-    glDrawArrays(GL_LINES, 0, 6);
-    glDisableClientState(GL_COLOR_ARRAY);
-}
-
-/**
- * bounding box rendering
- */
-void Render_BBox(btScalar bb_min[3], btScalar bb_max[3])
-{
-    btScalar vertices[24] =
-    {
-        bb_min[0], bb_min[1], bb_min[2],
-        bb_min[0], bb_max[1], bb_min[2],
-        bb_max[0], bb_max[1], bb_min[2],
-        bb_max[0], bb_min[1], bb_min[2],
-
-        bb_min[0], bb_min[1], bb_max[2],
-        bb_min[0], bb_max[1], bb_max[2],
-        bb_max[0], bb_max[1], bb_max[2],
-        bb_max[0], bb_min[1], bb_max[2]
-    };
-
-    const GLushort indices[24] =
-    {
-        0, 1,
-        1, 2,
-        2, 3,
-        3, 0,
-
-        4, 5,
-        5, 6,
-        6, 7,
-        7, 4,
-
-        0, 4,
-        1, 5,
-        2, 6,
-        3, 7
-    };
-
-    static GLuint indicesVBO = 0;
-
-    if((indicesVBO == 0) && glGenBuffersARB)
-    {
-        glGenBuffersARB(1, &indicesVBO);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(indices), indices, GL_STATIC_DRAW_ARB);
-    }
-
-    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertices[0]) * 3, vertices);
-    if(indicesVBO)
-    {
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
-        glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, NULL);
-    }
-    else
-    {
-        glDrawElements(GL_LINES, 24, GL_UNSIGNED_SHORT, indices);
-    }
-}
-
-void Render_Sector(btScalar corner1[3], btScalar corner2[3], btScalar corner3[3], btScalar corner4[3])
-{
-    btScalar vertices[12] =
-    {
-        corner1[0], corner1[1], corner1[2],
-        corner2[0], corner2[1], corner2[2],
-        corner3[0], corner3[1], corner3[2],
-        corner4[0], corner4[1], corner4[2]
-    };
-
-    const GLushort indices[8] =
-    {
-        0, 1,
-        1, 2,
-        2, 3,
-        3, 0
-    };
-
-    static GLuint indicesVBO = 0;
-
-    if((indicesVBO == 0) && glGenBuffersARB)
-    {
-        glGenBuffersARB(1, &indicesVBO);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(indices), indices, GL_STATIC_DRAW_ARB);
-    }
-
-    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertices[0]) * 3, vertices);
-    if(indicesVBO)
-    {
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
-        glDrawElements(GL_LINES, 4, GL_UNSIGNED_SHORT, NULL);
-    }
-    else
-    {
-        glDrawElements(GL_LINES, 4, GL_UNSIGNED_SHORT, indices);
-    }
-}
-
-/**
- * sector's borders rendering
- */
-void Render_SectorBorders(struct room_sector_s *sector)
-{
-    btScalar corner1[3], corner2[3], corner3[3], corner4[3];
-
-    if(sector->floor == 32512 || sector->ceiling == 32512)
-    {
-        return;
-    }
-
-    // Render_Sector(corner1,corner2,corner3,corner4);
-}
-
-void Render_OBB(struct obb_s *obb)
-{
-    uint16_t i;
-    polygon_p p;
-
-    p = obb->polygons;
-    for(i=0; i<obb->polygons_count; i++,p++)
-    {
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices);
-        glDrawArrays(GL_LINE_LOOP, 0, p->vertex_count);
-    }
-}
 
 void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour)
 {
@@ -1650,18 +1275,25 @@ void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour)
     }
 }
 
+/**
+ * DEBUG PRIMITIVES RENDERING
+ */
 render_DebugDrawer::render_DebugDrawer()
 :m_debugMode(0)
 {
     m_buffer = (GLfloat*)malloc(2 * 3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
     m_max_lines = DEBUG_DRAWER_DEFAULT_BUFFER_SIZE;
     m_lines = 0;
+    vec3_set_zero(m_color);
+    m_obb = OBB_Create();
 }
 
 render_DebugDrawer::~render_DebugDrawer()
 {
     free(m_buffer);
     m_buffer = NULL;
+    OBB_Clear(m_obb);
+    m_obb = NULL;
 }
 
 void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
@@ -1723,5 +1355,421 @@ void render_DebugDrawer::render()
         glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]),  m_buffer + 3);
         glDrawArrays(GL_LINES, 0, 4 * m_lines);
     }
+
+    vec3_set_zero(m_color);
     m_lines = 0;
 }
+
+void render_DebugDrawer::drawAxis(btScalar r, btScalar transform[16])
+{
+    GLfloat *v0, *v;
+
+    if(m_lines + 3 >= m_max_lines)
+    {
+        return;
+    }
+
+    v0 = v = m_buffer + 3 * 4 * m_lines;
+    m_lines += 3;
+    vec3_copy(v0, transform + 12);
+
+    // OX
+    v += 3;
+    v[0] = 1.0;
+    v[1] = 0.0;
+    v[2] = 0.0;
+    v += 3;
+    vec3_add_mul(v, v0, transform + 0, r);
+    v += 3;
+    v[0] = 1.0;
+    v[1] = 0.0;
+    v[2] = 0.0;
+    v += 3;
+
+    // OY
+    vec3_copy(v, v0);
+    v += 3;
+    v[0] = 0.0;
+    v[1] = 1.0;
+    v[2] = 0.0;
+    v += 3;
+    vec3_add_mul(v, v0, transform + 4, r);
+    v += 3;
+    v[0] = 0.0;
+    v[1] = 1.0;
+    v[2] = 0.0;
+    v += 3;
+
+    // OZ
+    vec3_copy(v, v0);
+    v += 3;
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = 1.0;
+    v += 3;
+    vec3_add_mul(v, v0, transform + 8, r);
+    v += 3;
+    v[0] = 0.0;
+    v[1] = 0.0;
+    v[2] = 1.0;
+}
+
+void render_DebugDrawer::drawFrustum(struct frustum_s *f)
+{
+    if((f != NULL) && (m_lines + f->count < m_max_lines))
+    {
+        GLfloat *v, *v0;
+        btScalar *fv = f->vertex;
+
+        v = v0 = m_buffer + 3 * 4 * m_lines;
+        m_lines += f->count;
+
+        for(int i=0;i<f->count-1;i++,fv += 3)
+        {
+            vec3_copy(v, fv);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+
+            vec3_copy(v, fv + 3);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+        }
+
+        vec3_copy(v, fv);
+        v += 3;
+        vec3_copy(v, m_color);
+        v += 3;
+        vec3_copy(v, v0);
+        v += 3;
+        vec3_copy(v, m_color);
+    }
+}
+
+void render_DebugDrawer::drawPortal(struct portal_s *p)
+{
+    if((p != NULL) && (m_lines + p->vertex_count < m_max_lines))
+    {
+        GLfloat *v, *v0;
+        btScalar *pv = p->vertex;
+
+        v = v0 = m_buffer + 3 * 4 * m_lines;
+        m_lines += p->vertex_count;
+
+        for(int i=0;i<p->vertex_count-1;i++,pv += 3)
+        {
+            vec3_copy(v, pv);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+
+            vec3_copy(v, pv + 3);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+        }
+
+        vec3_copy(v, pv);
+        v += 3;
+        vec3_copy(v, m_color);
+        v += 3;
+        vec3_copy(v, v0);
+        v += 3;
+        vec3_copy(v, m_color);
+    }
+}
+
+void render_DebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform)
+{
+    OBB_Rebuild(m_obb, bb_min, bb_max);
+    m_obb->transform = transform;
+    OBB_Transform(m_obb);
+    drawOBB(m_obb);
+}
+
+///@FIXME: rewrite it, lines count may be reduced twice!
+void render_DebugDrawer::drawOBB(struct obb_s *obb)
+{
+    GLfloat *v, *v0;
+    polygon_p p = obb->polygons;
+
+    v = v0 = m_buffer + 3 * 4 * m_lines;
+
+    for(uint16_t i=0; i<6; i++,p++)
+    {
+        if(m_lines + p->vertex_count < m_max_lines)
+        {
+            m_lines += p->vertex_count;
+            vertex_p pv = p->vertices;
+            v0 = v;
+            for(int j=0;j<p->vertex_count-1;j++,pv++)
+            {
+                vec3_copy(v, pv->position);
+                v += 3;
+                vec3_copy(v, m_color);
+                v += 3;
+
+                vec3_copy(v, (pv+1)->position);
+                v += 3;
+                vec3_copy(v, m_color);
+                v += 3;
+            }
+
+            vec3_copy(v, pv->position);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+            vec3_copy(v, v0);
+            v += 3;
+            vec3_copy(v, m_color);
+            v += 3;
+        }
+    }
+}
+
+void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals)
+{
+    uint32_t i;
+
+    if((renderer.style & R_DRAW_NORMALS) && (m_lines + mesh->vertex_count < m_max_lines))
+    {
+        GLfloat *v = m_buffer + 3 * 4 * m_lines;
+        btScalar n[3];
+
+        setColor(0.8, 0.0, 0.9);
+        m_lines += mesh->vertex_count;
+        if(overrideVertices)
+        {
+            btScalar *ov = (btScalar*)overrideVertices;
+            btScalar *on = (btScalar*)overrideNormals;
+            for(i=0; i<mesh->vertex_count; i++,ov+=3,on+=3,v+=12)
+            {
+                Mat4_vec3_mul_macro(v, transform, ov);
+                Mat4_vec3_rot_macro(n, transform, on);
+
+                v[6 + 0] = v[0] + n[0] * 128.0;
+                v[6 + 1] = v[1] + n[1] * 128.0;
+                v[6 + 2] = v[2] + n[2] * 128.0;
+                vec3_copy(v+3, m_color);
+                vec3_copy(v+9, m_color);
+            }
+        }
+        else
+        {
+            vertex_p mv = mesh->vertices;
+            for (i = 0; i < mesh->vertex_count; i++,mv++,v+=12)
+            {
+                Mat4_vec3_mul_macro(v, transform, mv->position);
+                Mat4_vec3_rot_macro(n, transform, mv->normal);
+
+                v[6 + 0] = v[0] + n[0] * 128.0;
+                v[6 + 1] = v[1] + n[1] * 128.0;
+                v[6 + 2] = v[2] + n[2] * 128.0;
+                vec3_copy(v+3, m_color);
+                vec3_copy(v+9, m_color);
+            }
+        }
+    }
+}
+
+void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16])
+{
+    if(!(renderer.style & R_DRAW_NORMALS))
+    {
+        return;
+    }
+
+    btScalar tr[16];
+
+    ss_bone_tag_p btag = bframe->bone_tags;
+    for(int i=0; i<bframe->bone_tag_count; i++,btag++)
+    {
+        Mat4_Mat4_mul_macro(tr, transform, btag->full_transform);
+        drawMeshDebugLines(btag->mesh, tr, NULL, NULL);
+    }
+}
+
+void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
+{
+    if(entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
+       entity->hide || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    {
+        return;
+    }
+
+    if(renderer.style & R_DRAW_BOXES)
+    {
+        debugDrawer.setColor(0.0, 0.0, 1.0);
+        debugDrawer.drawOBB(entity->obb);
+    }
+
+    if(renderer.style & R_DRAW_AXIS)
+    {
+        // If this happens, the lines after this will get drawn with random colors. I don't care.
+        debugDrawer.drawAxis(1000.0, entity->transform);
+    }
+
+    if(entity->bf.model && entity->bf.model->animations)
+    {
+        debugDrawer.drawSkeletalModelDebugLines(&entity->bf, entity->transform);
+    }
+
+    entity->was_rendered_lines = 1;
+}
+
+void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s *render)
+{
+    unsigned int i, flag;
+    frustum_p frus;
+    engine_container_p cont;
+    entity_p ent;
+
+    flag = render->style & R_DRAW_ROOMBOXES;
+    if(flag)
+    {
+        debugDrawer.setColor(0.0, 0.1, 0.9);
+        debugDrawer.drawBBox(room->bb_min, room->bb_max, NULL);
+        /*for(int s=0;s<room->sectors_count;s++)
+        {
+            Render_SectorBorders(&room->sectors[s]);
+        }*/
+    }
+
+    flag = render->style & R_DRAW_PORTALS;
+    if(flag)
+    {
+        debugDrawer.setColor(0.0, 0.0, 0.0);
+        for(i=0; i<room->portal_count; i++)
+        {
+            debugDrawer.drawPortal(room->portals+i);
+        }
+    }
+
+    flag = render->style & R_DRAW_FRUSTUMS;
+    if(flag)
+    {
+        debugDrawer.setColor(1.0, 0.0, 0.0);
+        for(frus=room->frustum; frus && frus->active; frus=frus->next)
+        {
+            debugDrawer.drawFrustum(frus);
+        }
+    }
+
+    if(!(renderer.style & R_SKIP_ROOM) && (room->mesh != NULL))
+    {
+        debugDrawer.drawMeshDebugLines(room->mesh, room->transform, NULL, NULL);
+    }
+
+    flag = render->style & R_DRAW_BOXES;
+    for(i=0; i<room->static_mesh_count; i++)
+    {
+        if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room) ||
+          ((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS)))
+        {
+            continue;
+        }
+
+        if(flag)
+        {
+            debugDrawer.setColor(0.0, 1.0, 0.1);
+            debugDrawer.drawOBB(room->static_mesh[i].obb);
+        }
+
+        if(render->style & R_DRAW_AXIS)
+        {
+            debugDrawer.drawAxis(1000.0, room->static_mesh[i].transform);
+        }
+
+        debugDrawer.drawMeshDebugLines(room->static_mesh[i].mesh, room->static_mesh[i].transform, NULL, NULL);
+
+        room->static_mesh[i].was_rendered_lines = 1;
+    }
+
+    for(cont=room->containers; cont; cont=cont->next)
+    {
+        switch(cont->object_type)
+        {
+        case OBJECT_ENTITY:
+            ent = (entity_p)cont->object;
+            if(ent->was_rendered_lines == 0)
+            {
+                if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
+                {
+                    debugDrawer.drawEntityDebugLines(ent);
+                }
+                ent->was_rendered_lines = 1;
+            }
+            break;
+        };
+    }
+}
+
+/*
+void Render_SkyBox_DebugLines()
+{
+    GLfloat tr[16];
+    btScalar *p;
+
+    if(!(renderer.style & R_DRAW_NORMALS))
+    {
+        return;
+    }
+
+    if(renderer.world != NULL && renderer.world->sky_box != NULL)
+    {
+        glDepthMask(GL_FALSE);
+        glPushMatrix();
+        tr[15] = 1.0;
+        p = renderer.world->sky_box->animations->frames->bone_tags->offset;
+        vec3_add(tr+12, renderer.cam->pos, p);
+        p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
+        Mat4_set_qrotation(tr, p);
+        glMultMatrixf(tr);
+
+        Render_Mesh_DebugLines(renderer.world->sky_box->mesh_offset, NULL, NULL);
+        glPopMatrix();
+
+        glDepthMask(GL_TRUE);
+    }
+}*/
+
+
+/*void Render_Sector(btScalar corner1[3], btScalar corner2[3], btScalar corner3[3], btScalar corner4[3])
+{
+    btScalar vertices[12] =
+    {
+        corner1[0], corner1[1], corner1[2],
+        corner2[0], corner2[1], corner2[2],
+        corner3[0], corner3[1], corner3[2],
+        corner4[0], corner4[1], corner4[2]
+    };
+
+    const GLushort indices[8] =
+    {
+        0, 1,
+        1, 2,
+        2, 3,
+        3, 0
+    };
+
+    static GLuint indicesVBO = 0;
+
+    if((indicesVBO == 0) && glGenBuffersARB)
+    {
+        glGenBuffersARB(1, &indicesVBO);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
+        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(indices), indices, GL_STATIC_DRAW_ARB);
+    }
+
+    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertices[0]) * 3, vertices);
+    if(indicesVBO)
+    {
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
+        glDrawElements(GL_LINES, 4, GL_UNSIGNED_SHORT, NULL);
+    }
+    else
+    {
+        glDrawElements(GL_LINES, 4, GL_UNSIGNED_SHORT, indices);
+    }
+}*/
