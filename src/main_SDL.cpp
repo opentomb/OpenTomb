@@ -804,7 +804,7 @@ void ShowDebugInfo()
 
     if(engine_camera.current_room != NULL)
     {
-        room_sector_p rs = Room_GetSector(engine_camera.current_room, engine_camera.pos);
+        room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
         if(rs != NULL)
         {
             Gui_OutTextXY(NULL, 20, 68, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
@@ -1081,9 +1081,9 @@ void DebugKeys(int button, int state)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
-                        if(engine_world.rooms[i].alternate_room != NULL)
+                        //if(engine_world.rooms[i].alternate_room != NULL)
                         {
-                            Room_SwapAlternate(engine_world.rooms + i);
+                            Room_SwapToAlternate(engine_world.rooms + i);
                         }
                     }
                 }
@@ -1093,9 +1093,9 @@ void DebugKeys(int button, int state)
                 {
                     for(int i=0;i<engine_world.room_count;i++)
                     {
-                        if(engine_world.rooms[i].base_room != NULL)
+                        //if(engine_world.rooms[i].base_room != NULL)
                         {
-                            Room_SwapAlternate(engine_world.rooms + i);
+                            Room_SwapToBase(engine_world.rooms + i);
                         }
                     }
                 }

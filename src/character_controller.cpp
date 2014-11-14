@@ -495,6 +495,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
 
 /**
  * Start position are taken from ent->transform
+ * @TODO: ADD ACTIVE FLIP CHECKS!!!
  */
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset)
 {
@@ -512,6 +513,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
     fc->transition_level = 32512.0;
 
     r = Room_FindPosCogerrence(&engine_world, pos, r);
+    r = Room_CheckFlip(r);
     if(r)
     {
         rs = Room_GetSectorXYZ(r, pos);                                         // if r != NULL then rs can not been NULL!!!
@@ -519,7 +521,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
         {
             while(rs->sector_above)
             {
-                rs = rs->sector_above;
+                rs = Sector_CheckFlip(rs->sector_above);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -532,7 +534,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
         {
             while(rs->sector_above)
             {
-                rs = rs->sector_above;
+                rs = Sector_CheckFlip(rs->sector_above);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)        // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -552,7 +554,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
         {
             while(rs->sector_below)
             {
-                rs = rs->sector_below;
+                rs = Sector_CheckFlip(rs->sector_below);
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->transition_level = (btScalar)rs->ceiling;
@@ -2194,7 +2196,7 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
 int Character_FindTraverse(struct entity_s *ch)
 {
     room_sector_p ch_s, obj_s = NULL;
-    ch_s = Room_GetSector(ch->self->room, ch->transform + 12);
+    ch_s = Room_GetSectorRaw(ch->self->room, ch->transform + 12);
 
     if(ch_s == NULL)
     {
@@ -2207,23 +2209,23 @@ int Character_FindTraverse(struct entity_s *ch)
     if(ch->transform[4 + 0] > 0.9)
     {
         btScalar pos[] = {ch_s->pos[0] + TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
-        obj_s = Room_GetSector(ch_s->owner_room, pos);
+        obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     else if(ch->transform[4 + 0] < -0.9)
     {
         btScalar pos[] = {ch_s->pos[0] - TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
-        obj_s = Room_GetSector(ch_s->owner_room, pos);
+        obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.9)
     {
         btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
-        obj_s = Room_GetSector(ch_s->owner_room, pos);
+        obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     else if(ch->transform[4 + 1] < -0.9)
     {
         btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
-        obj_s = Room_GetSector(ch_s->owner_room, pos);
+        obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
 
     if(obj_s != NULL)
@@ -2259,31 +2261,31 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
 {
     room_sector_p ch_s, obj_s;
 
-    ch_s = Room_GetSector(ch->self->room, ch->transform + 12);
-    obj_s = Room_GetSector(obj->self->room, obj->transform + 12);
+    ch_s = Room_GetSectorRaw(ch->self->room, ch->transform + 12);
+    obj_s = Room_GetSectorRaw(obj->self->room, obj->transform + 12);
 
     if(obj_s == ch_s)
     {
         if(ch->transform[4 + 0] > 0.8)
         {
             btScalar pos[] = {obj_s->pos[0] - TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
-            ch_s = Room_GetSector(obj_s->owner_room, pos);
+            ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
         else if(ch->transform[4 + 0] < -0.8)
         {
             btScalar pos[] = {obj_s->pos[0] + TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
-            ch_s = Room_GetSector(obj_s->owner_room, pos);
+            ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
         // OY move case
         else if(ch->transform[4 + 1] > 0.8)
         {
             btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
-            ch_s = Room_GetSector(obj_s->owner_room, pos);
+            ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
         else if(ch->transform[4 + 1] < -0.8)
         {
             btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
-            ch_s = Room_GetSector(obj_s->owner_room, pos);
+            ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
         ch_s = TR_Sector_CheckPortalPointer(ch_s);
     }
@@ -2310,23 +2312,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     if(ch->transform[4 + 0] > 0.8)
     {
         btScalar pos[] = {obj_s->pos[0] + TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
-        next_s = Room_GetSector(obj_s->owner_room, pos);
+        next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
     else if(ch->transform[4 + 0] < -0.8)
     {
         btScalar pos[] = {obj_s->pos[0] - TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
-        next_s = Room_GetSector(obj_s->owner_room, pos);
+        next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.8)
     {
         btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
-        next_s = Room_GetSector(obj_s->owner_room, pos);
+        next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
     else if(ch->transform[4 + 1] < -0.8)
     {
         btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
-        next_s = Room_GetSector(obj_s->owner_room, pos);
+        next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
 
     next_s = TR_Sector_CheckPortalPointer(next_s);
@@ -2362,23 +2364,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     if(ch->transform[4 + 0] > 0.8)
     {
         btScalar pos[] = {ch_s->pos[0] - TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
-        next_s = Room_GetSector(ch_s->owner_room, pos);
+        next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     else if(ch->transform[4 + 0] < -0.8)
     {
         btScalar pos[] = {ch_s->pos[0] + TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
-        next_s = Room_GetSector(ch_s->owner_room, pos);
+        next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.8)
     {
         btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
-        next_s = Room_GetSector(ch_s->owner_room, pos);
+        next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     else if(ch->transform[4 + 1] < -0.8)
     {
         btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
-        next_s = Room_GetSector(ch_s->owner_room, pos);
+        next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
 
     next_s = TR_Sector_CheckPortalPointer(next_s);

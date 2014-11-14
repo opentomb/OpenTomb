@@ -22,7 +22,7 @@
 #define R_DRAW_DUMMY_STATICS    0x00000800                                      // draw empty static meshes
 #define R_DRAW_COLL             0x00001000                                      // draw Bullet physics world
 
-#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (1024 * 1024)
+#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (4096 * 1024)
 
 #ifdef BT_USE_DOUBLE_PRECISION
     #define glMultMatrixbt glMultMatrixd
@@ -32,18 +32,53 @@
     #define GL_BT_SCALAR GL_FLOAT
 #endif
 
+struct portal_s;
+struct frustum_s;
+struct world_s;
+struct room_s;
+struct camera_s;
+struct entity_s;
+struct sprite_s;
+struct base_mesh_s;
+struct obb_s;
+
 class render_DebugDrawer:public btIDebugDraw
 {
     int m_debugMode;
     int m_max_lines;
     int m_lines;
 
+    GLfloat m_color[3];
     GLfloat *m_buffer;
+    
+    struct obb_s *m_obb;
 
     public:
+        // engine debug function
         render_DebugDrawer();
         ~render_DebugDrawer();
+        bool IsEmpty()
+        {
+            return m_lines == 0;
+        }
         void render();
+        void setColor(GLfloat r, GLfloat g, GLfloat b)
+        {
+            m_color[0] = r;
+            m_color[1] = g;
+            m_color[2] = b;
+        }
+        void drawAxis(btScalar r, btScalar transform[16]);
+        void drawPortal(struct portal_s *p);
+        void drawFrustum(struct frustum_s *f);
+        void drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform);
+        void drawOBB(struct obb_s *obb);
+        void drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals);
+        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16]);
+        void drawEntityDebugLines(struct entity_s *entity);
+        void drawRoomDebugLines(struct room_s *room, struct render_s *render);
+        
+        // bullet's debug interface
         virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
         virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color);
         virtual void   reportErrorWarning(const char* warningString);
@@ -83,14 +118,6 @@ enum BlendingMode
 
 #define TR_ANIMTEXTURE_UPDATE_INTERVAL   0.0166   // 60 FPS
 
-struct portal_s;
-struct world_s;
-struct room_s;
-struct camera_s;
-struct entity_s;
-struct sprite_s;
-struct base_mesh_s;
-struct obb_s;
 
 typedef struct render_list_s
 {
@@ -170,14 +197,6 @@ void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour);
  * DEBUG PRIMITIVES RENDERING
  */
 void Render_SkyBox_DebugLines();
-void Render_Entity_DebugLines(struct entity_s *entity);
-void Render_SkeletalModel_DebugLines(struct ss_bone_frame_s *bframe);
-void Render_Mesh_DebugLines(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
-void Render_Room_DebugLines(struct room_s *room, struct render_s *render);
-void Render_DrawAxis(btScalar r);
-void Render_BBox(btScalar bb_min[3], btScalar bb_max[3]);
-void Render_Sector(btScalar corner1[3], btScalar corner2[3], btScalar corner3[3], btScalar corner4[3]);
-void Render_SectorBorders(struct room_sector_s *sector);
-void Render_OBB(struct obb_s *obb);
+
 
 #endif

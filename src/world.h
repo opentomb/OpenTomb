@@ -245,12 +245,16 @@ room_p Room_FindPos(world_p w, btScalar pos[3]);
 room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room);
 room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room);
 room_p Room_GetByID(world_p w, unsigned int ID);
-room_sector_p Room_GetSector(room_p room, btScalar pos[3]);
+room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3]);
+room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3]);
+room_sector_p Sector_CheckFlip(room_sector_p rs);
 room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3]);
 
 void Room_Enable(room_p room);
 void Room_Disable(room_p room);
-void Room_SwapAlternate(room_p room);
+void Room_SwapToAlternate(room_p room);
+void Room_SwapToBase(room_p room);
+room_p Room_CheckFlip(room_p r);
 void Room_SwapPortals(room_p room, room_p dest_room);//Swap room portals of input room to destination room
 void Room_SwapItems(room_p room, room_p dest_room);//Swap room items of input room to destination room
 void Room_BuildNearRoomsList(room_p room);

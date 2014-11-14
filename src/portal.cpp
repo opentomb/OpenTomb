@@ -27,15 +27,6 @@ void Portal_InitGlobals()
  * PORTALS
  */
 
-void Portal_DrawVire(portal_p p)
-{
-    if(p)
-    {
-        glVertexPointer(3, GL_BT_SCALAR, 0, p->vertex);
-        glDrawArrays(GL_LINE_LOOP, 0, p->vertex_count);
-    }
-}
-
 portal_p Portal_Create(unsigned int vcount)
 {
     portal_p p = (portal_p)malloc(sizeof(portal_t));

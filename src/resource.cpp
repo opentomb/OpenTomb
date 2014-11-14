@@ -231,7 +231,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -248,7 +248,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -406,7 +406,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -423,7 +423,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -1167,13 +1167,13 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
         sector->sector_below = NULL;
         if(j >= 0 && j < world->room_count && j != 255)
         {
-            sector->sector_below = Room_GetSector(world->rooms + j, sector->pos);
+            sector->sector_below = Room_GetSectorRaw(world->rooms + j, sector->pos);
         }
         j = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
         if(j >= 0 && j < world->room_count && j != 255)
         {
-            sector->sector_above = Room_GetSector(world->rooms + j, sector->pos);
+            sector->sector_above = Room_GetSectorRaw(world->rooms + j, sector->pos);
         }
 
         room_sector_p near_sector = NULL;
@@ -1204,8 +1204,8 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
             {
                 if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
                 {
-                    room_sector_p dst = Room_GetSector(p->dest_room, sector->pos);
-                    room_sector_p orig_dst = Room_GetSector(engine_world.rooms + sector->portal_to_room, sector->pos);
+                    room_sector_p dst = Room_GetSectorRaw(p->dest_room, sector->pos);
+                    room_sector_p orig_dst = Room_GetSectorRaw(engine_world.rooms + sector->portal_to_room, sector->pos);
                     if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != 32512) && (dst->ceiling != 32512) && (sector->portal_to_room != p->dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
                         sector->portal_to_room = p->dest_room->id;
@@ -1812,20 +1812,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
 #endif
 
-    r = world->rooms;
-    for(i=0;i<world->room_count;i++,r++)
-    {
-        if(r->active && r->alternate_room)
-        {
-            Room_Disable(r->alternate_room);
-        }
-
-        if((r->portal_count == 0) && (world->room_count > 1))
-        {
-            Room_Disable(r);
-        }
-    }
-
     Gui_DrawLoadScreen(900);
 
     // Initialize audio.
@@ -1936,6 +1922,20 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     strcat(buf, "_autoexec.lua");
 
     luaL_dofile(engine_lua, buf);
+
+    r = world->rooms;
+    for(i=0;i<world->room_count;i++,r++)
+    {
+        if(r->base_room != NULL)
+        {
+            Room_Disable(r);                             //Disable current room
+        }
+
+        if((r->portal_count == 0) && (world->room_count > 1))
+        {
+            Room_Disable(r);
+        }
+    }
 
     // Set loadscreen fader to fade-in state.
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_IN);
@@ -2049,7 +2049,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
-        OBB_Init(r_static->obb, r_static->vbb_min, r_static->vbb_max);
+        OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
         OBB_Transform(r_static->obb);
 
         r_static->self->collide_flag = 0x0000;
@@ -3953,7 +3953,6 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->bf.model->hide = 0;
             entity->flags = ENTITY_IS_ACTIVE | ENTITY_CAN_TRIGGER;
             LM = (skeletal_model_p)entity->bf.model;
-            OBB_Init(entity->obb, NULL, NULL);
 
             top = lua_gettop(engine_lua);
             lua_pushinteger(engine_lua, entity->id);
@@ -4058,7 +4057,6 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             BT_GenEntityRigidBody(entity);
         }
 
-        OBB_Init(entity->obb, NULL, NULL);
         Entity_RebuildBV(entity);
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
@@ -4293,7 +4291,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
 
         case COLLISION_BOX:                                                     // the box with deviated centre
             obb = OBB_Create();
-            OBB_Init(obb, mesh->bb_min, mesh->bb_max);
+            OBB_Rebuild(obb, mesh->bb_min, mesh->bb_max);
             p = obb->base_polygons;
             for(i=0;i<6;i++,p++)
             {

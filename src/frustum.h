@@ -49,7 +49,7 @@ void Frustum_Copy(frustum_p p, frustum_p src);                                  
  *  - Current position will be arbitrary.
  *  - Vertex pointer will be arbitray.
  */
-void Frustum_DrawVire(frustum_p p);                                             // отрисовать фрутум в виде рамки
+
 int Frustum_GetFrustumsCount(struct frustum_s *f);
 int Frustum_HaveParent(frustum_p parent, frustum_p frustum);                    // ести ли у фрустума хоть один родитель из цепочки фрустумов parent
 void Frustum_SplitPrepare(frustum_p frustum, struct portal_s *p);               // подготовка фрустума к сплиту
