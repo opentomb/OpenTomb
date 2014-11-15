@@ -23,6 +23,7 @@
 #include "redblack.h"
 #include "console.h"
 #include "resource.h"
+#include "bsp_tree.h"
 
 void Room_Empty(room_p room)
 {
@@ -33,6 +34,13 @@ void Room_Empty(room_p room)
     if(room == NULL)
     {
         return;
+    }
+
+    /*bsp tree emty - free*/
+    if(room->bsp_root != NULL)
+    {
+        SBP_FreeTree(room->bsp_root);
+        room->bsp_root = NULL;
     }
 
     p = room->portals;

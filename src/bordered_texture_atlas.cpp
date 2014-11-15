@@ -433,10 +433,10 @@ unsigned long BorderedTextureAtlas_GetTextureHeight(bordered_texture_atlas_p atl
                                                     unsigned long texture)
 {
     assert(texture < atlas->number_file_object_textures);
-    
+
     struct file_object_texture_s *file_object_texture = atlas->file_object_textures + texture;
     struct canonical_object_texture_s *canonical = atlas->canonical_object_textures + file_object_texture->canonical_texture_index;
-    
+
     return canonical->height;
 }
 
@@ -468,7 +468,7 @@ void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
             case TOP_LEFT:
                 x_coord = canonical->new_x_with_border + atlas->border_width;
                 y_coord = canonical->new_y_with_border + atlas->border_width - shift;
-                
+
                 if(split)
                 {
                     y_coord += (canonical->height / 2);
@@ -477,7 +477,7 @@ void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
             case TOP_RIGHT:
                 x_coord = canonical->new_x_with_border + atlas->border_width + canonical->width;
                 y_coord = canonical->new_y_with_border + atlas->border_width - shift;
-                
+
                 if(split)
                 {
                     y_coord += (canonical->height / 2);

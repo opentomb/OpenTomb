@@ -34,11 +34,9 @@ obb_p OBB_Create()
 
 void OBB_Clear(obb_p obb)
 {
-    int i;
-
     if(obb)
     {
-        for(i=0;i<6;i++)
+        for(int i=0;i<6;i++)
         {
             Polygon_Clear(obb->polygons + i);
             Polygon_Clear(obb->base_polygons + i);

@@ -19,6 +19,7 @@
 #include "entity.h"
 #include "engine.h"
 #include "obb.h"
+#include "bsp_tree.h"
 
 render_t renderer;
 extern render_DebugDrawer debugDrawer;
@@ -162,12 +163,9 @@ void Render_SkyBox()
  */
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals, const btScalar *overrideColors)
 {
-    polygon_p p = mesh->polygons;
-
-    for(int i = 0; i < mesh->poly_count; i++)
+    if(mesh->vertex_count == 0)
     {
-        Render_AnimTexture(p);
-        p++;
+        return;
     }
 
     if(mesh->vbo_vertex_array)
@@ -226,71 +224,140 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
 
 
 /**
- * draw transparancy meshs polygons
+ * draw transparancy polygons
  */
-/**
- * draw transparancy meshs polygons
- */
-void Render_MeshTransparency(struct base_mesh_s *mesh)
+void Render_PolygonTransparency(struct polygon_s *p)
 {
-    uint32_t i;
-    polygon_p p;
-
-    if(mesh->transparancy_count <= 0)
+    // Blending mode switcher.
+    // Note that modes above 2 aren't explicitly used in TR textures, only for
+    // internal particle processing. Theoretically it's still possible to use
+    // them if you will force type via TRTextur utility.
+    switch(p->transparency)
     {
-        return;
+    default:
+    case BM_MULTIPLY:                                    // Classic PC alpha
+        glBlendFunc(GL_ONE, GL_ONE);
+        break;
+
+    case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
+        glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+        break;
+
+    case BM_INVERT_DEST:                                 // Inversion by dest
+        glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+        break;
+
+    case BM_SCREEN:                                      // Screen (smoke, etc.)
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+        break;
+
+    case BM_ANIMATED_TEX:
+        glBlendFunc(GL_ONE, GL_ZERO);
+        break;
+    };
+
+    if(p->double_side)
+    {
+        glDisable(GL_CULL_FACE);
+    }
+    else
+    {
+        glEnable(GL_CULL_FACE);
     }
 
-    p = mesh->polygons;
-    for(i=0; i<mesh->transparancy_count; i++,p++)
+    glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
+    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
+    glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
+    glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
+    glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
+    glDrawArrays(GL_POLYGON, 0, p->vertex_count);
+}
+
+
+void Render_BSPFrontToBack(struct bsp_node_s *root)
+{
+    btScalar d = vec3_dot(root->plane, engine_camera.pos);
+
+    if(d >= 0)
     {
-        // Blending mode switcher.
-        // Note that modes above 2 aren't explicitly used in TR textures, only for
-        // internal particle processing. Theoretically it's still possible to use
-        // them if you will force type via TRTextur utility.
-        switch(p->transparency)
+        if(root->front != NULL)
         {
-        default:
-        case BM_MULTIPLY:                                    // Classic PC alpha
-            glBlendFunc(GL_ONE, GL_ONE);
-            break;
-
-        case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
-            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_INVERT_DEST:                                 // Inversion by dest
-            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_SCREEN:                                      // Screen (smoke, etc.)
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_ANIMATED_TEX:
-            glBlendFunc(GL_ONE, GL_ZERO);
-            break;
-        };
-
-        if(p->double_side)
-        {
-            glDisable(GL_CULL_FACE);
-        }
-        else
-        {
-            glEnable(GL_CULL_FACE);
+            Render_BSPFrontToBack(root->front);
         }
 
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_POLYGON, 0, p->vertex_count);
+        for(uint16_t i=0;i<root->polygons_count;i++)
+        {
+            //Render_AnimTexture(root->polygons + i);
+            Render_PolygonTransparency(root->polygons + i);
+        }
+
+        if(root->back != NULL)
+        {
+            Render_BSPFrontToBack(root->back);
+        }
+    }
+    else
+    {
+        if(root->back != NULL)
+        {
+            Render_BSPFrontToBack(root->back);
+        }
+
+        for(uint16_t i=0;i<root->polygons_count;i++)
+        {
+            //Render_AnimTexture(root->polygons + i);
+            Render_PolygonTransparency(root->polygons + i);
+        }
+
+        if(root->front != NULL)
+        {
+            Render_BSPFrontToBack(root->front);
+        }
     }
 }
 
+void Render_BSPBackToFront(struct bsp_node_s *root)
+{
+    btScalar d = vec3_dot(root->plane, engine_camera.pos);
+
+    if(d >= 0)
+    {
+        if(root->back != NULL)
+        {
+            Render_BSPBackToFront(root->back);
+        }
+
+        for(uint16_t i=0;i<root->polygons_count;i++)
+        {
+            //Render_AnimTexture(root->polygons + i);
+            Render_PolygonTransparency(root->polygons + i);
+        }
+
+        if(root->front != NULL)
+        {
+            Render_BSPBackToFront(root->front);
+        }
+    }
+    else
+    {
+        if(root->front != NULL)
+        {
+            Render_BSPBackToFront(root->front);
+        }
+
+        for(uint16_t i=0;i<root->polygons_count;i++)
+        {
+            //Render_AnimTexture(root->polygons + i);
+            Render_PolygonTransparency(root->polygons + i);
+        }
+
+        if(root->back != NULL)
+        {
+            Render_BSPBackToFront(root->back);
+        }
+    }
+}
 
 void Render_UpdateAnimTextures()                                                // This function is used for updating global animated sequences.
 {
@@ -452,7 +519,7 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
     uint32_t    tex_id;
     anim_seq_p  seq = NULL;
 
-    if(polygon->anim_id)    // If animation sequence is assigned to polygon...
+    if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/(polygon->vertex_count <= 4) && (polygon->anim_id > 0) && (polygon->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
     {
         seq = engine_world.anim_sequences + (polygon->anim_id - 1);
 
@@ -900,8 +967,8 @@ int Render_AddRoom(struct room_s *room)
         ret++;
     }
 
-    if(room->mesh && (room->mesh->transparancy_count > 0) &&            // Has tranparancy polygons
-            (renderer.r_transparancy_list_active_count < renderer.r_transparancy_list_size-1))     // If we have enough free space
+    if((room->bsp_root->polygons_count > 0) &&                                  // Has tranparancy polygons
+       (renderer.r_transparancy_list_active_count < renderer.r_transparancy_list_size-1))     // If we have enough free space
     {
         renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].room = room;
         renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].active = 1;
@@ -1031,6 +1098,14 @@ void Render_DrawList()
     /*
      * NOW render transparency
      */
+    if(renderer.style & R_DRAW_WIRE)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    else
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
     glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glDisable(GL_ALPHA_TEST);
@@ -1038,13 +1113,7 @@ void Render_DrawList()
     for(i=renderer.r_transparancy_list_active_count-1; i>=0; i--)
     {
         room = renderer.r_transparancy_list[i].room;
-        if(room->mesh)
-        {
-            glPushMatrix();
-            glMultMatrixbt(room->transform);
-            Render_MeshTransparency(room->mesh);
-            glPopMatrix();
-        }
+        Render_BSPBackToFront(room->bsp_root);
     }
     glDisable(GL_BLEND);
 }
