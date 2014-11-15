@@ -35,6 +35,7 @@ extern "C" {
 #include "bordered_texture_atlas.h"
 #include "render.h"
 #include "redblack.h"
+#include "bsp_tree.h"
 
 lua_State *entity_flags_conf;
 lua_State *ent_ID_override;
@@ -1807,6 +1808,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         if(r->mesh)
         {
             SortPolygonsInMesh(r->mesh);
+            TR_TransparencyMeshToBSP(r->mesh, r->bsp_root, r->transform);
+        }
+
+        static_mesh_p sm = r->static_mesh;
+        for(uint32_t j=0;j<r->static_mesh_count;j++,sm++)
+        {
+            SortPolygonsInMesh(sm->mesh);
+            TR_TransparencyMeshToBSP(sm->mesh, r->bsp_root, sm->transform);
         }
     }
 
@@ -1985,6 +1994,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->self->next = NULL;
     room->self->object = NULL;
     room->self->object_type = OBJECT_ROOM_BASE;
+    room->bsp_root = BSP_CreateNode();
 
     TR_GenRoomMesh(world, room_index, room, tr);
 
@@ -2582,7 +2592,7 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
     {
         if(mesh->polygons[i].transparency > 1)
         {
-            Polygon_Copy(buf+j, mesh->polygons + i);
+            *(buf + j) = *(mesh->polygons + i);
             j++;
         }
         else
@@ -2594,6 +2604,34 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
     free(mesh->polygons);
     mesh->poly_count = mesh->transparancy_count;
     mesh->polygons = buf;
+}
+
+void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root, btScalar *transform)
+{
+    polygon_t tp;
+    tp.vertices = NULL;
+    tp.vertex_count = 0;
+
+    polygon_p p = mesh->polygons;
+    for(uint32_t i=0;i<mesh->transparancy_count;i++,p++)
+    {
+        Polygon_Copy(&tp, p);
+        Polygon_TransformSelf(&tp, transform);
+        BSP_AddPolygon(root, &tp);
+        Polygon_Clear(p);
+    }
+
+    Polygon_Clear(&tp);
+
+    if(mesh->transparancy_count > 0)
+    {
+        mesh->transparancy_count = 0;
+        mesh->poly_count = 0;
+        free(mesh->polygons);
+        mesh->polygons = NULL;
+    }
+
+    mesh->transparancy_flags = MESH_FULL_OPAQUE;
 }
 
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr)
@@ -4031,7 +4069,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->self->collide_flag = 0xff & lua_tointeger(entity_flags_conf, -3);          // get returned value
             entity->bf.model->hide = lua_tointeger(entity_flags_conf, -2);                     // get returned value
             if(lua_toboolean(entity_flags_conf, -1)) entity->flags |= 0x10;
-            
+
             lua_settop(entity_flags_conf, top);                                                // restore LUA stack
         }
 

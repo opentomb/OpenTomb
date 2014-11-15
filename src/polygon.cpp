@@ -72,19 +72,27 @@ int Polygon_IsBroken(polygon_p p)
 
 
 /*
- * It is like native C structure copy
+ * We made independent copy of src;
  */
 void Polygon_Copy(polygon_p dst, polygon_p src)
 {
-    dst->vertex_count = src->vertex_count;
-    dst->transparency = src->transparency;
-    dst->double_side  = src->double_side;
-    dst->tex_index = src->tex_index;
+    if(dst->vertex_count != src->vertex_count)
+    {
+        Polygon_Resize(dst, src->vertex_count);
+    }
+
     dst->anim_id = src->anim_id;
     dst->anim_offset = src->anim_offset;
+    dst->double_side  = src->double_side;
+    dst->tex_index = src->tex_index;
+    dst->transparency = src->transparency;
+
     vec4_copy(dst->plane, src->plane);
 
-    dst->vertices = src->vertices;
+    for(uint16_t i=0;i<src->vertex_count;i++)
+    {
+        dst->vertices[i] = src->vertices[i];
+    }
 }
 
 
@@ -509,7 +517,9 @@ int Polygon_SplitClassify(polygon_p p, btScalar n[4])
     return SPLIT_IN_BOTH;
 }
 
-
+/*
+ * FIXME: add vertex shift calculation for correct animated textures calculation!
+ */
 void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back)
 {
     btScalar t, tmp, dir[3];
@@ -517,6 +527,20 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
     int i;
     btScalar dist[2];
     unsigned int count = src->vertex_count;
+
+    vec4_copy(front->plane, src->plane);
+    front->anim_id = src->anim_id;
+    front->anim_offset = src->anim_offset;
+    front->double_side = src->double_side;
+    front->tex_index = src->tex_index;
+    front->transparency = src->transparency;
+
+    vec4_copy(back->plane, src->plane);
+    back->anim_id = src->anim_id;
+    back->anim_offset = src->anim_offset;
+    back->double_side = src->double_side;
+    back->tex_index = src->tex_index;
+    back->transparency = src->transparency;
 
     curr_v = src->vertices;
     prev_v = src->vertices + src->vertex_count - 1;
@@ -642,7 +666,7 @@ void Polygon_AddVertex(polygon_p p, struct vertex_s *v)
 
     size += (4 - size % 4);                                                     // количество вершин выравнивается блоками по 4
 
-    p->vertices = (vertex_p)realloc(p->vertices, size*sizeof(vertex_t));
+    p->vertices = (vertex_p)realloc(p->vertices, size * sizeof(vertex_t));
     vp = p->vertices + p->vertex_count;
 
     vec3_copy(vp->position, v->position);

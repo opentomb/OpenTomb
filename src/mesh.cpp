@@ -20,13 +20,13 @@ void BaseMesh_Clear(base_mesh_p mesh)
         glDeleteBuffersARB(1, &mesh->vbo_vertex_array);
         mesh->vbo_vertex_array = 0;
     }
-    
+
     if(mesh->vbo_index_array)
     {
         glDeleteBuffersARB(1, &mesh->vbo_index_array);
         mesh->vbo_index_array = 0;
     }
-    
+
     if(mesh->polygons)
     {
         for(i=0;i<mesh->poly_count;i++)
@@ -44,13 +44,13 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->vertices = NULL;
         mesh->vertex_count = 0;
     }
-    
+
     if(mesh->skin_map)
     {
         free(mesh->skin_map);
         mesh->skin_map = NULL;
     }
-      
+
     if(mesh->element_count_per_texture)
     {
         free(mesh->element_count_per_texture);
@@ -117,25 +117,25 @@ void BaseMesh_FindBB(base_mesh_p mesh)
 
 
 void Mesh_GenVBO(struct base_mesh_s *mesh)
-{      
+{
     mesh->vbo_vertex_array = 0;
     mesh->vbo_index_array = 0;
-    if(!glGenBuffersARB)                                                        // if not supported, pointer is NULL
+    if(glGenBuffersARB == NULL)                                                 // if not supported, pointer is NULL
     {
         return;
     }
-    
+
     /// now, begin VBO filling!
     glGenBuffersARB(1, &mesh->vbo_vertex_array);
     if(mesh->vbo_vertex_array == 0)
     {
         return;
-    }   
-    
+    }
+
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
     glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    
+
     // Fill indexes vbo
     glGenBuffersARB(1, &mesh->vbo_index_array);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
@@ -157,7 +157,7 @@ void Mesh_DefaultColor(struct base_mesh_s *mesh)
     long int i, j;
     polygon_p p;
     vertex_p v;
-    
+
     p = mesh->polygons;
     for(i=0;i<mesh->poly_count;i++,p++)
     {
@@ -213,7 +213,7 @@ void SkeletalModel_Clear(skeletal_model_p model)
             model->collision_map = NULL;
             model->collision_map_size = 0;
         }
-        
+
         if(model->animation_count)
         {
             anim = model->animations;
@@ -232,7 +232,7 @@ void SkeletalModel_Clear(skeletal_model_p model)
                     free(anim->state_change);
                     anim->state_change = NULL;
                 }
-                
+
                 if(anim->frames_count)
                 {
                     for(j=0;j<anim->frames_count;j++)
@@ -272,7 +272,7 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
 
     dst->command = src->command;
     vec3_copy(dst->move, src->move);
-    
+
     for(i=0;i<dst->bone_tag_count;i++)
     {
         vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
@@ -286,14 +286,14 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
     animation_frame_p anim = model->animations;
     bone_frame_p bf, new_bone_frames;
     btScalar lerp, t;
-    
+
     for(i=0;i<model->animation_count;i++,anim++)
     {
         if(anim->frames_count > 1 && anim->original_frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
         {
             new_frames_count = (uint16_t)anim->original_frame_rate * (anim->frames_count - 1) + 1;
             bf = new_bone_frames = (bone_frame_p)malloc(new_frames_count * sizeof(bone_frame_t));
-            
+
             /*
              * the first frame does not changes
              */
@@ -312,7 +312,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                 vec4_copy(bf->bone_tags[k].qrotate, anim->frames[0].bone_tags[k].qrotate);
             }
             bf++;
-            
+
             for(j=1;j<anim->frames_count;j++)
             {
                 for(l=1;l<=anim->original_frame_rate;l++)
@@ -322,7 +322,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                     bf->command = 0x00;
                     lerp = ((btScalar)l) / (btScalar)anim->original_frame_rate;
                     t = 1.0 - lerp;
-                    
+
                     bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
                     bf->bone_tag_count = model->mesh_count;
 
@@ -353,7 +353,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                     bf++;
                 }
             }
-            
+
             /*
              * swap old and new animation bone brames
              * free old bone frames;
@@ -442,7 +442,7 @@ vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3])
             return mv;
         }
     }
-    
+
     return NULL;
 }
 
@@ -465,7 +465,7 @@ void FillSkinnedMeshMap(skeletal_model_p model)
         {
             return;
         }
-        
+
         ch = mesh2->skin_map = (int8_t*)malloc(mesh2->vertex_count * sizeof(int8_t));
         v = mesh2->vertices;
         for(k=0;k<mesh2->vertex_count;k++,v++,ch++)
@@ -505,17 +505,17 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
 {
     uint32_t ind = 0;
     vertex_p v;
-    
+
     v = mesh->vertices;
-    for(ind=0;ind<mesh->vertex_count;ind++,v++)                                
+    for(ind=0;ind<mesh->vertex_count;ind++,v++)
     {
-        if(v->position[0] == vertex->position[0] && v->position[1] == vertex->position[1] && v->position[2] == vertex->position[2] && 
+        if(v->position[0] == vertex->position[0] && v->position[1] == vertex->position[1] && v->position[2] == vertex->position[2] &&
            v->tex_coord[0] == vertex->tex_coord[0] && v->tex_coord[1] == vertex->tex_coord[1])
         {
             return ind;
         }
     }
- 
+
     ind = mesh->vertex_count;                                                   // paranoid
     mesh->vertex_count++;
     mesh->vertices = (vertex_p)realloc(mesh->vertices, mesh->vertex_count * sizeof(vertex_t));
@@ -527,7 +527,7 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
     vec4_copy(v->color, vertex->base_color);
     v->tex_coord[0] = vertex->tex_coord[0];
     v->tex_coord[1] = vertex->tex_coord[1];
-    
+
     return ind;
 }
 
@@ -580,7 +580,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
     uint32_t elementsSoFar = 0;
     for(i = 0; i < mesh->num_texture_pages; i++)
     {
-        if(elements_for_texture[i] == NULL) 
+        if(elements_for_texture[i] == NULL)
         {
             continue;
         }
