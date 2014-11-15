@@ -126,6 +126,7 @@ enum TR_AUDIO_FX {
 // Define some common samples across ALL TR versions.
 
 #define TR_AUDIO_SOUND_NO          2
+#define TR_AUDIO_SOUND_SLIDING     3
 #define TR_AUDIO_SOUND_LANDING     4
 #define TR_AUDIO_SOUND_HOLSTEROUT  6
 #define TR_AUDIO_SOUND_HOLSTERIN   7
