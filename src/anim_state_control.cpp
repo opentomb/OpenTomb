@@ -1211,8 +1211,13 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->slide != 0 && cmd->jump == 1)
             {
                 ent->bf.next_state = TR_STATE_LARA_JUMP_BACK;
-                ent->onAnimChange = ent_set_cmd_slide;
             }
+            else
+            {
+                break;
+            }
+            
+            Audio_Kill(TR_AUDIO_SOUND_SLIDING, TR_AUDIO_EMITTER_ENTITY, ent->id);
             break;
 
         case TR_STATE_LARA_SLIDE_FORWARD:
@@ -1241,6 +1246,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 ent->bf.next_state = TR_STATE_LARA_JUMP_FORWARD;                // jump
             }
+            else
+            {
+                break;
+            }
+            
+            Audio_Kill(TR_AUDIO_SOUND_SLIDING, TR_AUDIO_EMITTER_ENTITY, ent->id);
             break;
 
             /*
