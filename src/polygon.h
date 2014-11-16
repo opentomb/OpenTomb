@@ -31,12 +31,15 @@ typedef struct polygon_s
 {
     uint16_t            vertex_count;                                           // number of vertices
     struct vertex_s    *vertices;                                               // vertices data
-    uint32_t            tex_index;                                              // texture index
-    uint32_t            anim_id;                                                // anim texture ID
-    uint32_t            anim_offset;                                            // anim texture frame offset
+    uint16_t            tex_index;                                              // texture index
+    uint16_t            anim_id;                                                // anim texture ID
+    uint16_t            frame_offset;                                           // anim texture frame offset
     uint16_t            transparency;                                           // transparency information
     bool                double_side;                                            // double side flag
     btScalar            plane[4];                                               // polygon plane equation
+    
+    uint16_t            anim_tex_frames_count;
+    GLfloat            *anim_tex_frames;
 }polygon_t, *polygon_p;
 
 /*
@@ -62,7 +65,7 @@ int  Polygon_IntersectPolygon(polygon_p p1, polygon_p p2);
 
 int  Polygon_SplitClassify(polygon_p p, btScalar n[4]);
 void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back);
-void Polygon_AddVertex(polygon_p p, struct vertex_s *v);
+void Polygon_AddVertex(polygon_p p, struct vertex_s *v, GLfloat *frame);
 
 int Polygon_IsInsideBBox(polygon_p p, btScalar bb_min[3], btScalar bb_max[3]);
 int Polygon_IsInsideBQuad(polygon_p p, btScalar bb_min[3], btScalar bb_max[3]);
