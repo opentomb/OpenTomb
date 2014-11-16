@@ -23,6 +23,7 @@
 				<Compiler>
 					<Add option="-march=prescott" />
 					<Add option="-O2" />
+					<Add option="-fno-exceptions" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -30,10 +31,12 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-O2" />
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add option='-I&quot;src\bullet&quot; -I&quot;src\freetype2&quot; -I&quot;src\image\jpeg-9&quot; -I&quot;src\image\libpng-1.6.2&quot;' />
 			<Add option="-Wno-sign-compare" />
+			<Add option="-fno-exceptions -static" />
 			<Add option="-DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX" />
 		</Compiler>
 		<Linker>
@@ -636,6 +639,10 @@
 		</Unit>
 		<Unit filename="src/bordered_texture_atlas.cpp" />
 		<Unit filename="src/bordered_texture_atlas.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="src/bsp_tree.cpp" />
+		<Unit filename="src/bsp_tree.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/bsp_tree_2d.c">
@@ -3435,12 +3442,6 @@
 		</Unit>
 		<Unit filename="src/world.cpp" />
 		<Unit filename="src/world.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/zone.cpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/zone.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Extensions>
