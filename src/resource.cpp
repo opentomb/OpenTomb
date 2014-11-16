@@ -2646,7 +2646,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                             break;
                     };
                     BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0,
-                                                        p, seq->current_uvrotate, true);
+                                                        &tp, seq->current_uvrotate, true);
                 }
                 else
                 {
@@ -2655,7 +2655,6 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                     // However, in TRNG it is possible to animate textures back and reverse, so we
                     // also implement this type in OpenTomb.
                     // UVRotate way of animating is more complicated and left as a placeholder.
-                    seq->frame_time = 0.0;
                     switch(seq->type)
                     {
                         case TR_ANIMTEXTURE_REVERSE:
@@ -2667,7 +2666,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                             seq->current_frame = seq->frame_count - j - 1;
                             break;
                     };
-                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, p);
+                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, &tp);
                 }
 
                 for(uint16_t k=0;k<tp.vertex_count;k++)
