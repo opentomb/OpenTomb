@@ -32,6 +32,13 @@ void Polygon_Clear(polygon_p p)
             p->vertices = NULL;
         }
         p->vertex_count = 0;
+
+        if(p->anim_tex_frames != NULL)
+        {
+            free(p->anim_tex_frames);
+            p->anim_tex_frames = NULL;
+        }
+        p->anim_tex_frames_count = 0;
     }
 }
 
@@ -82,16 +89,30 @@ void Polygon_Copy(polygon_p dst, polygon_p src)
     }
 
     dst->anim_id = src->anim_id;
-    dst->anim_offset = src->anim_offset;
+    dst->frame_offset = src->frame_offset;
     dst->double_side  = src->double_side;
     dst->tex_index = src->tex_index;
     dst->transparency = src->transparency;
+    dst->anim_tex_frames_count = src->anim_tex_frames_count;
 
     vec4_copy(dst->plane, src->plane);
 
     for(uint16_t i=0;i<src->vertex_count;i++)
     {
         dst->vertices[i] = src->vertices[i];
+    }
+
+    uint16_t count = src->anim_tex_frames_count * src->vertex_count;
+
+    if(count > 0)
+    {
+        dst->anim_tex_frames = (GLfloat*)realloc(dst->anim_tex_frames, 2 * count * sizeof(GLfloat));
+    }
+
+    for(uint16_t i=0;i<count;i++)
+    {
+        dst->anim_tex_frames[2 * i + 0] = src->anim_tex_frames[2 * i + 0];
+        dst->anim_tex_frames[2 * i + 1] = src->anim_tex_frames[2 * i + 1];
     }
 }
 
@@ -518,32 +539,49 @@ int Polygon_SplitClassify(polygon_p p, btScalar n[4])
 }
 
 /*
- * FIXME: add vertex shift calculation for correct animated textures calculation!
+ * animated textures coordinates splits too!
  */
 void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back)
 {
     btScalar t, tmp, dir[3];
     vertex_t *curr_v, *prev_v, tv;
+    GLfloat *curr_f, *prev_f, *buf;
     int i;
     btScalar dist[2];
     unsigned int count = src->vertex_count;
 
     vec4_copy(front->plane, src->plane);
     front->anim_id = src->anim_id;
-    front->anim_offset = src->anim_offset;
+    front->frame_offset = src->frame_offset;
     front->double_side = src->double_side;
     front->tex_index = src->tex_index;
     front->transparency = src->transparency;
+    front->anim_tex_frames = NULL;
+    front->anim_tex_frames_count = src->anim_tex_frames_count;
 
     vec4_copy(back->plane, src->plane);
     back->anim_id = src->anim_id;
-    back->anim_offset = src->anim_offset;
+    back->frame_offset = src->frame_offset;
     back->double_side = src->double_side;
     back->tex_index = src->tex_index;
     back->transparency = src->transparency;
+    back->anim_tex_frames = NULL;
+    back->anim_tex_frames_count = src->anim_tex_frames_count;
 
     curr_v = src->vertices;
     prev_v = src->vertices + src->vertex_count - 1;
+
+    curr_f = NULL;
+    prev_f = NULL;
+    buf = NULL;
+
+    if(src->anim_tex_frames_count > 0)
+    {
+        curr_f = src->anim_tex_frames;
+        prev_f = src->anim_tex_frames + 2 * src->anim_tex_frames_count * (src->vertex_count - 1);
+        buf = (GLfloat*)GetTempbtScalar(2 * src->anim_tex_frames_count);
+    }
+
     dist[0] = vec3_plane_dist(n, prev_v->position);
     for(i=0;i<count;i++)
     {
@@ -574,10 +612,19 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                Polygon_AddVertex(front, &tv);                                  // добавляем вершину к переднему полигону
-                Polygon_AddVertex(back, &tv);                                   // добавляем вершину к заднему полигону
+                if(src->anim_tex_frames_count > 0)
+                {
+                    for(uint16_t j=0;j<src->anim_tex_frames_count;j++)
+                    {
+                        buf[j * 2 + 0] = prev_f[j * 2 + 0] + t * (curr_f[j * 2 + 0] - prev_f[j * 2 + 0]);
+                        buf[j * 2 + 1] = prev_f[j * 2 + 1] + t * (curr_f[j * 2 + 1] - prev_f[j * 2 + 1]);
+                    }
+                }
+
+                Polygon_AddVertex(front, &tv, buf);                             // добавляем вершину к переднему полигону
+                Polygon_AddVertex(back, &tv, buf);                              // добавляем вершину к заднему полигону
             }
-            Polygon_AddVertex(front, curr_v);                                   // добавляем вершину к переднему полигону
+            Polygon_AddVertex(front, curr_v, curr_f);                           // добавляем вершину к переднему полигону
         }
         else if(dist[1] < -SPLIT_EPSILON)
         {
@@ -604,20 +651,39 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                Polygon_AddVertex(front, &tv);                                  // добавляем вершину к переднему полигону
-                Polygon_AddVertex(back, &tv);                                   // добавляем вершину к заднему полигону
+                if(src->anim_tex_frames_count > 0)
+                {
+                    for(uint16_t j=0;j<src->anim_tex_frames_count;j++)
+                    {
+                        buf[j * 2 + 0] = prev_f[j * 2 + 0] + t * (curr_f[j * 2 + 0] - prev_f[j * 2 + 0]);
+                        buf[j * 2 + 1] = prev_f[j * 2 + 1] + t * (curr_f[j * 2 + 1] - prev_f[j * 2 + 1]);
+                    }
+                }
+
+                Polygon_AddVertex(front, &tv, buf);                             // добавляем вершину к переднему полигону
+                Polygon_AddVertex(back, &tv, buf);                              // добавляем вершину к заднему полигону
             }
-            Polygon_AddVertex(back, curr_v);                                    // добавляем вершину к заднему полигону
+            Polygon_AddVertex(back, curr_v, curr_f);                            // добавляем вершину к заднему полигону
         }
         else
         {
-            Polygon_AddVertex(front, curr_v);                                   // добавляем вершину к переднему полигону
-            Polygon_AddVertex(back, curr_v);                                    // добавляем вершину к заднему полигону
+            Polygon_AddVertex(front, curr_v, curr_f);                           // добавляем вершину к переднему полигону
+            Polygon_AddVertex(back, curr_v, curr_f);                            // добавляем вершину к заднему полигону
         }
 
+        if(src->anim_tex_frames_count > 0)
+        {
+            prev_f = curr_f;
+            curr_f += 2 * src->anim_tex_frames_count;
+        }
         prev_v = curr_v;
         curr_v ++;
         dist[0] = dist[1];
+    }
+
+    if(src->anim_tex_frames_count > 0)
+    {
+        ReturnTempbtScalar(2 * src->anim_tex_frames_count);
     }
 }
 
@@ -659,7 +725,7 @@ int Polygon_IsInsideBQuad(polygon_p p, btScalar bb_min[3], btScalar bb_max[3])
 }
 
 
-void Polygon_AddVertex(polygon_p p, struct vertex_s *v)
+void Polygon_AddVertex(polygon_p p, struct vertex_s *v, GLfloat *frame)
 {
     vertex_p vp;
     int size = p->vertex_count+1;
@@ -675,6 +741,17 @@ void Polygon_AddVertex(polygon_p p, struct vertex_s *v)
     vec4_copy(vp->color, v->color);
     vp->tex_coord[0] = v->tex_coord[0];
     vp->tex_coord[1] = v->tex_coord[1];
+
+    if(frame != NULL)
+    {
+        p->anim_tex_frames = (GLfloat*)realloc(p->anim_tex_frames, 2 * size * p->anim_tex_frames_count * sizeof(GLfloat));
+        for(uint16_t i=0;i<p->anim_tex_frames_count;i++)
+        {
+            uint16_t offset = 2 * p->vertex_count * p->anim_tex_frames_count + 2 * i;
+            p->anim_tex_frames[offset + 0] = frame[2 * i + 0];
+            p->anim_tex_frames[offset + 1] = frame[2 * i + 1];
+        }
+    }
 
     p->vertex_count++;
 }

@@ -2554,7 +2554,7 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
                 // we assign corresponding animation sequence to this polygon,
                 // additionally specifying frame offset.
                 polygon->anim_id      = i + 1;  // Animation sequence ID.
-                polygon->anim_offset  = j;      // Animation frame offset.
+                polygon->frame_offset  = j;     // Animation frame offset.
                 return true;
             }
         }
@@ -2606,16 +2606,79 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
     mesh->polygons = buf;
 }
 
+/*
+ * PRERENDER HERE ALL ANIM TEXTURES COORDINATES
+ */
 void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root, btScalar *transform)
 {
     polygon_t tp;
-    tp.vertices = NULL;
-    tp.vertex_count = 0;
 
+    tp.vertex_count = 0;
+    tp.anim_tex_frames_count = 0;
+    tp.vertices = NULL;
+    tp.anim_tex_frames = NULL;
     polygon_p p = mesh->polygons;
     for(uint32_t i=0;i<mesh->transparancy_count;i++,p++)
     {
         Polygon_Copy(&tp, p);
+        if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/(p->vertex_count <= 4) && (p->anim_id > 0) && (p->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
+        {
+            anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
+            tp.anim_tex_frames_count = seq->frame_count;
+            tp.anim_tex_frames = (GLfloat*)realloc(tp.anim_tex_frames, 2 * seq->frame_count * tp.vertex_count * sizeof(GLfloat));
+            for(uint16_t j=0;j<seq->frame_count;j++)
+            {
+                uint16_t frame = (j + p->frame_offset) % seq->frame_count;
+                uint16_t tex_id = seq->frame_list[frame];                       // Extract TexInfo ID from sequence frame list.
+
+                // Write new texture coordinates to polygon.
+                if(seq->uvrotate)
+                {
+                    switch(seq->uvrotate_type)
+                    {
+                        case TR_ANIMTEXTURE_UVROTATE_REVERSE:
+                        case TR_ANIMTEXTURE_UVROTATE_FORWARD:
+                            seq->current_uvrotate = (j + 1) * seq->uvrotate_speed;
+                            break;
+
+                        case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
+                            seq->current_uvrotate = (seq->frame_count - j - 1 + 1) * seq->uvrotate_speed;
+                            break;
+                    };
+                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0,
+                                                        p, seq->current_uvrotate, true);
+                }
+                else
+                {
+                    // We have different ways of animating textures, depending on type.
+                    // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
+                    // However, in TRNG it is possible to animate textures back and reverse, so we
+                    // also implement this type in OpenTomb.
+                    // UVRotate way of animating is more complicated and left as a placeholder.
+                    seq->frame_time = 0.0;
+                    switch(seq->type)
+                    {
+                        case TR_ANIMTEXTURE_REVERSE:
+                        case TR_ANIMTEXTURE_FORWARD:
+                            seq->current_frame = j;
+                            break;
+
+                        case TR_ANIMTEXTURE_BACKWARD:
+                            seq->current_frame = seq->frame_count - j - 1;
+                            break;
+                    };
+                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, p);
+                }
+
+                for(uint16_t k=0;k<tp.vertex_count;k++)
+                {
+                    uint16_t offset = 2 * k * tp.anim_tex_frames_count + 2 * j;
+                    tp.anim_tex_frames[offset + 0] = tp.vertices[k].tex_coord[0];
+                    tp.anim_tex_frames[offset + 1] = tp.vertices[k].tex_coord[1];
+                }
+            }
+        }
+
         Polygon_TransformSelf(&tp, transform);
         BSP_AddPolygon(root, &tp);
         Polygon_Clear(p);

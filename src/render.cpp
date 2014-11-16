@@ -24,6 +24,10 @@
 render_t renderer;
 extern render_DebugDrawer debugDrawer;
 
+static uint16_t     texture_frame = 0;
+static btScalar     texture_frame_time = 0.0;
+
+
 bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
     engine_container_p cont = (engine_container_p)colObj->getUserPointer();
@@ -288,7 +292,7 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
 
         for(uint16_t i=0;i<root->polygons_count;i++)
         {
-            //Render_AnimTexture(root->polygons + i);
+            Render_AnimTexture(root->polygons + i);
             Render_PolygonTransparency(root->polygons + i);
         }
 
@@ -306,7 +310,7 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
 
         for(uint16_t i=0;i<root->polygons_count;i++)
         {
-            //Render_AnimTexture(root->polygons + i);
+            Render_AnimTexture(root->polygons + i);
             Render_PolygonTransparency(root->polygons + i);
         }
 
@@ -330,7 +334,7 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
 
         for(uint16_t i=0;i<root->polygons_count;i++)
         {
-            //Render_AnimTexture(root->polygons + i);
+            Render_AnimTexture(root->polygons + i);
             Render_PolygonTransparency(root->polygons + i);
         }
 
@@ -348,7 +352,7 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
 
         for(uint16_t i=0;i<root->polygons_count;i++)
         {
-            //Render_AnimTexture(root->polygons + i);
+            Render_AnimTexture(root->polygons + i);
             Render_PolygonTransparency(root->polygons + i);
         }
 
@@ -359,199 +363,32 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
     }
 }
 
-void Render_UpdateAnimTextures()                                                // This function is used for updating global animated sequences.
+void Render_UpdateAnimTextures()                                                // This function is used for updating global animated texture frame
 {
-    anim_seq_p current_sequence;
-
-    for(int i = 0; i < engine_world.anim_sequences_count; i++)
+    texture_frame_time += engine_frame_time;
+    if(texture_frame_time >= TR_ANIMTEXTURE_UPDATE_INTERVAL)
     {
-        current_sequence = engine_world.anim_sequences + i;
-
-        if( (!current_sequence->frame_lock) &&
-                ( current_sequence->frame_time >= current_sequence->frame_rate) )   // If it's time to update...
-        {
-            current_sequence->frame_time = 0.0;                                 // Reset interval counter.
-
-            // We have different ways of animating textures, depending on type.
-            // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
-            // However, in TRNG it is possible to animate textures back and reverse, so we
-            // also implement this type in OpenTomb.
-            // UVRotate way of animating is more complicated and left as a placeholder.
-
-            switch(current_sequence->type)
-            {
-            case TR_ANIMTEXTURE_FORWARD:
-                if(current_sequence->current_frame < (current_sequence->frame_count-1))
-                {
-                    // Increase animation frame.
-                    current_sequence->current_frame++;
-                }
-                else
-                {
-                    // Restart animation, if end is reached.
-                    current_sequence->current_frame = 0;
-                }
-                break;
-
-            case TR_ANIMTEXTURE_BACKWARD:
-                if(current_sequence->current_frame > 0)
-                {
-                    // Decrease animation frame.
-                    current_sequence->current_frame--;
-                }
-                else
-                {
-                    // Restart animation, if beginning is reached.
-                    current_sequence->current_frame = current_sequence->frame_count - 1;
-                }
-                break;
-
-            case TR_ANIMTEXTURE_REVERSE:
-                if(!current_sequence->type_flag)    // Take action, depending on direction flag.
-                {
-                    // FORWARD CASE:
-                    if(current_sequence->current_frame < (current_sequence->frame_count-1))
-                    {
-                        current_sequence->current_frame++;   // As in TR_ANIMTEXTURE_FORWARD.
-                    }
-                    else
-                    {
-                        current_sequence->type_flag = true;  // Reverse animation direction.
-                        current_sequence->current_frame--;   // Eat up duplicate frame.
-                    }
-                }
-                else
-                {
-                    // BACKWARD CASE:
-                    if(current_sequence->current_frame > 0)
-                    {
-                        current_sequence->current_frame--;
-                    }
-                    else
-                    {
-                        current_sequence->type_flag = false;  // Reverse animation direction.
-                        current_sequence->current_frame++;    // Eat up duplicate frame.
-                    }
-                }
-                break;
-            }
-        }
-        else
-        {
-            current_sequence->frame_time += engine_frame_time;   // Simply increase interval timer.
-        } // end if(current_sequence->frame_time >= current_sequence->frame_rate)
-
-
-        if(current_sequence->uvrotate)  // Also apply UVRotate, if option is set.
-        {
-            if(current_sequence->uvrotate_time >= TR_ANIMTEXTURE_UPDATE_INTERVAL)  // If it's time to update...
-            {
-                current_sequence->uvrotate_time = 0.0;  // Reset interval counter.
-
-                switch(current_sequence->uvrotate_type)
-                {
-                case TR_ANIMTEXTURE_UVROTATE_FORWARD:
-                    if(current_sequence->current_uvrotate < current_sequence->uvrotate_max)
-                    {
-                        current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
-                    }
-                    else
-                    {
-                        // Restart rotation.
-                        current_sequence->current_uvrotate = current_sequence->uvrotate_speed;
-                    }
-                    break;
-
-                case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
-                    if(current_sequence->current_uvrotate > 0)
-                    {
-                        current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
-                    }
-                    else
-                    {
-                        // Restart rotation.
-                        current_sequence->current_uvrotate = current_sequence->uvrotate_max - current_sequence->uvrotate_speed;
-                    }
-                    break;
-
-                case TR_ANIMTEXTURE_UVROTATE_REVERSE:
-                    if(!current_sequence->uvrotate_flag) // Take action, depending on direction flag.
-                    {
-                        if(current_sequence->current_uvrotate < current_sequence->uvrotate_max)
-                        {
-                            current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
-                        }
-                        else
-                        {
-                            // End is reached, reverse rotation direction.
-                            current_sequence->uvrotate_flag = true;
-                            // Eat up dublicate position.
-                            current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
-                        }
-                    }
-                    else
-                    {
-                        if(current_sequence->current_uvrotate > 0)
-                        {
-                            current_sequence->current_uvrotate -= current_sequence->uvrotate_speed;
-                        }
-                        else
-                        {
-                            // End is reached, reverse rotation direction.
-                            current_sequence->uvrotate_flag = false;
-                            // Eat up dublicate position.
-                            current_sequence->current_uvrotate += current_sequence->uvrotate_speed;
-                        }
-                    }
-                    break;
-                }
-            }
-            else
-            {
-                current_sequence->uvrotate_time += engine_frame_time;           // Simply increase interval timer.
-            }
-        }                                                                       // end if(current_sequence->uvrotate)
-    }                                                                           // end for(int i = 0; i < engine_world.anim_sequences_count; i++)
+        int i = texture_frame_time / TR_ANIMTEXTURE_UPDATE_INTERVAL;
+        texture_frame_time -= (btScalar)i * TR_ANIMTEXTURE_UPDATE_INTERVAL;
+        texture_frame++;
+        texture_frame %= 64;
+    }
 }
+
 
 void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys themselves.
 {
-    uint32_t    tex_id;
-    anim_seq_p  seq = NULL;
-
-    if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/(polygon->vertex_count <= 4) && (polygon->anim_id > 0) && (polygon->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
+    if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/(polygon->anim_tex_frames_count > 0) && (polygon->anim_id > 0) && (polygon->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
     {
-        seq = engine_world.anim_sequences + (polygon->anim_id - 1);
-
-        if(polygon->anim_offset)    // If polygon uses frame offset for animation...
-        {
-            if((polygon->anim_offset + seq->current_frame) > (seq->frame_count - 1))
-            {
-                // If current frame with offset goes beyond frame count, reset it.
-                tex_id = seq->current_frame + polygon->anim_offset - seq->frame_count;
-            }
-            else
-            {
-                // Simply add offset to current frame.
-                tex_id = seq->current_frame + polygon->anim_offset;
-            }
-        }
-        else
-        {
-            tex_id = seq->current_frame;    // Just use current frame, if no offset specified.
-        }
-
-        tex_id = seq->frame_list[tex_id];   // Extract TexInfo ID from sequence frame list.
+        anim_seq_p seq = engine_world.anim_sequences + (polygon->anim_id - 1);  ///@TODO: add here rate setup (texture_frame / rate) + move to polygon reverse bool
+        uint16_t frame = ((uint16_t)((btScalar)texture_frame * TR_ANIMTEXTURE_UPDATE_INTERVAL / seq->frame_rate)) % seq->frame_count;
 
         // Write new texture coordinates to polygon.
-        if(seq->uvrotate)
+        for(uint16_t i=0;i<polygon->vertex_count;i++)
         {
-            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0,
-                                                polygon, seq->current_uvrotate, true);
-        }
-        else
-        {
-            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, polygon);
+            uint16_t offset = 2 * i * polygon->anim_tex_frames_count + 2 * frame;
+            polygon->vertices[i].tex_coord[0] = polygon->anim_tex_frames[offset + 0];
+            polygon->vertices[i].tex_coord[1] = polygon->anim_tex_frames[offset + 1];
         }
     }
 }
