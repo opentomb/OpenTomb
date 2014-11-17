@@ -145,6 +145,7 @@ typedef struct render_settings_s
 typedef struct render_s
 {
     int8_t                      blocked;
+    int8_t                      skybox;
     uint32_t                    style;                                          //
     struct world_s             *world;
     struct camera_s            *cam;
