@@ -8,19 +8,20 @@
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/LinearMath/btIDebugDraw.h"
 
-#define R_DRAW_WIRE             0x00000001                                      // провволочная отрисовка
-#define R_DRAW_ROOMBOXES        0x00000002                                      // показывать границы комнаты
-#define R_DRAW_BOXES            0x00000004                                      // показывать границы комнаты
-#define R_DRAW_PORTALS          0x00000008                                      // показывать порталы
-#define R_DRAW_FRUSTUMS         0x00000010                                      // показывать фрустумы
-#define R_DRAW_NORMALS          0x00000020                                      // показывать нормали
-#define R_DRAW_AXIS             0x00000040                                      // показывать оси
-#define R_SKIP_ROOM             0x00000080                                      // hide rooms
-#define R_SKIP_STATIC           0x00000100                                      // hide statics
-#define R_SKIP_ENTITIES         0x00000200                                      // hide entities
-#define R_DRAW_NULLMESHES       0x00000400                                      // draw nullmesh entities
-#define R_DRAW_DUMMY_STATICS    0x00000800                                      // draw empty static meshes
-#define R_DRAW_COLL             0x00001000                                      // draw Bullet physics world
+#define R_DRAW_WIRE             0x00000001      // Wireframe rendering
+#define R_DRAW_ROOMBOXES        0x00000002      // Show room bounds
+#define R_DRAW_BOXES            0x00000004      // Show boxes
+#define R_DRAW_PORTALS          0x00000008      // Show portals
+#define R_DRAW_FRUSTUMS         0x00000010      // Show frustums
+#define R_DRAW_NORMALS          0x00000020      // Show normals
+#define R_DRAW_AXIS             0x00000040      // Show axes
+#define R_SKIP_ROOM             0x00000080      // Hide rooms
+#define R_SKIP_STATIC           0x00000100      // Hide statics
+#define R_SKIP_ENTITIES         0x00000200      // Hide entities
+#define R_DRAW_NULLMESHES       0x00000400      // Draw nullmesh entities
+#define R_DRAW_DUMMY_STATICS    0x00000800      // Draw empty static meshes
+#define R_DRAW_COLL             0x00001000      // Draw Bullet physics world
+#define R_DRAW_SKYBOX           0x00002000      // Draw skybox
 
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (4096 * 1024)
 
@@ -145,7 +146,6 @@ typedef struct render_settings_s
 typedef struct render_s
 {
     int8_t                      blocked;
-    int8_t                      skybox;
     uint32_t                    style;                                          //
     struct world_s             *world;
     struct camera_s            *cam;
