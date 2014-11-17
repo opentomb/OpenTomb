@@ -146,7 +146,7 @@ void Render_SkyBox()
     GLfloat tr[16];
     btScalar *p;
 
-    if(renderer.skybox && renderer.world != NULL && renderer.world->sky_box != NULL)
+    if(renderer.style & R_DRAW_SKYBOX && renderer.world != NULL && renderer.world->sky_box != NULL)
     {
         glDepthMask(GL_FALSE);
         glPushMatrix();
@@ -804,7 +804,7 @@ int Render_AddRoom(struct room_s *room)
         ret++;
         
         if(room->flags & TR_ROOM_FLAG_SKYBOX)
-            renderer.skybox = 1;
+            renderer.style |= R_DRAW_SKYBOX;
     }
 
     if((room->bsp_root->polygons_count > 0) &&                                  // Has tranparancy polygons
@@ -882,7 +882,7 @@ void Render_CleanList()
         renderer.r_transparancy_list[i].room = NULL;
     }
 
-    renderer.skybox = 0;
+    renderer.style &= ~R_DRAW_SKYBOX;
     renderer.r_list_active_count = 0;
     renderer.r_transparancy_list_active_count = 0;
 }
@@ -1123,7 +1123,7 @@ void Render_SetWorld(struct world_s *world)
     }
 
     renderer.world = world;
-    renderer.skybox = 0;
+    renderer.style &= ~R_DRAW_SKYBOX;
     renderer.r_list_size = list_size;
     renderer.r_list_active_count = 0;
 
