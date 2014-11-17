@@ -24,9 +24,6 @@
 render_t renderer;
 extern render_DebugDrawer debugDrawer;
 
-static uint16_t     texture_frame = 0;
-static btScalar     texture_frame_time = 0.0;
-
 
 bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
@@ -146,7 +143,7 @@ void Render_SkyBox()
     GLfloat tr[16];
     btScalar *p;
 
-    if(renderer.style & R_DRAW_SKYBOX && renderer.world != NULL && renderer.world->sky_box != NULL)
+    if((renderer.style & R_DRAW_SKYBOX) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
     {
         glDepthMask(GL_FALSE);
         glPushMatrix();
@@ -365,13 +362,104 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
 
 void Render_UpdateAnimTextures()                                                // This function is used for updating global animated texture frame
 {
-    texture_frame_time += engine_frame_time;
-    if(texture_frame_time >= TR_ANIMTEXTURE_UPDATE_INTERVAL)
+    anim_seq_p seq = engine_world.anim_sequences;
+    for(uint16_t i=0;i<engine_world.anim_sequences_count;i++,seq++)
     {
-        int i = texture_frame_time / TR_ANIMTEXTURE_UPDATE_INTERVAL;
-        texture_frame_time -= (btScalar)i * TR_ANIMTEXTURE_UPDATE_INTERVAL;
-        texture_frame++;
-        texture_frame %= 64;
+        if(seq->frame_lock)
+        {
+            continue;
+        }
+
+        if(seq->uvrotate)
+        {
+            seq->uvrotate_time += engine_frame_time;
+            if(seq->uvrotate_time >= TR_ANIMTEXTURE_UPDATE_INTERVAL)
+            {
+                int j = (seq->uvrotate_time / TR_ANIMTEXTURE_UPDATE_INTERVAL);
+                seq->uvrotate_time -= j * TR_ANIMTEXTURE_UPDATE_INTERVAL;
+                switch(seq->uvrotate_type)
+                {
+                    case TR_ANIMTEXTURE_UVROTATE_REVERSE:
+                        if(seq->type_flag)
+                        {
+                            if(seq->current_frame == 0)
+                            {
+                                seq->current_frame++;
+                                seq->type_flag = false;
+                            }
+                            else if(seq->current_frame > 0)
+                            {
+                                seq->current_frame--;
+                            }
+                        }
+                        else
+                        {
+                            if(seq->current_frame == seq->frame_count - 1)
+                            {
+                                seq->current_frame--;
+                                seq->type_flag = true;
+                            }
+                            else if(seq->current_frame < seq->frame_count - 1)
+                            {
+                                seq->current_frame++;
+                            }
+                            seq->current_frame %= seq->frame_count;             ///@PARANOID
+                        }
+                        break;
+
+                    case TR_ANIMTEXTURE_UVROTATE_FORWARD:                       // inversed in polygon anim. texture frames
+                    case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
+                        seq->current_frame++;
+                        seq->current_frame %= seq->frame_count;
+                        break;
+                };
+            }
+        }
+        else
+        {
+            seq->frame_time += engine_frame_time;
+            if(seq->frame_time >= seq->frame_rate)
+            {
+                int j = (seq->frame_time / seq->frame_rate);
+                seq->frame_time -= j * seq->frame_rate;
+                switch(seq->type)
+                {
+                    case TR_ANIMTEXTURE_REVERSE:
+                        if(seq->type_flag)
+                        {
+                            if(seq->current_frame == 0)
+                            {
+                                seq->current_frame++;
+                                seq->type_flag = false;
+                            }
+                            else if(seq->current_frame > 0)
+                            {
+                                seq->current_frame--;
+                            }
+                        }
+                        else
+                        {
+                            if(seq->current_frame == seq->frame_count - 1)
+                            {
+                                seq->current_frame--;
+                                seq->type_flag = true;
+                            }
+                            else if(seq->current_frame < seq->frame_count - 1)
+                            {
+                                seq->current_frame++;
+                            }
+                            seq->current_frame %= seq->frame_count;                 ///@PARANOID
+                        }
+                        break;
+
+                    case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
+                    case TR_ANIMTEXTURE_BACKWARD:
+                        seq->current_frame++;
+                        seq->current_frame %= seq->frame_count;
+                        break;
+                };
+            }
+        }
     }
 }
 
@@ -380,13 +468,12 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
 {
     if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/(polygon->anim_tex_frames_count > 0) && (polygon->anim_id > 0) && (polygon->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
     {
-        anim_seq_p seq = engine_world.anim_sequences + (polygon->anim_id - 1);  ///@TODO: add here rate setup (texture_frame / rate) + move to polygon reverse bool
-        uint16_t frame = ((uint16_t)((btScalar)texture_frame * TR_ANIMTEXTURE_UPDATE_INTERVAL / seq->frame_rate)) % seq->frame_count;
+        anim_seq_p seq = engine_world.anim_sequences + (polygon->anim_id - 1);
 
         // Write new texture coordinates to polygon.
         for(uint16_t i=0;i<polygon->vertex_count;i++)
         {
-            uint16_t offset = 2 * i * polygon->anim_tex_frames_count + 2 * frame;
+            uint16_t offset = 2 * i * polygon->anim_tex_frames_count + 2 * seq->current_frame;
             polygon->vertices[i].tex_coord[0] = polygon->anim_tex_frames[offset + 0];
             polygon->vertices[i].tex_coord[1] = polygon->anim_tex_frames[offset + 1];
         }
@@ -802,7 +889,7 @@ int Render_AddRoom(struct room_s *room)
         renderer.r_list[renderer.r_list_active_count].dist = dist;
         renderer.r_list_active_count++;
         ret++;
-        
+
         if(room->flags & TR_ROOM_FLAG_SKYBOX)
             renderer.style |= R_DRAW_SKYBOX;
     }
@@ -1405,43 +1492,80 @@ void render_DebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScal
     drawOBB(m_obb);
 }
 
-///@FIXME: rewrite it, lines count may be reduced twice!
 void render_DebugDrawer::drawOBB(struct obb_s *obb)
 {
     GLfloat *v, *v0;
     polygon_p p = obb->polygons;
 
-    v = v0 = m_buffer + 3 * 4 * m_lines;
-
-    for(uint16_t i=0; i<6; i++,p++)
+    if(m_lines + 12 >= m_max_lines)
     {
-        if(m_lines + p->vertex_count < m_max_lines)
+        return;
+    }
+
+    v = v0 = m_buffer + 3 * 4 * m_lines;
+    m_lines += 12;
+
+    vec3_copy(v, p->vertices[0].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+    vec3_copy(v, (p+1)->vertices[0].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+
+    vec3_copy(v, p->vertices[1].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+    vec3_copy(v, (p+1)->vertices[3].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+
+    vec3_copy(v, p->vertices[2].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+    vec3_copy(v, (p+1)->vertices[2].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+
+    vec3_copy(v, p->vertices[3].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+    vec3_copy(v, (p+1)->vertices[1].position);
+    v += 3;
+    vec3_copy(v, m_color);
+    v += 3;
+
+    for(uint16_t i=0; i<2; i++,p++)
+    {
+        vertex_p pv = p->vertices;
+        v0 = v;
+        for(int j=0;j<p->vertex_count-1;j++,pv++)
         {
-            m_lines += p->vertex_count;
-            vertex_p pv = p->vertices;
-            v0 = v;
-            for(int j=0;j<p->vertex_count-1;j++,pv++)
-            {
-                vec3_copy(v, pv->position);
-                v += 3;
-                vec3_copy(v, m_color);
-                v += 3;
-
-                vec3_copy(v, (pv+1)->position);
-                v += 3;
-                vec3_copy(v, m_color);
-                v += 3;
-            }
-
             vec3_copy(v, pv->position);
             v += 3;
             vec3_copy(v, m_color);
             v += 3;
-            vec3_copy(v, v0);
+
+            vec3_copy(v, (pv+1)->position);
             v += 3;
             vec3_copy(v, m_color);
             v += 3;
         }
+
+        vec3_copy(v, pv->position);
+        v += 3;
+        vec3_copy(v, m_color);
+        v += 3;
+        vec3_copy(v, v0);
+        v += 3;
+        vec3_copy(v, m_color);
+        v += 3;
     }
 }
 

@@ -39,7 +39,6 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
     switch(split_type)
     {
         case SPLIT_IN_PLANE:
-            if((vec3_dot(p->plane, root->plane) > 0.9) || p->double_side)
             {
                 root->polygons_count++;
                 root->polygons = (polygon_p)realloc(root->polygons, root->polygons_count * sizeof(polygon_t));
@@ -50,7 +49,6 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
                 lp->anim_tex_frames = NULL;
                 Polygon_Copy(lp, p);
             }
-            //else      incorrect case! do nothing! maybe add some feature to resolve that...
             break;
 
         case SPLIT_FRONT:
