@@ -2621,7 +2621,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
     for(uint32_t i=0;i<mesh->transparancy_count;i++,p++)
     {
         Polygon_Copy(&tp, p);
-        if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/(p->vertex_count <= 4) && (p->anim_id > 0) && (p->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
+        if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/ (p->anim_id > 0) && (p->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
         {
             anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
             tp.anim_tex_frames_count = seq->frame_count;
@@ -2638,11 +2638,11 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                     {
                         case TR_ANIMTEXTURE_UVROTATE_REVERSE:
                         case TR_ANIMTEXTURE_UVROTATE_FORWARD:
-                            seq->current_uvrotate = (j + 1) * seq->uvrotate_speed;
+                            seq->current_uvrotate = (frame + 1) * seq->uvrotate_speed;
                             break;
 
                         case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
-                            seq->current_uvrotate = (seq->frame_count - j - 1 + 1) * seq->uvrotate_speed;
+                            seq->current_uvrotate = (seq->frame_count - frame - 1 + 1) * seq->uvrotate_speed;
                             break;
                     };
                     BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0,
@@ -2659,11 +2659,11 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                     {
                         case TR_ANIMTEXTURE_REVERSE:
                         case TR_ANIMTEXTURE_FORWARD:
-                            seq->current_frame = j;
+                            seq->current_frame = frame;
                             break;
 
                         case TR_ANIMTEXTURE_BACKWARD:
-                            seq->current_frame = seq->frame_count - j - 1;
+                            seq->current_frame = seq->frame_count - frame - 1;
                             break;
                     };
                     BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, &tp);

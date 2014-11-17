@@ -103,6 +103,7 @@ typedef struct light_s
 /*
  *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
  */
+///@TODO: simplify this struct
 typedef struct anim_seq_s
 {
     int8_t      type;             // 0 = normal, 1 = back, 2 = reverse.
