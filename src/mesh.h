@@ -103,29 +103,26 @@ typedef struct light_s
 /*
  *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
  */
-///@TODO: simplify this struct
 typedef struct anim_seq_s
 {
-    int8_t      type;             // 0 = normal, 1 = back, 2 = reverse.
-    bool        type_flag;        // Used only with type 2 to identify current animation direction.
+    bool        uvrotate;               // UVRotate mode flag.
+    bool        frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
+    
+    bool        blend;                  // Blend flag.  Reserved for future use!
+    btScalar    blend_rate;             // Blend rate.  Reserved for future use!
+    btScalar    blend_time;             // Blend value. Reserved for future use!
+    
+    int8_t      anim_type;              // 0 = normal, 1 = back, 2 = reverse.
+    bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
+    btScalar    frame_time;             // Time passed since last frame update.
+    uint16_t    current_frame;          // Current frame for this sequence.
+    btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
+    uint32_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
+      
+    btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
+    btScalar    uvrotate_max;           // Reference value used to restart rotation.
+    btScalar    current_uvrotate;       // Current coordinate window position.
 
-    bool        blend;            // Blend flag.  Reserved for future use!
-    btScalar    blend_rate;       // Blend rate.  Reserved for future use!
-    btScalar    blend_time;       // Blend value. Reserved for future use!
-
-    bool        uvrotate;         // UVRotate mode flag.
-    int8_t      uvrotate_type;    // 0 = normal, 1 = back, 2 = reverse.
-    bool        uvrotate_flag;    // Used only with type 2 to identify current animation direction.
-    btScalar    uvrotate_speed;   // Speed of UVRotation, in seconds.
-    btScalar    uvrotate_time;    // Time passed since last UVRotate update.
-    btScalar    uvrotate_max;     // Reference value used to restart rotation.
-    btScalar    current_uvrotate; // Current coordinate window position.
-
-    uint32_t    current_frame;    // Current frame for this sequence.
-    btScalar    frame_rate;       // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
-    btScalar    frame_time;       // Time passed since last update.
-    uint32_t    frame_count;      // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
-    bool        frame_lock;       // Single frame mode. Needed for TR4-5 compatible UVRotate.
     uint32_t*   frame_list;       // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;
 

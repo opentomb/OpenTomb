@@ -41,6 +41,7 @@ lua_State *entity_flags_conf;
 lua_State *ent_ID_override;
 lua_State *level_script;
 
+void Items_CheckEntities(RedBlackNode_p n);
 
 /*
  * BASIC SECTOR COLLISION LAYOUT
@@ -1804,19 +1805,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
 
         delete[] room_tween;
-
-        if(r->mesh)
-        {
-            SortPolygonsInMesh(r->mesh);
-            TR_TransparencyMeshToBSP(r->mesh, r->bsp_root, r->transform);
-        }
-
-        static_mesh_p sm = r->static_mesh;
-        for(uint32_t j=0;j<r->static_mesh_count;j++,sm++)
-        {
-            SortPolygonsInMesh(sm->mesh);
-            TR_TransparencyMeshToBSP(sm->mesh, r->bsp_root, sm->transform);
-        }
     }
 
 #endif
@@ -1880,6 +1868,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         if(world->meshes[i].vertex_count)
         {
+            SortPolygonsInMesh(world->meshes + i);
             Mesh_GenVBO(world->meshes + i);
         }
     }
@@ -1890,13 +1879,9 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count))
         {
+            SortPolygonsInMesh(world->rooms[i].mesh);
             Mesh_GenVBO(world->rooms[i].mesh);
         }
-    }
-
-    for(i=0;i<world->meshs_count;i++)
-    {
-        SortPolygonsInMesh(world->meshes + i);
     }
 
     buf[0] = 0;
@@ -1930,11 +1915,28 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     strcat(buf, map);
     strcat(buf, "_autoexec.lua");
 
-    luaL_dofile(engine_lua, buf);
+    luaL_dofile(engine_lua, "scripts/autoexec.lua");                            // do standart autoexec
+    luaL_dofile(engine_lua, buf);                                               // do level specified autoexec
+
+    if((world->items_tree != NULL) && (world->items_tree->root != NULL))
+    {
+        Items_CheckEntities(world->items_tree->root);
+    }
 
     r = world->rooms;
     for(i=0;i<world->room_count;i++,r++)
     {
+        if(r->mesh)
+        {
+            TR_TransparencyMeshToBSP(r->mesh, r->bsp_root, r->transform);
+        }
+
+        static_mesh_p sm = r->static_mesh;
+        for(uint32_t j=0;j<r->static_mesh_count;j++,sm++)
+        {
+            TR_TransparencyMeshToBSP(sm->mesh, r->bsp_root, sm->transform);
+        }
+
         if(r->base_room != NULL)
         {
             Room_Disable(r);                             //Disable current room
@@ -2455,8 +2457,8 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
 void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 {
     uint16_t *pointer;
-    uint16_t  i, j, num_sequences, num_uvrotates;
-    uint16_t  block_size = tr->animated_textures_count; // This is actually whole anim textures block size.
+    uint16_t  i, num_sequences, num_uvrotates;
+    //uint16_t  block_size = tr->animated_textures_count; // This is actually whole anim textures block size.
     int32_t   uvrotate_script = 0;
 
     pointer       = tr->animated_textures;
@@ -2466,21 +2468,23 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 
     world->anim_sequences_count = num_sequences;
     world->anim_sequences = (anim_seq_p)malloc(num_sequences * sizeof(anim_seq_t));
-    memset(world->anim_sequences, 0, sizeof(anim_seq_t) * num_sequences);   // Reset all structure.
+    memset(world->anim_sequences, 0, sizeof(anim_seq_t) * num_sequences);       // Reset all structure.
 
     for(i = 0; i < num_sequences; i++)
     {
-        world->anim_sequences[i].frame_count = *(pointer++) + 1;
-        world->anim_sequences[i].frame_list  =  (uint32_t*)malloc(world->anim_sequences[i].frame_count * sizeof(uint32_t));
+        world->anim_sequences[i].frames_count = *(pointer++) + 1;
+        world->anim_sequences[i].frame_list   =  (uint32_t*)malloc(world->anim_sequences[i].frames_count * sizeof(uint32_t));
 
         // Fill up new sequence with frame list.
-        world->anim_sequences[i].type          = TR_ANIMTEXTURE_FORWARD;
-        world->anim_sequences[i].type_flag     = false; // Needed for proper reverse-type start-up.
-        world->anim_sequences[i].frame_rate    = 0.05;  // Should be passed as 1 / FPS.
-        world->anim_sequences[i].frame_time    = 0.0;   // Reset frame time to initial state.
-        world->anim_sequences[i].current_frame = 0;     // Reset current frame to zero.
+        world->anim_sequences[i].anim_type         = TR_ANIMTEXTURE_FORWARD;
+        world->anim_sequences[i].frame_lock        = false; // by default anim is playing
+        world->anim_sequences[i].uvrotate          = false; // by default uvrotate
+        world->anim_sequences[i].reverse_direction = false; // Needed for proper reverse-type start-up.
+        world->anim_sequences[i].frame_rate        = 0.05;  // Should be passed as 1 / FPS.
+        world->anim_sequences[i].frame_time        = 0.0;   // Reset frame time to initial state.
+        world->anim_sequences[i].current_frame     = 0;     // Reset current frame to zero.
 
-        for(int j = 0; j < world->anim_sequences[i].frame_count; j++)
+        for(int j = 0; j < world->anim_sequences[i].frames_count; j++)
         {
             world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
         }
@@ -2502,30 +2506,25 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             lua_settop(level_script, top);
         }
 
-        if((i < num_uvrotates) && (uvrotate_script != 0))
+        if((i < num_uvrotates)/* && (uvrotate_script != 0)*/)
         {
-            world->anim_sequences[i].frame_lock       = true;
-            world->anim_sequences[i].uvrotate         = true;
-            world->anim_sequences[i].uvrotate_flag    = false;
-            world->anim_sequences[i].uvrotate_time    = 0.0;
-
-            if(uvrotate_script > 0)
-            {
-                world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_FORWARD;
-                world->anim_sequences[i].uvrotate_speed   = (btScalar)(uvrotate_script);
-            }
-            else
-            {
-                world->anim_sequences[i].uvrotate_type    = TR_ANIMTEXTURE_UVROTATE_BACKWARD;
-                world->anim_sequences[i].uvrotate_speed   = (btScalar)abs(uvrotate_script);
-            }
-
-
+            world->anim_sequences[i].uvrotate = true;
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
             // if scrolling is completed or not.
-
             world->anim_sequences[i].uvrotate_max     = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, world->anim_sequences[i].frame_list[0]) / 2);
+            world->anim_sequences[i].uvrotate_speed = world->anim_sequences[i].uvrotate_max / (btScalar)world->anim_sequences[i].frames_count;
+
+            if(uvrotate_script > 0)
+            {
+                world->anim_sequences[i].anim_type        = TR_ANIMTEXTURE_FORWARD;
+                world->anim_sequences[i].uvrotate_speed   = (btScalar)(uvrotate_script);
+            }
+            else if(uvrotate_script < 0)
+            {
+                world->anim_sequences[i].anim_type        = TR_ANIMTEXTURE_BACKWARD;
+                world->anim_sequences[i].uvrotate_speed   = (btScalar)abs(uvrotate_script);
+            }
         }
     } // end for(i = 0; i < num_sequences; i++)
 }
@@ -2546,7 +2545,7 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
 
     for(i = 0; i < world->anim_sequences_count; i++)
     {
-        for(j = 0; j < world->anim_sequences[i].frame_count; j++)
+        for(j = 0; j < world->anim_sequences[i].frames_count; j++)
         {
             if(world->anim_sequences[i].frame_list[j] == tex_index)
             {
@@ -2624,25 +2623,30 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
         if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/ (p->anim_id > 0) && (p->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
         {
             anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
-            tp.anim_tex_frames_count = seq->frame_count;
-            tp.anim_tex_frames = (GLfloat*)realloc(tp.anim_tex_frames, 2 * seq->frame_count * tp.vertex_count * sizeof(GLfloat));
-            for(uint16_t j=0;j<seq->frame_count;j++)
+            tp.anim_tex_frames_count = seq->frames_count;
+            tp.anim_tex_frames = (GLfloat*)realloc(tp.anim_tex_frames, 2 * seq->frames_count * tp.vertex_count * sizeof(GLfloat));
+            for(uint16_t j=0;j<seq->frames_count;j++)
             {
-                uint16_t frame = (j + p->frame_offset) % seq->frame_count;
+                uint16_t frame = (j + p->frame_offset) % seq->frames_count;
                 uint16_t tex_id = seq->frame_list[frame];                       // Extract TexInfo ID from sequence frame list.
 
+                // We have different ways of animating textures, depending on type.
+                // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
+                // However, in TRNG it is possible to animate textures back and reverse, so we
+                // also implement this type in OpenTomb.
+                // UVRotate way of animating is more complicated and left as a placeholder.
                 // Write new texture coordinates to polygon.
                 if(seq->uvrotate)
                 {
-                    switch(seq->uvrotate_type)
+                    switch(seq->anim_type)
                     {
-                        case TR_ANIMTEXTURE_UVROTATE_REVERSE:
-                        case TR_ANIMTEXTURE_UVROTATE_FORWARD:
+                        case TR_ANIMTEXTURE_REVERSE:
+                        case TR_ANIMTEXTURE_FORWARD:
                             seq->current_uvrotate = (frame + 1) * seq->uvrotate_speed;
                             break;
 
-                        case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
-                            seq->current_uvrotate = (seq->frame_count - frame - 1 + 1) * seq->uvrotate_speed;
+                        case TR_ANIMTEXTURE_BACKWARD:
+                            seq->current_uvrotate = (seq->frames_count - frame - 1 + 1) * seq->uvrotate_speed;
                             break;
                     };
                     BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0,
@@ -2650,12 +2654,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                 }
                 else
                 {
-                    // We have different ways of animating textures, depending on type.
-                    // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
-                    // However, in TRNG it is possible to animate textures back and reverse, so we
-                    // also implement this type in OpenTomb.
-                    // UVRotate way of animating is more complicated and left as a placeholder.
-                    switch(seq->type)
+                    switch(seq->anim_type)
                     {
                         case TR_ANIMTEXTURE_REVERSE:
                         case TR_ANIMTEXTURE_FORWARD:
@@ -2663,7 +2662,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                             break;
 
                         case TR_ANIMTEXTURE_BACKWARD:
-                            seq->current_frame = seq->frame_count - frame - 1;
+                            seq->current_frame = seq->frames_count - frame - 1;
                             break;
                     };
                     BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, &tp);
@@ -2676,6 +2675,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                     tp.anim_tex_frames[offset + 1] = tp.vertices[k].tex_coord[1];
                 }
             }
+            seq->current_frame = 0;
         }
 
         Polygon_TransformSelf(&tp, transform);
@@ -4426,4 +4426,38 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     };
 
     return ret;
+}
+
+
+void Items_CheckEntities(RedBlackNode_p n)
+{
+    base_item_p item = (base_item_p)n->data;
+
+    for(int i=0;i<engine_world.room_count;i++)
+    {
+        engine_container_p cont = engine_world.rooms[i].containers;
+        for(;cont;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p ent = (entity_p)cont->object;
+                if(ent->bf.model->id == item->world_model_id)
+                {
+                    char buf[256] = {0};
+                    snprintf(buf, 256, "create_pickup_func(%d, %d);", ent->id, item->id);
+                    luaL_dostring(engine_lua, buf);
+                }
+            }
+        }
+    }
+
+    if(n->right)
+    {
+        Items_CheckEntities(n->right);
+    }
+
+    if(n->left)
+    {
+        Items_CheckEntities(n->left);
+    }
 }

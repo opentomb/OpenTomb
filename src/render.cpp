@@ -370,95 +370,48 @@ void Render_UpdateAnimTextures()                                                
             continue;
         }
 
-        if(seq->uvrotate)
+        seq->frame_time += engine_frame_time;
+        if(seq->frame_time >= seq->frame_rate)
         {
-            seq->uvrotate_time += engine_frame_time;
-            if(seq->uvrotate_time >= TR_ANIMTEXTURE_UPDATE_INTERVAL)
-            {
-                int j = (seq->uvrotate_time / TR_ANIMTEXTURE_UPDATE_INTERVAL);
-                seq->uvrotate_time -= j * TR_ANIMTEXTURE_UPDATE_INTERVAL;
-                switch(seq->uvrotate_type)
-                {
-                    case TR_ANIMTEXTURE_UVROTATE_REVERSE:
-                        if(seq->type_flag)
-                        {
-                            if(seq->current_frame == 0)
-                            {
-                                seq->current_frame++;
-                                seq->type_flag = false;
-                            }
-                            else if(seq->current_frame > 0)
-                            {
-                                seq->current_frame--;
-                            }
-                        }
-                        else
-                        {
-                            if(seq->current_frame == seq->frame_count - 1)
-                            {
-                                seq->current_frame--;
-                                seq->type_flag = true;
-                            }
-                            else if(seq->current_frame < seq->frame_count - 1)
-                            {
-                                seq->current_frame++;
-                            }
-                            seq->current_frame %= seq->frame_count;             ///@PARANOID
-                        }
-                        break;
+            int j = (seq->frame_time / seq->frame_rate);
+            seq->frame_time -= (btScalar)j * seq->frame_rate;
 
-                    case TR_ANIMTEXTURE_UVROTATE_FORWARD:                       // inversed in polygon anim. texture frames
-                    case TR_ANIMTEXTURE_UVROTATE_BACKWARD:
-                        seq->current_frame++;
-                        seq->current_frame %= seq->frame_count;
-                        break;
-                };
-            }
-        }
-        else
-        {
-            seq->frame_time += engine_frame_time;
-            if(seq->frame_time >= seq->frame_rate)
+            switch(seq->anim_type)
             {
-                int j = (seq->frame_time / seq->frame_rate);
-                seq->frame_time -= j * seq->frame_rate;
-                switch(seq->type)
-                {
-                    case TR_ANIMTEXTURE_REVERSE:
-                        if(seq->type_flag)
+                case TR_ANIMTEXTURE_REVERSE:
+                    if(seq->reverse_direction)
+                    {
+                        if(seq->current_frame == 0)
                         {
-                            if(seq->current_frame == 0)
-                            {
-                                seq->current_frame++;
-                                seq->type_flag = false;
-                            }
-                            else if(seq->current_frame > 0)
-                            {
-                                seq->current_frame--;
-                            }
+                            seq->current_frame++;
+                            seq->reverse_direction = false;
                         }
-                        else
+                        else if(seq->current_frame > 0)
                         {
-                            if(seq->current_frame == seq->frame_count - 1)
-                            {
-                                seq->current_frame--;
-                                seq->type_flag = true;
-                            }
-                            else if(seq->current_frame < seq->frame_count - 1)
-                            {
-                                seq->current_frame++;
-                            }
-                            seq->current_frame %= seq->frame_count;                 ///@PARANOID
+                            seq->current_frame--;
                         }
-                        break;
+                    }
+                    else
+                    {
+                        if(seq->current_frame == seq->frames_count - 1)
+                        {
+                            seq->current_frame--;
+                            seq->reverse_direction = true;
+                        }
+                        else if(seq->current_frame < seq->frames_count - 1)
+                        {
+                            seq->current_frame++;
+                        }
+                        seq->current_frame %= seq->frames_count;                ///@PARANOID
+                    }
+                    break;
 
-                    case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
-                    case TR_ANIMTEXTURE_BACKWARD:
-                        seq->current_frame++;
-                        seq->current_frame %= seq->frame_count;
-                        break;
-                };
-            }
+                case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
+                case TR_ANIMTEXTURE_BACKWARD:
+                    seq->current_frame++;
+                    seq->current_frame %= seq->frames_count;
+                    break;
+            };
         }
     }
 }

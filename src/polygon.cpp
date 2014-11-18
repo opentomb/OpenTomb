@@ -735,6 +735,11 @@ void Polygon_AddVertex(polygon_p p, struct vertex_s *v, GLfloat *frame)
     p->vertices = (vertex_p)realloc(p->vertices, size * sizeof(vertex_t));
     vp = p->vertices + p->vertex_count;
 
+    if((p->vertex_count > 0) && (vec3_dist_sq(vp->position, v->position) < 0.1))
+    {
+        return;
+    }
+
     vec3_copy(vp->position, v->position);
     vec3_copy(vp->normal, v->normal);
     vec4_copy(vp->base_color, v->base_color);

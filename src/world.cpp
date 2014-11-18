@@ -516,7 +516,7 @@ void World_Empty(world_p world)
     {
         for(i = 0; i < world->anim_sequences_count; i++)
         {
-            if(world->anim_sequences[i].frame_count)
+            if(world->anim_sequences[i].frames_count)
             {
                 free(world->anim_sequences[i].frame_list);
                 world->anim_sequences[i].frame_list = NULL;

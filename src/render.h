@@ -113,12 +113,6 @@ enum BlendingMode
 #define TR_ANIMTEXTURE_BACKWARD          1
 #define TR_ANIMTEXTURE_REVERSE           2
 
-#define TR_ANIMTEXTURE_UVROTATE_FORWARD  0
-#define TR_ANIMTEXTURE_UVROTATE_BACKWARD 1
-#define TR_ANIMTEXTURE_UVROTATE_REVERSE  2
-
-#define TR_ANIMTEXTURE_UPDATE_INTERVAL   0.0166   // 60 FPS
-
 
 typedef struct render_list_s
 {

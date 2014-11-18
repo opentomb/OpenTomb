@@ -2293,41 +2293,6 @@ void Engine_GetLevelName(char *name, const char *path)
 }
 
 
-void Items_CheckEntities(RedBlackNode_p n);
-
-void Items_CheckEntities(RedBlackNode_p n)
-{
-    base_item_p item = (base_item_p)n->data;
-
-    for(int i=0;i<engine_world.room_count;i++)
-    {
-        engine_container_p cont = engine_world.rooms[i].containers;
-        for(;cont;cont=cont->next)
-        {
-            if(cont->object_type == OBJECT_ENTITY)
-            {
-                entity_p ent = (entity_p)cont->object;
-                if(ent->bf.model->id == item->world_model_id)
-                {
-                    char buf[256] = {0};
-                    snprintf(buf, 256, "create_pickup_func(%d, %d);", ent->id, item->id);
-                    luaL_dostring(engine_lua, buf);
-                }
-            }
-        }
-    }
-
-    if(n->right)
-    {
-        Items_CheckEntities(n->right);
-    }
-
-    if(n->left)
-    {
-        Items_CheckEntities(n->left);
-    }
-}
-
 int Engine_LoadMap(const char *name)
 {
     int trv;
@@ -2403,12 +2368,6 @@ int Engine_LoadMap(const char *name)
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
-    luaL_dofile(engine_lua, "scripts/autoexec.lua");
-
-    if(engine_world.items_tree && engine_world.items_tree->root)
-    {
-        Items_CheckEntities(engine_world.items_tree->root);
-    }
 
     Game_Prepare();
 
