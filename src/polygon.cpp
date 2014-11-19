@@ -38,6 +38,11 @@ void Polygon_Clear(polygon_p p)
             free(p->anim_tex_frames);
             p->anim_tex_frames = NULL;
         }
+        if(p->anim_tex_indexes != NULL)
+        {
+            free(p->anim_tex_indexes);
+            p->anim_tex_indexes = NULL;
+        }
         p->anim_tex_frames_count = 0;
     }
 }
@@ -107,6 +112,12 @@ void Polygon_Copy(polygon_p dst, polygon_p src)
     if(count > 0)
     {
         dst->anim_tex_frames = (GLfloat*)realloc(dst->anim_tex_frames, 2 * count * sizeof(GLfloat));
+        dst->anim_tex_indexes = (uint16_t*)realloc(dst->anim_tex_indexes, src->anim_tex_frames_count * sizeof(uint16_t));
+    }
+
+    for(uint16_t i=0;i<src->anim_tex_frames_count;i++)
+    {
+        dst->anim_tex_indexes[i] = src->anim_tex_indexes[i];
     }
 
     for(uint16_t i=0;i<count;i++)
@@ -546,9 +557,8 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
     btScalar t, tmp, dir[3];
     vertex_t *curr_v, *prev_v, tv;
     GLfloat *curr_f, *prev_f, *buf;
-    int i;
     btScalar dist[2];
-    unsigned int count = src->vertex_count;
+    unsigned int i, count = src->vertex_count;
 
     vec4_copy(front->plane, src->plane);
     front->anim_id = src->anim_id;
@@ -580,6 +590,13 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
         curr_f = src->anim_tex_frames;
         prev_f = src->anim_tex_frames + 2 * src->anim_tex_frames_count * (src->vertex_count - 1);
         buf = (GLfloat*)GetTempbtScalar(2 * src->anim_tex_frames_count);
+        front->anim_tex_indexes = (uint16_t*)malloc(src->anim_tex_frames_count * sizeof(uint16_t));
+        back->anim_tex_indexes = (uint16_t*)malloc(src->anim_tex_frames_count * sizeof(uint16_t));
+        for(i=0;i<src->anim_tex_frames_count;i++)
+        {
+            front->anim_tex_indexes[i] = src->anim_tex_indexes[i];
+            back->anim_tex_indexes[i] = src->anim_tex_indexes[i];
+        }
     }
 
     dist[0] = vec3_plane_dist(n, prev_v->position);
@@ -734,11 +751,6 @@ void Polygon_AddVertex(polygon_p p, struct vertex_s *v, GLfloat *frame)
 
     p->vertices = (vertex_p)realloc(p->vertices, size * sizeof(vertex_t));
     vp = p->vertices + p->vertex_count;
-
-    if((p->vertex_count > 0) && (vec3_dist_sq(vp->position, v->position) < 0.1))
-    {
-        return;
-    }
 
     vec3_copy(vp->position, v->position);
     vec3_copy(vp->normal, v->normal);

@@ -40,6 +40,7 @@ typedef struct polygon_s
     
     uint16_t            anim_tex_frames_count;
     GLfloat            *anim_tex_frames;
+    uint16_t           *anim_tex_indexes;
 }polygon_t, *polygon_p;
 
 /*

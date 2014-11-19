@@ -2506,24 +2506,25 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             lua_settop(level_script, top);
         }
 
-        if((i < num_uvrotates)/* && (uvrotate_script != 0)*/)
+        if((i < num_uvrotates) /*&& (uvrotate_script != 0)*/)
         {
             world->anim_sequences[i].uvrotate = true;
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
             // if scrolling is completed or not.
-            world->anim_sequences[i].uvrotate_max     = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, world->anim_sequences[i].frame_list[0]) / 2);
+            world->anim_sequences[i].frames_count = 8;
+            world->anim_sequences[i].uvrotate_max   = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, world->anim_sequences[i].frame_list[0]) / 2);
             world->anim_sequences[i].uvrotate_speed = world->anim_sequences[i].uvrotate_max / (btScalar)world->anim_sequences[i].frames_count;
 
             if(uvrotate_script > 0)
             {
                 world->anim_sequences[i].anim_type        = TR_ANIMTEXTURE_FORWARD;
-                world->anim_sequences[i].uvrotate_speed   = (btScalar)(uvrotate_script);
+                //world->anim_sequences[i].uvrotate_speed   = (btScalar)(uvrotate_script);
             }
             else if(uvrotate_script < 0)
             {
                 world->anim_sequences[i].anim_type        = TR_ANIMTEXTURE_BACKWARD;
-                world->anim_sequences[i].uvrotate_speed   = (btScalar)abs(uvrotate_script);
+                //world->anim_sequences[i].uvrotate_speed   = (btScalar)abs(uvrotate_script);
             }
         }
     } // end for(i = 0; i < num_sequences; i++)
@@ -2616,6 +2617,8 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
     tp.anim_tex_frames_count = 0;
     tp.vertices = NULL;
     tp.anim_tex_frames = NULL;
+    tp.anim_tex_indexes = NULL;
+
     polygon_p p = mesh->polygons;
     for(uint32_t i=0;i<mesh->transparancy_count;i++,p++)
     {
@@ -2625,11 +2628,11 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
             anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
             tp.anim_tex_frames_count = seq->frames_count;
             tp.anim_tex_frames = (GLfloat*)realloc(tp.anim_tex_frames, 2 * seq->frames_count * tp.vertex_count * sizeof(GLfloat));
+            tp.anim_tex_indexes = (uint16_t*)realloc(tp.anim_tex_indexes, seq->frames_count * sizeof(uint16_t));
             for(uint16_t j=0;j<seq->frames_count;j++)
             {
                 uint16_t frame = (j + p->frame_offset) % seq->frames_count;
-                uint16_t tex_id = seq->frame_list[frame];                       // Extract TexInfo ID from sequence frame list.
-
+                uint16_t tex_id;
                 // We have different ways of animating textures, depending on type.
                 // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
                 // However, in TRNG it is possible to animate textures back and reverse, so we
@@ -2638,15 +2641,17 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                 // Write new texture coordinates to polygon.
                 if(seq->uvrotate)
                 {
+                    tex_id = seq->frame_list[0];
+                    seq->current_frame = 0;
                     switch(seq->anim_type)
                     {
                         case TR_ANIMTEXTURE_REVERSE:
                         case TR_ANIMTEXTURE_FORWARD:
-                            seq->current_uvrotate = (frame + 1) * seq->uvrotate_speed;
+                            seq->current_uvrotate = (frame) * seq->uvrotate_speed;
                             break;
 
                         case TR_ANIMTEXTURE_BACKWARD:
-                            seq->current_uvrotate = (seq->frames_count - frame - 1 + 1) * seq->uvrotate_speed;
+                            seq->current_uvrotate = (seq->frames_count - frame - 1) * seq->uvrotate_speed;
                             break;
                     };
                     BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0,
@@ -2654,6 +2659,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                 }
                 else
                 {
+                    tex_id = seq->frame_list[frame];                            // Extract TexInfo ID from sequence frame list.
                     switch(seq->anim_type)
                     {
                         case TR_ANIMTEXTURE_REVERSE:
@@ -2668,6 +2674,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
                     BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, &tp);
                 }
 
+                tp.anim_tex_indexes[j] = tp.tex_index;
                 for(uint16_t k=0;k<tp.vertex_count;k++)
                 {
                     uint16_t offset = 2 * k * tp.anim_tex_frames_count + 2 * j;
@@ -2680,20 +2687,20 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
 
         Polygon_TransformSelf(&tp, transform);
         BSP_AddPolygon(root, &tp);
-        Polygon_Clear(p);
+        //Polygon_Clear(p);
     }
 
     Polygon_Clear(&tp);
 
-    if(mesh->transparancy_count > 0)
+    /*if(mesh->transparancy_count > 0)
     {
         mesh->transparancy_count = 0;
         mesh->poly_count = 0;
         free(mesh->polygons);
         mesh->polygons = NULL;
-    }
+    }*/
 
-    mesh->transparancy_flags = MESH_FULL_OPAQUE;
+    //mesh->transparancy_flags = MESH_FULL_OPAQUE;
 }
 
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr)

@@ -20,6 +20,7 @@
 #include "engine.h"
 #include "obb.h"
 #include "bsp_tree.h"
+#include "resource.h"
 
 render_t renderer;
 extern render_DebugDrawer debugDrawer;
@@ -257,15 +258,6 @@ void Render_PolygonTransparency(struct polygon_s *p)
         break;
     };
 
-    if(p->double_side)
-    {
-        glDisable(GL_CULL_FACE);
-    }
-    else
-    {
-        glEnable(GL_CULL_FACE);
-    }
-
     glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
@@ -278,7 +270,7 @@ void Render_PolygonTransparency(struct polygon_s *p)
 
 void Render_BSPFrontToBack(struct bsp_node_s *root)
 {
-    btScalar d = vec3_dot(root->plane, engine_camera.pos);
+    btScalar d = vec3_plane_dist(root->plane, engine_camera.pos);
 
     if(d >= 0)
     {
@@ -320,7 +312,7 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
 
 void Render_BSPBackToFront(struct bsp_node_s *root)
 {
-    btScalar d = vec3_dot(root->plane, engine_camera.pos);
+    btScalar d = vec3_plane_dist(root->plane, engine_camera.pos);
 
     if(d >= 0)
     {
@@ -423,6 +415,7 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
     {
         anim_seq_p seq = engine_world.anim_sequences + (polygon->anim_id - 1);
 
+        polygon->tex_index = polygon->anim_tex_indexes[seq->current_frame];
         // Write new texture coordinates to polygon.
         for(uint16_t i=0;i<polygon->vertex_count;i++)
         {
@@ -830,6 +823,7 @@ int Render_AddRoom(struct room_s *room)
     {
         return 0;
     }
+
     centre[0] = (room->bb_min[0] + room->bb_max[0]) / 2;
     centre[1] = (room->bb_min[1] + room->bb_max[1]) / 2;
     centre[2] = (room->bb_min[2] + room->bb_max[2]) / 2;
@@ -970,6 +964,14 @@ void Render_DrawList()
 
     glDisable(GL_CULL_FACE);
     glDisableClientState(GL_COLOR_ARRAY);                                       ///@FIXME: reduce number of gl state changes
+    if(renderer.style & R_DRAW_WIRE)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    else
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
     glDisableClientState(GL_NORMAL_ARRAY);
     for(i=0; i<renderer.r_list_active_count; i++)
     {
@@ -979,14 +981,7 @@ void Render_DrawList()
     /*
      * NOW render transparency
      */
-    if(renderer.style & R_DRAW_WIRE)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
-    else
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
+
     glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glDisable(GL_ALPHA_TEST);
@@ -1076,6 +1071,11 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     return ret;
 }
 
+int r_list_compare(const void *p1, const void *p2)
+{
+    return (int)((render_list_p)p1)->room->max_path - (int)((render_list_p)p2)->room->max_path;
+}
+
 /**
  * Генерация списка рендеринга по текущему миру и камере
  * добавить сортировку комнат по удаленности после генерации билда
@@ -1126,6 +1126,11 @@ void Render_GenWorldList()
                 Render_AddRoom(curr_room);
             }
         }
+    }
+
+    if(renderer.r_transparancy_list_active_count > 1)
+    {
+        qsort(renderer.r_transparancy_list, renderer.r_transparancy_list_active_count, sizeof(render_list_t), r_list_compare);
     }
 }
 
