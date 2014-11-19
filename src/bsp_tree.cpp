@@ -20,6 +20,11 @@ bsp_node_p BSP_CreateNode()
 
 void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
 {
+    if(Polygon_IsBroken(p))
+    {
+        return;
+    }
+
     if(root->polygons_count == 0)
     {
         // we though root->front == NULL and root->back == NULL
@@ -29,6 +34,7 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
         root->polygons->anim_tex_frames_count = 0;
         root->polygons->vertices = NULL;
         root->polygons->anim_tex_frames = NULL;
+        root->polygons->anim_tex_indexes = NULL;
         Polygon_Copy(root->polygons, p);
         vec4_copy(root->plane, p->plane);
         return;
@@ -39,6 +45,7 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
     switch(split_type)
     {
         case SPLIT_IN_PLANE:
+            //if(vec3_dot(p->plane, root->plane) > 0.9)
             {
                 root->polygons_count++;
                 root->polygons = (polygon_p)realloc(root->polygons, root->polygons_count * sizeof(polygon_t));
@@ -47,6 +54,7 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
                 lp->anim_tex_frames_count = 0;
                 lp->vertices = NULL;
                 lp->anim_tex_frames = NULL;
+                lp->anim_tex_indexes = NULL;
                 Polygon_Copy(lp, p);
             }
             break;
@@ -75,11 +83,13 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
                 front->anim_tex_frames_count = 0;
                 front->vertices = NULL;
                 front->anim_tex_frames = NULL;
+                front->anim_tex_indexes = NULL;
                 back = (polygon_p)malloc(sizeof(polygon_t));
                 back->vertex_count = 0;
                 back->anim_tex_frames_count = 0;
                 back->vertices = NULL;
                 back->anim_tex_frames = NULL;
+                back->anim_tex_indexes = NULL;
                 Polygon_Split(p, root->plane, front, back);
 
                 if(root->front == NULL)
@@ -87,12 +97,15 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
                     root->front = BSP_CreateNode();
                 }
                 BSP_AddPolygon(root->front, front);
-
+                Polygon_Clear(front);
+                free(front);
                 if(root->back == NULL)
                 {
                     root->back = BSP_CreateNode();
                 }
                 BSP_AddPolygon(root->back, back);
+                Polygon_Clear(back);
+                free(back);
             }
             break;
     };

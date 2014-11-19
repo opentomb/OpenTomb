@@ -27,6 +27,8 @@ obb_p OBB_Create()
         ret->polygons[i].vertices = NULL;
         ret->base_polygons[i].anim_tex_frames = NULL;
         ret->polygons[i].anim_tex_frames = NULL;
+        ret->base_polygons[i].anim_tex_indexes = NULL;
+        ret->polygons[i].anim_tex_indexes = NULL;
         Polygon_Resize(ret->base_polygons+i, 4);
         Polygon_Resize(ret->polygons+i, 4);
     }
