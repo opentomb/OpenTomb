@@ -2762,23 +2762,21 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
-        if(p->anim_id > 0)
+        
+        if(face3->lighting & 0x01)
         {
-            if(tex->transparency_flags == 0)
-            {
-                tex->transparency_flags = BM_ANIMATED_TEX;
-            }
-            else if(tex->transparency_flags == 1)
-            {
-                tex->transparency_flags = BM_MULTIPLY;
-            }
-        }
-        if(tex->transparency_flags > 1)
-        {
+            p->transparency = BM_MULTIPLY;
             mesh->transparancy_count++;
         }
-        p->transparency = tex->transparency_flags;
-
+        else
+        {
+            p->transparency = tex->transparency_flags;
+            if(tex->transparency_flags > 1)
+            {
+                mesh->transparancy_count++;
+            }
+        }
+        
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[0]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face3->vertices[1]]);
         TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face3->vertices[2]]);
@@ -2911,22 +2909,20 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
-        if(p->anim_id > 0)
+        
+        if(face4->lighting & 0x01)
         {
-            if(tex->transparency_flags == 0)
-            {
-                tex->transparency_flags = BM_ANIMATED_TEX;
-            }
-            else if(tex->transparency_flags == 1)
-            {
-                tex->transparency_flags = BM_MULTIPLY;
-            }
-        }
-        if(tex->transparency_flags > 1)
-        {
+            p->transparency = BM_MULTIPLY;
             mesh->transparancy_count++;
         }
-        p->transparency = tex->transparency_flags;
+        else
+        {
+            p->transparency = tex->transparency_flags;
+            if(tex->transparency_flags > 1)
+            {
+                mesh->transparancy_count++;
+            }
+        }
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face4->vertices[0]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face4->vertices[1]]);
@@ -3206,21 +3202,13 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         face3 = &tr_room->triangles[i];
         tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
         SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
-        if(p->anim_id > 0)
-        {
-            if(tex->transparency_flags == 0)
-            {
-                tex->transparency_flags = BM_ANIMATED_TEX;
-            }
-            else if(tex->transparency_flags == 1)
-            {
-                tex->transparency_flags = BM_MULTIPLY;
-            }
-        }
+        
+        
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
         }
+        
         Polygon_Resize(p, 3);
 
         p->transparency = tex->transparency_flags;
@@ -3255,17 +3243,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         face4 = &tr_room->rectangles[i];
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
-        if(p->anim_id > 0)
-        {
-            if(tex->transparency_flags == 0)
-            {
-                tex->transparency_flags = BM_ANIMATED_TEX;
-            }
-            else if(tex->transparency_flags == 1)
-            {
-                tex->transparency_flags = BM_MULTIPLY;
-            }
-        }
+        
+        
         if(tex->transparency_flags > 1)
         {
             mesh->transparancy_count++;
