@@ -549,7 +549,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
     p = mesh->polygons;
     for(i=0;i<mesh->poly_count;i++,p++)
     {
-        if(p->transparency < 2 && !Polygon_IsBroken(p))
+        if((p->transparency < 2) && (p->anim_id == 0) && !Polygon_IsBroken(p))
         {
             uint32_t texture = p->tex_index;
             uint32_t oldStart = mesh->element_count_per_texture[texture];

@@ -1937,6 +1937,19 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             TR_TransparencyMeshToBSP(sm->mesh, r->bsp_root, sm->transform);
         }
 
+        engine_container_p cont = r->containers;
+        for(;cont!=NULL;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p ent = (entity_p)cont->object;
+                if((ent->bf.model->animation_count == 1) && (ent->bf.model->animations->frames_count == 1))
+                {
+                    TR_TransparencyMeshToBSP(ent->bf.model->mesh_tree->mesh, r->bsp_root, ent->transform);
+                }
+            }
+        }
+
         if(r->base_room != NULL)
         {
             Room_Disable(r);                             //Disable current room
@@ -2567,7 +2580,7 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
 void SortPolygonsInMesh(struct base_mesh_s *mesh)
 {
     int i, j;
-    polygon_p buf;
+    polygon_p buf, p;
 
     if(mesh->transparancy_flags == MESH_FULL_TRANSPERENCY)
     {
@@ -2587,10 +2600,10 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
     }
 
     buf = (polygon_p)malloc(mesh->transparancy_count * sizeof(polygon_t));
-
-    for(i=0,j=0;i<mesh->poly_count;i++)
+    p = mesh->polygons;
+    for(i=0,j=0;i<mesh->poly_count;i++,p++)
     {
-        if(mesh->polygons[i].transparency > 1)
+        if((p->transparency > 1) || (p->anim_id > 0))
         {
             *(buf + j) = *(mesh->polygons + i);
             j++;
@@ -2623,7 +2636,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
     for(uint32_t i=0;i<mesh->transparancy_count;i++,p++)
     {
         Polygon_Copy(&tp, p);
-        if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/ (p->anim_id > 0) && (p->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
+        if((p->anim_id > 0) && (p->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
         {
             anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
             tp.anim_tex_frames_count = seq->frames_count;
@@ -2687,19 +2700,9 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
 
         Polygon_TransformSelf(&tp, transform);
         BSP_AddPolygon(root, &tp);
-        //Polygon_Clear(p);
     }
 
     Polygon_Clear(&tp);
-
-    /*if(mesh->transparancy_count > 0)
-    {
-        mesh->transparancy_count = 0;
-        mesh->poly_count = 0;
-        free(mesh->polygons);
-        mesh->polygons = NULL;
-    }*/
-
     //mesh->transparancy_flags = MESH_FULL_OPAQUE;
 }
 
@@ -2769,7 +2772,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
-        
+
         if(face3->lighting & 0x01)
         {
             p->transparency = BM_MULTIPLY;
@@ -2778,12 +2781,12 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         else
         {
             p->transparency = tex->transparency_flags;
-            if(tex->transparency_flags > 1)
+            if((tex->transparency_flags > 1) || (p->anim_id > 0))
             {
                 mesh->transparancy_count++;
             }
         }
-        
+
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[0]]);
         TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face3->vertices[1]]);
         TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face3->vertices[2]]);
@@ -2916,7 +2919,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
-        
+
         if(face4->lighting & 0x01)
         {
             p->transparency = BM_MULTIPLY;
@@ -2925,7 +2928,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         else
         {
             p->transparency = tex->transparency_flags;
-            if(tex->transparency_flags > 1)
+            if((tex->transparency_flags > 1) || (p->anim_id > 0))
             {
                 mesh->transparancy_count++;
             }
@@ -3209,13 +3212,12 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         face3 = &tr_room->triangles[i];
         tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
         SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
-        
-        
-        if(tex->transparency_flags > 1)
+
+        if((tex->transparency_flags > 1) || (p->anim_id > 0))
         {
             mesh->transparancy_count++;
         }
-        
+
         Polygon_Resize(p, 3);
 
         p->transparency = tex->transparency_flags;
@@ -3250,9 +3252,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         face4 = &tr_room->rectangles[i];
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
-        
-        
-        if(tex->transparency_flags > 1)
+
+        if((tex->transparency_flags > 1) || (p->anim_id > 0))
         {
             mesh->transparancy_count++;
         }
@@ -3395,9 +3396,9 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     model->mesh_tree = (mesh_tree_tag_p)malloc(model->mesh_count * sizeof(mesh_tree_tag_t));
     tree_tag = model->mesh_tree;
     tree_tag->mesh2 = NULL;
-    
+
     uint32_t *mesh_index = tr->mesh_indices + tr_moveable->starting_mesh;
-    
+
     for(k=0;k<model->mesh_count;k++,tree_tag++)
     {
         tree_tag->mesh = world->meshes + (mesh_index[k]);

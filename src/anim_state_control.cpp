@@ -1216,7 +1216,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 break;
             }
-            
+
             Audio_Kill(TR_AUDIO_SOUND_SLIDING, TR_AUDIO_EMITTER_ENTITY, ent->id);
             break;
 
@@ -1250,7 +1250,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 break;
             }
-            
+
             Audio_Kill(TR_AUDIO_SOUND_SLIDING, TR_AUDIO_EMITTER_ENTITY, ent->id);
             break;
 
@@ -1623,7 +1623,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->onAnimChange = ent_to_monkey_swing;
                 break;
             }
-            if((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
+            if(((cmd->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR)) && ((cmd->action == 0) || (climb->can_hang == 0)))
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;                        // middle landing
                 break;

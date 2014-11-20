@@ -1311,7 +1311,7 @@ void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVect
 
 void render_DebugDrawer::render()
 {
-    if(m_lines != 0)
+    if(m_lines > 0)
     {
         glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), m_buffer);
         glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]),  m_buffer + 3);
