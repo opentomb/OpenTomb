@@ -3395,9 +3395,12 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     model->mesh_tree = (mesh_tree_tag_p)malloc(model->mesh_count * sizeof(mesh_tree_tag_t));
     tree_tag = model->mesh_tree;
     tree_tag->mesh2 = NULL;
+    
+    uint32_t *mesh_index = tr->mesh_indices + tr_moveable->starting_mesh;
+    
     for(k=0;k<model->mesh_count;k++,tree_tag++)
     {
-        tree_tag->mesh = model->mesh_offset + k;
+        tree_tag->mesh = world->meshes + (mesh_index[k]);
         tree_tag->mesh2 = NULL;
         tree_tag->flag = 0x00;
         vec3_set_zero(tree_tag->offset);
