@@ -498,9 +498,9 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 
 uint32_t TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
 {
-    uint32_t m1 = (v1 > v2)?(v1):(v2);
-    uint32_t m2 = (v3 > v4)?(v3):(v4);
-    return (m1 > m2)?(m1):(m2);
+    v1 = (v1 > v2)?(v1):(v2);
+    v2 = (v3 > v4)?(v3):(v4);
+    return (v1 > v2)?(v1):(v2);
 }
 
 int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
@@ -1505,7 +1505,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     lua_settop(engine_lua, top);
     i = (i < 0)?(0):(i);
     i = (i > 128)?(128):(i);
-    world->tex_atlas = BorderedTextureAtlas_Create(i);                    // here is border size
+    world->tex_atlas = BorderedTextureAtlas_Create(i);                          // here is border size
     for (i = 0; i < tr->textile32_count; i++)
     {
         BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
@@ -2552,12 +2552,26 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             {
                 BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &p, (GLfloat)j * seq->uvrotate_speed, true);
                 seq->frames[j].tex_ind = p.tex_index;
-                seq->frames[j].mat[0 * 2 + 0] = 1.0;
-                seq->frames[j].mat[0 * 2 + 1] = 0.0;
-                seq->frames[j].mat[1 * 2 + 0] = 0.0;
-                seq->frames[j].mat[1 * 2 + 1] = 1.0;
-                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - p0.vertices[0].tex_coord[1];
+
+                GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
+                A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
+                B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
+
+                A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
+                A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
+                B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
+                B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
+
+                d = A0[0] * B0[1] - A0[1] * B0[0];
+                seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
+                seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
+                seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
+                seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
+
+                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
+                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
             }
         }
         else
@@ -2568,12 +2582,26 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             {
                 BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[j], 0, &p);
                 seq->frames[j].tex_ind = p.tex_index;
-                seq->frames[j].mat[0 * 2 + 0] = 1.0;
-                seq->frames[j].mat[0 * 2 + 1] = 0.0;
-                seq->frames[j].mat[1 * 2 + 0] = 0.0;
-                seq->frames[j].mat[1 * 2 + 1] = 1.0;
-                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - p0.vertices[0].tex_coord[1];
+
+                GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
+                A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
+                B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
+
+                A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
+                A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
+                B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
+                B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
+
+                d = A0[0] * B0[1] - A0[1] * B0[0];
+                seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
+                seq->frames[j].mat[1 + 0 * 2] =-(A[1] * B0[1] - A0[1] * B[1]) / d;
+                seq->frames[j].mat[0 + 1 * 2] =-(A0[0] * B[0] - A[0] * B0[0]) / d;
+                seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
+
+                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
+                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
             }
 
         }
@@ -2675,7 +2703,7 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
         if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
         {
             anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
-            if(seq->uvrotate)
+            if(seq->uvrotate)                                                   // set tex coordinates to the first frame for correct texture transform in renderer
             {
                 BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &tp, 0.0, true);
             }
@@ -2690,7 +2718,6 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
     }
 
     Polygon_Clear(&tp);
-    //mesh->transparancy_flags = MESH_FULL_OPAQUE;
 }
 
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr)
@@ -3927,7 +3954,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->self->room = NULL;
         }
 
-        entity->activation_mask  = (tr_item->flags & 0x3E00) >> 9;  ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
+        entity->activation_mask  = (tr_item->flags & 0x3E00) >> 9;              ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
         entity->OCB              =  tr_item->ocb;
 
         entity->self->collide_flag = 0x0000;
