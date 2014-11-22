@@ -2471,8 +2471,15 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 {
     uint16_t *pointer;
     uint16_t  i, num_sequences, num_uvrotates;
-    //uint16_t  block_size = tr->animated_textures_count; // This is actually whole anim textures block size.
     int32_t   uvrotate_script = 0;
+    polygon_t p0, p;
+
+    p0.vertex_count = 0;
+    p0.vertices = NULL;
+    p.vertex_count = 0;
+    p.vertices = NULL;
+    Polygon_Resize(&p0, 3);
+    Polygon_Resize(&p, 3);
 
     pointer       = tr->animated_textures;
     num_uvrotates = tr->animated_textures_uv_count;
@@ -2483,23 +2490,24 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     world->anim_sequences = (anim_seq_p)malloc(num_sequences * sizeof(anim_seq_t));
     memset(world->anim_sequences, 0, sizeof(anim_seq_t) * num_sequences);       // Reset all structure.
 
-    for(i = 0; i < num_sequences; i++)
+    anim_seq_p seq = world->anim_sequences;
+    for(i = 0; i < num_sequences; i++,seq++)
     {
-        world->anim_sequences[i].frames_count = *(pointer++) + 1;
-        world->anim_sequences[i].frame_list   =  (uint32_t*)malloc(world->anim_sequences[i].frames_count * sizeof(uint32_t));
+        seq->frames_count = *(pointer++) + 1;
+        seq->frame_list   =  (uint32_t*)malloc(seq->frames_count * sizeof(uint32_t));
 
         // Fill up new sequence with frame list.
-        world->anim_sequences[i].anim_type         = TR_ANIMTEXTURE_FORWARD;
-        world->anim_sequences[i].frame_lock        = false; // by default anim is playing
-        world->anim_sequences[i].uvrotate          = false; // by default uvrotate
-        world->anim_sequences[i].reverse_direction = false; // Needed for proper reverse-type start-up.
-        world->anim_sequences[i].frame_rate        = 0.05;  // Should be passed as 1 / FPS.
-        world->anim_sequences[i].frame_time        = 0.0;   // Reset frame time to initial state.
-        world->anim_sequences[i].current_frame     = 0;     // Reset current frame to zero.
+        seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
+        seq->frame_lock        = false; // by default anim is playing
+        seq->uvrotate          = false; // by default uvrotate
+        seq->reverse_direction = false; // Needed for proper reverse-type start-up.
+        seq->frame_rate        = 0.05;  // Should be passed as 1 / FPS.
+        seq->frame_time        = 0.0;   // Reset frame time to initial state.
+        seq->current_frame     = 0;     // Reset current frame to zero.
 
-        for(int j = 0; j < world->anim_sequences[i].frames_count; j++)
+        for(uint16_t j = 0; j < seq->frames_count; j++)
         {
-            world->anim_sequences[i].frame_list[j] = *(pointer++);  // Add one frame.
+            seq->frame_list[j] = *(pointer++);  // Add one frame.
         }
 
         // UVRotate textures case.
@@ -2519,28 +2527,59 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             lua_settop(level_script, top);
         }
 
-        if((i < num_uvrotates) /*&& (uvrotate_script != 0)*/)
+        if(i < num_uvrotates)
         {
-            world->anim_sequences[i].uvrotate = true;
+            seq->uvrotate = true;
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
             // if scrolling is completed or not.
-            world->anim_sequences[i].frames_count = 8;
-            world->anim_sequences[i].uvrotate_max   = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, world->anim_sequences[i].frame_list[0]) / 2);
-            world->anim_sequences[i].uvrotate_speed = world->anim_sequences[i].uvrotate_max / (btScalar)world->anim_sequences[i].frames_count;
+            seq->frames_count = 8;
+            seq->uvrotate_max   = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, seq->frame_list[0]) / 2);
+            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
+            seq->frames = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
 
             if(uvrotate_script > 0)
             {
-                world->anim_sequences[i].anim_type        = TR_ANIMTEXTURE_FORWARD;
-                //world->anim_sequences[i].uvrotate_speed   = (btScalar)(uvrotate_script);
+                seq->anim_type        = TR_ANIMTEXTURE_FORWARD;
             }
             else if(uvrotate_script < 0)
             {
-                world->anim_sequences[i].anim_type        = TR_ANIMTEXTURE_BACKWARD;
-                //world->anim_sequences[i].uvrotate_speed   = (btScalar)abs(uvrotate_script);
+                seq->anim_type        = TR_ANIMTEXTURE_BACKWARD;
+            }
+
+            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &p0, 0.0, true);
+            for(uint16_t j=0;j<seq->frames_count;j++)
+            {
+                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &p, (GLfloat)j * seq->uvrotate_speed, true);
+                seq->frames[j].tex_ind = p.tex_index;
+                seq->frames[j].mat[0 * 2 + 0] = 1.0;
+                seq->frames[j].mat[0 * 2 + 1] = 0.0;
+                seq->frames[j].mat[1 * 2 + 0] = 0.0;
+                seq->frames[j].mat[1 * 2 + 1] = 1.0;
+                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - p0.vertices[0].tex_coord[1];
             }
         }
+        else
+        {
+            seq->frames = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
+            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &p0);
+            for(uint16_t j=0;j<seq->frames_count;j++)
+            {
+                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[j], 0, &p);
+                seq->frames[j].tex_ind = p.tex_index;
+                seq->frames[j].mat[0 * 2 + 0] = 1.0;
+                seq->frames[j].mat[0 * 2 + 1] = 0.0;
+                seq->frames[j].mat[1 * 2 + 0] = 0.0;
+                seq->frames[j].mat[1 * 2 + 1] = 1.0;
+                seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - p0.vertices[0].tex_coord[0];
+                seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - p0.vertices[0].tex_coord[1];
+            }
+
+        }
     } // end for(i = 0; i < num_sequences; i++)
+    Polygon_Clear(&p0);
+    Polygon_Clear(&p);
 }
 
 /**   Assign animated texture to a polygon.
@@ -2627,78 +2666,26 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
     polygon_t tp;
 
     tp.vertex_count = 0;
-    tp.anim_tex_frames_count = 0;
     tp.vertices = NULL;
-    tp.anim_tex_frames = NULL;
-    tp.anim_tex_indexes = NULL;
 
     polygon_p p = mesh->polygons;
     for(uint32_t i=0;i<mesh->transparancy_count;i++,p++)
     {
         Polygon_Copy(&tp, p);
-        if((p->anim_id > 0) && (p->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
+        if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
         {
             anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
-            tp.anim_tex_frames_count = seq->frames_count;
-            tp.anim_tex_frames = (GLfloat*)realloc(tp.anim_tex_frames, 2 * seq->frames_count * tp.vertex_count * sizeof(GLfloat));
-            tp.anim_tex_indexes = (uint16_t*)realloc(tp.anim_tex_indexes, seq->frames_count * sizeof(uint16_t));
-            for(uint16_t j=0;j<seq->frames_count;j++)
+            if(seq->uvrotate)
             {
-                uint16_t frame = (j + p->frame_offset) % seq->frames_count;
-                uint16_t tex_id;
-                // We have different ways of animating textures, depending on type.
-                // Default TR1-5 engine only have forward animation (plus UVRotate for TR4-5).
-                // However, in TRNG it is possible to animate textures back and reverse, so we
-                // also implement this type in OpenTomb.
-                // UVRotate way of animating is more complicated and left as a placeholder.
-                // Write new texture coordinates to polygon.
-                if(seq->uvrotate)
-                {
-                    tex_id = seq->frame_list[0];
-                    seq->current_frame = 0;
-                    switch(seq->anim_type)
-                    {
-                        case TR_ANIMTEXTURE_REVERSE:
-                        case TR_ANIMTEXTURE_FORWARD:
-                            seq->current_uvrotate = (frame) * seq->uvrotate_speed;
-                            break;
-
-                        case TR_ANIMTEXTURE_BACKWARD:
-                            seq->current_uvrotate = (seq->frames_count - frame - 1) * seq->uvrotate_speed;
-                            break;
-                    };
-                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0,
-                                                        &tp, seq->current_uvrotate, true);
-                }
-                else
-                {
-                    tex_id = seq->frame_list[frame];                            // Extract TexInfo ID from sequence frame list.
-                    switch(seq->anim_type)
-                    {
-                        case TR_ANIMTEXTURE_REVERSE:
-                        case TR_ANIMTEXTURE_FORWARD:
-                            seq->current_frame = frame;
-                            break;
-
-                        case TR_ANIMTEXTURE_BACKWARD:
-                            seq->current_frame = seq->frames_count - frame - 1;
-                            break;
-                    };
-                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, tex_id, 0, &tp);
-                }
-
-                tp.anim_tex_indexes[j] = tp.tex_index;
-                for(uint16_t k=0;k<tp.vertex_count;k++)
-                {
-                    uint16_t offset = 2 * k * tp.anim_tex_frames_count + 2 * j;
-                    tp.anim_tex_frames[offset + 0] = tp.vertices[k].tex_coord[0];
-                    tp.anim_tex_frames[offset + 1] = tp.vertices[k].tex_coord[1];
-                }
+                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &tp, 0.0, true);
             }
-            seq->current_frame = 0;
+            else
+            {
+                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &tp);
+            }
         }
 
-        Polygon_TransformSelf(&tp, transform);
+        Polygon_Transform(&tp, p, transform);
         BSP_AddPolygon(root, &tp);
     }
 

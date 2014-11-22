@@ -103,6 +103,14 @@ typedef struct light_s
 /*
  *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
  */
+
+typedef struct tex_frame_s
+{
+    btScalar    mat[4];
+    btScalar    move[2];
+    uint16_t    tex_ind;
+}tex_frame_t, *tex_frame_p;
+
 typedef struct anim_seq_s
 {
     bool        uvrotate;               // UVRotate mode flag.
@@ -123,8 +131,7 @@ typedef struct anim_seq_s
     btScalar    uvrotate_max;           // Reference value used to restart rotation.
     btScalar    current_uvrotate;       // Current coordinate window position.
 
-    GLfloat    *uv_frames;
-    uint16_t   *tex_indexes;
+    struct tex_frame_s  *frames;
     
     uint32_t*   frame_list;       // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;

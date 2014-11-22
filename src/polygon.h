@@ -38,9 +38,9 @@ typedef struct polygon_s
     bool                double_side;                                            // double side flag
     btScalar            plane[4];                                               // polygon plane equation
     
-    uint16_t            anim_tex_frames_count;
-    GLfloat            *anim_tex_frames;
-    uint16_t           *anim_tex_indexes;
+    //uint16_t            anim_tex_frames_count;
+    //GLfloat            *anim_tex_frames;
+    //uint16_t           *anim_tex_indexes;
 }polygon_t, *polygon_p;
 
 /*
@@ -66,7 +66,7 @@ int  Polygon_IntersectPolygon(polygon_p p1, polygon_p p2);
 
 int  Polygon_SplitClassify(polygon_p p, btScalar n[4]);
 void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back);
-void Polygon_AddVertex(polygon_p p, struct vertex_s *v, GLfloat *frame);
+void Polygon_AddVertex(polygon_p p, struct vertex_s *v);
 
 int Polygon_IsInsideBBox(polygon_p p, btScalar bb_min[3], btScalar bb_max[3]);
 int Polygon_IsInsideBQuad(polygon_p p, btScalar bb_min[3], btScalar bb_max[3]);
