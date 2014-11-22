@@ -198,68 +198,6 @@ void Polygon_vTransform(polygon_p ret, polygon_p src, btScalar tr[16])
 }
 
 
-int Polygon_VerticalRayIntersect(polygon_p p, btScalar dot[3])
-{
-#if 0
-    btScalar t, tdot[3], dir[3] = {0.0, 0.0, 1.0};
-
-    if(Polygon_RayIntersect(p, dot, dir, &t))
-    {
-        vec3_copy(tdot, dot);
-        vec3_ray_plane_intersect(dot, dir, p->plane, tdot, t);
-        dot[2] = tdot[2];
-        return 1;
-    }
-    return 0;
-
-#else
-    btScalar t, dist[2];
-    int i;
-    vertex_p prev_v, curr_v;
-
-    prev_v = p->vertices + p->vertex_count - 1;
-    curr_v = p->vertices;
-    dist[0] = (prev_v->position[0] - curr_v->position[0]) * (prev_v->position[1] - dot[1]) - (prev_v->position[1] - curr_v->position[1]) * (prev_v->position[0] - dot[0]);
-    if(fabs(dist[0]) <= 0.005)                                                  // точка принадлежит линии
-    {
-        if((dot[0] >= prev_v->position[0] && dot[0] <= curr_v->position[0]) || (dot[0] <= prev_v->position[0] && dot[0] >= curr_v->position[0]))
-        {
-            goto calc_pos;
-        }
-        return 0;
-    }
-    for(i=0;i<p->vertex_count-1;i++)
-    {
-        prev_v = curr_v;
-        curr_v ++;
-        dist[1] = (prev_v->position[0] - curr_v->position[0]) * (prev_v->position[1] - dot[1]) - (prev_v->position[1] - curr_v->position[1]) * (prev_v->position[0] - dot[0]);
-        if(fabs(dist[1]) <= 0.005)                                              // dot is inside line
-        {
-            if((dot[0] >= prev_v->position[0] && dot[0] <= curr_v->position[0]) || (dot[0] <= prev_v->position[0] && dot[0] >= curr_v->position[0]))
-            {
-                goto calc_pos;
-            }
-            return 0;
-        }
-        if(dist[0] * dist[1] < 0.0)
-        {
-            return 0;                                                           // Тест провален, искать нечего
-        }
-        dist[0] = dist[1];
-    }
-
-    calc_pos:
-
-    dot[2] = p->vertices[0].position[2];
-    t = -vec3_plane_dist(p->plane, dot);
-    t /= p->plane[2];
-    dot[2] = p->vertices[0].position[2] + t;
-
-    return 1;
-#endif
-}
-
-
 int Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t)
 {
     btScalar tt, u, v, E1[3], E2[3], P[3], Q[3], T[3];
@@ -268,16 +206,16 @@ int Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar
     u = vec3_dot(p->plane, dir);
     if(fabs(u) < 0.001 /*|| vec3_plane_dist(p->plane, dot) < -0.001*/)          // FIXME: magick
     {
-        return 0;                                                               // плоскость параллельна лучу
+        return 0;                                                               // plane is parallel to the ray - no intersection
     }
     *t = - vec3_plane_dist(p->plane, dot);
     *t /= u;
 
-    vp = p->vertices;                                                           // Указатель на текущий треугольник
-    vec3_sub(T, dot, vp[0].position);                                           // Вектор который не меняется для всего полигона
+    vp = p->vertices;                                                           // current polygon pointer
+    vec3_sub(T, dot, vp[0].position);
 
     vec3_sub(E2, vp[1].position, vp[0].position)
-    for(i=0;i<p->vertex_count-2;i++,vp++)                                       // Обход полигона веером, один из векторов остается прежним
+    for(i=0;i<p->vertex_count-2;i++,vp++)
     {
         vec3_copy(E1, E2)                                                       // PREV
         vec3_sub(E2, vp[2].position, p->vertices[0].position)                   // NEXT
@@ -307,7 +245,7 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
     int i;
     char cnt = 0;
 
-    if(SPLIT_IN_BOTH != Polygon_SplitClassify(p1, p2->plane) || SPLIT_IN_BOTH != Polygon_SplitClassify(p2, p1->plane))
+    if(SPLIT_IN_BOTH != Polygon_SplitClassify(p1, p2->plane) || (SPLIT_IN_BOTH != Polygon_SplitClassify(p2, p1->plane)))
     {
         return 0;                                                               // quick check
     }
@@ -328,8 +266,8 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
         {
             if(dist[0] < -SPLIT_EPSILON)
             {
-                vec3_sub(dir, curr_v->position, prev_v->position);              // вектор соединяющий соседние точки
-                vec3_ray_plane_intersect(prev_v->position, dir, p2->plane, result_v, t);  // ищем точку пересечения
+                vec3_sub(dir, curr_v->position, prev_v->position);
+                vec3_ray_plane_intersect(prev_v->position, dir, p2->plane, result_v, t);
                 result_v += 3;
                 cnt++;
             }
@@ -338,8 +276,8 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
         {
             if(dist[0] > SPLIT_EPSILON)
             {
-                vec3_sub(dir, curr_v->position, prev_v->position);              // вектор соединяющий соседние точки
-                vec3_ray_plane_intersect(prev_v->position, dir, p2->plane, result_v, t);  // ищем точку пересечения
+                vec3_sub(dir, curr_v->position, prev_v->position);
+                vec3_ray_plane_intersect(prev_v->position, dir, p2->plane, result_v, t);
                 result_v += 3;
                 cnt++;
             }
@@ -361,7 +299,7 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
     }
 
     /*
-     * рассечение полигона p2 плоскостью p1
+     * splitting p2 by p1 split plane
      */
     prev_v = p2->vertices + p2->vertex_count - 1;
     curr_v = p2->vertices;
@@ -373,8 +311,8 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
         {
             if(dist[0] < -SPLIT_EPSILON)
             {
-                vec3_sub(dir, curr_v->position, prev_v->position);              // вектор соединяющий соседние точки
-                vec3_ray_plane_intersect(prev_v->position, dir, p1->plane, result_v, t);  // ищем точку пересечения
+                vec3_sub(dir, curr_v->position, prev_v->position);
+                vec3_ray_plane_intersect(prev_v->position, dir, p1->plane, result_v, t);
                 result_v += 3;
                 cnt++;
             }
@@ -383,8 +321,8 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
         {
             if(dist[0] > SPLIT_EPSILON)
             {
-                vec3_sub(dir, curr_v->position, prev_v->position);              // вектор соединяющий соседние точки
-                vec3_ray_plane_intersect(prev_v->position, dir, p1->plane, result_v, t);  // ищем точку пересечения
+                vec3_sub(dir, curr_v->position, prev_v->position);
+                vec3_ray_plane_intersect(prev_v->position, dir, p1->plane, result_v, t);
                 result_v += 3;
                 cnt++;
             }
@@ -405,30 +343,7 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
         curr_v ++;
     }
 
-    /*
-     * Теперь преобрзуем координаты
-     */
-
-    //if(cnt < 4)
-    //{
-    //    return 0;
-    //}
-
-#if 0
-    GLint lw;
-    glColor3f(1.0, 0.0, 0.0);
-    glGetIntegerv(GL_LINE_WIDTH, &lw);
-    glLineWidth(5.0);
-    glBegin(GL_LINES);
-    glVertex3dv(result_buf);
-    glVertex3dv(result_buf+3);
-    glVertex3dv(result_buf+6);
-    glVertex3dv(result_buf+9);
-    glEnd();
-    glLineWidth(lw);
-#endif
-
-    vec3_cross(dir, p1->plane, p2->plane);                                      // вектор - задающий линию пересечения плоскостей
+    vec3_cross(dir, p1->plane, p2->plane);                                      // vector of two planes intersection line
     t = ABS(dir[0]);
     dist[0] = ABS(dir[1]);
     dist[1] = ABS(dir[2]);
@@ -466,11 +381,6 @@ int Polygon_IntersectPolygon(polygon_p p1, polygon_p p2)
 
     ReturnTempbtScalar(3 * (p1->vertex_count + p2->vertex_count));
 
-    /*
-     * если обе точки пересечения полигона плоскостью лежат
-     * либо левее второго полигона, либо правее
-     * то пересечения нет
-     */
     if(dist[0] > 0)
     {
         return !((dist[1] < 0.0 && dist[2] < 0.0) || (dist[1] > dist[0] && dist[2] > dist[0]));
@@ -553,8 +463,8 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
         {
             if(dist[0] < -SPLIT_EPSILON)
             {
-                vec3_sub(dir, curr_v->position, prev_v->position);              // добавляем к обоим полигонам
-                vec3_ray_plane_intersect(prev_v->position, dir, n, tv.position, t);     // ищем точку пересечения
+                vec3_sub(dir, curr_v->position, prev_v->position);
+                vec3_ray_plane_intersect(prev_v->position, dir, n, tv.position, t);
 
                 tv.normal[0] = prev_v->normal[0] + t * (curr_v->normal[0] - prev_v->normal[0]);
                 tv.normal[1] = prev_v->normal[1] + t * (curr_v->normal[1] - prev_v->normal[1]);
@@ -574,17 +484,17 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                Polygon_AddVertex(front, &tv);                                  // добавляем вершину к переднему полигону
-                Polygon_AddVertex(back, &tv);                                   // добавляем вершину к заднему полигону
+                Polygon_AddVertex(front, &tv);
+                Polygon_AddVertex(back, &tv);
             }
-            Polygon_AddVertex(front, curr_v);                                   // добавляем вершину к переднему полигону
+            Polygon_AddVertex(front, curr_v);
         }
         else if(dist[1] < -SPLIT_EPSILON)
         {
             if(dist[0] > SPLIT_EPSILON)
             {
-                vec3_sub(dir, curr_v->position, prev_v->position);              // добавляем к обоим полигонам
-                vec3_ray_plane_intersect(prev_v->position, dir, n, tv.position, t);     // ищем точку пересечения
+                vec3_sub(dir, curr_v->position, prev_v->position);
+                vec3_ray_plane_intersect(prev_v->position, dir, n, tv.position, t);
 
                 tv.normal[0] = prev_v->normal[0] + t * (curr_v->normal[0] - prev_v->normal[0]);
                 tv.normal[1] = prev_v->normal[1] + t * (curr_v->normal[1] - prev_v->normal[1]);
@@ -604,15 +514,15 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                Polygon_AddVertex(front, &tv);                                  // добавляем вершину к переднему полигону
-                Polygon_AddVertex(back, &tv);                                   // добавляем вершину к заднему полигону
+                Polygon_AddVertex(front, &tv);
+                Polygon_AddVertex(back, &tv);
             }
-            Polygon_AddVertex(back, curr_v);                                    // добавляем вершину к заднему полигону
+            Polygon_AddVertex(back, curr_v);
         }
         else
         {
-            Polygon_AddVertex(front, curr_v);                                   // добавляем вершину к переднему полигону
-            Polygon_AddVertex(back, curr_v);                                    // добавляем вершину к заднему полигону
+            Polygon_AddVertex(front, curr_v);
+            Polygon_AddVertex(back, curr_v);
         }
 
         prev_v = curr_v;
@@ -664,7 +574,7 @@ void Polygon_AddVertex(polygon_p p, struct vertex_s *v)
     vertex_p vp;
     int size = p->vertex_count+1;
 
-    size += (4 - size % 4);                                                     // количество вершин выравнивается блоками по 4
+    size += (4 - size % 4);                                                     // vertex count aligned by 4
 
     p->vertices = (vertex_p)realloc(p->vertices, size * sizeof(vertex_t));
     vp = p->vertices + p->vertex_count;

@@ -37,10 +37,6 @@ typedef struct polygon_s
     uint16_t            transparency;                                           // transparency information
     bool                double_side;                                            // double side flag
     btScalar            plane[4];                                               // polygon plane equation
-    
-    //uint16_t            anim_tex_frames_count;
-    //GLfloat            *anim_tex_frames;
-    //uint16_t           *anim_tex_indexes;
 }polygon_t, *polygon_p;
 
 /*
@@ -60,7 +56,6 @@ void Polygon_Transform(polygon_p ret, polygon_p src, btScalar tr[16]);
 void Polygon_TransformSelf(polygon_p p, btScalar tr[16]);
 
 void Polygon_FindNormale(polygon_p p);
-int  Polygon_VerticalRayIntersect(polygon_p p, btScalar dot[3]);
 int  Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t);            // тест на пересечение луча и выпуклого полигона в 3д
 int  Polygon_IntersectPolygon(polygon_p p1, polygon_p p2);
 

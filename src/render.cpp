@@ -1301,6 +1301,7 @@ void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, co
     if(m_lines < m_max_lines - 1)
     {
         v = m_buffer + 3 * 4 * m_lines;
+        m_lines++;
 
         vec3_copy(v, from.m_floats);
         v += 3;
@@ -1309,7 +1310,6 @@ void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, co
         vec3_copy(v, to.m_floats);
         v += 3;
         vec3_copy(v, color.m_floats);
-        m_lines++;
     }
 }
 
@@ -1480,10 +1480,13 @@ void render_DebugDrawer::drawPortal(struct portal_s *p)
 
 void render_DebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform)
 {
-    OBB_Rebuild(m_obb, bb_min, bb_max);
-    m_obb->transform = transform;
-    OBB_Transform(m_obb);
-    drawOBB(m_obb);
+    if(m_lines + 12 < m_max_lines)
+    {
+        OBB_Rebuild(m_obb, bb_min, bb_max);
+        m_obb->transform = transform;
+        OBB_Transform(m_obb);
+        drawOBB(m_obb);
+    }
 }
 
 void render_DebugDrawer::drawOBB(struct obb_s *obb)
@@ -1610,18 +1613,16 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar t
 
 void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16])
 {
-    if(!(renderer.style & R_DRAW_NORMALS))
+    if(renderer.style & R_DRAW_NORMALS)
     {
-        return;
-    }
+        btScalar tr[16];
 
-    btScalar tr[16];
-
-    ss_bone_tag_p btag = bframe->bone_tags;
-    for(int i=0; i<bframe->bone_tag_count; i++,btag++)
-    {
-        Mat4_Mat4_mul_macro(tr, transform, btag->full_transform);
-        drawMeshDebugLines(btag->mesh, tr, NULL, NULL);
+        ss_bone_tag_p btag = bframe->bone_tags;
+        for(int i=0; i<bframe->bone_tag_count; i++,btag++)
+        {
+            Mat4_Mat4_mul_macro(tr, transform, btag->full_transform);
+            drawMeshDebugLines(btag->mesh, tr, NULL, NULL);
+        }
     }
 }
 
