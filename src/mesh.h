@@ -117,12 +117,15 @@ typedef struct anim_seq_s
     btScalar    frame_time;             // Time passed since last frame update.
     uint16_t    current_frame;          // Current frame for this sequence.
     btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
-    uint32_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
+    uint16_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
       
     btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
     btScalar    uvrotate_max;           // Reference value used to restart rotation.
     btScalar    current_uvrotate;       // Current coordinate window position.
 
+    GLfloat    *uv_frames;
+    uint16_t   *tex_indexes;
+    
     uint32_t*   frame_list;       // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;
 
@@ -306,7 +309,6 @@ typedef struct skeletal_model_s
     struct animation_frame_s   *animations;                                     // animations data
 
     uint16_t                    mesh_count;                                     // number of model meshes
-    struct base_mesh_s         *mesh_offset;                                    // pointer to the first mesh in skeletal model mesh array
     struct mesh_tree_tag_s     *mesh_tree;                                      // base mesh tree.
     uint16_t                    collision_map_size;
     uint16_t                   *collision_map;

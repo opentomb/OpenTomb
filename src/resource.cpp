@@ -3894,7 +3894,7 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bo
 
 void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
 {
-    uint32_t i, m_offset;
+    uint32_t i;
     skeletal_model_p smodel;
     tr_moveable_t *tr_moveable;
 
@@ -3906,8 +3906,6 @@ void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         tr_moveable = &tr->moveables[i];
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
-        m_offset = tr->mesh_indices[tr_moveable->starting_mesh];
-        smodel->mesh_offset = world->meshes + m_offset;                         // base mesh offset
         TR_GenSkeletalModel(world, i, smodel, tr);
         SkeletonModel_FillTransparancy(smodel);
     }

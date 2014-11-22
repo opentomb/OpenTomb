@@ -342,9 +342,9 @@ void Character_CreateCollisionObject(struct entity_s *ent)
     ent->character->shapes = (btCollisionShape**)malloc(ent->bf.model->mesh_count * sizeof(btCollisionShape*));
     for(i=0;i<ent->bf.model->mesh_count;i++)
     {
-        box.m_floats[0] = 0.40 * (ent->bf.model->mesh_offset[i].bb_max[0] - ent->bf.model->mesh_offset[i].bb_min[0]);
-        box.m_floats[1] = 0.40 * (ent->bf.model->mesh_offset[i].bb_max[1] - ent->bf.model->mesh_offset[i].bb_min[1]);
-        box.m_floats[2] = 0.40 * (ent->bf.model->mesh_offset[i].bb_max[2] - ent->bf.model->mesh_offset[i].bb_min[2]);
+        box.m_floats[0] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[0] - ent->bf.model->mesh_tree[i].mesh->bb_min[0]);
+        box.m_floats[1] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[1] - ent->bf.model->mesh_tree[i].mesh->bb_min[1]);
+        box.m_floats[2] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[2] - ent->bf.model->mesh_tree[i].mesh->bb_min[2]);
         ent->character->shapes[i] = new btBoxShape(box);
     }
 #endif
@@ -1174,7 +1174,7 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
             m = ent->bf.model->collision_map[i];
             ltr = ent->bf.bone_tags[m].full_transform;
             Mat4_Mat4_mul_macro(tr, ent->transform, ltr);
-            v = ent->bf.model->mesh_offset[m].centre;
+            v = ent->bf.model->mesh_tree[i].mesh->centre;
             ent->character->ghostObject->setCollisionShape(ent->character->shapes[m]);
 
             ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(tr);
