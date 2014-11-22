@@ -154,7 +154,7 @@ void Render_SkyBox()
         p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
         glMultMatrixf(tr);
-        Render_Mesh(renderer.world->sky_box->mesh_offset, NULL, NULL, NULL);
+        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh, NULL, NULL, NULL);
         glPopMatrix();
         glDepthMask(GL_TRUE);
     }
@@ -236,26 +236,26 @@ void Render_PolygonTransparency(struct polygon_s *p)
     // them if you will force type via TRTextur utility.
     switch(p->transparency)
     {
-    default:
-    case BM_MULTIPLY:                                    // Classic PC alpha
-        glBlendFunc(GL_ONE, GL_ONE);
-        break;
+        case BM_MULTIPLY:                                    // Classic PC alpha
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
 
-    case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
-        glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-        break;
+        case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
+            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+            break;
 
-    case BM_INVERT_DEST:                                 // Inversion by dest
-        glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-        break;
+        case BM_INVERT_DEST:                                 // Inversion by dest
+            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+            break;
 
-    case BM_SCREEN:                                      // Screen (smoke, etc.)
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-        break;
+        case BM_SCREEN:                                      // Screen (smoke, etc.)
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+            break;
 
-    case BM_ANIMATED_TEX:
-        glBlendFunc(GL_ONE, GL_ZERO);
-        break;
+        default:                                             // opaque animated textures case
+        case BM_ANIMATED_TEX:
+            glBlendFunc(GL_ONE, GL_ZERO);
+            break;
     };
 
     glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
