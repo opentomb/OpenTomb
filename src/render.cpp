@@ -258,13 +258,49 @@ void Render_PolygonTransparency(struct polygon_s *p)
             break;
     };
 
-    glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-    glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-    glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-    glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-    glDrawArrays(GL_POLYGON, 0, p->vertex_count);
+    if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
+    {
+        anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
+        GLfloat *v, uv[2], *uv0 = (GLfloat*)GetTempbtScalar(2 * p->vertex_count);
+        uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
+        tex_frame_p tf = seq->frames + frame;
+        for(uint16_t i=0;i<p->vertex_count;i++)
+        {
+            v = p->vertices[i].tex_coord;
+            uv0[2*i+0] = v[0];
+            uv0[2*i+1] = v[1];
+            uv[0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
+            uv[1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
+            v[0] = uv[0];
+            v[1] = uv[1];
+        }
+
+        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[tf->tex_ind]);
+        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
+        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
+        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
+        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
+        glDrawArrays(GL_POLYGON, 0, p->vertex_count);
+
+        for(uint16_t i=0;i<p->vertex_count;i++)
+        {
+            v = p->vertices[i].tex_coord;
+            v[0] = uv0[2*i+0];
+            v[1] = uv0[2*i+1];
+        }
+        ReturnTempbtScalar(2 * p->vertex_count);
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
+        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
+        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
+        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
+        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
+        glDrawArrays(GL_POLYGON, 0, p->vertex_count);
+    }
 }
 
 
@@ -411,7 +447,7 @@ void Render_UpdateAnimTextures()                                                
 
 void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys themselves.
 {
-    if(/*(polygon->transparency == BM_ANIMATED_TEX) &&*/(polygon->anim_tex_frames_count > 0) && (polygon->anim_id > 0) && (polygon->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
+    /*if((polygon->anim_tex_frames_count > 0) && (polygon->anim_id > 0) && (polygon->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
     {
         anim_seq_p seq = engine_world.anim_sequences + (polygon->anim_id - 1);
 
@@ -423,7 +459,7 @@ void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys
             polygon->vertices[i].tex_coord[0] = polygon->anim_tex_frames[offset + 0];
             polygon->vertices[i].tex_coord[1] = polygon->anim_tex_frames[offset + 1];
         }
-    }
+    }*/
 }
 
 

@@ -31,10 +31,7 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
         root->polygons = (polygon_p)malloc(sizeof(polygon_t));
         root->polygons_count = 1;
         root->polygons->vertex_count = 0;
-        root->polygons->anim_tex_frames_count = 0;
         root->polygons->vertices = NULL;
-        root->polygons->anim_tex_frames = NULL;
-        root->polygons->anim_tex_indexes = NULL;
         Polygon_Copy(root->polygons, p);
         vec4_copy(root->plane, p->plane);
         return;
@@ -51,10 +48,7 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
                 root->polygons = (polygon_p)realloc(root->polygons, root->polygons_count * sizeof(polygon_t));
                 polygon_p lp = root->polygons + root->polygons_count - 1;
                 lp->vertex_count = 0;
-                lp->anim_tex_frames_count = 0;
                 lp->vertices = NULL;
-                lp->anim_tex_frames = NULL;
-                lp->anim_tex_indexes = NULL;
                 Polygon_Copy(lp, p);
             }
             break;
@@ -80,16 +74,10 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
                 polygon_p front, back;
                 front = (polygon_p)malloc(sizeof(polygon_t));
                 front->vertex_count = 0;
-                front->anim_tex_frames_count = 0;
                 front->vertices = NULL;
-                front->anim_tex_frames = NULL;
-                front->anim_tex_indexes = NULL;
                 back = (polygon_p)malloc(sizeof(polygon_t));
                 back->vertex_count = 0;
-                back->anim_tex_frames_count = 0;
                 back->vertices = NULL;
-                back->anim_tex_frames = NULL;
-                back->anim_tex_indexes = NULL;
                 Polygon_Split(p, root->plane, front, back);
 
                 if(root->front == NULL)
