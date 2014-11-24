@@ -2646,15 +2646,67 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
 
 void SortPolygonsInMesh(struct base_mesh_s *mesh)
 {
-    int i, j;
+    int i, j, k;
     polygon_p buf, p;
 
-    if(mesh->transparancy_flags == MESH_FULL_TRANSPERENCY)
+    mesh->animated_poly_count = 0;
+    mesh->transparancy_count = 0;
+    p = mesh->polygons;
+    for(i=0;i<mesh->poly_count;i++,p++)
     {
-        return;
+        if((p->transparency < 2) && (p->anim_id > 0))
+        {
+            mesh->animated_poly_count++;
+        }
+
+        if(p->transparency >= 2)
+        {
+            mesh->transparancy_count++;
+        }
     }
 
-    if(mesh->transparancy_flags == MESH_FULL_OPAQUE)
+    if(mesh->animated_poly_count > 0)
+    {
+        mesh->animated_polygons = (polygon_p)malloc(mesh->animated_poly_count * sizeof(polygon_t));
+    }
+    if(mesh->transparancy_count > 0)
+    {
+        buf = (polygon_p)malloc(mesh->transparancy_count * sizeof(polygon_t));
+    }
+
+    if((mesh->animated_poly_count > 0) || (mesh->transparancy_count > 0))
+    {
+        p = mesh->polygons;
+        j = 0;
+        k = 0;
+        for(i=0;i<mesh->poly_count;i++,p++)
+        {
+            if(p->transparency > 1)
+            {
+                *(buf + j) = *p;
+                j++;
+            }
+            else if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
+            {
+                anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
+                if(seq->uvrotate)                                                   // set tex coordinates to the first frame for correct texture transform in renderer
+                {
+                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, p, 0.0, true);
+                }
+                else
+                {
+                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, p);
+                }
+                *(mesh->animated_polygons + k) = *p;
+                k++;
+            }
+            else
+            {
+                Polygon_Clear(p);
+            }
+        }
+    }
+    else
     {
         for(i=0;i<mesh->poly_count;i++)
         {
@@ -2664,21 +2716,6 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
         free(mesh->polygons);
         mesh->polygons = NULL;
         return;
-    }
-
-    buf = (polygon_p)malloc(mesh->transparancy_count * sizeof(polygon_t));
-    p = mesh->polygons;
-    for(i=0,j=0;i<mesh->poly_count;i++,p++)
-    {
-        if((p->transparency > 1) || (p->anim_id > 0))
-        {
-            *(buf + j) = *(mesh->polygons + i);
-            j++;
-        }
-        else
-        {
-            Polygon_Clear(mesh->polygons + i);
-        }
     }
 
     free(mesh->polygons);
@@ -2755,6 +2792,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     mesh->transparancy_flags = 0;
     mesh->transparancy_count = 0;
     mesh->skin_map = NULL;
+    mesh->animated_poly_count = 0;
+    mesh->animated_polygons = NULL;
     mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
     mesh->elements = NULL;
     mesh->element_count_per_texture = NULL;
@@ -3203,6 +3242,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     mesh->transparancy_flags = 0;
     mesh->transparancy_count = 0;
     mesh->skin_map = NULL;
+    mesh->animated_poly_count = 0;
+    mesh->animated_polygons = NULL;
     mesh->vbo_index_array = 0;
     mesh->vbo_vertex_array = 0;
     mesh->uses_vertex_colors = 1; // This is implicitly true on room meshes

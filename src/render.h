@@ -77,6 +77,7 @@ class render_DebugDrawer:public btIDebugDraw
         void drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals);
         void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16]);
         void drawEntityDebugLines(struct entity_s *entity);
+        void drawSectorDebugLines(struct room_sector_s *rs);
         void drawRoomDebugLines(struct room_s *room, struct render_s *render);
         
         // bullet's debug interface

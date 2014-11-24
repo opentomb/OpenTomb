@@ -222,6 +222,14 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
         offset += mesh->element_count_per_texture[texture];
     }
+
+    if(mesh->animated_poly_count > 0)
+    {
+        for(uint32_t i=0;i<mesh->animated_poly_count;i++)
+        {
+            Render_PolygonTransparency(mesh->animated_polygons + i);
+        }
+    }
 }
 
 
@@ -1047,6 +1055,18 @@ void Render_DrawList_DebugLines()
     /*
      * Render world debug information
      */
+    if((renderer.style & R_DRAW_NORMALS) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
+    {
+        GLfloat tr[16];
+        btScalar *p;
+        Mat4_E_macro(tr);
+        p = renderer.world->sky_box->animations->frames->bone_tags->offset;
+        vec3_add(tr+12, renderer.cam->pos, p);
+        p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
+        Mat4_set_qrotation(tr, p);
+        debugDrawer.drawMeshDebugLines(renderer.world->sky_box->mesh_tree->mesh, tr, NULL, NULL);
+    }
+
     for(i=0; i<renderer.r_list_active_count; i++)
     {
         debugDrawer.drawRoomDebugLines(renderer.r_list[i].room, &renderer);
@@ -1654,6 +1674,19 @@ void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
     entity->was_rendered_lines = 1;
 }
 
+
+void render_DebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
+{
+    if(m_lines + 12 < m_max_lines)
+    {
+        btScalar bb_min[3] = {rs->pos[0] - TR_METERING_SECTORSIZE / 2.0, rs->pos[1] - TR_METERING_SECTORSIZE / 2.0, (btScalar)rs->floor};
+        btScalar bb_max[3] = {rs->pos[0] + TR_METERING_SECTORSIZE / 2.0, rs->pos[1] + TR_METERING_SECTORSIZE / 2.0, (btScalar)rs->ceiling};
+
+        drawBBox(bb_min, bb_max, NULL);
+    }
+}
+
+
 void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s *render)
 {
     unsigned int i, flag;
@@ -1666,9 +1699,9 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     {
         debugDrawer.setColor(0.0, 0.1, 0.9);
         debugDrawer.drawBBox(room->bb_min, room->bb_max, NULL);
-        /*for(int s=0;s<room->sectors_count;s++)
+        /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
-            Render_SectorBorders(&room->sectors[s]);
+            drawSectorDebugLines(room->sectors + s);
         }*/
     }
 
@@ -1741,71 +1774,3 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     }
 }
 
-/*
-void Render_SkyBox_DebugLines()
-{
-    GLfloat tr[16];
-    btScalar *p;
-
-    if(!(renderer.style & R_DRAW_NORMALS))
-    {
-        return;
-    }
-
-    if(renderer.world != NULL && renderer.world->sky_box != NULL)
-    {
-        glDepthMask(GL_FALSE);
-        glPushMatrix();
-        tr[15] = 1.0;
-        p = renderer.world->sky_box->animations->frames->bone_tags->offset;
-        vec3_add(tr+12, renderer.cam->pos, p);
-        p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
-        Mat4_set_qrotation(tr, p);
-        glMultMatrixf(tr);
-
-        Render_Mesh_DebugLines(renderer.world->sky_box->mesh_offset, NULL, NULL);
-        glPopMatrix();
-
-        glDepthMask(GL_TRUE);
-    }
-}*/
-
-
-/*void Render_Sector(btScalar corner1[3], btScalar corner2[3], btScalar corner3[3], btScalar corner4[3])
-{
-    btScalar vertices[12] =
-    {
-        corner1[0], corner1[1], corner1[2],
-        corner2[0], corner2[1], corner2[2],
-        corner3[0], corner3[1], corner3[2],
-        corner4[0], corner4[1], corner4[2]
-    };
-
-    const GLushort indices[8] =
-    {
-        0, 1,
-        1, 2,
-        2, 3,
-        3, 0
-    };
-
-    static GLuint indicesVBO = 0;
-
-    if((indicesVBO == 0) && glGenBuffersARB)
-    {
-        glGenBuffersARB(1, &indicesVBO);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(indices), indices, GL_STATIC_DRAW_ARB);
-    }
-
-    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertices[0]) * 3, vertices);
-    if(indicesVBO)
-    {
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indicesVBO);
-        glDrawElements(GL_LINES, 4, GL_UNSIGNED_SHORT, NULL);
-    }
-    else
-    {
-        glDrawElements(GL_LINES, 4, GL_UNSIGNED_SHORT, indices);
-    }
-}*/
