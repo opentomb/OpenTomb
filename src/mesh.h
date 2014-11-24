@@ -38,6 +38,9 @@ typedef struct base_mesh_s
     uint32_t              poly_count;                                           // number of all mesh's polygons
     struct polygon_s     *polygons;                                             // polygons data
 
+    uint32_t              animated_poly_count;                                  // number of opaque animated mesh's polygons
+    struct polygon_s     *animated_polygons;                                    // opaque animated mesh's polygons data
+    
     uint32_t num_texture_pages;                                                 // face without structure wrapping
     uint32_t *element_count_per_texture;                                        //
     uint32_t *elements;                                                         //
