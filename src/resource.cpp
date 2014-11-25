@@ -1738,8 +1738,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
                     Room_Disable(r);
                 }
             }
-
-            SortPolygonsInMesh(r->mesh);
         }
     }
 
@@ -1868,7 +1866,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         if(world->meshes[i].vertex_count)
         {
-            SortPolygonsInMesh(world->meshes + i);
             Mesh_GenVBO(world->meshes + i);
         }
     }
@@ -1879,7 +1876,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count))
         {
-            SortPolygonsInMesh(world->rooms[i].mesh);
             Mesh_GenVBO(world->rooms[i].mesh);
         }
     }
@@ -2646,81 +2642,48 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
 
 void SortPolygonsInMesh(struct base_mesh_s *mesh)
 {
-    int i, j, k;
-    polygon_p buf, p;
-
-    mesh->animated_poly_count = 0;
-    mesh->transparancy_count = 0;
-    p = mesh->polygons;
-    for(i=0;i<mesh->poly_count;i++,p++)
+    polygon_p p = mesh->polygons;
+    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
     {
-        if((p->transparency < 2) && (p->anim_id > 0))
+        if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
         {
-            mesh->animated_poly_count++;
+            anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
+            if(seq->uvrotate)                                                   // set tex coordinates to the first frame for correct texture transform in renderer
+            {
+                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, p, 0.0, true);
+            }
+            else
+            {
+                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, p);
+            }
         }
 
         if(p->transparency >= 2)
         {
-            mesh->transparancy_count++;
+            polygon_p np = (polygon_p)malloc(sizeof(polygon_t));
+            *np = *p;
+            np->next = mesh->transparency_polygons;
+            mesh->transparency_polygons = np;
+        }
+        else if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
+        {
+            polygon_p np = (polygon_p)malloc(sizeof(polygon_t));
+            *np = *p;
+            np->next = mesh->animated_polygons;
+            mesh->animated_polygons = np;
+        }
+        else
+        {
+            Polygon_Clear(p);
         }
     }
 
-    if(mesh->animated_poly_count > 0)
+    if(mesh->polygons_count > 0)
     {
-        mesh->animated_polygons = (polygon_p)malloc(mesh->animated_poly_count * sizeof(polygon_t));
-    }
-    if(mesh->transparancy_count > 0)
-    {
-        buf = (polygon_p)malloc(mesh->transparancy_count * sizeof(polygon_t));
-    }
-
-    if((mesh->animated_poly_count > 0) || (mesh->transparancy_count > 0))
-    {
-        p = mesh->polygons;
-        j = 0;
-        k = 0;
-        for(i=0;i<mesh->poly_count;i++,p++)
-        {
-            if(p->transparency > 1)
-            {
-                *(buf + j) = *p;
-                j++;
-            }
-            else if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
-            {
-                anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
-                if(seq->uvrotate)                                                   // set tex coordinates to the first frame for correct texture transform in renderer
-                {
-                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, p, 0.0, true);
-                }
-                else
-                {
-                    BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, p);
-                }
-                *(mesh->animated_polygons + k) = *p;
-                k++;
-            }
-            else
-            {
-                Polygon_Clear(p);
-            }
-        }
-    }
-    else
-    {
-        for(i=0;i<mesh->poly_count;i++)
-        {
-            Polygon_Clear(mesh->polygons + i);
-        }
-        mesh->poly_count = 0;
         free(mesh->polygons);
         mesh->polygons = NULL;
-        return;
+        mesh->polygons_count = 0;
     }
-
-    free(mesh->polygons);
-    mesh->poly_count = mesh->transparancy_count;
-    mesh->polygons = buf;
 }
 
 /*
@@ -2732,24 +2695,10 @@ void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root,
 
     tp.vertex_count = 0;
     tp.vertices = NULL;
-
-    polygon_p p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->transparancy_count;i++,p++)
+    tp.next = NULL;
+    for(polygon_p p=mesh->transparency_polygons;p!=NULL;p=p->next)
     {
         Polygon_Copy(&tp, p);
-        if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
-        {
-            anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
-            if(seq->uvrotate)                                                   // set tex coordinates to the first frame for correct texture transform in renderer
-            {
-                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &tp, 0.0, true);
-            }
-            else
-            {
-                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &tp);
-            }
-        }
-
         Polygon_Transform(&tp, p, transform);
         BSP_AddPolygon(root, &tp);
     }
@@ -2789,10 +2738,9 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     mesh->centre[1] =-tr_mesh->centre.z;
     mesh->centre[2] = tr_mesh->centre.y;
     mesh->R = tr_mesh->collision_size;
-    mesh->transparancy_flags = 0;
-    mesh->transparancy_count = 0;
+    mesh->transparency_polygons = NULL;
+    mesh->animated_polygons = NULL;
     mesh->skin_map = NULL;
-    mesh->animated_poly_count = 0;
     mesh->animated_polygons = NULL;
     mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
     mesh->elements = NULL;
@@ -2809,8 +2757,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         vec3_set_zero(vertex->normal);                                          // paranoid
     }
 
-    mesh->poly_count = tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles;
-    p = mesh->polygons = Polygon_CreateArray(mesh->poly_count);
+    mesh->polygons_count = tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles;
+    p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
 
     /*
      * textured triangles
@@ -2829,15 +2777,10 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         if(face3->lighting & 0x01)
         {
             p->transparency = BM_MULTIPLY;
-            mesh->transparancy_count++;
         }
         else
         {
             p->transparency = tex->transparency_flags;
-            if((tex->transparency_flags > 1) || (p->anim_id > 0))
-            {
-                mesh->transparancy_count++;
-            }
         }
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[0]]);
@@ -2976,15 +2919,10 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         if(face4->lighting & 0x01)
         {
             p->transparency = BM_MULTIPLY;
-            mesh->transparancy_count++;
         }
         else
         {
             p->transparency = tex->transparency_flags;
-            if((tex->transparency_flags > 1) || (p->anim_id > 0))
-            {
-                mesh->transparancy_count++;
-            }
         }
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face4->vertices[0]]);
@@ -3189,23 +3127,10 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         vec3_copy(p->vertices[3].normal, mesh->vertices[face4->vertices[3]].normal);
     }
 
-    if(mesh->poly_count == mesh->transparancy_count)
-    {
-        mesh->transparancy_flags = MESH_FULL_TRANSPERENCY;
-    }
-    else if(mesh->transparancy_count == 0)
-    {
-        mesh->transparancy_flags = MESH_FULL_OPAQUE;
-    }
-    else
-    {
-        mesh->transparancy_flags = MESH_PART_TRANSPERENCY;
-    }
-
     BaseMesh_FindBB(mesh);
-
     mesh->vertex_count = 0;
     Mesh_GenFaces(mesh);
+    SortPolygonsInMesh(mesh);
 }
 
 
@@ -3239,10 +3164,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     mesh->centre[1] = 0.0;
     mesh->centre[2] = 0.0;
     mesh->R = 0.0;
-    mesh->transparancy_flags = 0;
-    mesh->transparancy_count = 0;
     mesh->skin_map = NULL;
-    mesh->animated_poly_count = 0;
+    mesh->transparency_polygons = NULL;
     mesh->animated_polygons = NULL;
     mesh->vbo_index_array = 0;
     mesh->vbo_vertex_array = 0;
@@ -3256,8 +3179,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         vec3_set_zero(vertex->normal);                                               // paranoid
     }
 
-    mesh->poly_count = tr_room->num_triangles + tr_room->num_rectangles;
-    p = mesh->polygons = Polygon_CreateArray(mesh->poly_count);
+    mesh->polygons_count = tr_room->num_triangles + tr_room->num_rectangles;
+    p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
 
     /*
      * triangles
@@ -3267,14 +3190,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         face3 = &tr_room->triangles[i];
         tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
         SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
-
-        if((tex->transparency_flags > 1) || (p->anim_id > 0))
-        {
-            mesh->transparancy_count++;
-        }
-
         Polygon_Resize(p, 3);
-
         p->transparency = tex->transparency_flags;
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_room->vertices[face3->vertices[0]].vertex);
@@ -3307,13 +3223,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         face4 = &tr_room->rectangles[i];
         tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
         SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
-
-        if((tex->transparency_flags > 1) || (p->anim_id > 0))
-        {
-            mesh->transparancy_count++;
-        }
         Polygon_Resize(p, 4);
-
         p->transparency = tex->transparency_flags;
 
         TR_vertex_to_arr(p->vertices[0].position, &tr_room->vertices[face4->vertices[0]].vertex);
@@ -3377,21 +3287,9 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         vec3_copy(p->vertices[3].normal, mesh->vertices[face4->vertices[3]].normal);
     }
 
-    if(mesh->poly_count == mesh->transparancy_count)
-    {
-        mesh->transparancy_flags = MESH_FULL_TRANSPERENCY;
-    }
-    else if(mesh->transparancy_count == 0)
-    {
-        mesh->transparancy_flags = MESH_FULL_OPAQUE;
-    }
-    else
-    {
-        mesh->transparancy_flags = MESH_PART_TRANSPERENCY;
-    }
-
     mesh->vertex_count = 0;
     Mesh_GenFaces(mesh);
+    SortPolygonsInMesh(mesh);
 }
 
 
@@ -4402,7 +4300,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
         default:
         case COLLISION_TRIMESH:
             p = mesh->polygons;
-            for(i=0;i<mesh->poly_count;i++,p++)
+            for(i=0;i<mesh->polygons_count;i++,p++)
             {
                 if(Polygon_IsBroken(p))
                 {

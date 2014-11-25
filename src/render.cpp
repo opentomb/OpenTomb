@@ -223,12 +223,9 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         offset += mesh->element_count_per_texture[texture];
     }
 
-    if(mesh->animated_poly_count > 0)
+    for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
     {
-        for(uint32_t i=0;i<mesh->animated_poly_count;i++)
-        {
-            Render_PolygonTransparency(mesh->animated_polygons + i);
-        }
+        Render_PolygonTransparency(p);
     }
 }
 
@@ -323,10 +320,13 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
             Render_BSPFrontToBack(root->front);
         }
 
-        for(uint16_t i=0;i<root->polygons_count;i++)
+        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_AnimTexture(root->polygons + i);
-            Render_PolygonTransparency(root->polygons + i);
+            Render_PolygonTransparency(p);
+        }
+        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        {
+            Render_PolygonTransparency(p);
         }
 
         if(root->back != NULL)
@@ -341,10 +341,13 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
             Render_BSPFrontToBack(root->back);
         }
 
-        for(uint16_t i=0;i<root->polygons_count;i++)
+        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_AnimTexture(root->polygons + i);
-            Render_PolygonTransparency(root->polygons + i);
+            Render_PolygonTransparency(p);
+        }
+        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        {
+            Render_PolygonTransparency(p);
         }
 
         if(root->front != NULL)
@@ -365,10 +368,13 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
             Render_BSPBackToFront(root->back);
         }
 
-        for(uint16_t i=0;i<root->polygons_count;i++)
+        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_AnimTexture(root->polygons + i);
-            Render_PolygonTransparency(root->polygons + i);
+            Render_PolygonTransparency(p);
+        }
+        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        {
+            Render_PolygonTransparency(p);
         }
 
         if(root->front != NULL)
@@ -383,10 +389,13 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
             Render_BSPBackToFront(root->front);
         }
 
-        for(uint16_t i=0;i<root->polygons_count;i++)
+        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_AnimTexture(root->polygons + i);
-            Render_PolygonTransparency(root->polygons + i);
+            Render_PolygonTransparency(p);
+        }
+        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        {
+            Render_PolygonTransparency(p);
         }
 
         if(root->back != NULL)
@@ -885,7 +894,7 @@ int Render_AddRoom(struct room_s *room)
             renderer.style |= R_DRAW_SKYBOX;
     }
 
-    if((room->bsp_root->polygons_count > 0) &&                                  // Has tranparancy polygons
+    if((room->bsp_root->polygons_front != NULL) &&                              // Has tranparancy polygons
        (renderer.r_transparancy_list_active_count < renderer.r_transparancy_list_size-1))     // If we have enough free space
     {
         renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].room = room;

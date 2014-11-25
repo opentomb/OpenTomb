@@ -12,8 +12,8 @@ bsp_node_p BSP_CreateNode()
     bsp_node_p ret = (bsp_node_p)malloc(sizeof(bsp_node_t));
     ret->front = NULL;
     ret->back = NULL;
-    ret->polygons = NULL;
-    ret->polygons_count = 0;
+    ret->polygons_front = NULL;
+    ret->polygons_back = NULL;
 
     return ret;
 }
@@ -25,14 +25,14 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
         return;
     }
 
-    if(root->polygons_count == 0)
+    if(root->polygons_front == NULL)
     {
         // we though root->front == NULL and root->back == NULL
-        root->polygons = (polygon_p)malloc(sizeof(polygon_t));
-        root->polygons_count = 1;
-        root->polygons->vertex_count = 0;
-        root->polygons->vertices = NULL;
-        Polygon_Copy(root->polygons, p);
+        root->polygons_front = (polygon_p)malloc(sizeof(polygon_t));
+        root->polygons_front->next = NULL;
+        root->polygons_front->vertex_count = 0;
+        root->polygons_front->vertices = NULL;
+        Polygon_Copy(root->polygons_front, p);
         vec4_copy(root->plane, p->plane);
         return;
     }
@@ -42,14 +42,21 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
     switch(split_type)
     {
         case SPLIT_IN_PLANE:
-            //if(vec3_dot(p->plane, root->plane) > 0.9)
             {
-                root->polygons_count++;
-                root->polygons = (polygon_p)realloc(root->polygons, root->polygons_count * sizeof(polygon_t));
-                polygon_p lp = root->polygons + root->polygons_count - 1;
+                polygon_p lp = (polygon_p)malloc(sizeof(polygon_t));
                 lp->vertex_count = 0;
                 lp->vertices = NULL;
                 Polygon_Copy(lp, p);
+                if(vec3_dot(p->plane, root->plane) > 0.9)
+                {
+                    lp->next = root->polygons_front;
+                    root->polygons_front = lp;
+                }
+                else
+                {
+                    lp->next = root->polygons_back;
+                    root->polygons_back = lp;
+                }
             }
             break;
 
@@ -75,9 +82,11 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
                 front = (polygon_p)malloc(sizeof(polygon_t));
                 front->vertex_count = 0;
                 front->vertices = NULL;
+                front->next = NULL;
                 back = (polygon_p)malloc(sizeof(polygon_t));
                 back->vertex_count = 0;
                 back->vertices = NULL;
+                back->next = NULL;
                 Polygon_Split(p, root->plane, front, back);
 
                 if(root->front == NULL)
@@ -101,15 +110,35 @@ void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p)
 
 void SBP_FreeTree(struct bsp_node_s *root)
 {
-    if(root->polygons_count > 0)
+    if(root->polygons_front != NULL)
     {
-        for(uint16_t i=0;i<root->polygons_count;i++)
+        polygon_p p = root->polygons_front;
+        for(polygon_p next=p->next;p!=NULL;)
         {
-            Polygon_Clear(root->polygons + i);
+            Polygon_Clear(p);
+            free(p);
+            p = next;
+            if(p != NULL)
+            {
+                next = p->next;
+            }
         }
-        root->polygons_count = 0;
-        free(root->polygons);
-        root->polygons = NULL;
+        root->polygons_front = NULL;
+    }
+    if(root->polygons_back != NULL)
+    {
+        polygon_p p = root->polygons_back;
+        for(polygon_p next=p->next;p!=NULL;)
+        {
+            Polygon_Clear(p);
+            free(p);
+            p = next;
+            if(p != NULL)
+            {
+                next = p->next;
+            }
+        }
+        root->polygons_back = NULL;
     }
 
     if(root->front != NULL)

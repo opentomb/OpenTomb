@@ -11,8 +11,8 @@ typedef struct bsp_node_s
 {
     btScalar            plane[4];
     
-    uint16_t            polygons_count;
-    struct polygon_s   *polygons;
+    struct polygon_s   *polygons_front;
+    struct polygon_s   *polygons_back;
     
     struct bsp_node_s  *front;
     struct bsp_node_s  *back;

@@ -27,15 +27,47 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->vbo_index_array = 0;
     }
 
-    if(mesh->polygons)
+    if(mesh->polygons != NULL)
     {
-        for(i=0;i<mesh->poly_count;i++)
+        for(i=0;i<mesh->polygons_count;i++)
         {
             Polygon_Clear(mesh->polygons+i);
         }
         free(mesh->polygons);
         mesh->polygons = NULL;
-        mesh->poly_count = 0;
+        mesh->polygons_count = 0;
+    }
+
+    if(mesh->transparency_polygons != NULL)
+    {
+        polygon_p p = mesh->transparency_polygons;
+        for(polygon_p next=p->next;p!=NULL;)
+        {
+            Polygon_Clear(p);
+            free(p);
+            p = next;
+            if(p != NULL)
+            {
+                next = p->next;
+            }
+        }
+        mesh->transparency_polygons = NULL;
+    }
+
+    if(mesh->animated_polygons != NULL)
+    {
+        polygon_p p = mesh->animated_polygons;
+        for(polygon_p next=p->next;p!=NULL;)
+        {
+            Polygon_Clear(p);
+            free(p);
+            p = next;
+            if(p != NULL)
+            {
+                next = p->next;
+            }
+        }
+        mesh->animated_polygons = NULL;
     }
 
     if(mesh->vertex_count)
@@ -159,7 +191,7 @@ void Mesh_DefaultColor(struct base_mesh_s *mesh)
     vertex_p v;
 
     p = mesh->polygons;
-    for(i=0;i<mesh->poly_count;i++,p++)
+    for(i=0;i<mesh->polygons_count;i++,p++)
     {
         v = p->vertices;
         for(j=0;j<p->vertex_count;j++,v++)
@@ -179,7 +211,7 @@ void Mesh_MullColors(struct base_mesh_s *mesh, float *cl_mult)
     vertex_p v;
 
     p = mesh->polygons;
-    for(i=0;i<mesh->poly_count;i++,p++)
+    for(i=0;i<mesh->polygons_count;i++,p++)
     {
         v = p->vertices;
         for(j=0;j<p->vertex_count;j++,v++)
@@ -377,15 +409,12 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
 
 void SkeletonModel_FillTransparancy(skeletal_model_p model)
 {
-    unsigned int i;
-
-    model->transparancy_flags = model->mesh_tree[0].mesh->transparancy_flags;
-    for(i=1;i<model->mesh_count;i++)
+    model->transparancy_flags = MESH_FULL_OPAQUE;
+    for(uint16_t i=0;i<model->mesh_count;i++)
     {
-        if((model->transparancy_flags != model->mesh_tree[i].mesh->transparancy_flags) ||
-           (model->mesh_tree[i].mesh->transparancy_flags == MESH_PART_TRANSPERENCY))
+        if(model->mesh_tree[i].mesh->transparency_polygons != NULL)
         {
-            model->transparancy_flags = MESH_PART_TRANSPERENCY;
+            model->transparancy_flags = MESH_HAS_TRANSPERENCY;
             return;
         }
     }
@@ -547,7 +576,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
     uint32_t **elements_for_texture = (uint32_t **)calloc(sizeof(uint32_t*), mesh->num_texture_pages);
 
     p = mesh->polygons;
-    for(i=0;i<mesh->poly_count;i++,p++)
+    for(i=0;i<mesh->polygons_count;i++,p++)
     {
         if((p->transparency < 2) && (p->anim_id == 0) && !Polygon_IsBroken(p))
         {
