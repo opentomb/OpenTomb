@@ -3,8 +3,7 @@
 #define MESH_H
 
 #define MESH_FULL_OPAQUE 0x00                                                   // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
-#define MESH_FULL_TRANSPERENCY 0x01                                             // Fully transparancy object (all polygons are transparancy: all t.flags >= 2)
-#define MESH_PART_TRANSPERENCY 0x02                                             // Has transparancy and opaque polygons
+#define MESH_HAS_TRANSPERENCY 0x01                                              // Fully transparancy or has transparancy and opaque polygon / object
 
 #define ANIM_CMD_MOVE               0x01
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
@@ -30,20 +29,17 @@ struct vertex_s;
 typedef struct base_mesh_s
 {
     uint32_t              id;                                                   // mesh's ID
-    uint32_t              transparancy_flags;                                   // transparancy flags
-
     uint8_t               uses_vertex_colors;                                   // does this mesh have prebaked vertex lighting
 
-    uint32_t              transparancy_count;                                   // number of transparancy polygons
-    uint32_t              poly_count;                                           // number of all mesh's polygons
+    uint32_t              polygons_count;                                       // number of all mesh's polygons
     struct polygon_s     *polygons;                                             // polygons data
 
-    uint32_t              animated_poly_count;                                  // number of opaque animated mesh's polygons
-    struct polygon_s     *animated_polygons;                                    // opaque animated mesh's polygons data
+    struct polygon_s     *transparency_polygons;                                // transparency mesh's polygons list
+    struct polygon_s     *animated_polygons;                                    // opaque animated mesh's polygons list
     
-    uint32_t num_texture_pages;                                                 // face without structure wrapping
-    uint32_t *element_count_per_texture;                                        //
-    uint32_t *elements;                                                         //
+    uint32_t              num_texture_pages;                                    // face without structure wrapping
+    uint32_t             *element_count_per_texture;                            //
+    uint32_t             *elements;                                             //
 
     uint32_t              vertex_count;                                         // number of mesh's vertices
     struct vertex_s      *vertices;

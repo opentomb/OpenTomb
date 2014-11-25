@@ -36,7 +36,7 @@ void Room_Empty(room_p room)
         return;
     }
 
-    /*bsp tree emty - free*/
+    //bsp tree emty - free*/
     if(room->bsp_root != NULL)
     {
         SBP_FreeTree(room->bsp_root);

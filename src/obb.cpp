@@ -23,6 +23,8 @@ obb_p OBB_Create()
         ret->polygons[i].vertex_count = 0;
         ret->base_polygons[i].vertices = NULL;
         ret->polygons[i].vertices = NULL;
+        ret->base_polygons[i].next = NULL;
+        ret->polygons[i].next = NULL;
         Polygon_Resize(ret->base_polygons+i, 4);
         Polygon_Resize(ret->polygons+i, 4);
     }
