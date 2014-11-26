@@ -23,6 +23,7 @@
 #include "resource.h"
 
 render_t renderer;
+class dynamicBSP render_dBSP(16 * 1024 * 1024);
 extern render_DebugDrawer debugDrawer;
 
 
@@ -257,9 +258,11 @@ void Render_PolygonTransparency(struct polygon_s *p)
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             break;
 
-        default:                                             // opaque animated textures case
         case BM_ANIMATED_TEX:
             glBlendFunc(GL_ONE, GL_ZERO);
+            break;
+
+        default:                                             // opaque animated textures case
             break;
     };
 
@@ -459,24 +462,6 @@ void Render_UpdateAnimTextures()                                                
             };
         }
     }
-}
-
-
-void Render_AnimTexture(struct polygon_s *polygon)  // Update animation on polys themselves.
-{
-    /*if((polygon->anim_tex_frames_count > 0) && (polygon->anim_id > 0) && (polygon->anim_id < engine_world.anim_sequences_count))    // If animation sequence is assigned to polygon...
-    {
-        anim_seq_p seq = engine_world.anim_sequences + (polygon->anim_id - 1);
-
-        polygon->tex_index = polygon->anim_tex_indexes[seq->current_frame];
-        // Write new texture coordinates to polygon.
-        for(uint16_t i=0;i<polygon->vertex_count;i++)
-        {
-            uint16_t offset = 2 * i * polygon->anim_tex_frames_count + 2 * seq->current_frame;
-            polygon->vertices[i].tex_coord[0] = polygon->anim_tex_frames[offset + 0];
-            polygon->vertices[i].tex_coord[1] = polygon->anim_tex_frames[offset + 1];
-        }
-    }*/
 }
 
 
@@ -894,7 +879,7 @@ int Render_AddRoom(struct room_s *room)
             renderer.style |= R_DRAW_SKYBOX;
     }
 
-    if((room->bsp_root->polygons_front != NULL) &&                              // Has tranparancy polygons
+    /*if((room->bsp_root->polygons_front != NULL) &&                              // Has tranparancy polygons
        (renderer.r_transparancy_list_active_count < renderer.r_transparancy_list_size-1))     // If we have enough free space
     {
         renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].room = room;
@@ -902,7 +887,7 @@ int Render_AddRoom(struct room_s *room)
         renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].dist = dist;
         renderer.r_transparancy_list_active_count++;
         ret++;
-    }
+    }*/
 
     for(i=0; i<room->static_mesh_count; i++)
     {
@@ -1032,19 +1017,62 @@ void Render_DrawList()
     }
 
     /*
-     * NOW render transparency
+     * NOW render transparency polygons
      */
-
-    glEnableClientState(GL_COLOR_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glDisable(GL_ALPHA_TEST);
-    glEnable(GL_BLEND);
-    for(i=renderer.r_transparancy_list_active_count-1; i>=0; i--)
+    render_dBSP.reset();
+    /*First generate BSP from base room mesh - it has good for start splitter polygons*/
+    for(i=0;i<renderer.r_list_active_count;i++)
     {
-        room = renderer.r_transparancy_list[i].room;
-        Render_BSPBackToFront(room->bsp_root);
+        room_p r = renderer.r_list[i].room;
+        if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
+        {
+            render_dBSP.addNewPolygonList(r->mesh->transparency_polygons, r->transform);
+        }
     }
-    glDisable(GL_BLEND);
+
+    for(i=0;i<renderer.r_list_active_count;i++)
+    {
+        room_p r = renderer.r_list[i].room;
+        // Add transparency polygons from static meshes (if they exists)
+        for(uint16_t j=0;j<r->static_mesh_count;j++)
+        {
+            if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
+            {
+                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform);
+            }
+        }
+
+        // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
+        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p ent = (entity_p)cont->object;
+                if((ent->bf.model->transparancy_flags == MESH_HAS_TRANSPERENCY) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
+                {
+                    btScalar tr[16];
+                    for(uint16_t j=0;j<ent->bf.model->mesh_count;j++)
+                    {
+                        if(ent->bf.model->mesh_tree[j].mesh->transparency_polygons != NULL)
+                        {
+                            Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
+                            render_dBSP.addNewPolygonList(ent->bf.model->mesh_tree[j].mesh->transparency_polygons, tr);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if(render_dBSP.m_root->polygons_front != NULL)
+    {
+        glEnableClientState(GL_COLOR_ARRAY);
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glDisable(GL_ALPHA_TEST);
+        glEnable(GL_BLEND);
+        Render_BSPBackToFront(render_dBSP.m_root);
+        glDisable(GL_BLEND);
+    }
 }
 
 void Render_DrawList_DebugLines()
@@ -1142,8 +1170,7 @@ int r_list_compare(const void *p1, const void *p2)
 }
 
 /**
- * Генерация списка рендеринга по текущему миру и камере
- * добавить сортировку комнат по удаленности после генерации билда
+ * Renderer list generation by current world and camera
  */
 void Render_GenWorldList()
 {
@@ -1159,18 +1186,18 @@ void Render_GenWorldList()
 
     Render_CleanList();                                                         // clear old render list
 
-    curr_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);                // ищем комнату с камерой
+    curr_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
 
-    renderer.cam->current_room = curr_room;                                     // устанавливаем камере текущую комнату
-    if(curr_room)                                                               // камера в какой то комнате
+    renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
+    if(curr_room != NULL)                                                       // camera located in some room
     {
         curr_room->frustum->parent = NULL;                                      // room with camera inside has no frustums!
         curr_room->frustum->parents_count = 0;
         curr_room->frustum->active = 0;
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
-        p = curr_room->portals;                                                 // указатель на массив порталов стартовой комнаты
-        for(i=0; i<curr_room->portal_count; i++,p++)                            // ТУПО!!! перебираем все порталы стартовой комнаты
+        p = curr_room->portals;                                                 // pointer to the portals array
+        for(i=0; i<curr_room->portal_count; i++,p++)                            // go through all start room portals
         {
             last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
             if(last_frus)
@@ -1206,11 +1233,11 @@ void Render_SetWorld(struct world_s *world)
 {
     uint32_t i, list_size;
 
-    list_size = world->room_count + 128;                                        // дополнительная область списка, для дебага и т.п.
+    list_size = world->room_count + 128;                                        // magick 128 was added for debug and testing
 
     if(renderer.world)
     {
-        if(renderer.r_list_size < list_size)                                    // в случае необходимости расширяем список
+        if(renderer.r_list_size < list_size)                                    // if old list less than new one requiring
         {
             renderer.r_list = (render_list_p)realloc(renderer.r_list, list_size * sizeof(render_list_t));
             renderer.r_transparancy_list = (render_list_p)realloc(renderer.r_transparancy_list, list_size * sizeof(render_list_t));
@@ -1355,7 +1382,7 @@ void render_DebugDrawer::draw3dText(const btVector3& location, const char* textS
 
 void render_DebugDrawer::reportErrorWarning(const char* warningString)
 {
-   Con_Printf(warningString);
+   Con_AddLine(warningString);
 }
 
 void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)

@@ -118,7 +118,6 @@ int  TR_Sector_IsWall(room_sector_p ws, room_sector_p ns);
 // Miscellaneous functions.
 
 void SortPolygonsInMesh(struct base_mesh_s *mesh);
-void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root, btScalar *transform);
 bool Polygon_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world);
 
 #endif

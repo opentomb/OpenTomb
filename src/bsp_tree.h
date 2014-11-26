@@ -18,8 +18,32 @@ typedef struct bsp_node_s
     struct bsp_node_s  *back;
 } bsp_node_t, *bsp_node_p;
 
-bsp_node_p BSP_CreateNode();
-void BSP_AddPolygon(struct bsp_node_s *root, struct polygon_s *p);
-void SBP_FreeTree(struct bsp_node_s *root);
+/**
+ * Warning! that class has no memory allocation space check for more speed! Maybe I will add it in future; 
+ */
+class dynamicBSP
+{
+    void                *m_data;
+    uint32_t             m_data_size;
+    uint32_t             m_allocated;
+    
+    struct bsp_node_s *createBSPNode();
+    struct polygon_s  *createPolygon(uint16_t vertex_count);
+    void addPolygon(struct bsp_node_s *root, struct polygon_s *p);
+    
+public:
+    struct bsp_node_s   *m_root;
+    
+    dynamicBSP(uint32_t size);
+   ~dynamicBSP();
+    void addNewPolygon(struct polygon_s *p, btScalar *transform);
+    void addNewPolygonList(struct polygon_s *p, btScalar *transform);
+    void reset()
+    {
+        m_allocated = 0;
+        m_root = this->createBSPNode();
+    }
+};
+
 
 #endif

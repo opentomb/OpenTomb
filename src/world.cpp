@@ -36,13 +36,6 @@ void Room_Empty(room_p room)
         return;
     }
 
-    //bsp tree emty - free*/
-    if(room->bsp_root != NULL)
-    {
-        SBP_FreeTree(room->bsp_root);
-        room->bsp_root = NULL;
-    }
-
     p = room->portals;
     room->near_room_list_size = 0;
 

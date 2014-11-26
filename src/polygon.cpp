@@ -568,24 +568,15 @@ int Polygon_IsInsideBQuad(polygon_p p, btScalar bb_min[3], btScalar bb_max[3])
     return 1;
 }
 
-
+/**
+ * For correct function using You must alloc anough polygons vertices in advance and
+ * set vertex_count field to zero!
+ * @param p: polygon pointer, where to vertes adds;
+ * @param v: vertex pointer with new data;
+ */
 void Polygon_AddVertex(polygon_p p, struct vertex_s *v)
 {
-    vertex_p vp;
-    int size = p->vertex_count+1;
-
-    size += (4 - size % 4);                                                     // vertex count aligned by 4
-
-    p->vertices = (vertex_p)realloc(p->vertices, size * sizeof(vertex_t));
-    vp = p->vertices + p->vertex_count;
-
-    vec3_copy(vp->position, v->position);
-    vec3_copy(vp->normal, v->normal);
-    vec4_copy(vp->base_color, v->base_color);
-    vec4_copy(vp->color, v->color);
-    vp->tex_coord[0] = v->tex_coord[0];
-    vp->tex_coord[1] = v->tex_coord[1];
-
+    *(p->vertices + p->vertex_count) = *v;
     p->vertex_count++;
 }
 

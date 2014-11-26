@@ -172,7 +172,6 @@ void Render_PolygonTransparency(struct polygon_s *p);
 void Render_BSPFrontToBack(struct bsp_node_s *root);
 void Render_BSPBackToFront(struct bsp_node_s *root);
 void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16]);
-void Render_AnimTexture(struct polygon_s *polygon);
 void Render_UpdateAnimTextures();
 void Render_CleanList();
 
