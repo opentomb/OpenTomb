@@ -122,7 +122,7 @@ typedef struct room_s
     int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      hide;                                           // do not render
     struct base_mesh_s         *mesh;                                           // room's base mesh
-    struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
+    //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
     
     uint32_t                    static_mesh_count;
     struct static_mesh_s       *static_mesh;

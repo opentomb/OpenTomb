@@ -1922,30 +1922,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     r = world->rooms;
     for(i=0;i<world->room_count;i++,r++)
     {
-        if(r->mesh)
-        {
-            TR_TransparencyMeshToBSP(r->mesh, r->bsp_root, r->transform);
-        }
-
-        static_mesh_p sm = r->static_mesh;
-        for(uint32_t j=0;j<r->static_mesh_count;j++,sm++)
-        {
-            TR_TransparencyMeshToBSP(sm->mesh, r->bsp_root, sm->transform);
-        }
-
-        engine_container_p cont = r->containers;
-        for(;cont!=NULL;cont=cont->next)
-        {
-            if(cont->object_type == OBJECT_ENTITY)
-            {
-                entity_p ent = (entity_p)cont->object;
-                if((ent->bf.model->animation_count == 1) && (ent->bf.model->animations->frames_count == 1))
-                {
-                    TR_TransparencyMeshToBSP(ent->bf.model->mesh_tree->mesh, r->bsp_root, ent->transform);
-                }
-            }
-        }
-
         if(r->base_room != NULL)
         {
             Room_Disable(r);                             //Disable current room
@@ -2005,7 +1981,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->self->next = NULL;
     room->self->object = NULL;
     room->self->object_type = OBJECT_ROOM_BASE;
-    room->bsp_root = BSP_CreateNode();
 
     TR_GenRoomMesh(world, room_index, room, tr);
 
@@ -2686,25 +2661,6 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
     }
 }
 
-/*
- * PRERENDER HERE ALL ANIM TEXTURES COORDINATES
- */
-void TR_TransparencyMeshToBSP(struct base_mesh_s *mesh, struct bsp_node_s *root, btScalar *transform)
-{
-    polygon_t tp;
-
-    tp.vertex_count = 0;
-    tp.vertices = NULL;
-    tp.next = NULL;
-    for(polygon_p p=mesh->transparency_polygons;p!=NULL;p=p->next)
-    {
-        Polygon_Copy(&tp, p);
-        Polygon_Transform(&tp, p, transform);
-        BSP_AddPolygon(root, &tp);
-    }
-
-    Polygon_Clear(&tp);
-}
 
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr)
 {
