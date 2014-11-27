@@ -134,15 +134,17 @@ void Entity_Enable(entity_p ent)
         return;
     }
 
-    for(i=0;i<ent->bf.bone_tag_count;i++)
+    if(ent->bt_body != NULL)
     {
-        btRigidBody *b = ent->bt_body[i];
-        if(b)
+        for(i=0;i<ent->bf.bone_tag_count;i++)
         {
-            bt_engine_dynamicsWorld->addRigidBody(b);
+            btRigidBody *b = ent->bt_body[i];
+            if(b)
+            {
+                bt_engine_dynamicsWorld->addRigidBody(b);
+            }
         }
     }
-
     ent->hide = 0;
     ent->active = 1;
 }
@@ -156,12 +158,15 @@ void Entity_Disable(entity_p ent)
         return;
     }
 
-    for(i=0;i<ent->bf.bone_tag_count;i++)
+    if(ent->bt_body != NULL)
     {
-        btRigidBody *b = ent->bt_body[i];
-        if(b)
+        for(i=0;i<ent->bf.bone_tag_count;i++)
         {
-            bt_engine_dynamicsWorld->removeRigidBody(b);
+            btRigidBody *b = ent->bt_body[i];
+            if(b)
+            {
+                bt_engine_dynamicsWorld->removeRigidBody(b);
+            }
         }
     }
 

@@ -121,7 +121,7 @@ dynamicBSP::dynamicBSP(uint32_t size)
     m_data = malloc(size);
     m_data_size = size;
     m_allocated = 0;
-    m_root = NULL;
+    m_root = this->createBSPNode();
 }
 
 
@@ -153,7 +153,7 @@ void dynamicBSP::addNewPolygon(struct polygon_s *p, btScalar *transform)
 
 void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform)
 {
-    if(m_data_size - m_allocated < 1024)
+    if(m_data_size - m_allocated < 1024)                                        ///@FIXME: magick 1024
     {
         return;
     }

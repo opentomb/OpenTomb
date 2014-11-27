@@ -1295,8 +1295,8 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] = 0.0;
             ent->character->cam_follow_center = 64;
             i = ent->bf.model->animations[ent->bf.current_animation].frames_count;
-
-            if(cmd->action == 0)                                                //For TOMB4/5 If Lara is pushing and action let go, don't push
+            
+            if((cmd->action == 0) || !(0x01 & Character_CheckTraverse(ent, ent->character->traversed_object)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;
             }
@@ -1383,7 +1383,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             ent->character->cam_follow_center = 64;
             i = ent->bf.model->animations[ent->bf.current_animation].frames_count;
 
-            if(cmd->action == 0)                                                //For TOMB4/5 If Lara is pulling and action let go, don't pull
+            if((cmd->action == 0) || !(0x02 & Character_CheckTraverse(ent, ent->character->traversed_object)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
             {
                 ent->bf.next_state = TR_STATE_LARA_STOP;
             }
