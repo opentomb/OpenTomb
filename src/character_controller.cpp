@@ -2236,7 +2236,7 @@ int Character_FindTraverse(struct entity_s *ch)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p e = (entity_p)cont->object;
-                if((e->flags & ENTITY_IS_TRAVERSE) && (1 == OBB_OBB_Test(e, ch) && (e->transform[12 + 2] == ch->transform[12 + 2])))
+                if((e->flags & ENTITY_IS_TRAVERSE) && (1 == OBB_OBB_Test(e, ch) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1)))
                 {
                     int oz = (ch->angles[0] + 45.0) / 90.0;
                     ch->angles[0] = oz * 90.0;
@@ -2249,6 +2249,50 @@ int Character_FindTraverse(struct entity_s *ch)
     }
 
     return 0;
+}
+
+/**
+ * 
+ * @param rs: room sector pointer
+ * @param floor: floor height
+ * @return 0x01: can traverse, 0x00 can not;
+ */
+int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine_container_s *cont)
+{
+    btScalar f0 = rs->floor_corners[0].m_floats[2];
+    if((rs->floor_corners[0].m_floats[2] != f0) || (rs->floor_corners[1].m_floats[2] != f0) ||
+       (rs->floor_corners[2].m_floats[2] != f0) || (rs->floor_corners[3].m_floats[2] != f0))
+    {
+        return 0x00;
+    }
+    
+    if((fabs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= TR_METERING_SECTORSIZE)) 
+    {
+        return 0x01;
+    }
+    
+    bt_engine_ClosestRayResultCallback cb(cont);
+    btVector3 from, to;
+    to.m_floats[0] = from.m_floats[0] = rs->pos[0];
+    to.m_floats[1] = from.m_floats[1] = rs->pos[1];
+    from.m_floats[2] = floor + TR_METERING_SECTORSIZE * 0.5;
+    to.m_floats[2] = floor - TR_METERING_SECTORSIZE * 0.5;
+    bt_engine_dynamicsWorld->rayTest(from, to, cb);
+    if(cb.hasHit())
+    {
+        btVector3 v;
+        v.setInterpolate3(from, to, cb.m_closestHitFraction);
+        if(fabs(v.m_floats[2] - floor) < 1.1)
+        {
+            engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
+            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && (((entity_p)cont->object)->flags & ENTITY_IS_TRAVERSE))
+            {
+                return 0x01;
+            }
+        }
+    }
+    
+    return 0x00;
 }
 
 /**
@@ -2295,13 +2339,28 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         return 0x00;
     }
 
-    if((ch_s->floor != obj_s->floor) || (ch_s->floor_corners[0].m_floats[2] != obj_s->floor_corners[0].m_floats[2]) ||
-       (ch_s->floor_corners[0].m_floats[2] != ch_s->floor_corners[1].m_floats[2]) || (ch_s->floor_corners[0].m_floats[2] != ch_s->floor_corners[2].m_floats[2]) || (ch_s->floor_corners[0].m_floats[2] != ch_s->floor_corners[3].m_floats[2]) ||
-       (obj_s->floor_corners[0].m_floats[2] != obj_s->floor_corners[1].m_floats[2]) || (obj_s->floor_corners[0].m_floats[2] != obj_s->floor_corners[2].m_floats[2]) || (obj_s->floor_corners[0].m_floats[2] != obj_s->floor_corners[3].m_floats[2]))
+    btScalar floor = ch->transform[12 + 2];
+    if((ch_s->floor != obj_s->floor) || (Sector_AllowTraverse(ch_s, floor, ch->self) == 0x00) || (Sector_AllowTraverse(obj_s, floor, obj->self) == 0x00))
     {
         return 0x00;
     }
 
+    bt_engine_ClosestRayResultCallback cb(obj->self);
+    btVector3 v0, v1;
+    v1.m_floats[0] = v0.m_floats[0] = obj_s->pos[0];
+    v1.m_floats[1] = v0.m_floats[1] = obj_s->pos[1];
+    v0.m_floats[2] = floor + TR_METERING_SECTORSIZE * 0.5;
+    v1.m_floats[2] = floor + TR_METERING_SECTORSIZE * 2.5;
+    bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
+    if(cb.hasHit())
+    {
+        engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
+        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && (((entity_p)cont->object)->flags & ENTITY_IS_TRAVERSE))
+        {
+            return 0x00;
+        }
+    }
+    
     int ret = 0x00;
     room_sector_p next_s = NULL;
 
@@ -2332,9 +2391,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     }
 
     next_s = TR_Sector_CheckPortalPointer(next_s);
-    if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE) && (next_s->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) &&
-       (next_s->floor == obj_s->floor) && (next_s->floor_corners[0].m_floats[2] == obj_s->floor_corners[0].m_floats[2]) &&
-       (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
+    if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01))
     {
         bt_engine_ClosestConvexResultCallback ccb(obj->self);
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
@@ -2342,7 +2399,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         btTransform from, to;
         v.m_floats[0] = obj_s->pos[0];
         v.m_floats[1] = obj_s->pos[1];
-        v.m_floats[2] = obj_s->floor_corners[0].m_floats[2] + 0.5 * TR_METERING_SECTORSIZE;
+        v.m_floats[2] = floor + 0.5 * TR_METERING_SECTORSIZE;
         from.setIdentity();
         from.setOrigin(v);
         v.m_floats[0] = next_s->pos[0];
@@ -2384,9 +2441,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     }
 
     next_s = TR_Sector_CheckPortalPointer(next_s);
-    if((next_s != NULL) && (next_s->ceiling - next_s->floor >= TR_METERING_SECTORSIZE)  && (next_s->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) &&
-       (next_s->floor == ch_s->floor) && (next_s->floor_corners[0].m_floats[2] == ch_s->floor_corners[0].m_floats[2]) &&
-       (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[1].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[2].m_floats[2]) && (next_s->floor_corners[0].m_floats[2] == next_s->floor_corners[3].m_floats[2]))
+    if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01)) 
     {
         bt_engine_ClosestConvexResultCallback ccb(ch->self);
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
@@ -2394,7 +2449,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         btTransform from, to;
         v.m_floats[0] = ch_s->pos[0];
         v.m_floats[1] = ch_s->pos[1];
-        v.m_floats[2] = ch_s->floor_corners[0].m_floats[2] + 0.5 * TR_METERING_SECTORSIZE;
+        v.m_floats[2] = floor + 0.5 * TR_METERING_SECTORSIZE;
         from.setIdentity();
         from.setOrigin(v);
         v.m_floats[0] = next_s->pos[0];

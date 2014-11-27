@@ -519,15 +519,15 @@ tr2_entity_tbl[63] = {coll = 0x0001};                -- Drawbridge
 tr2_entity_tbl[64] = {coll = 0x0002};                -- Slamming door
 tr2_entity_tbl[65] = {coll = 0x0001};                -- Elevator
 tr2_entity_tbl[66] = {coll = 0x0002};                -- Minisub
-tr2_entity_tbl[67] = {coll = 0x0001, trav = 1};      -- Movable cubical block (pushable)
-tr2_entity_tbl[68] = {coll = 0x0001, trav = 1};      -- Movable cubical block (pushable)
-tr2_entity_tbl[69] = {coll = 0x0001, trav = 1};      -- Movable cubical block (pushable)
-tr2_entity_tbl[70] = {coll = 0x0001, trav = 1};      -- Movable cubical block (pushable)
+tr2_entity_tbl[67] = {coll = 0x0002, trav = 1};      -- Movable cubical block (pushable)
+tr2_entity_tbl[68] = {coll = 0x0002, trav = 1};      -- Movable cubical block (pushable)
+tr2_entity_tbl[69] = {coll = 0x0002, trav = 1};      -- Movable cubical block (pushable)
+tr2_entity_tbl[70] = {coll = 0x0002, trav = 1};      -- Movable cubical block (pushable)
 tr2_entity_tbl[71] = {coll = 0x0002};                -- Big bowl (Ice Palace)
 tr2_entity_tbl[72] = {coll = 0x0002};                -- Breakable window (can shoot out)
 tr2_entity_tbl[73] = {coll = 0x0002};                -- Breakable window (must jump through)
 tr2_entity_tbl[76] = {coll = 0x0001};                -- Airplane propeller
-tr2_entity_tbl[77] = {coll = 0x0002};                -- Power saw
+tr2_entity_tbl[77] = {coll = 0x0002, trav = 1};      -- Power saw (trav cube on map 10)
 tr2_entity_tbl[78] = {coll = 0x0002};                -- Overhead pulley hook
 tr2_entity_tbl[79] = {coll = 0x0002};                -- Sandbag / Ceiling fragments
 tr2_entity_tbl[80] = {coll = 0x0002};                -- Rolling spindle

@@ -253,6 +253,7 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);
 
 int Character_FindTraverse(struct entity_s *ch);
+int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine_container_s *cont);
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj);
 
 void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd);

@@ -411,7 +411,7 @@ int lua_DisableEntity(lua_State * lua)
     }
 
     ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-    if(ent)
+    if(ent != NULL)
     {
         Entity_Disable(ent);
     }

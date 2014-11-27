@@ -1048,7 +1048,7 @@ void Render_DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if((ent->bf.model->transparancy_flags == MESH_HAS_TRANSPERENCY) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
+                if((ent->bf.model->transparancy_flags == MESH_HAS_TRANSPERENCY) && (ent->hide == 0) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
                 {
                     btScalar tr[16];
                     for(uint16_t j=0;j<ent->bf.model->mesh_count;j++)
@@ -1060,6 +1060,20 @@ void Render_DrawList()
                         }
                     }
                 }
+            }
+        }
+    }
+
+    if((engine_world.Character != NULL) && (engine_world.Character->bf.model->transparancy_flags == MESH_HAS_TRANSPERENCY))
+    {
+        btScalar tr[16];
+        entity_p ent = engine_world.Character;
+        for(uint16_t j=0;j<ent->bf.model->mesh_count;j++)
+        {
+            if(ent->bf.model->mesh_tree[j].mesh->transparency_polygons != NULL)
+            {
+                Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
+                render_dBSP.addNewPolygonList(ent->bf.model->mesh_tree[j].mesh->transparency_polygons, tr);
             }
         }
     }

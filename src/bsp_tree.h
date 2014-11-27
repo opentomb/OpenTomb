@@ -19,7 +19,7 @@ typedef struct bsp_node_s
 } bsp_node_t, *bsp_node_p;
 
 /**
- * Warning! that class has no memory allocation space check for more speed! Maybe I will add it in future; 
+ * Warning! that class has too primitive and rough (but fast) memory allocation space check! Maybe I will fix it in future; 
  */
 class dynamicBSP
 {
