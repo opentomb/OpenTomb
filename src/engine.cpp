@@ -390,7 +390,7 @@ int lua_EnableEntity(lua_State * lua)
     }
 
     ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-    if(ent)
+    if(ent != NULL)
     {
         Entity_Enable(ent);
     }
