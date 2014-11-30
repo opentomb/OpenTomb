@@ -60,3 +60,15 @@ setAnimCommandTransform(0, 203, -1, 0x02);
 
 setAnimCommandTransform(0, 212, 10, 0x00);   -- back jump roll animation smooth fix 
 setAnimCommandTransform(0, 212, 9, 0x02);
+
+-- generate UV rotation texture animations for waterfalls in TR4+ versions
+if (cvars.engine_version == TR_IV) then
+    for i=423, 426, 1 do
+        genUVRotateAnimation(i);
+    end;
+elseif (cvars.engine_version == TR_V) then
+    for i=410, 415, 1 do
+        genUVRotateAnimation(i);
+    end;
+end
+
