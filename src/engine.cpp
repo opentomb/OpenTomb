@@ -1875,6 +1875,83 @@ int lua_SetGame(lua_State *lua)
     return 0;
 }
 
+int lua_genUVRotateAnimation(lua_State * lua)
+{
+    int id, top;
+
+    top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_AddLine("wrong arguments number, must be (model_id)");
+        return 0;
+    }
+    id = lua_tointeger(lua, 1);
+
+    skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    if(model != NULL)
+    {
+        polygon_p p=model->mesh_tree->mesh->transparency_polygons;
+        if((p != NULL) && (p->anim_id == 0))
+        {
+            engine_world.anim_sequences_count++;
+            engine_world.anim_sequences = (anim_seq_p)realloc(engine_world.anim_sequences, engine_world.anim_sequences_count * sizeof(anim_seq_t));
+            anim_seq_p seq = engine_world.anim_sequences + engine_world.anim_sequences_count - 1;
+
+            // Fill up new sequence with frame list.
+            seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
+            seq->frame_lock        = false; // by default anim is playing
+            seq->uvrotate          = true;
+            seq->reverse_direction = false; // Needed for proper reverse-type start-up.
+            seq->frame_rate        = 0.05;  // Should be passed as 1 / FPS.
+            seq->frame_time        = 0.0;   // Reset frame time to initial state.
+            seq->current_frame     = 0;     // Reset current frame to zero.
+            seq->frames_count      = 8;
+            seq->frame_list        = (uint32_t*)malloc(sizeof(uint32_t));
+            seq->frame_list[0]     = 0;
+            seq->frames            = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
+
+            btScalar v_min, v_max;
+            v_min = v_max = p->vertices->tex_coord[1];
+            for(uint16_t j=1;j<p->vertex_count;j++)
+            {
+                if(p->vertices[j].tex_coord[1] > v_max)
+                {
+                    v_max = p->vertices[j].tex_coord[1];
+                }
+                if(p->vertices[j].tex_coord[1] < v_min)
+                {
+                    v_min = p->vertices[j].tex_coord[1];
+                }
+            }
+
+            seq->uvrotate_max = 0.5 * (v_max - v_min);
+            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
+            for(uint16_t j=0;j<seq->frames_count;j++)
+            {
+                seq->frames[j].tex_ind = p->tex_index;
+                seq->frames[j].mat[0] = 1.0;
+                seq->frames[j].mat[1] = 0.0;
+                seq->frames[j].mat[2] = 0.0;
+                seq->frames[j].mat[3] = 1.0;
+                seq->frames[j].move[0] = 0.0;
+                seq->frames[j].move[1] = -((btScalar)j * seq->uvrotate_speed);
+            }
+
+            for(;p!=NULL;p=p->next)
+            {
+                p->anim_id = engine_world.anim_sequences_count;
+                for(uint16_t j=0;j<p->vertex_count;j++)
+                {
+                    p->vertices[j].tex_coord[1] = v_min + 0.5 * (p->vertices[j].tex_coord[1] - v_min) + seq->uvrotate_max;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
 void Engine_LuaClearTasks()
 {
     int top = lua_gettop(engine_lua);
@@ -1968,6 +2045,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
     lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
+
+    lua_register(lua, "genUVRotateAnimation", lua_genUVRotateAnimation);
 }
 
 
