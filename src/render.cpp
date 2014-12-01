@@ -26,6 +26,11 @@ render_t renderer;
 class dynamicBSP render_dBSP(16 * 1024 * 1024);
 extern render_DebugDrawer debugDrawer;
 
+/*
+ * Shaders section
+ */
+GLhandleARB color_mult_vsh, color_mult_program;
+GLint color_mult_tint_pos;
 
 bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
@@ -55,6 +60,21 @@ void Render_InitGlobals()
 }
 
 
+void Render_DoShaders()
+{
+    color_mult_program = glCreateProgramObjectARB();
+    color_mult_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+    loadShaderFromFile(color_mult_vsh, "shaders/color_mult.vsh");
+    glAttachObjectARB(color_mult_program, color_mult_vsh);
+    glLinkProgramARB(color_mult_program);
+    printInfoLog(color_mult_program);
+
+    glUseProgramObjectARB(color_mult_program);
+    color_mult_tint_pos = glGetUniformLocationARB(color_mult_program, "tintMult");   //uniform	vec4	tintMult;
+    glUseProgramObjectARB(0);
+}
+
+
 void Render_Init()
 {
     renderer.blocked = 1;
@@ -63,10 +83,6 @@ void Render_Init()
     renderer.r_list = NULL;
     renderer.r_list_size = 0;
     renderer.r_list_active_count= 0;
-
-    renderer.r_transparancy_list = NULL;
-    renderer.r_transparancy_list_size = 0;
-    renderer.r_transparancy_list_active_count= 0;
 
     renderer.world = NULL;
     renderer.style = 0x00;
@@ -84,6 +100,15 @@ void Render_Empty(render_p render)
         free(render->r_list);
         render->r_list = NULL;
     }
+
+    if((color_mult_program != 0) && (color_mult_vsh != 0))
+    {
+        glDetachObjectARB(color_mult_program, color_mult_vsh);
+        glDeleteObjectARB(color_mult_program);
+        glDeleteObjectARB(color_mult_vsh);
+    }
+    color_mult_program = 0;
+    color_mult_vsh = 0;
 }
 
 
@@ -155,7 +180,7 @@ void Render_SkyBox()
         p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
         glMultMatrixf(tr);
-        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh, NULL, NULL, NULL);
+        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh, NULL, NULL);
         glPopMatrix();
         glDepthMask(GL_TRUE);
     }
@@ -164,7 +189,7 @@ void Render_SkyBox()
 /**
  * Opaque meshes drawing
  */
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals, const btScalar *overrideColors)
+void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
 {
     if(mesh->vertex_count == 0)
     {
@@ -189,19 +214,13 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
     }
 
     // Bind overriden vertices if they exist
-    if (overrideVertices)
+    if (overrideVertices != NULL)
     {
         // Standard normals are always float. Overridden normals (from skinning)
         // are btScalar.
         if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
         glNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
-    }
-
-    if (overrideColors)
-    {
-        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glColorPointer(4, GL_BT_SCALAR, 0, overrideColors);
     }
 
     const uint32_t *elementsbase = mesh->elements;
@@ -522,7 +541,7 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
         dst_n += 3;
     }
 
-    Render_Mesh(mesh, p_vertex, p_normale, NULL);
+    Render_Mesh(mesh, p_vertex, p_normale);
     ReturnTempbtScalar(6 * mesh->vertex_count);
 }
 
@@ -538,7 +557,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
     {
         glPushMatrix();
         glMultMatrixbt(btag->full_transform);
-        Render_Mesh(btag->mesh, NULL, NULL, NULL);
+        Render_Mesh(btag->mesh, NULL, NULL);
         if(btag->mesh2)
         {
             Render_SkinMesh(btag->mesh2, btag->transform);
@@ -665,39 +684,20 @@ void Render_Entity(struct entity_s *entity)
 
 void Render_StaticMesh(struct static_mesh_s *static_mesh, struct room_s *room)
 {
-    uint32_t i;
-    vertex_p v;
-    btScalar *p_color, *src_p, *dst_p;
     base_mesh_s *mesh = static_mesh->mesh;
-    btScalar tint[4];
+    GLfloat tint[4];
 
-    tint[0] = static_mesh->tint[0];
-    tint[1] = static_mesh->tint[1];
-    tint[2] = static_mesh->tint[2];
-    tint[3] = static_mesh->tint[3];
+    vec4_copy(tint, static_mesh->tint);
 
     if(room->flags & TR_ROOM_FLAG_WATER)
     {
         Render_CalculateWaterTint(tint, 0);
     }
 
-    p_color  = (GLfloat*)GetTempbtScalar(4 * mesh->vertex_count);
-    dst_p = p_color;
-    v = mesh->vertices;
-    for(i=0; i<mesh->vertex_count; i++,v++)
-    {
-        src_p = v->color;
-
-        dst_p[0] = src_p[0] * tint[0];
-        dst_p[1] = src_p[1] * tint[1];
-        dst_p[2] = src_p[2] * tint[2];
-        dst_p[3] = src_p[3] * tint[3];
-
-        dst_p += 4;
-    }
-
-    Render_Mesh(mesh, NULL, NULL, p_color);
-    ReturnTempbtScalar(4 * mesh->vertex_count);
+    glUseProgramObjectARB(color_mult_program);
+    glUniform4fvARB(color_mult_tint_pos, 1, tint);
+    Render_Mesh(mesh, NULL, NULL);
+    glUseProgramObjectARB(0);
 }
 
 /**
@@ -705,10 +705,6 @@ void Render_StaticMesh(struct static_mesh_s *static_mesh, struct room_s *room)
  */
 void Render_Room(struct room_s *room, struct render_s *render)
 {
-    uint32_t i;
-    vertex_p v;
-    btScalar *p_color, *src_p, *dst_p;
-
     engine_container_p cont;
     entity_p ent;
 
@@ -719,37 +715,22 @@ void Render_Room(struct room_s *room, struct render_s *render)
 
         if(room->flags & TR_ROOM_FLAG_WATER)
         {
-            btScalar tint[4];
-
-            p_color  = (GLfloat*)GetTempbtScalar(4 * room->mesh->vertex_count);
-            dst_p = p_color;
-
-            v = room->mesh->vertices;
-
+            GLfloat tint[4];
             Render_CalculateWaterTint(tint, 1);
-
-            for(i=0; i<room->mesh->vertex_count; i++,v++)
-            {
-                src_p = v->color;
-
-                dst_p[0] = src_p[0] * tint[0];
-                dst_p[1] = src_p[1] * tint[1];
-                dst_p[2] = src_p[2] * tint[2];
-                dst_p[3] = src_p[3] * tint[3];
-
-                dst_p += 4;
-            }
-            Render_Mesh(room->mesh, NULL, NULL, p_color);   //Render with modified color
+            glUseProgramObjectARB(color_mult_program);
+            glUniform4fvARB(color_mult_tint_pos, 1, tint);
+            Render_Mesh(room->mesh, NULL, NULL);
+            glUseProgramObjectARB(0);
         }
         else
         {
-            Render_Mesh(room->mesh, NULL, NULL, NULL);
+            Render_Mesh(room->mesh, NULL, NULL);
         }
 
         glPopMatrix();
     }
 
-    for(i=0; i<room->static_mesh_count; i++)
+    for(uint32_t i=0; i<room->static_mesh_count; i++)
     {
         if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
         {
@@ -769,28 +750,19 @@ void Render_Room(struct room_s *room, struct render_s *render)
         }
         else
         {
-            glDisableClientState(GL_COLOR_ARRAY);
-
+            GLfloat tint[4];
+            tint[0] = room->static_mesh[i].tint[0];
+            tint[1] = room->static_mesh[i].tint[1];
+            tint[2] = room->static_mesh[i].tint[2];
+            tint[3] = 1.0f;
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
-                btScalar tint[4];
-                tint[0] = room->static_mesh[i].tint[0];
-                tint[1] = room->static_mesh[i].tint[1];
-                tint[2] = room->static_mesh[i].tint[2];
-                tint[3] = 1.0f;
-
                 Render_CalculateWaterTint(tint, 0);
-
-                glColor3f(tint[0], tint[1], tint[2]);
-                Render_Mesh(room->static_mesh[i].mesh, NULL, NULL, NULL);
             }
-            else
-            {
-                glColor3f(room->static_mesh[i].tint[0], room->static_mesh[i].tint[1], room->static_mesh[i].tint[2]);
-                Render_Mesh(room->static_mesh[i].mesh, NULL, NULL, NULL);
-            }
-
-            glEnableClientState(GL_COLOR_ARRAY);
+            glUseProgramObjectARB(color_mult_program);
+            glUniform4fvARB(color_mult_tint_pos, 1, tint);
+            Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
+            glUseProgramObjectARB(0);
         }
         glPopMatrix();
         room->static_mesh[i].was_rendered = 1;
@@ -879,16 +851,6 @@ int Render_AddRoom(struct room_s *room)
             renderer.style |= R_DRAW_SKYBOX;
     }
 
-    /*if((room->bsp_root->polygons_front != NULL) &&                              // Has tranparancy polygons
-       (renderer.r_transparancy_list_active_count < renderer.r_transparancy_list_size-1))     // If we have enough free space
-    {
-        renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].room = room;
-        renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].active = 1;
-        renderer.r_transparancy_list[renderer.r_transparancy_list_active_count].dist = dist;
-        renderer.r_transparancy_list_active_count++;
-        ret++;
-    }*/
-
     for(i=0; i<room->static_mesh_count; i++)
     {
         room->static_mesh[i].was_rendered = 0;
@@ -947,16 +909,8 @@ void Render_CleanList()
         }
     }
 
-    for(i=0; i<renderer.r_transparancy_list_active_count; i++)
-    {
-        renderer.r_transparancy_list[i].active = 0;
-        renderer.r_transparancy_list[i].dist = 0.0;
-        renderer.r_transparancy_list[i].room = NULL;
-    }
-
     renderer.style &= ~R_DRAW_SKYBOX;
     renderer.r_list_active_count = 0;
-    renderer.r_transparancy_list_active_count = 0;
 }
 
 /**
@@ -964,8 +918,7 @@ void Render_CleanList()
  */
 void Render_DrawList()
 {
-    int32_t i;
-    room_p room;
+    uint32_t i;
 
     if(!renderer.world)
     {
@@ -984,6 +937,9 @@ void Render_DrawList()
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
+
+    glDisable(GL_LIGHTING);
+    Render_SkyBox();
 
     glEnable(GL_LIGHTING);
     if(renderer.world->Character)
@@ -1178,11 +1134,6 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     return ret;
 }
 
-int r_list_compare(const void *p1, const void *p2)
-{
-    return (int)((render_list_p)p1)->room->max_path - (int)((render_list_p)p2)->room->max_path;
-}
-
 /**
  * Renderer list generation by current world and camera
  */
@@ -1233,11 +1184,6 @@ void Render_GenWorldList()
             }
         }
     }
-
-    if(renderer.r_transparancy_list_active_count > 1)
-    {
-        qsort(renderer.r_transparancy_list, renderer.r_transparancy_list_active_count, sizeof(render_list_t), r_list_compare);
-    }
 }
 
 /**
@@ -1254,32 +1200,23 @@ void Render_SetWorld(struct world_s *world)
         if(renderer.r_list_size < list_size)                                    // if old list less than new one requiring
         {
             renderer.r_list = (render_list_p)realloc(renderer.r_list, list_size * sizeof(render_list_t));
-            renderer.r_transparancy_list = (render_list_p)realloc(renderer.r_transparancy_list, list_size * sizeof(render_list_t));
             for(i=0; i<list_size; i++)
             {
                 renderer.r_list[i].active = 0;
                 renderer.r_list[i].room = NULL;
                 renderer.r_list[i].dist = 0.0;
-
-                renderer.r_transparancy_list[i].active = 0;
-                renderer.r_transparancy_list[i].room = NULL;
-                renderer.r_transparancy_list[i].dist = 0.0;
             }
         }
     }
     else
     {
         renderer.r_list = Render_CreateRoomListArray(list_size);
-        renderer.r_transparancy_list = Render_CreateRoomListArray(list_size);
     }
 
     renderer.world = world;
     renderer.style &= ~R_DRAW_SKYBOX;
     renderer.r_list_size = list_size;
     renderer.r_list_active_count = 0;
-
-    renderer.r_transparancy_list_size = list_size;
-    renderer.r_transparancy_list_active_count = 0;
 
     renderer.cam = &engine_camera;
     engine_camera.frustum->next = NULL;
@@ -1292,7 +1229,7 @@ void Render_SetWorld(struct world_s *world)
 }
 
 
-void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour)
+void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour)
 {
     if(engine_world.version < TR_IV)  // If water room and level is TR1-3
     {

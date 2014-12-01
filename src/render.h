@@ -149,14 +149,11 @@ typedef struct render_s
     uint32_t                    r_list_size;
     uint32_t                    r_list_active_count;
     struct render_list_s       *r_list;
-
-    uint32_t                    r_transparancy_list_size;
-    uint32_t                    r_transparancy_list_active_count;
-    struct render_list_s        *r_transparancy_list;
 }render_t, *render_p;
 
 extern render_t renderer;
 
+void Render_DoShaders();
 void Render_Empty(render_p render);
 void Render_InitGlobals();
 void Render_Init();
@@ -167,7 +164,7 @@ void Render_RoomSprite(struct room_sprite_s *sp);
 void Render_SkeletalModel(struct ss_bone_frame_s *bframe);
 void Render_Sprite(struct sprite_s *sprite);
 void Render_SkyBox();
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals, const btScalar *overrideColors);
+void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
 void Render_PolygonTransparency(struct polygon_s *p);
 void Render_BSPFrontToBack(struct bsp_node_s *root);
 void Render_BSPBackToFront(struct bsp_node_s *root);
@@ -188,7 +185,7 @@ void Render_GenWorldList();
 
 void Render_SetWorld(struct world_s *world);
 
-void Render_CalculateWaterTint(btScalar *tint, uint8_t fixed_colour);
+void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
 
 /*
  * DEBUG PRIMITIVES RENDERING

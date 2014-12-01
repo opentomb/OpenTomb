@@ -2749,32 +2749,28 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
 
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
-            p->vertices[0].base_color[0] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[1] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[2] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[3] = 1.0f;
+            p->vertices[0].color[0] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
+            p->vertices[0].color[1] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
+            p->vertices[0].color[2] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
+            p->vertices[0].color[3] = 1.0f;
 
-            p->vertices[1].base_color[0] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[1] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[2] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[3] = 1.0f;
+            p->vertices[1].color[0] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
+            p->vertices[1].color[1] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
+            p->vertices[1].color[2] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
+            p->vertices[1].color[3] = 1.0f;
 
-            p->vertices[2].base_color[0] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[1] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[2] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[3] = 1.0f;
-
-            vec4_copy(p->vertices[0].color, p->vertices[0].base_color);
-            vec4_copy(p->vertices[1].color, p->vertices[1].base_color);
-            vec4_copy(p->vertices[2].color, p->vertices[2].base_color);
+            p->vertices[2].color[0] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
+            p->vertices[2].color[1] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
+            p->vertices[2].color[2] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
+            p->vertices[2].color[3] = 1.0f;
 
             mesh->uses_vertex_colors = 1;
         }
         else
         {
-            vec4_set_one(p->vertices[0].base_color);         vec4_set_one(p->vertices[0].color);
-            vec4_set_one(p->vertices[1].base_color);         vec4_set_one(p->vertices[1].color);
-            vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
+            vec4_set_one(p->vertices[0].color);
+            vec4_set_one(p->vertices[1].color);
+            vec4_set_one(p->vertices[2].color);
         }
 
         BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 0, p);
@@ -2802,52 +2798,47 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
 
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
-            p->vertices[0].base_color[0] = (float)(tr->palette.colour[col].r / 255.0)
+            p->vertices[0].color[0] = (float)(tr->palette.colour[col].r / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[1] = (float)(tr->palette.colour[col].g / 255.0)
+            p->vertices[0].color[1] = (float)(tr->palette.colour[col].g / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[2] = (float)(tr->palette.colour[col].b / 255.0)
+            p->vertices[0].color[2] = (float)(tr->palette.colour[col].b / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[3] = (float)1.0;
+            p->vertices[0].color[3] = (float)1.0;
 
-            p->vertices[1].base_color[0] = (float)(tr->palette.colour[col].r / 255.0)
+            p->vertices[1].color[0] = (float)(tr->palette.colour[col].r / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[1] = (float)(tr->palette.colour[col].g / 255.0)
+            p->vertices[1].color[1] = (float)(tr->palette.colour[col].g / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[2] = (float)(tr->palette.colour[col].b / 255.0)
+            p->vertices[1].color[2] = (float)(tr->palette.colour[col].b / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[3] = (float)1.0;
+            p->vertices[1].color[3] = (float)1.0;
 
-            p->vertices[2].base_color[0] = (float)(tr->palette.colour[col].r / 255.0)
+            p->vertices[2].color[0] = (float)(tr->palette.colour[col].r / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[1] = (float)(tr->palette.colour[col].g / 255.0)
+            p->vertices[2].color[1] = (float)(tr->palette.colour[col].g / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[2] = (float)(tr->palette.colour[col].b / 255.0)
+            p->vertices[2].color[2] = (float)(tr->palette.colour[col].b / 255.0)
                 * 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[3] = (float)1.0;
+            p->vertices[2].color[3] = (float)1.0;
         }
         else
         {
-            p->vertices[0].base_color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[0].base_color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[0].base_color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[0].base_color[3] = (float)1.0;
+            p->vertices[0].color[0] = (float)tr->palette.colour[col].r / 255.0;
+            p->vertices[0].color[1] = (float)tr->palette.colour[col].g / 255.0;
+            p->vertices[0].color[2] = (float)tr->palette.colour[col].b / 255.0;
+            p->vertices[0].color[3] = (float)1.0;
 
-            p->vertices[1].base_color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[1].base_color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[1].base_color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[1].base_color[3] = (float)1.0;
+            p->vertices[1].color[0] = (float)tr->palette.colour[col].r / 255.0;
+            p->vertices[1].color[1] = (float)tr->palette.colour[col].g / 255.0;
+            p->vertices[1].color[2] = (float)tr->palette.colour[col].b / 255.0;
+            p->vertices[1].color[3] = (float)1.0;
 
-            p->vertices[2].base_color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[2].base_color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[2].base_color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[2].base_color[3] = (float)1.0;
-
+            p->vertices[2].color[0] = (float)tr->palette.colour[col].r / 255.0;
+            p->vertices[2].color[1] = (float)tr->palette.colour[col].g / 255.0;
+            p->vertices[2].color[2] = (float)tr->palette.colour[col].b / 255.0;
+            p->vertices[2].color[3] = (float)1.0;
         }
-
-        vec4_copy(p->vertices[0].color, p->vertices[0].base_color);
-        vec4_copy(p->vertices[1].color, p->vertices[1].base_color);
-        vec4_copy(p->vertices[2].color, p->vertices[2].base_color);
 
         p->vertices[0].tex_coord[0] = 0.0;
         p->vertices[0].tex_coord[1] = 0.0;
@@ -2891,46 +2882,36 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         t = mesh->vertices[face4->vertices[2]].normal; vec3_add(t, t, p->plane);
         t = mesh->vertices[face4->vertices[3]].normal; vec3_add(t, t, p->plane);
 
-        vec4_set_one(p->vertices[0].base_color);         vec4_set_one(p->vertices[0].color);
-        vec4_set_one(p->vertices[1].base_color);         vec4_set_one(p->vertices[1].color);
-        vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
-        vec4_set_one(p->vertices[3].base_color);         vec4_set_one(p->vertices[3].color);
-
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
-            p->vertices[0].base_color[0] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[1] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[2] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[3] = 1.0f;
+            p->vertices[0].color[0] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
+            p->vertices[0].color[1] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
+            p->vertices[0].color[2] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
+            p->vertices[0].color[3] = 1.0f;
 
-            p->vertices[1].base_color[0] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[1] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[2] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[3] = 1.0f;
+            p->vertices[1].color[0] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
+            p->vertices[1].color[1] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
+            p->vertices[1].color[2] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
+            p->vertices[1].color[3] = 1.0f;
 
-            p->vertices[2].base_color[0] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[1] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[2] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[3] = 1.0f;
+            p->vertices[2].color[0] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
+            p->vertices[2].color[1] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
+            p->vertices[2].color[2] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
+            p->vertices[2].color[3] = 1.0f;
 
-            p->vertices[3].base_color[0] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].base_color[1] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].base_color[2] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].base_color[3] = 1.0f;
-
-            vec4_copy(p->vertices[0].color, p->vertices[0].base_color);
-            vec4_copy(p->vertices[1].color, p->vertices[1].base_color);
-            vec4_copy(p->vertices[2].color, p->vertices[2].base_color);
-            vec4_copy(p->vertices[3].color, p->vertices[3].base_color);
+            p->vertices[3].color[0] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
+            p->vertices[3].color[1] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
+            p->vertices[3].color[2] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
+            p->vertices[3].color[3] = 1.0f;
 
             mesh->uses_vertex_colors = 1;
         }
         else
         {
-            vec4_set_one(p->vertices[0].base_color);         vec4_set_one(p->vertices[0].color);
-            vec4_set_one(p->vertices[1].base_color);         vec4_set_one(p->vertices[1].color);
-            vec4_set_one(p->vertices[2].base_color);         vec4_set_one(p->vertices[2].color);
-            vec4_set_one(p->vertices[3].base_color);         vec4_set_one(p->vertices[3].color);
+            vec4_set_one(p->vertices[0].color);
+            vec4_set_one(p->vertices[1].color);
+            vec4_set_one(p->vertices[2].color);
+            vec4_set_one(p->vertices[3].color);
         }
 
 
@@ -2961,65 +2942,60 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
 
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
-            p->vertices[0].base_color[0] = (float)(tr->palette.colour[col].r / 255.0)
+            p->vertices[0].color[0] = (float)(tr->palette.colour[col].r / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[1] = (float)(tr->palette.colour[col].g / 255.0)
+            p->vertices[0].color[1] = (float)(tr->palette.colour[col].g / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[2] = (float)(tr->palette.colour[col].b / 255.0)
+            p->vertices[0].color[2] = (float)(tr->palette.colour[col].b / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].base_color[3] = (float)1.0;
+            p->vertices[0].color[3] = (float)1.0;
 
-            p->vertices[1].base_color[0] = (float)(tr->palette.colour[col].r / 255.0)
+            p->vertices[1].color[0] = (float)(tr->palette.colour[col].r / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[1] = (float)(tr->palette.colour[col].g / 255.0)
+            p->vertices[1].color[1] = (float)(tr->palette.colour[col].g / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[2] = (float)(tr->palette.colour[col].b / 255.0)
+            p->vertices[1].color[2] = (float)(tr->palette.colour[col].b / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].base_color[3] = (float)1.0;
+            p->vertices[1].color[3] = (float)1.0;
 
-            p->vertices[2].base_color[0] = (float)(tr->palette.colour[col].r / 255.0)
+            p->vertices[2].color[0] = (float)(tr->palette.colour[col].r / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[1] = (float)(tr->palette.colour[col].g / 255.0)
+            p->vertices[2].color[1] = (float)(tr->palette.colour[col].g / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[2] = (float)(tr->palette.colour[col].b / 255.0)
+            p->vertices[2].color[2] = (float)(tr->palette.colour[col].b / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].base_color[3] = (float)1.0;
+            p->vertices[2].color[3] = (float)1.0;
 
-            p->vertices[3].base_color[0] = (float)(tr->palette.colour[col].r / 255.0)
+            p->vertices[3].color[0] = (float)(tr->palette.colour[col].r / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].base_color[1] = (float)(tr->palette.colour[col].g / 255.0)
+            p->vertices[3].color[1] = (float)(tr->palette.colour[col].g / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].base_color[2] = (float)(tr->palette.colour[col].b / 255.0)
+            p->vertices[3].color[2] = (float)(tr->palette.colour[col].b / 255.0)
                 * 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].base_color[3] = (float)1.0;
+            p->vertices[3].color[3] = (float)1.0;
         }
         else
         {
-            p->vertices[0].base_color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[0].base_color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[0].base_color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[0].base_color[3] = (float)1.0;
+            p->vertices[0].color[0] = (float)tr->palette.colour[col].r / 255.0;
+            p->vertices[0].color[1] = (float)tr->palette.colour[col].g / 255.0;
+            p->vertices[0].color[2] = (float)tr->palette.colour[col].b / 255.0;
+            p->vertices[0].color[3] = (float)1.0;
 
-            p->vertices[1].base_color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[1].base_color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[1].base_color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[1].base_color[3] = (float)1.0;
+            p->vertices[1].color[0] = (float)tr->palette.colour[col].r / 255.0;
+            p->vertices[1].color[1] = (float)tr->palette.colour[col].g / 255.0;
+            p->vertices[1].color[2] = (float)tr->palette.colour[col].b / 255.0;
+            p->vertices[1].color[3] = (float)1.0;
 
-            p->vertices[2].base_color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[2].base_color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[2].base_color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[2].base_color[3] = (float)1.0;
+            p->vertices[2].color[0] = (float)tr->palette.colour[col].r / 255.0;
+            p->vertices[2].color[1] = (float)tr->palette.colour[col].g / 255.0;
+            p->vertices[2].color[2] = (float)tr->palette.colour[col].b / 255.0;
+            p->vertices[2].color[3] = (float)1.0;
 
-            p->vertices[3].base_color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[3].base_color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[3].base_color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[3].base_color[3] = (float)1.0;
+            p->vertices[3].color[0] = (float)tr->palette.colour[col].r / 255.0;
+            p->vertices[3].color[1] = (float)tr->palette.colour[col].g / 255.0;
+            p->vertices[3].color[2] = (float)tr->palette.colour[col].b / 255.0;
+            p->vertices[3].color[3] = (float)1.0;
         }
-
-        vec4_copy(p->vertices[0].color, p->vertices[0].base_color);
-        vec4_copy(p->vertices[1].color, p->vertices[1].base_color);
-        vec4_copy(p->vertices[2].color, p->vertices[2].base_color);
-        vec4_copy(p->vertices[3].color, p->vertices[3].base_color);
 
         p->vertices[0].tex_coord[0] = 0.0;
         p->vertices[0].tex_coord[1] = 0.0;
@@ -3160,13 +3136,9 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         vec3_copy(p->vertices[1].normal, p->plane);
         vec3_copy(p->vertices[2].normal, p->plane);
 
-        TR_color_to_arr(p->vertices[0].base_color, &tr_room->vertices[face3->vertices[0]].colour);
-        TR_color_to_arr(p->vertices[1].base_color, &tr_room->vertices[face3->vertices[1]].colour);
-        TR_color_to_arr(p->vertices[2].base_color, &tr_room->vertices[face3->vertices[2]].colour);
-
-        vec4_copy(p->vertices[0].color, p->vertices[0].base_color);
-        vec4_copy(p->vertices[1].color, p->vertices[1].base_color);
-        vec4_copy(p->vertices[2].color, p->vertices[2].base_color);
+        TR_color_to_arr(p->vertices[0].color, &tr_room->vertices[face3->vertices[0]].colour);
+        TR_color_to_arr(p->vertices[1].color, &tr_room->vertices[face3->vertices[1]].colour);
+        TR_color_to_arr(p->vertices[2].color, &tr_room->vertices[face3->vertices[2]].colour);
 
         BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 0, p);
     }
@@ -3196,15 +3168,10 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         vec3_copy(p->vertices[2].normal, p->plane);
         vec3_copy(p->vertices[3].normal, p->plane);
 
-        TR_color_to_arr(p->vertices[0].base_color, &tr_room->vertices[face4->vertices[0]].colour);
-        TR_color_to_arr(p->vertices[1].base_color, &tr_room->vertices[face4->vertices[1]].colour);
-        TR_color_to_arr(p->vertices[2].base_color, &tr_room->vertices[face4->vertices[2]].colour);
-        TR_color_to_arr(p->vertices[3].base_color, &tr_room->vertices[face4->vertices[3]].colour);
-
-        vec4_copy(p->vertices[0].color, p->vertices[0].base_color);
-        vec4_copy(p->vertices[1].color, p->vertices[1].base_color);
-        vec4_copy(p->vertices[2].color, p->vertices[2].base_color);
-        vec4_copy(p->vertices[3].color, p->vertices[3].base_color);
+        TR_color_to_arr(p->vertices[0].color, &tr_room->vertices[face4->vertices[0]].colour);
+        TR_color_to_arr(p->vertices[1].color, &tr_room->vertices[face4->vertices[1]].colour);
+        TR_color_to_arr(p->vertices[2].color, &tr_room->vertices[face4->vertices[2]].colour);
+        TR_color_to_arr(p->vertices[3].color, &tr_room->vertices[face4->vertices[3]].colour);
 
         BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 0, p);
     }
@@ -3243,6 +3210,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         vec3_copy(p->vertices[3].normal, mesh->vertices[face4->vertices[3]].normal);
     }
 
+    BaseMesh_FindBB(mesh);
     mesh->vertex_count = 0;
     Mesh_GenFaces(mesh);
     SortPolygonsInMesh(mesh);
@@ -4298,9 +4266,9 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
                 }
                 for(j=1;j<p->vertex_count-1;j++)
                 {
-                    vec3_copy(v0.m_floats, p->vertices[0].position);
+                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
                     vec3_copy(v1.m_floats, p->vertices[j].position);
-                    vec3_copy(v2.m_floats, p->vertices[j + 1].position);
+                    vec3_copy(v2.m_floats, p->vertices[0].position);
                     trimesh->addTriangle(v0, v1, v2, true);
                 }
                 cnt ++;

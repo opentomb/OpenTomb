@@ -229,7 +229,7 @@ void SkeletalModelTestDraw()
     //glEnable(GL_TEXTURE_2D);
     glColor3f(1.0, 1.0, 1.0);
     glMultMatrixf(tr);
-    Render_Mesh(mt->mesh, NULL, NULL, NULL);
+    Render_Mesh(mt->mesh, NULL, NULL);
     btag++;
     mt++;;
     for(stack=0,i=1;i<bframe->bone_tag_count;i++,btag++,mt++)
@@ -251,7 +251,7 @@ void SkeletalModelTestDraw()
             stack++;
         }
         glMultMatrixf(tr);
-        Render_Mesh(mt->mesh, NULL, NULL, NULL);
+        Render_Mesh(mt->mesh, NULL, NULL);
         //Render_BBox(tree_tag->mesh->bb_min, tree_tag->mesh->bb_max);
         if(mt->mesh2)
         {
@@ -277,7 +277,7 @@ void SkeletalModelTestDraw()
 
     glPushMatrix();
     glTranslated(-1024.0, 0.0, 0.0);
-    Render_Mesh(engine_world.meshes + mesh, NULL, NULL, NULL);
+    Render_Mesh(engine_world.meshes + mesh, NULL, NULL);
     glPopMatrix();
 }
 
@@ -485,6 +485,7 @@ int main(int argc, char **argv)
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
     Engine_PrepareOpenGL();
+    Render_DoShaders();
     Engine_InitALAudio();
 
     World_Prepare(&engine_world);
@@ -541,8 +542,6 @@ void Engine_Display()
         Cam_RecalcClipPlanes(&engine_camera);
         Cam_Apply(&engine_camera);
 #if !SKELETAL_TEST
-        Render_SkyBox();
-
         Render_GenWorldList();
         Render_DrawList();
 #else
