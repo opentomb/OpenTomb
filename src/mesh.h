@@ -147,7 +147,7 @@ typedef struct static_mesh_s
     uint8_t                     hide;                                           // disable static mesh rendering
     btScalar                    pos[3];                                         // model position
     btScalar                    rot[3];                                         // model angles
-    btScalar                    tint[4];                                        // model tint
+    GLfloat                     tint[4];                                        // model tint
 
     btScalar                    vbb_min[3];                                     // visible bounding box
     btScalar                    vbb_max[3];
@@ -324,9 +324,6 @@ typedef struct skeletal_model_s
 void BaseMesh_Clear(base_mesh_p mesh);
 void BaseMesh_FindBB(base_mesh_p mesh);
 void Mesh_GenVBO(struct base_mesh_s *mesh);
-
-void Mesh_DefaultColor(struct base_mesh_s *mesh);
-void Mesh_MullColors(struct base_mesh_s *mesh, float *cl_mult);
 
 void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletonModel_FillTransparancy(skeletal_model_p model);

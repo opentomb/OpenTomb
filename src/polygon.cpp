@@ -476,11 +476,6 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.color[2] = prev_v->color[2] + t * (curr_v->color[2] - prev_v->color[2]);
                 tv.color[3] = prev_v->color[3] + t * (curr_v->color[3] - prev_v->color[3]);
 
-                tv.base_color[0] = prev_v->base_color[0] + t * (curr_v->base_color[0] - prev_v->base_color[0]);
-                tv.base_color[1] = prev_v->base_color[1] + t * (curr_v->base_color[1] - prev_v->base_color[1]);
-                tv.base_color[2] = prev_v->base_color[2] + t * (curr_v->base_color[2] - prev_v->base_color[2]);
-                tv.base_color[3] = prev_v->base_color[3] + t * (curr_v->base_color[3] - prev_v->base_color[3]);
-
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
@@ -505,11 +500,6 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.color[1] = prev_v->color[1] + t * (curr_v->color[1] - prev_v->color[1]);
                 tv.color[2] = prev_v->color[2] + t * (curr_v->color[2] - prev_v->color[2]);
                 tv.color[3] = prev_v->color[3] + t * (curr_v->color[3] - prev_v->color[3]);
-
-                tv.base_color[0] = prev_v->base_color[0] + t * (curr_v->base_color[0] - prev_v->base_color[0]);
-                tv.base_color[1] = prev_v->base_color[1] + t * (curr_v->base_color[1] - prev_v->base_color[1]);
-                tv.base_color[2] = prev_v->base_color[2] + t * (curr_v->base_color[2] - prev_v->base_color[2]);
-                tv.base_color[3] = prev_v->base_color[3] + t * (curr_v->base_color[3] - prev_v->base_color[3]);
 
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);

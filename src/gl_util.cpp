@@ -25,6 +25,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "gl_util.h"
+#include "system.h"
+#include "console.h"
 
 #ifndef GL_GLEXT_PROTOTYPES
 PFNGLDELETEOBJECTARBPROC                glDeleteObjectARB =                     NULL;
@@ -117,21 +119,6 @@ PFNGLMAPBUFFERARBPROC                   glMapBufferARB =                        
 PFNGLUNMAPBUFFERARBPROC                 glUnmapBufferARB =                      NULL;
 PFNGLGETBUFFERPARAMETERIVARBPROC        glGetBufferParameterivARB =             NULL;
 PFNGLGETBUFFERPOINTERVARBPROC           glGetBufferPointervARB =                NULL;
-
-PFNGLBINDVERTEXARRAYPROC                glBindVertexArray =                     NULL;
-PFNGLDELETEVERTEXARRAYSPROC             glDeleteVertexArray =                   NULL;
-PFNGLGENVERTEXARRAYSPROC                glGenVertexArray =                      NULL;
-PFNGLISVERTEXARRAYPROC                  glIsVertexArray =                       NULL;
-PFNGLENABLEVERTEXATTRIBARRAYPROC        glEnableVertexAttribArray =             NULL;
-
-PFNGLBINDPROGRAMARBPROC                 glBindProgramARB =                      NULL;
-PFNGLTEXIMAGE3DPROC                     glTexImage3D=                           NULL;
-PFNGLBLENDEQUATIONSEPARATEPROC          glBlendEquationSeparate=                NULL;
-PFNGLBLENDFUNCSEPARATEPROC              glBlendFuncSeparate=                    NULL;
-PFNGLBLENDEQUATIONPROC                  glBlendEquation=                        NULL;
-PFNGLDISABLEVERTEXATTRIBARRAYPROC       glDisableVertexAttribArray=             NULL;
-PFNGLGETVERTEXATTRIBIVPROC              glGetVertexAttribiv=                    NULL;
-PFNGLGETVERTEXATTRIBFVPROC              glGetVertexAttribfv=                    NULL;
 #endif
 
 char *engine_gl_ext_str = NULL;
@@ -246,22 +233,6 @@ void InitGLExtFuncs()
         SAFE_GET_PROC(glGetActiveAttribARB, PFNGLGETACTIVEATTRIBARBPROC, "glGetActiveAttribARB");
         SAFE_GET_PROC(glGetAttribLocationARB, PFNGLGETATTRIBLOCATIONARBPROC, "glGetAttribLocationARB");
     }
-    
-    /*ANT menu library GL funcs*/
-    /*SAFE_GET_PROC(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
-    SAFE_GET_PROC(glDeleteVertexArray, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArray");
-    SAFE_GET_PROC(glGenVertexArray, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArray");
-    SAFE_GET_PROC(glIsVertexArray, PFNGLISVERTEXARRAYPROC, "glIsVertexArray");
-    SAFE_GET_PROC(glEnableVertexAttribArray, PFNGLENABLEVERTEXATTRIBARRAYPROC, "glEnableVertexAttribArray");        
-    
-    SAFE_GET_PROC(glBindProgramARB, PFNGLBINDPROGRAMARBPROC, "glBindProgramARB");
-    SAFE_GET_PROC(glTexImage3D, PFNGLTEXIMAGE3DPROC, "glTexImage3D");
-    SAFE_GET_PROC(glBlendEquationSeparate, PFNGLBLENDEQUATIONSEPARATEPROC, "glBlendEquationSeparate");
-    SAFE_GET_PROC(glBlendFuncSeparate, PFNGLBLENDFUNCSEPARATEPROC, "glBlendFuncSeparate");
-    SAFE_GET_PROC(glBlendEquation, PFNGLBLENDEQUATIONPROC, "glBlendEquation");
-    SAFE_GET_PROC(glDisableVertexAttribArray, PFNGLDISABLEVERTEXATTRIBARRAYPROC, "glDisableVertexAttribArray");
-    SAFE_GET_PROC(glGetVertexAttribiv, PFNGLGETVERTEXATTRIBIVPROC, "glGetVertexAttribiv");
-    SAFE_GET_PROC(glGetVertexAttribfv, PFNGLGETVERTEXATTRIBFVPROC, "glGetVertexAttribfv");*/
 #endif
 }
 
@@ -290,3 +261,100 @@ int IsGLExtensionSupported(const char *ext)
     return 0;
 }
 
+/*
+ * Shaders generation section
+ */
+int checkOpenGLError()
+{
+    for( ; ; )
+    {
+        GLenum  glErr = glGetError();
+        if(glErr == GL_NO_ERROR)
+        {
+            return 0;
+        }
+        Sys_DebugLog(LOG_FILENAME, "glError: %s", gluErrorString(glErr));
+        Con_AddText((const char*)gluErrorString(glErr));
+    }
+    return 1;
+}
+
+void printInfoLog (GLhandleARB object)
+{
+    GLint       logLength     = 0;
+    GLint       charsWritten  = 0;
+    GLcharARB * infoLog;
+
+    checkOpenGLError();                         // check for OpenGL errors
+    glGetObjectParameterivARB(object, GL_OBJECT_INFO_LOG_LENGTH_ARB, &logLength);
+
+    if (logLength > 0)
+    {
+        infoLog = (GLcharARB*)malloc(logLength);
+        glGetInfoLogARB(object, logLength, &charsWritten, infoLog);
+        Con_AddLine("GL_InfoLog:");
+        Con_AddText((const char*)infoLog);
+        free(infoLog);
+    }
+}
+
+int loadShaderFromBuff(GLhandleARB ShaderObj, char * source)
+{
+    int size;
+    GLint compileStatus = 0;
+    size = strlen(source);
+    glShaderSourceARB(ShaderObj, 1, (const char **) &source, &size);
+    Con_AddLine("source loaded");                   // compile the particle vertex shader, and print out
+    glCompileShaderARB(ShaderObj);
+    Con_AddLine("trying to compile");
+    if(checkOpenGLError())                          // check for OpenGL errors
+    {
+        return 0;
+    }
+    glGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
+    printInfoLog(ShaderObj);
+    return compileStatus != 0;
+}
+
+int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName)
+{
+    GLint   compileStatus;
+    int size;
+    FILE * file;
+    Con_Printf("GL_Loading %s", fileName);
+    file = fopen (fileName, "rb");
+    if (file == NULL)
+    {
+        Con_Printf("Error opening %s", fileName);
+        return 0;
+    }
+
+    fseek(file, 0, SEEK_END);
+    size = ftell(file);
+
+    if(size < 1)
+    {
+        fclose(file);
+        Con_Printf("Error loading file %s: size < 1", fileName);
+        return 0;
+    }
+
+    char *buf = (char*)malloc(size);
+    fseek(file, 0, SEEK_SET);
+    fread(buf, 1, size, file);
+    fclose(file);
+    
+    //printf ( "source = %s\n", buf );
+    glShaderSourceARB(ShaderObj, 1, (const char **)&buf, &size);
+    Con_AddLine("source loaded");
+    free(buf);                                   // compile the particle vertex shader, and print out
+    glCompileShaderARB(ShaderObj);
+    Con_AddLine("trying to compile");
+    if(checkOpenGLError())                       // check for OpenGL errors
+    {
+        return 0;
+    }
+    glGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
+    printInfoLog(ShaderObj);
+    return compileStatus != 0;
+}

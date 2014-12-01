@@ -184,47 +184,6 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
 }
 
 
-void Mesh_DefaultColor(struct base_mesh_s *mesh)
-{
-    long int i, j;
-    polygon_p p;
-    vertex_p v;
-
-    p = mesh->polygons;
-    for(i=0;i<mesh->polygons_count;i++,p++)
-    {
-        v = p->vertices;
-        for(j=0;j<p->vertex_count;j++,v++)
-        {
-            vec4_copy(v->color, v->base_color);
-        }
-    }
-}
-
-/**
- * Mesh color mult
- */
-void Mesh_MullColors(struct base_mesh_s *mesh, float *cl_mult)
-{
-    long int i, j;
-    polygon_p p;
-    vertex_p v;
-
-    p = mesh->polygons;
-    for(i=0;i<mesh->polygons_count;i++,p++)
-    {
-        v = p->vertices;
-        for(j=0;j<p->vertex_count;j++,v++)
-        {
-            v->color[0] = v->base_color[0] * cl_mult[0];
-            v->color[1] = v->base_color[1] * cl_mult[1];
-            v->color[2] = v->base_color[2] * cl_mult[2];
-            v->color[3] = v->base_color[3] * cl_mult[3];
-        }
-    }
-}
-
-
 void SkeletalModel_Clear(skeletal_model_p model)
 {
     int i, j;
@@ -552,8 +511,7 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
     v = mesh->vertices + ind;
     vec3_copy(v->position, vertex->position);
     vec3_copy(v->normal, vertex->normal);
-    vec4_copy(v->base_color, vertex->base_color);
-    vec4_copy(v->color, vertex->base_color);
+    vec4_copy(v->color, vertex->color);
     v->tex_coord[0] = vertex->tex_coord[0];
     v->tex_coord[1] = vertex->tex_coord[1];
 

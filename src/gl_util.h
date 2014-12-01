@@ -135,25 +135,14 @@ extern PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB;
 extern PFNGLGETBUFFERPARAMETERIVARBPROC glGetBufferParameterivARB;
 extern PFNGLGETBUFFERPOINTERVARBPROC glGetBufferPointervARB;
 
-/*ANT menu library GL funcs*/
-/*extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
-extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArray;
-extern PFNGLGENVERTEXARRAYSPROC glGenVertexArray;
-extern PFNGLISVERTEXARRAYPROC glIsVertexArray;
-extern PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
-
-extern PFNGLBINDPROGRAMARBPROC glBindProgramARB;
-extern PFNGLTEXIMAGE3DPROC glTexImage3D;
-extern PFNGLBLENDEQUATIONSEPARATEPROC glBlendEquationSeparate;
-extern PFNGLBLENDFUNCSEPARATEPROC glBlendFuncSeparate;
-extern PFNGLBLENDEQUATIONPROC glBlendEquation;
-extern PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
-extern PFNGLGETVERTEXATTRIBIVPROC glGetVertexAttribiv;
-extern PFNGLGETVERTEXATTRIBFVPROC glGetVertexAttribfv;*/
-
 #endif
 
 void InitGLExtFuncs();
 int IsGLExtensionSupported(const char *ext);
+
+int checkOpenGLError();
+void printInfoLog (GLhandleARB object);
+int loadShaderFromBuff(GLhandleARB ShaderObj, char * source);
+int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName);
 
 #endif
