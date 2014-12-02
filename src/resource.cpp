@@ -149,7 +149,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
             room_sector_p next_heightmap    = current_heightmap + 1;
             char joined_floors = 0;
             char joined_ceilings = 0;
-                    
+
             /* XY corners coordinates must be calculated from native room sector */
             room_tween->floor_corners[0].m_floats[1] = current_heightmap->floor_corners[0].m_floats[1];
             room_tween->floor_corners[1].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
@@ -353,7 +353,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 
             joined_floors = 0;
             joined_ceilings = 0;
-            
+
             if((h > 0) && (current_heightmap->floor <= current_heightmap->ceiling) && (next_heightmap->floor <= next_heightmap->ceiling))     ///@STICK: TR_V CASE
             {
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))

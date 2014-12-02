@@ -689,7 +689,7 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
 
     if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
     {
-        rs->z_depth = 16;
+        rs->z_depth = 24;
     }
 
     lua_settop(lua, top);

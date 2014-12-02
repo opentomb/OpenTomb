@@ -35,7 +35,7 @@ GLint color_mult_tint_pos;
 bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
     engine_container_p cont = (engine_container_p)colObj->getUserPointer();
-    return (cont == NULL) || (cont->room->is_in_r_list);
+    return (cont == NULL) || (cont->room == NULL) || (cont->room->is_in_r_list);
 }
 
 int R_List_Less(const void *v1, const void *v2);
