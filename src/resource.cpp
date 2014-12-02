@@ -147,7 +147,9 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 
             room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
             room_sector_p next_heightmap    = current_heightmap + 1;
-
+            char joined_floors = 0;
+            char joined_ceilings = 0;
+                    
             /* XY corners coordinates must be calculated from native room sector */
             room_tween->floor_corners[0].m_floats[1] = current_heightmap->floor_corners[0].m_floats[1];
             room_tween->floor_corners[1].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
@@ -179,6 +181,8 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
                         TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                        joined_floors = 1;
+                        joined_ceilings = 1;
                     }
                     else if(TR_Sector_IsWall(current_heightmap, next_heightmap))
                     {
@@ -188,6 +192,8 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
                         TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                        joined_floors = 1;
+                        joined_ceilings = 1;
                     }
                     else
                     {
@@ -205,6 +211,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
                                     room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
                                     TR_Sector_SetTweenFloorConfig(room_tween);
+                                    joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
@@ -213,6 +220,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
                                     room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
                                     TR_Sector_SetTweenCeilingConfig(room_tween);
+                                    joined_ceilings = 1;
                                 }
                             }
                         }
@@ -221,7 +229,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 
                 current_heightmap = room->sectors + (w * room->sectors_y + h);
                 next_heightmap    = current_heightmap + 1;
-                if((room_tween->floor_tween_type == TR_SECTOR_TWEEN_TYPE_NONE) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -268,9 +276,9 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     }
                 }
 
-                /*current_heightmap = room->sectors + (w * room->sectors_y + h);
+                current_heightmap = room->sectors + (w * room->sectors_y + h);
                 next_heightmap    = current_heightmap + 1;
-                if((room_tween->ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_NONE) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -282,7 +290,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -299,7 +307,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -315,7 +323,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
                         TR_Sector_SetTweenCeilingConfig(room_tween);
                     }
-                }*/
+                }
             }
 
             /*****************************************************************************************************
@@ -343,6 +351,9 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
             room_tween->ceiling_corners[2].m_floats[1] = current_heightmap->ceiling_corners[2].m_floats[1];
             room_tween->ceiling_corners[3].m_floats[1] = room_tween->ceiling_corners[2].m_floats[1];
 
+            joined_floors = 0;
+            joined_ceilings = 0;
+            
             if((h > 0) && (current_heightmap->floor <= current_heightmap->ceiling) && (next_heightmap->floor <= next_heightmap->ceiling))     ///@STICK: TR_V CASE
             {
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
@@ -356,6 +367,8 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
                         TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                        joined_floors = 1;
+                        joined_ceilings = 1;
                     }
                     else if(TR_Sector_IsWall(current_heightmap, next_heightmap))
                     {
@@ -365,6 +378,8 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                         TR_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                        joined_floors = 1;
+                        joined_ceilings = 1;
                     }
                     else
                     {
@@ -382,6 +397,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                                     room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
                                     TR_Sector_SetTweenFloorConfig(room_tween);
+                                    joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
@@ -390,13 +406,14 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                                     room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
                                     TR_Sector_SetTweenCeilingConfig(room_tween);
+                                    joined_ceilings = 1;
                                 }
                             }
                         }
                     }
                 }
 
-                if((room_tween->floor_tween_type == TR_SECTOR_TWEEN_TYPE_NONE) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -443,9 +460,9 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     }
                 }
 
-                /*current_heightmap = room->sectors + (w * room->sectors_y + h);
+                current_heightmap = room->sectors + (w * room->sectors_y + h);
                 next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
-                if((room_tween->ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_NONE) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -457,7 +474,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -474,7 +491,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSector(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -490,7 +507,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
                         TR_Sector_SetTweenCeilingConfig(room_tween);
                     }
-                }*/
+                }
             }
         }    ///END for
     }    ///END for
@@ -2636,28 +2653,21 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
         if(p->transparency >= 2)
         {
             polygon_p np = (polygon_p)malloc(sizeof(polygon_t));
-            *np = *p;
+            np->vertices = NULL;
+            np->vertex_count = 0;
+            Polygon_Copy(np, p);
             np->next = mesh->transparency_polygons;
             mesh->transparency_polygons = np;
         }
         else if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
         {
             polygon_p np = (polygon_p)malloc(sizeof(polygon_t));
-            *np = *p;
+            np->vertices = NULL;
+            np->vertex_count = 0;
+            Polygon_Copy(np, p);
             np->next = mesh->animated_polygons;
             mesh->animated_polygons = np;
         }
-        else
-        {
-            Polygon_Clear(p);
-        }
-    }
-
-    if(mesh->polygons_count > 0)
-    {
-        free(mesh->polygons);
-        mesh->polygons = NULL;
-        mesh->polygons_count = 0;
     }
 }
 
@@ -3791,12 +3801,12 @@ void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
 
 void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 {
-    int i, j, top;
+    int j, top;
 
     tr2_item_t *tr_item;
     entity_p entity;
 
-    for(i=0;i<tr->items_count;i++)
+    for(uint32_t i=0;i<tr->items_count;i++)
     {
         tr_item = &tr->items[i];
         entity = Entity_Create();
@@ -3808,7 +3818,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->angles[1] = 0.0;
         entity->angles[2] = 0.0;
         Entity_UpdateRotation(entity);
-        if(tr_item->room >= 0 && tr_item->room < world->room_count)
+        if((tr_item->room >= 0) && (tr_item->room < world->room_count))
         {
             entity->self->room = world->rooms + tr_item->room;
         }
@@ -3832,7 +3842,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 
         entity->bf.model = World_FindModelByID(world, tr_item->object_id);
 
-        if(ent_ID_override)
+        if(ent_ID_override != NULL)
         {
             if(entity->bf.model == NULL)
             {

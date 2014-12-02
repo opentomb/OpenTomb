@@ -27,7 +27,7 @@ render =
     anisotropy = 8;                             -- Maximum depends and is limited by hardware capabilities.
     antialias = 1;
     antialias_samples = 8;                      -- Maximum depends and is limited by hardware capabilities.
-    z_depth = 24;                               -- Maximum and recommended is 24.
+    z_depth = 32;                               -- Maximum and recommended is 24.
     texture_border = 16;
 }
 
