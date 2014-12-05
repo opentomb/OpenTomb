@@ -384,17 +384,16 @@ void World_Prepare(world_p world)
 
 void World_Empty(world_p world)
 {
-    int32_t i;
     engine_container_p cont;
-    extern entity_p last_rmb;
+    extern engine_container_p last_cont;
 
-    last_rmb = NULL;
+    last_cont = NULL;
     Engine_LuaClearTasks();
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
     SDL_Delay(500);                                                             ///@FIXME: find correct time, or way to waiting ALL audio tracks stopping and destroing.
     // Now we can delete all other. Be carefull: OpenAL uses multithreading!
-    for(i=0;i<world->room_count;i++)
+    for(uint32_t i=0;i<world->room_count;i++)
     {
         Room_Empty(world->rooms+i);
     }
@@ -433,7 +432,7 @@ void World_Empty(world_p world)
 
     if(world->skeletal_model_count)
     {
-        for(i=0;i<world->skeletal_model_count;i++)
+        for(uint32_t i=0;i<world->skeletal_model_count;i++)
         {
             SkeletalModel_Clear(world->skeletal_models+i);
         }
@@ -446,7 +445,7 @@ void World_Empty(world_p world)
 
     if(world->meshs_count)
     {
-        for(i=0;i<world->meshs_count;i++)
+        for(uint32_t i=0;i<world->meshs_count;i++)
         {
             BaseMesh_Clear(world->meshes+i);
         }
@@ -467,7 +466,7 @@ void World_Empty(world_p world)
 
     if(bt_engine_dynamicsWorld)
     {
-        for (i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
+        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
         {
             btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
             btRigidBody* body = btRigidBody::upcast(obj);
@@ -507,7 +506,7 @@ void World_Empty(world_p world)
 
     if(world->anim_sequences_count)
     {
-        for(i = 0; i < world->anim_sequences_count; i++)
+        for(uint32_t i=0;i < world->anim_sequences_count;i++)
         {
             if(world->anim_sequences[i].frames_count != 0)
             {
@@ -843,37 +842,33 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
 
 void Room_Enable(room_p room)
 {
-    int i;
-    //engine_container_p cont;
-
     if(room->active)
     {
         return;
     }
 
-    if(room->bt_body)
+    if(room->bt_body != NULL)
     {
         bt_engine_dynamicsWorld->addRigidBody(room->bt_body);
     }
-    for(i=0;i<room->static_mesh_count;i++)
+
+    for(uint32_t i=0;i<room->static_mesh_count;i++)
     {
-        if(room->static_mesh[i].bt_body)
+        if(room->static_mesh[i].bt_body != NULL)
         {
             bt_engine_dynamicsWorld->addRigidBody(room->static_mesh[i].bt_body);
         }
     }
 
-    ///@FIXME: This is causing a critical crash on some rooms when it is already alternate flipping back to original!
-    /*
-    for(cont = room->containers;cont;cont = cont->next)
+    for(engine_container_p cont=room->containers;cont;cont=cont->next)
     {
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                Entity_Disable((entity_p)cont->object);
+                Entity_Enable((entity_p)cont->object);
                 break;
         }
-    }*/
+    }
 
     room->active = 1;
 }
@@ -881,25 +876,34 @@ void Room_Enable(room_p room)
 
 void Room_Disable(room_p room)
 {
-    int i;
-
     if(!room->active)
     {
         return;
     }
 
-    if(room->bt_body)
+    if(room->bt_body != NULL)
     {
         bt_engine_dynamicsWorld->removeRigidBody(room->bt_body);
     }
-    for(i=0;i<room->static_mesh_count;i++)
+
+    for(uint32_t i=0;i<room->static_mesh_count;i++)
     {
-        if(room->static_mesh[i].bt_body)
+        if(room->static_mesh[i].bt_body != NULL)
         {
             bt_engine_dynamicsWorld->removeRigidBody(room->static_mesh[i].bt_body);
         }
     }
 
+    for(engine_container_p cont=room->containers;cont;cont=cont->next)
+    {
+        switch(cont->object_type)
+        {
+            case OBJECT_ENTITY:
+                Entity_Disable((entity_p)cont->object);
+                break;
+        }
+    }
+    
     room->active = 0;
 }
 

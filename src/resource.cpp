@@ -37,11 +37,99 @@ extern "C" {
 #include "redblack.h"
 #include "bsp_tree.h"
 
-lua_State *entity_flags_conf;
-lua_State *ent_ID_override;
-lua_State *level_script;
+lua_State *objects_flags_conf = NULL;
+lua_State *ent_ID_override = NULL;
+lua_State *level_script = NULL;
+
+int lua_setModelVisibility(lua_State * lua);
 
 void Items_CheckEntities(RedBlackNode_p n);
+
+
+void TR_SetEntityModelFlags(struct entity_s *ent)
+{
+    if((objects_flags_conf != NULL) && (ent->bf.model != NULL))
+    {
+        int top = lua_gettop(objects_flags_conf);                               // save LUA's stack position
+        lua_getglobal(objects_flags_conf, "trGetEntityFlags");                  // add to the up of stack LUA's function "getEntityParameters"
+        if(lua_isfunction(objects_flags_conf, -1))                                  // If function exists...
+        {
+            lua_pushinteger(objects_flags_conf, engine_world.version);              // add to stack engine version
+            lua_pushinteger(objects_flags_conf, ent->bf.model->id);                 // add to stack model id
+            lua_pcall(objects_flags_conf, 2, 3, 0);                                 // call function "getEntityParameters"
+            ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -3); // get collision flag
+            ent->bf.model->hide = lua_tointeger(objects_flags_conf, -2);            // get info about model visibility
+            ent->type_flags |= lua_tointeger(objects_flags_conf, -1);               // get traverse information
+        }
+        lua_settop(objects_flags_conf, top);                                    // restore LUA stack position
+    }
+
+    if((level_script != NULL) && (ent->bf.model != NULL))
+    {
+        int top = lua_gettop(level_script);                                     // save LUA's stack position
+        lua_getglobal(level_script, "trGetEntityFlags");                        // add to the up of stack LUA's function
+        if(lua_isfunction(level_script, -1))                                    // If function exists...
+        {
+            lua_pushinteger(level_script, engine_world.version);                // add to stack engine version
+            lua_pushinteger(level_script, ent->bf.model->id);                   // add to stack model id
+            lua_pcall(level_script, 2, 3, 0);                                   // call that function
+            if(!lua_isnil(level_script, -3))
+            {
+                ent->self->collide_flag = 0xff & lua_tointeger(level_script, -3);   // get collision flag
+            }
+            if(!lua_isnil(level_script, -2))
+            {
+                ent->bf.model->hide = lua_tointeger(level_script, -2);              // get info about model visibility
+            }
+            if(!lua_isnil(level_script, -1))
+            {
+                ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
+                ent->type_flags |= lua_tointeger(level_script, -1);                 // get traverse information
+            }
+        }
+        lua_settop(level_script, top);                                          // restore LUA stack position
+    }
+}
+
+
+void TR_SetStaticMeshFlags(struct static_mesh_s *r_static)
+{
+    if(objects_flags_conf != NULL)
+    {
+        int top = lua_gettop(objects_flags_conf);                               // save LUA's stack position
+        lua_getglobal(objects_flags_conf, "trGetStaticMeshFlags");              // add to the up of stack LUA's function "getEntityParameters"
+        if(lua_isfunction(objects_flags_conf, -1))                              // If function exists...
+        {
+            lua_pushinteger(objects_flags_conf, engine_world.version);                      // add to stack engine version
+            lua_pushinteger(objects_flags_conf, r_static->object_id);                       // add to stack model id
+            lua_pcall(objects_flags_conf, 2, 2, 0);                                         // call function "getEntityParameters"
+            r_static->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -2);    // get collision flag
+            r_static->hide = lua_tointeger(objects_flags_conf, -1);                         // get info about model visibility
+        }
+        lua_settop(objects_flags_conf, top);                                    // restore LUA stack position
+    }
+
+    if(level_script != NULL)
+    {
+        int top = lua_gettop(level_script);                                     // save LUA's stack position
+        lua_getglobal(level_script, "trGetStaticMeshFlags");                    // add to the up of stack LUA's function
+        if(lua_isfunction(level_script, -1))                                    // If function exists...
+        {
+            lua_pushinteger(level_script, engine_world.version);                      // add to stack engine version
+            lua_pushinteger(level_script, r_static->object_id);                       // add to stack model id
+            lua_pcall(level_script, 2, 2, 0);                                         // call function "getEntityParameters"
+            if(!lua_isnil(level_script, -2))
+            {
+                r_static->self->collide_flag = 0xff & lua_tointeger(level_script, -2);    // get collision flag
+            }
+            if(!lua_isnil(level_script, -1))
+            {
+                r_static->hide = lua_tointeger(level_script, -1);                         // get info about model visibility
+            }
+        }
+        lua_settop(level_script, top);                                            // restore LUA stack position
+    }
+}
 
 /*
  * BASIC SECTOR COLLISION LAYOUT
@@ -60,16 +148,18 @@ void Items_CheckEntities(RedBlackNode_p n);
 
 void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 {
-    btScalar t;
-
-    ///@FIXME: add 2triangle case and calculate central vertex in bullet model generation.
     if(tween->floor_corners[0].m_floats[2] < tween->floor_corners[1].m_floats[2])
     {
+        btScalar t;
         SWAPT(tween->floor_corners[0].m_floats[2], tween->floor_corners[1].m_floats[2], t);
         SWAPT(tween->floor_corners[2].m_floats[2], tween->floor_corners[3].m_floats[2], t);
     }
 
-    if((tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2]) &&
+    if((tween->floor_corners[0].m_floats[2] - tween->floor_corners[1].m_floats[2]) * (tween->floor_corners[3].m_floats[2] - tween->floor_corners[2].m_floats[2]) < 0.0)
+    {
+        tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;              // like a butterfly
+    }
+    else if((tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2]) &&
        (tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2]))
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
@@ -90,16 +180,18 @@ void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 
 void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
 {
-    btScalar t;
-
-    ///@FIXME: add 2triangle case and calculate central vertex in bullet model generation.
     if(tween->ceiling_corners[0].m_floats[2] > tween->ceiling_corners[1].m_floats[2])
     {
+        btScalar t;
         SWAPT(tween->ceiling_corners[0].m_floats[2], tween->ceiling_corners[1].m_floats[2], t);
         SWAPT(tween->ceiling_corners[2].m_floats[2], tween->ceiling_corners[3].m_floats[2], t);
     }
 
-    if((tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2]) &&
+    if((tween->ceiling_corners[0].m_floats[2] - tween->ceiling_corners[1].m_floats[2]) * (tween->ceiling_corners[3].m_floats[2] - tween->ceiling_corners[2].m_floats[2]) < 0.0)
+    {
+        tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;            // like a butterfly
+    }
+    else if((tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2]) &&
        (tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2]))
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
@@ -137,11 +229,12 @@ int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
     return 0;
 }
 
+///@TODO: resolve floor >> ceiling case
 void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 {
-    for(int h = 0; h < room->sectors_y-1; h++)
+    for(uint16_t h = 0; h < room->sectors_y-1; h++)
     {
-        for(int w = 0; w < room->sectors_x-1; w++, room_tween++)
+        for(uint16_t w = 0; w < room->sectors_x-1; w++)
         {
             // Init X-plane tween [ | ]
 
@@ -169,7 +262,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
             room_tween->ceiling_corners[2].m_floats[0] = current_heightmap->ceiling_corners[1].m_floats[0];
             room_tween->ceiling_corners[3].m_floats[0] = room_tween->ceiling_corners[2].m_floats[0];
 
-            if((w > 0) && (current_heightmap->floor <= current_heightmap->ceiling) && (next_heightmap->floor <= next_heightmap->ceiling))     ///@STICK: TR_V CASE
+            if(w > 0)
             {
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))                                                           // Init X-plane tween [ | ]
                 {
@@ -354,7 +447,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
             joined_floors = 0;
             joined_ceilings = 0;
 
-            if((h > 0) && (current_heightmap->floor <= current_heightmap->ceiling) && (next_heightmap->floor <= next_heightmap->ceiling))     ///@STICK: TR_V CASE
+            if(h > 0)
             {
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                 {
@@ -509,6 +602,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     }
                 }
             }
+            room_tween++;
         }    ///END for
     }    ///END for
 }
@@ -1059,19 +1153,18 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
 
 void BT_GenEntityRigidBody(entity_p ent)
 {
-    int i;
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
-    if(!ent->bf.model)
+    if(ent->bf.model == NULL)
     {
         return;
     }
 
     ent->bt_body = (btRigidBody**)malloc(ent->bf.model->mesh_count * sizeof(btRigidBody*));
 
-    for(i=0;i<ent->bf.model->mesh_count;i++)
+    for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
     {
         ent->bt_body[i] = NULL;
         cshape = BT_CSfromMesh(ent->bf.model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
@@ -1081,7 +1174,6 @@ void BT_GenEntityRigidBody(entity_p ent)
             startTransform.setFromOpenGLMatrix(tr);
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             ent->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
-            ///@TODO: use switch for COLLISION_GROUP correction
             bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_CINEMATIC, COLLISION_MASK_ALL);
             ent->bt_body[i]->setUserPointer(ent->self);
         }
@@ -1096,7 +1188,7 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
         {
             btScalar min_x, max_x, min_y, max_y, x;
             max_x = min_x = p->vertex[0];
-            for(int i=1;i<p->vertex_count;i++)
+            for(uint16_t i=1;i<p->vertex_count;i++)
             {
                 x = p->vertex[3 * i + 0];
                 if(x > max_x)
@@ -1131,7 +1223,7 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
         {
             btScalar min_x, max_x, min_y, max_y, y;
             max_y = min_y = p->vertex[1];
-            for(int i=1;i<p->vertex_count;i++)
+            for(uint16_t i=1;i<p->vertex_count;i++)
             {
                 y = p->vertex[3 * i + 1];
                 if(y > max_y)
@@ -1166,7 +1258,6 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
 
 void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index)
 {
-    int i, j;
     room_sector_p sector;
     room_p room = world->rooms + room_index;
     tr5_room_t *tr_room = &tr->rooms[room_index];
@@ -1176,23 +1267,23 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
      */
 
     sector = room->sectors;
-    for(i=0;i<room->sectors_count;i++,sector++)
+    for(uint32_t i=0;i<room->sectors_count;i++,sector++)
     {
         /*
          * Let us fill pointers to sectors above and sectors below
          */
 
-        j = tr_room->sector_list[i].room_below;
+        uint8_t rp = tr_room->sector_list[i].room_below;
         sector->sector_below = NULL;
-        if(j >= 0 && j < world->room_count && j != 255)
+        if(rp >= 0 && rp < world->room_count && rp != 255)
         {
-            sector->sector_below = Room_GetSectorRaw(world->rooms + j, sector->pos);
+            sector->sector_below = Room_GetSectorRaw(world->rooms + rp, sector->pos);
         }
-        j = tr_room->sector_list[i].room_above;
+        rp = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
-        if(j >= 0 && j < world->room_count && j != 255)
+        if(rp >= 0 && rp < world->room_count && rp != 255)
         {
-            sector->sector_above = Room_GetSectorRaw(world->rooms + j, sector->pos);
+            sector->sector_above = Room_GetSectorRaw(world->rooms + rp, sector->pos);
         }
 
         room_sector_p near_sector = NULL;
@@ -1219,7 +1310,7 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
         if((near_sector != NULL) && (sector->portal_to_room >= 0))
         {
             portal_p p = room->portals;
-            for(j=0;j<room->portal_count;j++,p++)
+            for(uint16_t j=0;j<room->portal_count;j++,p++)
             {
                 if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
                 {
@@ -1397,7 +1488,6 @@ int lua_SetSectorFlags(lua_State * lua)
 
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
-    int32_t i;
     int lua_err, top;
     room_p r;
     base_mesh_p base_mesh;
@@ -1459,18 +1549,18 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    entity_flags_conf = luaL_newstate();
-    if(entity_flags_conf != NULL)
+    objects_flags_conf = luaL_newstate();
+    if(objects_flags_conf != NULL)
     {
-        luaL_openlibs(entity_flags_conf);
-        lua_err = luaL_loadfile(entity_flags_conf, "scripts/entity/entity_flags.lua");
-        lua_pcall(entity_flags_conf, 0, 0, 0);
+        luaL_openlibs(objects_flags_conf);
+        lua_err = luaL_loadfile(objects_flags_conf, "scripts/entity/entity_flags.lua");
+        lua_pcall(objects_flags_conf, 0, 0, 0);
         if(lua_err)
         {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(entity_flags_conf, -1));
-            lua_pop(entity_flags_conf, 1);
-            lua_close(entity_flags_conf);
-            entity_flags_conf = NULL;
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(objects_flags_conf, -1));
+            lua_pop(objects_flags_conf, 1);
+            lua_close(objects_flags_conf);
+            objects_flags_conf = NULL;
         }
     }
 
@@ -1518,26 +1608,26 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     top = lua_gettop(engine_lua);
     lua_getglobal(engine_lua, "render");
-    i = lua_GetScalarField(engine_lua,"texture_border");
+    int border_size = lua_GetScalarField(engine_lua,"texture_border");
     lua_settop(engine_lua, top);
-    i = (i < 0)?(0):(i);
-    i = (i > 128)?(128):(i);
-    world->tex_atlas = BorderedTextureAtlas_Create(i);                          // here is border size
-    for (i = 0; i < tr->textile32_count; i++)
+    border_size = (border_size < 0)?(0):(border_size);
+    border_size = (border_size > 128)?(128):(border_size);
+    world->tex_atlas = BorderedTextureAtlas_Create(border_size);                // here is border size
+    for(uint32_t i = 0; i < tr->textile32_count; i++)
     {
         BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
     }
 
     Gui_DrawLoadScreen(300);
 
-    for (i = 0; i < tr->sprite_textures_count; i++)
+    for (uint32_t i = 0; i < tr->sprite_textures_count; i++)
     {
         BorderedTextureAtlas_AddSpriteTexture(world->tex_atlas, tr->sprite_textures + i);
     }
 
     Gui_DrawLoadScreen(400);
 
-    for (i = 0; i < tr->object_textures_count; i++)
+    for (uint32_t i = 0; i < tr->object_textures_count; i++)
     {
         BorderedTextureAtlas_AddObjectTexture(world->tex_atlas, tr->object_textures + i);
     }
@@ -1621,7 +1711,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
      */
     world->meshs_count = tr->meshes_count;
     base_mesh = world->meshes = (base_mesh_p)malloc(world->meshs_count * sizeof(base_mesh_t));
-    for(i=0;i<world->meshs_count;i++,base_mesh++)
+    for(uint32_t i=0;i<world->meshs_count;i++,base_mesh++)
     {
         TR_GenMesh(world, i, base_mesh, tr);
     }
@@ -1641,7 +1731,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     if(world->room_box_count)
     {
         world->room_boxes = (room_box_p)malloc(world->room_box_count * sizeof(room_box_t));
-        for(i=0;i<world->room_box_count;i++)
+        for(uint32_t i=0;i<world->room_box_count;i++)
         {
             world->room_boxes[i].overlap_index = tr->boxes[i].overlap_index;
             world->room_boxes[i].true_floor =-tr->boxes[i].true_floor;
@@ -1657,7 +1747,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
      */
     world->room_count = tr->rooms_count;
     r = world->rooms = (room_p)realloc(world->rooms, world->room_count * sizeof(room_t));
-    for(i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         TR_GenRoom(i, r, world, tr);
         r->frustum = Frustum_Create();
@@ -1678,22 +1768,22 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     TR_GenEntities(world, tr);
 
     r = world->rooms;
-    for(i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         ///@STICK! THE STICK FOR TR_V ALTERNATE ROOM CALCULATION!!!
         if(world->version == TR_V)
         {
             room_p alt_room = world->rooms;
-            for(int j=0;j<world->room_count;j++,alt_room++)
+            for(uint32_t j=0;j<world->room_count;j++,alt_room++)
             {
                 if((j != i) && (alt_room->alternate_room == NULL) && (r->sectors_x == alt_room->sectors_x) && (r->sectors_y == alt_room->sectors_y) &&
                     (r->transform[12 + 0] == alt_room->transform[12 + 0]) && (r->transform[12 + 1] == alt_room->transform[12 + 1]) && !((r->bb_max[2] <= alt_room->bb_min[2]) || (r->bb_min[2] >= alt_room->bb_max[2])))
                 {
                     portal_p p = alt_room->portals;
-                    int cnt = 0;
-                    for(int jj=0;jj<alt_room->portal_count;jj++,p++)
+                    uint32_t cnt = 0;
+                    for(uint16_t jj=0;jj<alt_room->portal_count;jj++,p++)
                     {
-                        for(int k=0;k<p->dest_room->portal_count;k++)
+                        for(uint16_t k=0;k<p->dest_room->portal_count;k++)
                         {
                             if(p->dest_room->portals[k].dest_room == alt_room)
                             {
@@ -1721,7 +1811,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         // once and for all, and then safely destroy it.
 
         // (Actually, floordata should never be copied into final map, when this is finished.)
-        for(int j=0;j<r->sectors_count;j++)
+        for(uint32_t j=0;j<r->sectors_count;j++)
         {
             TR_Sector_TranslateFloorData(r->sectors + j, world);
         }
@@ -1734,7 +1824,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     r = world->rooms;
 
 #if TR_MESH_ROOM_COLLISION
-    for(i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         r->bt_body = NULL;
 
@@ -1768,7 +1858,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_settop(level_script, top);
     }
 
-    for(i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         /*if((r->base_room != NULL) && (r->base_room->base_room != NULL))
         {
@@ -1813,10 +1903,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
             r->bt_body->setUserPointer(r->self);
             r->self->collide_flag = COLLISION_TRIMESH;                          // meshtree
-            if(!r->active)
-            {
-                Room_Disable(r);
-            }
         }
 
         delete[] room_tween;
@@ -1861,16 +1947,18 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     // Load entity collision flags and ID overrides from script.
 
-    if(entity_flags_conf)
+    if(objects_flags_conf)
     {
-        lua_close(entity_flags_conf);
-        entity_flags_conf = NULL;
+        lua_close(objects_flags_conf);
+        objects_flags_conf = NULL;
     }
+
     if(ent_ID_override)
     {
         lua_close(ent_ID_override);
         ent_ID_override = NULL;
     }
+
     if(level_script)
     {
         lua_close(level_script);
@@ -1879,7 +1967,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     // Generate VBOs for meshes.
 
-    for(i=0;i<world->meshs_count;i++)
+    for(uint32_t i=0;i<world->meshs_count;i++)
     {
         if(world->meshes[i].vertex_count)
         {
@@ -1889,7 +1977,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     Gui_DrawLoadScreen(1000);
 
-    for(i=0;i<world->room_count;i++)
+    for(uint32_t i=0;i<world->room_count;i++)
     {
         if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count))
         {
@@ -1937,7 +2025,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
     r = world->rooms;
-    for(i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         if(r->base_room != NULL)
         {
@@ -1957,7 +2045,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr)
 {
-    int i, j, top;
+    int i, j;
     portal_p p;
     room_p r_dest;
     tr5_room_t *tr_room = &tr->rooms[room_index];
@@ -1996,7 +2084,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->self = (engine_container_p)malloc(sizeof(engine_container_t));
     room->self->room = room;
     room->self->next = NULL;
-    room->self->object = NULL;
+    room->self->object = room;
     room->self->object_type = OBJECT_ROOM_BASE;
 
     TR_GenRoomMesh(world, room_index, room, tr);
@@ -2069,35 +2157,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->bt_body = NULL;
         r_static->hide = 0;
 
-        if(entity_flags_conf)
-        {
-            top = lua_gettop(entity_flags_conf);                                               // save LUA stack
-            lua_getglobal(entity_flags_conf, "GetStaticMeshFlags");                            // add to the up of stack LUA's function
-            lua_pushinteger(entity_flags_conf, tr->game_version);                              // add to stack first argument
-            lua_pushinteger(entity_flags_conf, r_static->object_id);                           // add to stack second argument
-            lua_pcall(entity_flags_conf, 2, 2, 0);                                             // call that function
-            r_static->self->collide_flag = 0xff & lua_tointeger(entity_flags_conf, -2);        // get returned value
-            r_static->hide = lua_tointeger(entity_flags_conf, -1);                             // get returned value
-            lua_settop(entity_flags_conf, top);                                                // restore LUA stack
-        }
-
-        if(level_script)
-        {
-            top = lua_gettop(level_script);                                                        // save LUA stack
-            lua_getglobal(level_script, "GetStaticMeshFlags");                                     // add to the up of stack LUA's function
-
-            if(lua_isfunction(level_script, -1))                                                   // If function exists...
-            {
-                lua_pushinteger(level_script, tr->game_version);                                   // add to stack first argument
-                lua_pushinteger(level_script, r_static->object_id);                                // add to stack second argument
-                lua_pcall(level_script, 2, 2, 0);                                                  // call that function
-                r_static->self->collide_flag = 0xff & lua_tointeger(level_script, -2);             // get returned value
-                r_static->hide = lua_tointeger(level_script, -1);                                  // get returned value
-            }
-            lua_settop(level_script, top);                                                         // restore LUA stack
-        }
-
-        if(r_static->self->collide_flag != 0x0000)
+        TR_SetStaticMeshFlags(r_static);
+        if(r_static->self->collide_flag != 0x00)
         {
             cshape = BT_CSfromMesh(r_static->mesh, true, true, r_static->self->collide_flag);
             if(cshape)
@@ -3793,6 +3854,8 @@ void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         tr_moveable = &tr->moveables[i];
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
+        smodel->hide = 0x00;
+        smodel->transparancy_flags = 0x00;
         TR_GenSkeletalModel(world, i, smodel, tr);
         SkeletonModel_FillTransparancy(smodel);
     }
@@ -3830,9 +3893,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->activation_mask  = (tr_item->flags & 0x3E00) >> 9;              ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
         entity->OCB              =  tr_item->ocb;
 
-        entity->self->collide_flag = 0x0000;
+        entity->self->collide_flag = 0x00;
         entity->anim_flags = 0x0000;
-        entity->flags = 0x00000000;
         entity->move_type = 0x0000;
         entity->bf.current_animation = 0;
         entity->bf.current_frame = 0;
@@ -3926,7 +3988,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             world->Character = entity;
             entity->self->collide_flag = ENTITY_ACTOR_COLLISION;
             entity->bf.model->hide = 0;
-            entity->flags = ENTITY_IS_ACTIVE | ENTITY_CAN_TRIGGER;
+            entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             LM = (skeletal_model_p)entity->bf.model;
 
             top = lua_gettop(engine_lua);
@@ -3992,46 +4054,12 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         }
 
         Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
-
-        entity->self->collide_flag = 0x0000;
-        entity->bf.model->hide = 0;
-
-        if(entity_flags_conf)
+        TR_SetEntityModelFlags(entity);
+        BT_GenEntityRigidBody(entity);
+        if(entity->self->collide_flag == 0x00)
         {
-            top = lua_gettop(entity_flags_conf);                                               // save LUA stack
-            lua_getglobal(entity_flags_conf, "GetEntityFlags");                                // add to the up of stack LUA's function
-            lua_pushinteger(entity_flags_conf, tr->game_version);                              // add to stack first argument
-            lua_pushinteger(entity_flags_conf, tr_item->object_id);                            // add to stack second argument
-            lua_pcall(entity_flags_conf, 2, 3, 0);                                             // call that function
-            entity->self->collide_flag = 0xff & lua_tointeger(entity_flags_conf, -3);          // get returned value
-            entity->bf.model->hide = lua_tointeger(entity_flags_conf, -2);                     // get returned value
-            if(lua_toboolean(entity_flags_conf, -1)) entity->flags |= 0x10;
-
-            lua_settop(entity_flags_conf, top);                                                // restore LUA stack
+            Entity_DisableCollision(entity);
         }
-
-        if(level_script)
-        {
-            top = lua_gettop(level_script);                                             // save LUA stack
-            lua_getglobal(level_script, "GetEntityFlags");                              // add to the up of stack LUA's function
-
-            if(lua_isfunction(level_script, -1))                                        // If function exists...
-            {
-                lua_pushinteger(level_script, tr->game_version);                        // add to stack first argument
-                lua_pushinteger(level_script, tr_item->object_id);                      // add to stack second argument
-                lua_pcall(level_script, 2, 3, 0);                                       // call that function
-                entity->self->collide_flag = 0xff & lua_tointeger(level_script, -3);    // get returned value
-                entity->bf.model->hide = lua_tointeger(level_script, -2);                  // get returned value
-                if(lua_toboolean(level_script, -1)) entity->flags |= 0x10;
-            }
-            lua_settop(level_script, top);                                              // restore LUA stack
-        }
-
-        if(entity->self->collide_flag != 0x0000)
-        {
-            BT_GenEntityRigidBody(entity);
-        }
-
         Entity_RebuildBV(entity);
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
@@ -4149,64 +4177,101 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
     for(int i=0; i<tweens_size; i++)
     {
 
-        if(tweens[i].ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT)
+        switch(tweens[i].ceiling_tween_type)
         {
-            trimesh->addTriangle(tweens[i].ceiling_corners[0],
-                                 tweens[i].ceiling_corners[1],
-                                 tweens[i].ceiling_corners[3],
-                                 true);
-            cnt++;
-        }
-        if(tweens[i].ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT)
-        {
-            trimesh->addTriangle(tweens[i].ceiling_corners[2],
-                                 tweens[i].ceiling_corners[1],
-                                 tweens[i].ceiling_corners[3],
-                                 true);
-            cnt++;
-        }
-        else if(tweens[i].ceiling_tween_type == TR_SECTOR_TWEEN_TYPE_QUAD)
-        {
-            trimesh->addTriangle(tweens[i].ceiling_corners[0],
-                                 tweens[i].ceiling_corners[1],
-                                 tweens[i].ceiling_corners[3],
-                                 true);
-            trimesh->addTriangle(tweens[i].ceiling_corners[2],
-                                 tweens[i].ceiling_corners[1],
-                                 tweens[i].ceiling_corners[3],
-                                 true);
-            cnt += 2;
-        }
+            case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
+                {
+                    btScalar t = fabs((tweens[i].ceiling_corners[2].m_floats[2] - tweens[i].ceiling_corners[3].m_floats[2]) /
+                                      (tweens[i].ceiling_corners[0].m_floats[2] - tweens[i].ceiling_corners[1].m_floats[2]));
+                    t = 1.0 / (1.0 + t);
+                    btVector3 o;
+                    o.setInterpolate3(tweens[i].ceiling_corners[0], tweens[i].ceiling_corners[2], t);
+                    trimesh->addTriangle(tweens[i].ceiling_corners[0],
+                                         tweens[i].ceiling_corners[1],
+                                         o, true);
+                    trimesh->addTriangle(tweens[i].ceiling_corners[3],
+                                         tweens[i].ceiling_corners[2],
+                                         o, true);
+                    cnt += 2;
+                }
+                break;
 
+            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
+                trimesh->addTriangle(tweens[i].ceiling_corners[0],
+                                     tweens[i].ceiling_corners[1],
+                                     tweens[i].ceiling_corners[3],
+                                     true);
+                cnt++;
+                break;
 
-        if(tweens[i].floor_tween_type == TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT)
+            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
+                trimesh->addTriangle(tweens[i].ceiling_corners[2],
+                                     tweens[i].ceiling_corners[1],
+                                     tweens[i].ceiling_corners[3],
+                                     true);
+                cnt++;
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_QUAD:
+                trimesh->addTriangle(tweens[i].ceiling_corners[0],
+                                     tweens[i].ceiling_corners[1],
+                                     tweens[i].ceiling_corners[3],
+                                     true);
+                trimesh->addTriangle(tweens[i].ceiling_corners[2],
+                                     tweens[i].ceiling_corners[1],
+                                     tweens[i].ceiling_corners[3],
+                                     true);
+                cnt += 2;
+                break;
+        };
+
+        switch(tweens[i].floor_tween_type)
         {
-            trimesh->addTriangle(tweens[i].floor_corners[0],
-                                 tweens[i].floor_corners[1],
-                                 tweens[i].floor_corners[3],
-                                 true);
-            cnt++;
-        }
-        else if(tweens[i].floor_tween_type == TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT)
-        {
-            trimesh->addTriangle(tweens[i].floor_corners[2],
-                                 tweens[i].floor_corners[1],
-                                 tweens[i].floor_corners[3],
-                                 true);
-            cnt++;
-        }
-        else if(tweens[i].floor_tween_type == TR_SECTOR_TWEEN_TYPE_QUAD)
-        {
-            trimesh->addTriangle(tweens[i].floor_corners[0],
-                                 tweens[i].floor_corners[1],
-                                 tweens[i].floor_corners[3],
-                                 true);
-            trimesh->addTriangle(tweens[i].floor_corners[2],
-                                 tweens[i].floor_corners[1],
-                                 tweens[i].floor_corners[3],
-                                 true);
-            cnt += 2;
-        }
+            case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
+                {
+                    btScalar t = fabs((tweens[i].floor_corners[2].m_floats[2] - tweens[i].floor_corners[3].m_floats[2]) /
+                                      (tweens[i].floor_corners[0].m_floats[2] - tweens[i].floor_corners[1].m_floats[2]));
+                    t = 1.0 / (1.0 + t);
+                    btVector3 o;
+                    o.setInterpolate3(tweens[i].floor_corners[0], tweens[i].floor_corners[2], t);
+                    trimesh->addTriangle(tweens[i].floor_corners[0],
+                                         tweens[i].floor_corners[1],
+                                         o, true);
+                    trimesh->addTriangle(tweens[i].floor_corners[3],
+                                         tweens[i].floor_corners[2],
+                                         o, true);
+                    cnt += 2;
+                }
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
+                trimesh->addTriangle(tweens[i].floor_corners[0],
+                                     tweens[i].floor_corners[1],
+                                     tweens[i].floor_corners[3],
+                                     true);
+                cnt++;
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
+                trimesh->addTriangle(tweens[i].floor_corners[2],
+                                     tweens[i].floor_corners[1],
+                                     tweens[i].floor_corners[3],
+                                     true);
+                cnt++;
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_QUAD:
+                trimesh->addTriangle(tweens[i].floor_corners[0],
+                                     tweens[i].floor_corners[1],
+                                     tweens[i].floor_corners[3],
+                                     true);
+                trimesh->addTriangle(tweens[i].floor_corners[2],
+                                     tweens[i].floor_corners[1],
+                                     tweens[i].floor_corners[3],
+                                     true);
+                cnt += 2;
+                break;
+        };
     }
 
     if(cnt == 0)
@@ -4260,10 +4325,6 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
             ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
             break;
 
-        /*case COLLISION_SPHERE:
-            ret = new btSphereShape(mesh->R);
-            break;*/
-
         case COLLISION_BOX:                                                     // the box with deviated centre
             obb = OBB_Create();
             OBB_Rebuild(obb, mesh->bb_min, mesh->bb_max);
@@ -4294,10 +4355,6 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
             OBB_Clear(obb);
             free(obb);
             break;
-
-        case COLLISION_NONE:
-            ret = NULL;
-            break;
     };
 
     return ret;
@@ -4308,7 +4365,7 @@ void Items_CheckEntities(RedBlackNode_p n)
 {
     base_item_p item = (base_item_p)n->data;
 
-    for(int i=0;i<engine_world.room_count;i++)
+    for(uint32_t i=0;i<engine_world.room_count;i++)
     {
         engine_container_p cont = engine_world.rooms[i].containers;
         for(;cont;cont=cont->next)

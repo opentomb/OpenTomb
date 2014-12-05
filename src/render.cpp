@@ -569,7 +569,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
 
 void Render_Entity(struct entity_s *entity)
 {
-    if(entity->was_rendered || entity->hide || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -1004,7 +1004,7 @@ void Render_DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if((ent->bf.model->transparancy_flags == MESH_HAS_TRANSPERENCY) && (ent->hide == 0) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
+                if((ent->bf.model->transparancy_flags == MESH_HAS_TRANSPERENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
                 {
                     btScalar tr[16];
                     for(uint16_t j=0;j<ent->bf.model->mesh_count;j++)
@@ -1636,7 +1636,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
 void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
 {
     if(entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
-       entity->hide || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+       !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }

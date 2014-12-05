@@ -27,7 +27,8 @@ entity_p Entity_Create()
 
     ret->move_type = MOVE_ON_FLOOR;
     Mat4_E(ret->transform);
-    ret->active = 1;
+    ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
+    ret->type_flags = ENTITY_TYPE_DECORATION;
 
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
     ret->self->next = NULL;
@@ -127,51 +128,73 @@ void Entity_Clear(entity_p entity)
 
 void Entity_Enable(entity_p ent)
 {
-    int i;
-
-    if(ent->active)
+    if(!(ent->state_flags & ENTITY_STATE_ENABLED))
     {
-        return;
+        if(ent->bt_body != NULL)
+        {
+            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+            {
+                btRigidBody *b = ent->bt_body[i];
+                if(b != NULL)
+                {
+                    bt_engine_dynamicsWorld->addRigidBody(b);
+                }
+            }
+        }
+        ent->state_flags |= ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
     }
+}
 
+
+void Entity_Disable(entity_p ent)
+{
+    if(ent->state_flags & ENTITY_STATE_ENABLED)
+    {
+        if(ent->bt_body != NULL)
+        {
+            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+            {
+                btRigidBody *b = ent->bt_body[i];
+                if(b != NULL)
+                {
+                    bt_engine_dynamicsWorld->removeRigidBody(b);
+                }
+            }
+        }
+        ent->state_flags = 0x0000;
+    }
+}
+
+
+void Entity_EnableCollision(entity_p ent)
+{
     if(ent->bt_body != NULL)
     {
-        for(i=0;i<ent->bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt_body[i];
-            if(b)
+            if(b != NULL)
             {
                 bt_engine_dynamicsWorld->addRigidBody(b);
             }
         }
     }
-    ent->hide = 0;
-    ent->active = 1;
 }
 
-void Entity_Disable(entity_p ent)
+
+void Entity_DisableCollision(entity_p ent)
 {
-    int i;
-
-    if(!ent->active)
-    {
-        return;
-    }
-
     if(ent->bt_body != NULL)
     {
-        for(i=0;i<ent->bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt_body[i];
-            if(b)
+            if(b != NULL)
             {
                 bt_engine_dynamicsWorld->removeRigidBody(b);
             }
         }
     }
-
-    ent->hide = 1;
-    ent->active = 0;
 }
 
 
@@ -198,7 +221,7 @@ void Entity_UpdateRoomPos(entity_p ent)
         if(ent->current_sector != new_sector)
         {
             ent->current_sector = new_sector;
-            if(new_sector && (ent->flags & ENTITY_IS_ACTIVE) && (ent->flags & ENTITY_CAN_TRIGGER))
+            if(new_sector && (ent->state_flags & ENTITY_STATE_ENABLED) && (ent->state_flags & ENTITY_STATE_ACTIVE) && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
             {
                 Entity_ParseFloorData(ent, &engine_world);
             }
@@ -239,14 +262,17 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
     }
 #endif
 
-    for(i=0;i<ent->bf.model->mesh_count;i++)
+    if(ent->self->collide_flag != 0x00)
     {
-        if(ent->bt_body[i])
+        for(i=0;i<ent->bf.model->mesh_count;i++)
         {
-            Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
-            bt_tr.setFromOpenGLMatrix(tr);
-            ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-            ent->bt_body[i]->setWorldTransform(bt_tr);
+            if(ent->bt_body[i])
+            {
+                Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
+                bt_tr.setFromOpenGLMatrix(tr);
+                ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+                ent->bt_body[i]->setWorldTransform(bt_tr);
+            }
         }
     }
 
@@ -595,11 +621,11 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                             break;
 
                         case TR_EFFECT_HIDEOBJECT:
-                            entity->hide = 1;
+                            entity->state_flags &= ~ENTITY_STATE_VISIBLE;
                             break;
 
                         case TR_EFFECT_SHOWOBJECT:
-                            entity->hide = 0;
+                            entity->state_flags |= ENTITY_STATE_VISIBLE;
                             break;
 
                         case TR_EFFECT_PLAYSTEPSOUND:
@@ -865,7 +891,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                                 {
                                     Con_Printf("Activate %d, %d", operands, ent->id);
                                     //lua_ActivateEntity(engine_lua, operands, ent->id);   /// prevents to Lara pick up items, that she should not;
-                                    e->active = 0x01;
+                                    e->state_flags |= ENTITY_STATE_ACTIVE;
                                 }
                             }
                             break;
@@ -1265,7 +1291,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     animation_frame_p af;
     state_change_p stc;
 
-    if((entity == NULL) || (entity->active == 0) || (entity->bf.model == NULL) /*|| !entity->bf.model->animations*/ || ((entity->bf.model->animation_count == 1) && (entity->bf.model->animations->frames_count == 1)))
+    if((entity == NULL) || !(entity->state_flags & ENTITY_STATE_ACTIVE)  || !(entity->state_flags & ENTITY_STATE_ENABLED) || (entity->bf.model == NULL) || ((entity->bf.model->animation_count == 1) && (entity->bf.model->animations->frames_count == 1)))
     {
         return 0;
     }
@@ -1360,7 +1386,7 @@ void Entity_CheckActivators(struct entity_s *ent)
             e = (entity_p)cont->object;
             r = e->activation_offset[3];
             r *= r;
-            if(e->flags & ENTITY_IS_TRIGGER)
+            if((e->type_flags & ENTITY_TYPE_TRIGGER) && (e->state_flags & ENTITY_STATE_ENABLED))
             {
                 //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
                 if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
@@ -1369,7 +1395,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                     lua_ActivateEntity(engine_lua, e->id, ent->id);
                 }
             }
-            else if(e->flags & ENTITY_IS_PICKABLE)
+            else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
             {
                 v = e->transform + 12;
                 if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&

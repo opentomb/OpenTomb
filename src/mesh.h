@@ -305,8 +305,8 @@ typedef struct animation_frame_s
 typedef struct skeletal_model_s
 {
     uint32_t                    id;                                             // ID
-    uint16_t                    transparancy_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
-    uint16_t                    hide;                                           // do not render
+    uint8_t                     transparancy_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
+    uint8_t                     hide;                                           // do not render
     btScalar                    bbox_min[3];                                    // bbox info
     btScalar                    bbox_max[3];
     btScalar                    centre[3];                                      // the centre of model

@@ -8,6 +8,8 @@
 #define SPLIT_EMPTY 0x00
 #define SPLIT_SUCCES 0x01
 
+#include <stdint.h>
+
 struct camera_s;
 struct room_s;
 struct polygon_s;
@@ -21,7 +23,7 @@ struct frustum_s;
  */
 typedef struct portal_s                                                         
 {
-    unsigned short int vertex_count;     
+    uint16_t vertex_count;     
     btScalar *vertex;                                                           // Оригинальные вершины портала
     btScalar norm[4];                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
     btScalar centre[3];                                                         // центр портала

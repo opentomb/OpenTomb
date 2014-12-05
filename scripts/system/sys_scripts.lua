@@ -12,10 +12,16 @@ TR_IV_DEMO          = 7;
 TR_V                = 8;
 TR_UNKNOWN          = 127;
 
-ENTITY_IS_ACTIVE    = 0x01;
-ENTITY_CAN_TRIGGER  = 0x02;   
-ENTITY_TRIGGER      = 0x04;
-ENTITY_PICKABLE     = 0x08;
+ENTITY_STATE_ENABLED                      = 0x0001;
+ENTITY_STATE_ACTIVE                       = 0x0002;
+ENTITY_STATE_VISIBLE                      = 0x0004;
+
+ENTITY_TYPE_DECORATION                    = 0x0000;
+ENTITY_TYPE_TRIGGER                       = 0x0001;
+ENTITY_TYPE_TRIGGER_ACTIVATOR             = 0x0002;
+ENTITY_TYPE_PICKABLE                      = 0x0004;
+ENTITY_TYPE_TRAVERSE                      = 0x0008;
+ENTITY_TYPE_TRAVERSE_FLOOR                = 0x0010;
 
 -- global frame time var, in seconds
 frame_time = 1.0 / 60.0;
@@ -76,7 +82,7 @@ entity_funcs = {};
 
 -- doors - door id's to open; func - additional things we want to do after activation
 function create_keyhole_func(id, doors, func, mask)
-    setEntityFlag(id, ENTITY_TRIGGER);
+    setEntityFlags(id, nil, ENTITY_TYPE_TRIGGER);
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end
@@ -116,7 +122,7 @@ end
 -- switch: 2 - enable
 -- switch: 3 - disable
 function create_switch_func(id, doors, func, mask)
-    setEntityFlag(id, ENTITY_TRIGGER);
+    setEntityFlags(id, nil, ENTITY_TYPE_TRIGGER);
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end
@@ -142,7 +148,7 @@ function create_switch_func(id, doors, func, mask)
 end
 
 function create_pickup_func(id, item_id)
-    setEntityFlag(id, ENTITY_PICKABLE);
+    setEntityFlags(id, nil, ENTITY_TYPE_PICKABLE);
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end
@@ -203,10 +209,7 @@ function create_pickup_func(id, item_id)
             end;
             
             addItem(activator_id, item_id);
-            setEntityFlag(object_id, 0x00);                 -- disable entity
-            setEntityVisibility(object_id, 0x00);
-            getEntityActivity(object_id, 0x00);
-            
+            disableEntity(object_id);
         end);
     end;
 end

@@ -235,7 +235,6 @@ void Engine_Init()
     engine_lua = luaL_newstate();
     if(engine_lua != NULL)
     {
-        ///@FIXME: CRITICAL: ALL LUA's ACTIONS PREVENTS TO CRASH!!!
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
     }
@@ -286,7 +285,7 @@ int lua_DumpRoom(lua_State * lua)
 }
 
 
-int lua_SetRoomCollision(lua_State * lua)
+int lua_SetRoomEnabled(lua_State * lua)
 {
     int val, id, top;
     top = lua_gettop(lua);
@@ -414,6 +413,34 @@ int lua_DisableEntity(lua_State * lua)
     if(ent != NULL)
     {
         Entity_Disable(ent);
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityCollision(lua_State * lua)
+{
+    int num = lua_gettop(lua);                                                  // get # of arguments
+    entity_p ent;
+
+    if(num < 1)
+    {
+        Con_AddLine("You must to enter entity ID");
+        return 0;
+    }
+
+    ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    if(ent != NULL)
+    {
+        if(lua_tointeger(lua, 2) != 0)
+        {
+            Entity_EnableCollision(ent);
+        }
+        else
+        {
+            Entity_DisableCollision(ent);
+        }
     }
 
     return 0;
@@ -1405,7 +1432,14 @@ int lua_SetEntityVisibility(lua_State * lua)
         return 0;
     }
 
-    ent->hide = !lua_tointeger(lua, 2);
+    if(lua_tointeger(lua, 2) != 0)
+    {
+        ent->state_flags |= ENTITY_STATE_VISIBLE;
+    }
+    else
+    {
+        ent->state_flags &= ~ENTITY_STATE_VISIBLE;
+    }
 
     return 0;
 }
@@ -1431,7 +1465,7 @@ int lua_GetEntityActivity(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->active);
+    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_ACTIVE) != 0);
 
     return 1;
 }
@@ -1457,7 +1491,14 @@ int lua_SetEntityActivity(lua_State * lua)
         return 0;
     }
 
-    ent->active = lua_tointeger(lua, 2);
+    if(lua_tointeger(lua, 2) != 0)
+    {
+        ent->state_flags |= ENTITY_STATE_ACTIVE;
+    }
+    else
+    {
+        ent->state_flags &= ~ENTITY_STATE_ACTIVE;
+    }
 
     return 0;
 }
@@ -1489,7 +1530,7 @@ int lua_GetEntityOCB(lua_State * lua)
 }
 
 
-int lua_GetEntityFlag(lua_State * lua)
+int lua_GetEntityFlags(lua_State * lua)
 {
     int id, top;
     entity_p ent;
@@ -1509,21 +1550,22 @@ int lua_GetEntityFlag(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->flags);
+    lua_pushinteger(lua, ent->state_flags);
+    lua_pushinteger(lua, ent->type_flags);
 
-    return 1;
+    return 2;
 }
 
 
-int lua_SetEntityFlag(lua_State * lua)
+int lua_SetEntityFlags(lua_State * lua)
 {
     int id, top;
     entity_p ent;
     top = lua_gettop(lua);
 
-    if(top < 2)
+    if(top < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        Con_Printf("Wrong arguments count. Must be (entity_id, state_flags, type_flags)");
         return 0;
     }
 
@@ -1535,7 +1577,14 @@ int lua_SetEntityFlag(lua_State * lua)
         return 0;
     }
 
-    ent->flags = lua_tointeger(lua, 2);
+    if(!lua_isnil(lua, 2))
+    {
+        ent->state_flags = lua_tointeger(lua, 2);
+    }
+    if(!lua_isnil(lua, 3))
+    {
+        ent->type_flags = lua_tointeger(lua, 3);
+    }
 
     return 0;
 }
@@ -1952,6 +2001,7 @@ int lua_genUVRotateAnimation(lua_State * lua)
     return 0;
 }
 
+
 void Engine_LuaClearTasks()
 {
     int top = lua_gettop(engine_lua);
@@ -1973,7 +2023,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      */
 
     lua_register(lua, "dumpRoom", lua_DumpRoom);
-    lua_register(lua, "setRoomCollision", lua_SetRoomCollision);
+    lua_register(lua, "setRoomEnabled", lua_SetRoomEnabled);
 
     lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "playSound", lua_PlaySound);
@@ -2017,6 +2067,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
     lua_register(lua, "enableEntity", lua_EnableEntity);
     lua_register(lua, "disableEntity", lua_DisableEntity);
+    lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
     lua_register(lua, "getModelID", lua_GetModelID);
@@ -2025,8 +2076,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
     lua_register(lua, "getEntityOCB", lua_GetEntityOCB);
-    lua_register(lua, "getEntityFlag", lua_GetEntityFlag);
-    lua_register(lua, "setEntityFlag", lua_SetEntityFlag);
+    lua_register(lua, "getEntityFlags", lua_GetEntityFlags);
+    lua_register(lua, "setEntityFlags", lua_SetEntityFlags);
     lua_register(lua, "getEntityActivationMask", lua_GetEntityActivationMask);
     lua_register(lua, "setEntityActivationMask", lua_SetEntityActivationMask);
     lua_register(lua, "getEntityState", lua_GetEntityState);

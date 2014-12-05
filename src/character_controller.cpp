@@ -2236,7 +2236,7 @@ int Character_FindTraverse(struct entity_s *ch)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p e = (entity_p)cont->object;
-                if((e->flags & ENTITY_IS_TRAVERSE) && (1 == OBB_OBB_Test(e, ch) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1)))
+                if((e->type_flags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(e, ch) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1)))
                 {
                     int oz = (ch->angles[0] + 45.0) / 90.0;
                     ch->angles[0] = oz * 90.0;
@@ -2252,7 +2252,7 @@ int Character_FindTraverse(struct entity_s *ch)
 }
 
 /**
- * 
+ *
  * @param rs: room sector pointer
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
@@ -2265,12 +2265,12 @@ int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine
     {
         return 0x00;
     }
-    
-    if((fabs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= TR_METERING_SECTORSIZE)) 
+
+    if((fabs(floor - f0) < 1.1) && (rs->ceiling - rs->floor >= TR_METERING_SECTORSIZE))
     {
         return 0x01;
     }
-    
+
     bt_engine_ClosestRayResultCallback cb(cont);
     btVector3 from, to;
     to.m_floats[0] = from.m_floats[0] = rs->pos[0];
@@ -2285,13 +2285,13 @@ int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine
         if(fabs(v.m_floats[2] - floor) < 1.1)
         {
             engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
-            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && (((entity_p)cont->object)->flags & ENTITY_IS_TRAVERSE))
+            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && (((entity_p)cont->object)->type_flags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
         }
     }
-    
+
     return 0x00;
 }
 
@@ -2355,12 +2355,12 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     if(cb.hasHit())
     {
         engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
-        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && (((entity_p)cont->object)->flags & ENTITY_IS_TRAVERSE))
+        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && (((entity_p)cont->object)->type_flags & ENTITY_TYPE_TRAVERSE))
         {
             return 0x00;
         }
     }
-    
+
     int ret = 0x00;
     room_sector_p next_s = NULL;
 
@@ -2441,7 +2441,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     }
 
     next_s = TR_Sector_CheckPortalPointer(next_s);
-    if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01)) 
+    if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01))
     {
         bt_engine_ClosestConvexResultCallback ccb(ch->self);
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);

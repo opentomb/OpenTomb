@@ -32,7 +32,7 @@ static_tbl[49] = {coll = COLL_BBOX};            -- Chain
 
 --------------------------------------------------------------------------------
 
-function GetStaticMeshFlags(ver, id)
+function trGetStaticMeshFlags(ver, id)
     if(static_tbl[id] == nil) then
         return nil, nil;
     else

@@ -1836,13 +1836,19 @@ static ALCvoid FreeContext(ALCcontext *context)
     ResetUIntMap(&context->EffectSlotMap);
 
     context->ActiveSourceCount = 0;
-    free(context->ActiveSources);
-    context->ActiveSources = NULL;
+    if(context->ActiveSources != NULL)
+    {
+        free(context->ActiveSources);
+        context->ActiveSources = NULL;
+    }
     context->MaxActiveSources = 0;
 
     context->ActiveEffectSlotCount = 0;
-    free(context->ActiveEffectSlots);
-    context->ActiveEffectSlots = NULL;
+    if(context->ActiveEffectSlots != NULL)
+    {
+        free(context->ActiveEffectSlots);
+        context->ActiveEffectSlots = NULL;
+    }
     context->MaxActiveEffectSlots = 0;
 
     ALCdevice_DecRef(context->Device);

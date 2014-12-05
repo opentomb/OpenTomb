@@ -2,27 +2,27 @@
 -- FOR TOMB RAIDER, LEVEL1 (CAVES)
 
 -- ColType values reference: 
---   0x0000  - Object has no collisions
---   0x0001  - Object uses real mesh data for collision.
---   0x0002  - Object uses bounding box for collision.
+COLL_NONE = 0x00;  -- Object has no collisions
+COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
+COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
 
 print("Level script loaded (LEVEL1.lua)");
 
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
 
-tr_static_tbl = {};
+static_tbl = {};
 
-tr_static_tbl[06] = {coll = 0x0000};             -- Hanging plant
-tr_static_tbl[08] = {coll = 0x0000};             -- Hanging plant
-tr_static_tbl[10] = {coll = 0x0001};             -- Wood barrier
-tr_static_tbl[33] = {coll = 0x0001};             -- Bridge part 1
-tr_static_tbl[34] = {coll = 0x0001};             -- Bridge part 2
-tr_static_tbl[38] = {coll = 0x0000};             -- Door frame
-tr_static_tbl[39] = {coll = 0x0001};             -- Wall bricks
-tr_static_tbl[43] = {coll = 0x0000};             -- Icicle
+static_tbl[06] = {coll = COLL_NONE};             -- Hanging plant
+static_tbl[08] = {coll = COLL_NONE};             -- Hanging plant
+static_tbl[10] = {coll = COLL_MESH};             -- Wood barrier
+static_tbl[33] = {coll = COLL_MESH};             -- Bridge part 1
+static_tbl[34] = {coll = COLL_MESH};             -- Bridge part 2
+static_tbl[38] = {coll = COLL_NONE};             -- Door frame
+static_tbl[39] = {coll = COLL_MESH};             -- Wall bricks
+static_tbl[43] = {coll = COLL_NONE};             -- Icicle
 
-function GetStaticMeshFlags(ver, id)
+function trGetStaticMeshFlags(ver, id)
     if(static_tbl[id] == nil) then
         return nil, nil;
     else
