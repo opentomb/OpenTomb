@@ -260,7 +260,7 @@ void Game_ApplyControls(struct entity_s *ent)
     {
         control_states.free_look = 1;
     }
-    
+
     /*
      * MOVE KB LOGIC
      */
@@ -583,7 +583,7 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
 
     if(ent && ent->character)
     {
-        if(ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
             Entity_CheckActivators(ent);
         }
@@ -612,7 +612,7 @@ void Game_UpdateCharacters()
 
     if(ent && ent->character)
     {
-        if(ent->character->cmd.action && (ent->flags & ENTITY_CAN_TRIGGER))
+        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
             Entity_CheckActivators(ent);
         }
@@ -679,7 +679,7 @@ void Game_Frame(btScalar time)
     {
         Game_ApplyControls(engine_world.Character);
     }
-                    
+
     if((engine_world.Character != NULL) && !control_states.noclip)
     {
         Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);

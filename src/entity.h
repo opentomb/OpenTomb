@@ -17,11 +17,16 @@ struct obb_s;
 struct character_s;
 struct ss_bone_frame_s;
 
-#define ENTITY_IS_ACTIVE                          (0x00000001)
-#define ENTITY_CAN_TRIGGER                        (0x00000002)
-#define ENTITY_IS_TRIGGER                         (0x00000004)
-#define ENTITY_IS_PICKABLE                        (0x00000008)
-#define ENTITY_IS_TRAVERSE                        (0x00000010)
+#define ENTITY_STATE_ENABLED                        (0x0001)
+#define ENTITY_STATE_ACTIVE                         (0x0002)
+#define ENTITY_STATE_VISIBLE                        (0x0004)
+
+#define ENTITY_TYPE_DECORATION                      (0x0000)
+#define ENTITY_TYPE_TRIGGER                         (0x0001)
+#define ENTITY_TYPE_TRIGGER_ACTIVATOR               (0x0002)
+#define ENTITY_TYPE_PICKABLE                        (0x0004)
+#define ENTITY_TYPE_TRAVERSE                        (0x0008)
+#define ENTITY_TYPE_TRAVERSE_FLOOR                  (0x0010)
 
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction
@@ -116,9 +121,8 @@ typedef struct entity_s
     int32_t                             OCB;                                    // Object code bit (since TR4)
     uint32_t                            activation_mask;                        // 0x1F means ACTIVATE.
 
-    uint32_t                            flags;
-    uint8_t                             active;
-    uint8_t                             hide;
+    uint16_t                            type_flags;
+    uint16_t                            state_flags;
 
     uint8_t                             dir_flag;                               // (move direction)
     uint16_t                            anim_flags;                             // additional animation control param
@@ -151,6 +155,8 @@ entity_p Entity_Create();
 void Entity_Clear(entity_p entity);
 void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);
+void Entity_EnableCollision(entity_p ent);
+void Entity_DisableCollision(entity_p ent);
 
 void Entity_UpdateRoomPos(entity_p ent);
 void Entity_UpdateRigidBody(entity_p ent, int force);

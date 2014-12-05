@@ -75,7 +75,7 @@ static GLUquadricObj   *dbgSphere;
 static GLUquadricObj   *dbgCyl;
 static btScalar         dbgR = 128.0;
 
-entity_p                last_rmb = NULL;
+engine_container_p      last_cont = NULL;
 
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
 /*
@@ -667,11 +667,7 @@ void Engine_SecondaryMouseDown()
 
         if((c0 = (engine_container_p)cbc.m_collisionObject->getUserPointer()))
         {
-            if(c0->object_type == OBJECT_ENTITY)
-            {
-                last_rmb = (entity_p)c0->object;
-            }
-            else if(c0->object_type == OBJECT_BULLET_MISC)
+            if(c0->object_type == OBJECT_BULLET_MISC)
             {
                 btCollisionObject* obj = (btCollisionObject*)cbc.m_collisionObject;
                 btRigidBody* body = btRigidBody::upcast(obj);
@@ -690,6 +686,10 @@ void Engine_SecondaryMouseDown()
 
                 bt_engine_dynamicsWorld->removeCollisionObject(obj);
                 delete obj;
+            }
+            else
+            {
+                last_cont = c0;
             }
         }
     }
@@ -796,9 +796,23 @@ void ShowDebugInfo()
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
-    if(last_rmb != NULL)
+    if(last_cont != NULL)
     {
-        Gui_OutTextXY(NULL, 20, 92, "ent_rmb_ID = %d", last_rmb->id);
+        switch(last_cont->object_type)
+        {
+            case OBJECT_ENTITY:
+                Gui_OutTextXY(NULL, 20, 92, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
+                break;
+                
+            case OBJECT_STATIC_MESH:
+                Gui_OutTextXY(NULL, 20, 92, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                break;
+                
+            case OBJECT_ROOM_BASE:
+                Gui_OutTextXY(NULL, 20, 92, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                break;
+        }
+        
     }
 
     if(engine_camera.current_room != NULL)
@@ -1056,23 +1070,6 @@ void DebugKeys(int button, int state)
                 break;
 
                 /*
-                 * keys for animation switching
-                 */
-            case SDLK_e:
-                if(last_rmb)
-                {
-                    Entity_SetAnimation(last_rmb, last_rmb->bf.current_animation + 1, 0);   // next anim
-                }
-                break;
-
-            case SDLK_q:
-                if(last_rmb)
-                {
-                    Entity_SetAnimation(last_rmb, last_rmb->bf.current_animation - 1, 0);   // previous anim
-                }
-                break;
-
-                /*
                  * alternate rooms testing: be carefull, something is wrong and engine may crash!
                  */
             case SDLK_r:
@@ -1087,6 +1084,7 @@ void DebugKeys(int button, int state)
                     }
                 }
                 break;
+                
             case SDLK_4:
                 if(!con_base.show)
                 {

@@ -3,9 +3,9 @@
 
 -- ColType values reference: 
 
-COLL_NONE = 0x0000;  -- Object has no collisions
-COLL_MESH = 0x0001;  -- Object uses real mesh data for collision.
-COLL_BBOX = 0x0002;  -- Object uses bounding box for collision.
+COLL_NONE = 0x00;  -- Object has no collisions
+COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
+COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
 
 print("Level script loaded (COMPOUND.lua)");
 
@@ -38,7 +38,7 @@ static_tbl[47] = {coll = COLL_NONE};            -- F-117
 
 --------------------------------------------------------------------------------
 
-function GetStaticMeshFlags(ver, id)
+function trGetStaticMeshFlags(ver, id)
     if(static_tbl[id] == nil) then
         return nil, nil;
     else

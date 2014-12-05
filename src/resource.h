@@ -42,7 +42,8 @@
 #define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
 #define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
 #define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_QUAD               3
+#define TR_SECTOR_TWEEN_TYPE_QUAD               3   // 
+#define TR_SECTOR_TWEEN_TYPE_2TRIANGLES         4   // it looks like a butterfly
 
 ///@FIXME: Move skybox item IDs to script!
 
