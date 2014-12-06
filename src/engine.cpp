@@ -254,8 +254,9 @@ void Engine_Init()
 int lua_DumpRoom(lua_State * lua)
 {
     room_p r = NULL;
+    int top = lua_gettop(lua);
 
-    if(lua_gettop(lua) == 0)
+    if(top == 0)
     {
         r = engine_camera.current_room;
     }
@@ -379,10 +380,10 @@ int lua_SetModelCollisionMap(lua_State * lua)
 
 int lua_EnableEntity(lua_State * lua)
 {
-    int num = lua_gettop(lua);                                                  // get # of arguments
+    int top = lua_gettop(lua);                                                  // get # of arguments
     entity_p ent;
 
-    if(num < 1)
+    if(top < 1)
     {
         Con_AddLine("You must to enter entity ID");
         return 0;
@@ -400,10 +401,10 @@ int lua_EnableEntity(lua_State * lua)
 
 int lua_DisableEntity(lua_State * lua)
 {
-    int num = lua_gettop(lua);                                                  // get # of arguments
+    int top = lua_gettop(lua);                                                  // get # of arguments
     entity_p ent;
 
-    if(num < 1)
+    if(top < 1)
     {
         Con_AddLine("You must to enter entity ID");
         return 0;
@@ -421,10 +422,10 @@ int lua_DisableEntity(lua_State * lua)
 
 int lua_SetEntityCollision(lua_State * lua)
 {
-    int num = lua_gettop(lua);                                                  // get # of arguments
+    int top = lua_gettop(lua);                                                  // get # of arguments
     entity_p ent;
 
-    if(num < 1)
+    if(top < 1)
     {
         Con_AddLine("You must to enter entity ID");
         return 0;
@@ -449,10 +450,10 @@ int lua_SetEntityCollision(lua_State * lua)
 
 int lua_SetGravity(lua_State * lua)                                             // function to be exported to Lua
 {
-    int num = lua_gettop(lua);                                                  // get # of arguments
+    int top = lua_gettop(lua);                                                  // get # of arguments
     btVector3 g;
 
-    switch(num)
+    switch(top)
     {
         case 0:                                                                 // get value
             g = bt_engine_dynamicsWorld->getGravity();
@@ -1715,6 +1716,46 @@ int lua_SetEntityState(lua_State * lua)
     return 0;
 }
 
+///@TODO: current realisation is not correct: if entity is outside the room than entity will not be saved (see savegame function)
+int lua_SetEntityRoomMove(lua_State * lua)
+{
+    int id, room, top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (id, move_type, room_id)");
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+
+    ent->move_type = lua_tointeger(lua, 2);
+    room = lua_tointeger(lua, 3);
+    if(!lua_isnil(lua, 3) && (room >= 0) && (room < engine_world.room_count))
+    {
+        room_p r = engine_world.rooms + room;
+        if(ent == engine_world.Character)
+        {
+            ent->self->room = r;
+        }
+        else if(ent->self->room != r)
+        {
+            if(ent->self->room != NULL)
+            {
+                Room_RemoveEntity(ent->self->room, ent);
+            }
+            Room_AddEntity(r, ent);
+        }
+    }
+    Entity_UpdateRoomPos(ent);
+}
+
 
 int lua_SetEntityMeshswap(lua_State * lua)
 {
@@ -1742,6 +1783,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
         ent_dest->bf.bone_tags[i].mesh  = model_src->mesh_tree[i].mesh;
         ent_dest->bf.bone_tags[i].mesh2 = model_src->mesh_tree[i].mesh2;
     }
+
     return 0;
 }
 
@@ -1751,7 +1793,8 @@ int lua_SetEntityMeshswap(lua_State * lua)
 
 int lua_CamShake(lua_State *lua)
 {
-    if(lua_gettop(lua) != 2)
+    int top = lua_gettop(lua);
+    if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (power), (time).");
         return 0;
@@ -1759,7 +1802,6 @@ int lua_CamShake(lua_State *lua)
 
     float power = lua_tonumber(lua, 1);
     float time  = lua_tonumber(lua, 2);
-
     Cam_Shake(renderer.cam, power, time);
 
     return 1;
@@ -1797,14 +1839,13 @@ int lua_PlaySound(lua_State *lua)
     int id, top;
 
     top = lua_gettop(lua);
-    id  = lua_tointeger(lua, 1);
-
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
 
+    id  = lua_tointeger(lua, 1);
     if((id < 0) || (id >= engine_world.audio_map_count))
     {
         Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
@@ -1835,14 +1876,13 @@ int lua_StopSound(lua_State *lua)
     int id, top;
 
     top = lua_gettop(lua);
-    id  = lua_tointeger(lua, 1);
-
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
 
+    id  = lua_tointeger(lua, 1);
     if((id < 0) || (id >= engine_world.audio_map_count))
     {
         Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
@@ -1868,14 +1908,13 @@ int lua_SetLevel(lua_State *lua)
     int id, top;
 
     top = lua_gettop(lua);
-    id  = lua_tointeger(lua, 1);
-
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
 
+    id  = lua_tointeger(lua, 1);
     Con_Printf("Changing gameflow_manager.CurrentLevelID to %d", id);
 
     Game_LevelTransition(id);
@@ -1924,7 +1963,33 @@ int lua_SetGame(lua_State *lua)
     return 0;
 }
 
-int lua_genUVRotateAnimation(lua_State * lua)
+int lua_LoadMap(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_AddLine("wrong arguments number, must be (map_name)");
+        return 0;
+    }
+
+    if(lua_isstring(lua, 1))
+    {
+        const char *s = lua_tostring(lua, 1);
+        if((s != NULL) && (s[0] != 0) && (strcmp(s, gameflow_manager.CurrentLevelPath) != 0))
+        {
+            Engine_LoadMap(s);
+        }
+        /*if(!lua_isnil(lua, 2))                                                ///@TODO: REWRITE GAMEFLOW MANAGER!!!
+        {
+            gameflow_manager...
+        }*/
+    }
+
+    return 0;
+}
+
+int lua_genUVRotateAnimation(lua_State *lua)
 {
     int id, top;
 
@@ -2044,6 +2109,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "setgame", lua_SetGame);
     lua_register(lua, "setGame", lua_SetGame);
+    lua_register(lua, "loadMap", lua_LoadMap);
 
     lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
@@ -2082,6 +2148,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityActivationMask", lua_SetEntityActivationMask);
     lua_register(lua, "getEntityState", lua_GetEntityState);
     lua_register(lua, "setEntityState", lua_SetEntityState);
+    lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
     lua_register(lua, "getEntityMoveType", lua_GetEntityMoveType);
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
@@ -2524,7 +2591,7 @@ int Engine_ExecCmd(char *ch)
         if(!strcmp(token, "help"))
         {
             Con_AddLine("help - show help info\0");
-            Con_AddLine("map - load level \"file_name\"\0");
+            Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0");
             Con_AddLine("save, load - save and load game state in \"file_name\"\0");
             Con_AddLine("exit - close program\0");
             Con_AddLine("cls - clean console\0");
@@ -2538,15 +2605,6 @@ int Engine_ExecCmd(char *ch)
             Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0");
             Con_AddLine("playsound(id) - play specified sound\0");
             Con_AddLine("stopsound(id) - stop specified sound\0");
-        }
-        else if(!strcmp(token, "map"))
-        {
-            ch = parse_token(ch, token);
-            if(NULL != ch)
-            {
-                Engine_LoadMap(token);
-            }
-            return 1;
         }
         else if(!strcmp(token, "goto"))
         {
