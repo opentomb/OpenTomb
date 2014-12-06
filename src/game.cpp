@@ -121,8 +121,7 @@ void Game_InitGlobals()
 int Game_Load(const char* name)
 {
     FILE *f;
-    char *buf, *ch, token[512], local;
-    long int buf_size;
+    char *ch, local;
 
     local = 1;
     for(ch=(char*)name;*ch;ch++)
@@ -136,76 +135,77 @@ int Game_Load(const char* name)
 
     if(local)
     {
+        char token[512];
         snprintf(token, 512, "save/%s", name);
         f = fopen(token, "rb");
+        if(f == NULL)
+        {
+            Sys_extWarn("Can not read file \"%s\"", token);
+            return 0;
+        }
+        fclose(f);
+        Engine_LuaClearTasks();
+        luaL_dofile(engine_lua, token);
     }
     else
     {
         f = fopen(name, "rb");
-    }
-
-    if(!f)
-    {
-        Sys_extWarn("Can not read file \"%s\"", name);
-        return 0;
-    }
-
-    Engine_LuaClearTasks();
-
-    fseek(f, 0, SEEK_END);
-    buf_size = ftell(f) + 1;
-    fseek(f, 0, SEEK_SET);
-    ch = buf = (char*)malloc(buf_size * sizeof(char));
-    fread(buf, buf_size, sizeof(char), f);
-    fclose(f);
-
-    CVAR_set_val_d("engine_version", SC_ParseInt(&ch));
-    ch = parse_token(ch, token);
-    if(strcmp(CVAR_get_val_s("game_level"), token))
-    {
-        CVAR_set_val_s("game_level", token);
-        Engine_LoadMap(token);
-    }
-    while(ch = parse_token(ch, token))
-    {
-        if(!strcmp("LARA", token))
+        if(f == NULL)
         {
-            SC_ParseEntity(&ch, engine_world.Character);
+            Sys_extWarn("Can not read file \"%s\"", name);
+            return 0;
         }
+        fclose(f);
+        Engine_LuaClearTasks();
+        luaL_dofile(engine_lua, name);
     }
 
-    free(buf);
     return 1;
 }
 
 
 /**
- * Вспомогательная ф-я сохранения entity
+ * Entity save function, based on engine lua scripts;
+ * @TODO: something wrong with state save / load system (try to yse triggers, save, load other map, load saved game)
  */
 void Save_Entity(FILE **f, entity_p ent)
 {
-    int r, x, y;
-    if(!ent)
+    if(ent == NULL)
     {
         return;
     }
-    fprintf(*f, "\n{");
-    fprintf(*f, "\n\tpos \t%f\t%f\t%f", ent->transform[12], ent->transform[13], ent->transform[14]);
-    fprintf(*f, "\n\tangles \t%f\t%f\t%f", ent->angles[0], ent->angles[1], ent->angles[2]);
-    fprintf(*f, "\n\tanim \t%d\t%d\t%f", ent->bf.current_animation, ent->bf.current_frame, ent->bf.frame_time);
-    r = -1;
-    x = -1;
-    y = -1;
-    if(ent->self->room)
+
+    fprintf(*f, "\nsetEntityPos(%d, %f, %f, %f, %f, %f, %f);", ent->id,
+            ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+            ent->angles[0], ent->angles[1], ent->angles[2]);
+    fprintf(*f, "\nsetEntitySpeed(%d, %f, %f, %f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.current_animation, ent->bf.current_frame);
+    fprintf(*f, "\nsetEntityState(%d, %d);", ent->id, ent->bf.next_state);
+    if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
-        r = ent->self->room->id;
+        fprintf(*f, "\nenableEntity(%d);", ent->id);
     }
-    x = 1;
-    y = 1;
-    fprintf(*f, "\n\troom \t%d\t%d\t%d", r, x, y);
-    fprintf(*f, "\n\tmove \t%d", ent->move_type);
-    fprintf(*f, "\n\tspeed \t%f\t%f\t%f", ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
-    fprintf(*f, "\n}\n");
+    else
+    {
+        fprintf(*f, "\ndisableEntity(%d);", ent->id);
+    }
+    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X);", ent->id, ent->state_flags, ent->type_flags);
+    //setEntityMeshswap()
+
+    if(ent->character != NULL)
+    {
+        if(ent->self->room != NULL)
+        {
+            fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d);", ent->id, ent->move_type, ent->self->room->id);
+        }
+        else
+        {
+            fprintf(*f, "\nsetEntityRoomMove(%d, %d, nil);", ent->id, ent->move_type);
+        }
+        //character info
+    }
+
+
 }
 
 /**
@@ -242,10 +242,21 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "%d\n", (int)CVAR_get_val_d("engine_version"));
-    fprintf(f, "\"%s\"\n", CVAR_get_val_s("game_level"));
-    fprintf(f, "\nLARA");
+    ///@READ: not use here gameflow ver_id, map_id without level path! it brokes custom levels loading!
+    fprintf(f, "loadMap(\"%s\");\n", CVAR_get_val_s("game_level"));
     Save_Entity(&f, engine_world.Character);
+    room_p r = engine_world.rooms;
+    for(uint32_t i=0;i<engine_world.room_count;i++,r++)
+    {
+        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                fprintf(f, "\n\n-- other entity");
+                Save_Entity(&f, (entity_p)cont->object);
+            }
+        }
+    }
     fclose(f);
 
     return 1;

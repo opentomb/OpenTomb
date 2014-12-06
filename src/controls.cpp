@@ -79,14 +79,14 @@ void Controls_Key(int32_t button, int state)
                 case ACT_LOOKRIGHT:
                     control_states.look_right = state;
                     break;
-                    
+
                 case ACT_BIGMEDI:
                     if(!control_mapper.action_map[i].already_pressed)
                     {
                         control_states.use_big_medi = state;
                     }
                     break;
-                    
+
                 case ACT_SMALLMEDI:
                     if(!control_mapper.action_map[i].already_pressed)
                     {
@@ -98,7 +98,7 @@ void Controls_Key(int32_t button, int state)
                     if(!state)
                     {
                         con_base.show = !con_base.show;
-                        
+
                         if(con_base.show)
                         {
                             Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
@@ -124,14 +124,14 @@ void Controls_Key(int32_t button, int state)
                 case ACT_SAVEGAME:
                     if(!state)
                     {
-                        Game_Save("qsave.txt");
+                        Game_Save("qsave.lua");
                     }
                     break;
 
                 case ACT_LOADGAME:
                     if(!state)
                     {
-                        Game_Load("qsave.txt");
+                        Game_Load("qsave.lua");
                     }
                     break;
 
@@ -139,7 +139,7 @@ void Controls_Key(int32_t button, int state)
                     // control_states.move_forward = state;
                     return;
             }
-            
+
             control_mapper.action_map[i].state = state;
         }
     }
@@ -370,7 +370,7 @@ int Controls_KeyConsoleFilter(int32_t key, int kmod_states)
                 return key;
             else
                 return ':';
-        
+
         case SDLK_BACKSLASH:
             if( !(kmod_states & KMOD_SHIFT) )
                 return key;

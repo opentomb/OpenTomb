@@ -152,6 +152,14 @@ void Room_AddEntity(room_p room, struct entity_s *entity)
 {
     engine_container_p curr;
 
+    for(curr=room->containers;curr!=NULL;curr=curr->next)
+    {
+        if((curr->object_type == OBJECT_ENTITY) && (((entity_p)curr->object)->id == entity->id))
+        {
+            return;
+        }
+    }
+
     curr = entity->self;
     curr->object = entity;
     curr->object_type = OBJECT_ENTITY;
@@ -903,7 +911,7 @@ void Room_Disable(room_p room)
                 break;
         }
     }
-    
+
     room->active = 0;
 }
 

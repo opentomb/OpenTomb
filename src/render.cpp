@@ -1038,9 +1038,11 @@ void Render_DrawList()
     {
         glEnableClientState(GL_COLOR_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
+        glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
         Render_BSPBackToFront(render_dBSP.m_root);
+        glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
 }
