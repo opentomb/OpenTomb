@@ -1712,6 +1712,10 @@ int lua_SetEntityState(lua_State * lua)
     }
 
     ent->bf.next_state = lua_tointeger(lua, 2);
+    if(!lua_isnil(lua, 3))
+    {
+        ent->bf.last_state = lua_tointeger(lua, 3);
+    }
 
     return 0;
 }

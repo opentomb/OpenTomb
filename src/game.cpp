@@ -166,7 +166,6 @@ int Game_Load(const char* name)
 
 /**
  * Entity save function, based on engine lua scripts;
- * @TODO: something wrong with state save / load system (try to yse triggers, save, load other map, load saved game)
  */
 void Save_Entity(FILE **f, entity_p ent)
 {
@@ -180,7 +179,7 @@ void Save_Entity(FILE **f, entity_p ent)
             ent->angles[0], ent->angles[1], ent->angles[2]);
     fprintf(*f, "\nsetEntitySpeed(%d, %f, %f, %f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.current_animation, ent->bf.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d);", ent->id, ent->bf.next_state);
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.next_state, ent->bf.last_state);
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
         fprintf(*f, "\nenableEntity(%d);", ent->id);
@@ -190,10 +189,15 @@ void Save_Entity(FILE **f, entity_p ent)
         fprintf(*f, "\ndisableEntity(%d);", ent->id);
     }
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X);", ent->id, ent->state_flags, ent->type_flags);
+    if(ent->activation_mask != 0)
+    {
+        fprintf(*f, "\nsetEntityActivationMask(%d, 0x%.8X);", ent->id, ent->activation_mask);
+    }
     //setEntityMeshswap()
 
     if(ent->character != NULL)
     {
+        // maybe use it in non character case to avoid glitches with long moved objects and overlapped rooms
         if(ent->self->room != NULL)
         {
             fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d);", ent->id, ent->move_type, ent->self->room->id);

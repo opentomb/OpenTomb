@@ -23,20 +23,22 @@ How to use model_view
 	*) It is my own engine, not a branch of OpenRaider, but I use some useful code from it.
 
 Used here:
-    1) SDL v2.0 library http://www.libsdl.org/
-    2) OpenGL http://www.opengl.org/
-    3) zlib http://www.zlib.net/
-    4) LUA v5.1.4. http://www.lua.org/
-    5) OpenAL v1.15.1 http://kcat.strangesoft.net/openal.html
-    6) Vera Mono font http://www.dafont.com/
-    7) EasterEgg ASCII art http://www.chris.com/ascii/index.php
-    8) Code from or integrated lib:
-        - openraider project https://sourceforge.net/projects/openraider/
-        - quaketenebrae (parser and mem manager) http://tenebrae.sourceforge.net/
-        - vt project http://icculus.org/vt/vt/website/
-        - freetype2 http://freetype.sourceforge.net/freetype2/index.html
-        - ftgl http://sourceforge.net/projects/ftgl/
-        - BULLET http://bulletphysics.org/wordpress/
+	1) SDL library http://www.libsdl.org/
+	2) OpenGL http://www.opengl.org/
+	3) zlib http://www.zlib.net/
+	4) LUA v5.2.3. http://www.lua.org/
+	5) Vera Mono font http://www.dafont.com/
+	6) EasterEgg ASCII art http://www.chris.com/ascii/index.php
+	7) Code from or integrated lib:
+		- openraider project (animation models loading) https://sourceforge.net/projects/openraider/
+		- quaketenebrae (parser) http://tenebrae.sourceforge.net/
+		- vt project http://icculus.org/vt/vt/website/
+		- freetype2 http://freetype.sourceforge.net/freetype2/index.html
+		- ftgl http://sourceforge.net/projects/ftgl/
+		- BULLET http://bulletphysics.org/wordpress/
+		- SDL_Image http://www.libsdl.org/projects/SDL_image/
+			+ jpeg-9 http://www.ijg.org/
+			+ libpng-1.6.2 http://www.libpng.org/pub/png/libpng.html
     
 Note:
 Added test object interaction like doors and statics (test it in TR_I). To change selected object animation press "e" (next animation), or "q" (previous animation).

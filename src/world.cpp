@@ -191,15 +191,13 @@ int Room_RemoveEntity(room_p room, struct entity_s *entity)
     if(prev == NULL)                                                            // start list
     {
         room->containers = room->containers->next;
-        //free(cont);
     }
     else
     {
         prev->next = cont->next;
-        //free(cont);
     }
-
     cont->next = NULL;
+
     return 1;
 }
 
