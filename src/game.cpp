@@ -174,10 +174,10 @@ void Save_Entity(FILE **f, entity_p ent)
         return;
     }
 
-    fprintf(*f, "\nsetEntityPos(%d, %f, %f, %f, %f, %f, %f);", ent->id,
+    fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
             ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
             ent->angles[0], ent->angles[1], ent->angles[2]);
-    fprintf(*f, "\nsetEntitySpeed(%d, %f, %f, %f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.current_animation, ent->bf.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.next_state, ent->bf.last_state);
     if(ent->state_flags & ENTITY_STATE_ENABLED)
@@ -189,27 +189,31 @@ void Save_Entity(FILE **f, entity_p ent)
         fprintf(*f, "\ndisableEntity(%d);", ent->id);
     }
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X);", ent->id, ent->state_flags, ent->type_flags);
-    if(ent->activation_mask != 0)
-    {
-        fprintf(*f, "\nsetEntityActivationMask(%d, 0x%.8X);", ent->id, ent->activation_mask);
-    }
+    fprintf(*f, "\nsetEntityActivationMask(%d, 0x%.8X);", ent->id, ent->activation_mask);
     //setEntityMeshswap()
+
+    if(ent->self->room != NULL)
+    {
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
+    }
+    else
+    {
+        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
+    }
 
     if(ent->character != NULL)
     {
-        // maybe use it in non character case to avoid glitches with long moved objects and overlapped rooms
-        if(ent->self->room != NULL)
+        fprintf(*f, "\nremoveAllItems(%d);", ent->id);
+        for(inventory_node_p i=ent->character->inventory;i!=NULL;i=i->next)
         {
-            fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d);", ent->id, ent->move_type, ent->self->room->id);
+            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i->id, i->count);
         }
-        else
+
+        for(int i=0;i<PARAM_LASTINDEX;i++)
         {
-            fprintf(*f, "\nsetEntityRoomMove(%d, %d, nil);", ent->id, ent->move_type);
+            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
         }
-        //character info
     }
-
-
 }
 
 /**

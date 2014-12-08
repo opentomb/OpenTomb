@@ -223,6 +223,7 @@ void Character_Clean(struct entity_s *ent);
 
 int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
 int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
+int32_t Character_RemoveAllItems(struct entity_s *ent);
 int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id);                // returns items count
 
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset = 0.0);
