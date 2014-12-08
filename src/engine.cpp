@@ -609,20 +609,18 @@ int lua_GetCharacterParam(lua_State * lua)
 int lua_SetCharacterParam(lua_State * lua)
 {
     int id, top, parameter;
-    float value;
     entity_p ent;
 
     top = lua_gettop(lua);
 
     if(top < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, param, value)");
+        Con_Printf("Wrong arguments count. Must be (entity_id, param, value, (max_value))");
         return 0;
     }
 
     id        = lua_tointeger(lua, 1);
     parameter = lua_tointeger(lua, 2);
-    value     = lua_tonumber (lua, 3);
     ent       = World_GetEntityByID(&engine_world, id);
 
     if(parameter >= PARAM_LASTINDEX)
@@ -635,10 +633,17 @@ int lua_SetCharacterParam(lua_State * lua)
         Con_Printf("No entity or no character for entity #%d", id);
         return 0;
     }
+    else if(top == 3)
+    {
+        Character_SetParam(ent, parameter, lua_tonumber(lua, 3));
+    }
     else
     {
-        return Character_SetParam(ent, parameter, value);
+        ent->character->parameters.param[parameter] = lua_tonumber(lua, 3);
+        ent->character->parameters.maximum[parameter] = lua_tonumber(lua, 4);
     }
+
+    return 0;
 }
 
 int lua_ChangeCharacterParam(lua_State * lua)
@@ -670,10 +675,9 @@ int lua_ChangeCharacterParam(lua_State * lua)
         Con_Printf("No entity or no character for entity #%d", id);
         return 0;
     }
-    else
-    {
-        return Character_ChangeParam(ent, parameter, value);
-    }
+    Character_ChangeParam(ent, parameter, value);
+
+    return 0;
 }
 
 int lua_GetActionState(lua_State *lua)
@@ -818,6 +822,55 @@ int lua_RemoveItem(lua_State * lua)
 }
 
 
+int lua_RemoveAllItems(lua_State * lua)
+{
+    int top, entity_id;
+    top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        return 0;
+    }
+
+    entity_id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", entity_id);
+        return 0;
+    }
+    Character_RemoveAllItems(ent);
+
+    return 0;
+}
+
+
+int lua_GetItemsCount(lua_State * lua)
+{
+    int top, entity_id, item_id;
+    top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (entity_id, item_id)");
+        return 0;
+    }
+    entity_id = lua_tointeger(lua, 1);
+    item_id = lua_tointeger(lua, 2);
+
+    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", entity_id);
+        return 0;
+    }
+
+    lua_pushinteger(lua, Character_GetItemsCount(ent, item_id));
+    return 1;
+}
+
+
 int lua_CreateBaseItem(lua_State * lua)
 {
     int top, item_id, model_id, type, world_model_id, count;
@@ -886,31 +939,6 @@ int lua_PrintItems(lua_State * lua)
         }
     }
     return 0;
-}
-
-
-int lua_GetItemsCount(lua_State * lua)
-{
-    int top, entity_id, item_id;
-    top = lua_gettop(lua);
-
-    if(top < 2)
-    {
-        Con_Printf("Wrong arguments count. Must be (entity_id, item_id)");
-        return 0;
-    }
-    entity_id = lua_tointeger(lua, 1);
-    item_id = lua_tointeger(lua, 2);
-
-    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", entity_id);
-        return 0;
-    }
-
-    lua_pushinteger(lua, Character_GetItemsCount(ent, item_id));
-    return 1;
 }
 
 
@@ -1725,9 +1753,9 @@ int lua_SetEntityRoomMove(lua_State * lua)
 {
     int id, room, top = lua_gettop(lua);
 
-    if(top < 3)
+    if(top < 4)
     {
-        Con_Printf("Wrong arguments count. Must be (id, move_type, room_id)");
+        Con_Printf("Wrong arguments count. Must be (id, room_id, move_type, dir_flag)");
         return 0;
     }
 
@@ -1739,9 +1767,8 @@ int lua_SetEntityRoomMove(lua_State * lua)
         return 0;
     }
 
-    ent->move_type = lua_tointeger(lua, 2);
-    room = lua_tointeger(lua, 3);
-    if(!lua_isnil(lua, 3) && (room >= 0) && (room < engine_world.room_count))
+    room = lua_tointeger(lua, 2);
+    if(!lua_isnil(lua, 2) && (room >= 0) && (room < engine_world.room_count))
     {
         room_p r = engine_world.rooms + room;
         if(ent == engine_world.Character)
@@ -1758,6 +1785,17 @@ int lua_SetEntityRoomMove(lua_State * lua)
         }
     }
     Entity_UpdateRoomPos(ent);
+
+    if(!lua_isnil(lua, 3))
+    {
+        ent->move_type = lua_tointeger(lua, 3);
+    }
+    if(!lua_isnil(lua, 4))
+    {
+        ent->dir_flag = lua_tointeger(lua, 4);
+    }
+
+    return 0;
 }
 
 
@@ -2123,10 +2161,11 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "addItem", lua_AddItem);
     lua_register(lua, "removeItem", lua_RemoveItem);
+    lua_register(lua, "removeAllItems", lua_RemoveAllItems);
+    lua_register(lua, "getItemsCount", lua_GetItemsCount);
     lua_register(lua, "createBaseItem", lua_CreateBaseItem);
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
     lua_register(lua, "printItems", lua_PrintItems);
-    lua_register(lua, "getItemsCount", lua_GetItemsCount);
 
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);

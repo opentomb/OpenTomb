@@ -308,6 +308,28 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
     return -count;
 }
 
+int32_t Character_RemoveAllItems(struct entity_s *ent)
+{
+    if((ent->character == NULL) || (ent->character->inventory == NULL))
+    {
+        return 0;
+    }
+
+    inventory_node_p curr_i, next_i;
+    int32_t ret = 0;
+
+    while(curr_i != NULL)
+    {
+        next_i = curr_i->next;
+        free(curr_i);
+        curr_i = next_i;
+        ret++;
+    }
+    ent->character->inventory = NULL;
+
+    return ret;
+}
+
 int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         // returns items count
 {
     if(ent->character == NULL)
