@@ -250,8 +250,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    ///@READ: not use here gameflow ver_id, map_id without level path! it brokes custom levels loading!
-    fprintf(f, "loadMap(\"%s\");\n", CVAR_get_val_s("game_level"));
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
     Save_Entity(&f, engine_world.Character);
     room_p r = engine_world.rooms;
     for(uint32_t i=0;i<engine_world.room_count;i++,r++)

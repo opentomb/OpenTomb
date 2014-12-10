@@ -77,6 +77,9 @@ end
 
 dofile("scripts/entity/door_script.lua");
 dofile("scripts/entity/switch_script.lua");
+
+dofile("scripts/gameflow/gameflow.lua");
+
 --
 entity_funcs = {};
 

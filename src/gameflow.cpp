@@ -34,21 +34,12 @@ void Gameflow_Do()
         case TR_GAMEFLOW_OP_LEVELCOMPLETE:
             if(Gui_FadeCheck(FADER_LOADSCREEN) == TR_FADER_STATUS_COMPLETE)     // Switch level only when fade is complete!
             {
-                // Get our script filepath from game_script cvar!
-                strncpy(gameflow_manager.Script, CVAR_get_val_s("game_script"), MAX_ENGINE_PATH);
-                if(Engine_FileFound(gameflow_manager.Script))                   // If the lua file exists...
-                {
-                    luaL_dofile(engine_lua, gameflow_manager.Script);
-                }
-                else
-                {
-                    Con_Printf("CRITICAL WARNING: Cannot find script file at path: %s", gameflow_manager.Script);
-                }
                 lua_getglobal(engine_lua, "GetNextLevel");                      // mustbe loaded from gameflow script!!!
+                lua_pushnumber(engine_lua, gameflow_manager.CurrentGameID);     // Push the first argument
                 lua_pushnumber(engine_lua, gameflow_manager.CurrentLevelID);    // Push the first argument
                 lua_pushnumber(engine_lua, gameflow_manager.Operand);           // Push the second argument
 
-                if (!lua_pcall(engine_lua, 2, 3, 0) != 0)                       ///@FIXME: crazy
+                if (!lua_pcall(engine_lua, 3, 3, 0) != 0)                       ///@FIXME: crazy
                 {
                     gameflow_manager.CurrentLevelID = lua_tonumber(engine_lua, -1);   // First value in stack is level id
                     lua_pop(engine_lua, 1); // Pop stack to get next value
@@ -57,11 +48,11 @@ void Gameflow_Do()
                     strncpy(gameflow_manager.CurrentLevelPath, lua_tostring(engine_lua, -1), MAX_ENGINE_PATH); // Third value in stack is level path
 
                     // Now, load the level!
-                    Engine_LoadMap(lua_tostring(engine_lua, -1));
+                    Engine_LoadMap(gameflow_manager.CurrentLevelPath);
                 }
                 else
                 {
-                    Con_Printf("Fatal Error: Failed to call GetNextLevel(); from LUA script: %s", gameflow_manager.Script);
+                    Con_AddLine("Fatal Error: Failed to call GetNextLevel()");
                 }
             }
             else

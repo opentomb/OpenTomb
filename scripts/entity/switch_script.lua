@@ -254,7 +254,7 @@ function trigger_activate(trig_id, actor_id, func)
     local off = {};
     local key = nil;
 
-    if(cvars.engine_version < TR_II) then
+    if(getLevelVersion() < TR_II) then
         if(tr1_triggers[m_id] ~= nil) then
             on       = tr1_triggers[m_id].on;
             off      = tr1_triggers[m_id].off;
@@ -263,7 +263,7 @@ function trigger_activate(trig_id, actor_id, func)
         else
             return;
         end
-    elseif(cvars.engine_version < TR_III) then
+    elseif(getLevelVersion() < TR_III) then
         if(tr2_triggers[m_id] ~= nil) then
             on       = tr2_triggers[m_id].on;
             off      = tr2_triggers[m_id].off;
@@ -272,7 +272,7 @@ function trigger_activate(trig_id, actor_id, func)
         else
             return;
         end
-    elseif(cvars.engine_version < TR_IV) then
+    elseif(getLevelVersion() < TR_IV) then
         if(tr3_triggers[m_id] ~= nil) then
             on       = tr3_triggers[m_id].on;
             off      = tr3_triggers[m_id].off;
@@ -281,7 +281,7 @@ function trigger_activate(trig_id, actor_id, func)
         else
             return;
         end
-    elseif(cvars.engine_version < TR_V) then
+    elseif(getLevelVersion() < TR_V) then
         if(tr4_triggers[m_id] ~= nil) then
             on       = tr4_triggers[m_id].on;
             off      = tr4_triggers[m_id].off;

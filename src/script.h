@@ -14,14 +14,6 @@ struct lua_State;
 
 extern lua_State *engine_lua;
 
-int CVAR_Register(const char *name, const char *val);
-int CVAR_Delete(const char *name);
-
-btScalar CVAR_get_val_d(const char *key);
-const char *CVAR_get_val_s(const char *key);
-int CVAR_set_val_d(const char *key, btScalar val);
-int CVAR_set_val_s(const char *key, const char *val);
-
 char *parse_token(char *data, char *token);
 
 float SC_ParseFloat(char **ch);

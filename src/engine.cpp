@@ -239,12 +239,7 @@ void Engine_Init()
         Engine_LuaRegisterFuncs(engine_lua);
     }
 
-    CVAR_Register("game_level", "empty"); // Empty level name - jump right to the game sequence!
-    CVAR_Register("engine_version", "1");
-    CVAR_Register("time_scale", "1.0");
-
     Con_AddLine("Engine inited");
-    luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
     luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
 }
 
@@ -1968,40 +1963,33 @@ int lua_SetLevel(lua_State *lua)
 int lua_SetGame(lua_State *lua)
 {
     int   top = lua_gettop(lua);
-    float id  = lua_tonumber(lua, 1);
 
-    if(top != 1)
+    if(top < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (gameversion).");
+        Con_Printf("Wrong arguments count. Must be (gameversion, (level_id)).");
         return 0;
     }
 
-    lua_getglobal(lua, "GetTitleScreen");
+    gameflow_manager.CurrentGameID = lua_tointeger(lua, 1);
+    if(!lua_isnil(lua, 2))
+    {
+        gameflow_manager.CurrentLevelID = lua_tointeger(lua, 2);
+    }
 
+    lua_getglobal(lua, "GetTitleScreen");
     if(lua_isfunction(lua, -1))                                        // If function exists...
     {
-        lua_pushnumber(lua, id);                                       // add to stack first argument
+        lua_pushnumber(lua, gameflow_manager.CurrentGameID);           // add to stack first argument
         lua_pcall(lua, 1, 1, 0);                                       // call that function
         Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
         Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
     }
-
-    lua_getglobal(lua, "GetGameflowScriptPath");
-
-    if(lua_isfunction(lua, -1))                                        // If function exists...
-    {
-        lua_pushnumber(lua, id);                                       // add to stack first argument
-        lua_pcall(lua, 1, 0, 0);                                       // call that function
-        lua_settop(lua, top);                                          // restore LUA stack
-
-        Con_Printf("Changing game to Tomb Raider %.1f", id);
-
-        Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, 1);
-
-        return 1;
-    }
-
     lua_settop(lua, top);   // restore LUA stack
+
+    Con_Printf("Changing gameflow_manager.CurrentGameID to %d", gameflow_manager.CurrentGameID);
+    Game_LevelTransition(gameflow_manager.CurrentLevelID);
+    Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow_manager.CurrentLevelID);
+
     return 0;
 }
 
@@ -2011,7 +1999,7 @@ int lua_LoadMap(lua_State *lua)
 
     if(top < 1)
     {
-        Con_AddLine("wrong arguments number, must be (map_name)");
+        Con_AddLine("wrong arguments number, must be (map_name, (game_id, map_id))");
         return 0;
     }
 
@@ -2020,12 +2008,16 @@ int lua_LoadMap(lua_State *lua)
         const char *s = lua_tostring(lua, 1);
         if((s != NULL) && (s[0] != 0) && (strcmp(s, gameflow_manager.CurrentLevelPath) != 0))
         {
+            if(!lua_isnil(lua, 2))
+            {
+                gameflow_manager.CurrentGameID = lua_tointeger(lua, 2);
+            }
+            if(!lua_isnil(lua, 3))
+            {
+                gameflow_manager.CurrentLevelID = lua_tointeger(lua, 3);
+            }
             Engine_LoadMap(s);
         }
-        /*if(!lua_isnil(lua, 2))                                                ///@TODO: REWRITE GAMEFLOW MANAGER!!!
-        {
-            gameflow_manager...
-        }*/
     }
 
     return 0;
@@ -2537,7 +2529,7 @@ int Engine_LoadMap(const char *name)
 {
     int trv;
     VT_Level tr_level;
-    char buf[LEVEL_NAME_MAX_LEN], sbuf[LEVEL_NAME_MAX_LEN] = {0x00};
+    char buf[LEVEL_NAME_MAX_LEN] = {0x00};
 
     Gui_DrawLoadScreen(0);
 
@@ -2556,35 +2548,7 @@ int Engine_LoadMap(const char *name)
 
     renderer.world = NULL;
 
-    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);         // it is needed for "not in the game" levels or correct saves loading.
-    CVAR_set_val_s("game_level", name);
-    CVAR_set_val_d("engine_version", (btScalar)trv);
-
-    Engine_GetLevelName(buf, name);
-    strcat(sbuf, "scripts/level/");
-    if(trv < TR_II)
-    {
-        strcat(sbuf, "tr1/");
-    }
-    else if(trv < TR_III)
-    {
-        strcat(sbuf, "tr2/");
-    }
-    else if(trv < TR_IV)
-    {
-        strcat(sbuf, "tr3/");
-    }
-    else if(trv < TR_V)
-    {
-        strcat(sbuf, "tr4/");
-    }
-    else
-    {
-        strcat(sbuf, "tr5/");
-    }
-    strcat(sbuf, buf);
-    strcat(sbuf, ".lua");
-    CVAR_set_val_s("game_script", sbuf);
+    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.
 
     tr_level.read_level(name, trv);
     tr_level.prepare_level();
@@ -2605,6 +2569,7 @@ int Engine_LoadMap(const char *name)
     engine_world.name = 0;
     engine_world.type = 0;
 
+    Engine_GetLevelName(buf, name);
     Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
     Con_Printf("Rooms = %d", tr_level.rooms_count);
     Con_Printf("Num textures = %d", tr_level.textile32_count);
