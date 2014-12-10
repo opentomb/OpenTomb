@@ -5,20 +5,19 @@
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-basepath = "data/tr1_gold/";
-numlevels = 4;
+gameflow_paths[GAME_1_5].numlevels = 4;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- 1 - Define our level array to store our level information
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-level = {};
+gameflow_paths[GAME_1_5].level = {};
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- 2 - Assign our level information
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
---Array       [1]    Level Name                 [2] Level File Path                             [3] Level Load Screen Path
+-- Array                               [1]    Level Name                 [2] Level File Path                               [3] Level Load Screen Path
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-level[01] = { name = "Return to Egypt",         filepath = basepath .. "data/EGYPT.tub",        picpath = basepath .. "pix/egyptloa.png" };
-level[02] = { name = "Temple of the Cat",       filepath = basepath .. "data/CAT.tub",          picpath = basepath .. "pix/egyptloa.png" };
-level[03] = { name = "Atlantean Stronghold",    filepath = basepath .. "data/END.tub",          picpath = basepath .. "pix/atlanloa.png" };
-level[04] = { name = "The Hive",                filepath = basepath .. "data/END2.tub",         picpath = basepath .. "pix/atlanloa.png" };
+gameflow_paths[GAME_1_5].level[01] = { name = "Return to Egypt",         filepath = "data/tr1_gold/data/EGYPT.tub",        picpath = "data/tr1_gold/pix/egyptloa.png" };
+gameflow_paths[GAME_1_5].level[02] = { name = "Temple of the Cat",       filepath = "data/tr1_gold/data/CAT.tub",          picpath = "data/tr1_gold/pix/egyptloa.png" };
+gameflow_paths[GAME_1_5].level[03] = { name = "Atlantean Stronghold",    filepath = "data/tr1_gold/data/END.tub",          picpath = "data/tr1_gold/pix/atlanloa.png" };
+gameflow_paths[GAME_1_5].level[04] = { name = "The Hive",                filepath = "data/tr1_gold/data/END2.tub",         picpath = "data/tr1_gold/pix/atlanloa.png" };
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------

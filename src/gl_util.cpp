@@ -28,6 +28,8 @@
 #include "system.h"
 #include "console.h"
 
+#define GL_LOG_FILENAME "gl_log.txt"
+
 #ifndef GL_GLEXT_PROTOTYPES
 PFNGLDELETEOBJECTARBPROC                glDeleteObjectARB =                     NULL;
 PFNGLGETHANDLEARBPROC                   glGetHandleARB =                        NULL;
@@ -273,8 +275,8 @@ int checkOpenGLError()
         {
             return 0;
         }
-        Sys_DebugLog(LOG_FILENAME, "glError: %s", gluErrorString(glErr));
-        Con_AddText((const char*)gluErrorString(glErr));
+        Sys_DebugLog(GL_LOG_FILENAME, "glError: %s", gluErrorString(glErr));
+        Sys_DebugLog(GL_LOG_FILENAME, (const char*)gluErrorString(glErr));
     }
     return 1;
 }
@@ -292,8 +294,8 @@ void printInfoLog (GLhandleARB object)
     {
         infoLog = (GLcharARB*)malloc(logLength);
         glGetInfoLogARB(object, logLength, &charsWritten, infoLog);
-        Con_AddLine("GL_InfoLog:");
-        Con_AddText((const char*)infoLog);
+        Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog:");
+        Sys_DebugLog(GL_LOG_FILENAME, (const char*)infoLog);
         free(infoLog);
     }
 }
@@ -304,15 +306,16 @@ int loadShaderFromBuff(GLhandleARB ShaderObj, char * source)
     GLint compileStatus = 0;
     size = strlen(source);
     glShaderSourceARB(ShaderObj, 1, (const char **) &source, &size);
-    Con_AddLine("source loaded");                   // compile the particle vertex shader, and print out
+    Sys_DebugLog(GL_LOG_FILENAME, "source loaded");                   // compile the particle vertex shader, and print out
     glCompileShaderARB(ShaderObj);
-    Con_AddLine("trying to compile");
+    Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
     if(checkOpenGLError())                          // check for OpenGL errors
     {
         return 0;
     }
     glGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
     printInfoLog(ShaderObj);
+    
     return compileStatus != 0;
 }
 
@@ -321,11 +324,11 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName)
     GLint   compileStatus;
     int size;
     FILE * file;
-    Con_Printf("GL_Loading %s", fileName);
+    Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
     file = fopen (fileName, "rb");
     if (file == NULL)
     {
-        Con_Printf("Error opening %s", fileName);
+        Sys_DebugLog(GL_LOG_FILENAME, "Error opening %s", fileName);
         return 0;
     }
 
@@ -335,7 +338,7 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName)
     if(size < 1)
     {
         fclose(file);
-        Con_Printf("Error loading file %s: size < 1", fileName);
+        Sys_DebugLog(GL_LOG_FILENAME, "Error loading file %s: size < 1", fileName);
         return 0;
     }
 
@@ -346,15 +349,16 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName)
     
     //printf ( "source = %s\n", buf );
     glShaderSourceARB(ShaderObj, 1, (const char **)&buf, &size);
-    Con_AddLine("source loaded");
+    Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
     free(buf);                                   // compile the particle vertex shader, and print out
     glCompileShaderARB(ShaderObj);
-    Con_AddLine("trying to compile");
+    Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
     if(checkOpenGLError())                       // check for OpenGL errors
     {
         return 0;
     }
     glGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
     printInfoLog(ShaderObj);
+    
     return compileStatus != 0;
 }

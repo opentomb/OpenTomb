@@ -107,8 +107,16 @@ cvars.free_look_speed = 2500;
 
 
 -- AUTOEXEC LINES
-setgame(1);
-setlevel(1);
+-- GAME_1      -- original TR_I
+-- GAME_1_5    -- gold TR_I
+-- GAME_2      -- original TR_II
+-- GAME_2_5    -- gold TR_II
+-- GAME_3      -- original TR_III
+-- GAME_3_5    -- gold TR_I
+-- GAME_4      -- original TR_IV
+-- GAME_5      -- original TR_V
+-- setgame(game_id, level_id);
+setgame(GAME_1, 2);
 
 gravity(0, 0, -5700.0);
 mlook(1);

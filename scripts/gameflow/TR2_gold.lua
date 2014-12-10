@@ -5,21 +5,20 @@
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
-basepath = "data/tr2_gold/";
-numlevels = 5;
+gameflow_paths[GAME_2_5].numlevels = 5;
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 -- 1 - Define our level array to store our level information
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-level = {};
+gameflow_paths[GAME_2_5].level = {};
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 -- 2 - Assign our level information
 ------------------------------------------------------------------------------------------------------------------------------------------------------
---Array       [1]    Level Name                 [2] Level File Path                             [3] Level Load Screen Path
+-- Array                               [1]    Level Name                 [2] Level File Path                             [3] Level Load Screen Path
 ------------------------------------------------------------------------------------------------------------------------------------------------------
-level[01] = { name = "The Cold War",            filepath = basepath .. "data/level1.tr2",       picpath = basepath .. "pix/title.jpg" };
-level[02] = { name = "Fool's Gold",             filepath = basepath .. "data/level2.tr2",       picpath = basepath .. "pix/title.jpg" };
-level[03] = { name = "Furnace of the Gods",     filepath = basepath .. "data/level3.tr2",       picpath = basepath .. "pix/title.jpg" };
-level[04] = { name = "Kingdom",                 filepath = basepath .. "data/level4.tr2",       picpath = basepath .. "pix/title.jpg" };
-level[05] = { name = "Nightmare in Vegas",      filepath = basepath .. "data/level5.tr2",       picpath = basepath .. "pix/title.jpg" };
+gameflow_paths[GAME_2_5].level[01] = { name = "The Cold War",            filepath = "data/tr2_gold/data/level1.tr2",       picpath = "data/tr2_gold/pix/title.jpg" };
+gameflow_paths[GAME_2_5].level[02] = { name = "Fool's Gold",             filepath = "data/tr2_gold/data/level2.tr2",       picpath = "data/tr2_gold/pix/title.jpg" };
+gameflow_paths[GAME_2_5].level[03] = { name = "Furnace of the Gods",     filepath = "data/tr2_gold/data/level3.tr2",       picpath = "data/tr2_gold/pix/title.jpg" };
+gameflow_paths[GAME_2_5].level[04] = { name = "Kingdom",                 filepath = "data/tr2_gold/data/level4.tr2",       picpath = "data/tr2_gold/pix/title.jpg" };
+gameflow_paths[GAME_2_5].level[05] = { name = "Nightmare in Vegas",      filepath = "data/tr2_gold/data/level5.tr2",       picpath = "data/tr2_gold/pix/title.jpg" };
 ------------------------------------------------------------------------------------------------------------------------------------------------------

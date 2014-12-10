@@ -7,9 +7,9 @@
 
 typedef struct gameflow_manager_s
 {
-    char        Script[MAX_ENGINE_PATH];                                       ///@PARANOID: copy LUA string to the external buffer; I do not know, how much time returned LUA's string pointer is valid;
     char        CurrentLevelName[LEVEL_NAME_MAX_LEN];
     char        CurrentLevelPath[MAX_ENGINE_PATH];
+    uint8_t     CurrentGameID;
     uint8_t     CurrentLevelID;
 
     uint8_t     Opcode;
