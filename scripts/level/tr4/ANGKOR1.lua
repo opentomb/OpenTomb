@@ -53,7 +53,7 @@ static_tbl[45] = {coll = COLL_MESH};            -- Stone face
 
 --------------------------------------------------------------------------------
 
-function GetStaticMeshFlags(ver, id)
+function trGetStaticMeshFlags(ver, id)
     if(static_tbl[id] == nil) then
         return nil, nil;
     else

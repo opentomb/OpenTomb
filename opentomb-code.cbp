@@ -45,422 +45,154 @@
 		<Unit filename="config.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="scripts/audio/common_sounds.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/audio/sample_override.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/audio/soundtrack.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/config/control_constants.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/entity/collide_flags.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/entity/door_script.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/entity/entity_model_ID_override.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/entity/switch_script.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR1_gold.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR2.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR2_gold.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR3.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR3_gold.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR4.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR5.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/gameflow.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/GYM.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL10B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL10C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="save/qsave.lua" />
+		<Unit filename="scripts/audio/common_sounds.lua" />
+		<Unit filename="scripts/audio/sample_override.lua" />
+		<Unit filename="scripts/audio/soundtrack.lua" />
+		<Unit filename="scripts/autoexec.lua" />
+		<Unit filename="scripts/config/control_constants.lua" />
+		<Unit filename="scripts/entity/character.lua" />
+		<Unit filename="scripts/entity/door_script.lua" />
+		<Unit filename="scripts/entity/entity_flags.lua" />
+		<Unit filename="scripts/entity/entity_model_ID_override.lua" />
+		<Unit filename="scripts/entity/switch_script.lua" />
+		<Unit filename="scripts/gameflow/TR1.lua" />
+		<Unit filename="scripts/gameflow/TR1_gold.lua" />
+		<Unit filename="scripts/gameflow/TR2.lua" />
+		<Unit filename="scripts/gameflow/TR2_gold.lua" />
+		<Unit filename="scripts/gameflow/TR3.lua" />
+		<Unit filename="scripts/gameflow/TR3_gold.lua" />
+		<Unit filename="scripts/gameflow/TR4.lua" />
+		<Unit filename="scripts/gameflow/TR5.lua" />
+		<Unit filename="scripts/gameflow/gameflow.lua" />
+		<Unit filename="scripts/inventory/item_combine.lua" />
+		<Unit filename="scripts/inventory/item_list.lua" />
+		<Unit filename="scripts/inventory/item_names.lua" />
+		<Unit filename="scripts/inventory/items.lua" />
+		<Unit filename="scripts/level/tr1/GYM.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL1.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10C_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL1_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL2_autoexec.lua" />
 		<Unit filename="scripts/level/tr1/LEVEL4_autoexec.lua" />
-		<Unit filename="scripts/level/tr1/LEVEL6_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL7A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/ASSAULT.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/CATACOMB_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/DECK_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/EMPRTOMB_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/FLOATING_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/ICECAVE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/KEEL_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/LIVING_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/OPERA_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/PLATFORM_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/RIG_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/SKIDOO_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/UNWATER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/VENICE.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/WALL.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/WALL_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/WALL_trigger.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/WALL_trigger.txt">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/XIAN_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/ANTARC.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/ANTARC_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/AREA51.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/AREA51_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CHAMBER.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CHAMBER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CITY.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CITY_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/COMPOUND.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/COMPOUND_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CRASH.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CRASH_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/HOUSE.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/HOUSE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="scripts/level/tr1/LEVEL6_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL7A_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8A_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8C_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/ASSAULT.lua" />
+		<Unit filename="scripts/level/tr2/CATACOMB_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/DECK_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/EMPRTOMB_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/FLOATING_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/ICECAVE_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/KEEL_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/LIVING_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/OPERA_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/PLATFORM_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/RIG_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/SKIDOO_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/UNWATER_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/VENICE.lua" />
+		<Unit filename="scripts/level/tr2/WALL.lua" />
+		<Unit filename="scripts/level/tr2/WALL_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/WALL_trigger.lua" />
+		<Unit filename="scripts/level/tr2/WALL_trigger.txt" />
+		<Unit filename="scripts/level/tr2/XIAN_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/ANTARC.lua" />
+		<Unit filename="scripts/level/tr3/ANTARC_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/AREA51.lua" />
+		<Unit filename="scripts/level/tr3/AREA51_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/CHAMBER.lua" />
+		<Unit filename="scripts/level/tr3/CHAMBER_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/CITY.lua" />
+		<Unit filename="scripts/level/tr3/CITY_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/COMPOUND.lua" />
+		<Unit filename="scripts/level/tr3/COMPOUND_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/CRASH.lua" />
+		<Unit filename="scripts/level/tr3/CRASH_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/HOUSE.lua" />
+		<Unit filename="scripts/level/tr3/HOUSE_autoexec.lua" />
 		<Unit filename="scripts/level/tr3/JUNGLE.lua" />
-		<Unit filename="scripts/level/tr3/JUNGLE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/MINES.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/MINES_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/NEVADA.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/NEVADA_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/OFFICE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/QUADCHAS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/RAPIDS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/ROOFS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/ROOFS_trigger.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/SEWER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/SHORE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/STPAUL_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/TEMPLE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/TONYBOSS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/TOWER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/TRIBOSS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ALEXHUB.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ALEXHUB2.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ALEXHUB2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ALEXHUB_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ANGKOR1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ANGKOR1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ANG_RACE.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ANG_RACE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/BIKEBIT.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/BIKEBIT_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CITNEW.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CITNEW_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CORTYARD_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CSPLIT1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CSPLIT2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/HALL_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/HIGHSTRT_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JEEPCHAS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JEEPCHS2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY1A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY3A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY3B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY4A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY4B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY4C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY5A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY5B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY5C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/KARNAK1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/KARNAK1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/LAKE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/LIBEND_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/LIBRARY_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/LOWSTRT_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/NUTRENCH_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/PALACES2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/PALACES_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SEMER2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SEMER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SETTOMB1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SETTOMB2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SETTOMB_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/TRAIN_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDREA1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDREA2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDREA3_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDY1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDY2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDY3_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/JOBY2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/JOBY3_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/JOBY4_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/JOBY5_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/RICH1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/RICH2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/RICH3_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/RICHCUT_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/system/sys_scripts.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="scripts/level/tr3/JUNGLE_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/MINES.lua" />
+		<Unit filename="scripts/level/tr3/MINES_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/NEVADA.lua" />
+		<Unit filename="scripts/level/tr3/NEVADA_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/OFFICE_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/QUADCHAS_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/RAPIDS_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/ROOFS_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/ROOFS_trigger.lua" />
+		<Unit filename="scripts/level/tr3/SEWER_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/SHORE_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/STPAUL_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/TEMPLE.lua" />
+		<Unit filename="scripts/level/tr3/TEMPLE_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/TONYBOSS_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/TOWER_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/TRIBOSS_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/ALEXHUB.lua" />
+		<Unit filename="scripts/level/tr4/ALEXHUB2.lua" />
+		<Unit filename="scripts/level/tr4/ALEXHUB2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/ALEXHUB_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/ANGKOR1.lua" />
+		<Unit filename="scripts/level/tr4/ANGKOR1_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/ANG_RACE.lua" />
+		<Unit filename="scripts/level/tr4/ANG_RACE_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/BIKEBIT.lua" />
+		<Unit filename="scripts/level/tr4/BIKEBIT_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/CITNEW.lua" />
+		<Unit filename="scripts/level/tr4/CITNEW_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/CORTYARD_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/CSPLIT1_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/CSPLIT2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/HALL_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/HIGHSTRT_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JEEPCHAS_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JEEPCHS2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY1A_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY3A_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY3B_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY4A_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY4B_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY4C_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY5A_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY5B_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY5C_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/KARNAK1.lua" />
+		<Unit filename="scripts/level/tr4/KARNAK1_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/LAKE_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/LIBEND_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/LIBRARY_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/LOWSTRT_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/NUTRENCH_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/PALACES2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/PALACES_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SEMER.lua" />
+		<Unit filename="scripts/level/tr4/SEMER2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SEMER_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SETTOMB1_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SETTOMB2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SETTOMB_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/TRAIN_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDREA1_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDREA2_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDREA3_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDY1_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDY2_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDY3_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/JOBY2_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/JOBY3_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/JOBY4_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/JOBY5_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/RICH1_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/RICH2_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/RICH3_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/RICHCUT_autoexec.lua" />
+		<Unit filename="scripts/system/sys_scripts.lua" />
 		<Unit filename="shaders/color_mult.vsh" />
 		<Unit filename="src/al/AL/al.h">
 			<Option target="&lt;{~None~}&gt;" />

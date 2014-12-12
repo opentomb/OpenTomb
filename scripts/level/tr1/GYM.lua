@@ -4,7 +4,7 @@
 
 print("Level script loaded (GYM.lua)");
 
--- ColType values reference: 
+-- ColType values reference:
 --   0x0000  - Object has no collisions
 --   0x0001  - Object uses real mesh data for collision.
 --   0x0002  - Object uses bounding box for collision.
@@ -37,7 +37,7 @@ static_tbl[35] = {coll = 0x0002};             -- Armor
 
 --------------------------------------------------------------------------------
 
-function GetStaticMeshFlags(ver, id)
+function trGetStaticMeshFlags(ver, id)
     if(static_tbl[id] == nil) then
         return nil, nil;
     else

@@ -116,7 +116,7 @@ tr4_static_tbl[31] = {coll = 0x02};            -- balcony border
 tr4_static_tbl[32] = {coll = 0x02};            -- balcony border
 tr4_static_tbl[33] = {coll = 0x02};            -- balcony border
 tr4_static_tbl[34] = {coll = 0x02};            -- balcony border
-tr4_static_tbl[35] = {coll = 0x01};            -- stairs
+tr4_static_tbl[35] = {coll = 0x00};            -- stairs
 tr4_static_tbl[36] = {coll = 0x02};
 tr4_static_tbl[37] = {coll = 0x02};            -- corner colonna
 tr4_static_tbl[38] = {coll = 0x02};
