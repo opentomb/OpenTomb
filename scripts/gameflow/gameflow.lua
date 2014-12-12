@@ -110,4 +110,30 @@ function GetLoadingScreen(currentgame, currentlevel, operand)
     end;
 end;
 
+function setgamef(game_id, level_id)
+    if(game_id == 1.0) then
+        setgame(GAME_1, level_id);
+    elseif(game_id == 1.1) then
+        setgame(GAME_1_1, level_id);
+    elseif(game_id == 1.5) then
+        setgame(GAME_1_5, level_id);
+    elseif(game_id == 2.0) then
+        setgame(GAME_2, level_id);
+    elseif(game_id == 2.1) then
+        setgame(GAME_2_1, level_id);
+    elseif(game_id == 2.5) then
+        setgame(GAME_2_5, level_id);
+    elseif(game_id == 3.0) then
+        setgame(GAME_3, level_id);
+    elseif(game_id == 3.5) then
+        setgame(GAME_3_5, level_id);
+    elseif(game_id == 4.0) then
+        setgame(GAME_4, level_id);
+    elseif(game_id == 4.1) then
+        setgame(GAME_4_1, level_id);
+    elseif(game_id == 5.0) then
+        setgame(GAME_5, level_id);
+    end;
+end;
+
 print("Gameflow path script loaded");
