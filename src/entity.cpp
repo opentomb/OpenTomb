@@ -42,7 +42,7 @@ entity_p Entity_Create()
     ret->character = NULL;
     ret->smooth_anim = 1;
     ret->current_sector = NULL;
-    ret->onAnimChange = NULL;
+    ret->onFrame = NULL;
     ret->bf.model = NULL;
     ret->bf.frame_time = 0.0;
     ret->bf.next_state = 0;
@@ -787,14 +787,12 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                 if(sub_function == 0x00)
                 {
                     i = *(entry++);
-
                 }
                 break;
 
             case TR_FD_FUNC_FLOORSLANT:          // FLOOR SLANT
                 if(sub_function == 0x00)
                 {
-
                     entry++;
                 }
                 break;
@@ -802,7 +800,6 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
             case TR_FD_FUNC_CEILINGSLANT:          // CEILING SLANT
                 if(sub_function == 0x00)
                 {
-
                     entry++;
                 }
                 break;
@@ -883,14 +880,13 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                     switch(FD_function)
                     {
                         case TR_FD_TRIGFUNC_OBJECT:                             // ACTIVATE / DEACTIVATE item
-                            ent->activation_mask ^= trigger_mask;
-                            if((skip == 0) && (ent->activation_mask == 0x1F))
+                            if(skip == 0)
                             {
                                 entity_p e = World_GetEntityByID(&engine_world, operands);
-                                if(e)// && !(e->flags & ENTITY_IS_PICKABLE))    /// ENTITY_IS_PICKABLE flag does not works %/
+                                if((e != NULL) && ((e->activation_mask ^ trigger_mask) == 0x1F))
                                 {
-                                    Con_Printf("Activate %d, %d", operands, ent->id);
-                                    //lua_ActivateEntity(engine_lua, operands, ent->id);   /// prevents to Lara pick up items, that she should not;
+                                    Con_Printf("Activate object %d by %d", operands, ent->id);
+                                    e->activation_mask ^= trigger_mask;         // ask Lwmte about it
                                     e->state_flags |= ENTITY_STATE_ACTIVE;
                                 }
                             }
@@ -986,7 +982,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
                             Con_Printf("UNKNOWN MEANING: %X", *entry);
                     };
                 }
-                while(!cont_bit && entry < end_p);
+                while((cont_bit == 0x00) && (entry < end_p));
                 break;
 
             case TR_FD_FUNC_DEATH:          // KILL LARA
@@ -1285,7 +1281,7 @@ void Entity_DoAnimMove(entity_p entity)
  */
 int Entity_Frame(entity_p entity, btScalar time)
 {
-    int16_t frame, anim, ret = 0;
+    int16_t frame, anim, ret = 0x00;
     long int t;
     btScalar dt;
     animation_frame_p af;
@@ -1303,15 +1299,10 @@ int Entity_Frame(entity_p entity, btScalar time)
     {
         entity->bf.last_animation = entity->bf.current_animation;
 
-        ret = 2;
+        ret = 0x02;
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);
         Entity_SetAnimation(entity, anim, frame);
-        if(entity->onAnimChange)
-        {
-            entity->onAnimChange(entity);
-            entity->onAnimChange = NULL;
-        }
         stc = Anim_FindStateChangeByID(entity->bf.model->animations + entity->bf.current_animation, entity->bf.next_state);
     }
     else if(entity->bf.current_frame != frame)
@@ -1321,7 +1312,7 @@ int Entity_Frame(entity_p entity, btScalar time)
             entity->bf.last_animation = entity->bf.current_animation;
         }
 
-        ret = 1;
+        ret = 0x01;
         Entity_DoAnimCommands(entity, ret);
         Entity_DoAnimMove(entity);
         entity->bf.current_frame = frame;
@@ -1345,6 +1336,10 @@ int Entity_Frame(entity_p entity, btScalar time)
     }
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
+    if(entity->onFrame != NULL)
+    {
+        entity->onFrame(entity, ret);
+    }
 
     return ret;
 }

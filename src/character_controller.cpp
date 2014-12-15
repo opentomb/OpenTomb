@@ -220,6 +220,7 @@ void Character_Clean(struct entity_s *ent)
     ent->character = NULL;
 }
 
+
 int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
     if(ent->character == NULL)
@@ -230,10 +231,10 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     Gui_StartNotifier(item_id);
 
     base_item_p item    = World_GetBaseItemByID(&engine_world, item_id);
-    inventory_node_p i  = ent->character->inventory;
+    inventory_node_p last, i  = ent->character->inventory;
 
     count = (count == -1)?(item->count):(count);
-
+    last = i;
     while(i)
     {
         if(i->id == item_id)
@@ -241,16 +242,26 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
             i->count += count;
             return i->count;
         }
+        last = i;
         i = i->next;
     }
 
     i = (inventory_node_p)malloc(sizeof(inventory_node_t));
     i->id = item_id;
     i->count = count;
-    i->next = ent->character->inventory;
-    ent->character->inventory = i;
+    i->next = NULL;
+    if(last != NULL)
+    {
+        last->next = i;
+    }
+    else
+    {
+        ent->character->inventory = i;
+    }
+    
     return count;
 }
+
 
 int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count) // returns items count after in the function's end
 {
@@ -308,6 +319,7 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
     return -count;
 }
 
+
 int32_t Character_RemoveAllItems(struct entity_s *ent)
 {
     if((ent->character == NULL) || (ent->character->inventory == NULL))
@@ -329,6 +341,7 @@ int32_t Character_RemoveAllItems(struct entity_s *ent)
 
     return ret;
 }
+
 
 int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         // returns items count
 {

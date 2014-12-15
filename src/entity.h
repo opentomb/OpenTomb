@@ -119,7 +119,7 @@ typedef struct entity_s
 {
     uint32_t                            id;                                     // ID
     int32_t                             OCB;                                    // Object code bit (since TR4)
-    uint32_t                            activation_mask;                        // 0x1F means ACTIVATE.
+    uint16_t                            activation_mask;                        // 0x1F means ACTIVATE.
 
     uint16_t                            type_flags;
     uint16_t                            state_flags;
@@ -140,7 +140,7 @@ typedef struct entity_s
 
     struct obb_s                       *obb;                                    // oriented bounding box
 
-    void                              (*onAnimChange)(struct entity_s *ent);
+    void                              (*onFrame)(struct entity_s *ent, int state);
     struct room_sector_s               *current_sector;
 
     struct engine_container_s          *self;

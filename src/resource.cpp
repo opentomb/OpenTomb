@@ -909,7 +909,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                 {
                     if((sub_function == TR_FD_TRIGTYPE_SWITCH) || (sub_function == TR_FD_TRIGTYPE_KEY))
                     {
-                        snprintf(buf, 64, "}, nil, %d);", trigger_mask);
+                        snprintf(buf, 64, "}, nil, 0x%.2X);", trigger_mask);
                         strcat(script, buf);
                         Con_Printf(script);
                         luaL_dostring(engine_lua, script);
