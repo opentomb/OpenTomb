@@ -47,8 +47,18 @@ void Gameflow_Do()
                     lua_pop(engine_lua, 1); // Pop stack to get next value
                     strncpy(gameflow_manager.CurrentLevelPath, lua_tostring(engine_lua, -1), MAX_ENGINE_PATH); // Third value in stack is level path
 
-                    // Now, load the level!
-                    Engine_LoadMap(gameflow_manager.CurrentLevelPath);
+                    // Now, load the level! + if character exists then save inventory
+                    if((engine_world.Character != NULL) && (engine_world.Character->character != NULL))
+                    {
+                        inventory_node_p i = engine_world.Character->character->inventory;
+                        engine_world.Character->character->inventory = NULL;
+                        Engine_LoadMap(gameflow_manager.CurrentLevelPath);
+                        engine_world.Character->character->inventory = i;
+                    }
+                    else
+                    {
+                        Engine_LoadMap(gameflow_manager.CurrentLevelPath);
+                    }
                 }
                 else
                 {
