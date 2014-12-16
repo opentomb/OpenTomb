@@ -39,7 +39,7 @@ void Gameflow_Do()
                 lua_pushnumber(engine_lua, gameflow_manager.CurrentLevelID);    // Push the first argument
                 lua_pushnumber(engine_lua, gameflow_manager.Operand);           // Push the second argument
 
-                if (!lua_pcall(engine_lua, 3, 3, 0) != 0)                       ///@FIXME: crazy
+                if (lua_pcall(engine_lua, 3, 3, 0) == 0)
                 {
                     gameflow_manager.CurrentLevelID = lua_tonumber(engine_lua, -1);   // First value in stack is level id
                     lua_pop(engine_lua, 1); // Pop stack to get next value
