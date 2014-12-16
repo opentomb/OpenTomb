@@ -357,7 +357,9 @@ void World_Prepare(world_p world)
     world->rooms = 0;
     world->textures = NULL;
     world->type = 0;
+    world->last_finded_entity = NULL;
     world->entity_tree = NULL;
+    world->last_finded_item = NULL;
     world->items_tree = NULL;
     world->Character = NULL;
 
@@ -394,6 +396,8 @@ void World_Empty(world_p world)
     extern engine_container_p last_cont;
 
     last_cont = NULL;
+    world->last_finded_entity = NULL;
+    world->last_finded_item = NULL;
     Engine_LuaClearTasks();
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
@@ -562,16 +566,28 @@ struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
     entity_p ent = NULL;
     RedBlackNode_p node;
 
-    if(world->Character && (world->Character->id == id))
+    if((world == NULL) || (world->entity_tree == NULL))
     {
+        return NULL;
+    }
+
+    if((world->last_finded_entity != NULL) && (world->last_finded_entity->id == id))
+    {
+        return world->last_finded_entity;
+    }
+
+    if((world->Character != NULL) && (world->Character->id == id))
+    {
+        world->last_finded_entity = world->Character;
         return world->Character;
     }
 
     node = RB_SearchNode(&id, world->entity_tree);
-    if(node)
+    if(node != NULL)
     {
         ent = (entity_p)node->data;
     }
+    world->last_finded_entity = ent;
 
     return ent;
 }
@@ -582,14 +598,22 @@ struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id)
     base_item_p item = NULL;
     RedBlackNode_p node;
 
-    if(world && world->items_tree)
+    if((world == NULL) || (world->items_tree == NULL))
     {
-        node = RB_SearchNode(&id, world->items_tree);
-        if(node)
-        {
-            item = (base_item_p)node->data;
-        }
+        return NULL;
     }
+
+    if((world->last_finded_item != NULL) && (world->last_finded_item->id == id))
+    {
+        return world->last_finded_item;
+    }
+
+    node = RB_SearchNode(&id, world->items_tree);
+    if(node != NULL)
+    {
+        item = (base_item_p)node->data;
+    }
+    world->last_finded_item = item;
 
     return item;
 }
@@ -1017,6 +1041,10 @@ int World_AddEntity(world_p world, struct entity_s *entity)
 
 int World_DeleteEntity(world_p world, struct entity_s *entity)
 {
+    if(world->last_finded_entity == entity)
+    {
+        world->last_finded_entity = NULL;
+    }
     RB_Delete(world->entity_tree, RB_SearchNode(&entity->id, world->entity_tree));
     return 1;
 }
@@ -1079,6 +1107,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
 
 int World_DeleteItem(world_p world, uint32_t item_id)
 {
+    world->last_finded_item = NULL;
     RB_Delete(world->items_tree, RB_SearchNode(&item_id, world->items_tree));
     return 1;
 }
