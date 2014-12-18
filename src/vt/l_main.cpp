@@ -57,7 +57,7 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
     this->meshes_count = this->mesh_indices_count;
     this->meshes = (tr4_mesh_t*)calloc(this->meshes_count, sizeof(tr4_mesh_t));
 
-    for (i = 0; i < this->mesh_indices_count; i++) 
+    for (i = 0; i < this->mesh_indices_count; i++)
     {
         uint32_t j;
 
@@ -75,7 +75,7 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
         mesh++;
 
         for (j = 0; j < this->mesh_indices_count; j++)
-            if (this->mesh_indices[j] > pos) 
+            if (this->mesh_indices[j] > pos)
             {
                 pos = this->mesh_indices[j];
                 break;
@@ -118,12 +118,12 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
     }
 
     //this->frames.reserve(this->moveables.size());
-    for (i = 0; i < this->moveables_count; i++) 
+    for (i = 0; i < this->moveables_count; i++)
     {
         uint32_t j;
 
         for (j = 0; j < this->moveables_count; j++)
-            if (this->moveables[j].frame_offset == pos) 
+            if (this->moveables[j].frame_offset == pos)
             {
                 this->moveables[j].frame_index = frame;
                 this->moveables[j].frame_offset = 0;
@@ -143,7 +143,7 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
 
         pos = 0;
         for (j = 0; j < this->moveables_count; j++)
-            if (this->moveables[j].frame_offset > pos) 
+            if (this->moveables[j].frame_offset > pos)
             {
                 pos = this->moveables[j].frame_offset;
                 break;
@@ -190,7 +190,7 @@ void TR_Level::read_level(SDL_RWops * const src, int32_t game_version)
 
     this->game_version = game_version;
 
-    switch (game_version) 
+    switch (game_version)
     {
         case TR_I:
             read_tr_level(src, 0);
@@ -216,9 +216,9 @@ void TR_Level::read_level(SDL_RWops * const src, int32_t game_version)
             read_tr5_level(src);
             break;
         default:
-                    Sys_extError("Invalid game version");
+            Sys_extError("Invalid game version");
             break;
     }
-        
+
     SDL_RWclose(src);
 }
