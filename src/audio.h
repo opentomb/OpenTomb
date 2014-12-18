@@ -8,10 +8,10 @@ extern "C" {
 #include "al/AL/alext.h"
 #include "al/AL/efx-presets.h"
 
-/*#include "ogg/codec.h"
+#include "ogg/codec.h"
 #include "ogg/ogg.h"
 #include "ogg/os_types.h"
-#include "ogg/vorbisfile.h"*/
+#include "ogg/vorbisfile.h"
 }
 
 #include "vt/vt_level.h"
@@ -418,7 +418,7 @@ private:
     bool Stream_Wav(ALuint buffer);      // Wav-specific streaming routine.
 
     FILE*           audio_file;          // General handle for opened audio file.
-    //OggVorbis_File  vorbis_Stream;       // Vorbis file reader needs its own handle.
+    OggVorbis_File  vorbis_Stream;       // Vorbis file reader needs its own handle.
     
     // General OpenAL fields 
     ALbyte         *data;

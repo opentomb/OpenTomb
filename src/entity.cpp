@@ -29,6 +29,7 @@ entity_p Entity_Create()
     Mat4_E(ret->transform);
     ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
     ret->type_flags = ENTITY_TYPE_DECORATION;
+    ret->callback_flags = 0x00000000;               // no callbacks by default
 
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
     ret->self->next = NULL;

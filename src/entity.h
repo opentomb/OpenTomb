@@ -28,6 +28,11 @@ struct ss_bone_frame_s;
 #define ENTITY_TYPE_TRAVERSE                        (0x0008)
 #define ENTITY_TYPE_TRAVERSE_FLOOR                  (0x0010)
 
+#define ENTITY_CALLBACK_NONE                        (0x00000000)
+#define ENTITY_CALLBACK_COLLISION                   (0x00000001)
+#define ENTITY_CALLBACK_ON_STAND                    (0x00000002)
+#define ENTITY_CALLBACK_ON_HIT                      (0x00000004)
+
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction
 #define ENTITY_CINEMATIC_COLLISION                2                             // doors and other moveable statics
@@ -121,6 +126,7 @@ typedef struct entity_s
     int32_t                             OCB;                                    // Object code bit (since TR4)
     uint16_t                            activation_mask;                        // 0x1F means ACTIVATE.
 
+    uint32_t                            callback_flags;                         // information about scripts callbacks
     uint16_t                            type_flags;
     uint16_t                            state_flags;
 

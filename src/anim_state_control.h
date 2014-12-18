@@ -30,27 +30,11 @@ struct character_command_s;
 #define ENT_MOVE_CROUCH 0x00000020
 
 /*
- * ENTITY MOVEMENT TYPES
- */
-
-#define MOVE_STATIC_POS         0
-#define MOVE_ON_FLOOR           1
-#define MOVE_WADE               2
-#define MOVE_QUICKSAND          3
-#define MOVE_ON_WATER           4
-#define MOVE_UNDER_WATER        5
-#define MOVE_FREE_FALLING       6
-#define MOVE_CLIMBING           7
-#define MOVE_MONKEYSWING        8
-#define MOVE_WALLS_CLIMB        9
-#define MOVE_DOZY               10
-
-/*
  *  ====== LARA'S ANIMATIONS ======
- * 
- *  NOTE: In case of conflicting animations, there will be tr* prefix inside name. 
  *
- * 
+ *  NOTE: In case of conflicting animations, there will be tr* prefix inside name.
+ *
+ *
  *  TR1 AND ABOVE (0-159)
  */
 #define TR_ANIMATION_LARA_RUN 0
@@ -61,9 +45,9 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_WALK_TO_RUN_LEFT 5
 #define TR_ANIMATION_LARA_STAY_TO_RUN 6
 #define TR_ANIMATION_LARA_RUN_TO_WALK_RIGHT 7
-#define TR_ANIMATION_LARA_RUN_TO_STAY_LEFT 8 
+#define TR_ANIMATION_LARA_RUN_TO_STAY_LEFT 8
 #define TR_ANIMATION_LARA_RUN_TO_WALK_LEFT 9
-#define TR_ANIMATION_LARA_RUN_TO_STAY_RIGHT 10 
+#define TR_ANIMATION_LARA_RUN_TO_STAY_RIGHT 10
 #define TR_ANIMATION_LARA_STAY_SOLID 11                         // Intermediate animation used to reset flags and states.
 #define TR_ANIMATION_LARA_TURN_RIGHT_SLOW 12                    // Used once before the fast one if all weapon are in holsters
 #define TR_ANIMATION_LARA_TURN_LEFT_SLOW 13                     // Used once before the fast one if all weapon are in holsters
@@ -148,7 +132,7 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_RUN_BACK_BEGIN 88
 #define TR_ANIMATION_LARA_RUN_BACK 89
 #define TR_ANIMATION_LARA_RUN_BACK_END 90
-#define TR_ANIMATION_LARA_TRY_HANG_VERTICAL_BEGIN 91              // Native bug: glitchy intermediate animation. 
+#define TR_ANIMATION_LARA_TRY_HANG_VERTICAL_BEGIN 91              // Native bug: glitchy intermediate animation.
 #define TR_ANIMATION_LARA_LANDING_FROM_RUN 92
 #define TR_ANIMATION_LARA_FREE_FALL_VERTICAL 93
 #define TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG 94
@@ -354,7 +338,7 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_CRAWL_TO_CROUCH_END 274
 #define TR_ANIMATION_LARA_CRAWL_FORWARD 260
 #define TR_ANIMATION_LARA_CRAWL_IDLE_TO_FORWARD 261
-#define TR_ANIMATION_LARA_CRAWL_BACKWARD 276    
+#define TR_ANIMATION_LARA_CRAWL_BACKWARD 276
 #define TR_ANIMATION_LARA_CRAWL_IDLE_TO_BACKWARD 275
 #define TR_ANIMATION_LARA_CRAWL_IDLE 263
 #define TR_ANIMATION_LARA_CRAWL_FORWARD_TO_IDLE_BEGIN_RIGHT 262
@@ -625,7 +609,7 @@ struct character_command_s;
 #define TR_STATE_LARA_ONWATER_EXIT 55
 #define TR_STATE_LARA_LADDER_IDLE 56
 #define TR_STATE_LARA_LADDER_UP 57
-#define TR_STATE_LARA_LADDER_LEFT 58    
+#define TR_STATE_LARA_LADDER_LEFT 58
 //#define TR_STATE_LARA_UNUSED5 59
 #define TR_STATE_LARA_LADDER_RIGHT 60
 #define TR_STATE_LARA_LADDER_DOWN 61
@@ -757,7 +741,7 @@ struct character_command_s;
 #define TR_EFFECT_CLEARSCARABS          31
 #define TR_EFFECT_PLAYSTEPSOUND         32 // Also called FOOTPRINT_FX in TR4 source code.
 
-// Effects 33 - 42 are assigned to FLIP_MAP0-FLIP_MAP9 in TR4 source code, 
+// Effects 33 - 42 are assigned to FLIP_MAP0-FLIP_MAP9 in TR4 source code,
 // but are empty in TR4 binaries.
 
 #define TR_EFFECT_GETWATERSKIN          43
