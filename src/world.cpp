@@ -27,7 +27,6 @@
 
 void Room_Empty(room_p room)
 {
-    int i;
     portal_p p;
     btRigidBody* body;
 
@@ -41,7 +40,7 @@ void Room_Empty(room_p room)
 
     if(room->portal_count)
     {
-        for(i=0;i<room->portal_count;i++,p++)
+        for(uint16_t i=0;i<room->portal_count;i++,p++)
         {
             Portal_Clear(p);
         }
@@ -62,7 +61,7 @@ void Room_Empty(room_p room)
 
     if(room->static_mesh_count)
     {
-        for(i=0;i<room->static_mesh_count;i++)
+        for(uint32_t i=0;i<room->static_mesh_count;i++)
         {
             body = room->static_mesh[i].bt_body;
             if(body)
@@ -1001,7 +1000,7 @@ room_p Room_CheckFlip(room_p r)
 void Room_SwapPortals(room_p room, room_p dest_room)
 {
     //Update portals in room rooms
-    for(int i=0;i<engine_world.room_count;i++)//For every room in the world itself
+    for(uint32_t i=0;i<engine_world.room_count;i++)//For every room in the world itself
     {
         for(int j=0;j<engine_world.rooms[i].portal_count;j++)//For every portal in this room
         {
@@ -1156,11 +1155,8 @@ struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id)
  */
 struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world)
 {
-    int i;
-    sprite_p sp;
-
-    sp = world->sprites;
-    for(i=0;i<world->sprites_count;i++,sp++)
+    sprite_p sp = world->sprites;
+    for(uint32_t i=0;i<world->sprites_count;i++,sp++)
     {
         if(sp->id == ID)
         {

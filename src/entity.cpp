@@ -737,9 +737,9 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
 int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 {
     uint16_t function, sub_function, b3, FD_function, operands = 0x0000;
-    uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;        ///@FIXME: set, but not used!
-    int16_t slope_t01, slope_t00;
-    int i, ret = 0;
+    //uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;
+    //int16_t slope_t01, slope_t00;
+    int ret = 0;
     uint16_t *entry, *end_p, end_bit, cont_bit;
     room_sector_p sector = ent->current_sector;
     char skip = 0;
@@ -787,7 +787,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
-                    i = *(entry++);
+                    entry++;
                 }
                 break;
 
@@ -1016,14 +1016,14 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
             case TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW:           // TR3 SLANT
             case TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE:           // TR3 SLANT
                 cont_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
-                slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
-                slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
-                slope_func = ((*entry) & 0x001F);           // 0b00000000 00011111
+                //slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
+                //slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
+                //slope_func = ((*entry) & 0x001F);           // 0b00000000 00011111
                 entry++;
-                slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
-                slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
-                slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
-                slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
+                //slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
+                //slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
+                //slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
+                //slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
                 break;
 
             case TR_FD_FUNC_MONKEY:          // Climbable ceiling
@@ -1125,17 +1125,15 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
 }
 
 
-struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, int id)
+struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
 {
-    int i;
-    state_change_p ret = anim->state_change;
-
     if(id < 0)
     {
         return NULL;
     }
 
-    for(i=0;i<anim->state_change_count;i++,ret++)
+    state_change_p ret = anim->state_change;
+    for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
     {
         if(ret->id == id)
         {
@@ -1147,9 +1145,8 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 }
 
 
-int Entity_GetAnimDispatchCase(struct entity_s *entity, int id)
+int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
 {
-    int i, j;
     animation_frame_p anim = entity->bf.model->animations + entity->bf.current_animation;
     state_change_p stc = anim->state_change;
     anim_dispath_p disp;
@@ -1159,17 +1156,17 @@ int Entity_GetAnimDispatchCase(struct entity_s *entity, int id)
         return -1;
     }
 
-    for(i=0;i<anim->state_change_count;i++,stc++)
+    for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
     {
         if(stc->id == id)
         {
             disp = stc->anim_dispath;
-            for(j=0;j<stc->anim_dispath_count;j++,disp++)
+            for(uint16_t j=0;j<stc->anim_dispath_count;j++,disp++)
             {
                 if((disp->frame_high >= disp->frame_low) && (entity->bf.current_frame >= disp->frame_low) && (entity->bf.current_frame <= disp->frame_high))// ||
                    //(disp->frame_high <  disp->frame_low) && ((entity->bf.current_frame >= disp->frame_low) || (entity->bf.current_frame <= disp->frame_high)))
                 {
-                    return j;
+                    return (int)j;
                 }
             }
         }
@@ -1360,12 +1357,12 @@ void Entity_RebuildBV(entity_p ent)
     }
 }
 
-///@TODO: rewrite it: use only dist or OBB-OBB check;
+
 void Entity_CheckActivators(struct entity_s *ent)
 {
     entity_p e;
     engine_container_p cont;
-    btScalar *v, ppos[3], pos[3], r;
+    btScalar *v, ppos[3], r;
 
     if(!ent || !ent->self->room)
     {

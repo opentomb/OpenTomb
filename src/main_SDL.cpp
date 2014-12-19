@@ -164,13 +164,13 @@ void SkeletalModelTestDraw()
         frame = 0;
     }
 
-    if(model < 0 || model > engine_world.skeletal_model_count)
+    if((uint32_t)model > engine_world.skeletal_model_count)
     {
         model = 0;
     }
     smodel = engine_world.skeletal_models + model;
 
-    if(anim < 0 || anim > smodel->animation_count-1)
+    if((uint16_t)anim + 1 > smodel->animation_count)
     {
         anim = 0;
     }
@@ -638,16 +638,12 @@ void Engine_PrimaryMouseDown()
 
 void Engine_SecondaryMouseDown()
 {
-    engine_container_t cont, *c0;
+    engine_container_t *c0;
     btVector3 from, to, place;
     engine_container_t cam_cont;
 
     vec3_copy(from.m_floats, engine_camera.pos);
     to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;
-    cont.next = NULL;
-    cont.object = NULL;
-    cont.object_type = 0;
-    cont.room = engine_camera.current_room;
 
     cam_cont.next = NULL;
     cam_cont.object = NULL;
@@ -967,7 +963,7 @@ void DebugKeys(int button, int state)
                 /*models switching*/
             case SDLK_p:
                 model++;
-                if(model > engine_world.skeletal_model_count-1)
+                if((uint32_t)model + 1 > engine_world.skeletal_model_count)
                 {
                     model = 0;
                 }
@@ -1018,7 +1014,7 @@ void DebugKeys(int button, int state)
 
             case SDLK_y:
                 mesh++;
-                if(mesh > engine_world.meshs_count-1)
+                if((uint32_t)mesh + 1 > engine_world.meshs_count)
                 {
                     mesh = 0;
                 }
@@ -1063,7 +1059,7 @@ void DebugKeys(int button, int state)
 
             case SDLK_m:
                 sprite++;
-                if(sprite >= engine_world.sprites_count)
+                if((uint32_t)sprite >= engine_world.sprites_count)
                 {
                     sprite = 0;
                 }
@@ -1075,7 +1071,7 @@ void DebugKeys(int button, int state)
             case SDLK_r:
                 if(!con_base.show)
                 {
-                    for(int i=0;i<engine_world.room_count;i++)
+                    for(uint32_t i=0;i<engine_world.room_count;i++)
                     {
                         //if(engine_world.rooms[i].alternate_room != NULL)
                         {
@@ -1088,7 +1084,7 @@ void DebugKeys(int button, int state)
             case SDLK_4:
                 if(!con_base.show)
                 {
-                    for(int i=0;i<engine_world.room_count;i++)
+                    for(uint32_t i=0;i<engine_world.room_count;i++)
                     {
                         //if(engine_world.rooms[i].base_room != NULL)
                         {

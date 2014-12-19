@@ -941,7 +941,7 @@ void Audio_UpdateStreamsDamping()
     // NOT background. So we simply check this condition and set damp activity flag
     // if condition is met.
 
-    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
     {
         if(engine_world.stream_tracks[i].IsPlaying())
         {
@@ -961,7 +961,7 @@ void Audio_UpdateStreams()
 {
     Audio_UpdateStreamsDamping();
 
-    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
     {
         if(engine_world.stream_tracks[i].IsPlaying())
         {
@@ -979,7 +979,7 @@ void Audio_UpdateStreams()
 
 bool Audio_IsTrackPlaying(uint32_t track_index)
 {
-    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
     {
         if(engine_world.stream_tracks[i].IsPlaying() &&
            engine_world.stream_tracks[i].IsTrack(track_index))
@@ -1028,7 +1028,7 @@ bool Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask)
 
 int Audio_GetFreeStream()
 {
-    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
     {
         if( (!engine_world.stream_tracks[i].IsPlaying()) &&
             (!engine_world.stream_tracks[i].IsActive())   )
@@ -1044,7 +1044,7 @@ bool Audio_StopStreams(int stream_type)
 {
     bool result = false;
 
-    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
     {
         if(engine_world.stream_tracks[i].IsPlaying()          &&
            (engine_world.stream_tracks[i].IsType(stream_type) ||
@@ -1062,7 +1062,7 @@ bool Audio_EndStreams(int stream_type)
 {
     bool result = false;
 
-    for(int i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
     {
         if( (stream_type == -1) ||                              // End ALL streams at once.
             ((engine_world.stream_tracks[i].IsPlaying()) &&
@@ -1095,7 +1095,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
             break;
 
         case TR_AUDIO_EMITTER_SOUNDSOURCE:
-            if(entity_ID > engine_world.audio_emitters_count - 1)
+            if((uint32_t)entity_ID + 1 > engine_world.audio_emitters_count)
             {
                 return false;
             }
@@ -1145,7 +1145,7 @@ void Audio_UpdateSources()
 
 void Audio_PauseAllSources()
 {
-    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
     {
         if(engine_world.audio_sources[i].IsActive())
         {
@@ -1156,7 +1156,7 @@ void Audio_PauseAllSources()
 
 void Audio_StopAllSources()
 {
-    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
     {
         engine_world.audio_sources[i].Stop();
     }
@@ -1164,7 +1164,7 @@ void Audio_StopAllSources()
 
 void Audio_ResumeAllSources()
 {
-    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
     {
         if(engine_world.audio_sources[i].IsActive())
         {
@@ -1176,7 +1176,7 @@ void Audio_ResumeAllSources()
 
 int Audio_GetFreeSource()   ///@FIXME: add condition (compare max_dist with new source dist)
 {
-    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
     {
         if(engine_world.audio_sources[i].IsActive() == false)
         {
@@ -1192,11 +1192,11 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
 {
     int state;
 
-    for(int i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
     {
-        if( (engine_world.audio_sources[i].emitter_type == entity_type) &&
-            (engine_world.audio_sources[i].emitter_ID   == entity_ID  ) &&
-            (engine_world.audio_sources[i].effect_index == effect_ID  ) )
+        if( (engine_world.audio_sources[i].emitter_type == (uint32_t)entity_type) &&
+            (engine_world.audio_sources[i].emitter_ID   == ( int32_t)entity_ID  ) &&
+            (engine_world.audio_sources[i].effect_index == (uint32_t)effect_ID  ) )
         {
             alGetSourcei(engine_world.audio_sources[i].source_index, AL_SOURCE_STATE, &state);
 
@@ -1225,7 +1225,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     // Remap global engine effect ID to local effect ID.
 
-    if((effect_ID < 0) || (effect_ID >= engine_world.audio_map_count))
+    if((uint32_t)effect_ID >= engine_world.audio_map_count)
     {
         return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
@@ -1653,7 +1653,7 @@ void Audio_LoadOverridedSamples()
     {
         int buffer_counter = 0;
 
-        for(int i = 0; i < engine_world.audio_map_count; i++)
+        for(uint32_t i = 0; i < engine_world.audio_map_count; i++)
         {
             if(engine_world.audio_map[i] != -1)
             {
@@ -1724,7 +1724,6 @@ void Audio_InitFX()
 
 int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
-    ALenum err;
     ALuint effect = fxManager.al_effect[effect_index];
 
     if(alIsEffect(effect))
@@ -2045,7 +2044,6 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
 void Audio_UpdateListenerByCamera(struct camera_s *cam)
 {
     ALfloat v[6];       // vec3 - forvard, vec3 - up
-    int room_type = 0;
 
     vec3_copy(v+0, cam->view_dir);
     vec3_copy(v+3, cam->up_dir);

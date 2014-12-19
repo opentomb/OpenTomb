@@ -671,11 +671,11 @@ static pthread_mutex_t ListLock;
 
 static void LockLists(void)
 {
-    EnterCriticalSection(&ListLock);
+    al_EnterCriticalSection(&ListLock);
 }
 static void UnlockLists(void)
 {
-    LeaveCriticalSection(&ListLock);
+    al_LeaveCriticalSection(&ListLock);
 }
 
 /************************************************
@@ -720,7 +720,7 @@ static void alc_init(void)
         ZScale *= -1.0f;
 
     pthread_key_create(&LocalContext, ReleaseThreadCtx);
-    InitializeCriticalSection(&ListLock);
+    al_InitializeCriticalSection(&ListLock);
     ThunkInit();
 }
 
@@ -1001,7 +1001,7 @@ static void alc_deinit_safe(void)
     FreeALConfig();
 
     ThunkExit();
-    DeleteCriticalSection(&ListLock);
+    al_DeleteCriticalSection(&ListLock);
     pthread_key_delete(LocalContext);
 
     if(LogFile != stderr)
@@ -1228,11 +1228,11 @@ static ALCboolean IsValidALCChannels(ALCenum channels)
 
 void ALCdevice_LockDefault(ALCdevice *device)
 {
-    EnterCriticalSection(&device->Mutex);
+    al_EnterCriticalSection(&device->Mutex);
 }
 void ALCdevice_UnlockDefault(ALCdevice *device)
 {
-    LeaveCriticalSection(&device->Mutex);
+    al_LeaveCriticalSection(&device->Mutex);
 }
 ALint64 ALCdevice_GetLatencyDefault(ALCdevice *device)
 {
@@ -1718,7 +1718,7 @@ static ALCvoid FreeDevice(ALCdevice *device)
     free(device->DeviceName);
     device->DeviceName = NULL;
 
-    DeleteCriticalSection(&device->Mutex);
+    al_DeleteCriticalSection(&device->Mutex);
 
     al_free(device);
 }
@@ -2638,7 +2638,7 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     device->ref = 1;
     device->Connected = ALC_TRUE;
     device->Type = Playback;
-    InitializeCriticalSection(&device->Mutex);
+    al_InitializeCriticalSection(&device->Mutex);
     device->LastError = ALC_NO_ERROR;
 
     device->Flags = 0;
@@ -2801,7 +2801,7 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     // Find a playback device to open
     if((err=ALCdevice_OpenPlayback(device, deviceName)) != ALC_NO_ERROR)
     {
-        DeleteCriticalSection(&device->Mutex);
+        al_DeleteCriticalSection(&device->Mutex);
         al_free(device);
         alcSetError(NULL, err);
         return NULL;
@@ -2908,7 +2908,7 @@ ALC_API ALCdevice* ALC_APIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, 
     device->ref = 1;
     device->Connected = ALC_TRUE;
     device->Type = Capture;
-    InitializeCriticalSection(&device->Mutex);
+    al_InitializeCriticalSection(&device->Mutex);
 
     InitUIntMap(&device->BufferMap, ~0);
     InitUIntMap(&device->EffectMap, ~0);
@@ -2922,7 +2922,7 @@ ALC_API ALCdevice* ALC_APIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, 
     device->Flags |= DEVICE_CHANNELS_REQUEST | DEVICE_SAMPLE_TYPE_REQUEST;
     if(DecomposeDevFormat(format, &device->FmtChans, &device->FmtType) == AL_FALSE)
     {
-        DeleteCriticalSection(&device->Mutex);
+        al_DeleteCriticalSection(&device->Mutex);
         al_free(device);
         alcSetError(NULL, ALC_INVALID_ENUM);
         return NULL;
@@ -2933,7 +2933,7 @@ ALC_API ALCdevice* ALC_APIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, 
 
     if((err=ALCdevice_OpenCapture(device, deviceName)) != ALC_NO_ERROR)
     {
-        DeleteCriticalSection(&device->Mutex);
+        al_DeleteCriticalSection(&device->Mutex);
         al_free(device);
         alcSetError(NULL, err);
         return NULL;
@@ -3059,7 +3059,7 @@ ALC_API ALCdevice* ALC_APIENTRY alcLoopbackOpenDeviceSOFT(const ALCchar *deviceN
     device->ref = 1;
     device->Connected = ALC_TRUE;
     device->Type = Loopback;
-    InitializeCriticalSection(&device->Mutex);
+    al_InitializeCriticalSection(&device->Mutex);
     device->LastError = ALC_NO_ERROR;
 
     device->Flags = 0;

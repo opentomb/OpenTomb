@@ -428,7 +428,6 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
     int16_t frame, anim;
     long int t;
     btScalar dt;
-    animation_frame_p af;
     state_change_p stc;
 
     bf->lerp = 0.0;
@@ -457,7 +456,6 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
         bf->current_frame = frame;
     }
 
-    af = bf->model->animations + bf->current_animation;
     bf->frame_time += time;
 
     t = (bf->frame_time) / bf->period;

@@ -102,8 +102,8 @@ end;
 -- Get next level's loading screen.
 ---------------------------------------------------------------------------------------------------------------------------------------
 function GetLoadingScreen(currentgame, currentlevel, operand)
-    if(level ~= nil) then
-        local level_number = NextLevelNum(currentgame, currentlevel, operand);
+    local level_number = NextLevelNum(currentgame, currentlevel, operand);
+    if(gameflow_paths[currentgame].level[level_number] ~= nil) then
         return gameflow_paths[currentgame].level[level_number].picpath;
     else
         return "NULL";

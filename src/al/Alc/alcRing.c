@@ -50,7 +50,7 @@ RingBuffer *CreateRingBuffer(ALsizei frame_size, ALsizei length)
         ring->read_pos = 0;
         ring->write_pos = 0;
 
-        InitializeCriticalSection(&ring->cs);
+        al_InitializeCriticalSection(&ring->cs);
     }
     return ring;
 }
@@ -59,7 +59,7 @@ void DestroyRingBuffer(RingBuffer *ring)
 {
     if(ring)
     {
-        DeleteCriticalSection(&ring->cs);
+        al_DeleteCriticalSection(&ring->cs);
         free(ring);
     }
 }
@@ -68,9 +68,9 @@ ALsizei RingBufferSize(RingBuffer *ring)
 {
     ALsizei s;
 
-    EnterCriticalSection(&ring->cs);
+    al_EnterCriticalSection(&ring->cs);
     s = (ring->write_pos-ring->read_pos+ring->length) % ring->length;
-    LeaveCriticalSection(&ring->cs);
+    al_LeaveCriticalSection(&ring->cs);
 
     return s;
 }
@@ -79,7 +79,7 @@ void WriteRingBuffer(RingBuffer *ring, const ALubyte *data, ALsizei len)
 {
     int remain;
 
-    EnterCriticalSection(&ring->cs);
+    al_EnterCriticalSection(&ring->cs);
 
     remain = (ring->read_pos-ring->write_pos-1+ring->length) % ring->length;
     if(remain < len) len = remain;
@@ -102,14 +102,14 @@ void WriteRingBuffer(RingBuffer *ring, const ALubyte *data, ALsizei len)
         ring->write_pos %= ring->length;
     }
 
-    LeaveCriticalSection(&ring->cs);
+    al_LeaveCriticalSection(&ring->cs);
 }
 
 void ReadRingBuffer(RingBuffer *ring, ALubyte *data, ALsizei len)
 {
     int remain;
 
-    EnterCriticalSection(&ring->cs);
+    al_EnterCriticalSection(&ring->cs);
 
     remain = ring->length - ring->read_pos;
     if(remain < len)
@@ -123,5 +123,5 @@ void ReadRingBuffer(RingBuffer *ring, ALubyte *data, ALsizei len)
     ring->read_pos += len;
     ring->read_pos %= ring->length;
 
-    LeaveCriticalSection(&ring->cs);
+    al_LeaveCriticalSection(&ring->cs);
 }

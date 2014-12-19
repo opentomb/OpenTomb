@@ -232,7 +232,7 @@ void Con_Edit(int key)
     con_base.cursor_time = 0.0;
     con_base.show_cursor = 1;
 
-    size_t oldLength = strlen(con_base.shown_lines[0]);
+    int16_t oldLength = strlen(con_base.shown_lines[0]);                        // int16_t is absolutly enough
 
     switch(key)
     {
@@ -283,7 +283,7 @@ void Con_Edit(int key)
         case SDLK_BACKSPACE:
             if(con_base.cursor_pos > 0)
             {
-                for(size_t i = con_base.cursor_pos; i < oldLength ;i++)
+                for(int16_t i = con_base.cursor_pos; i < oldLength ;i++)
                 {
                     con_base.shown_lines[0][i-1] = con_base.shown_lines[0][i];
                 }
@@ -296,7 +296,7 @@ void Con_Edit(int key)
         case SDLK_DELETE:
             if(/*(con_base.cursor_pos > 0) && */(con_base.cursor_pos < oldLength))
             {
-                for(size_t i=con_base.cursor_pos;i<oldLength-1;i++)
+                for(int16_t i=con_base.cursor_pos;i<oldLength-1;i++)
                 {
                     con_base.shown_lines[0][i] = con_base.shown_lines[0][i+1];
                 }
@@ -307,7 +307,7 @@ void Con_Edit(int key)
         default:
             if((oldLength < con_base.line_size-1) && (key >= SDLK_SPACE))
             {
-                for(size_t i=oldLength;i>con_base.cursor_pos;i--)
+                for(int16_t i=oldLength;i>con_base.cursor_pos;i--)
                 {
                     con_base.shown_lines[0][i] = con_base.shown_lines[0][i-1];
                 }
@@ -385,10 +385,9 @@ void Con_AddText(const char *text)
 {
     char buf[4096], ch;
     size_t text_size = strlen(text);
-    int i, j;
+    size_t i, j;
     
     buf[0] = 0;
-    buf[4095] = 0;
     for(i=0,j=0;i<text_size;i++)
     {
         ch = text[i];
@@ -396,8 +395,9 @@ void Con_AddText(const char *text)
         {
             j = (j < 4096)?(j):(4095);
             buf[j] = 0;
+            buf[4095] = 0;
             if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
-            {
+            {  
                 Con_AddLine(buf);
             }
             j=0;
@@ -407,7 +407,8 @@ void Con_AddText(const char *text)
            buf[j++] = ch;
         }
     }
-
+    
+    buf[4095] = 0;
     if(j < 4096)
     {
         buf[j] = 0;

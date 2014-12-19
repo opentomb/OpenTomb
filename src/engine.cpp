@@ -257,8 +257,8 @@ int lua_DumpRoom(lua_State * lua)
     }
     else
     {
-        int id = lua_tointeger(lua, 1);
-        if(id < 0 || id >= engine_world.room_count)
+        uint32_t id = lua_tointeger(lua, 1);
+        if(id >= engine_world.room_count)
         {
             Con_Printf("wrong room id = %d", id);
             return 0;
@@ -271,7 +271,7 @@ int lua_DumpRoom(lua_State * lua)
         room_sector_p rs = r->sectors;
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform[12 + 0], r->transform[12 + 1]);
         Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL)?(r->alternate_room->id):(-1), (r->base_room != NULL)?(r->base_room->id):(-1));
-        for(int i=0;i<r->sectors_count;i++,rs++)
+        for(uint32_t i=0;i<r->sectors_count;i++,rs++)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, rs->portal_to_room);
         }
@@ -283,7 +283,7 @@ int lua_DumpRoom(lua_State * lua)
 
 int lua_SetRoomEnabled(lua_State * lua)
 {
-    int val, id, top;
+    int val, top;
     top = lua_gettop(lua);
 
     if(top < 2)
@@ -292,8 +292,8 @@ int lua_SetRoomEnabled(lua_State * lua)
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    if(id < 0 || id >= engine_world.room_count)
+    uint32_t id = lua_tointeger(lua, 1);
+    if(id >= engine_world.room_count)
     {
         Con_Printf("wrong room id = %d", id);
         return 0;
@@ -318,7 +318,7 @@ int lua_SetRoomEnabled(lua_State * lua)
 
 int lua_SetModelCollisionMapSize(lua_State * lua)
 {
-    int size, id, top;
+    int size, top;
     top = lua_gettop(lua);
 
     if(top < 2)
@@ -327,8 +327,8 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    if(id < 0 || id > engine_world.skeletal_model_count - 1)
+    uint32_t id = lua_tointeger(lua, 1);
+    if(id > engine_world.skeletal_model_count - 1)
     {
         Con_Printf("there are not models with id = %d", id);
         return 0;
@@ -346,7 +346,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
 
 int lua_SetModelCollisionMap(lua_State * lua)
 {
-    int arg, val, id, top;
+    int arg, val, top;
     top = lua_gettop(lua);
 
     if(top < 3)
@@ -355,8 +355,8 @@ int lua_SetModelCollisionMap(lua_State * lua)
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    if(id < 0 || id > engine_world.skeletal_model_count - 1)
+    uint32_t id = lua_tointeger(lua, 1);
+    if(id > engine_world.skeletal_model_count - 1)
     {
         Con_Printf("there are not models with id = %d", id);
         return 0;
@@ -949,19 +949,20 @@ int lua_SetStateChangeRange(lua_State * lua)
     }
 
     id = lua_tointeger(lua, 1);
-    anim = lua_tointeger(lua, 2);
-    state = lua_tointeger(lua, 3);
-    dispath = lua_tointeger(lua, 4);
-    frame_low = lua_tointeger(lua, 5);
-    frame_high = lua_tointeger(lua, 6);
-
     skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    
     if(model == NULL)
     {
         Con_Printf("can not find skeletal model with id = %d", id);
         return 0;
     }
 
+    anim = lua_tointeger(lua, 2);
+    state = lua_tointeger(lua, 3);
+    dispath = lua_tointeger(lua, 4);
+    frame_low = lua_tointeger(lua, 5);
+    frame_high = lua_tointeger(lua, 6);
+    
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
         Con_Printf("wrong anim number");
@@ -969,9 +970,9 @@ int lua_SetStateChangeRange(lua_State * lua)
     }
 
     animation_frame_p af = model->animations + anim;
-    for(int i=0;i<af->state_change_count;i++)
+    for(uint16_t i=0;i<af->state_change_count;i++)
     {
-        if(af->state_change[i].id == state)
+        if(af->state_change[i].id == (uint32_t)state)
         {
             if((dispath >= 0) && (dispath < af->state_change[i].anim_dispath_count))
             {
@@ -1746,7 +1747,7 @@ int lua_SetEntityState(lua_State * lua)
 ///@TODO: current realisation is not correct: if entity is outside the room than entity will not be saved (see savegame function)
 int lua_SetEntityRoomMove(lua_State * lua)
 {
-    int id, room, top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 4)
     {
@@ -1754,7 +1755,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
+    uint32_t id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
@@ -1762,8 +1763,8 @@ int lua_SetEntityRoomMove(lua_State * lua)
         return 0;
     }
 
-    room = lua_tointeger(lua, 2);
-    if(!lua_isnil(lua, 2) && (room >= 0) && (room < engine_world.room_count))
+    uint32_t room = lua_tointeger(lua, 2);
+    if(!lua_isnil(lua, 2) && (room < engine_world.room_count))
     {
         room_p r = engine_world.rooms + room;
         if(ent == engine_world.Character)
@@ -1873,17 +1874,16 @@ int lua_PlayStream(lua_State *lua)
 
 int lua_PlaySound(lua_State *lua)
 {
-    int id, top;
-
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
+    
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
 
-    id  = lua_tointeger(lua, 1);
-    if((id < 0) || (id >= engine_world.audio_map_count))
+    uint32_t id  = lua_tointeger(lua, 1);
+    if(id >= engine_world.audio_map_count)
     {
         Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
         return 0;
@@ -1910,17 +1910,15 @@ int lua_PlaySound(lua_State *lua)
 
 int lua_StopSound(lua_State *lua)
 {
-    int id, top;
-
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
         return 0;
     }
 
-    id  = lua_tointeger(lua, 1);
-    if((id < 0) || (id >= engine_world.audio_map_count))
+    uint32_t id  = lua_tointeger(lua, 1);
+    if(id >= engine_world.audio_map_count)
     {
         Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
         return 0;
@@ -2677,7 +2675,7 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                snprintf(buf, con_base.line_size + 32, "showing_lines = %d\0", con_base.showing_lines);
+                snprintf(buf, con_base.line_size + 32, "showing_lines = %d", con_base.showing_lines);
                 Con_AddLine(buf);
                 return 1;
             }
@@ -2762,7 +2760,7 @@ int Engine_ExecCmd(char *ch)
                 {
                     Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
                                (int)(sect->ceiling == 32512 || sect->floor == 32512), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
-                    for(int i=0;i<sect->owner_room->static_mesh_count;i++)
+                    for(uint32_t i=0;i<sect->owner_room->static_mesh_count;i++)
                     {
                         Con_Printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i].object_id);
                     }
@@ -2812,7 +2810,7 @@ int Engine_ExecCmd(char *ch)
             }
             else
             {
-                snprintf(buf, con_base.line_size + 32, "Command \"%s\" not found\0", token);
+                snprintf(buf, con_base.line_size + 32, "Command \"%s\" not found", token);
                 Con_AddLine(buf);
             }
             return 0;

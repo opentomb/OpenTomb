@@ -239,8 +239,8 @@ struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id);
 void Room_Empty(room_p room);
 void Room_AddEntity(room_p room, struct entity_s *entity);
 int Room_RemoveEntity(room_p room, struct entity_s *entity);
-void Room_AddToNearRoomsList(room_p room, room_p r);
 
+void Room_AddToNearRoomsList(room_p room, room_p r);
 int Room_IsPointIn(room_p room, btScalar dot[3]);
 room_p Room_FindPos2d(world_p w, btScalar pos[3]);
 

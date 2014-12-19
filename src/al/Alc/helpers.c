@@ -233,7 +233,7 @@ void RestoreFPUMode(const FPUCtl *ctl)
 #endif
 #include <sched.h>
 
-void InitializeCriticalSection(pthread_mutex_t *cs)
+void al_InitializeCriticalSection(pthread_mutex_t *cs)
 {
     pthread_mutexattr_t attrib;
     int ret;
@@ -252,19 +252,19 @@ void InitializeCriticalSection(pthread_mutex_t *cs)
 
     pthread_mutexattr_destroy(&attrib);
 }
-void DeleteCriticalSection(pthread_mutex_t *cs)
+void al_DeleteCriticalSection(pthread_mutex_t *cs)
 {
     int ret;
     ret = pthread_mutex_destroy(cs);
     assert(ret == 0);
 }
-void EnterCriticalSection(pthread_mutex_t *cs)
+void al_EnterCriticalSection(pthread_mutex_t *cs)
 {
     int ret;
     ret = pthread_mutex_lock(cs);
     assert(ret == 0);
 }
-void LeaveCriticalSection(pthread_mutex_t *cs)
+void al_LeaveCriticalSection(pthread_mutex_t *cs)
 {
     int ret;
     ret = pthread_mutex_unlock(cs);
@@ -275,7 +275,7 @@ void LeaveCriticalSection(pthread_mutex_t *cs)
  * to the expected DWORD. Both are defined as unsigned 32-bit types, however.
  * Additionally, Win32 is supposed to measure the time since Windows started,
  * as opposed to the actual time. */
-ALuint ALtimeGetTime(void)
+ALuint al_timeGetTime(void)
 {
     struct timeval tv;
     int ret;
@@ -288,7 +288,7 @@ ALuint ALtimeGetTime(void)
 
 #include <stdlib.h>
 
-void ALSleep(ALuint t)
+void al_Sleep(ALuint t)
 {
     ALuint seconds = (ALuint)t / 1000;
     ALuint rest = t - seconds * 1000;

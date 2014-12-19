@@ -168,8 +168,8 @@ void Entity_UpdateRoomPos(entity_p ent);
 void Entity_UpdateRigidBody(entity_p ent, int force);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
-struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, int id);
-int  Entity_GetAnimDispatchCase(struct entity_s *entity, int id);
+struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
+int  Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id);
 void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
 int  Entity_Frame(entity_p entity, btScalar time);                 // frame + trying to chabge state
 

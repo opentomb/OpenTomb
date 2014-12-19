@@ -13,6 +13,12 @@
 
 #define SPLIT_EPSILON (0.2)
 
+#define Polygon_AddVertexMacro(p, v)\
+{\
+    *((p)->vertices + (p)->vertex_count) = *(v);\
+    (p)->vertex_count++;\
+}
+
 /*
  * The structure taken from Cochrane. Next I realise one in my style.
  * make it aligned... is it enough good?

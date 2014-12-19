@@ -125,16 +125,14 @@ void Frustum_SplitPrepare(frustum_p frustum, struct portal_s *p)
 int Frustum_Split(frustum_p p, btScalar n[4], btScalar *buf)                    // отсечение части фрустума плоскостью
 {
     btScalar *curr_v, *prev_v, *v, t, dir[3];
-    int added, i;
     btScalar dist[2];
-    unsigned int count = p->count;
 
     curr_v = p->vertex;
     prev_v = p->vertex + 3*(p->count-1);
-    added = 0;
+    uint16_t added = 0;
     dist[0] = vec3_plane_dist(n, prev_v);
     v = buf;
-    for(i=0;i<count;i++)
+    for(uint16_t i=0;i<p->count;i++)
     {
         dist[1] = vec3_plane_dist(n, curr_v);
 

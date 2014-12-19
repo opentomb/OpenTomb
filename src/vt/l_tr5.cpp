@@ -114,7 +114,7 @@ void TR_Level::read_tr5_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & v
 void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 {
     uint32_t room_data_size;
-    uint32_t portal_offset;                         ///@FIXME: set, but not used
+    //uint32_t portal_offset;
     uint32_t sector_data_offset;
     uint32_t static_meshes_offset;
     uint32_t layer_offset;
@@ -122,7 +122,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     uint32_t poly_offset;
     uint32_t poly_offset2;
     uint32_t vertices_size;
-    uint32_t light_size;                            ///@FIXME: set, but not used
+    //uint32_t light_size;
 
     SDL_RWops *newsrc = NULL;
     uint32_t temp;
@@ -149,7 +149,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     if (read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator1 has wrong value");
 
-    portal_offset = read_bit32(newsrc);             // StartPortalOffset?   // endSDOffset
+    /*portal_offset = */read_bit32(newsrc);             // StartPortalOffset?   // endSDOffset
     sector_data_offset = read_bitu32(newsrc);    // StartSDOffset
     temp = read_bitu32(newsrc);
     if ((temp != 0) && (temp != 0xCDCDCDCD))
@@ -254,7 +254,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     if (read_bitu32(newsrc) != 0)
         Sys_extWarn("read_tr5_room: seperator14 has wrong value");
 
-    light_size = read_bitu32(newsrc);
+    /*light_size = */read_bitu32(newsrc);
     if (read_bitu32(newsrc) != room.num_lights)
         Sys_extError("read_tr5_room: room.num_lights2 != room.num_lights");
 
@@ -371,10 +371,8 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 
     {
         uint32_t vertex_index = 0;
-        int temp1;                          ///@FIXME: set, but not used
-
         room.num_vertices = vertices_size / 28;
-        temp1 = room_data_size - (208 + vertices_offset + vertices_size);
+        //int temp1 = room_data_size - (208 + vertices_offset + vertices_size);
         room.vertices = (tr5_room_vertex_t*)calloc(room.num_vertices, sizeof(tr5_room_vertex_t));
         for (i = 0; i < room.num_layers; i++) {
             uint32_t j;
