@@ -44,10 +44,10 @@ static ALuint NullProc(ALvoid *ptr)
                             Device->Frequency / 2;
 
     done = 0;
-    start = ALtimeGetTime();
+    start = al_timeGetTime();
     while(!data->killNow && Device->Connected)
     {
-        now = ALtimeGetTime();
+        now = al_timeGetTime();
 
         avail = (ALuint64)(now-start) * Device->Frequency / 1000;
         if(avail < done)
@@ -59,7 +59,7 @@ static ALuint NullProc(ALvoid *ptr)
         }
         if(avail-done < Device->UpdateSize)
         {
-            ALSleep(restTime);
+            al_Sleep(restTime);
             continue;
         }
 

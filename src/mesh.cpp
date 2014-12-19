@@ -104,47 +104,47 @@ void BaseMesh_Clear(base_mesh_p mesh)
  */
 void BaseMesh_FindBB(base_mesh_p mesh)
 {
-    vertex_p v;
-    int i;
-
-    v = mesh->vertices;
-    vec3_copy(mesh->bb_min, v->position);
-    vec3_copy(mesh->bb_max, v->position);
-    v ++;
-    for(i=1;i<mesh->vertex_count;i++,v++)
+    if(mesh->vertex_count > 0)
     {
-        // X
-        if(mesh->bb_min[0] > v->position[0])
+        vertex_p v = mesh->vertices;
+        vec3_copy(mesh->bb_min, v->position);
+        vec3_copy(mesh->bb_max, v->position);
+        v ++;
+        for(uint32_t i=1;i<mesh->vertex_count;i++,v++)
         {
-            mesh->bb_min[0] = v->position[0];
+            // X
+            if(mesh->bb_min[0] > v->position[0])
+            {
+                mesh->bb_min[0] = v->position[0];
+            }
+            if(mesh->bb_max[0] < v->position[0])
+            {
+                mesh->bb_max[0] = v->position[0];
+            }
+            // Y
+            if(mesh->bb_min[1] > v->position[1])
+            {
+                mesh->bb_min[1] = v->position[1];
+            }
+            if(mesh->bb_max[1] < v->position[1])
+            {
+                mesh->bb_max[1] = v->position[1];
+            }
+            // Z
+            if(mesh->bb_min[2] > v->position[2])
+            {
+                mesh->bb_min[2] = v->position[2];
+            }
+            if(mesh->bb_max[2] < v->position[2])
+            {
+                mesh->bb_max[2] = v->position[2];
+            }
         }
-        if(mesh->bb_max[0] < v->position[0])
-        {
-            mesh->bb_max[0] = v->position[0];
-        }
-        // Y
-        if(mesh->bb_min[1] > v->position[1])
-        {
-            mesh->bb_min[1] = v->position[1];
-        }
-        if(mesh->bb_max[1] < v->position[1])
-        {
-            mesh->bb_max[1] = v->position[1];
-        }
-        // Z
-        if(mesh->bb_min[2] > v->position[2])
-        {
-            mesh->bb_min[2] = v->position[2];
-        }
-        if(mesh->bb_max[2] < v->position[2])
-        {
-            mesh->bb_max[2] = v->position[2];
-        }
-    }
 
-    mesh->centre[0] = (mesh->bb_min[0] + mesh->bb_max[0]) / 2.0;
-    mesh->centre[1] = (mesh->bb_min[1] + mesh->bb_max[1]) / 2.0;
-    mesh->centre[2] = (mesh->bb_min[2] + mesh->bb_max[2]) / 2.0;
+        mesh->centre[0] = (mesh->bb_min[0] + mesh->bb_max[0]) / 2.0;
+        mesh->centre[1] = (mesh->bb_min[1] + mesh->bb_max[1]) / 2.0;
+        mesh->centre[2] = (mesh->bb_min[2] + mesh->bb_max[2]) / 2.0;
+    }
 }
 
 
@@ -173,7 +173,7 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
 
     GLsizeiptr elementsSize = 0;
-    for (GLsizeiptr i = 0; i < mesh->num_texture_pages; i++)
+    for (uint32_t i = 0; i < mesh->num_texture_pages; i++)
     {
         elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
     }
@@ -420,10 +420,8 @@ void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_coun
 
 vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3])
 {
-    int i;
     vertex_p mv = mesh->vertices;
-
-    for(i=0;i<mesh->vertex_count;i++,mv++)
+    for(uint32_t i=0;i<mesh->vertex_count;i++,mv++)
     {
         if(vec3_dist_sq(v, mv->position) < 4.0)
         {
@@ -436,7 +434,6 @@ vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3])
 
 void FillSkinnedMeshMap(skeletal_model_p model)
 {
-    int32_t i, k, l;
     int8_t *ch;
     btScalar tv[3];
     vertex_p v, rv;
@@ -444,7 +441,7 @@ void FillSkinnedMeshMap(skeletal_model_p model)
     mesh_tree_tag_p tree_tag, prev_tree_tag;
 
     tree_tag = model->mesh_tree;
-    for(i=0;i<model->mesh_count;i++,tree_tag++)
+    for(uint16_t i=0;i<model->mesh_count;i++,tree_tag++)
     {
         mesh = tree_tag->mesh;
         mesh2 = tree_tag->mesh2;
@@ -456,7 +453,7 @@ void FillSkinnedMeshMap(skeletal_model_p model)
 
         ch = mesh2->skin_map = (int8_t*)malloc(mesh2->vertex_count * sizeof(int8_t));
         v = mesh2->vertices;
-        for(k=0;k<mesh2->vertex_count;k++,v++,ch++)
+        for(uint32_t k=0;k<mesh2->vertex_count;k++,v++,ch++)
         {
             rv = FindVertexInMesh(mesh, v->position);
             if(rv != NULL)
@@ -470,7 +467,7 @@ void FillSkinnedMeshMap(skeletal_model_p model)
                 *ch = 0;
                 vec3_add(tv, v->position, tree_tag->offset);
                 prev_tree_tag = model->mesh_tree;
-                for(l=0;l<model->mesh_count;l++,prev_tree_tag++)
+                for(uint16_t l=0;l<model->mesh_count;l++,prev_tree_tag++)
                 {
                     rv = FindVertexInMesh(prev_tree_tag->mesh, tv);
                     if(rv != NULL)
@@ -521,9 +518,6 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
 
 void Mesh_GenFaces(base_mesh_p mesh)
 {
-    int i, j;
-    polygon_p p;
-
     // Note: This code relies on NULL being an all-zero value, which is true on
     // any reasonable system these days.
     if(mesh->element_count_per_texture == NULL)
@@ -533,8 +527,8 @@ void Mesh_GenFaces(base_mesh_p mesh)
     // First collect indices on a per-texture basis
     uint32_t **elements_for_texture = (uint32_t **)calloc(sizeof(uint32_t*), mesh->num_texture_pages);
 
-    p = mesh->polygons;
-    for(i=0;i<mesh->polygons_count;i++,p++)
+    polygon_p p = mesh->polygons;
+    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
     {
         if((p->transparency < 2) && (p->anim_id == 0) && !Polygon_IsBroken(p))
         {
@@ -549,7 +543,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
             uint32_t startElement = Mesh_AddVertex(mesh, p->vertices);
             uint32_t previousElement = Mesh_AddVertex(mesh, p->vertices + 1);
 
-            for(j = 2; j < p->vertex_count; j++)
+            for(uint16_t j = 2; j < p->vertex_count; j++)
             {
                 uint32_t thisElement = Mesh_AddVertex(mesh, p->vertices + j);
 
@@ -565,7 +559,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
     // Now flatten all these indices to a single array
     mesh->elements = NULL;
     uint32_t elementsSoFar = 0;
-    for(i = 0; i < mesh->num_texture_pages; i++)
+    for(uint32_t i = 0; i < mesh->num_texture_pages; i++)
     {
         if(elements_for_texture[i] == NULL)
         {

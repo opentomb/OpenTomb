@@ -258,7 +258,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     {
         ent->character->inventory = i;
     }
-    
+
     return count;
 }
 
@@ -327,7 +327,7 @@ int32_t Character_RemoveAllItems(struct entity_s *ent)
         return 0;
     }
 
-    inventory_node_p curr_i, next_i;
+    inventory_node_p curr_i = ent->character->inventory, next_i;
     int32_t ret = 0;
 
     while(curr_i != NULL)

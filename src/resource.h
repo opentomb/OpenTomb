@@ -91,7 +91,7 @@ void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c);
 void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame);
 int      TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
 int      TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
-long int TR_GetOriginalAnimationFrameOffset(long int offset, long int anim, class VT_Level *tr);
+long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr);
 
 // Bullet entity rigid body generating.
 

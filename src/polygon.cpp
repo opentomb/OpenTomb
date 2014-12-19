@@ -479,10 +479,10 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                Polygon_AddVertex(front, &tv);
-                Polygon_AddVertex(back, &tv);
+                Polygon_AddVertexMacro(front, &tv);
+                Polygon_AddVertexMacro(back, &tv);
             }
-            Polygon_AddVertex(front, curr_v);
+            Polygon_AddVertexMacro(front, curr_v);
         }
         else if(dist[1] < -SPLIT_EPSILON)
         {
@@ -504,15 +504,15 @@ void Polygon_Split(polygon_p src, btScalar n[4], polygon_p front, polygon_p back
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                Polygon_AddVertex(front, &tv);
-                Polygon_AddVertex(back, &tv);
+                Polygon_AddVertexMacro(front, &tv);
+                Polygon_AddVertexMacro(back, &tv);
             }
-            Polygon_AddVertex(back, curr_v);
+            Polygon_AddVertexMacro(back, curr_v);
         }
         else
         {
-            Polygon_AddVertex(front, curr_v);
-            Polygon_AddVertex(back, curr_v);
+            Polygon_AddVertexMacro(front, curr_v);
+            Polygon_AddVertexMacro(back, curr_v);
         }
 
         prev_v = curr_v;

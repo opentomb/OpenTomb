@@ -28,11 +28,11 @@ typedef struct console_info_s
     GLfloat                     font_color[4];
     GLfloat                     background_color[4];
 
-    int                         log_lines_count;            // Amount of log lines to use
-    int                         log_pos;                    // Current log position
-    int                         line_size;                  // Console line size
-    int                         shown_lines_count;          // Amount of shown lines
-    int                         showing_lines;              // Amount of visible lines
+    uint16_t                    log_lines_count;            // Amount of log lines to use
+    uint16_t                    log_pos;                    // Current log position
+    uint16_t                    line_size;                  // Console line size
+    uint16_t                    shown_lines_count;          // Amount of shown lines
+    uint16_t                    showing_lines;              // Amount of visible lines
     float                       spacing;                    // Line spacing
     float                       show_cursor_period;
     float                       cursor_time;                // Current cursor draw time

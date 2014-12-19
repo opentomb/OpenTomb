@@ -199,7 +199,7 @@ static void sdl_stop_playback(ALCdevice *device)
     SDL_PauseAudioDevice(sdl_dev_id, 1);//SDL_PauseAudio(1);
 }
 
-static ALCenum sdl_open_capture(ALCdevice *device, const ALCchar *deviceName)
+/*static ALCenum sdl_open_capture(ALCdevice *device, const ALCchar *deviceName)
 {
     (void) device;
     (void) deviceName;
@@ -235,7 +235,7 @@ static ALCuint sdl_available_samples(ALCdevice *pDevice)
     (void) pDevice;
     //sdl_warn_nocapture();
     return 0;
-}
+}*/
 
 BackendFuncs sdl_funcs = {
     sdl_open_playback,                  // ALCenum (*OpenPlayback)(ALCdevice*, const ALCchar*);

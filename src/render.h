@@ -45,9 +45,9 @@ struct obb_s;
 
 class render_DebugDrawer:public btIDebugDraw
 {
-    int m_debugMode;
-    int m_max_lines;
-    int m_lines;
+    uint32_t m_debugMode;
+    uint32_t m_max_lines;
+    uint32_t m_lines;
 
     GLfloat m_color[3];
     GLfloat *m_buffer;

@@ -180,7 +180,7 @@ static void borderedTextureAtlas_LayOutTextures(bordered_texture_atlas_p atlas)
 
         // Try to find space in an existing page.
         int found_place = 0;
-        for (int page = 0; page < atlas->number_result_pages; page++)
+        for (unsigned long page = 0; page < atlas->number_result_pages; page++)
         {
             found_place = BSPTree2D_FindSpaceFor(result_pages[page],
                                                  canonical->width + 2*atlas->border_width,
@@ -301,7 +301,7 @@ void BorderedTextureAtlas_AddObjectTexture(bordered_texture_atlas_p atlas, const
     // See whether it already exists
     long canonical_index = -1;
     struct canonical_object_texture_s *canonical = NULL;
-    for (long i = 0; i < atlas->number_canonical_object_textures; i++)
+    for (unsigned long i = 0; i < atlas->number_canonical_object_textures; i++)
     {
         struct canonical_object_texture_s *canonical_candidate = &(atlas->canonical_object_textures[i]);
 
@@ -381,7 +381,7 @@ void BorderedTextureAtlas_AddSpriteTexture(bordered_texture_atlas_p atlas,
     // See whether it already exists
     long canonical_index = -1;
     struct canonical_object_texture_s *canonical = NULL;
-    for (long i = 0; i < atlas->number_canonical_object_textures; i++)
+    for (unsigned long i = 0; i < atlas->number_canonical_object_textures; i++)
     {
         struct canonical_object_texture_s *canonical_candidate = &(atlas->canonical_object_textures[i]);
 

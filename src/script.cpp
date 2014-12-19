@@ -359,14 +359,14 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 }
 
 
-bool lua_GetLoadingScreen(lua_State *lua, int level_index, int next_level, char *pic_path)
+bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 {
     size_t  string_length  = 0;
     int     top;
 
     const char *real_path;
 
-    if(lua)
+    if(lua != NULL)
     {
         top = lua_gettop(lua);                                                  // save LUA stack
 
@@ -374,19 +374,16 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, int next_level, char 
 
         if(lua_isfunction(lua, -1))                                             // If function exists...
         {
-            lua_pushinteger(lua, level_index);                                  // add to stack first argument
-            lua_pushinteger(lua, next_level);                                   // add to stack first argument
+            lua_pushinteger(lua, gameflow_manager.CurrentGameID);               // add to stack first argument
+            lua_pushinteger(lua, gameflow_manager.CurrentLevelID);              // add to stack second argument
+            lua_pushinteger(lua, level_index);                                  // add to stack third argument
 
-
-            lua_pcall(lua, 2, 1, 0);                                            // call that function
-
-            real_path   = lua_tolstring(lua, -1, &string_length);               // get returned value 1
+            lua_pcall(lua, 3, 1, 0);                                            // call that function
+            real_path = lua_tolstring(lua, -1, &string_length);                 // get returned value 1
 
             // For some reason, Lua returns constant string pointer, which we can't assign to
             // provided argument; so we need to straightly copy it.
-
             strcpy(pic_path, real_path);
-
             lua_settop(lua, top);                                               // restore LUA stack
 
             return true;
@@ -707,97 +704,4 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     Con_SetLineInterval(con_base.spacing);
 
     return 1;
-}
-
-
-int SC_ParseEntity(char **ch, struct entity_s *ent)
-{
-    char token[64];
-    int r, x, y, ret = 0;                                                       ///@FIXME: "x", "y" set, but not used
-    btScalar v[3];
-
-    (*ch) = parse_token(*ch, token);
-    if(strcmp(token,"{"))                                                       // the syntax: entity data must be inside { ... }
-    {
-        Sys_DebugLog(LOG_FILENAME, "Parse error: Expected '{'");
-        return -1;
-    }
-
-    if(ent == NULL)
-    {
-        while(strcmp(token,"}")&&(*ch != NULL))
-        {
-            (*ch) = parse_token(*ch, token);
-        }
-        return 0;
-    }
-
-    ent->move_type = MOVE_FREE_FALLING;                                         // default state
-
-    while(strcmp(token, "}")&&(*ch != NULL))
-    {
-        ret++;
-        (*ch) = parse_token(*ch, token);
-        if(!strcmp(token, "pos"))
-        {
-            ent->transform[12] = SC_ParseFloat(ch);
-            ent->transform[13] = SC_ParseFloat(ch);
-            ent->transform[14] = SC_ParseFloat(ch);
-        }
-        else if(!strcmp(token, "angles"))
-        {
-            ent->angles[0] = SC_ParseFloat(ch);
-            ent->angles[1] = SC_ParseFloat(ch);
-            ent->angles[2] = SC_ParseFloat(ch);
-        }
-        else if(!strcmp(token, "anim"))
-        {
-            ent->bf.current_animation = SC_ParseInt(ch);
-            ent->bf.current_frame = SC_ParseInt(ch);
-            Entity_SetAnimation(ent, ent->bf.current_animation, ent->bf.current_frame);
-            ent->bf.frame_time = SC_ParseFloat(ch);
-        }
-        else if(!strcmp(token, "move"))
-        {
-            ent->move_type = SC_ParseInt(ch);
-        }
-        else if(!strcmp(token, "speed"))
-        {
-            v[0] = SC_ParseFloat(ch);
-            v[1] = SC_ParseFloat(ch);
-            v[2] = SC_ParseFloat(ch);
-            vec3_copy(ent->speed.m_floats, v);
-        }
-        else if(!strcmp(token, "room"))
-        {
-            r = SC_ParseInt(ch);
-            x = SC_ParseInt(ch);
-            y = SC_ParseInt(ch);
-            if(ent->self->room)
-            {
-                Room_RemoveEntity(ent->self->room, ent);
-            }
-
-            ent->self->room = Room_GetByID(&engine_world, r);
-        }
-        else
-        {
-            ret --;
-            if(strcmp(token,"{")&&strcmp(token,"}"))
-            {
-                //Sys_DebugLog(LOG_FILENAME, "\tScript error: Entity have no property: %s", token);
-            }
-        }
-    }
-
-    Entity_UpdateRotation(ent);
-    /*if(ent->character)
-    {
-        btVector3 min, max;
-        ent->character->body->getWorldTransform().setFromOpenGLMatrix(ent->transform);
-        ent->character->body->getAabb(min, max);
-        ent->character->body->getWorldTransform().getOrigin().m_floats[2] += ent->transform[14] - min.m_floats[2];
-    }*/
-
-    return ret;
 }

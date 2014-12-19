@@ -86,8 +86,13 @@ static const union {
 #include <errno.h>
 
 
-ALuint ALtimeGetTime(void);
-void ALSleep(ALuint t);
+void al_InitializeCriticalSection(pthread_mutex_t *cs);
+void al_DeleteCriticalSection(pthread_mutex_t *cs);
+void al_EnterCriticalSection(pthread_mutex_t *cs);
+void al_LeaveCriticalSection(pthread_mutex_t *cs);
+
+ALuint al_timeGetTime(void);
+void al_Sleep(ALuint t);
 
 typedef void *volatile XchgPtr;
 

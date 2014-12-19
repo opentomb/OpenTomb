@@ -1,119 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Release" />
-	<File name="src\world.cpp" open="0" top="0" tabpos="25" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="scripts\gameflow\TR1.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="489" topLine="63" />
+			<Cursor1 position="1123" topLine="5" />
 		</Cursor>
 	</File>
-	<File name="src\main_SDL.h" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="scripts\gameflow\TR4.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="371" topLine="2" />
+			<Cursor1 position="5063" topLine="9" />
 		</Cursor>
 	</File>
-	<File name="src\script.cpp" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\portal.cpp" open="0" top="0" tabpos="18" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="18443" topLine="675" />
-		</Cursor>
-	</File>
-	<File name="src\gui.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="31715" topLine="1050" />
-		</Cursor>
-	</File>
-	<File name="src\image\IMG_png.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="976" topLine="219" />
-		</Cursor>
-	</File>
-	<File name="scripts\level\tr4\SEMER_autoexec.lua" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="127" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\bsp_tree.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2247" topLine="81" />
-		</Cursor>
-	</File>
-	<File name="src\vt\l_tr5.cpp" open="0" top="0" tabpos="24" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4482" topLine="98" />
-		</Cursor>
-	</File>
-	<File name="src\world.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4390" topLine="112" />
-		</Cursor>
-	</File>
-	<File name="save\qsave.lua" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\ogg\libvorbis\lsp.c" open="0" top="0" tabpos="17" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="9131" topLine="293" />
-		</Cursor>
-	</File>
-	<File name="src\al\Alc\helpers.c" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="7502" topLine="243" />
-		</Cursor>
-	</File>
-	<File name="src\al\Alc\backends\backend.c" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6792" topLine="183" />
-		</Cursor>
-	</File>
-	<File name="src\redblack.cpp" open="0" top="0" tabpos="19" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="10927" topLine="423" />
-		</Cursor>
-	</File>
-	<File name="src\engine.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6104" topLine="188" />
+			<Cursor1 position="11491" topLine="346" />
 		</Cursor>
 	</File>
 	<File name="src\game.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="17531" topLine="521" />
-		</Cursor>
-	</File>
-	<File name="src\mesh.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="845" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="config.lua" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3284" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\system.cpp" open="1" top="1" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3350" topLine="136" />
-		</Cursor>
-	</File>
-	<File name="src\anim_state_control.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="582" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\image\miniz.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="113469" topLine="2216" />
-		</Cursor>
-	</File>
-	<File name="scripts\autoexec.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="302" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\engine.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="4189" topLine="119" />
+			<Cursor1 position="23084" topLine="717" />
 		</Cursor>
 	</File>
 	<File name="src\obb.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -121,114 +26,9 @@
 			<Cursor1 position="0" topLine="224" />
 		</Cursor>
 	</File>
-	<File name="src\render.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="scripts\gameflow\TR2.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1351" topLine="38" />
-		</Cursor>
-	</File>
-	<File name="src\entity.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="958" topLine="15" />
-		</Cursor>
-	</File>
-	<File name="src\character_controller.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="43977" topLine="1276" />
-		</Cursor>
-	</File>
-	<File name="src\bullet\BulletCollision\Gimpact\gim_math.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3828" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="scripts\level\tr3\JUNGLE.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1013" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\audio.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="53504" topLine="1712" />
-		</Cursor>
-	</File>
-	<File name="src\al\Alc\ALc.c" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="18806" topLine="659" />
-		</Cursor>
-	</File>
-	<File name="src\bullet\BulletCollision\CollisionDispatch\btInternalEdgeUtility.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="8503" topLine="290" />
-		</Cursor>
-	</File>
-	<File name="scripts\level\tr1\LEVEL2_autoexec.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="271" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\render.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="3597" topLine="155" />
-		</Cursor>
-	</File>
-	<File name="src\entity.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="8099" topLine="141" />
-		</Cursor>
-	</File>
-	<File name="src\frustum.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="19982" topLine="543" />
-		</Cursor>
-	</File>
-	<File name="src\lua\lauxlib.c" open="0" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="26578" topLine="913" />
-		</Cursor>
-	</File>
-	<File name="scripts\level\tr1\LEVEL4_autoexec.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="97" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\resource.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="12879" topLine="237" />
-		</Cursor>
-	</File>
-	<File name="src\frustum.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2276" topLine="36" />
-		</Cursor>
-	</File>
-	<File name="src\common.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="417" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="src\bordered_texture_atlas.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="19161" topLine="445" />
-		</Cursor>
-	</File>
-	<File name="src\bullet\BulletCollision\CollisionDispatch\btDefaultCollisionConfiguration.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5551" topLine="86" />
-		</Cursor>
-	</File>
-	<File name="src\lua\luaconf.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="6419" topLine="203" />
-		</Cursor>
-	</File>
-	<File name="src\main_SDL.cpp" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="14250" topLine="484" />
-		</Cursor>
-	</File>
-	<File name="src\resource.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="5572" topLine="102" />
+			<Cursor1 position="2201" topLine="12" />
 		</Cursor>
 	</File>
 	<File name="src\ftgl\FTExtrdGlyph.cpp" open="0" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -236,14 +36,319 @@
 			<Cursor1 position="2160" topLine="55" />
 		</Cursor>
 	</File>
+	<File name="src\engine.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4189" topLine="119" />
+		</Cursor>
+	</File>
+	<File name="src\script.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1219" topLine="17" />
+		</Cursor>
+	</File>
+	<File name="src\image\IMG_png.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="976" topLine="219" />
+		</Cursor>
+	</File>
+	<File name="scripts\gameflow\TR3.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2538" topLine="12" />
+		</Cursor>
+	</File>
+	<File name="src\resource.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="10440" topLine="199" />
+		</Cursor>
+	</File>
+	<File name="scripts\gameflow\TR5.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2486" topLine="8" />
+		</Cursor>
+	</File>
+	<File name="src\gui.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="26411" topLine="867" />
+		</Cursor>
+	</File>
+	<File name="src\image\jpeg-9\jmemname.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4299" topLine="136" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\CollisionDispatch\btCompoundCollisionAlgorithm.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4887" topLine="108" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\CollisionDispatch\btCollisionObject.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1019" topLine="17" />
+		</Cursor>
+	</File>
+	<File name="scripts\level\tr3\JUNGLE.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1013" topLine="0" />
+		</Cursor>
+	</File>
 	<File name="src\vt\l_tr4.cpp" open="0" top="0" tabpos="23" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="1550" topLine="26" />
 		</Cursor>
 	</File>
-	<File name="src\portal.cpp" open="0" top="0" tabpos="18" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="src\bullet\BulletCollision\Gimpact\gim_tri_collision.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="11491" topLine="346" />
+			<Cursor1 position="10499" topLine="351" />
+		</Cursor>
+	</File>
+	<File name="scripts\level\tr1\LEVEL2_autoexec.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="271" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\vt\l_tr5.cpp" open="0" top="0" tabpos="24" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4482" topLine="98" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\CollisionDispatch\btInternalEdgeUtility.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="8503" topLine="290" />
+		</Cursor>
+	</File>
+	<File name="src\render.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="16957" topLine="502" />
+		</Cursor>
+	</File>
+	<File name="src\bordered_texture_atlas.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="19161" topLine="445" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\CollisionDispatch\btCollisionObject.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3410" topLine="79" />
+		</Cursor>
+	</File>
+	<File name="src\al\Alc\backends\backend.c" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6792" topLine="183" />
+		</Cursor>
+	</File>
+	<File name="src\frustum.cpp" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="19982" topLine="543" />
+		</Cursor>
+	</File>
+	<File name="src\lua\luaconf.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6419" topLine="203" />
+		</Cursor>
+	</File>
+	<File name="scripts\gameflow\gameflow.lua" open="1" top="1" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4945" topLine="74" />
+		</Cursor>
+	</File>
+	<File name="src\engine.cpp" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="48278" topLine="1938" />
+		</Cursor>
+	</File>
+	<File name="src\world.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4390" topLine="112" />
+		</Cursor>
+	</File>
+	<File name="src\resource.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5572" topLine="102" />
+		</Cursor>
+	</File>
+	<File name="scripts\gameflow\TR3_gold.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1959" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\world.cpp" open="0" top="0" tabpos="25" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="489" topLine="63" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\BroadphaseCollision\btDbvt.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6097" topLine="238" />
+		</Cursor>
+	</File>
+	<File name="src\character_controller.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="8740" topLine="315" />
+		</Cursor>
+	</File>
+	<File name="src\frustum.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2276" topLine="36" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletSoftBody\btSoftBody.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="47144" topLine="2034" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\Gimpact\gim_math.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3876" topLine="129" />
+		</Cursor>
+	</File>
+	<File name="src\audio.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="62654" topLine="1983" />
+		</Cursor>
+	</File>
+	<File name="src\mesh.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="845" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\redblack.cpp" open="0" top="0" tabpos="19" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="10927" topLine="423" />
+		</Cursor>
+	</File>
+	<File name="src\ogg\libvorbis\lsp.c" open="0" top="0" tabpos="17" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9131" topLine="293" />
+		</Cursor>
+	</File>
+	<File name="src\image\miniz.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="113469" topLine="2216" />
+		</Cursor>
+	</File>
+	<File name="src\main_SDL.h" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="371" topLine="2" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\Gimpact\gim_contact.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3617" topLine="102" />
+		</Cursor>
+	</File>
+	<File name="config.lua" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2682" topLine="43" />
+		</Cursor>
+	</File>
+	<File name="scripts\level\tr1\LEVEL4_autoexec.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="97" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\render.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3597" topLine="155" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\LinearMath\btVector3.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="7599" topLine="232" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletDynamics\ConstraintSolver\btConeTwistConstraint.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="17482" topLine="524" />
+		</Cursor>
+	</File>
+	<File name="src\system.cpp" open="0" top="0" tabpos="22" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3417" topLine="136" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\NarrowPhaseCollision\btSubSimplexConvexCast.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2654" topLine="53" />
+		</Cursor>
+	</File>
+	<File name="src\script.cpp" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="10298" topLine="352" />
+		</Cursor>
+	</File>
+	<File name="src\al\Alc\ALc.c" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="53595" topLine="1820" />
+		</Cursor>
+	</File>
+	<File name="src\anim_state_control.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="582" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\entity.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="8099" topLine="141" />
+		</Cursor>
+	</File>
+	<File name="src\bsp_tree.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="676" topLine="3" />
+		</Cursor>
+	</File>
+	<File name="scripts\autoexec.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="302" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletDynamics\Vehicle\btRaycastVehicle.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9139" topLine="284" />
+		</Cursor>
+	</File>
+	<File name="src\entity.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="46212" topLine="1224" />
+		</Cursor>
+	</File>
+	<File name="src\main_SDL.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="238" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\ogg\libvorbis\vorbisfile.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1277" topLine="10" />
+		</Cursor>
+	</File>
+	<File name="scripts\entity\collide_flags.lua" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4364" topLine="80" />
+		</Cursor>
+	</File>
+	<File name="scripts\level\tr4\SEMER_autoexec.lua" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="127" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\Gimpact\gim_tri_collision.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="10181" topLine="379" />
+		</Cursor>
+	</File>
+	<File name="src\bullet\BulletCollision\CollisionDispatch\btDefaultCollisionConfiguration.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5558" topLine="101" />
+		</Cursor>
+	</File>
+	<File name="src\common.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="417" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\lua\lauxlib.c" open="0" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="26578" topLine="913" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

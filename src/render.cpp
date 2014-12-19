@@ -191,6 +191,11 @@ void Render_SkyBox()
  */
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
 {
+    for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
+    {
+        Render_PolygonTransparency(p);
+    }
+    
     if(mesh->vertex_count == 0)
     {
         return;
@@ -241,11 +246,6 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
         glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
         offset += mesh->element_count_per_texture[texture];
-    }
-
-    for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
-    {
-        Render_PolygonTransparency(p);
     }
 }
 
@@ -604,8 +604,7 @@ void Render_Entity(struct entity_s *entity)
         GLenum current_light_number = GL_LIGHT0;
         light_s *current_light = NULL;
 
-        int i;
-        for(i = 0; i < room->light_count; i++)
+        for(uint32_t i = 0; i < room->light_count; i++)
         {
             if(current_light_number < GL_LIGHT7)
             {
@@ -1577,8 +1576,6 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
 
 void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals)
 {
-    uint32_t i;
-
     if((renderer.style & R_DRAW_NORMALS) && (m_lines + mesh->vertex_count < m_max_lines))
     {
         GLfloat *v = m_buffer + 3 * 4 * m_lines;
@@ -1590,7 +1587,7 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar t
         {
             btScalar *ov = (btScalar*)overrideVertices;
             btScalar *on = (btScalar*)overrideNormals;
-            for(i=0; i<mesh->vertex_count; i++,ov+=3,on+=3,v+=12)
+            for(uint32_t i=0; i<mesh->vertex_count; i++,ov+=3,on+=3,v+=12)
             {
                 Mat4_vec3_mul_macro(v, transform, ov);
                 Mat4_vec3_rot_macro(n, transform, on);
@@ -1605,7 +1602,7 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar t
         else
         {
             vertex_p mv = mesh->vertices;
-            for (i = 0; i < mesh->vertex_count; i++,mv++,v+=12)
+            for (uint32_t i = 0; i < mesh->vertex_count; i++,mv++,v+=12)
             {
                 Mat4_vec3_mul_macro(v, transform, mv->position);
                 Mat4_vec3_rot_macro(n, transform, mv->normal);
