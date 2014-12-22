@@ -196,7 +196,7 @@ void Character_Clean(struct entity_s *ent)
 #if CHARACTER_USE_COMPLEX_COLLISION
     if(actor->shapes)
     {
-        for(int i=0;i<ent->bf.model->mesh_count;i++)
+        for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
         {
             delete ent->character->shapes[i];
         }
@@ -366,17 +366,15 @@ int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         
 void Character_CreateCollisionObject(struct entity_s *ent)
 {
 #if CHARACTER_USE_COMPLEX_COLLISION
-    int i;
-    btVector3 box;
-
     if((ent->character == NULL) || (ent->bf.model == NULL) || (ent->bf.model->mesh_count == 0))
     {
         return;
     }
 
     ent->character->shapes = (btCollisionShape**)malloc(ent->bf.model->mesh_count * sizeof(btCollisionShape*));
-    for(i=0;i<ent->bf.model->mesh_count;i++)
+    for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
     {
+        btVector3 box;
         box.m_floats[0] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[0] - ent->bf.model->mesh_tree[i].mesh->bb_min[0]);
         box.m_floats[1] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[1] - ent->bf.model->mesh_tree[i].mesh->bb_min[1]);
         box.m_floats[2] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[2] - ent->bf.model->mesh_tree[i].mesh->bb_min[2]);
@@ -1121,7 +1119,7 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
     // Do this by calling the broadphase's setAabb with the moved AABB, this will update the broadphase
     // paircache and the ghostobject's internal paircache at the same time.    /BW
 
-    int i, j, k, ret = 0;
+    int ret = 0;
     int num_pairs, manifolds_size;
     const btCollisionShape *cs = ghost->getCollisionShape();
     btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
@@ -1133,7 +1131,7 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
 
     vec3_set_zero(correction);
     num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
-    for(i=0;i<num_pairs;i++)
+    for(int i=0;i<num_pairs;i++)
     {
         manifoldArray->clear();
         // do not use commented code: it prevents to collision skips.
@@ -1152,16 +1150,16 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
         }
 
         manifolds_size = manifoldArray->size();
-        for(j=0;j<manifolds_size;j++)
+        for(int j=0;j<manifolds_size;j++)
         {
             btPersistentManifold* manifold = (*manifoldArray)[j];
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
-            for(k=0;k<manifold->getNumContacts();k++)
+            for(int k=0;k<manifold->getNumContacts();k++)
             {
                 const btManifoldPoint&pt = manifold->getContactPoint(k);
                 btScalar dist = pt.getDistance();
 
-                if (dist < 0.0)
+                if(dist < 0.0)
                 {
                     t = pt.m_normalWorldOnB * dist * directionSign * PENETRATION_PART_KOEF;
                     pos += t;
@@ -1174,7 +1172,7 @@ int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifold
         }
     }
 
-    if(ret)
+    //if(ret)
     {
         ghost->getWorldTransform().setOrigin(pos);
     }
@@ -1200,13 +1198,12 @@ void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, bt
     {
         btScalar tr[16], *v, *ltr;
         btCollisionShape *shape = ent->character->ghostObject->getCollisionShape();
-        int i, m;
 
         cmd->horizontal_collide = 0x00;
-        for(i=0;i<ent->bf.model->collision_map_size;i++)
+        for(uint16_t i=0;i<ent->bf.model->collision_map_size;i++)
         {
             numPenetrationLoops = 0;
-            m = ent->bf.model->collision_map[i];
+            uint16_t m = ent->bf.model->collision_map[i];
             ltr = ent->bf.bone_tags[m].full_transform;
             Mat4_Mat4_mul_macro(tr, ent->transform, ltr);
             v = ent->bf.model->mesh_tree[i].mesh->centre;
@@ -1504,7 +1501,6 @@ void Character_Inertia(struct entity_s *ent, btScalar max_speed, btScalar in_spe
  */
 int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
 {
-    int i, iter;
     btVector3 tv, norm_move_xy, move, spd(0.0, 0.0, 0.0);
     btScalar norm_move_xy_len, t, ang, *pos = ent->transform + 12;
     height_info_t nfc;
@@ -1617,7 +1613,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1637,7 +1633,7 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
         vec3_set_zero(norm_move_xy.m_floats);
     }
 
-    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    for(int i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
@@ -1681,7 +1677,6 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
 
 int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
 {
-    int i, iter;
     btVector3 move;
     btScalar t, *pos = ent->transform + 12;
 
@@ -1714,7 +1709,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
     vec3_RotateZ(ent->speed.m_floats, ent->speed.m_floats, cmd->rot[0] * 0.5);  ///@FIXME magic const
 
     t = move.length();
-    iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1767,7 +1762,7 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
         }
     }
 
-    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    for(int i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
@@ -1816,7 +1811,6 @@ int Character_FreeFalling(struct entity_s *ent, character_command_p cmd)
  */
 int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
 {
-    int i, iter;
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
 
@@ -1863,14 +1857,14 @@ int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd)
     move = spd * engine_frame_time;
     move.m_floats[2] = 0.0;
     t = move.length();
-    iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
     }
     move /= (btScalar)iter;
 
-    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    for(int i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
@@ -1902,7 +1896,6 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
     climb_info_t *climb = &ent->character->climb;
     btVector3 spd, move;
     btScalar t, *pos = ent->transform + 12;
-    int i, iter;
     /*
      * resize collision model
      */
@@ -1951,14 +1944,14 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
     move = ent->speed * engine_frame_time;
 
     t = move.length();
-    iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
     }
     move /= (btScalar)iter;
 
-    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    for(int i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
@@ -1981,7 +1974,6 @@ int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd)
  */
 int Character_Climbing(struct entity_s *ent, character_command_p cmd)
 {
-    int i, iter;
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
     btScalar z = pos[2];
@@ -2029,14 +2021,14 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
     }
     move /= (btScalar)iter;
 
-    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    for(int i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
@@ -2057,7 +2049,6 @@ int Character_Climbing(struct entity_s *ent, character_command_p cmd)
  */
 int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
 {
-    int i, iter;
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
 
@@ -2102,14 +2093,14 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
 
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
     }
     move /= (btScalar)iter;
 
-    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    for(int i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
@@ -2137,7 +2128,6 @@ int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd)
 
 int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
 {
-    int i, iter;
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
 
@@ -2200,14 +2190,14 @@ int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->ry + 1;
     if(iter < 1)
     {
         iter = 1;
     }
     move /= (btScalar)iter;
 
-    for(i=0;i<iter && cmd->horizontal_collide==0x00;i++)
+    for(int i=0;i<iter && cmd->horizontal_collide==0x00;i++)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
@@ -2243,23 +2233,23 @@ int Character_FindTraverse(struct entity_s *ch)
     // OX move case
     if(ch->transform[4 + 0] > 0.9)
     {
-        btScalar pos[] = {ch_s->pos[0] + TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
+        btScalar pos[] = {(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0};
         obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     else if(ch->transform[4 + 0] < -0.9)
     {
-        btScalar pos[] = {ch_s->pos[0] - TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
+        btScalar pos[] = {(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0};
         obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.9)
     {
-        btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
+        btScalar pos[] = {(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0};
         obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     else if(ch->transform[4 + 1] < -0.9)
     {
-        btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
+        btScalar pos[] = {(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0};
         obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
 
@@ -2347,23 +2337,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     {
         if(ch->transform[4 + 0] > 0.8)
         {
-            btScalar pos[] = {obj_s->pos[0] - TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
+            btScalar pos[] = {(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0};
             ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
         else if(ch->transform[4 + 0] < -0.8)
         {
-            btScalar pos[] = {obj_s->pos[0] + TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
+            btScalar pos[] = {(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0};
             ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
         // OY move case
         else if(ch->transform[4 + 1] > 0.8)
         {
-            btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
+            btScalar pos[] = {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0};
             ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
         else if(ch->transform[4 + 1] < -0.8)
         {
-            btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
+            btScalar pos[] = {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0};
             ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
         ch_s = TR_Sector_CheckPortalPointer(ch_s);
@@ -2405,23 +2395,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     // OX move case
     if(ch->transform[4 + 0] > 0.8)
     {
-        btScalar pos[] = {obj_s->pos[0] + TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
+        btScalar pos[] = {(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0};
         next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
     else if(ch->transform[4 + 0] < -0.8)
     {
-        btScalar pos[] = {obj_s->pos[0] - TR_METERING_SECTORSIZE, obj_s->pos[1], 0.0};
+        btScalar pos[] = {(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0};
         next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.8)
     {
-        btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
+        btScalar pos[] = {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0};
         next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
     else if(ch->transform[4 + 1] < -0.8)
     {
-        btScalar pos[] = {obj_s->pos[0], obj_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
+        btScalar pos[] = {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0};
         next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
 
@@ -2455,23 +2445,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     // OX move case
     if(ch->transform[4 + 0] > 0.8)
     {
-        btScalar pos[] = {ch_s->pos[0] - TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
+        btScalar pos[] = {(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0};
         next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     else if(ch->transform[4 + 0] < -0.8)
     {
-        btScalar pos[] = {ch_s->pos[0] + TR_METERING_SECTORSIZE, ch_s->pos[1], 0.0};
+        btScalar pos[] = {(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0};
         next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.8)
     {
-        btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] - TR_METERING_SECTORSIZE, 0.0};
+        btScalar pos[] = {(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0};
         next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
     else if(ch->transform[4 + 1] < -0.8)
     {
-        btScalar pos[] = {ch_s->pos[0], ch_s->pos[1] + TR_METERING_SECTORSIZE, 0.0};
+        btScalar pos[] = {(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0};
         next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
 

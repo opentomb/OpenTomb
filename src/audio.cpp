@@ -31,23 +31,6 @@ static uint8_t              audio_blocked = 1;
 
 bool                        StreamTrack::damp_active = false;
 
-/*
- * NextPowerOf2 are taken from OpenAL
- */
-static __inline uint32_t NextPowerOf2(uint32_t value)
-{
-    if(value > 0)
-    {
-        value--;
-        value |= value>>1;
-        value |= value>>2;
-        value |= value>>4;
-        value |= value>>8;
-        value |= value>>16;
-    }
-    return value+1;
-}
-
 // ======== AUDIOSOURCE CLASS IMPLEMENTATION ========
 
 AudioSource::AudioSource()
@@ -1122,8 +1105,6 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 
 void Audio_UpdateSources()
 {
-    uint32_t i;
-
     if(audio_blocked || (engine_world.audio_sources_count < 1))
     {
         return;
@@ -1131,12 +1112,12 @@ void Audio_UpdateSources()
 
     alGetListenerfv(AL_POSITION, listener_position);
 
-    for(i = 0; i < engine_world.audio_emitters_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_emitters_count; i++)
     {
         Audio_Send(engine_world.audio_emitters[i].sound_index, TR_AUDIO_EMITTER_SOUNDSOURCE, i);
     }
 
-    for(i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
     {
         engine_world.audio_sources[i].Update();
     }
@@ -2069,7 +2050,7 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
             fxManager.current_room_type = cam->current_room->reverb_info;
         }
 
-        if(fxManager.water_state != (cam->current_room->flags & TR_ROOM_FLAG_WATER))
+        if(fxManager.water_state != (int8_t)(cam->current_room->flags & TR_ROOM_FLAG_WATER))
         {
             fxManager.water_state = cam->current_room->flags & TR_ROOM_FLAG_WATER;
 

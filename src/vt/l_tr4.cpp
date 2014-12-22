@@ -390,7 +390,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             this->textile32 = (tr4_textile32_t*)malloc(this->textile32_count * sizeof(tr4_textile32_t));
             comp_buffer = new uint8_t[comp_size];
 
-            if (SDL_RWread(src, comp_buffer, 1, comp_size) < (int)comp_size)
+            if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
                 Sys_extError("read_tr4_level: textiles32");
 
             size = uncomp_size;
@@ -430,7 +430,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
                 this->textile16 = (tr2_textile16_t*)malloc(this->textile16_count * sizeof(tr2_textile16_t));
                 comp_buffer = new uint8_t[comp_size];
 
-                if (SDL_RWread(src, comp_buffer, 1, comp_size) < (int)comp_size)
+                if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
                     Sys_extError("read_tr4_level: textiles16");
 
                 size = uncomp_size;
@@ -478,7 +478,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             }
             comp_buffer = new uint8_t[comp_size];
 
-            if (SDL_RWread(src, comp_buffer, 1, comp_size) < (int)comp_size)
+            if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
                 Sys_extError("read_tr4_level: misc_textiles");
 
             size = uncomp_size;
@@ -514,7 +514,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         uncomp_buffer = new uint8_t[uncomp_size];
         comp_buffer = new uint8_t[comp_size];
 
-        if (SDL_RWread(src, comp_buffer, 1, comp_size) < (int)comp_size)
+        if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
             Sys_extError("read_tr4_level: packed geometry");
 
         size = uncomp_size;

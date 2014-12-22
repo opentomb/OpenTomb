@@ -43,7 +43,7 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
     size = num_mesh_data * 2;
     buffer = new uint8_t[size];
 
-    if (SDL_RWread(src, buffer, 1, size) < (int)size)
+    if (SDL_RWread(src, buffer, 1, size) < size)
         Sys_extError("read_tr_mesh_data: SDL_RWread(buffer)");
 
     if ((newsrc = SDL_RWFromMem(buffer, size)) == NULL)
@@ -101,7 +101,7 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
     this->frame_data_size = read_bitu32(src);
     this->frame_data = (uint16_t*)malloc(this->frame_data_size * sizeof(uint16_t));
 
-    if (SDL_RWread(src, this->frame_data, sizeof(uint16_t), this->frame_data_size) < (int)frame_data_size)
+    if (SDL_RWread(src, this->frame_data, sizeof(uint16_t), this->frame_data_size) < frame_data_size)
         Sys_extError("read_tr_level: frame_data: SDL_RWread(buffer)");
 
     if ((newsrc = SDL_RWFromMem(this->frame_data, this->frame_data_size)) == NULL)

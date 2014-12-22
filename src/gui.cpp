@@ -30,8 +30,7 @@ gui_InventoryMenu  *main_inventory_menu = NULL;
 
 void Gui_Init()
 {
-    int i;
-    for(i=0;i<MAX_TEMP_LINES;i++)
+    for(int i=0;i<MAX_TEMP_LINES;i++)
     {
         gui_temp_lines[i].buf_size = TEMP_LINE_LENGHT;
         gui_temp_lines[i].text = (char*)malloc(TEMP_LINE_LENGHT * sizeof(char));
@@ -404,9 +403,8 @@ void Gui_RenderStrings()
         l = l->next;
     }
 
-    uint16_t i;
     l = gui_temp_lines;
-    for(i=0;i<temp_lines_used;i++,l++)
+    for(uint16_t i=0;i<temp_lines_used;i++,l++)
     {
         if(l->show)
         {

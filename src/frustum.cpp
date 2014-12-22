@@ -80,9 +80,9 @@ void Frustum_Copy(frustum_p p, frustum_p src)
 int Frustum_GetFrustumsCount(struct frustum_s *f)
 {
     int i;
-
+    
     for(i=0;f;f=f->next,i++);
-
+    
     return i - 1;
 }
 
@@ -191,7 +191,6 @@ int Frustum_Split(frustum_p p, btScalar n[4], btScalar *buf)                    
  */
 void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam)
 {
-    int i;
     btScalar V1[3], V2[3], *prev_v, *curr_v, *next_v, *r;
 
     if(p->count)
@@ -205,7 +204,7 @@ void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam)
 
         //==========================================================================
 
-        for(i=0;i<p->count;i++,r+=4)
+        for(uint16_t i=0;i<p->count;i++,r+=4)
         {
             vec3_sub(V1, prev_v, cam->pos)                                      // вектор от наблюдателя до вершины полигона
             vec3_sub(V2, curr_v, prev_v)                                        // вектор соединяющий соседние вершины полигона
@@ -237,7 +236,6 @@ int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
     btScalar t, dir[3], T[3], dist[2];
     btScalar *prev_n, *curr_n, *next_n;
     vertex_p curr_v, prev_v;
-    int i, j;
     char ins, outs;
 
     if(vec3_plane_dist(p->plane, frustum->cam_pos) < 0.0)
@@ -255,13 +253,13 @@ int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
     curr_n = frustum->planes + 4*(frustum->count-1);                            // 3 соседних плоскости отсечения
     prev_n = curr_n - 4;                                                        //
     ins = 1;                                                                    // на случай если нет пересечений
-    for(i=0;i<frustum->count;i++)                                               // перебираем все плоскости текущего фрустума
+    for(uint16_t i=0;i<frustum->count;i++)                                      // перебираем все плоскости текущего фрустума
     {
         curr_v = p->vertices;                                                   // генерим очередь вершин под проверку
         prev_v = p->vertices + p->vertex_count - 1;                             //
         dist[0] = vec3_plane_dist(curr_n, prev_v->position);                    // расстояние со знаком от текущей точки до предыдущей плоскости
         outs = 1;
-        for(j=0;j<p->vertex_count;j++)                                          // перебираем все вершины полигона
+        for(uint16_t j=0;j<p->vertex_count;j++)                                 // перебираем все вершины полигона
         {
             dist[1] = vec3_plane_dist(curr_n, curr_v->position);
             if(ABS(dist[0]) < SPLIT_EPSILON)                                    // точка на плоскости отсечения
@@ -508,12 +506,12 @@ int Frustum_IsAABBVisible(btScalar bbmin[3], btScalar bbmax[3], struct frustum_s
 
 int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
 {
-    int i, ins = 1;
+    int ins = 1;
     btScalar t;
     polygon_p p;
 
     p = obb->polygons;
-    for(i=0;i<6;i++,p++)
+    for(int i=0;i<6;i++,p++)
     {
         t = vec3_plane_dist(p->plane, frustum->cam_pos);
         if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))
@@ -531,7 +529,7 @@ int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
 
 int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
 {
-    int i, ins;
+    int ins;
     polygon_p p;
     frustum_p frustum;
     btScalar t;
@@ -541,7 +539,7 @@ int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
     {
         ins = 1;                                                                // считаем, что камера внутри OBB
         p = obb->polygons;
-        for(i=0;i<6;i++,p++)
+        for(int i=0;i<6;i++,p++)
         {
             t = vec3_plane_dist(p->plane, engine_camera.pos);
             if((t > 0.0) && Frustum_IsPolyVisible(p, engine_camera.frustum))
@@ -559,7 +557,7 @@ int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
     for(;frustum && frustum->active;frustum=frustum->next)                      // Если хоть в одном активном фрустуме виден объект, то возвращаем 1
     {
         p = obb->polygons;
-        for(i=0;i<6;i++,p++)
+        for(int i=0;i<6;i++,p++)
         {
             t = vec3_plane_dist(p->plane, frustum->cam_pos);
             if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))

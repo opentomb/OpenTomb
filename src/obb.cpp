@@ -381,7 +381,6 @@ int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
  */
 btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n)
 {
-    int i;
     btScalar fi, dfi;
     btVector3 v;
     btConvexHullShape *ret;
@@ -395,7 +394,7 @@ btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n)
     dfi = M_PI * 2.0 / (btScalar)n;
     ret = new btConvexHullShape();
 
-    for(i=0;i<n;i++,fi+=dfi)
+    for(int i=0;i<n;i++,fi+=dfi)
     {
         v.m_floats[0] = 0.0;
         v.m_floats[1] = 0.0;

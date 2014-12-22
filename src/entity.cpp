@@ -233,7 +233,6 @@ void Entity_UpdateRoomPos(entity_p ent)
 
 void Entity_UpdateRigidBody(entity_p ent, int force)
 {
-    int i;
     btScalar tr[16];
     btTransform bt_tr;
     room_p old_room;
@@ -265,7 +264,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
 
     if(ent->self->collide_flag != 0x00)
     {
-        for(i=0;i<ent->bf.model->mesh_count;i++)
+        for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
         {
             if(ent->bt_body[i])
             {
@@ -367,7 +366,6 @@ void Entity_UpdateRotation(entity_p entity)
 
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
 {
-    long int k, stack_use;
     btScalar cmd_tr[3], tr[3];
     ss_bone_tag_p btag = bf->bone_tags;
     bone_tag_p src_btag, next_btag;
@@ -401,7 +399,7 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
     vec3_add(bf->pos, bf->pos, cmd_tr);
     next_btag = next_bf->bone_tags;
     src_btag = curr_bf->bone_tags;
-    for(k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
+    for(uint16_t k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
     {
         vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->lerp, t);
         vec3_copy(btag->transform+12, btag->offset);
@@ -439,7 +437,7 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
      * build absolute coordinate matrix system
      */
     sp = stack = GetTempbtScalar(model->mesh_count * 16);
-    stack_use = 0;
+    int16_t stack_use = 0;
 
     btag = bf->bone_tags;
 
@@ -447,7 +445,7 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
     Mat4_Copy(sp, btag->transform);
     btag++;
 
-    for(k=1;k<curr_bf->bone_tag_count;k++,btag++)
+    for(uint16_t k=1;k<curr_bf->bone_tag_count;k++,btag++)
     {
         if(btag->flag & 0x01)
         {
@@ -459,7 +457,7 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
         }
         if(btag->flag & 0x02)
         {
-            if(stack_use < model->mesh_count - 1)
+            if(stack_use + 1 < (int16_t)model->mesh_count)
             {
                 Mat4_Copy(sp+16, sp);
                 sp += 16;// glPushMatrix();
@@ -1102,19 +1100,33 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
 {
-    int i, j;
-    state_change_p ret = anim->state_change;
-
-    if(state_change_anim < 0)
+    if(state_change_anim >= 0)
     {
-        return NULL;
-    }
-
-    for(i=0;i<anim->state_change_count;i++,ret++)
-    {
-        for(j=0;j<ret->anim_dispath_count;j++)
+        state_change_p ret = anim->state_change;
+        for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
         {
-            if(ret->anim_dispath[j].next_anim == state_change_anim)
+            for(uint16_t j=0;j<ret->anim_dispath_count;j++)
+            {
+                if(ret->anim_dispath[j].next_anim == state_change_anim)
+                {
+                    return ret;
+                }
+            }
+        }
+    }
+    
+    return NULL;
+}
+
+
+struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
+{
+    if(id >= 0)
+    {
+        state_change_p ret = anim->state_change;
+        for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
+        {
+            if(ret->id == id)
             {
                 return ret;
             }
@@ -1125,48 +1137,25 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
 }
 
 
-struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
-{
-    if(id < 0)
-    {
-        return NULL;
-    }
-
-    state_change_p ret = anim->state_change;
-    for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
-    {
-        if(ret->id == id)
-        {
-            return ret;
-        }
-    }
-
-    return NULL;
-}
-
-
 int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
 {
-    animation_frame_p anim = entity->bf.model->animations + entity->bf.current_animation;
-    state_change_p stc = anim->state_change;
-    anim_dispath_p disp;
-
-    if(id < 0)
+    if(id >= 0)
     {
-        return -1;
-    }
-
-    for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
-    {
-        if(stc->id == id)
+        animation_frame_p anim = entity->bf.model->animations + entity->bf.current_animation;
+        state_change_p stc = anim->state_change;
+        anim_dispath_p disp;
+        for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
         {
-            disp = stc->anim_dispath;
-            for(uint16_t j=0;j<stc->anim_dispath_count;j++,disp++)
+            if(stc->id == id)
             {
-                if((disp->frame_high >= disp->frame_low) && (entity->bf.current_frame >= disp->frame_low) && (entity->bf.current_frame <= disp->frame_high))// ||
-                   //(disp->frame_high <  disp->frame_low) && ((entity->bf.current_frame >= disp->frame_low) || (entity->bf.current_frame <= disp->frame_high)))
+                disp = stc->anim_dispath;
+                for(uint16_t j=0;j<stc->anim_dispath_count;j++,disp++)
                 {
-                    return (int)j;
+                    if((disp->frame_high >= disp->frame_low) && (entity->bf.current_frame >= disp->frame_low) && (entity->bf.current_frame <= disp->frame_high))// ||
+                       //(disp->frame_high <  disp->frame_low) && ((entity->bf.current_frame >= disp->frame_low) || (entity->bf.current_frame <= disp->frame_high)))
+                    {
+                        return (int)j;
+                    }
                 }
             }
         }
@@ -1181,8 +1170,6 @@ int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
 void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
 {
     animation_frame_p curr_anim = bf->model->animations + bf->current_animation;
-    anim_dispath_p disp;
-    int i;
 
     *frame = (bf->frame_time + time) / bf->period;
     *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
@@ -1221,10 +1208,10 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
     /*
      * State change check
      */
-    if(stc)
+    if(stc != NULL)
     {
-        disp = stc->anim_dispath;
-        for(i=0;i<stc->anim_dispath_count;i++,disp++)
+        anim_dispath_p disp = stc->anim_dispath;
+        for(uint16_t i=0;i<stc->anim_dispath_count;i++,disp++)
         {
             if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
             {
@@ -1240,10 +1227,10 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
 
 void Entity_DoAnimMove(entity_p entity)
 {
-    if(entity->bf.model)
+    if(entity->bf.model != NULL)
     {
-        btScalar tr[3];
         bone_frame_p curr_bf = entity->bf.model->animations[entity->bf.current_animation].frames + entity->bf.current_frame;
+        
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
             Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
@@ -1267,6 +1254,7 @@ void Entity_DoAnimMove(entity_p entity)
         }
         if(curr_bf->command & ANIM_CMD_MOVE)
         {
+            btScalar tr[3];
             Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
             vec3_add(entity->transform+12, entity->transform+12, tr);
         }
@@ -1360,41 +1348,38 @@ void Entity_RebuildBV(entity_p ent)
 
 void Entity_CheckActivators(struct entity_s *ent)
 {
-    entity_p e;
-    engine_container_p cont;
-    btScalar *v, ppos[3], r;
-
-    if(!ent || !ent->self->room)
+    if((ent != NULL) && (ent->self->room != NULL))
     {
-        return;
-    }
-    ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf.bb_max[1];
-    ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf.bb_max[1];
-    ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf.bb_max[1];
-    cont = ent->self->room->containers;
-    for(;cont;cont=cont->next)
-    {
-        if((cont->object_type == OBJECT_ENTITY) && (cont->object))
+        btScalar ppos[3];
+        
+        ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf.bb_max[1];
+        ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf.bb_max[1];
+        ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf.bb_max[1];
+        engine_container_p cont = ent->self->room->containers;
+        for(;cont;cont=cont->next)
         {
-            e = (entity_p)cont->object;
-            r = e->activation_offset[3];
-            r *= r;
-            if((e->type_flags & ENTITY_TYPE_TRIGGER) && (e->state_flags & ENTITY_STATE_ENABLED))
+            if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {
-                //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
-                   (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
+                entity_p e = (entity_p)cont->object;
+                btScalar r = e->activation_offset[3];
+                r *= r;
+                if((e->type_flags & ENTITY_TYPE_TRIGGER) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
-                    lua_ActivateEntity(engine_lua, e->id, ent->id);
+                    //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
+                    if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
+                       (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
+                    {
+                        lua_ActivateEntity(engine_lua, e->id, ent->id);
+                    }
                 }
-            }
-            else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
-            {
-                v = e->transform + 12;
-                if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                                  (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
+                else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
-                    lua_ActivateEntity(engine_lua, e->id, ent->id);
+                    btScalar *v = e->transform + 12;
+                    if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
+                                      (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
+                    {
+                        lua_ActivateEntity(engine_lua, e->id, ent->id);
+                    }
                 }
             }
         }

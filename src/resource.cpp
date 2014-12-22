@@ -41,7 +41,6 @@ lua_State *objects_flags_conf = NULL;
 lua_State *ent_ID_override = NULL;
 lua_State *level_script = NULL;
 
-int lua_setModelVisibility(lua_State * lua);
 
 void Items_CheckEntities(RedBlackNode_p n);
 
@@ -127,7 +126,7 @@ void TR_SetStaticMeshFlags(struct static_mesh_s *r_static)
                 r_static->hide = lua_tointeger(level_script, -1);                         // get info about model visibility
             }
         }
-        lua_settop(level_script, top);                                            // restore LUA stack position
+        lua_settop(level_script, top);                                          // restore LUA stack position
     }
 }
 
@@ -148,14 +147,14 @@ void TR_SetStaticMeshFlags(struct static_mesh_s *r_static)
 
 void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 {
-    if(tween->floor_corners[0].m_floats[2] < tween->floor_corners[1].m_floats[2])
+    if(tween->floor_corners[0].m_floats[2] > tween->floor_corners[1].m_floats[2])
     {
         btScalar t;
         SWAPT(tween->floor_corners[0].m_floats[2], tween->floor_corners[1].m_floats[2], t);
         SWAPT(tween->floor_corners[2].m_floats[2], tween->floor_corners[3].m_floats[2], t);
     }
 
-    if((tween->floor_corners[0].m_floats[2] - tween->floor_corners[1].m_floats[2]) * (tween->floor_corners[3].m_floats[2] - tween->floor_corners[2].m_floats[2]) < 0.0)
+    if(tween->floor_corners[3].m_floats[2] > tween->floor_corners[2].m_floats[2])
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;              // like a butterfly
     }
@@ -187,7 +186,7 @@ void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
         SWAPT(tween->ceiling_corners[2].m_floats[2], tween->ceiling_corners[3].m_floats[2], t);
     }
 
-    if((tween->ceiling_corners[0].m_floats[2] - tween->ceiling_corners[1].m_floats[2]) * (tween->ceiling_corners[3].m_floats[2] - tween->ceiling_corners[2].m_floats[2]) < 0.0)
+    if(tween->ceiling_corners[3].m_floats[2] > tween->ceiling_corners[2].m_floats[2])
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;            // like a butterfly
     }
@@ -237,7 +236,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
         for(uint16_t w = 0; w < room->sectors_x-1; w++)
         {
             // Init X-plane tween [ | ]
-
+            
             room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
             room_sector_p next_heightmap    = current_heightmap + 1;
             char joined_floors = 0;
@@ -506,6 +505,8 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                     }
                 }
 
+                current_heightmap = room->sectors + (w * room->sectors_y + h);
+                next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
@@ -1849,7 +1850,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
 #else
 
-    if(level_script)
+    if(level_script != NULL)
     {
         top = lua_gettop(level_script);
         lua_getglobal(level_script, "doTuneSector");
@@ -3146,11 +3147,6 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     btScalar *t, n;
     vertex_p vertex;
 
-    if(room_index == 6)
-    {
-        printf("xxx");
-    }
-    
     tr_room = &tr->rooms[room_index];
 
     if(tr_room->num_triangles + tr_room->num_rectangles == 0)
