@@ -1408,10 +1408,6 @@
 		<Unit filename="src/bullet/vectormath/vmInclude.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/cache.cpp" />
-		<Unit filename="src/cache.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/camera.cpp" />
 		<Unit filename="src/camera.h">
 			<Option target="&lt;{~None~}&gt;" />

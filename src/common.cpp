@@ -42,7 +42,7 @@ void Com_TakeScreenShot()
         memcpy(pixels + h * str_size, pixels + (ViewPort[3] - h - 1) * str_size, str_size);
         memcpy(pixels + (ViewPort[3] - h - 1) * str_size, buf, str_size);
     }
-
+    ///@TODO: use surface creation without pixels dublication
     surface = SDL_CreateRGBSurfaceFrom(pixels, ViewPort[2], ViewPort[3], 32, str_size, 0x000000FF, 0x00000FF00, 0x00FF0000, 0xFF000000);
     surface->format->format = SDL_PIXELFORMAT_RGBA8888;
 
