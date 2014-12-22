@@ -58,7 +58,6 @@ void Portal_Clear(portal_p p)
  */
 int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector)
 {
-    int i;
     btScalar bb_min[2], bb_max[2], prtl_range_x[2], prtl_range_y[2];
 
     /*
@@ -76,7 +75,7 @@ int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector)
          */
         prtl_range_x[0] = prtl_range_x[1] = p->vertex[0];
         prtl_range_y[0] = prtl_range_y[1] = p->vertex[1];
-        for(i=1;i<p->vertex_count;i++)
+        for(uint16_t i=1;i<p->vertex_count;i++)
         {
             // portal range x
             if(p->vertex[3*i+0] < prtl_range_x[0])
@@ -116,7 +115,6 @@ int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector)
  */
 int Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
 {
-    int i;
     btScalar bb_min[2], bb_max[2], prtl_range_x[2], prtl_range_y[2];
     char in_x, in_y;
 
@@ -130,7 +128,7 @@ int Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
      */
     prtl_range_x[0] = prtl_range_x[1] = p->vertex[0];
     prtl_range_y[0] = prtl_range_y[1] = p->vertex[1];
-    for(i=1;i<p->vertex_count;i++)
+    for(uint16_t i=1;i<p->vertex_count;i++)
     {
         // portal range x
         if(p->vertex[3*i+0] < prtl_range_x[0])
@@ -227,11 +225,10 @@ int Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
 
 void Portal_Move(portal_p p, btScalar mv[3])
 {
-    int i;
     btScalar *v = p->vertex;
 
     vec3_add(p->centre, p->centre, mv);
-    for(i=0;i<p->vertex_count;i++,v+=3)
+    for(uint16_t i=0;i<p->vertex_count;i++,v+=3)
     {
         vec3_add(v, v, mv);
     }
@@ -249,7 +246,7 @@ void Portal_Move(portal_p p, btScalar mv[3])
 int Portal_RayIntersect(portal_p p, btScalar dir[3], btScalar dot[3])
 {
     btScalar t, u, v, E1[3], E2[3], P[3], Q[3], T[3], *vd;
-    int i;
+
     u = vec3_dot(p->norm, dir);
     if(ABS(u) < SPLIT_EPSILON)
     {
@@ -266,7 +263,7 @@ int Portal_RayIntersect(portal_p p, btScalar dir[3], btScalar dot[3])
     vec3_sub(T, dot, vd)                                                        // Вектор который не меняется для всего полигона
 
     vec3_sub(E2, vd+3, vd)
-    for(i=0;i<p->vertex_count-2;i++,vd+=3)                                      // Обход полигона веером, один из векторов остается прежним
+    for(uint16_t i=0;i<p->vertex_count-2;i++,vd+=3)                             // Обход полигона веером, один из векторов остается прежним
     {
         vec3_copy(E1, E2)                                                       // PREV
         vec3_sub(E2, vd+6, p->vertex)                                           // NEXT
@@ -310,7 +307,7 @@ void Portal_GenNormale(portal_p p)
 
 struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emitter, struct render_s *render)
 {
-    int i, ins, bz;
+    int ins, bz;
     btScalar *n, *v;
     frustum_p receiver = portal->dest_room->frustum;
     frustum_p prev = NULL, current_gen = receiver;
@@ -335,7 +332,7 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
     ins = 0;
     n = render->cam->frustum->norm;
     v = portal->vertex;
-    for(i=0;i<portal->vertex_count;i++,v+=3)
+    for(uint16_t i=0;i<portal->vertex_count;i++,v+=3)
     {
         if(vec3_plane_dist(n, v) < render->cam->dist_far)
         {
@@ -368,7 +365,7 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
     if(Frustum_Split(current_gen, emitter->norm, tmp))                          // проводим отсечение плоскостью фрустума
     {
         n = emitter->planes;
-        for(i=0;i<emitter->count;i++,n+=4)
+        for(uint16_t i=0;i<emitter->count;i++,n+=4)
         {
             if(!Frustum_Split(current_gen, n, tmp))
             {

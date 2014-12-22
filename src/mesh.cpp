@@ -13,8 +13,6 @@ vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3]);
 
 void BaseMesh_Clear(base_mesh_p mesh)
 {
-    unsigned int i;
-
     if(mesh->vbo_vertex_array)
     {
         glDeleteBuffersARB(1, &mesh->vbo_vertex_array);
@@ -29,7 +27,7 @@ void BaseMesh_Clear(base_mesh_p mesh)
 
     if(mesh->polygons != NULL)
     {
-        for(i=0;i<mesh->polygons_count;i++)
+        for(uint32_t i=0;i<mesh->polygons_count;i++)
         {
             Polygon_Clear(mesh->polygons+i);
         }
@@ -186,10 +184,7 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
 
 void SkeletalModel_Clear(skeletal_model_p model)
 {
-    int i, j;
-    animation_frame_p anim;
-
-    if(model)
+    if(model != NULL)
     {
         if(model->mesh_count)
         {
@@ -207,12 +202,12 @@ void SkeletalModel_Clear(skeletal_model_p model)
 
         if(model->animation_count)
         {
-            anim = model->animations;
-            for(i=0;i<model->animation_count;i++,anim++)
+            animation_frame_p anim = model->animations;
+            for(uint16_t i=0;i<model->animation_count;i++,anim++)
             {
                 if(anim->state_change_count)
                 {
-                    for(j=0;j<anim->state_change_count;j++)
+                    for(uint16_t j=0;j<anim->state_change_count;j++)
                     {
                         anim->state_change[j].anim_dispath_count = 0;
                         free(anim->state_change[j].anim_dispath);
@@ -226,7 +221,7 @@ void SkeletalModel_Clear(skeletal_model_p model)
 
                 if(anim->frames_count)
                 {
-                    for(j=0;j<anim->frames_count;j++)
+                    for(uint16_t j=0;j<anim->frames_count;j++)
                     {
                         if(anim->frames[j].bone_tag_count)
                         {
@@ -250,7 +245,6 @@ void SkeletalModel_Clear(skeletal_model_p model)
 
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
 {
-    unsigned int i;
     if(dst->bone_tag_count < src->bone_tag_count)
     {
         dst->bone_tags = (bone_tag_p)realloc(dst->bone_tags, src->bone_tag_count * sizeof(bone_tag_t));
@@ -264,7 +258,7 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
     dst->command = src->command;
     vec3_copy(dst->move, src->move);
 
-    for(i=0;i<dst->bone_tag_count;i++)
+    for(uint16_t i=0;i<dst->bone_tag_count;i++)
     {
         vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
         vec3_copy(dst->bone_tags[i].offset, src->bone_tags[i].offset);
@@ -273,12 +267,12 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
 
 void SkeletalModel_InterpolateFrames(skeletal_model_p model)
 {
-    uint16_t i, j, k, l, new_frames_count;
+    uint16_t new_frames_count;
     animation_frame_p anim = model->animations;
     bone_frame_p bf, new_bone_frames;
     btScalar lerp, t;
 
-    for(i=0;i<model->animation_count;i++,anim++)
+    for(uint16_t i=0;i<model->animation_count;i++,anim++)
     {
         if(anim->frames_count > 1 && anim->original_frame_rate > 1)                      // we can't interpolate one frame or rate < 2!
         {
@@ -297,16 +291,16 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
             vec3_copy(bf->pos, anim->frames[0].pos);
             vec3_copy(bf->bb_max, anim->frames[0].bb_max);
             vec3_copy(bf->bb_min, anim->frames[0].bb_min);
-            for(k=0;k<model->mesh_count;k++)
+            for(uint16_t k=0;k<model->mesh_count;k++)
             {
                 vec3_copy(bf->bone_tags[k].offset, anim->frames[0].bone_tags[k].offset);
                 vec4_copy(bf->bone_tags[k].qrotate, anim->frames[0].bone_tags[k].qrotate);
             }
             bf++;
 
-            for(j=1;j<anim->frames_count;j++)
+            for(uint16_t j=1;j<anim->frames_count;j++)
             {
-                for(l=1;l<=anim->original_frame_rate;l++)
+                for(uint16_t l=1;l<=anim->original_frame_rate;l++)
                 {
                     vec3_set_zero(bf->pos);
                     vec3_set_zero(bf->move);
@@ -333,7 +327,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                     bf->bb_min[1] = t * anim->frames[j-1].bb_min[1] + lerp * anim->frames[j].bb_min[1];
                     bf->bb_min[2] = t * anim->frames[j-1].bb_min[2] + lerp * anim->frames[j].bb_min[2];
 
-                    for(k=0;k<model->mesh_count;k++)
+                    for(uint16_t k=0;k<model->mesh_count;k++)
                     {
                         bf->bone_tags[k].offset[0] = t * anim->frames[j-1].bone_tags[k].offset[0] + lerp * anim->frames[j].bone_tags[k].offset[0];
                         bf->bone_tags[k].offset[1] = t * anim->frames[j-1].bone_tags[k].offset[1] + lerp * anim->frames[j].bone_tags[k].offset[1];
@@ -349,7 +343,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
              * swap old and new animation bone brames
              * free old bone frames;
              */
-            for(j=0;j<anim->frames_count;j++)
+            for(uint16_t j=0;j<anim->frames_count;j++)
             {
                 if(anim->frames[j].bone_tag_count)
                 {
@@ -382,11 +376,9 @@ void SkeletonModel_FillTransparancy(skeletal_model_p model)
 
 mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
 {
-    int i;
-    mesh_tree_tag_p ret;
+    mesh_tree_tag_p ret = (mesh_tree_tag_p)malloc(tags_count * sizeof(mesh_tree_tag_t));
 
-    ret = (mesh_tree_tag_p)malloc(tags_count * sizeof(mesh_tree_tag_t));
-    for(i=0;i<tags_count;i++)
+    for(int i=0;i<tags_count;i++)
     {
         ret[i].mesh = src[i].mesh;
         ret[i].flag = src[i].flag;
@@ -398,9 +390,8 @@ mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
 
 void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
-    int i;
     //Sys_DebugLog(LOG_FILENAME, "tree_1:");
-    for(i=0;i<tags_count;i++)
+    for(int i=0;i<tags_count;i++)
     {
         //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->id);
         dst[i].mesh = src[i].mesh;
@@ -409,9 +400,8 @@ void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count
 
 void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
-    int i;
     //Sys_DebugLog(LOG_FILENAME, "tree_2:");
-    for(i=0;i<tags_count;i++)
+    for(int i=0;i<tags_count;i++)
     {
         //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->id);
         dst[i].mesh2 = src[i].mesh;
@@ -488,14 +478,14 @@ void FillSkinnedMeshMap(skeletal_model_p model)
  */
 uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
 {
+    vertex_p v = mesh->vertices;
     uint32_t ind = 0;
-    vertex_p v;
-
-    v = mesh->vertices;
+    
     for(ind=0;ind<mesh->vertex_count;ind++,v++)
     {
         if(v->position[0] == vertex->position[0] && v->position[1] == vertex->position[1] && v->position[2] == vertex->position[2] &&
            v->tex_coord[0] == vertex->tex_coord[0] && v->tex_coord[1] == vertex->tex_coord[1])
+            ///@QUESTION: color check?
         {
             return ind;
         }

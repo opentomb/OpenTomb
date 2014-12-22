@@ -47,13 +47,13 @@ void Con_Init()
     con_base.font->FaceSize(con_base.font_size);
     
     con_base.shown_lines = (char**) malloc(con_base.shown_lines_count*sizeof(char*));
-    for(long i=0;i<con_base.shown_lines_count;i++)
+    for(uint16_t i=0;i<con_base.shown_lines_count;i++)
     {
         con_base.shown_lines[i] = (char*) calloc(con_base.line_size*sizeof(char), 1);
     }
 
     con_base.log_lines = (char**) malloc(con_base.log_lines_count*sizeof(char*));
-    for(long i=0;i<con_base.log_lines_count;i++)
+    for(uint16_t i=0;i<con_base.log_lines_count;i++)
     {
         con_base.log_lines[i] = (char*) calloc(con_base.line_size*sizeof(char), 1);
     }
@@ -71,7 +71,6 @@ void Con_Init()
 
 void Con_Destroy()
 {
-    int i;
     if(con_base.inited)
     {
         if(con_base.font)
@@ -79,13 +78,13 @@ void Con_Destroy()
             delete con_base.font;
         }
 
-        for(i=0;i<con_base.shown_lines_count;i++)
+        for(uint16_t i=0;i<con_base.shown_lines_count;i++)
         {
             free(con_base.shown_lines[i]);
         }
         free(con_base.shown_lines);
 
-        for(i=0;i<con_base.log_lines_count;i++)
+        for(uint16_t i=0;i<con_base.log_lines_count;i++)
         {
             free(con_base.log_lines[i]);
         }
@@ -139,16 +138,15 @@ void Con_SetLineInterval(float interval)
 
 void Con_Draw()
 {
-    int x, y, i;
-    
     if(con_base.inited && con_base.show)
     {
+        int x, y;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
         Con_DrawBackground();
         x = 8;
         y = con_base.cursor_y;
         glColor4fv(con_base.font_color);
-        for(i=0;i<con_base.showing_lines;i++)
+        for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
             y += con_base.line_height;
             glPushMatrix();
@@ -330,15 +328,12 @@ void Con_CalcCursorPosition()
 
 void Con_AddLog(const char *text)
 {
-    int i;
-    char *last;
-
     if(con_base.inited && (text != NULL) && (text[0] != 0))
     {
         if(con_base.log_lines_count > 1)
         {
-            last = con_base.log_lines[con_base.log_lines_count-1];              // save pointer to the last log string
-            for(i=con_base.log_lines_count-1;i>0;i--)                           // shift log
+            char *last = con_base.log_lines[con_base.log_lines_count-1];        // save pointer to the last log string
+            for(uint16_t i=con_base.log_lines_count-1;i>0;i--)                  // shift log
             {
                 con_base.log_lines[i] = con_base.log_lines[i-1];                // shift is round
             }
@@ -358,17 +353,14 @@ void Con_AddLog(const char *text)
 
 void Con_AddLine(const char *text)
 {
-    int i;
-    char *last;
-    size_t len;
-    
     if(con_base.inited && (text != NULL))
     {
+        size_t len = 0;
         do
         {
             len = strlen(text);
-            last = con_base.shown_lines[con_base.shown_lines_count-1];          // save pointer to the last log string
-            for(i=con_base.shown_lines_count-1;i>1;i--)                         // shift log
+            char *last = con_base.shown_lines[con_base.shown_lines_count-1];    // save pointer to the last log string
+            for(uint16_t i=con_base.shown_lines_count-1;i>1;i--)                // shift log
             {
                 con_base.shown_lines[i] = con_base.shown_lines[i-1];            // shift is round
             }
@@ -384,11 +376,10 @@ void Con_AddLine(const char *text)
 void Con_AddText(const char *text)
 {
     char buf[4096], ch;
-    size_t text_size = strlen(text);
-    size_t i, j;
+    size_t j = 0, text_size = strlen(text);
     
     buf[0] = 0;
-    for(i=0,j=0;i<text_size;i++)
+    for(size_t i=0,j=0;i<text_size;i++)
     {
         ch = text[i];
         if((ch == 10) || (ch == 13))
@@ -433,8 +424,7 @@ void Con_Printf(const char *fmt, ...)
 
 void Con_Clean()
 {
-    int i;
-    for(i=0;i<con_base.shown_lines_count;i++)
+    for(uint16_t i=0;i<con_base.shown_lines_count;i++)
     {
         con_base.shown_lines[i][0] = 0;
     }

@@ -213,8 +213,6 @@ void Room_AddToNearRoomsList(room_p room, room_p r)
 
 int Room_IsInNearRoomsList(room_p r0, room_p r1)
 {
-    int i;
-
     if(r0 && r1)
     {
         if(r0->id == r1->id)
@@ -224,7 +222,7 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
 
         if(r1->near_room_list_size >= r0->near_room_list_size)
         {
-            for(i=0;i<r0->near_room_list_size;i++)
+            for(uint16_t i=0;i<r0->near_room_list_size;i++)
             {
                 if(r0->near_room_list[i]->id == r1->id)
                 {
@@ -234,7 +232,7 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
         }
         else
         {
-            for(i=0;i<r1->near_room_list_size;i++)
+            for(uint16_t i=0;i<r1->near_room_list_size;i++)
             {
                 if(r1->near_room_list[i]->id == r0->id)
                 {
@@ -282,6 +280,23 @@ room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs)
 }
 
 
+room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs)
+{
+    if((rs != NULL) && (rs->owner_room->alternate_room != NULL))
+    {
+        room_p r = rs->owner_room->alternate_room;
+        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        {
+            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+        }
+    }
+
+    return rs;
+}
+
+
 int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
 {
     if(s1->portal_to_room >= 0)
@@ -293,33 +308,50 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
         s2 = Room_GetSectorRaw(engine_world.rooms + s2->portal_to_room, s2->pos);
     }
 
-    s1 = TR_Sector_CheckBaseRoom(s1);
-    s2 = TR_Sector_CheckBaseRoom(s2);
-
     if((s1->owner_room == s2->owner_room) || !Room_IsJoined(s1->owner_room, s2->owner_room))
     {
         return 0;
     }
 
+    s1 = TR_Sector_CheckBaseRoom(s1);
+    s2 = TR_Sector_CheckBaseRoom(s2);
+
     room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
-    if((s1p == NULL) || (s1p->portal_to_room < 0))
+    if(s1p == NULL)
     {
         return 0;
+    }
+    if(s1p->portal_to_room < 0)
+    {
+        s1p = TR_Sector_CheckAlternateRoom(s1p);
+        if(s1p->portal_to_room < 0)
+        {
+            return 0;
+        }
     }
 
     room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
-    if((s2p == NULL) || (s2p->portal_to_room < 0))
+    if(s2p == NULL)
     {
         return 0;
     }
+    if(s2p->portal_to_room < 0)
+    {
+        s2p = TR_Sector_CheckAlternateRoom(s2p);
+        if(s2p->portal_to_room < 0)
+        {
+            return 0;
+        }
+    }
 
+    if((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room))
+    {
+        return 1;
+    }
+    
+    ///@QUESTION: is next code necessary?
     s1p = TR_Sector_CheckBaseRoom(s1p);
     s2p = TR_Sector_CheckBaseRoom(s2p);
-
-    /*room_p r1 = engine_world.rooms + s1p->portal_to_room;
-    r1 = (r1->base_room != NULL)?(r1->base_room):(r1);
-    room_p r2 = engine_world.rooms + s2p->portal_to_room;
-    r2 = (r2->base_room != NULL)?(r2->base_room):(r2);*/
 
     if((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room))
     {
@@ -628,9 +660,8 @@ inline int Room_IsPointIn(room_p room, btScalar dot[3])
 
 room_p Room_FindPos(world_p w, btScalar pos[3])
 {
-    unsigned int i;
     room_p r = w->rooms;
-    for(i=0;i<w->room_count;i++,r++)
+    for(uint32_t i=0;i<w->room_count;i++,r++)
     {
         if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
@@ -646,9 +677,8 @@ room_p Room_FindPos(world_p w, btScalar pos[3])
 
 room_p Room_FindPos2d(world_p w, btScalar pos[3])
 {
-    unsigned int i;
     room_p r = w->rooms;
-    for(i=0;i<w->room_count;i++,r++)
+    for(uint32_t i=0;i<w->room_count;i++,r++)
     {
         if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]))
@@ -662,7 +692,6 @@ room_p Room_FindPos2d(world_p w, btScalar pos[3])
 
 room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room)
 {
-    unsigned int i;
     room_p r;
 
     if(room == NULL)
@@ -678,7 +707,7 @@ room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room)
         return room;
     }
 
-    for(i=0;i<room->near_room_list_size;i++)
+    for(uint16_t i=0;i<room->near_room_list_size;i++)
     {
         r = room->near_room_list[i];
         if(r->active &&
@@ -696,7 +725,6 @@ room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room)
 
 room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room)
 {
-    unsigned int i;
     room_p r;
     if(room == NULL)
     {
@@ -710,7 +738,7 @@ room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room)
         return room;
     }
 
-    for(i=0;i<room->portal_count;i++)
+    for(uint16_t i=0;i<room->portal_count;i++)
     {
         r = room->portals[i].dest_room;
         if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
@@ -726,9 +754,8 @@ room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room)
 
 room_p Room_GetByID(world_p w, unsigned int ID)
 {
-    unsigned int i;
     room_p r = w->rooms;
-    for(i=0;i<w->room_count;i++,r++)
+    for(uint32_t i=0;i<w->room_count;i++,r++)
     {
         if(ID == r->id)
         {
@@ -1002,7 +1029,7 @@ void Room_SwapPortals(room_p room, room_p dest_room)
     //Update portals in room rooms
     for(uint32_t i=0;i<engine_world.room_count;i++)//For every room in the world itself
     {
-        for(int j=0;j<engine_world.rooms[i].portal_count;j++)//For every portal in this room
+        for(uint16_t j=0;j<engine_world.rooms[i].portal_count;j++)//For every portal in this room
         {
             if(engine_world.rooms[i].portals[j].dest_room->id == room->id)//If a portal is linked to the input room
             {
@@ -1074,7 +1101,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     bf->model = model;
     bf->bone_tag_count = model->mesh_count;
     bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
-    for(int j=0;j<bf->bone_tag_count;j++)
+    for(uint16_t j=0;j<bf->bone_tag_count;j++)
     {
         bf->bone_tags[j].flag = bf->model->mesh_tree[j].flag;
         bf->bone_tags[j].overrided = bf->model->mesh_tree[j].overrided;
@@ -1173,29 +1200,21 @@ struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world)
  */
 int Room_IsJoined(room_p r1, room_p r2)
 {
-    unsigned short int i;
-    portal_p p;
-
-    if(r1->portal_count <= r2->portal_count)
+    portal_p p = r1->portals;
+    for(uint16_t i=0;i<r1->portal_count;i++,p++)
     {
-        p = r1->portals;
-        for(i=0;i<r1->portal_count;i++,p++)
+        if(p->dest_room->id == r2->id)
         {
-            if(p->dest_room->id == r2->id)
-            {
-                return 1;
-            }
+            return 1;
         }
     }
-    else
+
+    p = r2->portals;
+    for(uint16_t i=0;i<r2->portal_count;i++,p++)
     {
-        p = r2->portals;
-        for(i=0;i<r2->portal_count;i++,p++)
+        if(p->dest_room->id == r1->id)
         {
-            if(p->dest_room->id == r1->id)
-            {
-                return 1;
-            }
+            return 1;
         }
     }
 
@@ -1204,25 +1223,21 @@ int Room_IsJoined(room_p r1, room_p r2)
 
 void Room_BuildNearRoomsList(room_p room)
 {
-    int i, j, nc1;
-    portal_p p;
-    room_p r;
-
     room->near_room_list_size = 0;
 
-    p = room->portals;
-    for(i=0;i<room->portal_count;i++,p++)
+    portal_p p = room->portals;
+    for(uint16_t i=0;i<room->portal_count;i++,p++)
     {
         Room_AddToNearRoomsList(room, p->dest_room);
     }
 
-    nc1 = room->near_room_list_size;
+    uint16_t nc1 = room->near_room_list_size;
 
-    for(i=0;i<nc1;i++)
+    for(uint16_t i=0;i<nc1;i++)
     {
-        r = room->near_room_list[i];
+        room_p r = room->near_room_list[i];
         p = r->portals;
-        for(j=0;j<r->portal_count;j++,p++)
+        for(uint16_t j=0;j<r->portal_count;j++,p++)
         {
             Room_AddToNearRoomsList(room, p->dest_room);
         }

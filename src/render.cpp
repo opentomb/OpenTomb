@@ -114,10 +114,9 @@ void Render_Empty(render_p render)
 
 render_list_p Render_CreateRoomListArray(unsigned int count)
 {
-    unsigned int i;
     render_list_p ret = (render_list_p)malloc(count * sizeof(render_list_t));
 
-    for(i=0; i<count; i++)
+    for(unsigned int i=0; i<count; i++)
     {
         ret[i].active = 0;
         ret[i].room = NULL;
@@ -195,7 +194,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
     {
         Render_PolygonTransparency(p);
     }
-    
+
     if(mesh->vertex_count == 0)
     {
         return;
@@ -550,10 +549,9 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
  */
 void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
 {
-    uint16_t i;
     ss_bone_tag_p btag = bframe->bone_tags;
 
-    for(i=0; i<bframe->bone_tag_count; i++,btag++)
+    for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
     {
         glPushMatrix();
         glMultMatrixbt(btag->full_transform);
@@ -791,14 +789,11 @@ void Render_Room(struct room_s *room, struct render_s *render)
 
 void Render_Room_Sprites(struct room_s *room, struct render_s *render)
 {
-    unsigned int i;
-    btScalar *v;
-
-    for(i=0; i<room->sprites_count; i++)
+    for(unsigned int i=0; i<room->sprites_count; i++)
     {
         if(!room->sprites[i].was_rendered)
         {
-            v = room->sprites[i].pos;
+            btScalar *v = room->sprites[i].pos;
             glPushMatrix();
 #ifdef BT_USE_DOUBLE_PRECISION
             glTranslated(v[0], v[1], v[2]);
@@ -824,7 +819,6 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render)
 int Render_AddRoom(struct room_s *room)
 {
     int ret = 0;
-    uint32_t i;
     engine_container_p cont;
     btScalar dist, centre[3];
 
@@ -850,7 +844,7 @@ int Render_AddRoom(struct room_s *room)
             renderer.style |= R_DRAW_SKYBOX;
     }
 
-    for(i=0; i<room->static_mesh_count; i++)
+    for(uint32_t i=0; i<room->static_mesh_count; i++)
     {
         room->static_mesh[i].was_rendered = 0;
         room->static_mesh[i].was_rendered_lines = 0;
@@ -867,7 +861,7 @@ int Render_AddRoom(struct room_s *room)
         };
     }
 
-    for(i=0; i<room->sprites_count; i++)
+    for(uint32_t i=0; i<room->sprites_count; i++)
     {
         room->sprites[i].was_rendered = 0;
     }
@@ -880,26 +874,22 @@ int Render_AddRoom(struct room_s *room)
 
 void Render_CleanList()
 {
-    unsigned int i;
-    room_p r;
-    frustum_p f;
-
     if(renderer.world->Character)
     {
         renderer.world->Character->was_rendered = 0;
         renderer.world->Character->was_rendered_lines = 0;
     }
 
-    for(i=0; i<renderer.r_list_active_count; i++)
+    for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
         renderer.r_list[i].active = 0;
         renderer.r_list[i].dist = 0.0;
-        r = renderer.r_list[i].room;
+        room_p r = renderer.r_list[i].room;
         renderer.r_list[i].room = NULL;
 
         r->is_in_r_list = 0;
         r->active_frustums = 0;
-        f = r->last_frustum = r->frustum;
+        frustum_p f = r->last_frustum = r->frustum;
         for(; f; f=f->next)
         {
             f->active = 0;
@@ -917,8 +907,6 @@ void Render_CleanList()
  */
 void Render_DrawList()
 {
-    uint32_t i;
-
     if(!renderer.world)
     {
         return;
@@ -950,7 +938,7 @@ void Render_DrawList()
     /*
      * room rendering
      */
-    for(i=0; i<renderer.r_list_active_count; i++)
+    for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
         Render_Room(renderer.r_list[i].room, &renderer);
     }
@@ -966,7 +954,7 @@ void Render_DrawList()
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
     glDisableClientState(GL_NORMAL_ARRAY);
-    for(i=0; i<renderer.r_list_active_count; i++)
+    for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer);
     }
@@ -976,7 +964,7 @@ void Render_DrawList()
      */
     render_dBSP.reset();
     /*First generate BSP from base room mesh - it has good for start splitter polygons*/
-    for(i=0;i<renderer.r_list_active_count;i++)
+    for(uint32_t i=0;i<renderer.r_list_active_count;i++)
     {
         room_p r = renderer.r_list[i].room;
         if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
@@ -985,7 +973,7 @@ void Render_DrawList()
         }
     }
 
-    for(i=0;i<renderer.r_list_active_count;i++)
+    for(uint32_t i=0;i<renderer.r_list_active_count;i++)
     {
         room_p r = renderer.r_list[i].room;
         // Add transparency polygons from static meshes (if they exists)
@@ -1048,8 +1036,6 @@ void Render_DrawList()
 
 void Render_DrawList_DebugLines()
 {
-    uint32_t i;
-
     if (!renderer.world || !(renderer.style & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL)))
     {
         return;
@@ -1075,7 +1061,7 @@ void Render_DrawList_DebugLines()
         debugDrawer.drawMeshDebugLines(renderer.world->sky_box->mesh_tree->mesh, tr, NULL, NULL);
     }
 
-    for(i=0; i<renderer.r_list_active_count; i++)
+    for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
         debugDrawer.drawRoomDebugLines(renderer.r_list[i].room, &renderer);
     }
@@ -1106,7 +1092,7 @@ void Render_DrawList_DebugLines()
  */
 int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 {
-    int ret = 0, i;
+    int ret = 0;
     room_p room = portal->dest_room;                                            // куда ведет портал
     room_p src_room = portal->current_room;                                     // откуда ведет портал
     portal_p p;                                                                 // указатель на массив порталов входной ф-ии
@@ -1119,7 +1105,7 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 
     p = room->portals;
 
-    for(i=0; i<room->portal_count; i++,p++)                                     // перебираем все порталы входной комнаты
+    for(uint16_t i=0; i<room->portal_count; i++,p++)                            // перебираем все порталы входной комнаты
     {
         if((p->dest_room->active) && (p->dest_room != src_room))                // обратно идти даже не пытаемся
         {
@@ -1140,19 +1126,14 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
  */
 void Render_GenWorldList()
 {
-    uint32_t i;
-    room_p curr_room;
-    portal_p p;
-    frustum_p last_frus;
-
-    if(!renderer.world)
+    if(renderer.world == NULL)
     {
         return;
     }
 
     Render_CleanList();                                                         // clear old render list
 
-    curr_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
+    room_p curr_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
 
     renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
@@ -1162,10 +1143,10 @@ void Render_GenWorldList()
         curr_room->frustum->active = 0;
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
-        p = curr_room->portals;                                                 // pointer to the portals array
-        for(i=0; i<curr_room->portal_count; i++,p++)                            // go through all start room portals
+        portal_p p = curr_room->portals;                                        // pointer to the portals array
+        for(uint32_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
         {
-            last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
+            frustum_p last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
             if(last_frus)
             {
                 Render_AddRoom(p->dest_room);                                   // portal destination room
@@ -1177,7 +1158,7 @@ void Render_GenWorldList()
     else                                                                        // camera is out of all rooms
     {
         curr_room = renderer.world->rooms;                                      // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
-        for(i=0; i<renderer.world->room_count; i++,curr_room++)
+        for(uint32_t i=0; i<renderer.world->room_count; i++,curr_room++)
         {
             if(Frustum_IsAABBVisible(curr_room->bb_min, curr_room->bb_max, renderer.cam->frustum))
             {
@@ -1192,16 +1173,14 @@ void Render_GenWorldList()
  */
 void Render_SetWorld(struct world_s *world)
 {
-    uint32_t i, list_size;
-
-    list_size = world->room_count + 128;                                        // magick 128 was added for debug and testing
+    uint32_t list_size = world->room_count + 128;                               // magick 128 was added for debug and testing
 
     if(renderer.world)
     {
         if(renderer.r_list_size < list_size)                                    // if old list less than new one requiring
         {
             renderer.r_list = (render_list_p)realloc(renderer.r_list, list_size * sizeof(render_list_t));
-            for(i=0; i<list_size; i++)
+            for(uint32_t i=0; i<list_size; i++)
             {
                 renderer.r_list[i].active = 0;
                 renderer.r_list[i].room = NULL;
@@ -1223,7 +1202,7 @@ void Render_SetWorld(struct world_s *world)
     engine_camera.frustum->next = NULL;
     engine_camera.current_room = NULL;
 
-    for(i=0; i<world->room_count; i++)
+    for(uint32_t i=0; i<world->room_count; i++)
     {
         world->rooms[i].is_in_r_list = 0;
     }
@@ -1430,7 +1409,7 @@ void render_DebugDrawer::drawFrustum(struct frustum_s *f)
         v = v0 = m_buffer + 3 * 4 * m_lines;
         m_lines += f->count;
 
-        for(int i=0;i<f->count-1;i++,fv += 3)
+        for(uint16_t i=0;i<f->count-1;i++,fv += 3)
         {
             vec3_copy(v, fv);
             v += 3;
@@ -1463,7 +1442,7 @@ void render_DebugDrawer::drawPortal(struct portal_s *p)
         v = v0 = m_buffer + 3 * 4 * m_lines;
         m_lines += p->vertex_count;
 
-        for(int i=0;i<p->vertex_count-1;i++,pv += 3)
+        for(uint16_t i=0;i<p->vertex_count-1;i++,pv += 3)
         {
             vec3_copy(v, pv);
             v += 3;
@@ -1550,7 +1529,7 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
     {
         vertex_p pv = p->vertices;
         v0 = v;
-        for(int j=0;j<p->vertex_count-1;j++,pv++)
+        for(uint16_t j=0;j<p->vertex_count-1;j++,pv++)
         {
             vec3_copy(v, pv->position);
             v += 3;
@@ -1624,7 +1603,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
         btScalar tr[16];
 
         ss_bone_tag_p btag = bframe->bone_tags;
-        for(int i=0; i<bframe->bone_tag_count; i++,btag++)
+        for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
         {
             Mat4_Mat4_mul_macro(tr, transform, btag->full_transform);
             drawMeshDebugLines(btag->mesh, tr, NULL, NULL);
@@ -1665,8 +1644,8 @@ void render_DebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
 {
     if(m_lines + 12 < m_max_lines)
     {
-        btScalar bb_min[3] = {rs->pos[0] - TR_METERING_SECTORSIZE / 2.0, rs->pos[1] - TR_METERING_SECTORSIZE / 2.0, (btScalar)rs->floor};
-        btScalar bb_max[3] = {rs->pos[0] + TR_METERING_SECTORSIZE / 2.0, rs->pos[1] + TR_METERING_SECTORSIZE / 2.0, (btScalar)rs->ceiling};
+        btScalar bb_min[3] = {(btScalar)(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->floor};
+        btScalar bb_max[3] = {(btScalar)(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->ceiling};
 
         drawBBox(bb_min, bb_max, NULL);
     }
@@ -1675,7 +1654,7 @@ void render_DebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
 
 void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s *render)
 {
-    unsigned int i, flag;
+    uint32_t flag;
     frustum_p frus;
     engine_container_p cont;
     entity_p ent;
@@ -1695,7 +1674,7 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     if(flag)
     {
         debugDrawer.setColor(0.0, 0.0, 0.0);
-        for(i=0; i<room->portal_count; i++)
+        for(uint16_t i=0; i<room->portal_count; i++)
         {
             debugDrawer.drawPortal(room->portals+i);
         }
@@ -1717,7 +1696,7 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     }
 
     flag = render->style & R_DRAW_BOXES;
-    for(i=0; i<room->static_mesh_count; i++)
+    for(uint32_t i=0; i<room->static_mesh_count; i++)
     {
         if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room) ||
           ((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS)))

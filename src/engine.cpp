@@ -124,9 +124,7 @@ void RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& di
  */
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
-    int i;
-
-    for(i=world->getNumCollisionObjects()-1;i>=0;i--)
+    for(int i=world->getNumCollisionObjects()-1;i>=0;i--)
     {
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
@@ -950,7 +948,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     id = lua_tointeger(lua, 1);
     skeletal_model_p model = World_FindModelByID(&engine_world, id);
-    
+
     if(model == NULL)
     {
         Con_Printf("can not find skeletal model with id = %d", id);
@@ -962,7 +960,7 @@ int lua_SetStateChangeRange(lua_State * lua)
     dispath = lua_tointeger(lua, 4);
     frame_low = lua_tointeger(lua, 5);
     frame_high = lua_tointeger(lua, 6);
-    
+
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
         Con_Printf("wrong anim number");
@@ -1875,7 +1873,7 @@ int lua_PlayStream(lua_State *lua)
 int lua_PlaySound(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id).");
@@ -2014,6 +2012,9 @@ int lua_LoadMap(lua_State *lua)
             {
                 gameflow_manager.CurrentLevelID = lua_tointeger(lua, 3);
             }
+            char file_path[MAX_ENGINE_PATH];
+            lua_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
+            Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
             Engine_LoadMap(s);
         }
     }
@@ -2491,7 +2492,7 @@ int Engine_GetLevelVersion(const char *name)
 
 void Engine_GetLevelName(char *name, const char *path)
 {
-    int len, start, ext, i;
+    int i, len, start, ext;
 
     if(!path || (path[0] == 0x00))
     {

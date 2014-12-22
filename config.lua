@@ -117,7 +117,7 @@ cvars.free_look_speed = 2500;
 -- GAME_5      -- original TR_V
 -- setgame(game_id, level_id);
 -- setgamef(2.5, 1) -- TR_II gold, map 1
-setgame(GAME_1, 15);
+setgame(GAME_1, 3);
 
 gravity(0, 0, -5700.0);
 mlook(1);

@@ -496,7 +496,7 @@ int main(int argc, char **argv)
 
     Gui_FadeAssignPic(FADER_LOADSCREEN, "graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
-
+    
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif

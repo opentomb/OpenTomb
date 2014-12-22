@@ -135,7 +135,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     room_data_size = read_bitu32(src);
     buffer = new uint8_t[room_data_size];
 
-    if (SDL_RWread(src, buffer, 1, room_data_size) < (int)room_data_size)
+    if (SDL_RWread(src, buffer, 1, room_data_size) < room_data_size)
         Sys_extError("read_tr5_room: room_data");
 
     if ((newsrc = SDL_RWFromMem(buffer, room_data_size)) == NULL)
@@ -438,7 +438,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         this->textile32 = (tr4_textile32_t*)malloc(this->textile32_count * sizeof(tr4_textile32_t));
         comp_buffer = new uint8_t[comp_size];
 
-        if (SDL_RWread(src, comp_buffer, 1, comp_size) < (int)comp_size)
+        if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
             Sys_extError("read_tr5_level: textiles32");
 
         size = uncomp_size;
@@ -476,7 +476,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
             this->textile16 = (tr2_textile16_t*)malloc(this->textile16_count * sizeof(tr2_textile16_t));
             comp_buffer = new uint8_t[comp_size];
 
-            if (SDL_RWread(src, comp_buffer, 1, comp_size) < (int)comp_size)
+            if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
                 Sys_extError("read_tr5_level: textiles16");
 
             size = uncomp_size;
@@ -522,7 +522,7 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
 
         comp_buffer = new uint8_t[comp_size];
 
-        if (SDL_RWread(src, comp_buffer, 1, comp_size) < (int)comp_size)
+        if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
             Sys_extError("read_tr5_level: misc_textiles");
 
         size = uncomp_size;
