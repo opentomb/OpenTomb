@@ -1,6 +1,9 @@
 -- OPENTOMB TRIGGER SCRIPT
 -- FOR TOMB RAIDER 1, LEVEL1
 
+create_trapfloor_func(50);
+create_trapfloor_func(51);
+
 --[[
 -- disable / enable entities
 -- Bats

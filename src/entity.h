@@ -29,9 +29,10 @@ struct ss_bone_frame_s;
 #define ENTITY_TYPE_TRAVERSE_FLOOR                  (0x0010)
 
 #define ENTITY_CALLBACK_NONE                        (0x00000000)
-#define ENTITY_CALLBACK_COLLISION                   (0x00000001)
-#define ENTITY_CALLBACK_ON_STAND                    (0x00000002)
-#define ENTITY_CALLBACK_ON_HIT                      (0x00000004)
+#define ENTITY_CALLBACK_ACTIVATE                    (0x00000001)
+#define ENTITY_CALLBACK_COLLISION                   (0x00000002)
+#define ENTITY_CALLBACK_ON_STAND                    (0x00000004)
+#define ENTITY_CALLBACK_ON_HIT                      (0x00000008)
 
 #define ENTITY_GHOST_COLLISION                    0                             // no one collisions
 #define ENTITY_DYNAMIC_COLLISION                  1                             // hallo full physics interaction

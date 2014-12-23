@@ -39,7 +39,7 @@ int lua_SetScalarField(lua_State *lua, const char *key, btScalar val);
 const char *lua_GetStrField(lua_State *lua, const char *key);
 int lua_SetStrField(lua_State *lua, const char *key, const char *val);
 
-int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator);
+int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator, int id_callback);
 int lua_DoTasks(lua_State *lua, btScalar time);
 
 #endif

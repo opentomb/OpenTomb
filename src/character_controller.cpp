@@ -16,6 +16,7 @@
 #include "vmath.h"
 #include "polygon.h"
 #include "resource.h"
+#include "console.h"
 
 
 #define CHARACTER_BOX_HALF_SIZE (128.0)
@@ -1527,6 +1528,18 @@ int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd)
     cmd->vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
     Character_UpdateCurrentHeight(ent);
+    if(ent->character->height_info.floor_hit && (ent->character->height_info.floor_point.m_floats[2] + 1.0 >= ent->transform[12+2] + ent->bf.bb_min[2]))
+    {
+        engine_container_p cont = (engine_container_p)ent->character->height_info.floor_obj->getUserPointer();
+        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
+        {
+            entity_p e = (entity_p)cont->object;
+            if(e->callback_flags & ENTITY_CALLBACK_ON_STAND)
+            {
+                lua_ActivateEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ON_STAND);
+            }
+        }
+    }
 
     /*
      * check move type

@@ -127,7 +127,7 @@ tr4_static_tbl[39] = {coll = 0x02};
 tr4_static_tbl[40] = {coll = 0x02};
 tr4_static_tbl[41] = {coll = 0x02};
 tr4_static_tbl[42] = {coll = 0x02};
-tr4_static_tbl[43] = {coll = 0x02};  
+tr4_static_tbl[43] = {coll = 0x02};
 tr4_static_tbl[44] = {coll = 0x02};
 tr4_static_tbl[45] = {coll = 0x02};
 tr4_static_tbl[46] = {coll = 0x02};
@@ -418,7 +418,7 @@ tr1_entity_tbl[134] = {coll = 0x00};                     -- Key 2
 tr1_entity_tbl[135] = {coll = 0x00};                     -- Key 3
 tr1_entity_tbl[136] = {coll = 0x00};                     -- Key 4
 
-tr1_entity_tbl[137] = {coll = 0x02};                     -- Lock 1 
+tr1_entity_tbl[137] = {coll = 0x02};                     -- Lock 1
 tr1_entity_tbl[138] = {coll = 0x02};                     -- Lock 2
 tr1_entity_tbl[139] = {coll = 0x02};                     -- Lock 3
 tr1_entity_tbl[140] = {coll = 0x02};                     -- Lock 4
@@ -1960,13 +1960,13 @@ tr5_entity_tbl[436] = {coll = 0x01}; -- Animating 11
 tr5_entity_tbl[437] = {coll = 0x01}; -- Animating 11 MIP
 tr5_entity_tbl[438] = {coll = 0x01}; -- Animating 12
 tr5_entity_tbl[439] = {coll = 0x01}; -- Animating 12 MIP
-tr5_entity_tbl[440] = {coll = 0x01}; -- Animating 13
+tr5_entity_tbl[440] = {coll = 0x00}; -- Animating 13 / map 3 - light
 tr5_entity_tbl[441] = {coll = 0x01}; -- Animating 13 MIP
 tr5_entity_tbl[442] = {coll = 0x01}; -- Animating 14
 tr5_entity_tbl[443] = {coll = 0x01}; -- Animating 14 MIP
-tr5_entity_tbl[444] = {coll = 0x01}; -- Animating 15
+tr5_entity_tbl[444] = {coll = 0x00}; -- Animating 15 / map 3 - light
 tr5_entity_tbl[445] = {coll = 0x01}; -- Animating 15 MIP
-tr5_entity_tbl[446] = {coll = 0x01}; -- Animating 16
+tr5_entity_tbl[446] = {coll = 0x00}; -- Animating 16 / map 2 - light
 tr5_entity_tbl[447] = {coll = 0x01}; -- Animating 16 MIP
 
 -- STATIC TERRAIN

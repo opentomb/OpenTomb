@@ -188,7 +188,7 @@ void Save_Entity(FILE **f, entity_p ent)
     {
         fprintf(*f, "\ndisableEntity(%d);", ent->id);
     }
-    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X);", ent->id, ent->state_flags, ent->type_flags);
+    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
     fprintf(*f, "\nsetEntityActivationMask(%d, 0x%.4X);", ent->id, ent->activation_mask);
     //setEntityMeshswap()
 

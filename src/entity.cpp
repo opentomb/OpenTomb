@@ -1114,7 +1114,7 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
             }
         }
     }
-    
+
     return NULL;
 }
 
@@ -1230,7 +1230,7 @@ void Entity_DoAnimMove(entity_p entity)
     if(entity->bf.model != NULL)
     {
         bone_frame_p curr_bf = entity->bf.model->animations[entity->bf.current_animation].frames + entity->bf.current_frame;
-        
+
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
             Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
@@ -1351,7 +1351,7 @@ void Entity_CheckActivators(struct entity_s *ent)
     if((ent != NULL) && (ent->self->room != NULL))
     {
         btScalar ppos[3];
-        
+
         ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf.bb_max[1];
         ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf.bb_max[1];
         ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf.bb_max[1];
@@ -1366,10 +1366,9 @@ void Entity_CheckActivators(struct entity_s *ent)
                 if((e->type_flags & ENTITY_TYPE_TRIGGER) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e != ent) && (vec3_dot(e->transform+4, ent->transform+4) > 0.75) &&
-                       (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
+                    if((e != ent) && (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
                     {
-                        lua_ActivateEntity(engine_lua, e->id, ent->id);
+                        lua_ActivateEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
                     }
                 }
                 else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
@@ -1378,7 +1377,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                     if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                                       (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
                     {
-                        lua_ActivateEntity(engine_lua, e->id, ent->id);
+                        lua_ActivateEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
                     }
                 }
             }
