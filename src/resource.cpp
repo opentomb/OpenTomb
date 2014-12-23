@@ -236,7 +236,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
         for(uint16_t w = 0; w < room->sectors_x-1; w++)
         {
             // Init X-plane tween [ | ]
-            
+
             room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
             room_sector_p next_heightmap    = current_heightmap + 1;
             char joined_floors = 0;

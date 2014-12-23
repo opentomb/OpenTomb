@@ -456,7 +456,7 @@ int lua_DoTasks(lua_State *lua, btScalar time)
     return 0;
 }
 
-int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator)
+int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator, int id_callback)
 {
     int top;
 
@@ -471,7 +471,8 @@ int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator)
 
     lua_pushinteger(lua, id_object);
     lua_pushinteger(lua, id_activator);
-    lua_pcall(lua, 2, 0, 0);
+    lua_pushinteger(lua, id_callback);
+    lua_pcall(lua, 3, 0, 0);
     lua_settop(lua, top);
     return 1;
 }

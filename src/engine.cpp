@@ -244,6 +244,23 @@ void Engine_Init()
 /*
  * debug functions
  */
+ int lua_print(lua_State * lua)
+ {
+     int top = lua_gettop(lua);
+
+     if(top == 0)
+     {
+        Con_AddLine("nil");
+     }
+
+     for(int i=1;i<=top;i++)
+     {
+         Con_AddLine(lua_tostring(lua, i));
+     }
+
+     return 0;
+ }
+
 int lua_DumpRoom(lua_State * lua)
 {
     room_p r = NULL;
@@ -1126,6 +1143,37 @@ int lua_GetEntityVector(lua_State * lua)
 }
 
 
+int lua_GetEntityDirDot(lua_State * lua)
+{
+    int id, top;
+    entity_p e1, e2;
+
+    top = lua_gettop(lua);
+    if(top < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (id1, id2)");
+        return 0;
+    }
+    id = lua_tointeger(lua, 1);
+    e1 = World_GetEntityByID(&engine_world, id);
+    if(e1 == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+    id = lua_tointeger(lua, 2);
+    e2 = World_GetEntityByID(&engine_world, id);
+    if(e2 == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+
+    lua_pushnumber(lua, vec3_dot(e1->transform + 4, e2->transform + 4));
+    return 1;
+}
+
+
 int lua_GetEntityPosition(lua_State * lua)
 {
     int id, top;
@@ -1575,8 +1623,9 @@ int lua_GetEntityFlags(lua_State * lua)
 
     lua_pushinteger(lua, ent->state_flags);
     lua_pushinteger(lua, ent->type_flags);
+    lua_pushinteger(lua, ent->callback_flags);
 
-    return 2;
+    return 3;
 }
 
 
@@ -1588,7 +1637,7 @@ int lua_SetEntityFlags(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, state_flags, type_flags)");
+        Con_Printf("Wrong arguments count. Must be (entity_id, state_flags, type_flags, (callback_flags))");
         return 0;
     }
 
@@ -1608,9 +1657,14 @@ int lua_SetEntityFlags(lua_State * lua)
     {
         ent->type_flags = lua_tointeger(lua, 3);
     }
+    if(!lua_isnil(lua, 4))
+    {
+        ent->callback_flags = lua_tointeger(lua, 4);
+    }
 
     return 0;
 }
+
 
 int lua_GetEntityActivationMask(lua_State * lua)
 {
@@ -2120,6 +2174,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      * register functions
      */
 
+    lua_register(lua, "print", lua_print);
     lua_register(lua, "dumpRoom", lua_DumpRoom);
     lua_register(lua, "setRoomEnabled", lua_SetRoomEnabled);
 
@@ -2159,6 +2214,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "printItems", lua_PrintItems);
 
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
+    lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);

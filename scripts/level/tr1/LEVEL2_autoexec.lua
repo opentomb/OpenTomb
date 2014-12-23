@@ -1,6 +1,23 @@
 -- OPENTOMB TRIGGER SCRIPT
 -- FOR TOMB RAIDER 1, LEVEL2
 
+create_trapfloor_func(23);
+create_trapfloor_func(24);
+
+create_trapfloor_func(64);
+create_trapfloor_func(65);
+create_trapfloor_func(66);
+create_trapfloor_func(67);
+create_trapfloor_func(68);
+create_trapfloor_func(69);
+create_trapfloor_func(70);
+
+create_trapfloor_func(73);
+create_trapfloor_func(74);
+create_trapfloor_func(75);
+create_trapfloor_func(76);
+create_trapfloor_func(77);
+
 -- disable / enable entities
 -- wolves
 setEntityActivity(6, 0);
