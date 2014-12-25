@@ -458,6 +458,17 @@ int lua_SetEntityCollision(lua_State * lua)
 }
 
 
+int lua_GetGravity(lua_State * lua)
+{
+    btVector3 g = bt_engine_dynamicsWorld->getGravity();
+    lua_pushnumber(lua, g.m_floats[0]);
+    lua_pushnumber(lua, g.m_floats[1]);
+    lua_pushnumber(lua, g.m_floats[2]);
+
+    return 3;
+}
+
+
 int lua_SetGravity(lua_State * lua)                                             // function to be exported to Lua
 {
     int top = lua_gettop(lua);                                                  // get # of arguments
@@ -492,6 +503,51 @@ int lua_SetGravity(lua_State * lua)                                             
     };
 
     return 0;                                                                   // we returned two vaues
+}
+
+
+int lua_DropEntity(lua_State * lua)                                             // function to be exported to Lua
+{
+    int top = lua_gettop(lua);                                                  // get # of arguments
+
+    if(top < 2)
+    {
+        Con_AddLine("wrong arguments number, must be (entity_id, time)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    if(ent == NULL)
+    {
+        Con_Printf("can not find entity with id = %d", id);
+        return 0;
+    }
+
+    btScalar time = lua_tonumber(lua, 2);
+    btVector3 g = bt_engine_dynamicsWorld->getGravity();
+    btVector3 move = ent->speed * time;;
+    move += g * 0.5 * time * time;
+    ent->speed += g * time;
+
+    bt_engine_ClosestRayResultCallback cb(ent->self);
+    btVector3 from, to;
+    Mat4_vec3_mul_macro(from.m_floats, ent->transform, ent->bf.centre);
+    to = from + move;
+    bt_engine_dynamicsWorld->rayTest(from, to, cb);
+    if(cb.hasHit())
+    {
+        move.setInterpolate3(from ,to, cb.m_closestHitFraction);
+        ent->transform[12+2] = move.m_floats[2];// - ent->bf.bb_min[2];
+        lua_pushboolean(lua, 1);
+        return 1;
+    }
+
+    ent->transform[12+0] += move.m_floats[0];
+    ent->transform[12+1] += move.m_floats[1];
+    ent->transform[12+2] += move.m_floats[2];
+    lua_pushboolean(lua, 0);
+    return 1;
 }
 
 
@@ -2251,7 +2307,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getActionState", lua_GetActionState);
     lua_register(lua, "getActionChange", lua_GetActionChange);
 
-    lua_register(lua, "gravity", lua_SetGravity);                               // get and set gravity function
+    lua_register(lua, "getGravity", lua_GetGravity);
+    lua_register(lua, "setGravity", lua_SetGravity);                            // get and set gravity function
+    lua_register(lua, "dropEntity", lua_DropEntity);
     lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
 
     lua_register(lua, "genUVRotateAnimation", lua_genUVRotateAnimation);

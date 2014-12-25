@@ -91,7 +91,8 @@ entity_funcs = {};
 
 -- doors - door id's to open; func - additional things we want to do after activation
 function create_keyhole_func(id, doors, func, mask)
-    setEntityFlags(id, nil, ENTITY_TYPE_TRIGGER);
+    local f1, f2, f3 = getEntityFlags(id);
+    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_TRIGGER), nil);
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end
@@ -131,7 +132,8 @@ end
 -- switch: 2 - enable
 -- switch: 3 - disable
 function create_switch_func(id, doors, func, mask)
-    setEntityFlags(id, nil, ENTITY_TYPE_TRIGGER);
+    local f1, f2, f3 = getEntityFlags(id);
+    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_TRIGGER), nil);
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end
@@ -157,7 +159,8 @@ function create_switch_func(id, doors, func, mask)
 end
 
 function create_pickup_func(id, item_id)
-    setEntityFlags(id, nil, ENTITY_TYPE_PICKABLE);
+    local f1, f2, f3 = getEntityFlags(id);
+    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_PICKABLE), nil);
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end
@@ -225,7 +228,9 @@ end
 
 
 function create_trapfloor_func(id)
-    setEntityFlags(id, nil, nil, ENTITY_CALLBACK_ON_STAND);
+    local f1, f2, f3 = getEntityFlags(id);
+    setEntityFlags(id, nil, nil, bit32.bor(f3, ENTITY_CALLBACK_ON_STAND));
+    setEntitySpeed(id, 0.0, 0.0, 0.0);
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end
@@ -242,22 +247,24 @@ function create_trapfloor_func(id)
             local t = 0.0;          -- we can store time only here
             addTask(
             function()
+                t = t + frame_time;
                 if(t > 1.5) then
                     setEntityCollision(object_id, 0);
-                end;
-                if(t < 2.0) then
-                    t = t + frame_time;
+                else
                     return true;
                 end;
+
                 local anim = getEntityAnim(object_id);
                 if(anim == 1) then
                     setEntityAnim(object_id, 2);
                 end;
-                if(t < 3.0) then
-                    t = t + frame_time;
-                    return true;
+
+                if(dropEntity(object_id, frame_time) or (t > 10.0)) then
+                    setEntityAnim(object_id, 3);
+                    dropEntity(object_id, frame_time)
+                    return false;
                 end;
-                setEntityAnim(object_id, 3);
+                return true;
             end);
         end;
     end;
@@ -266,7 +273,8 @@ end
 
 function create_pushdoor_func(id)
     setEntityActivity(id, 0);
-    setEntityFlags(id, nil, ENTITY_TYPE_TRIGGER);
+    local f1, f2, f3 = getEntityFlags(id);
+    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_TRIGGER), nil);
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end

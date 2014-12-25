@@ -911,7 +911,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                     {
                         snprintf(buf, 64, "}, nil, 0x%.2X);", trigger_mask);
                         strcat(script, buf);
-                        Con_Printf(script);
+                        //Con_Printf(script);
                         luaL_dostring(engine_lua, script);
                     }
                     script[0] = 0;
@@ -4376,6 +4376,7 @@ void Items_CheckEntities(RedBlackNode_p n)
                     char buf[256] = {0};
                     snprintf(buf, 256, "create_pickup_func(%d, %d);", ent->id, item->id);
                     luaL_dostring(engine_lua, buf);
+                    Entity_DisableCollision(ent);
                 }
             }
         }

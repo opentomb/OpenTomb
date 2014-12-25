@@ -171,10 +171,11 @@ void Entity_EnableCollision(entity_p ent)
 {
     if(ent->bt_body != NULL)
     {
+        ent->self->collide_flag = 0x01;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt_body[i];
-            if(b != NULL)
+            if((b != NULL) && !b->isInWorld())
             {
                 bt_engine_dynamicsWorld->addRigidBody(b);
             }
@@ -187,10 +188,11 @@ void Entity_DisableCollision(entity_p ent)
 {
     if(ent->bt_body != NULL)
     {
+        ent->self->collide_flag = 0x00;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt_body[i];
-            if(b != NULL)
+            if((b != NULL) && b->isInWorld())
             {
                 bt_engine_dynamicsWorld->removeRigidBody(b);
             }
