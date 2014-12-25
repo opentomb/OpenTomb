@@ -180,6 +180,7 @@ void Save_Entity(FILE **f, entity_p ent)
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.current_animation, ent->bf.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.next_state, ent->bf.last_state);
+    fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->id, ent->self->collide_flag);
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
         fprintf(*f, "\nenableEntity(%d);", ent->id);
@@ -677,17 +678,18 @@ void Game_Frame(btScalar time)
 
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
+        int32_t t = game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
+        btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+        game_logic_time -= dt;
         Gameflow_Do();
-        bt_engine_dynamicsWorld->stepSimulation(game_logic_time, 8);
-        lua_DoTasks(engine_lua, game_logic_time);
+        bt_engine_dynamicsWorld->stepSimulation(dt, 8);
+        lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
         Audio_Update();
         if(engine_world.Character)
         {
             Character_UpdateParams(engine_world.Character);
         }
-
-        Game_Tick(&game_logic_time);
     }
 
     // This must be called EVERY frame to max out smoothness.

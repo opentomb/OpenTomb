@@ -380,15 +380,15 @@ tr1_entity_tbl[98] = {coll = 0x00};                      -- Menu: Flashlight (UN
 
 -- GENERAL MENU ITEMS --
 
-tr1_entity_tbl[99] = {coll = 0x02};                      -- Menu: Pistols
-tr1_entity_tbl[100] = {coll = 0x02};                     -- Menu: Shotgun
-tr1_entity_tbl[101] = {coll = 0x02};                     -- Menu: Magnums
-tr1_entity_tbl[102] = {coll = 0x02};                     -- Menu: Uzis
-tr1_entity_tbl[103] = {coll = 0x02};                     -- Menu: Pistol ammo
-tr1_entity_tbl[104] = {coll = 0x02};                     -- Menu: Shotgun ammo
-tr1_entity_tbl[105] = {coll = 0x02};                     -- Menu: Magnum ammo
-tr1_entity_tbl[106] = {coll = 0x02};                     -- Menu: Uzi ammo
-tr1_entity_tbl[107] = {coll = 0x02};                     -- Menu: Grenade ammo (UNUSED!)
+tr1_entity_tbl[99] = {coll = 0x00};                      -- Menu: Pistols
+tr1_entity_tbl[100] = {coll = 0x00};                     -- Menu: Shotgun
+tr1_entity_tbl[101] = {coll = 0x00};                     -- Menu: Magnums
+tr1_entity_tbl[102] = {coll = 0x00};                     -- Menu: Uzis
+tr1_entity_tbl[103] = {coll = 0x00};                     -- Menu: Pistol ammo
+tr1_entity_tbl[104] = {coll = 0x00};                     -- Menu: Shotgun ammo
+tr1_entity_tbl[105] = {coll = 0x00};                     -- Menu: Magnum ammo
+tr1_entity_tbl[106] = {coll = 0x00};                     -- Menu: Uzi ammo
+tr1_entity_tbl[107] = {coll = 0x00};                     -- Menu: Grenade ammo (UNUSED!)
 tr1_entity_tbl[108] = {coll = 0x00};                     -- Pick-up: Small medipack
 tr1_entity_tbl[109] = {coll = 0x00};                     -- Pick-up: Large medipack
 
