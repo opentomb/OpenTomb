@@ -533,12 +533,14 @@ int lua_DropEntity(lua_State * lua)                                             
     bt_engine_ClosestRayResultCallback cb(ent->self);
     btVector3 from, to;
     Mat4_vec3_mul_macro(from.m_floats, ent->transform, ent->bf.centre);
+    from.m_floats[2] = ent->transform[12 + 2];
     to = from + move;
+    to.m_floats[2] -= (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
     bt_engine_dynamicsWorld->rayTest(from, to, cb);
     if(cb.hasHit())
     {
         move.setInterpolate3(from ,to, cb.m_closestHitFraction);
-        ent->transform[12+2] = move.m_floats[2];// - ent->bf.bb_min[2];
+        ent->transform[12+2] = move.m_floats[2];
         lua_pushboolean(lua, 1);
         return 1;
     }
@@ -1329,6 +1331,7 @@ int lua_MoveEntityGlobal(lua_State * lua)
             ent->transform[12+0] += lua_tonumber(lua, 2);
             ent->transform[12+1] += lua_tonumber(lua, 3);
             ent->transform[12+2] += lua_tonumber(lua, 4);
+            Entity_UpdateRigidBody(ent, 1);
             return 0;
 
         default:
@@ -1368,6 +1371,8 @@ int lua_MoveEntityLocal(lua_State * lua)
     ent->transform[12+0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
     ent->transform[12+1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
     ent->transform[12+2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
+
+    Entity_UpdateRigidBody(ent, 1);
 
     return 0;
 }

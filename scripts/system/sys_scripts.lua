@@ -243,25 +243,20 @@ function create_trapfloor_func(id)
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
             setEntityAnim(object_id, 1);
-            print("you trapped to id = "..object_id);
-            local t = 0.0;          -- we can store time only here
+            -- print("you trapped to id = "..object_id);
+            local once = true;
             addTask(
             function()
-                t = t + frame_time;
-                if(t > 1.5) then
-                    setEntityCollision(object_id, 0);
-                else
-                    return true;
-                end;
-
                 local anim = getEntityAnim(object_id);
                 if(anim == 1) then
-                    setEntityAnim(object_id, 2);
+                    return true;
                 end;
-
-                if(dropEntity(object_id, frame_time) or (t > 10.0)) then
+                if(once) then
+                    setEntityCollision(object_id, 0);
+                    once = false;
+                end;
+                if(dropEntity(object_id, frame_time)) then
                     setEntityAnim(object_id, 3);
-                    dropEntity(object_id, frame_time)
                     return false;
                 end;
                 return true;
