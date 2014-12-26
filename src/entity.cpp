@@ -166,7 +166,11 @@ void Entity_Disable(entity_p ent)
     }
 }
 
-
+/**
+ * This function enables collision for entity_p in all cases exept NULL models.
+ * If collision models does not exists, function will create them;
+ * @param ent - pointer to the entity.
+ */
 void Entity_EnableCollision(entity_p ent)
 {
     if(ent->bt_body != NULL)
@@ -180,6 +184,11 @@ void Entity_EnableCollision(entity_p ent)
                 bt_engine_dynamicsWorld->addRigidBody(b);
             }
         }
+    }
+    else
+    {
+        ent->self->collide_flag = 0x01;
+        BT_GenEntityRigidBody(ent);
     }
 }
 
@@ -196,6 +205,36 @@ void Entity_DisableCollision(entity_p ent)
             {
                 bt_engine_dynamicsWorld->removeRigidBody(b);
             }
+        }
+    }
+}
+
+
+void BT_GenEntityRigidBody(entity_p ent)
+{
+    btScalar tr[16];
+    btVector3 localInertia(0, 0, 0);
+    btTransform startTransform;
+    btCollisionShape *cshape;
+    if(ent->bf.model == NULL)
+    {
+        return;
+    }
+
+    ent->bt_body = (btRigidBody**)malloc(ent->bf.model->mesh_count * sizeof(btRigidBody*));
+
+    for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
+    {
+        ent->bt_body[i] = NULL;
+        cshape = BT_CSfromMesh(ent->bf.model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
+        if(cshape)
+        {
+            Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
+            startTransform.setFromOpenGLMatrix(tr);
+            btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+            ent->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
+            bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_CINEMATIC, COLLISION_MASK_ALL);
+            ent->bt_body[i]->setUserPointer(ent->self);
         }
     }
 }

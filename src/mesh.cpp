@@ -8,6 +8,11 @@
 #include "engine.h"
 #include "system.h"
 #include "gl_util.h"
+#include "obb.h"
+#include "resource.h"
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
+
 
 vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3]);
 
@@ -562,5 +567,299 @@ void Mesh_GenFaces(base_mesh_p mesh)
         free(elements_for_texture[i]);
     }
     free(elements_for_texture);
+}
+
+
+btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag)
+{
+    uint32_t cnt = 0;
+    polygon_p p;
+    btTriangleMesh *trimesh = new btTriangleMesh;
+    btCollisionShape* ret;
+    btVector3 v0, v1, v2;
+    obb_p obb;
+
+    switch(cflag)
+    {
+        default:
+        case COLLISION_TRIMESH:
+            p = mesh->polygons;
+            for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
+            {
+                if(Polygon_IsBroken(p))
+                {
+                    continue;
+                }
+
+                for(uint16_t j=1;j+1<p->vertex_count;j++)
+                {
+                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+                    vec3_copy(v1.m_floats, p->vertices[j].position);
+                    vec3_copy(v2.m_floats, p->vertices[0].position);
+                    trimesh->addTriangle(v0, v1, v2, true);
+                }
+                cnt ++;
+            }
+
+            if(cnt == 0)
+            {
+                delete trimesh;
+                return NULL;
+            }
+
+            ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+            break;
+
+        case COLLISION_BOX:                                                     // the box with deviated centre
+            obb = OBB_Create();
+            OBB_Rebuild(obb, mesh->bb_min, mesh->bb_max);
+            p = obb->base_polygons;
+            for(uint16_t i=0;i<6;i++,p++)
+            {
+                if(Polygon_IsBroken(p))
+                {
+                    continue;
+                }
+                for(uint16_t j=1;j+1<p->vertex_count;j++)
+                {
+                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+                    vec3_copy(v1.m_floats, p->vertices[j].position);
+                    vec3_copy(v2.m_floats, p->vertices[0].position);
+                    trimesh->addTriangle(v0, v1, v2, true);
+                }
+                cnt ++;
+            }
+
+            if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
+            {
+                delete trimesh;
+                return NULL;
+            }
+
+            ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+            OBB_Clear(obb);
+            free(obb);
+            break;
+    };
+
+    return ret;
+}
+
+
+btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
+{
+    uint32_t cnt = 0;
+    room_p r = heightmap->owner_room;
+    btTriangleMesh *trimesh = new btTriangleMesh;
+    btCollisionShape* ret;
+
+    for(uint32_t i = 0; i < r->sectors_count; i++)
+    {
+        if(heightmap->floor > heightmap->ceiling)
+        {
+            continue;
+        }
+
+        if( (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
+            (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
+        {
+            if( (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
+                (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
+            {
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[3],
+                                         heightmap[i].floor_corners[2],
+                                         heightmap[i].floor_corners[0],
+                                         true);
+                    cnt++;
+                }
+
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[2],
+                                         heightmap[i].floor_corners[1],
+                                         heightmap[i].floor_corners[0],
+                                         true);
+                    cnt++;
+                }
+            }
+            else
+            {
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[3],
+                                         heightmap[i].floor_corners[2],
+                                         heightmap[i].floor_corners[1],
+                                         true);
+                    cnt++;
+                }
+
+                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+                {
+                    trimesh->addTriangle(heightmap[i].floor_corners[3],
+                                         heightmap[i].floor_corners[1],
+                                         heightmap[i].floor_corners[0],
+                                         true);
+                    cnt++;
+                }
+            }
+        }
+
+        if( (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
+            (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
+        {
+            if( (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
+                (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
+            {
+                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
+                                         heightmap[i].ceiling_corners[2],
+                                         heightmap[i].ceiling_corners[3],
+                                         true);
+                    cnt++;
+                }
+
+                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+                {
+                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
+                                         heightmap[i].ceiling_corners[1],
+                                         heightmap[i].ceiling_corners[2],
+                                         true);
+                    cnt++;
+                }
+            }
+            else
+            {
+                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+                {
+                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
+                                         heightmap[i].ceiling_corners[1],
+                                         heightmap[i].ceiling_corners[3],
+                                         true);
+                    cnt++;
+                }
+
+                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+                {
+                    trimesh->addTriangle(heightmap[i].ceiling_corners[1],
+                                         heightmap[i].ceiling_corners[2],
+                                         heightmap[i].ceiling_corners[3],
+                                         true);
+                    cnt++;
+                }
+            }
+        }
+    }
+
+    for(int i=0; i<tweens_size; i++)
+    {
+
+        switch(tweens[i].ceiling_tween_type)
+        {
+            case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
+                {
+                    btScalar t = fabs((tweens[i].ceiling_corners[2].m_floats[2] - tweens[i].ceiling_corners[3].m_floats[2]) /
+                                      (tweens[i].ceiling_corners[0].m_floats[2] - tweens[i].ceiling_corners[1].m_floats[2]));
+                    t = 1.0 / (1.0 + t);
+                    btVector3 o;
+                    o.setInterpolate3(tweens[i].ceiling_corners[0], tweens[i].ceiling_corners[2], t);
+                    trimesh->addTriangle(tweens[i].ceiling_corners[0],
+                                         tweens[i].ceiling_corners[1],
+                                         o, true);
+                    trimesh->addTriangle(tweens[i].ceiling_corners[3],
+                                         tweens[i].ceiling_corners[2],
+                                         o, true);
+                    cnt += 2;
+                }
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
+                trimesh->addTriangle(tweens[i].ceiling_corners[0],
+                                     tweens[i].ceiling_corners[1],
+                                     tweens[i].ceiling_corners[3],
+                                     true);
+                cnt++;
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
+                trimesh->addTriangle(tweens[i].ceiling_corners[2],
+                                     tweens[i].ceiling_corners[1],
+                                     tweens[i].ceiling_corners[3],
+                                     true);
+                cnt++;
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_QUAD:
+                trimesh->addTriangle(tweens[i].ceiling_corners[0],
+                                     tweens[i].ceiling_corners[1],
+                                     tweens[i].ceiling_corners[3],
+                                     true);
+                trimesh->addTriangle(tweens[i].ceiling_corners[2],
+                                     tweens[i].ceiling_corners[1],
+                                     tweens[i].ceiling_corners[3],
+                                     true);
+                cnt += 2;
+                break;
+        };
+
+        switch(tweens[i].floor_tween_type)
+        {
+            case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
+                {
+                    btScalar t = fabs((tweens[i].floor_corners[2].m_floats[2] - tweens[i].floor_corners[3].m_floats[2]) /
+                                      (tweens[i].floor_corners[0].m_floats[2] - tweens[i].floor_corners[1].m_floats[2]));
+                    t = 1.0 / (1.0 + t);
+                    btVector3 o;
+                    o.setInterpolate3(tweens[i].floor_corners[0], tweens[i].floor_corners[2], t);
+                    trimesh->addTriangle(tweens[i].floor_corners[0],
+                                         tweens[i].floor_corners[1],
+                                         o, true);
+                    trimesh->addTriangle(tweens[i].floor_corners[3],
+                                         tweens[i].floor_corners[2],
+                                         o, true);
+                    cnt += 2;
+                }
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
+                trimesh->addTriangle(tweens[i].floor_corners[0],
+                                     tweens[i].floor_corners[1],
+                                     tweens[i].floor_corners[3],
+                                     true);
+                cnt++;
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
+                trimesh->addTriangle(tweens[i].floor_corners[2],
+                                     tweens[i].floor_corners[1],
+                                     tweens[i].floor_corners[3],
+                                     true);
+                cnt++;
+                break;
+
+            case TR_SECTOR_TWEEN_TYPE_QUAD:
+                trimesh->addTriangle(tweens[i].floor_corners[0],
+                                     tweens[i].floor_corners[1],
+                                     tweens[i].floor_corners[3],
+                                     true);
+                trimesh->addTriangle(tweens[i].floor_corners[2],
+                                     tweens[i].floor_corners[1],
+                                     tweens[i].floor_corners[3],
+                                     true);
+                cnt += 2;
+                break;
+        };
+    }
+
+    if(cnt == 0)
+    {
+        delete trimesh;
+        return NULL;
+    }
+
+    ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+    return ret;
 }
 

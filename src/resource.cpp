@@ -1151,105 +1151,70 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
 }
 
 
-void BT_GenEntityRigidBody(entity_p ent)
-{
-    btScalar tr[16];
-    btVector3 localInertia(0, 0, 0);
-    btTransform startTransform;
-    btCollisionShape *cshape;
-    if(ent->bf.model == NULL)
-    {
-        return;
-    }
-
-    ent->bt_body = (btRigidBody**)malloc(ent->bf.model->mesh_count * sizeof(btRigidBody*));
-
-    for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
-    {
-        ent->bt_body[i] = NULL;
-        cshape = BT_CSfromMesh(ent->bf.model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
-        if(cshape)
-        {
-            Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
-            startTransform.setFromOpenGLMatrix(tr);
-            btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-            ent->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
-            bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_CINEMATIC, COLLISION_MASK_ALL);
-            ent->bt_body[i]->setUserPointer(ent->self);
-        }
-    }
-}
-
 int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
 {
     if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p->norm[1]) > 0.99))
     {
-        if(fabs(p->norm[1]) > 0.99)
+        btScalar min_x, max_x, min_y, max_y, x;
+        max_x = min_x = p->vertex[0];
+        for(uint16_t i=1;i<p->vertex_count;i++)
         {
-            btScalar min_x, max_x, min_y, max_y, x;
-            max_x = min_x = p->vertex[0];
-            for(uint16_t i=1;i<p->vertex_count;i++)
+            x = p->vertex[3 * i + 0];
+            if(x > max_x)
             {
-                x = p->vertex[3 * i + 0];
-                if(x > max_x)
-                {
-                    max_x = x;
-                }
-                if(x < min_x)
-                {
-                    min_x = x;
-                }
+                max_x = x;
             }
-            if(s1->pos[1] > s2->pos[1])
+            if(x < min_x)
             {
-                min_y = s2->pos[1];
-                max_y = s1->pos[1];
-            }
-            else
-            {
-                min_y = s1->pos[1];
-                max_y = s2->pos[1];
-            }
-
-            if((s1->pos[0] < max_x) && (s1->pos[0] > min_x) && (p->centre[1] < max_y) && (p->centre[1] > min_y))
-            {
-                return 1;
+                min_x = x;
             }
         }
-    }
-    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]))
-    {
-        if(fabs(p->norm[0]) > 0.99)
+        if(s1->pos[1] > s2->pos[1])
         {
-            btScalar min_x, max_x, min_y, max_y, y;
-            max_y = min_y = p->vertex[1];
-            for(uint16_t i=1;i<p->vertex_count;i++)
-            {
-                y = p->vertex[3 * i + 1];
-                if(y > max_y)
-                {
-                    max_y = y;
-                }
-                if(y < min_y)
-                {
-                    min_y = y;
-                }
-            }
-            if(s1->pos[0] > s2->pos[0])
-            {
-                min_x = s2->pos[0];
-                max_x = s1->pos[0];
-            }
-            else
-            {
-                min_x = s1->pos[0];
-                max_x = s2->pos[0];
-            }
+            min_y = s2->pos[1];
+            max_y = s1->pos[1];
+        }
+        else
+        {
+            min_y = s1->pos[1];
+            max_y = s2->pos[1];
+        }
 
-            if((p->centre[0] < max_x) && (p->centre[0] > min_x) && (s1->pos[1] < max_y) && (s1->pos[1] > min_y))
+        if((s1->pos[0] < max_x) && (s1->pos[0] > min_x) && (p->centre[1] < max_y) && (p->centre[1] > min_y))
+        {
+            return 1;
+        }
+    }
+    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p->norm[0]) > 0.99))
+    {
+        btScalar min_x, max_x, min_y, max_y, y;
+        max_y = min_y = p->vertex[1];
+        for(uint16_t i=1;i<p->vertex_count;i++)
+        {
+            y = p->vertex[3 * i + 1];
+            if(y > max_y)
             {
-                return 1;
+                max_y = y;
             }
+            if(y < min_y)
+            {
+                min_y = y;
+            }
+        }
+        if(s1->pos[0] > s2->pos[0])
+        {
+            min_x = s2->pos[0];
+            max_x = s1->pos[0];
+        }
+        else
+        {
+            min_x = s1->pos[0];
+            max_x = s2->pos[0];
+        }
+
+        if((p->centre[0] < max_x) && (p->centre[0] > min_x) && (s1->pos[1] < max_y) && (s1->pos[1] > min_y))
+        {
+            return 1;
         }
     }
 
@@ -4062,300 +4027,6 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
     }
-}
-
-
-btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
-{
-    uint32_t cnt = 0;
-    room_p r = heightmap->owner_room;
-    btTriangleMesh *trimesh = new btTriangleMesh;
-    btCollisionShape* ret;
-
-    for(uint32_t i = 0; i < r->sectors_count; i++)
-    {
-        if(heightmap->floor > heightmap->ceiling)
-        {
-            continue;
-        }
-
-        if( (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
-            (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
-        {
-            if( (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
-                (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
-            {
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[0],
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
-                {
-                    trimesh->addTriangle(heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[1],
-                                         heightmap[i].floor_corners[0],
-                                         true);
-                    cnt++;
-                }
-            }
-            else
-            {
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[2],
-                                         heightmap[i].floor_corners[1],
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
-                {
-                    trimesh->addTriangle(heightmap[i].floor_corners[3],
-                                         heightmap[i].floor_corners[1],
-                                         heightmap[i].floor_corners[0],
-                                         true);
-                    cnt++;
-                }
-            }
-        }
-
-        if( (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
-            (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
-        {
-            if( (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
-                (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
-            {
-                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[2],
-                                         heightmap[i].ceiling_corners[3],
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
-                {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[2],
-                                         true);
-                    cnt++;
-                }
-            }
-            else
-            {
-                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[0],
-                                         heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[3],
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
-                {
-                    trimesh->addTriangle(heightmap[i].ceiling_corners[1],
-                                         heightmap[i].ceiling_corners[2],
-                                         heightmap[i].ceiling_corners[3],
-                                         true);
-                    cnt++;
-                }
-            }
-        }
-    }
-
-    for(int i=0; i<tweens_size; i++)
-    {
-
-        switch(tweens[i].ceiling_tween_type)
-        {
-            case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
-                {
-                    btScalar t = fabs((tweens[i].ceiling_corners[2].m_floats[2] - tweens[i].ceiling_corners[3].m_floats[2]) /
-                                      (tweens[i].ceiling_corners[0].m_floats[2] - tweens[i].ceiling_corners[1].m_floats[2]));
-                    t = 1.0 / (1.0 + t);
-                    btVector3 o;
-                    o.setInterpolate3(tweens[i].ceiling_corners[0], tweens[i].ceiling_corners[2], t);
-                    trimesh->addTriangle(tweens[i].ceiling_corners[0],
-                                         tweens[i].ceiling_corners[1],
-                                         o, true);
-                    trimesh->addTriangle(tweens[i].ceiling_corners[3],
-                                         tweens[i].ceiling_corners[2],
-                                         o, true);
-                    cnt += 2;
-                }
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
-                trimesh->addTriangle(tweens[i].ceiling_corners[0],
-                                     tweens[i].ceiling_corners[1],
-                                     tweens[i].ceiling_corners[3],
-                                     true);
-                cnt++;
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
-                trimesh->addTriangle(tweens[i].ceiling_corners[2],
-                                     tweens[i].ceiling_corners[1],
-                                     tweens[i].ceiling_corners[3],
-                                     true);
-                cnt++;
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_QUAD:
-                trimesh->addTriangle(tweens[i].ceiling_corners[0],
-                                     tweens[i].ceiling_corners[1],
-                                     tweens[i].ceiling_corners[3],
-                                     true);
-                trimesh->addTriangle(tweens[i].ceiling_corners[2],
-                                     tweens[i].ceiling_corners[1],
-                                     tweens[i].ceiling_corners[3],
-                                     true);
-                cnt += 2;
-                break;
-        };
-
-        switch(tweens[i].floor_tween_type)
-        {
-            case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
-                {
-                    btScalar t = fabs((tweens[i].floor_corners[2].m_floats[2] - tweens[i].floor_corners[3].m_floats[2]) /
-                                      (tweens[i].floor_corners[0].m_floats[2] - tweens[i].floor_corners[1].m_floats[2]));
-                    t = 1.0 / (1.0 + t);
-                    btVector3 o;
-                    o.setInterpolate3(tweens[i].floor_corners[0], tweens[i].floor_corners[2], t);
-                    trimesh->addTriangle(tweens[i].floor_corners[0],
-                                         tweens[i].floor_corners[1],
-                                         o, true);
-                    trimesh->addTriangle(tweens[i].floor_corners[3],
-                                         tweens[i].floor_corners[2],
-                                         o, true);
-                    cnt += 2;
-                }
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
-                trimesh->addTriangle(tweens[i].floor_corners[0],
-                                     tweens[i].floor_corners[1],
-                                     tweens[i].floor_corners[3],
-                                     true);
-                cnt++;
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
-                trimesh->addTriangle(tweens[i].floor_corners[2],
-                                     tweens[i].floor_corners[1],
-                                     tweens[i].floor_corners[3],
-                                     true);
-                cnt++;
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_QUAD:
-                trimesh->addTriangle(tweens[i].floor_corners[0],
-                                     tweens[i].floor_corners[1],
-                                     tweens[i].floor_corners[3],
-                                     true);
-                trimesh->addTriangle(tweens[i].floor_corners[2],
-                                     tweens[i].floor_corners[1],
-                                     tweens[i].floor_corners[3],
-                                     true);
-                cnt += 2;
-                break;
-        };
-    }
-
-    if(cnt == 0)
-    {
-        delete trimesh;
-        return NULL;
-    }
-
-    ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
-    return ret;
-}
-
-
-btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag)
-{
-    uint32_t cnt = 0;
-    polygon_p p;
-    btTriangleMesh *trimesh = new btTriangleMesh;
-    btCollisionShape* ret;
-    btVector3 v0, v1, v2;
-    obb_p obb;
-
-    switch(cflag)
-    {
-        default:
-        case COLLISION_TRIMESH:
-            p = mesh->polygons;
-            for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
-            {
-                if(Polygon_IsBroken(p))
-                {
-                    continue;
-                }
-
-                for(uint16_t j=1;j+1<p->vertex_count;j++)
-                {
-                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-                    vec3_copy(v1.m_floats, p->vertices[j].position);
-                    vec3_copy(v2.m_floats, p->vertices[0].position);
-                    trimesh->addTriangle(v0, v1, v2, true);
-                }
-                cnt ++;
-            }
-
-            if(cnt == 0)
-            {
-                delete trimesh;
-                return NULL;
-            }
-
-            ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
-            break;
-
-        case COLLISION_BOX:                                                     // the box with deviated centre
-            obb = OBB_Create();
-            OBB_Rebuild(obb, mesh->bb_min, mesh->bb_max);
-            p = obb->base_polygons;
-            for(uint16_t i=0;i<6;i++,p++)
-            {
-                if(Polygon_IsBroken(p))
-                {
-                    continue;
-                }
-                for(uint16_t j=1;j+1<p->vertex_count;j++)
-                {
-                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-                    vec3_copy(v1.m_floats, p->vertices[j].position);
-                    vec3_copy(v2.m_floats, p->vertices[0].position);
-                    trimesh->addTriangle(v0, v1, v2, true);
-                }
-                cnt ++;
-            }
-
-            if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
-            {
-                delete trimesh;
-                return NULL;
-            }
-
-            ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
-            OBB_Clear(obb);
-            free(obb);
-            break;
-    };
-
-    return ret;
 }
 
 

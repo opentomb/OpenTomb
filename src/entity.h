@@ -48,11 +48,6 @@ struct ss_bone_frame_s;
 #define ENTITY_SUBSTANCE_QUICKSAND_SHALLOW        4
 #define ENTITY_SUBSTANCE_QUICKSAND_CONSUMED       5
 
-
-#define COLLISION_NONE                            (0x00000000)
-#define COLLISION_TRIMESH                         (0x00000001)
-#define COLLISION_BOX                             (0x00000002)
-
 // TR floor data functions
 
 #define TR_FD_FUNC_PORTALSECTOR                 0x01
@@ -164,6 +159,9 @@ void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);
 void Entity_EnableCollision(entity_p ent);
 void Entity_DisableCollision(entity_p ent);
+
+// Bullet entity rigid body generating.
+void BT_GenEntityRigidBody(entity_p ent);
 
 void Entity_UpdateRoomPos(entity_p ent);
 void Entity_UpdateRigidBody(entity_p ent, int force);

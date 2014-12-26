@@ -9,6 +9,11 @@
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
 
+#define COLLISION_NONE                            (0x00000000)
+#define COLLISION_TRIMESH                         (0x00000001)
+#define COLLISION_BOX                             (0x00000002)
+
+
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 #include "bullet/LinearMath/btScalar.h"
@@ -338,5 +343,9 @@ void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_coun
 
 uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
 void Mesh_GenFaces(base_mesh_p mesh);
+
+/* bullet collision model calculation */
+btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag);
+btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
 #endif
