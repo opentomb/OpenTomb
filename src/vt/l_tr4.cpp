@@ -192,7 +192,9 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
     room.extra_param = read_bitu8(src);
     room.reverb_info = read_bitu8(src);
 
-    SDL_RWseek(src, 1, SEEK_CUR);
+    // Only in TR4-5
+
+    room.alternate_group = read_bitu8(src);
 
     room.light_colour.r = (( room.intensity2 & 0x00FF)       / 255.0f);
     room.light_colour.g = (((room.intensity1 & 0xFF00) >> 8) / 255.0f);
