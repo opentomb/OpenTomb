@@ -229,7 +229,7 @@ typedef struct {
     uint16_t num_static_meshes;     // number of static meshes
     tr2_room_staticmesh_t *static_meshes;    // [NumStaticMeshes]list of static meshes
     int16_t alternate_room;         // number of the room that this room can alternate
-    int16_t alternate_group;        // number of group which is used to switch alternate rooms
+    int8_t  alternate_group;        // number of group which is used to switch alternate rooms
     // with (e.g. empty/filled with water is implemented as an empty room that alternates with a full room)
     
         uint16_t flags;
