@@ -147,7 +147,9 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
     for (i = 0; i < room.num_static_meshes; i++)
         read_tr3_room_staticmesh(src, room.static_meshes[i]);
 
-    room.alternate_room = read_bit16(src);
+    room.alternate_room  = read_bit16(src);
+    room.alternate_group = 0;   // Doesn't exist in TR1-3
+    
     room.flags = read_bitu16(src);
     
     if(room.flags & 0x0080)
