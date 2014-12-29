@@ -36,8 +36,8 @@ extern "C" {
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
 extern lua_State *engine_lua;
 
+void Save_EntityTree(FILE **f, RedBlackNode_p n);
 void Save_Entity(FILE **f, entity_p ent);
-
 
 int lua_mlook(lua_State * lua)
 {
@@ -164,6 +164,19 @@ int Game_Load(const char* name)
 }
 
 
+void Save_EntityTree(FILE **f, RedBlackNode_p n)
+{
+    if(n->left != NULL)
+    {
+        Save_EntityTree(f, n->left);
+    }
+    Save_Entity(f, (entity_p)n->data);
+    if(n->right != NULL)
+    {
+        Save_EntityTree(f, n->right);
+    }
+}
+
 /**
  * Entity save function, based on engine lua scripts;
  */
@@ -174,9 +187,19 @@ void Save_Entity(FILE **f, entity_p ent)
         return;
     }
 
-    fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
-            ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
-            ent->angles[0], ent->angles[1], ent->angles[2]);
+    if(ent->type_flags & ENTITY_TYPE_SPAWNED)
+    {
+        uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
+        fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf.model->id, room_id,
+                ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+                ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
+    }
+    else
+    {
+        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
+                ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+                ent->angles[0], ent->angles[1], ent->angles[2]);
+    }
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.current_animation, ent->bf.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.next_state, ent->bf.last_state);
@@ -253,17 +276,9 @@ int Game_Save(const char* name)
 
     fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
     Save_Entity(&f, engine_world.Character);
-    room_p r = engine_world.rooms;
-    for(uint32_t i=0;i<engine_world.room_count;i++,r++)
+    if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
     {
-        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
-        {
-            if(cont->object_type == OBJECT_ENTITY)
-            {
-                fprintf(f, "\n\n-- other entity");
-                Save_Entity(&f, (entity_p)cont->object);
-            }
-        }
+        Save_EntityTree(&f, engine_world.entity_tree->root);
     }
     fclose(f);
 

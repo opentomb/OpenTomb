@@ -1165,6 +1165,49 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     return 0;
 }
 
+
+int lua_SpawnEntity(lua_State * lua)
+{
+    int top;
+    btScalar pos[3], ang[3];
+
+    top = lua_gettop(lua);
+    if(top < 5)
+    {
+        ///uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3])
+        Con_Printf("Wrong arguments count. Must be (model_id1, room_id, x, y, z, (ax, ay, az))");
+        return 0;
+    }
+
+    int model_id = lua_tointeger(lua, 1);
+    int room_id = lua_tointeger(lua, 2);
+    pos[0] = lua_tonumber(lua, 3);
+    pos[1] = lua_tonumber(lua, 4);
+    pos[2] = lua_tonumber(lua, 5);
+    ang[0] = lua_tonumber(lua, 6);
+    ang[1] = lua_tonumber(lua, 7);
+    ang[2] = lua_tonumber(lua, 8);
+
+    int32_t ov_id = -1;
+    if(lua_isnumber(lua, 9))
+    {
+        ov_id = lua_tointeger(lua, 9);
+    }
+
+    uint32_t id = World_SpawnEntity(model_id, room_id, pos, ang, ov_id);
+    if(id == 0xFFFFFFFF)
+    {
+        lua_pushnil(lua);
+    }
+    else
+    {
+        lua_pushinteger(lua, id);
+    }
+
+    return 1;
+}
+
+
 /*
  * Moveables script control section
  */
@@ -2274,6 +2317,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
     lua_register(lua, "printItems", lua_PrintItems);
 
+    lua_register(lua, "spawnEntity", lua_SpawnEntity);
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
