@@ -35,6 +35,16 @@ void Room_Empty(room_p room)
         return;
     }
 
+    engine_container_p cont = room->containers;
+    for(;cont!=NULL;)
+    {
+        engine_container_p dl = cont;
+        cont=cont->next;
+        dl->room = NULL;
+        dl->next = NULL;
+    }
+    room->containers = NULL;
+
     p = room->portals;
     room->near_room_list_size = 0;
 
@@ -348,7 +358,7 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
     {
         return 1;
     }
-    
+
     ///@QUESTION: is next code necessary?
     s1p = TR_Sector_CheckBaseRoom(s1p);
     s2p = TR_Sector_CheckBaseRoom(s2p);
@@ -589,6 +599,123 @@ void RBItemFree(void *x)
     free(((base_item_p)x)->bf->bone_tags);
     free(((base_item_p)x)->bf);
     free(x);
+}
+
+
+uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3], int32_t id)
+{
+    if(engine_world.entity_tree != NULL)
+    {
+        skeletal_model_p model = World_FindModelByID(&engine_world, model_id);
+        if(model != NULL)
+        {
+            entity_p ent = World_GetEntityByID(&engine_world, id);
+            RedBlackNode_p node = engine_world.entity_tree->root;
+
+            if(ent != NULL)
+            {
+                if(pos != NULL)
+                {
+                    vec3_copy(ent->transform+12, pos);
+                }
+                if(ang != NULL)
+                {
+                    vec3_copy(ent->angles, ang);
+                    Entity_UpdateRotation(ent);
+                }
+                if(room_id < engine_world.room_count)
+                {
+                    ent->self->room = engine_world.rooms + room_id;
+                    ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
+                }
+                else
+                {
+                    ent->self->room = NULL;
+                }
+
+                return ent->id;
+            }
+
+            ent = Entity_Create();
+
+            if(id < 0)
+            {
+                ent->id = 0;
+                while(node != NULL)
+                {
+                    ent->id = *((uint32_t*)node->key) + 1;
+                    node = node->right;
+                }
+            }
+            else
+            {
+                ent->id = id;
+            }
+
+            if(pos != NULL)
+            {
+                vec3_copy(ent->transform+12, pos);
+            }
+            if(ang != NULL)
+            {
+                vec3_copy(ent->angles, ang);
+                Entity_UpdateRotation(ent);
+            }
+            if(room_id < engine_world.room_count)
+            {
+                ent->self->room = engine_world.rooms + room_id;
+                ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
+            }
+            else
+            {
+                ent->self->room = NULL;
+            }
+
+            ent->type_flags       = ENTITY_TYPE_SPAWNED;
+            ent->state_flags      = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
+            ent->activation_mask  = 0x00;
+            ent->OCB              = 0x00;
+
+            ent->self->collide_flag = 0x00;
+            ent->anim_flags = 0x0000;
+            ent->move_type = 0x0000;
+            ent->bf.current_animation = 0;
+            ent->bf.current_frame = 0;
+            ent->bf.frame_time = 0.0;
+            ent->inertia = 0.0;
+            ent->move_type = 0;
+
+            ent->bf.model = model;
+            ent->bf.bone_tag_count = model->mesh_count;
+            ent->bf.bone_tags = (ss_bone_tag_p)malloc(model->mesh_count * sizeof(ss_bone_tag_t));
+            for(uint16_t j=0;j<model->mesh_count;j++)
+            {
+                ent->bf.bone_tags[j].flag = ent->bf.model->mesh_tree[j].flag;
+                ent->bf.bone_tags[j].overrided = ent->bf.model->mesh_tree[j].overrided;
+                ent->bf.bone_tags[j].mesh = ent->bf.model->mesh_tree[j].mesh;
+                ent->bf.bone_tags[j].mesh2 = ent->bf.model->mesh_tree[j].mesh2;
+
+                vec3_copy(ent->bf.bone_tags[j].offset, ent->bf.model->mesh_tree[j].offset);
+                vec4_set_zero(ent->bf.bone_tags[j].qrotate);
+                Mat4_E_macro(ent->bf.bone_tags[j].transform);
+                Mat4_E_macro(ent->bf.bone_tags[j].full_transform);
+            }
+
+            Entity_SetAnimation(ent, 0, 0);                                      // Set zero animation and zero frame
+            BT_GenEntityRigidBody(ent);
+
+            Entity_RebuildBV(ent);
+            if(ent->self->room != NULL)
+            {
+                Room_AddEntity(ent->self->room, ent);
+            }
+            World_AddEntity(&engine_world, ent);
+
+            return ent->id;
+        }
+    }
+
+    return 0xFFFFFFFF;
 }
 
 

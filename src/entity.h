@@ -27,6 +27,7 @@ struct ss_bone_frame_s;
 #define ENTITY_TYPE_PICKABLE                        (0x0004)
 #define ENTITY_TYPE_TRAVERSE                        (0x0008)
 #define ENTITY_TYPE_TRAVERSE_FLOOR                  (0x0010)
+#define ENTITY_TYPE_SPAWNED                         (0x8000)
 
 #define ENTITY_CALLBACK_NONE                        (0x00000000)
 #define ENTITY_CALLBACK_ACTIVATE                    (0x00000001)
