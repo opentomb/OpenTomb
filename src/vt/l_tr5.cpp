@@ -181,7 +181,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
         Sys_extWarn("read_tr5_room: num_static_meshes > 512");
 
     room.reverb_info = read_bitu8(newsrc);
-    room.extra_param = 0;                   ///@FIXME: FIND IT LATER!
+    room.water_scheme = 0;                   ///@FIXME: FIND IT LATER!
 
     room.unknown_r1  = read_bitu8(newsrc);
     room.unknown_r2  = read_bitu16(newsrc);

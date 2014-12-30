@@ -160,7 +160,7 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
 
     // Only in TR3-5
 
-    room.extra_param = read_bitu8(src);
+    room.water_scheme = read_bitu8(src);
     room.reverb_info = read_bitu8(src);
 
     SDL_RWseek(src, 1, SEEK_CUR);   // Alternate_group override?

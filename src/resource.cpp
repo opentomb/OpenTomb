@@ -2037,7 +2037,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->sprites = NULL;
     room->flags = tr->rooms[room_index].flags;
     room->reverb_info = tr->rooms[room_index].reverb_info;
-    room->extra_param = tr->rooms[room_index].extra_param;
+    room->water_scheme = tr->rooms[room_index].water_scheme;
     Mat4_E_macro(room->transform);
     room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
     room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
