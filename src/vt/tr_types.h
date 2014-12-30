@@ -240,8 +240,8 @@ typedef struct {
     // TR3 most likely has flags for "is raining", "is snowing", "water is cold", and "is
     // filled by quicksand", among others.
     
-        uint8_t extra_param;
-    // Extra parameter is used with various room options, for example, R and M room flags in TRLE.
+        uint8_t water_scheme;
+    // Water scheme is used with various room options, for example, R and M room flags in TRLE.
     // Also, it specifies lighting scheme, when 0x4000 vertex attribute is set.
 
     uint8_t reverb_info;
