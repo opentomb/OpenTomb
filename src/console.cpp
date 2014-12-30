@@ -22,14 +22,14 @@ void Con_Init()
     con_base.font_color[1] = 0.0;
     con_base.font_color[2] = 0.0;
     con_base.font_color[3] = 1.0;
-    
+
     con_base.background_color[0] = 1.0;
     con_base.background_color[1] = 0.9;
     con_base.background_color[2] = 0.7;
     con_base.background_color[3] = 0.4;
-    
+
     strncpy(con_base.font_path, "VeraMono.ttf", sizeof(con_base.font_path));
-    
+
     con_base.font_size = 12;
     con_base.log_lines_count = CON_MIN_LOG;
     con_base.shown_lines_count = CON_MIN_LINES;
@@ -37,15 +37,15 @@ void Con_Init()
     con_base.spacing = CON_MIN_LINE_INTERVAL;
     con_base.showing_lines = con_base.shown_lines_count;
     con_base.show_cursor_period = 0.5;
-    
+
     if(!Engine_FileFound(con_base.font_path))
     {
         Sys_Error("Console: could not find font = \"%s\"", con_base.font_path);
     }
-    
+
     con_base.font = new FTGLTextureFont(con_base.font_path);
     con_base.font->FaceSize(con_base.font_size);
-    
+
     con_base.shown_lines = (char**) malloc(con_base.shown_lines_count*sizeof(char*));
     for(uint16_t i=0;i<con_base.shown_lines_count;i++)
     {
@@ -169,7 +169,7 @@ void Con_DrawBackground()
     rectCoords[2] = 0.0;                        rectCoords[3] = (GLfloat)(con_base.cursor_y + con_base.line_height - 8);
     rectCoords[4] = (GLfloat)screen_info.w;     rectCoords[5] = (GLfloat)(con_base.cursor_y + con_base.line_height - 8);
     rectCoords[6] = (GLfloat)screen_info.w;     rectCoords[7] = (GLfloat)screen_info.h;
-    
+
     glVertexPointer(2, GL_FLOAT, 0, rectCoords);
     glDrawArrays(GL_POLYGON, 0, 4);
 
@@ -178,7 +178,7 @@ void Con_DrawBackground()
      */
     glColor4fv(con_base.font_color);
     glVertexPointer(2, GL_FLOAT, 0, rectCoords + 2);
-    glDrawArrays(GL_LINES, 0, 2);    
+    glDrawArrays(GL_LINES, 0, 2);
 }
 
 void Con_DrawCursor()
@@ -203,7 +203,7 @@ void Con_DrawCursor()
         coords[2] = (GLfloat)con_base.cursor_x;     coords[3] = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // otherways cursor does not swown in smooth font case
         glVertexPointer(2, GL_FLOAT, 0, coords);
-        glDrawArrays(GL_LINES, 0, 2); 
+        glDrawArrays(GL_LINES, 0, 2);
     }
 }
 
@@ -248,10 +248,13 @@ void Con_Edit(int key)
         case SDLK_DOWN:
             Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
             strncpy(con_base.shown_lines[0], con_base.log_lines[con_base.log_pos], con_base.line_size);
-            con_base.log_pos--;
-            if(con_base.log_pos < 0)
+            if(con_base.log_pos == 0)
             {
                 con_base.log_pos = con_base.log_lines_count - 1;
+            }
+            else
+            {
+                con_base.log_pos--;
             }
             con_base.cursor_pos = strlen(con_base.shown_lines[0]);
             break;
@@ -377,7 +380,7 @@ void Con_AddText(const char *text)
 {
     char buf[4096], ch;
     size_t j = 0, text_size = strlen(text);
-    
+
     buf[0] = 0;
     for(size_t i=0,j=0;i<text_size;i++)
     {
@@ -388,7 +391,7 @@ void Con_AddText(const char *text)
             buf[j] = 0;
             buf[4095] = 0;
             if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
-            {  
+            {
                 Con_AddLine(buf);
             }
             j=0;
@@ -398,7 +401,7 @@ void Con_AddText(const char *text)
            buf[j++] = ch;
         }
     }
-    
+
     buf[4095] = 0;
     if(j < 4096)
     {

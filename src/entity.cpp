@@ -74,6 +74,11 @@ void Entity_Clear(entity_p entity)
 {
     if(entity)
     {
+        if(entity->self->room != NULL)
+        {
+            Room_RemoveEntity(entity->self->room, entity);
+        }
+
         if(entity->obb)
         {
             OBB_Clear(entity->obb);

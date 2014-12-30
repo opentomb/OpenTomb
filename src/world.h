@@ -124,7 +124,7 @@ typedef struct room_s
     int8_t                      hide;                                           // do not render
     struct base_mesh_s         *mesh;                                           // room's base mesh
     //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
-    
+
     uint32_t                    static_mesh_count;
     struct static_mesh_s       *static_mesh;
     uint32_t                    sprites_count;
@@ -236,6 +236,7 @@ int compEntityEQ(void *x, void *y);
 int compEntityLT(void *x, void *y);
 void RBEntityFree(void *x);
 void RBItemFree(void *x);
+uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3], int32_t id);
 struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
 struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id);
 
