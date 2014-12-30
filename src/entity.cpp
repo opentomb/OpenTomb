@@ -74,7 +74,7 @@ void Entity_Clear(entity_p entity)
 {
     if(entity)
     {
-        if(entity->self->room != NULL)
+        if((entity->self->room != NULL) && (entity != engine_world.Character))
         {
             Room_RemoveEntity(entity->self->room, entity);
         }

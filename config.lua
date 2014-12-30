@@ -119,7 +119,7 @@ cvars.free_look_speed = 2500;
 -- setgamef(2.5, 1) -- TR_II gold, map 1
 setgame(GAME_1, 2);
 
-gravity(0, 0, -5700.0);
+setGravity(0, 0, -5700.0);
 mlook(1);
 freelook(0);
 cam_distance(1024.0);

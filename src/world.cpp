@@ -445,6 +445,13 @@ void World_Empty(world_p world)
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
     SDL_Delay(500);                                                             ///@FIXME: find correct time, or way to waiting ALL audio tracks stopping and destroing.
+    if(world->Character != NULL)
+    {
+        world->Character->self->room = NULL;
+        world->Character->self->next = NULL;
+        world->Character->current_sector = NULL;
+    }
+
     // Now we can delete all other. Be carefull: OpenAL uses multithreading!
     for(uint32_t i=0;i<world->room_count;i++)
     {
