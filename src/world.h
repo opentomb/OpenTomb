@@ -116,7 +116,8 @@ typedef struct room_s
     uint32_t                    id;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
     uint8_t                     reverb_info;                                    // room reverb type
-    uint8_t                     extra_param;
+    uint8_t                     water_scheme;
+    uint8_t                     alternate_group;
 
     int8_t                      active;                                         // flag: is active
     int8_t                      is_in_r_list;                                   // is room in render list
@@ -173,7 +174,9 @@ typedef struct world_s
 
     uint32_t                    room_box_count;
     struct room_box_s          *room_boxes;
-
+    
+    uint32_t                    room_flipmap;           // Flipped room activity bit field.
+    uint32_t                    room_flipstate;         // Flipped room actual state bit field.
 
     bordered_texture_atlas_p    tex_atlas;
     uint32_t                    tex_count;              // Number of textures

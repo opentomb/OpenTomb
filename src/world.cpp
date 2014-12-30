@@ -386,6 +386,8 @@ void World_Prepare(world_p world)
     world->sprites_count = 0;
     world->room_count = 0;
     world->rooms = 0;
+    world->room_flipmap = 0;
+    world->room_flipstate = 0;
     world->textures = NULL;
     world->type = 0;
     world->last_finded_entity = NULL;
