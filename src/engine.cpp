@@ -2180,6 +2180,177 @@ int lua_LoadMap(lua_State *lua)
     return 0;
 }
 
+
+/*
+ * Flipped (alternate) room functions
+ */
+ 
+int lua_SetFlipRoom(lua_State *lua)
+{
+    uint32_t group, state;
+    
+    int top = lua_gettop(lua);
+    if(top != 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (flipmap_index, room_state).");
+        return 0;
+    }
+    
+    group = (uint32_t)lua_tointeger(lua, 1);
+    state = (uint32_t)lua_tointeger(lua, 2);
+    state = (state > 1)?(1):(state);                // State is always boolean.
+
+    if(engine_world.room_flipmap & (1 << group))    // Check flipmap state.
+    {
+        room_p current_room = engine_world.rooms;
+        
+        if(engine_world.version > TR_III)
+        {
+            for(int i=0;i<engine_world.room_count;i++, current_room++)
+            {
+                if(current_room->alternate_group == group)    // Check if group is valid.
+                {
+                    if(state)
+                    {
+                        Room_SwapToAlternate(current_room);
+                    }
+                    else
+                    {
+                        Room_SwapToBase(current_room);
+                    }
+                }
+            }
+        
+            if(state)
+            {
+                engine_world.room_flipstate |= (1 << group);    // Mark group state as alternate.
+            } 
+            else
+            {
+                engine_world.room_flipstate ^= (1 << group);    // Mark group state as base.
+            }
+        }
+        else
+        {
+            for(int i=0;i<engine_world.room_count;i++,current_room++)
+            {
+                if(state)
+                {
+                    Room_SwapToAlternate(current_room);
+                }
+                else
+                {
+                    Room_SwapToBase(current_room);
+                }
+            }
+            
+            engine_world.room_flipstate = state;    // In TR1-3, state is always global.
+        }
+    }
+    else
+    {
+        Con_Printf("Flipmap bit %d state is FALSE - no rooms were swapped!", group);
+    }
+    
+    return 0;
+}
+
+int lua_SetFlipFlag(lua_State *lua)
+{
+    uint32_t group, state;
+    
+    int top = lua_gettop(lua);
+    if(top != 2)
+    {
+        Con_Printf("Wrong arguments count. Must be (flipmap_index, flipmap_state).");
+        return 0;
+    }
+    
+    group = (uint32_t)lua_tointeger(lua, 1);
+    state = (uint32_t)lua_tointeger(lua, 2);
+    state = (state > 1)?(1):(state);                // State is always boolean.
+    
+    if(state)
+    {
+        engine_world.room_flipmap |= (1 << group);  // Mark group state as alternate.
+    }
+    else
+    {
+        engine_world.room_flipmap ^= (1 << group);  // Mark group state as base.
+    }
+    
+    return 0;
+}
+
+int lua_GetFlipmap(lua_State *lua)
+{
+    lua_pushinteger(lua, engine_world.room_flipmap);
+    return 0;
+}
+
+int lua_SetFlipmap(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    if(top == 1)
+    {
+        uint32_t flipmap = (uint32_t)lua_tointeger(lua, 1);
+        engine_world.room_flipmap = flipmap;
+    }
+    return 0;
+}
+
+int lua_GetFlipstate(lua_State *lua)
+{
+    lua_pushinteger(lua, engine_world.room_flipstate);
+    return 0;
+}
+
+int lua_SetFlipstate(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    if(top == 1)
+    {
+        uint32_t flipstate = (uint32_t)lua_tointeger(lua, 1);
+        engine_world.room_flipstate = flipstate;
+        room_p current_room = engine_world.rooms;
+        
+        if(engine_world.version > TR_III)
+        {
+            for(int i=0;i<engine_world.room_count;i++,current_room++)
+            {
+                if(flipstate & (1 << current_room->alternate_group))
+                {
+                    Room_SwapToAlternate(current_room);
+                }
+                else
+                {
+                    Room_SwapToBase(current_room);
+                }
+            }
+        }
+        else
+        {
+            for(int i=0;i<engine_world.room_count;i++,current_room++)
+            {
+                if(flipstate)
+                {
+                    Room_SwapToAlternate(current_room);
+                }
+                else
+                {
+                    Room_SwapToBase(current_room);
+                }
+            }
+        }
+    }
+    
+    return 0;
+}
+
+/*
+ * Generate UV rotate animations
+ */
+
 int lua_genUVRotateAnimation(lua_State *lua)
 {
     int id, top;
@@ -2302,6 +2473,13 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setgame", lua_SetGame);
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
+    
+    lua_register(lua, "setFlipFlag", lua_SetFlipFlag);
+    lua_register(lua, "setFlipRoom", lua_SetFlipRoom);
+    lua_register(lua, "setFlipmap", lua_SetFlipmap);
+    lua_register(lua, "getFlipmap", lua_GetFlipmap);
+    lua_register(lua, "setFlipstate", lua_SetFlipstate);
+    lua_register(lua, "getFlipstate", lua_GetFlipstate);
 
     lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);

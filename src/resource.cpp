@@ -1555,6 +1555,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->meshs_count = 0;
     world->room_count = 0;
     world->rooms = NULL;
+    world->room_flipmap = 0;
+    world->room_flipstate = 0;
     world->sprites_count = 0;
     world->sprites = NULL;
     world->entity_tree = RB_Init();
@@ -2038,6 +2040,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->flags = tr->rooms[room_index].flags;
     room->reverb_info = tr->rooms[room_index].reverb_info;
     room->water_scheme = tr->rooms[room_index].water_scheme;
+    room->alternate_group = tr->rooms[room_index].alternate_group;
+    
     Mat4_E_macro(room->transform);
     room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
     room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
