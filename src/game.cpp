@@ -275,7 +275,14 @@ int Game_Save(const char* name)
     }
 
     fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
-    Save_Entity(&f, engine_world.Character);
+
+    // Save flipmap and flipped room states.
+
+    fprintf(f, "setFlipmap(%d);\n",   engine_world.room_flipmap);
+    fprintf(f, "setFlipstate(%d);\n", engine_world.room_flipstate);
+    
+    Save_Entity(&f, engine_world.Character);    // Save Lara.
+    
     if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
     {
         Save_EntityTree(&f, engine_world.entity_tree->root);
