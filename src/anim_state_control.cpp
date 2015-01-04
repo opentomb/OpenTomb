@@ -1668,6 +1668,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     pos[1] = climb->point[1] - ent->transform[4 + 1] * (ent->character->ry + 16.0);
                 }
             }
+            
+            if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit))
+            {
+                ent->bf.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+                ent->onFrame = ent_to_monkey_swing;
+            }
 
             if(((ent->move_type != MOVE_ON_FLOOR)) && (cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 64.0))
             {
@@ -2834,6 +2840,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
              * CLIMB MONKEY
              */
         case TR_STATE_LARA_MONKEYSWING_IDLE:
+            cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_STAY;
             ///@FIXME: stick for TR_III+ monkey swing fix... something wrong with anim 150
             if((cmd->action == 1) && (ent->move_type != MOVE_MONKEYSWING) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 96.0))
@@ -2846,7 +2853,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if((ent->move_type != MOVE_MONKEYSWING) || (cmd->action == 0))
             {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
                 ent->dir_flag = ENT_STAY;
                 ent->move_type = MOVE_FREE_FALLING;
             }
@@ -2877,7 +2884,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] *= 0.5;
             if((ent->move_type != MOVE_MONKEYSWING) || (!cmd->action))
             {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
                 ent->dir_flag = ENT_STAY;
                 ent->move_type = MOVE_FREE_FALLING;
             }
@@ -2891,7 +2898,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             cmd->rot[0] *= 0.5;
             if((ent->move_type != MOVE_MONKEYSWING) || (!cmd->action))
             {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
                 ent->dir_flag = ENT_STAY;
                 ent->move_type = MOVE_FREE_FALLING;
             }
@@ -2907,7 +2914,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if((ent->move_type != MOVE_MONKEYSWING) || (!cmd->action))
             {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
                 ent->move_type = MOVE_FREE_FALLING;
             }
             else if(cmd->move[0] != 1)

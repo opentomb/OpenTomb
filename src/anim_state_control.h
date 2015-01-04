@@ -746,7 +746,7 @@ struct character_command_s;
 
 #define TR_EFFECT_GETWATERSKIN          43
 #define TR_EFFECT_REMOVEWATERSKIN       44
-#define TR_EFFECT_VONCROYPROGRESS       45
+#define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
 
 int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd);
