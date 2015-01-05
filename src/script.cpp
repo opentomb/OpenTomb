@@ -491,6 +491,7 @@ int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs)
     int top = lua_gettop(lua);
     lua_getglobal(lua, "controls");
     cs->mouse_sensitivity = lua_GetScalarField(lua, "mouse_sensitivity");
+    cs->keyboard_type = lua_GetScalarField(lua, "keyboard_type");
     cs->use_joy = lua_GetScalarField(lua, "use_joy");
     cs->joy_number = lua_GetScalarField(lua, "joy_number");
     cs->joy_rumble = lua_GetScalarField(lua, "joy_rumble");
