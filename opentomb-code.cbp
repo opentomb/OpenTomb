@@ -7,17 +7,20 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/opentomb-code" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
+				<Option output="C:/MinGW/Projects/OpenTomb/bin/Debug/opentomb-code" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="C:/MinGW/Projects/OpenTomb/bin/Debug/" />
+				<Option object_output="C:/MinGW/Projects/OpenTomb/obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-w" />
 					<Add option="-g3 -fno-exceptions -Wall" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/opentomb-code" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+				<Option output="C:/MinGW/Projects/OpenTomb/bin/Release/opentomb-code" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="C:/MinGW/Projects/OpenTomb/bin/Release/" />
+				<Option object_output="C:/MinGW/Projects/OpenTomb/obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
