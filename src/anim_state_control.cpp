@@ -2922,6 +2922,36 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->bf.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
+            
+        case TR_STATE_LARA_MONKEYSWING_LEFT:
+            cmd->rot[0] = 0.0;
+            ent->dir_flag = ENT_MOVE_LEFT;
+
+            if((ent->move_type != MOVE_MONKEYSWING) || (!cmd->action))
+            {
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
+                ent->move_type = MOVE_FREE_FALLING;
+            }
+            else if(cmd->move[0] != 1)
+            {
+                ent->bf.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+            }
+            break;
+            
+        case TR_STATE_LARA_MONKEYSWING_RIGHT:
+            cmd->rot[0] = 0.0;
+            ent->dir_flag = ENT_MOVE_RIGHT;
+
+            if((ent->move_type != MOVE_MONKEYSWING) || (!cmd->action))
+            {
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
+                ent->move_type = MOVE_FREE_FALLING;
+            }
+            else if(cmd->move[0] != 1)
+            {
+                ent->bf.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+            }
+            break;
 
         case TR_STATE_LARA_FALL_FORWARD:
             if(ent->speed.m_floats[3] < -FREE_FALL_SPEED_2)
