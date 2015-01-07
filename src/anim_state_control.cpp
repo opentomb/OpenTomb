@@ -1252,8 +1252,12 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if(ent->move_type == MOVE_FREE_FALLING)
             {
-                ent->speed.m_floats[0] *= 0.7;
-                ent->speed.m_floats[1] *= 0.7;
+                if(cmd->action)
+                {
+                    ent->speed.m_floats[0] = -ent->transform[4 + 0] * 128.0;
+                    ent->speed.m_floats[1] = -ent->transform[4 + 1] * 128.0;
+                }
+
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
             else if(cmd->slide == 0)
@@ -1668,7 +1672,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                     pos[1] = climb->point[1] - ent->transform[4 + 1] * (ent->character->ry + 16.0);
                 }
             }
-            
+
             if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit))
             {
                 ent->bf.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
@@ -2922,7 +2926,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->bf.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
-            
+
         case TR_STATE_LARA_MONKEYSWING_LEFT:
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_LEFT;
@@ -2937,7 +2941,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->bf.next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
-            
+
         case TR_STATE_LARA_MONKEYSWING_RIGHT:
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_RIGHT;
