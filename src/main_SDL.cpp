@@ -897,6 +897,18 @@ void Engine_PollSDLInput()
                 if(sdl_joystick)
                     Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
                 break;
+                
+            case SDL_TEXTINPUT:
+            case SDL_TEXTEDITING:
+                if(con_base.show && event.key.state)
+                {
+                    if (event.text.text != NULL)
+                    {
+                        Controls_KeyConsoleFilter(event.text.text);
+                        return;
+                    }
+                }
+                break;
 
             case SDL_KEYUP:
             case SDL_KEYDOWN:
@@ -910,7 +922,22 @@ void Engine_PollSDLInput()
 
                 if(con_base.show && event.key.state)
                 {
-                    Con_Edit(Controls_KeyConsoleFilter(event.key.keysym.sym, event.key.keysym.mod));
+                    switch (event.key.keysym.sym)
+                    {
+                        case SDLK_RETURN:
+                        case SDLK_UP:
+                        case SDLK_DOWN:
+                        case SDLK_LEFT:
+                        case SDLK_RIGHT:
+                        case SDLK_HOME:
+                        case SDLK_END:
+                        case SDLK_BACKSPACE:
+                        case SDLK_DELETE:
+                            Con_Edit(event.key.keysym.sym);
+                            break;
+                        default:
+                            break;
+                    }
                     return;
                 }
                 else
