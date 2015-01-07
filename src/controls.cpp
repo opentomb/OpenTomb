@@ -363,17 +363,6 @@ void Controls_JoyRumble(float power, int time)
         SDL_HapticRumblePlay(sdl_haptic, power, time);
 }
 
-int Controls_KeyConsoleFilter(char *text)
-{
-    while (*text != '\0')
-    {
-        Con_Edit(*text);
-        text++;
-    }
-
-    return 0;
-}
-
 void Controls_RefreshStates()
 {
     for(int i = 0; i < ACT_LASTINDEX; i++)

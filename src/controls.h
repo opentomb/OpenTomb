@@ -123,7 +123,5 @@ void Controls_JoyRumble(float power, int time);
 void Controls_RefreshStates();
 void Controls_InitGlobals();
 
-int  Controls_KeyConsoleFilter(char *text);
-
 #endif /* CONTROLS_H */
 
