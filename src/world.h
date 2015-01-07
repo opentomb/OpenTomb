@@ -30,11 +30,8 @@
 #define TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW 0x11    //  [P/_]
 #define TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE 0x12    //  [_/P]
 #define TR_FD_FUNC_MONKEY                       0x13
-
-#define TR_FD_FUNC_MINECART_LEFT        0x14    // In TR3 only.
-#define TR_FD_FUNC_MINECART_RIGHT       0x15    // In TR3 only.
-#define TR_FD_FUNC_TRIGGERER_MARK       0x14    // In TR4 only.
-#define TR_FD_FUNC_BEETLE_MARK          0x15    // In TR4 only.
+#define TR_FD_FUNC_MINECART_LEFT                0x14    // In TR3 only. Function changed in TR4+.
+#define TR_FD_FUNC_MINECART_RIGHT               0x15    // In TR3 only. Function changed in TR4+.
 
 // Native TR trigger (TR_FD_FUNC_TRIGGER) types.
 

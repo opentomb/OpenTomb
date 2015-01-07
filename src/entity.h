@@ -118,6 +118,7 @@ int  Entity_GetSubstanceState(entity_p entity);
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
 void Entity_DoAnimCommands(entity_p entity, int changing);
 int  Entity_ParseFloorData(struct entity_s *ent, struct world_s *world);
+void Entity_ProcessSector(struct entity_s *ent);
 void Entity_SetAnimation(entity_p entity, int animation, int frame);
 void Entity_MoveForward(struct entity_s *ent, btScalar dist);
 void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);

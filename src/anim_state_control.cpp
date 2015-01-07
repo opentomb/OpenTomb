@@ -1574,8 +1574,11 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 else
                 {
                     *climb = Character_CheckWallsClimbability(ent);
-                    if(climb->wall_hit)
+                    if((climb->wall_hit) &&
+                       (ent->speed.m_floats[2] < 0.0)) // Only hang if speed is lower than zero.
                     {
+                        // Fix the position to the TR metering step.
+                        ent->transform[12+2] = (btScalar)((int)((ent->transform[12+2]) / TR_METERING_STEP) * TR_METERING_STEP);
                         ent->move_type = MOVE_WALLS_CLIMB;
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_HANG_IDLE, -1);
                         break;

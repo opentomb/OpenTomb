@@ -2217,6 +2217,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         sector->owner_room = room;
         sector->box_index  = tr_room->sector_list[i].box_index;
+        
+        sector->flags = 0;  // Clear sector flags.
 
         if(sector->box_index == 0xFFFF)
         {
