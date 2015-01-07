@@ -308,9 +308,9 @@ gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *f
         l->prev = NULL;
         l->rect_border = 2.0;
 
-        l->font_color[0] = 0.0;
-        l->font_color[1] = 0.0;
-        l->font_color[2] = 0.0;
+        l->font_color[0] = 1.0;
+        l->font_color[1] = 1.0;
+        l->font_color[2] = 1.0;
         l->font_color[3] = 1.0;
 
         l->rect_color[0] = 0.0;
@@ -321,7 +321,8 @@ gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *f
         temp_lines_used ++;
         l->x = x;
         l->y = y;
-        Gui_StringAutoRect(l);
+        //Gui_StringAutoRect(l);
+        l->shadowed = 1;
         l->show = 1;
         return l;
     }
@@ -349,8 +350,8 @@ void Gui_Render()
     Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_DrawFaders();
-    Con_Draw();
     Gui_RenderStrings();
+    Con_Draw();
 
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
@@ -376,6 +377,21 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glColor4fv(l->rect_color);
         glVertexPointer(2, GL_FLOAT, 0, rectCoords);
         glDrawArrays(GL_POLYGON, 0, 4);
+    }
+    if(l->shadowed)
+    {
+        if(l->font == NULL)
+        {
+            l->font = con_base.font;
+        }
+
+        GLfloat temp[4] = {0.0,0.0,0.0,1};
+        glColor4fv(temp);
+        glPushMatrix();
+        GLfloat xs = 0.4, ys = -0.7;
+        glTranslatef((GLfloat)((l->x+xs >= 0)?(l->x+xs):(screen_info.w + l->x+xs)), (GLfloat)((l->y+ys >= 0)?(l->y+ys):(screen_info.h + l->y+ys)), 0.0);
+        l->font->RenderRaw(l->text);
+        glPopMatrix();
     }
 
     if(l->show)
