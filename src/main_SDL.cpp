@@ -496,7 +496,7 @@ int main(int argc, char **argv)
 
     Gui_FadeAssignPic(FADER_LOADSCREEN, "graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
-    
+
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
@@ -799,16 +799,16 @@ void ShowDebugInfo()
             case OBJECT_ENTITY:
                 Gui_OutTextXY(NULL, 20, 92, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
                 break;
-                
+
             case OBJECT_STATIC_MESH:
                 Gui_OutTextXY(NULL, 20, 92, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
-                
+
             case OBJECT_ROOM_BASE:
                 Gui_OutTextXY(NULL, 20, 92, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
-        
+
     }
 
     if(engine_camera.current_room != NULL)
@@ -945,19 +945,19 @@ void DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_UP:
-                main_inventory_menu->MoveSelectVertical(-1);
+                if(0)main_inventory_menu->MoveSelectVertical(-1);
                 break;
 
             case SDLK_DOWN:
-                main_inventory_menu->MoveSelectVertical(1);
+                if(0)main_inventory_menu->MoveSelectVertical(1);
                 break;
 
             case SDLK_LEFT:
-                main_inventory_menu->MoveSelectHorisontal(-1);
+                if(0)main_inventory_menu->MoveSelectHorisontal(-1);
                 break;
 
             case SDLK_RIGHT:
-                main_inventory_menu->MoveSelectHorisontal(1);
+                if(0)main_inventory_menu->MoveSelectHorisontal(1);
                 break;
 
                 /*models switching*/
@@ -1080,7 +1080,7 @@ void DebugKeys(int button, int state)
                     }
                 }
                 break;
-                
+
             case SDLK_4:
                 if(!con_base.show)
                 {

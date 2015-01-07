@@ -363,382 +363,183 @@ void Controls_JoyRumble(float power, int time)
 
 int Controls_KeyConsoleFilter(int32_t key, int kmod_states)
 {
-    switch(control_mapper.keyboard_type)
+    switch(key)
     {
-        case 1:
+        case SDLK_SEMICOLON:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return ':';
+
+        case SDLK_BACKSLASH:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return '|';
+
+        case SDLK_SLASH:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return '?';
+        case SDLK_MINUS:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return '_';
+
+        case SDLK_EQUALS:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return '+';
+
+        case SDLK_LESS:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return '<';
+
+        case SDLK_PERIOD:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return '>';
+
+        case SDLK_LEFTBRACKET:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return '{';
+
+        case SDLK_RIGHTBRACKET:
+            if( !(kmod_states & KMOD_SHIFT) )
+                return key;
+            else
+                return '}';
+
+        case SDLK_KP_DIVIDE:
+            return SDLK_COLON;
+
+        case SDLK_KP_MULTIPLY:
+            return SDLK_ASTERISK;
+
+        case SDLK_KP_MINUS:
+            return SDLK_MINUS;
+
+        case SDLK_KP_PLUS:
+            return SDLK_PLUS;
+
+        case SDLK_KP_ENTER:
+            return SDLK_RETURN;
+
+        case SDLK_KP_EQUALS:
+            return SDLK_EQUALS;
+
+        case SDLK_BACKSPACE:
+        case SDLK_DELETE:
+        case SDLK_SPACE:
+        case SDLK_RETURN:
+        case SDLK_LEFT:
+        case SDLK_RIGHT:
+        case SDLK_UP:
+        case SDLK_DOWN:
+        case SDLK_HOME:
+        case SDLK_END:
+            return key;
+
+        case SDLK_KP_PERIOD:
+            return (kmod_states & KMOD_NUM)?(SDLK_PERIOD):(SDLK_DELETE);
+
+        case SDLK_KP_0:
+        case SDLK_KP_1:
+        case SDLK_KP_2:
+        case SDLK_KP_3:
+        case SDLK_KP_4:
+        case SDLK_KP_5:
+        case SDLK_KP_6:
+        case SDLK_KP_7:
+        case SDLK_KP_8:
+        case SDLK_KP_9:
+            if(kmod_states & KMOD_NUM)
+            {
+                return key - 208;
+            }
+            else
             {
                 switch(key)
                 {
-                    {
-                    case SDLK_PERIOD:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return ':';
-
-                    case SDLK_COMMA:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return ';';
-
-                    case SDLK_QUOTE:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '?';
-
-                    case SDLK_MINUS:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '_';
-
-                    case SDLK_EQUALS:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '^';
-
-                    case SDLK_LESS:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '>';
-
-                    case 232:
-                        if( !(kmod_states & KMOD_SHIFT) && (kmod_states & KMOD_ALT) )
-                            return '[';
-                        else if( (kmod_states & KMOD_ALT) )
-                            return '{';
-                        else
-                            break;
-
-                    case 43:
-                        if( !(kmod_states & KMOD_SHIFT) && !(kmod_states & KMOD_ALT) )
-                            return SDLK_PLUS;
-                        else if( !(kmod_states & KMOD_SHIFT) && (kmod_states & KMOD_ALT) )
-                            return ']';
-                        else if( (kmod_states & KMOD_ALT) )
-                            return '}';
-                        else
-                            break;
-
-                    case 249:
-                        if( (kmod_states & KMOD_SHIFT) )
-                            return '~';
-
-                    case 236:
-                        if( (kmod_states & KMOD_SHIFT) )
-                            return '^';
-
-                    case SDLK_KP_DIVIDE:
-                        return SDLK_COLON;
-
-                    case SDLK_KP_MULTIPLY:
-                        return SDLK_ASTERISK;
-
-                    case SDLK_KP_MINUS:
-                        return SDLK_MINUS;
-
-                    case SDLK_KP_PLUS:
-                        return SDLK_PLUS;
-
-                    case SDLK_KP_ENTER:
-                        return SDLK_RETURN;
-
-                    case SDLK_KP_EQUALS:
-                        return SDLK_EQUALS;
-
-                    case SDLK_BACKSPACE:
-                    case SDLK_DELETE:
-                    case SDLK_SPACE:
-                    case SDLK_RETURN:
-                    case SDLK_LEFT:
-                    case SDLK_RIGHT:
-                    case SDLK_UP:
-                    case SDLK_DOWN:
-                    case SDLK_HOME:
-                    case SDLK_END:
-                        return key;
-
-                    case SDLK_KP_PERIOD:
-                        return (kmod_states & KMOD_NUM)?(SDLK_PERIOD):(SDLK_DELETE);
-
-                    case SDLK_KP_0:
-                    case SDLK_KP_1:
-                    case SDLK_KP_2:
-                    case SDLK_KP_3:
-                    case SDLK_KP_4:
-                    case SDLK_KP_5:
-                    case SDLK_KP_6:
-                    case SDLK_KP_7:
-                    case SDLK_KP_8:
-                    case SDLK_KP_9:
-                        if(kmod_states & KMOD_NUM)
-                        {
-                            return key - 208;
-                        }
-                        else
-                        {
-                            switch(key)
-                            {
-                            case SDLK_KP_1:
-                                return SDLK_END;
-                            case SDLK_KP_2:
-                                return SDLK_DOWN;
-                            case SDLK_KP_4:
-                                return SDLK_LEFT;
-                            case SDLK_KP_6:
-                                return SDLK_RIGHT;
-                            case SDLK_KP_7:
-                                return SDLK_HOME;
-                            case SDLK_KP_8:
-                                return SDLK_UP;
-                            default:
-                                return 0;
-                            }
-                        }
-
-                    default:
-                        if((key <= SDLK_9) && (key >= SDLK_0))
-                        {
-                            if( !(kmod_states & KMOD_SHIFT) )
-                            {
-                                return key;
-                            }
-                            else switch(key)
-                            {
-                                case SDLK_1:
-                                    return '!';
-
-                                case SDLK_2:
-                                    return '"';
-
-                                case SDLK_3:
-                                    return '£';
-
-                                case SDLK_4:
-                                    return '$';
-
-                                case SDLK_5:
-                                    return '%';
-
-                                case SDLK_6:
-                                    return '&';
-
-                                case SDLK_7:
-                                    return '/';
-
-                                case SDLK_8:
-                                    return '(';
-
-                                case SDLK_9:
-                                    return ')';
-
-                                case SDLK_0:
-                                    return '=';
-                            }
-                        }
-                        else if((key <= SDLK_z) && (key >= SDLK_a))
-                        {
-                            if( (kmod_states & KMOD_SHIFT) || (kmod_states & KMOD_CAPS) )
-                            {
-                                return key - SDLK_a + 'A';
-                            }
-                            else
-                            {
-                                return key - SDLK_a + 'a';
-                            }
-                        }
-                        else
-                        {
-                            return 0;
-                        }
+                case SDLK_KP_1:
+                    return SDLK_END;
+                case SDLK_KP_2:
+                    return SDLK_DOWN;
+                case SDLK_KP_4:
+                    return SDLK_LEFT;
+                case SDLK_KP_6:
+                    return SDLK_RIGHT;
+                case SDLK_KP_7:
+                    return SDLK_HOME;
+                case SDLK_KP_8:
+                    return SDLK_UP;
+                default:
+                    return 0;
                 }
             }
-        }
+
         default:
+            if((key <= SDLK_9) && (key >= SDLK_0))
             {
-                switch(key)
+                if( !(kmod_states & KMOD_SHIFT) )
                 {
-                    case SDLK_SEMICOLON:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return ':';
-
-                    case SDLK_BACKSLASH:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '|';
-
-                    case SDLK_SLASH:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '?';
-                    case SDLK_MINUS:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '_';
-
-                    case SDLK_EQUALS:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '+';
-
-                    case SDLK_LESS:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '<';
-
-                    case SDLK_PERIOD:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '>';
-
-                    case SDLK_LEFTBRACKET:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '{';
-
-                    case SDLK_RIGHTBRACKET:
-                        if( !(kmod_states & KMOD_SHIFT) )
-                            return key;
-                        else
-                            return '}';
-
-                    case SDLK_KP_DIVIDE:
-                        return SDLK_COLON;
-
-                    case SDLK_KP_MULTIPLY:
-                        return SDLK_ASTERISK;
-
-                    case SDLK_KP_MINUS:
-                        return SDLK_MINUS;
-
-                    case SDLK_KP_PLUS:
-                        return SDLK_PLUS;
-
-                    case SDLK_KP_ENTER:
-                        return SDLK_RETURN;
-
-                    case SDLK_KP_EQUALS:
-                        return SDLK_EQUALS;
-
-                    case SDLK_BACKSPACE:
-                    case SDLK_DELETE:
-                    case SDLK_SPACE:
-                    case SDLK_RETURN:
-                    case SDLK_LEFT:
-                    case SDLK_RIGHT:
-                    case SDLK_UP:
-                    case SDLK_DOWN:
-                    case SDLK_HOME:
-                    case SDLK_END:
-                        return key;
-
-                    case SDLK_KP_PERIOD:
-                        return (kmod_states & KMOD_NUM)?(SDLK_PERIOD):(SDLK_DELETE);
-
-                    case SDLK_KP_0:
-                    case SDLK_KP_1:
-                    case SDLK_KP_2:
-                    case SDLK_KP_3:
-                    case SDLK_KP_4:
-                    case SDLK_KP_5:
-                    case SDLK_KP_6:
-                    case SDLK_KP_7:
-                    case SDLK_KP_8:
-                    case SDLK_KP_9:
-                        if(kmod_states & KMOD_NUM)
-                        {
-                            return key - 208;
-                        }
-                        else
-                        {
-                            switch(key)
-                            {
-                            case SDLK_KP_1:
-                                return SDLK_END;
-                            case SDLK_KP_2:
-                                return SDLK_DOWN;
-                            case SDLK_KP_4:
-                                return SDLK_LEFT;
-                            case SDLK_KP_6:
-                                return SDLK_RIGHT;
-                            case SDLK_KP_7:
-                                return SDLK_HOME;
-                            case SDLK_KP_8:
-                                return SDLK_UP;
-                            default:
-                                return 0;
-                            }
-                        }
-
-                    default:
-                        if((key <= SDLK_9) && (key >= SDLK_0))
-                        {
-                            if( !(kmod_states & KMOD_SHIFT) )
-                            {
-                                return key;
-                            }
-                            else switch(key)
-                            {
-                                case SDLK_1:
-                                    return '!';
-
-                                case SDLK_2:
-                                    return '@';
-
-                                case SDLK_3:
-                                    return '#';
-
-                                case SDLK_4:
-                                    return '$';
-
-                                case SDLK_5:
-                                    return '%';
-
-                                case SDLK_6:
-                                    return '^';
-
-                                case SDLK_7:
-                                    return '&';
-
-                                case SDLK_8:
-                                    return '*';
-
-                                case SDLK_9:
-                                    return '(';
-
-                                case SDLK_0:
-                                    return ')';
-                            }
-                        }
-                        else if((key <= SDLK_z) && (key >= SDLK_a))
-                        {
-                            if( (kmod_states & KMOD_SHIFT) || (kmod_states & KMOD_CAPS) )
-                            {
-                                return key - SDLK_a + 'A';
-                            }
-                            else
-                            {
-                                return key - SDLK_a + 'a';
-                            }
-                        }
-                        else
-                        {
-                            return 0;
-                        }
+                    return key;
                 }
+                else switch(key)
+                {
+                    case SDLK_1:
+                        return '!';
+
+                    case SDLK_2:
+                        return '@';
+
+                    case SDLK_3:
+                        return '#';
+
+                    case SDLK_4:
+                        return '$';
+
+                    case SDLK_5:
+                        return '%';
+
+                    case SDLK_6:
+                        return '^';
+
+                    case SDLK_7:
+                        return '&';
+
+                    case SDLK_8:
+                        return '*';
+
+                    case SDLK_9:
+                        return '(';
+
+                    case SDLK_0:
+                        return ')';
+                }
+            }
+            else if((key <= SDLK_z) && (key >= SDLK_a))
+            {
+                if( (kmod_states & KMOD_SHIFT) || (kmod_states & KMOD_CAPS) )
+                {
+                    return key - SDLK_a + 'A';
+                }
+                else
+                {
+                    return key - SDLK_a + 'a';
+                }
+            }
+            else
+            {
+                return 0;
             }
     }
     return 0;
