@@ -902,11 +902,8 @@ void Engine_PollSDLInput()
             case SDL_TEXTEDITING:
                 if(con_base.show && event.key.state)
                 {
-                    if (event.text.text != NULL)
-                    {
-                        Controls_KeyConsoleFilter(event.text.text);
-                        return;
-                    }
+                    Con_Filter(event.text.text);
+                    return;
                 }
                 break;
 
