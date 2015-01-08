@@ -71,15 +71,21 @@ struct bordered_texture_atlas_s;
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 
-void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr);
+void TR_GenWorld(struct world_s *world, class VT_Level *tr);
+void TR_GenRBTrees(struct world_s *world);
+void TR_GenMeshes(struct world_s *world, class VT_Level *tr);
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr);
-void TR_GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class VT_Level *tr);
+void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr);
 void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr);
+void TR_GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class VT_Level *tr);
 void TR_GenEntities(struct world_s *world, class VT_Level *tr);
 void TR_GenSprites(struct world_s *world, class VT_Level *tr);
+void TR_GenTextures(struct world_s *world, class VT_Level *tr);
 void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr);
+void TR_GenRooms(struct world_s *world, class VT_Level *tr);
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr);
-void TR_GenWorld(struct world_s *world, class VT_Level *tr);
+void TR_GenRoomCollision(struct world_s *world);
+void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
@@ -97,16 +103,16 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
 // Main function which is used to translate legacy TR floor data
 // to native OpenTomb structs.
 
-int  TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world);
+int      TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world);
 
 // All functions related to generating heightmap from sector floor data.
 
-void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
-void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index);
+void     TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
+void     TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index);
 uint32_t TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
-void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
-void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
-int  TR_Sector_IsWall(room_sector_p ws, room_sector_p ns);
+void     TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
+void     TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
+int      TR_Sector_IsWall(room_sector_p ws, room_sector_p ns);
 
 // Miscellaneous functions.
 

@@ -784,15 +784,15 @@ void Entity_ProcessSector(struct entity_s *ent)
 {
     if(ent->character)
     {
-        ent->character->height_info.walls_climb_dir = ent->current_sector->flags & (TR_SECTOR_FLAG_CLIMB_WEST  |
-                                                                                    TR_SECTOR_FLAG_CLIMB_EAST  |
-                                                                                    TR_SECTOR_FLAG_CLIMB_NORTH |
-                                                                                    TR_SECTOR_FLAG_CLIMB_SOUTH );
+        ent->character->height_info.walls_climb_dir = ent->current_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
+                                                                                    SECTOR_FLAG_CLIMB_EAST  |
+                                                                                    SECTOR_FLAG_CLIMB_NORTH |
+                                                                                    SECTOR_FLAG_CLIMB_SOUTH );
                                                                                     
         ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
-        ent->character->height_info.ceiling_climb   = (ent->current_sector->flags & TR_SECTOR_FLAG_CLIMB_CEILING);
+        ent->character->height_info.ceiling_climb   = (ent->current_sector->flags & SECTOR_FLAG_CLIMB_CEILING);
         
-        if(ent->current_sector->flags & TR_SECTOR_FLAG_DEATH)
+        if(ent->current_sector->flags & SECTOR_FLAG_DEATH)
         {
             if((ent->move_type == MOVE_ON_FLOOR)    ||
                (ent->move_type == MOVE_UNDER_WATER) ||

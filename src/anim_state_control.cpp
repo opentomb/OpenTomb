@@ -661,12 +661,6 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
             if(ent->move_type == MOVE_FREE_FALLING)
             {
-                if(cmd->action)
-                {
-                    ent->speed.m_floats[0] = -ent->transform[4 + 0] * 128.0;
-                    ent->speed.m_floats[1] = -ent->transform[4 + 1] * 128.0;
-                }
-
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
             else if(cmd->horizontal_collide & 0x01)
@@ -2172,6 +2166,9 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             {
                 if(ent->dir_flag == ENT_MOVE_BACKWARD)
                 {
+                    ent->speed.m_floats[0] = -ent->transform[4 + 0] * 64.0;
+                    ent->speed.m_floats[1] = -ent->transform[4 + 1] * 64.0;
+                    
                     if(ent->bf.current_frame > 3 && ent->bf.current_animation == TR_ANIMATION_LARA_FREE_FALL_MIDDLE)///@FIXME This should stop the player from grabbing too early but sometimes it is not consistent? possibly the frame > 3
                     {
                         ent->bf.next_state = TR_STATE_LARA_REACH;

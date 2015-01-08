@@ -391,7 +391,7 @@ void World_Prepare(world_p world)
     world->name = NULL;
     world->type = 0x00;
     world->meshes = NULL;
-    world->meshs_count = 0;
+    world->meshes_count = 0;
     world->sprites = NULL;
     world->sprites_count = 0;
     world->room_count = 0;
@@ -503,15 +503,15 @@ void World_Empty(world_p world)
 
     /*mesh empty*/
 
-    if(world->meshs_count)
+    if(world->meshes_count)
     {
-        for(uint32_t i=0;i<world->meshs_count;i++)
+        for(uint32_t i=0;i<world->meshes_count;i++)
         {
             BaseMesh_Clear(world->meshes+i);
         }
         free(world->meshes);
         world->meshes = NULL;
-        world->meshs_count = 0;
+        world->meshes_count = 0;
     }
 
     /*

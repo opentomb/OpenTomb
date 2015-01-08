@@ -183,8 +183,8 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     room.reverb_info = read_bitu8(newsrc);
     room.water_scheme = 0;                   ///@FIXME: FIND IT LATER!
 
-    room.unknown_r1  = read_bitu8(newsrc);
-    room.unknown_r2  = read_bitu16(newsrc);
+    room.alternate_group  = read_bitu8(newsrc);
+    room.unknown_r1  = read_bitu16(newsrc);
 
     if (read_bitu32(newsrc) != 0x00007FFF)
         Sys_extWarn("read_tr5_room: filler1 has wrong value");
@@ -201,23 +201,23 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     if (read_bitu32(newsrc) != 0xFFFFFFFF)
         Sys_extWarn("read_tr5_room: seperator6 has wrong value");
 
-    room.unknown_r3 = read_bit16(newsrc);
+    room.alternate_room = read_bit16(newsrc);
 
     room.flags = read_bitu16(newsrc);
 
+    room.unknown_r2 = read_bitu32(newsrc);
+    room.unknown_r3 = read_bitu32(newsrc);
     room.unknown_r4 = read_bitu32(newsrc);
-    room.unknown_r5 = read_bitu32(newsrc);
-    room.unknown_r6 = read_bitu32(newsrc);
 
     temp = read_bitu32(newsrc);
     if ((temp != 0) && (temp != 0xCDCDCDCD))
         Sys_extWarn("read_tr5_room: seperator7 has wrong value");
 
-    room.unknown_r7a = read_bitu16(newsrc);
-    room.unknown_r7b = read_bitu16(newsrc);
+    room.unknown_r5a = read_bitu16(newsrc);
+    room.unknown_r5b = read_bitu16(newsrc);
 
     room.room_x = read_float(newsrc);
-    room.unknown_r8 = read_bitu32(newsrc);
+    room.unknown_r6 = read_bitu32(newsrc);
     room.room_z = -read_float(newsrc);
 
     if (read_bitu32(newsrc) != 0xCDCDCDCD)
@@ -258,7 +258,7 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     if (read_bitu32(newsrc) != room.num_lights)
         Sys_extError("read_tr5_room: room.num_lights2 != room.num_lights");
 
-    room.unknown_r9 = read_bitu32(newsrc);
+    room.unknown_r7 = read_bitu32(newsrc);
     room.room_y_top = -read_float(newsrc);
     room.room_y_bottom = -read_float(newsrc);
 
