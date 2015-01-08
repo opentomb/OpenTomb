@@ -207,9 +207,21 @@ void Con_DrawCursor()
     }
 }
 
+void Con_Filter(char *text)
+{
+    if(text != NULL)
+    {
+        while(*text != '\0')
+        {
+            Con_Edit(*text);
+            text++;
+        }
+    }
+}
+
 void Con_Edit(int key)
 {
-    if(key == SDLK_UNKNOWN || !con_base.inited)
+    if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || !con_base.inited)
     {
         return;
     }

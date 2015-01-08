@@ -259,6 +259,9 @@ void Entity_UpdateRoomPos(entity_p ent)
     new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
     if(new_room)
     {
+        if(ent->current_sector)
+            Entity_ProcessSector(ent);
+        
         new_sector = Room_GetSectorXYZ(new_room, pos);
         if(new_room != new_sector->owner_room)
         {
@@ -777,6 +780,33 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
     }
 }
 
+void Entity_ProcessSector(struct entity_s *ent)
+{
+    if(ent->character)
+    {
+        ent->character->height_info.walls_climb_dir = ent->current_sector->flags & (TR_SECTOR_FLAG_CLIMB_WEST  |
+                                                                                    TR_SECTOR_FLAG_CLIMB_EAST  |
+                                                                                    TR_SECTOR_FLAG_CLIMB_NORTH |
+                                                                                    TR_SECTOR_FLAG_CLIMB_SOUTH );
+                                                                                    
+        ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
+        ent->character->height_info.ceiling_climb   = (ent->current_sector->flags & TR_SECTOR_FLAG_CLIMB_CEILING);
+        
+        if(ent->current_sector->flags & TR_SECTOR_FLAG_DEATH)
+        {
+            if((ent->move_type == MOVE_ON_FLOOR)    ||
+               (ent->move_type == MOVE_UNDER_WATER) ||
+               (ent->move_type == MOVE_WADE)        ||
+               (ent->move_type == MOVE_ON_WATER)    ||
+               (ent->move_type == MOVE_QUICKSAND)    )
+            {
+                Character_SetParam(ent, PARAM_HEALTH, 0.0);
+                ent->character->cmd.kill = 1;
+            }
+        }
+    }
+}
+
 
 int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 {
@@ -792,13 +822,6 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
     uint8_t  trigger_mask;
     uint8_t  only_once;
     int8_t   timer_field;
-
-    if(ent->character)
-    {
-        ent->character->height_info.walls_climb = 0;
-        ent->character->height_info.walls_climb_dir = 0;
-        ent->character->height_info.ceiling_climb = 0;
-    }
 
     if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size))
     {
@@ -1032,19 +1055,10 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
             case TR_FD_FUNC_DEATH:          // KILL LARA
                 Con_Printf("KILL! sub = %d, b3 = %d", sub_function, b3);
-                if(ent->move_type == MOVE_ON_FLOOR)
-                {
-                    ent->character->cmd.kill = 1;
-                }
                 break;
 
             case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
                 Con_Printf("Climbable walls! sub = %d, b3 = %d", sub_function, b3);
-                if(ent->character)
-                {
-                    ent->character->height_info.walls_climb = 1;
-                    ent->character->height_info.walls_climb_dir = sub_function;
-                }
                 break;
 
             case TR_FD_FUNC_FLOORTRIANGLE_NW:                       // TR3 SLANT
@@ -1072,21 +1086,13 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
 
             case TR_FD_FUNC_MONKEY:          // Climbable ceiling
                 Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
-                if(ent->character)
-                {
-                    ent->character->height_info.ceiling_climb = 1;
-                }
-                if(sub_function == 0x00)
-                {
-
-                }
                 break;
-///@FIXME: check operands... is it mistake in variable using???
-            case TR_FD_FUNC_TRIGGERER_MARK:
+                
+            case TR_FD_FUNC_MINECART_LEFT:
                 Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
                 break;
 
-            case TR_FD_FUNC_BEETLE_MARK:
+            case TR_FD_FUNC_MINECART_RIGHT:
                 Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
                 break;
 

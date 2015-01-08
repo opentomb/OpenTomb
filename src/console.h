@@ -60,6 +60,7 @@ void Con_Draw();
 void Con_DrawBackground();
 void Con_DrawCursor();
 
+void Con_Filter(char *text);
 void Con_Edit(int key);
 void Con_CalcCursorPosition();
 void Con_AddLog(const char *text);
