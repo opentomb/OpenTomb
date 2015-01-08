@@ -1032,13 +1032,13 @@ void DebugKeys(int button, int state)
                 mesh--;
                 if(mesh < 0)
                 {
-                    mesh = engine_world.meshs_count-1;
+                    mesh = engine_world.meshes_count-1;
                 }
                 break;
 
             case SDLK_y:
                 mesh++;
-                if((uint32_t)mesh + 1 > engine_world.meshs_count)
+                if((uint32_t)mesh + 1 > engine_world.meshes_count)
                 {
                     mesh = 0;
                 }
