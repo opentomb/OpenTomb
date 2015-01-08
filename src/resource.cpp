@@ -1646,30 +1646,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     // Find and set skybox.
 
-    switch(tr->game_version)
-    {
-        case TR_II:
-        case TR_II_DEMO:
-            world->sky_box = World_FindModelByID(world, TR_ITEM_SKYBOX_TR2);
-            break;
-
-        case TR_III:
-            world->sky_box = World_FindModelByID(world, TR_ITEM_SKYBOX_TR3);
-            break;
-
-        case TR_IV:
-        case TR_IV_DEMO:
-            world->sky_box = World_FindModelByID(world, TR_ITEM_SKYBOX_TR4);
-            break;
-
-        case TR_V:
-            world->sky_box = World_FindModelByID(world, TR_ITEM_SKYBOX_TR5);
-            break;
-
-        default:
-            world->sky_box = NULL;
-            break;
-    }
+    world->sky_box = TR_GetSkybox(world, tr->game_version);
 
     // Load entity collision flags and ID overrides from script.
 
@@ -3279,6 +3256,29 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
     }
 
     return tr_animation->frame_offset;
+}
+
+struct skeletal_model_s* TR_GetSkybox(struct world_s *world, uint32_t engine_version)
+{
+    switch(engine_version)
+    {
+        case TR_II:
+        case TR_II_DEMO:
+            return World_FindModelByID(world, TR_ITEM_SKYBOX_TR2);
+
+        case TR_III:
+            return World_FindModelByID(world, TR_ITEM_SKYBOX_TR3);
+
+        case TR_IV:
+        case TR_IV_DEMO:
+            return World_FindModelByID(world, TR_ITEM_SKYBOX_TR4);
+
+        case TR_V:
+            return World_FindModelByID(world, TR_ITEM_SKYBOX_TR5);
+
+        default:
+            return NULL;
+    }
 }
 
 
