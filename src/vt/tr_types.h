@@ -258,14 +258,13 @@ typedef struct {
     float room_y_bottom;
     float room_y_top;
     
-    uint16_t unknown_r1;
+    uint32_t unknown_r1;
     uint32_t unknown_r2;
     uint32_t unknown_r3;
-    uint32_t unknown_r4;
-    uint16_t unknown_r5a;
-    uint16_t unknown_r5b;
+    uint16_t unknown_r4a;
+    uint16_t unknown_r4b;
+    uint32_t unknown_r5;
     uint32_t unknown_r6;
-    uint32_t unknown_r7;
 } tr5_room_t;
 //typedef prtl::array < tr5_room_t > tr5_room_array_t;
 
