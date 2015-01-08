@@ -71,20 +71,16 @@ btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
 btCollisionDispatcher                   *bt_engine_dispatcher;
 btGhostPairCallback                     *bt_engine_ghostPairCallback;
 btBroadphaseInterface                   *bt_engine_overlappingPairCache;
-btSequentialImpulseConstraintSolver     *bt_engine_solver ;
+btSequentialImpulseConstraintSolver     *bt_engine_solver;
 btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 btOverlapFilterCallback                 *bt_engine_filterCallback;
 
 render_DebugDrawer                       debugDrawer;
 
-
-void RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
-void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
-
 /**
  * overlapping room collision filter
  */
-void RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
     engine_container_p c0, c1;
     room_p r0 = NULL, r1 = NULL;
@@ -182,6 +178,7 @@ void Engine_InitGlobals()
     Game_InitGlobals();
     Render_InitGlobals();
     Audio_InitGlobals();
+    Cam_InitGlobals(&engine_camera);
 }
 
 
@@ -189,36 +186,38 @@ void Engine_Init()
 {
     Con_Init();
     Gui_Init();
-
+    
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-
+    
     Sys_Init();
     Com_Init();
     Render_Init();
-
     Cam_Init(&engine_camera);
-    engine_camera.dist_near = 10.0;
-    engine_camera.dist_far = 65536.0;
-    engine_camera.pos[0] = 300.0;
-    engine_camera.pos[1] = 850.0;
-    engine_camera.pos[2] = 150.0;
-
+    
     renderer.cam = &engine_camera;
-    engine_camera.frustum->next = NULL;
-    engine_camera.current_room = NULL;
+    
+    Engine_BTInit();
+    Engine_LuaInit();
+    
+    Con_AddLine("Engine inited");
+}
 
+void Engine_BTInit()
+{
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
     bt_engine_collisionConfiguration = new btDefaultCollisionConfiguration();
 
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
-    bt_engine_dispatcher->setNearCallback(RoomNearCallback);
+    bt_engine_dispatcher->setNearCallback(Engine_RoomNearCallback);
+    
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
     bt_engine_ghostPairCallback = new btGhostPairCallback();
     bt_engine_overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(bt_engine_ghostPairCallback);
+    
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
@@ -229,16 +228,6 @@ void Engine_Init()
     debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
     bt_engine_dynamicsWorld->setDebugDrawer(&debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
-
-    engine_lua = luaL_newstate();
-    if(engine_lua != NULL)
-    {
-        luaL_openlibs(engine_lua);
-        Engine_LuaRegisterFuncs(engine_lua);
-    }
-
-    Con_AddLine("Engine inited");
-    luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
 }
 
 /*
@@ -2429,6 +2418,32 @@ int lua_genUVRotateAnimation(lua_State *lua)
 }
 
 
+bool Engine_LuaInit()
+{
+    engine_lua = luaL_newstate();
+    
+    if(engine_lua != NULL)
+    {
+        luaL_openlibs(engine_lua);
+        Engine_LuaRegisterFuncs(engine_lua);
+        
+        
+        // Load and run global engine scripts.
+        
+        luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
+        luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
+        luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
+        luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
+        luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
+        
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 void Engine_LuaClearTasks()
 {
     int top = lua_gettop(engine_lua);
@@ -3168,15 +3183,6 @@ void Engine_LoadConfig()
     if(!engine_lua)
     {
         return;
-    }
-
-    if(Engine_FileFound("scripts/config/control_constants.lua"))
-    {
-        luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
-    }
-    else
-    {
-        Sys_Warn("Could not find \"scripts/config/control_constants.lua\"");
     }
 
     if(Engine_FileFound("config.lua"))
