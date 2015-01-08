@@ -713,7 +713,7 @@ void Engine_Frame(btScalar time)
     {
         screen_info.fps = (20.0 / time_cycl);
         snprintf(system_fps.text, system_fps.buf_size, "%.1f", screen_info.fps);
-        Gui_StringAutoRect(&system_fps);
+        //Gui_StringAutoRect(&system_fps);
         cycles = 0;
         time_cycl = 0.0;
     }
@@ -897,7 +897,7 @@ void Engine_PollSDLInput()
                 if(sdl_joystick)
                     Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
                 break;
-                
+
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
                 if(con_base.show && event.key.state)

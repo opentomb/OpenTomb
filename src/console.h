@@ -25,6 +25,7 @@ typedef struct console_info_s
     FTGLTextureFont            *font;                       // Texture font renderer
 
     uint16_t                    font_size;
+    uint8_t                    *line_color;
     GLfloat                     font_color[4];
     GLfloat                     background_color[4];
 
@@ -64,8 +65,8 @@ void Con_Filter(char *text);
 void Con_Edit(int key);
 void Con_CalcCursorPosition();
 void Con_AddLog(const char *text);
-void Con_AddLine(const char *text);
-void Con_AddText(const char *text);
+void Con_AddLine(const char *text, uint8_t color=0);
+void Con_AddText(const char *text, uint8_t color=0);
 void Con_Printf(const char *fmt, ...);
 
 void Con_Clean();
