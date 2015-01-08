@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <stdint.h>
+#include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
 #include "world.h"
 #include "script.h"
@@ -225,11 +226,17 @@ void ResetTempbtScalar();
 
 void Engine_InitGlobals();
 void Engine_Init();
+void Engine_Destroy();
+void Engine_Shutdown(int val);
+
+void Engine_Frame(btScalar time);
+void Engine_Display();
+
+void Engine_BTInit();
+
+bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);
-void Engine_Destroy();
-
-void Engine_Shutdown(int val);
 
 bool Engine_FileFound(const char *name, bool Write = false);
 int  Engine_GetLevelVersion(const char *name);
@@ -241,7 +248,8 @@ int  Engine_ExecCmd(char *ch);
 void Engine_LoadConfig();
 void Engine_SaveConfig();
 
-void Engine_Frame(btScalar time);
-void Engine_Display();
+void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
+void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
+
 
 #endif

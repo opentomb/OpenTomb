@@ -921,7 +921,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                 break;
 
             case TR_FD_FUNC_DEATH:          // KILL LARA
-                sector->flags |= TR_SECTOR_FLAG_DEATH;
+                sector->flags |= SECTOR_FLAG_DEATH;
                 break;
 
             case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
@@ -930,7 +930,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                 break;
 
             case TR_FD_FUNC_MONKEY:         // Climbable ceiling
-                sector->flags |= TR_SECTOR_FLAG_CLIMB_CEILING;
+                sector->flags |= SECTOR_FLAG_CLIMB_CEILING;
                 break;
 
             case TR_FD_FUNC_MINECART_LEFT:
@@ -938,11 +938,11 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                 // We re-parse them properly here.
                 if(world->version < TR_IV)
                 {
-                    sector->flags |= TR_SECTOR_FLAG_MINECART_LEFT;
+                    sector->flags |= SECTOR_FLAG_MINECART_LEFT;
                 }
                 else
                 {
-                    sector->flags |= TR_SECTOR_FLAG_TRIGGERER_MARK;
+                    sector->flags |= SECTOR_FLAG_TRIGGERER_MARK;
                 }
                 break;
 
@@ -951,11 +951,11 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                 // We re-parse them properly here.
                 if(world->version < TR_IV)
                 {
-                    sector->flags |= TR_SECTOR_FLAG_MINECART_RIGHT;
+                    sector->flags |= SECTOR_FLAG_MINECART_RIGHT;
                 }
                 else
                 {
-                    sector->flags |= TR_SECTOR_FLAG_BEETLE_MARK;
+                    sector->flags |= SECTOR_FLAG_BEETLE_MARK;
                 }
                 break;
 
@@ -1476,16 +1476,9 @@ int lua_SetSectorFlags(lua_State * lua)
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
     int lua_err, top;
-    room_p r;
-    base_mesh_p base_mesh;
     char buf[256], map[LEVEL_NAME_MAX_LEN];
-    /// white texture data for coloured polygons and debug lines.
-    GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-    Gui_DrawLoadScreen(200);
+    
+    Gui_DrawLoadScreen(50);
 
     world->version = tr->game_version;
 
@@ -1513,6 +1506,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
     Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
+    
     strcat(buf, map);
     strcat(buf, ".lua");
 
@@ -1566,111 +1560,15 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
-    luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
-    luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
+    Gui_DrawLoadScreen(100);
 
-    Gui_DrawLoadScreen(250);
+    TR_GenRBTrees(world);
 
-    world->Character = NULL;
-    world->meshes = NULL;
-    world->meshs_count = 0;
-    world->room_count = 0;
-    world->rooms = NULL;
-    world->room_flipmap = 0;
-    world->room_flipstate = 0;
-    world->sprites_count = 0;
-    world->sprites = NULL;
-    world->entity_tree = RB_Init();
-    world->entity_tree->rb_compEQ = compEntityEQ;
-    world->entity_tree->rb_compLT = compEntityLT;
-    world->entity_tree->rb_free_data = RBEntityFree;
+    Gui_DrawLoadScreen(150);
 
-    world->items_tree = RB_Init();
-    world->items_tree->rb_compEQ = compEntityEQ;
-    world->items_tree->rb_compLT = compEntityLT;
-    world->items_tree->rb_free_data = RBItemFree;
-
-    /*
-     * Generate OGL textures
-     */
-
-    top = lua_gettop(engine_lua);
-    lua_getglobal(engine_lua, "render");
-    int border_size = lua_GetScalarField(engine_lua,"texture_border");
-    lua_settop(engine_lua, top);
-    border_size = (border_size < 0)?(0):(border_size);
-    border_size = (border_size > 128)?(128):(border_size);
-    world->tex_atlas = BorderedTextureAtlas_Create(border_size);                // here is border size
-    for(uint32_t i = 0; i < tr->textile32_count; i++)
-    {
-        BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
-    }
+    TR_GenTextures(world, tr);  // Generate OGL textures
 
     Gui_DrawLoadScreen(300);
-
-    for (uint32_t i = 0; i < tr->sprite_textures_count; i++)
-    {
-        BorderedTextureAtlas_AddSpriteTexture(world->tex_atlas, tr->sprite_textures + i);
-    }
-
-    Gui_DrawLoadScreen(400);
-
-    for (uint32_t i = 0; i < tr->object_textures_count; i++)
-    {
-        BorderedTextureAtlas_AddObjectTexture(world->tex_atlas, tr->object_textures + i);
-    }
-
-    Gui_DrawLoadScreen(500);
-
-    world->tex_count = (uint32_t) BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
-    world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glPixelZoom(1, 1);
-    BorderedTextureAtlas_CreateTextures(world->tex_atlas, world->textures, 1);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
-
-    // Select mipmap mode
-    switch(renderer.settings.mipmap_mode)
-    {
-        case 0:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-            break;
-
-        case 1:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-            break;
-
-        case 2:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-            break;
-
-        case 3:
-        default:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            break;
-    };
-
-    // Set mipmaps number
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings.mipmaps);
-
-    // Set anisotropy degree
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings.anisotropy);
-
-    // Read lod bias
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings.lod_bias);
-
-
-    glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 4, 4, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
-
-    //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
-
-    Gui_DrawLoadScreen(600);
 
     /*
      * copy sectors floordata
@@ -1688,29 +1586,17 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     tr->anim_commands = NULL;
     tr->anim_commands_count = 0;
 
-    /*
-     * Generate anim textures
-     */
-    TR_GenAnimTextures(world, tr);
+    TR_GenAnimTextures(world, tr);  // Generate animated textures
 
-    Gui_DrawLoadScreen(650);
+    Gui_DrawLoadScreen(400);
 
-    /*
-     * generate all meshes
-     */
-    world->meshs_count = tr->meshes_count;
-    base_mesh = world->meshes = (base_mesh_p)malloc(world->meshs_count * sizeof(base_mesh_t));
-    for(uint32_t i=0;i<world->meshs_count;i++,base_mesh++)
-    {
-        TR_GenMesh(world, i, base_mesh, tr);
-    }
+    TR_GenMeshes(world, tr);        // Generate all meshes
+    
+    Gui_DrawLoadScreen(500);
 
-    /*
-     * generate sprites
-     */
-    TR_GenSprites(world, tr);
+    TR_GenSprites(world, tr);       // Generate all sprites
 
-    Gui_DrawLoadScreen(700);
+    Gui_DrawLoadScreen(550);
 
     /*
      * generate boxes
@@ -1731,173 +1617,24 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    /*
-     * build all rooms
-     */
-    world->room_count = tr->rooms_count;
-    r = world->rooms = (room_p)realloc(world->rooms, world->room_count * sizeof(room_t));
-    for(uint32_t i=0;i<world->room_count;i++,r++)
-    {
-        TR_GenRoom(i, r, world, tr);
-        r->frustum = Frustum_Create();
-    }
+    TR_GenRooms(world, tr);     // Build all rooms
 
-    Gui_DrawLoadScreen(800);
+    Gui_DrawLoadScreen(650);
 
-    /*
-     * Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
-     */
+    // Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
     TR_GenSkeletalModels(world, tr);
 
-    Gui_DrawLoadScreen(850);
+    Gui_DrawLoadScreen(700);
 
-    /*
-     * build all moveables
-     */
-    TR_GenEntities(world, tr);
+    TR_GenEntities(world, tr);  // Build all moveables (entities)
+    
+    Gui_DrawLoadScreen(750);
 
-    r = world->rooms;
-    for(uint32_t i=0;i<world->room_count;i++,r++)
-    {
-        ///@STICK! THE STICK FOR TR_V ALTERNATE ROOM CALCULATION!!!
-        if(world->version == TR_V)
-        {
-            room_p alt_room = world->rooms;
-            for(uint32_t j=0;j<world->room_count;j++,alt_room++)
-            {
-                if((j != i) && (alt_room->alternate_room == NULL) && (r->sectors_x == alt_room->sectors_x) && (r->sectors_y == alt_room->sectors_y) &&
-                    (r->transform[12 + 0] == alt_room->transform[12 + 0]) && (r->transform[12 + 1] == alt_room->transform[12 + 1]) && !((r->bb_max[2] <= alt_room->bb_min[2]) || (r->bb_min[2] >= alt_room->bb_max[2])))
-                {
-                    portal_p p = alt_room->portals;
-                    uint32_t cnt = 0;
-                    for(uint16_t jj=0;jj<alt_room->portal_count;jj++,p++)
-                    {
-                        for(uint16_t k=0;k<p->dest_room->portal_count;k++)
-                        {
-                            if(p->dest_room->portals[k].dest_room == alt_room)
-                            {
-                                cnt++;
-                                break;
-                            }
-                        }
-                    }
+    TR_GenRoomProperties(world, tr);
+    
+    Gui_DrawLoadScreen(800);
 
-                    if((cnt != alt_room->portal_count) || ((cnt == 0) && (world->room_count > 1)))
-                    {
-                        r->alternate_room = alt_room;
-                    }
-                }
-            }
-        }
-
-        if(r->alternate_room != NULL)
-        {
-            r->alternate_room->base_room = r;
-        }
-        // Now, when building basic heightmap is finished, we can parse floordata
-        // to load actual slant height values into it, plus fill out Lua script on the way.
-        // These two tasks are joined here, because it allows to parse through floordata
-        // once and for all, and then safely destroy it.
-
-        // (Actually, floordata should never be copied into final map, when this is finished.)
-        for(uint32_t j=0;j<r->sectors_count;j++)
-        {
-            TR_Sector_TranslateFloorData(r->sectors + j, world);
-        }
-        // Generate links to the near rooms.
-        Room_BuildNearRoomsList(r);
-        // basic sectors calculations
-        TR_Sector_Calculate(world, tr, i);
-    }
-
-    r = world->rooms;
-
-#if TR_MESH_ROOM_COLLISION
-    for(uint32_t i=0;i<world->room_count;i++,r++)
-    {
-        r->bt_body = NULL;
-
-        if(r->mesh)
-        {
-            cshape = BT_CSfromMesh(r->mesh, true, true, COLLISION_TRIMESH);
-
-            if(cshape)
-            {
-                startTransform.setFromOpenGLMatrix(r->transform);
-                btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-                r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-                r->bt_body->setUserPointer(room->self);
-                r->self->collide_flag = COLLISION_TRIMESH;                   // meshtree
-                if(!r->active)
-                {
-                    Room_Disable(r);
-                }
-            }
-        }
-    }
-
-#else
-
-    if(level_script != NULL)
-    {
-        top = lua_gettop(level_script);
-        lua_getglobal(level_script, "doTuneSector");
-        lua_pcall(level_script, 0, 0, 0);
-        lua_settop(level_script, top);
-    }
-
-    for(uint32_t i=0;i<world->room_count;i++,r++)
-    {
-        /*if((r->base_room != NULL) && (r->base_room->base_room != NULL))
-        {
-            Sys_DebugLog("rooms.txt", "AHTUNG! CYCLED ALTERNATE ROOMS!!!\n");
-        }*/
-        // Inbetween polygons array is later filled by loop which scans adjacent
-        // sector heightmaps and fills the gaps between them, thus creating inbetween
-        // polygon. Inbetweens can be either quad (if all four corner heights are
-        // different), triangle (if one corner height is similar to adjacent) or
-        // ghost (if corner heights are completely similar). In case of quad inbetween,
-        // two triangles are added to collisional trimesh, in case of triangle inbetween,
-        // we add only one, and in case of ghost inbetween, we ignore it.
-
-        int num_heightmaps = (r->sectors_x * r->sectors_y);
-        int num_tweens = (num_heightmaps * 4);
-        sector_tween_s *room_tween   = new sector_tween_s[num_tweens];
-
-        // Clear tween array.
-
-        for(int j=0;j<num_tweens;j++)
-        {
-            room_tween[j].ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
-            room_tween[j].floor_tween_type   = TR_SECTOR_TWEEN_TYPE_NONE;
-        }
-
-        // Most difficult task with converting floordata collision to trimesh collision is
-        // building inbetween polygons which will block out gaps between sector heights.
-
-        TR_Sector_GenTweens(r, room_tween);
-
-        // Final step is sending actual sectors to Bullet collision model. We do it here.
-
-        btCollisionShape *cshape = BT_CSfromHeightmap(r->sectors, room_tween, num_tweens, true, true);
-
-        if(cshape)
-        {
-            btVector3 localInertia(0, 0, 0);
-            btTransform tr;
-            tr.setFromOpenGLMatrix(r->transform);
-            btDefaultMotionState* motionState = new btDefaultMotionState(tr);
-            r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-            bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-            r->bt_body->setUserPointer(r->self);
-            r->self->collide_flag = COLLISION_TRIMESH;                          // meshtree
-        }
-
-        delete[] room_tween;
-    }
-
-#endif
+    TR_GenRoomCollision(world);
 
     Gui_DrawLoadScreen(900);
 
@@ -1956,7 +1693,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     // Generate VBOs for meshes.
 
-    for(uint32_t i=0;i<world->meshs_count;i++)
+    for(uint32_t i=0;i<world->meshes_count;i++)
     {
         if(world->meshes[i].vertex_count)
         {
@@ -2013,7 +1750,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         Items_CheckEntities(world->items_tree->root);
     }
 
-    r = world->rooms;
+    room_p r = world->rooms;
     for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         if(r->base_room != NULL)
@@ -2031,6 +1768,31 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_IN);
 }
 
+
+void TR_GenRBTrees(struct world_s *world)
+{
+    world->entity_tree = RB_Init();
+    world->entity_tree->rb_compEQ = compEntityEQ;
+    world->entity_tree->rb_compLT = compEntityLT;
+    world->entity_tree->rb_free_data = RBEntityFree;
+
+    world->items_tree = RB_Init();
+    world->items_tree->rb_compEQ = compEntityEQ;
+    world->items_tree->rb_compLT = compEntityLT;
+    world->items_tree->rb_free_data = RBItemFree;
+}
+
+
+void TR_GenRooms(struct world_s *world, class VT_Level *tr)
+{
+    world->room_count = tr->rooms_count;
+    room_p r = world->rooms = (room_p)realloc(world->rooms, world->room_count * sizeof(room_t));
+    for(uint32_t i=0;i<world->room_count;i++,r++)
+    {
+        TR_GenRoom(i, r, world, tr);
+        r->frustum = Frustum_Create();
+    }
+}
 
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr)
 {
@@ -2450,14 +2212,128 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
      */
     room->alternate_room = NULL;
     room->base_room = NULL;
-    if(tr->game_version < TR_V)
+
+    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
     {
-        if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
-        {
-            room->alternate_room = world->rooms + tr_room->alternate_room;
-        }
+        room->alternate_room = world->rooms + tr_room->alternate_room;
     }
 }
+
+
+void TR_GenRoomCollision(struct world_s *world)
+{
+    room_p r = world->rooms;
+
+#if TR_MESH_ROOM_COLLISION
+    for(uint32_t i=0;i<world->room_count;i++,r++)
+    {
+        r->bt_body = NULL;
+
+        if(r->mesh)
+        {
+            cshape = BT_CSfromMesh(r->mesh, true, true, COLLISION_TRIMESH);
+
+            if(cshape)
+            {
+                startTransform.setFromOpenGLMatrix(r->transform);
+                btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+                r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+                bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+                r->bt_body->setUserPointer(room->self);
+                r->self->collide_flag = COLLISION_TRIMESH;                   // meshtree
+                if(!r->active)
+                {
+                    Room_Disable(r);
+                }
+            }
+        }
+    }
+
+#else
+
+    if(level_script != NULL)
+    {
+        int top = lua_gettop(level_script);
+        lua_getglobal(level_script, "doTuneSector");
+        lua_pcall(level_script, 0, 0, 0);
+        lua_settop(level_script, top);
+    }
+
+    for(uint32_t i=0;i<world->room_count;i++,r++)
+    {
+        // Inbetween polygons array is later filled by loop which scans adjacent
+        // sector heightmaps and fills the gaps between them, thus creating inbetween
+        // polygon. Inbetweens can be either quad (if all four corner heights are
+        // different), triangle (if one corner height is similar to adjacent) or
+        // ghost (if corner heights are completely similar). In case of quad inbetween,
+        // two triangles are added to collisional trimesh, in case of triangle inbetween,
+        // we add only one, and in case of ghost inbetween, we ignore it.
+
+        int num_heightmaps = (r->sectors_x * r->sectors_y);
+        int num_tweens = (num_heightmaps * 4);
+        sector_tween_s *room_tween   = new sector_tween_s[num_tweens];
+
+        // Clear tween array.
+
+        for(int j=0;j<num_tweens;j++)
+        {
+            room_tween[j].ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+            room_tween[j].floor_tween_type   = TR_SECTOR_TWEEN_TYPE_NONE;
+        }
+
+        // Most difficult task with converting floordata collision to trimesh collision is
+        // building inbetween polygons which will block out gaps between sector heights.
+
+        TR_Sector_GenTweens(r, room_tween);
+
+        // Final step is sending actual sectors to Bullet collision model. We do it here.
+
+        btCollisionShape *cshape = BT_CSfromHeightmap(r->sectors, room_tween, num_tweens, true, true);
+
+        if(cshape)
+        {
+            btVector3 localInertia(0, 0, 0);
+            btTransform tr;
+            tr.setFromOpenGLMatrix(r->transform);
+            btDefaultMotionState* motionState = new btDefaultMotionState(tr);
+            r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+            bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+            r->bt_body->setUserPointer(r->self);
+            r->self->collide_flag = COLLISION_TRIMESH;                          // meshtree
+        }
+
+        delete[] room_tween;
+    }
+
+#endif
+}
+
+
+void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
+{
+    room_p r = world->rooms;
+    
+    for(uint32_t i=0;i<world->room_count;i++,r++)
+    {
+        if(r->alternate_room != NULL)
+        {
+            r->alternate_room->base_room = r;   // Refill base room pointer.
+        }
+        
+        // Fill heightmap and translate floordata.
+        for(uint32_t j=0;j<r->sectors_count;j++)
+        {
+            TR_Sector_TranslateFloorData(r->sectors + j, world);
+        }
+        
+        // Generate links to the near rooms.
+        Room_BuildNearRoomsList(r);
+        
+        // Basic sector calculations.
+        TR_Sector_Calculate(world, tr, i);
+    }
+}
+
 
 /**
  * sprites loading, works correct in TR1 - TR5
@@ -2498,6 +2374,87 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
             world->sprites[tr->sprite_sequences[i].offset].id = tr->sprite_sequences[i].object_id;
         }
     }
+}
+
+void TR_GenTextures(struct world_s* world, class VT_Level *tr)
+{
+    int top = lua_gettop(engine_lua);
+    lua_getglobal(engine_lua, "render");
+    int border_size = lua_GetScalarField(engine_lua, "texture_border");
+    lua_settop(engine_lua, top);
+    
+    border_size = (border_size < 0)?(0):(border_size);
+    border_size = (border_size > 128)?(128):(border_size);
+    world->tex_atlas = BorderedTextureAtlas_Create(border_size);    // here is border size
+    
+    for(uint32_t i = 0; i < tr->textile32_count; i++)
+    {
+        BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
+    }
+
+    for (uint32_t i = 0; i < tr->sprite_textures_count; i++)
+    {
+        BorderedTextureAtlas_AddSpriteTexture(world->tex_atlas, tr->sprite_textures + i);
+    }
+
+    for (uint32_t i = 0; i < tr->object_textures_count; i++)
+    {
+        BorderedTextureAtlas_AddObjectTexture(world->tex_atlas, tr->object_textures + i);
+    }
+
+    world->tex_count = (uint32_t) BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
+    world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelZoom(1, 1);
+    BorderedTextureAtlas_CreateTextures(world->tex_atlas, world->textures, 1);
+    
+        // white texture data for coloured polygons and debug lines.
+    GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
+
+    // Select mipmap mode
+    switch(renderer.settings.mipmap_mode)
+    {
+        case 0:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+            break;
+
+        case 1:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+            break;
+
+        case 2:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+            break;
+
+        case 3:
+        default:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            break;
+    };
+
+    // Set mipmaps number
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings.mipmaps);
+
+    // Set anisotropy degree
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings.anisotropy);
+
+    // Read lod bias
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings.lod_bias);
+
+
+    glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 4, 4, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
+
+    //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
+    
 }
 
 /**   Animated textures loading.
@@ -2716,6 +2673,19 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
             np->next = mesh->animated_polygons;
             mesh->animated_polygons = np;
         }
+    }
+}
+
+
+void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
+{
+    base_mesh_p base_mesh;
+    
+    world->meshes_count = tr->meshes_count;
+    base_mesh = world->meshes = (base_mesh_p)malloc(world->meshes_count * sizeof(base_mesh_t));
+    for(uint32_t i=0;i<world->meshes_count;i++,base_mesh++)
+    {
+        TR_GenMesh(world, i, base_mesh, tr);
     }
 }
 
