@@ -634,6 +634,8 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
     {
         return 0;
     }
+    
+    sector->flags = 0;  // Clear sector flags before parsing.
 
     /*
      * PARSE FUNCTIONS
@@ -919,26 +921,46 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                 break;
 
             case TR_FD_FUNC_DEATH:          // KILL LARA
-                //Con_Printf("KILL! sub = %d, b3 = %d", sub_function, b3);
+                sector->flags |= TR_SECTOR_FLAG_DEATH;
                 break;
 
             case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
-                //Con_Printf("Climbable walls! sub = %d, b3 = %d", sub_function, b3);
+                // First 4 sector flags are similar to subfunction layout.
+                sector->flags |= sub_function;
                 break;
 
-            case TR_FD_FUNC_MONKEY:          // Climbable ceiling
-                //Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
+            case TR_FD_FUNC_MONKEY:         // Climbable ceiling
+                sector->flags |= TR_SECTOR_FLAG_CLIMB_CEILING;
                 break;
 
-            case TR_FD_FUNC_TRIGGERER_MARK:
-                //Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
+            case TR_FD_FUNC_MINECART_LEFT:
+                // Minecart left (TR3) and trigger triggerer mark (TR4-5) has the same flag value.
+                // We re-parse them properly here.
+                if(world->version < TR_IV)  
+                {
+                    sector->flags |= TR_SECTOR_FLAG_MINECART_LEFT;
+                }
+                else
+                {
+                    sector->flags |= TR_SECTOR_FLAG_TRIGGERER_MARK;
+                }
                 break;
 
-            case TR_FD_FUNC_BEETLE_MARK:
-                //Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
+            case TR_FD_FUNC_MINECART_RIGHT:
+                // Minecart right (TR3) and beetle mark (TR4-5) has the same flag value.
+                // We re-parse them properly here.
+                if(world->version < TR_IV)  
+                {
+                    sector->flags |= TR_SECTOR_FLAG_MINECART_RIGHT;
+                }
+                else
+                {
+                    sector->flags |= TR_SECTOR_FLAG_BEETLE_MARK;
+                }
                 break;
 
             default:
+                // Other functions are TR3+ collisional triangle functions.
                 if( (function >= TR_FD_FUNC_FLOORTRIANGLE_NW) &&
                     (function <= TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE) )
                 {
@@ -2195,6 +2217,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         sector->owner_room = room;
         sector->box_index  = tr_room->sector_list[i].box_index;
+        
+        sector->flags = 0;  // Clear sector flags.
 
         if(sector->box_index == 0xFFFF)
         {
