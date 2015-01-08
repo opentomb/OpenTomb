@@ -634,7 +634,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
     {
         return 0;
     }
-    
+
     sector->flags = 0;  // Clear sector flags before parsing.
 
     /*
@@ -936,7 +936,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
             case TR_FD_FUNC_MINECART_LEFT:
                 // Minecart left (TR3) and trigger triggerer mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(world->version < TR_IV)  
+                if(world->version < TR_IV)
                 {
                     sector->flags |= TR_SECTOR_FLAG_MINECART_LEFT;
                 }
@@ -949,7 +949,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
             case TR_FD_FUNC_MINECART_RIGHT:
                 // Minecart right (TR3) and beetle mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(world->version < TR_IV)  
+                if(world->version < TR_IV)
                 {
                     sector->flags |= TR_SECTOR_FLAG_MINECART_RIGHT;
                 }
@@ -1354,7 +1354,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
 
     if(top < 10)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)");
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", 3);
         return 0;
     }
 
@@ -1364,7 +1364,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info");
+        Con_AddLine("wrong sector info", 3);
         return 0;
     }
 
@@ -1387,7 +1387,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
 
     if(top < 10)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)");
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", 3);
         return 0;
     }
 
@@ -1397,7 +1397,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info");
+        Con_AddLine("wrong sector info", 3);
         return 0;
     }
 
@@ -1420,7 +1420,7 @@ int lua_SetSectorPortal(lua_State * lua)
 
     if(top < 4)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)");
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", 3);
         return 0;
     }
 
@@ -1430,7 +1430,7 @@ int lua_SetSectorPortal(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info");
+        Con_AddLine("wrong sector info", 3);
         return 0;
     }
 
@@ -1451,7 +1451,7 @@ int lua_SetSectorFlags(lua_State * lua)
 
     if(top < 7)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)");
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", 3);
         return 0;
     }
 
@@ -1461,7 +1461,7 @@ int lua_SetSectorFlags(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info");
+        Con_AddLine("wrong sector info", 3);
         return 0;
     }
 
@@ -2063,7 +2063,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->reverb_info = tr->rooms[room_index].reverb_info;
     room->water_scheme = tr->rooms[room_index].water_scheme;
     room->alternate_group = tr->rooms[room_index].alternate_group;
-    
+
     Mat4_E_macro(room->transform);
     room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
     room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
@@ -2217,7 +2217,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         sector->owner_room = room;
         sector->box_index  = tr_room->sector_list[i].box_index;
-        
+
         sector->flags = 0;  // Clear sector flags.
 
         if(sector->box_index == 0xFFFF)

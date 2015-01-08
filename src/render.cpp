@@ -1330,7 +1330,7 @@ void render_DebugDrawer::draw3dText(const btVector3& location, const char* textS
 
 void render_DebugDrawer::reportErrorWarning(const char* warningString)
 {
-   Con_AddLine(warningString);
+   Con_AddLine(warningString, 3);
 }
 
 void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)

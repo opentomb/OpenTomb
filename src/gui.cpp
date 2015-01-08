@@ -352,6 +352,7 @@ void Gui_Render()
     Gui_DrawFaders();
     Gui_RenderStrings();
     Con_Draw();
+    //Inv_Draw();
 
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
@@ -388,7 +389,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
         GLfloat temp[4] = {0.0,0.0,0.0,1};
         glColor4fv(temp);
         glPushMatrix();
-        GLfloat xs = 0.4, ys = -0.7;
+        GLfloat xs = 0.7, ys = -0.9;
         glTranslatef((GLfloat)((l->x+xs >= 0)?(l->x+xs):(screen_info.w + l->x+xs)), (GLfloat)((l->y+ys >= 0)?(l->y+ys):(screen_info.h + l->y+ys)), 0.0);
         l->font->RenderRaw(l->text);
         glPopMatrix();
