@@ -60,6 +60,17 @@ void Cam_Init(camera_p cam)
     cam->current_room = NULL;
 }
 
+void Cam_InitGlobals(camera_p cam)
+{
+    cam->dist_near = 10.0;
+    cam->dist_far = 65536.0;
+    cam->pos[0] = 300.0;
+    cam->pos[1] = 850.0;
+    cam->pos[2] = 150.0;
+    cam->frustum->next = NULL;
+    cam->current_room = NULL;
+}
+
 void Cam_Apply(camera_p cam)
 {   
     glMatrixMode(GL_PROJECTION);

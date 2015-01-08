@@ -91,16 +91,16 @@
 // Sector flags specify various unique sector properties.
 // Derived from native TR floordata functions.
 
-#define TR_SECTOR_FLAG_CLIMB_NORTH      0x00000001  // subfunction 0x01
-#define TR_SECTOR_FLAG_CLIMB_EAST       0x00000002  // subfunction 0x02
-#define TR_SECTOR_FLAG_CLIMB_SOUTH      0x00000004  // subfunction 0x04
-#define TR_SECTOR_FLAG_CLIMB_WEST       0x00000008  // subfunction 0x08
-#define TR_SECTOR_FLAG_CLIMB_CEILING    0x00000010
-#define TR_SECTOR_FLAG_MINECART_LEFT    0x00000020
-#define TR_SECTOR_FLAG_MINECART_RIGHT   0x00000040
-#define TR_SECTOR_FLAG_TRIGGERER_MARK   0x00000080
-#define TR_SECTOR_FLAG_BEETLE_MARK      0x00000100
-#define TR_SECTOR_FLAG_DEATH            0x00000200
+#define SECTOR_FLAG_CLIMB_NORTH     0x00000001  // subfunction 0x01
+#define SECTOR_FLAG_CLIMB_EAST      0x00000002  // subfunction 0x02
+#define SECTOR_FLAG_CLIMB_SOUTH     0x00000004  // subfunction 0x04
+#define SECTOR_FLAG_CLIMB_WEST      0x00000008  // subfunction 0x08
+#define SECTOR_FLAG_CLIMB_CEILING   0x00000010
+#define SECTOR_FLAG_MINECART_LEFT   0x00000020
+#define SECTOR_FLAG_MINECART_RIGHT  0x00000040
+#define SECTOR_FLAG_TRIGGERER_MARK  0x00000080
+#define SECTOR_FLAG_BEETLE_MARK     0x00000100
+#define SECTOR_FLAG_DEATH           0x00000200
 
 class btCollisionShape;
 class btRigidBody;
@@ -261,7 +261,7 @@ typedef struct world_s
     uint32_t                    anim_sequences_count;   // Animated texture sequence count
     struct anim_seq_s          *anim_sequences;         // Animated textures
 
-    uint32_t                    meshs_count;            // Base meshes count
+    uint32_t                    meshes_count;            // Base meshes count
     struct base_mesh_s         *meshes;                 // Base meshes data
 
     uint32_t                    sprites_count;          // Base sprites count

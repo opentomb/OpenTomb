@@ -111,6 +111,10 @@ function GetLoadingScreen(currentgame, currentlevel, operand)
 end;
 
 function setgamef(game_id, level_id)
+    if(level_id == nil) then
+        level_id = 1;
+    end;
+
     if(game_id == 1.0) then
         setgame(GAME_1, level_id);
     elseif(game_id == 1.1) then

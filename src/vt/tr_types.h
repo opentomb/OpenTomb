@@ -251,21 +251,21 @@ typedef struct {
     
     tr5_colour_t light_colour;    // Present in TR5 only
 
-    // TR5 only -->
-    uint16_t unknown_r1;
-    uint16_t unknown_r2;
-    int16_t  unknown_r3;
-    uint32_t unknown_r4;
-    uint32_t unknown_r5;
-    uint32_t unknown_r6;
+    // TR5 only:
+    
     float room_x;
     float room_z;
-    uint16_t unknown_r7a;
-    uint16_t unknown_r7b;
-    uint32_t unknown_r8;
-    uint32_t unknown_r9;
     float room_y_bottom;
     float room_y_top;
+    
+    uint16_t unknown_r1;
+    uint32_t unknown_r2;
+    uint32_t unknown_r3;
+    uint32_t unknown_r4;
+    uint16_t unknown_r5a;
+    uint16_t unknown_r5b;
+    uint32_t unknown_r6;
+    uint32_t unknown_r7;
 } tr5_room_t;
 //typedef prtl::array < tr5_room_t > tr5_room_array_t;
 
