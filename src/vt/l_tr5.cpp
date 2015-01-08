@@ -283,8 +283,8 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
         Sys_extError("read_tr5_room: poly_offset != poly_offset2");
 
     vertices_size = read_bitu32(newsrc);
-    //if ((vertices_size % 28) != 0)
-     //   Sys_extError("read_tr5_room: vertices_size has wrong value");
+    if ((vertices_size % 28) != 0)
+        Sys_extError("read_tr5_room: vertices_size has wrong value");
 
     if (read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator15 has wrong value");
