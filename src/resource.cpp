@@ -1476,7 +1476,6 @@ int lua_SetSectorFlags(lua_State * lua)
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
     int lua_err, top;
-    room_p r;
     char buf[256], map[LEVEL_NAME_MAX_LEN];
     
     Gui_DrawLoadScreen(50);
@@ -1751,7 +1750,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         Items_CheckEntities(world->items_tree->root);
     }
 
-    r = world->rooms;
+    room_p r = world->rooms;
     for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         if(r->base_room != NULL)
