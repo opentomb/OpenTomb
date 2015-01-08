@@ -98,6 +98,7 @@ void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_
 int      TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
 int      TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr);
+struct   skeletal_model_s* TR_GetSkybox(struct world_s *world, uint32_t engine_version);
 
 
 // Main function which is used to translate legacy TR floor data
