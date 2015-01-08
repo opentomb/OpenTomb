@@ -12,3 +12,4 @@ build
 opentomb-code.depend
 scripts\config\control_constants.lua.orig
 src\main_SDL.cpp.orig
+opentomb-code.layout
