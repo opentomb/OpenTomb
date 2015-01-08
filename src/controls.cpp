@@ -363,7 +363,6 @@ void Controls_JoyRumble(float power, int time)
         SDL_HapticRumblePlay(sdl_haptic, power, time);
 }
 
-<<<<<<< local
 int Controls_KeyConsoleFilter(int32_t key, int kmod_states)
 {
     switch(key)
@@ -548,8 +547,6 @@ int Controls_KeyConsoleFilter(int32_t key, int kmod_states)
     return 0;
 }
 
-=======
->>>>>>> other
 void Controls_RefreshStates()
 {
     for(int i = 0; i < ACT_LASTINDEX; i++)

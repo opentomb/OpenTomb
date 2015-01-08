@@ -13,6 +13,7 @@ typedef struct gui_text_line_s
     uint16_t                    buf_size;
     int8_t                      show_rect;
     int8_t                      show;
+    int8_t                      shadowed;
 
     GLint                       x;
     GLint                       y;
@@ -21,7 +22,7 @@ typedef struct gui_text_line_s
     GLfloat                     font_color[4];
     GLfloat                     rect_border;
     GLfloat                     rect[4];                                        //x0, yo, x1, y1
-    
+
     FTGLTextureFont            *font;
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;
@@ -31,7 +32,7 @@ typedef struct gui_text_line_s
 // Fader is a simple full-screen rectangle, which always sits above the scene,
 // and, when activated, either shows or hides gradually - hence, creating illusion
 // of fade in and fade out effects.
-// TR1-3 had only one type of fader - black one, which was activated on level 
+// TR1-3 had only one type of fader - black one, which was activated on level
 // transitions. Since TR4, additional colored fader was introduced to emulate
 // various full-screen effects (flashes, flares, and so on).
 // With OpenTomb, we extend fader functionality to support not only simple dip to
@@ -86,45 +87,45 @@ public:
     void Show();                  // Shows and updates fader.
     void Engage(int fade_dir);    // Resets and starts fader.
     void Cut();                   // Immediately cuts fader.
-    
+
     int  IsFading();              // Get current state of the fader.
-    
+
     void SetScaleMode(uint8_t mode = TR_FADER_SCALE_ZOOM);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
     void SetBlendingMode(uint32_t mode = BM_OPAQUE);
     void SetAlpha(uint8_t alpha  = 255);
     void SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary = 200);
     void SetDelay(uint32_t delay_msec);
-    
+
     bool SetTexture(const char* texture_path);
-    
+
 private:
     void SetAspect();
     bool DropTexture();
-    
+
     GLfloat         mTopLeftColor[4];       // All colors are defined separately, for
     GLfloat         mTopRightColor[4];      // further possibility of advanced full
     GLfloat         mBottomLeftColor[4];    // screen effects with gradients.
     GLfloat         mBottomRightColor[4];
-    
+
     uint32_t        mBlendingMode;          // Fader's blending mode.
-    
+
     GLfloat         mCurrentAlpha;          // Current alpha value.
     GLfloat         mMaxAlpha;              // Maximum reachable alpha value.
     GLfloat         mSpeed;                 // Fade speed.
     GLfloat         mSpeedSecondary;        // Secondary speed - used with TIMED type.
-    
+
     GLuint          mTexture;               // Texture (optional).
     uint16_t        mTextureWidth;
     uint16_t        mTextureHeight;
     bool            mTextureWide;           // Set, if texture width is greater than height.
     float           mTextureAspectRatio;    // Pre-calculated aspect ratio.
     uint8_t         mTextureScaleMode;      // Fader texture's scale mode.
-    
+
     bool            mActive;                // Specifies if fader active or not.
     bool            mComplete;              // Specifies if fading is complete or not.
     int8_t          mDirection;             // Specifies fade direction.
-    
+
     float           mCurrentTime;           // Current fader time.
     float           mMaxTime;               // Maximum delay time.
 };
@@ -186,7 +187,7 @@ public:
 
     bool          Invert;               // Invert decrease direction flag.
     bool          Vertical;             // Change bar style to vertical.
-    
+
 private:
 
     bool          UpdateResolution      // Try to update bar resolution.
@@ -276,17 +277,17 @@ class gui_ItemNotifier
 {
 public:
     gui_ItemNotifier();
-    
+
     void    Start(int item, float time);
     void    Reset();
     void    Animate();
     void    Draw();
-    
+
     void    SetPos(float X, float Y);
     void    SetRot(float X, float Y);
     void    SetSize(float size);
     void    SetRotateTime(float time);
-        
+
 private:
     bool    mActive;
     int     mItem;
@@ -298,14 +299,14 @@ private:
     float   mStartPosX;
     float   mEndPosX;
     float   mCurrPosX;
-    
+
     float   mRotX;
     float   mRotY;
     float   mCurrRotX;
     float   mCurrRotY;
-    
+
     float   mSize;
-    
+
     float   mShowTime;
     float   mCurrTime;
     float   mRotateTime;
@@ -342,18 +343,18 @@ private:
     int                         mRowOffset;
     int                         mSelected;
     int                         mMaxItems;
-    
+
     int                         mFrame;
     int                         mAnim;
     float                       mTime;
     float                       mAng;
-    
+
     int                         mFontSize;
     int                         mFontHeight;
     // background settings
 public:
     FTGLTextureFont            *mFont;               // Texture font renderer
-    
+
     gui_InventoryMenu()
     {
         mCells_x = 4;
@@ -366,18 +367,18 @@ public:
         mRowOffset = 0;
         mSelected = 0;
         mMaxItems = 0;
-        
+
         mFrame = 0;
         mAnim = 0;
         mTime = 0.0;
         mAng = 0.0;
-        
+
         mFontSize = 18;
         mFontHeight = 12;
-        
+
         mFont = NULL;
     }
-    
+
     ~gui_InventoryMenu()
     {
         if(mFont)
@@ -386,37 +387,37 @@ public:
             mFont = NULL;
         }
     }
-    
+
     void InitFont(const char *path);
     void SetFontSize(int size);
     void SetSize(int width, int height);
     void SetTableSize(int cells_x, int cells_y);
-    
+
     int GetFontSize()
     {
         return mFontSize;
     }
-    
+
     void SetPosition(int left, int top)
     {
         mLeft = left;
         mTop = top;
     }
-    
+
     void SetCellSize(int size)
     {
         mCellSize = size;
     }
-    
+
     void SetRowOffset(int dy)               /// Scrolling inventory
     {
         mRowOffset = dy;
     }
-    
+
     void UpdateSelectionOffset();
     void MoveSelectHorisontal(int dx);
     void MoveSelectVertical(int dy);
-    
+
     void Render(struct inventory_node_s *inv);
     // inventory parameters calculation
     // mouse callback
@@ -477,7 +478,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
                   const int &blendMode,
                   const GLuint texture = 0);
-                  
+
 /**
  *  Initiate fade or check if fade is active.
  *  When Gui_Fade function is called without second argument, it will act like
@@ -487,13 +488,13 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeAssignPic(int fader, const char* pic_name);
 int  Gui_FadeCheck(int fader);
-                  
+
 /**
  * Draw item notifier.
  */
 void Gui_StartNotifier(int item);
 void Gui_DrawNotifier();
- 
+
 /**
  * General GUI drawing routines.
  */

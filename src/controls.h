@@ -1,5 +1,3 @@
-<<<<<<< local
-
 #ifndef CONTROLS_H
 #define CONTROLS_H
 
@@ -128,8 +126,6 @@ int  Controls_KeyConsoleFilter(int32_t key, int kmod_states);
 
 #endif /* CONTROLS_H */
 
-=======
-
 #ifndef CONTROLS_H
 #define CONTROLS_H
 
@@ -255,5 +251,3 @@ void Controls_RefreshStates();
 void Controls_InitGlobals();
 
 #endif /* CONTROLS_H */
-
->>>>>>> other

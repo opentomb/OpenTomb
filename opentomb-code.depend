@@ -6241,7 +6241,7 @@
 	"../alMain.h"
 	"../alThunk.h"
 
-1420418556 source:c:\mingw\projects\opentomb\hg-fork\src\anim_state_control.cpp
+1420675550 source:c:\mingw\projects\opentomb\hg-fork\src\anim_state_control.cpp
 	<stdlib.h>
 	<stdio.h>
 	"vmath.h"
@@ -6325,7 +6325,7 @@
 1420410650 c:\mingw\projects\opentomb\hg-fork\src\bullet\bulletcollision\collisiondispatch\btcollisioncreatefunc.h
 	"LinearMath/btAlignedObjectArray.h"
 
-1420410662 c:\mingw\projects\opentomb\hg-fork\src\world.h
+1420675550 c:\mingw\projects\opentomb\hg-fork\src\world.h
 	<SDL2/SDL_opengl.h>
 	<stdint.h>
 	"audio.h"
@@ -6422,7 +6422,9 @@
 1420410652 c:\mingw\projects\opentomb\hg-fork\src\bullet\linearmath\btalignedallocator.h
 	"btScalar.h"
 
-1420673888 c:\mingw\projects\opentomb\hg-fork\src\controls.h
+1420676232 c:\mingw\projects\opentomb\hg-fork\src\controls.h
+	<SDL2/SDL.h>
+	<stdint.h>
 	<SDL2/SDL.h>
 	<stdint.h>
 
@@ -6431,7 +6433,7 @@
 	<stdint.h>
 	"bullet/LinearMath/btScalar.h"
 
-1420410652 c:\mingw\projects\opentomb\hg-fork\src\entity.h
+1420675550 c:\mingw\projects\opentomb\hg-fork\src\entity.h
 	<stdint.h>
 	"bullet/LinearMath/btVector3.h"
 	"bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
@@ -6845,7 +6847,7 @@
 1420410662 c:\mingw\projects\opentomb\hg-fork\src\portal.h
 	<stdint.h>
 
-1420410652 c:\mingw\projects\opentomb\hg-fork\src\console.h
+1420675550 c:\mingw\projects\opentomb\hg-fork\src\console.h
 	"ftgl/FTGLTextureFont.h"
 	<stdint.h>
 	"script.h"
@@ -8344,7 +8346,7 @@
 	"bullet/LinearMath/btScalar.h"
 	"bullet/btBulletCollisionCommon.h"
 
-1420651600 c:\mingw\projects\opentomb\hg-fork\src\gui.h
+1420676299 c:\mingw\projects\opentomb\hg-fork\src\gui.h
 	"ftgl/FTGLTextureFont.h"
 	"entity.h"
 	"render.h"
@@ -8361,7 +8363,7 @@
 	"vt/vt_level.h"
 	"vmath.h"
 
-1420422093 source:c:\mingw\projects\opentomb\hg-fork\src\console.cpp
+1420675550 source:c:\mingw\projects\opentomb\hg-fork\src\console.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL_opengl.h>
@@ -8377,7 +8379,7 @@
 	"FTFont.h"
 	"FTGL.h"
 
-1420673838 source:c:\mingw\projects\opentomb\hg-fork\src\controls.cpp
+1420676256 source:c:\mingw\projects\opentomb\hg-fork\src\controls.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_keycode.h>
 	<SDL2/SDL_scancode.h>
@@ -8501,7 +8503,7 @@
 	<stdlib.h>
 	<stdint.h>
 
-1420410652 source:c:\mingw\projects\opentomb\hg-fork\src\entity.cpp
+1420675550 source:c:\mingw\projects\opentomb\hg-fork\src\entity.cpp
 	<stdlib.h>
 	<math.h>
 	"vmath.h"
@@ -10939,7 +10941,7 @@
 	"lstate.h"
 	"lzio.h"
 
-1420671172 source:c:\mingw\projects\opentomb\hg-fork\src\main_sdl.cpp
+1420675551 source:c:\mingw\projects\opentomb\hg-fork\src\main_sdl.cpp
 	<time.h>
 	<stdio.h>
 	<string.h>
@@ -11394,7 +11396,7 @@
 	"bsp_tree.h"
 	"resource.h"
 
-1420410662 source:c:\mingw\projects\opentomb\hg-fork\src\resource.cpp
+1420675550 source:c:\mingw\projects\opentomb\hg-fork\src\resource.cpp
 	<stdio.h>
 	<stdint.h>
 	<stdlib.h>
@@ -11428,7 +11430,7 @@
 	"redblack.h"
 	"bsp_tree.h"
 
-1420423487 source:c:\mingw\projects\opentomb\hg-fork\src\script.cpp
+1420673940 source:c:\mingw\projects\opentomb\hg-fork\src\script.cpp
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
