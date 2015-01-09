@@ -333,6 +333,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size);
 class gui_InventoryMenu
 {
 private:
+    bool                        mVisible;
     int                         mCells_x;
     int                         mCells_y;
     int                         mWidth;
@@ -348,6 +349,9 @@ private:
     int                         mAnim;
     float                       mTime;
     float                       mAng;
+    float                       mAng2;
+    float                       mAng3;
+    float                       mMovement;
 
     int                         mFontSize;
     int                         mFontHeight;
@@ -357,6 +361,8 @@ public:
 
     gui_InventoryMenu()
     {
+        mVisible = 0;
+
         mCells_x = 4;
         mCells_y = 2;
         mWidth = 512;
@@ -372,6 +378,9 @@ public:
         mAnim = 0;
         mTime = 0.0;
         mAng = 0.0;
+        mAng2 = 0.0;
+        mAng3 = 0.0;
+        mMovement = 0.0;
 
         mFontSize = 18;
         mFontHeight = 12;
@@ -386,6 +395,23 @@ public:
             delete mFont;
             mFont = NULL;
         }
+    }
+
+    void Toggle()
+    {
+        mVisible = !mVisible;
+    }
+
+    bool IsVisible()
+    {
+        return mVisible;
+    }
+
+    bool IsMoving()
+    {
+        if (mMovement!=0)
+            return true;
+        return false;
     }
 
     void InitFont(const char *path);
@@ -502,5 +528,6 @@ void Gui_DrawCrosshair();
 void Gui_DrawFaders();
 void Gui_DrawBars();
 void Gui_DrawLoadScreen(int value);
+void Gui_DrawInventory();
 
 #endif

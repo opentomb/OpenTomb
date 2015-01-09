@@ -561,8 +561,8 @@ void Engine_Display()
         Gui_SwitchGLMode(1);
         {
             GLfloat lp[] = {250.0, 120.0, 0.0, 0.0};
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT0);
+            //glEnable(GL_LIGHTING);
+            //glEnable(GL_LIGHT0);
             //glEnable(GL_BLEND);
             glEnable(GL_ALPHA_TEST);
             glLightfv(GL_LIGHT0, GL_POSITION, lp);
@@ -571,10 +571,11 @@ void Engine_Display()
             Gui_DrawNotifier();
             if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
             {
-                main_inventory_menu->Render(engine_world.Character->character->inventory);
+                Gui_DrawInventory();
             }
 #endif
         }
+
         glPopClientAttrib();
         Gui_Render();
         Gui_SwitchGLMode(0);
@@ -969,19 +970,19 @@ void DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_UP:
-                if(0)main_inventory_menu->MoveSelectVertical(-1);
+                if(main_inventory_menu->IsVisible())main_inventory_menu->MoveSelectVertical(-1);
                 break;
 
             case SDLK_DOWN:
-                if(0)main_inventory_menu->MoveSelectVertical(1);
+                if(main_inventory_menu->IsVisible())main_inventory_menu->MoveSelectVertical(1);
                 break;
 
             case SDLK_LEFT:
-                if(0)main_inventory_menu->MoveSelectHorisontal(-1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(-1);
                 break;
 
             case SDLK_RIGHT:
-                if(0)main_inventory_menu->MoveSelectHorisontal(1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(1);
                 break;
 
                 /*models switching*/
@@ -995,11 +996,6 @@ void DebugKeys(int button, int state)
                 anim = 0;
                 break;
 
-            case SDLK_f:
-                Audio_Send(105);
-                Gui_FadeStart(FADER_EFFECT, TR_FADER_DIR_TIMED);
-                break;
-
             case SDLK_o:
                 model--;
                 if(model < 0)
@@ -1010,8 +1006,19 @@ void DebugKeys(int button, int state)
                 anim = 0;
                 break;
 
-                /*animations switching*/
+                /*rumble*/
+            case SDLK_f:
+                Audio_Send(105);
+                Gui_FadeStart(FADER_EFFECT, TR_FADER_DIR_TIMED);
+                break;
 
+                /*full health*/
+            case SDLK_h:
+                if(Character_ChangeParam(engine_world.Character, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
+                    Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+                break;
+
+                /*animations switching*/
             case SDLK_u:
                 anim--;
                 if(anim < 0)

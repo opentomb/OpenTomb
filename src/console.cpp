@@ -153,40 +153,29 @@ void Con_Draw()
         y = con_base.cursor_y;
         for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
-            GLfloat fcolor_1[4] = {0.1,1,0.1,1}; // green
-            GLfloat fcolor_2[4] = {0.3,0.6,1,1}; // blue
-            GLfloat fcolor_3[4] = {1,0.1,0.1,1}; // red
-            GLfloat fcolor_4[4] = {0.5,0.5,0.5,1}; // grey
-            GLfloat fcolor_5[4] = {1,1,1,1}; // white
-            void *fcolor;
+            //void *fcolor;
             switch(con_base.line_color[i])
             {
             case 1:
-                {
-                    fcolor = &fcolor_1;
-                    break;
-                }
+                glColor4f(0.1,1,0.1,1); // green
+                break;
             case 2:
-                {
-                    fcolor = &fcolor_2;
-                    break;
-                }
+                glColor4f(0.3,0.6,1,1); // blue
+                break;
             case 3:
-                {
-                    fcolor = &fcolor_3;
-                    break;
-                }
+                glColor4f(1,0.1,0.1,1); // red
+                break;
             case 4:
-                {
-                    fcolor = &fcolor_4;
-                    break;
-                }
-            default:
-                fcolor = &fcolor_3; //con_base.font_color;
+                glColor4f(0.5,0.5,0.5,1); // grey
+                break;
+            default: //con_base.font_color;
+                glColor4f(1,0.1,0.1,1); // red
+                break;
             }
             if(i==0)
-                fcolor = &fcolor_5;
-            glColor4fv((GLfloat*)fcolor);
+                glColor4f(1,1,1,1); // white
+                //fcolor = &fcolor_5;
+            //glColor4fv((GLfloat*)fcolor);
             y += con_base.line_height;
             glPushMatrix();
             glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
