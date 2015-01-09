@@ -579,7 +579,7 @@ void gui_InventoryMenu::UpdateSelectionOffset()
         mRowOffset = mSelected / mCells_x - mCells_y + 1;
     }
 
-    mAng = 0.0;
+    //mAng = 0.0;
     //mAng2 /= 2;
 }
 
@@ -618,8 +618,6 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         movement_direction = -1;
     else if(mMovement>0)
         movement_direction = 1;
-    else
-        mAng3 = mAng;
 
     unsigned int itemsCount = 0;
     inventory_node_s *item_counter = inv;
@@ -674,11 +672,12 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
             glPushMatrix();
                 glTranslatef(-400, 0.0, 0.0); // x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
                 glRotatef(-75.0 , 1.0, 0.0, 0.0);
-                glRotatef(180.0, 0.0, 0.0, 1.0);
+                glRotatef(90.0, 0.0, 0.0, 1.0);
                 if(i == mSelected)
                 {
-                    mAng -= engine_frame_time * 30.0;
-                    glRotatef(mAng, 0.0, 0.0, 1.0);
+                    inv->mAng -= engine_frame_time * 30.0; inv->mAng2 -= engine_frame_time * 30.0;
+                    if(inv->mAng2 < -180)
+                        inv->mAng2 = 180;
                     if(item->name[0])
                     {
                         Gui_OutTextXY(mFont, screen_info.w/2 - 40, screen_info.h/2 - 200, "%d", inv->count);
@@ -686,9 +685,12 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
                     }
                 }
                 else
-                    if((movement_direction<0 && i == mSelected+1)||(movement_direction>0 && i == mSelected-1))
-                        glRotatef(mAng2, 0.0, 0.0, 1.0);
-
+                {
+                    inv->mAng = inv->mAng2 * mMovement * movement_direction;
+                    if (mMovement == 0.0)
+                        inv->mAng2 = 0.0;
+                }
+                glRotatef(inv->mAng, 0.0, 0.0, 1.0);
                 glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
                 glScalef(0.6, 0.6, 0.6);
                 Gui_RenderItem(item->bf, NULL);
@@ -718,7 +720,6 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
 //        glVertex2f(mLeft         , screen_info.h - mTop - mHeight);
 //    glEnd();
 
-    mAng2 = mAng3 * mMovement * movement_direction;
     mMovement -= engine_frame_time * 2.1 * movement_direction;
     if ((mMovement < 0 && movement_direction == 1)||(mMovement > 0 && movement_direction == -1))
         mMovement = 0;

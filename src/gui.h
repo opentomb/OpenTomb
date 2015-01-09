@@ -348,9 +348,6 @@ private:
     int                         mFrame;
     int                         mAnim;
     float                       mTime;
-    float                       mAng;
-    float                       mAng2;
-    float                       mAng3;
     float                       mMovement;
 
     int                         mFontSize;
@@ -377,9 +374,6 @@ public:
         mFrame = 0;
         mAnim = 0;
         mTime = 0.0;
-        mAng = 0.0;
-        mAng2 = 0.0;
-        mAng3 = 0.0;
         mMovement = 0.0;
 
         mFontSize = 18;
