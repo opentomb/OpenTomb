@@ -60,7 +60,7 @@ void Gui_Init()
 
     main_inventory_menu = new gui_InventoryMenu();
     main_inventory_menu->SetSize(512, 512/6);
-    main_inventory_menu->SetTableSize(6, 1);
+    main_inventory_menu->SetTableSize(32, 1);
     main_inventory_menu->InitFont(con_base.font_path);
 }
 
@@ -352,7 +352,6 @@ void Gui_Render()
     Gui_DrawFaders();
     Gui_RenderStrings();
     Con_Draw();
-    //Inv_Draw();
 
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
@@ -491,23 +490,30 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 {
-    btScalar bb[3];
-    vec3_sub(bb, bf->bb_max, bf->bb_min);
-    if(bb[0] >= bb[1])
+    //glClearDepth(1.0);
+
+    if(size!=NULL)
     {
-        size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
+        btScalar bb[3];
+        vec3_sub(bb, bf->bb_max, bf->bb_min);
+        if(bb[0] >= bb[1])
+        {
+            size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
+        }
+        else
+        {
+            size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
+        }
+        size *= 0.8;
+
+        glPushMatrix();
+        if(size < 1.0)          // only reduce items size...
+            glScalef(size, size, size);
+        Render_SkeletalModel(bf);
+        glPopMatrix();
     }
     else
-    {
-        size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
-    }
-    size *= 0.8;
-
-    glPushMatrix();
-    if(size < 1.0)          // only reduce items size...
-        glScalef(size, size, size);
-    Render_SkeletalModel(bf);
-    glPopMatrix();
+        Render_SkeletalModel(bf);
 }
 
 
@@ -574,14 +580,21 @@ void gui_InventoryMenu::UpdateSelectionOffset()
     }
 
     mAng = 0.0;
+    //mAng2 /= 2;
 }
 
 
 void gui_InventoryMenu::MoveSelectHorisontal(int dx)
 {
+    Audio_Send(TR_AUDIO_SOUND_MENUROTATE);
     mSelected += dx;
-    mSelected = (mSelected >= mMaxItems)?(mMaxItems-1):(mSelected);
-    mSelected = (mSelected < 0)?(0.0):(mSelected);
+    mMovement = (float)dx;
+//    mSelected = (mSelected >= mMaxItems)?(mMaxItems-1):(mSelected);
+//    mSelected = (mSelected < 0)?(0.0):(mSelected);
+    if (mSelected < 0)
+        mSelected = mMaxItems-1;
+    if (mSelected >= mMaxItems)
+        mSelected = 0;
     UpdateSelectionOffset();
 }
 
@@ -597,19 +610,37 @@ void gui_InventoryMenu::MoveSelectVertical(int dy)
 
 void gui_InventoryMenu::Render(struct inventory_node_s *inv)
 {
-    int cx, cy, i, min, max, x0, y0;
+//    int cx, cy, x0, y0, min, max;
+    int i;
 
-    min = mCells_x * mRowOffset;
-    max = min + mCells_x * mCells_y;
-    x0 = 0.5 * mCellSize + mLeft;
-    y0 = - 0.5 * mCellSize + screen_info.h - mTop;
+    int movement_direction = 0;
+    if(mMovement<0)
+        movement_direction = -1;
+    else if(mMovement>0)
+        movement_direction = 1;
+    else
+        mAng3 = mAng;
+
+    unsigned int itemsCount = 0;
+    inventory_node_s *item_counter = inv;
+    while (item_counter != 0)
+    {
+        item_counter = item_counter->next;
+        itemsCount++;
+    }
+    GLfloat rot = 360/itemsCount;
+
+//    min = mCells_x * mRowOffset;
+//    max = min + mCells_x * mCells_y;
+//    x0 = 0.5 * mCellSize + mLeft;
+//    y0 = - 0.5 * mCellSize + screen_info.h - mTop;
 
     for(i=0;inv;inv=inv->next,i++)
     {
-        if((i < min) || (i >= max))
-        {
-            continue;
-        }
+//        if((i < min) || (i >= max))
+//        {
+//            continue;
+//        }
 
         base_item_p item = World_GetBaseItemByID(&engine_world, inv->id);
         if(item == NULL)
@@ -632,49 +663,65 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         bf->frame_time = time;*/
 
         Item_Frame(item->bf, 0.0);
-        cx = i % mCells_x;
-        cy = i / mCells_x - mRowOffset;
-        Gui_OutTextXY(mFont, mLeft + mCellSize * cx, screen_info.h - mCellSize * cy - mFontHeight, "%d", inv->count);
+//        cx = i % mCells_x;
+//        cy = i / mCells_x - mRowOffset;
+
+        glLoadIdentity();
         glPushMatrix();
-            glTranslatef(x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
-            glRotatef(-60.0 , 1.0, 0.0, 0.0);
-            glRotatef(180.0, 0.0, 0.0, 1.0);
-            if(i == mSelected)
-            {
-                mAng += engine_frame_time * 30.0;
-                glRotatef(mAng, 0.0, 0.0, 1.0);
-                if(item->name[0])
+            //glScalef(1, 1, 1);
+            glTranslatef(0.0, 0.0, -850.0);
+            glRotatef((i-mSelected+mMovement) * rot + 90, 0.0, 4.0, 1.0);
+            glPushMatrix();
+                glTranslatef(-400, 0.0, 0.0); // x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
+                glRotatef(-75.0 , 1.0, 0.0, 0.0);
+                glRotatef(180.0, 0.0, 0.0, 1.0);
+                if(i == mSelected)
                 {
-                    Gui_OutTextXY(mFont, mLeft, screen_info.h - mHeight - mFontHeight, "%s", item->name);
+                    mAng -= engine_frame_time * 30.0;
+                    glRotatef(mAng, 0.0, 0.0, 1.0);
+                    if(item->name[0])
+                    {
+                        Gui_OutTextXY(mFont, screen_info.w/2 - 40, screen_info.h/2 - 200, "%d", inv->count);
+                        Gui_OutTextXY(mFont, screen_info.w/2 - 40, screen_info.h/2 - 226 - mFontHeight, "%s", item->name);
+                    }
                 }
-            }
-            glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
-            Gui_RenderItem(item->bf, (btScalar)mCellSize);
+                else
+                    if((movement_direction<0 && i == mSelected+1)||(movement_direction>0 && i == mSelected-1))
+                        glRotatef(mAng2, 0.0, 0.0, 1.0);
+
+                glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
+                glScalef(0.6, 0.6, 0.6);
+                Gui_RenderItem(item->bf, NULL);
+            glPopMatrix();
         glPopMatrix();
     }
 
-    cx = mSelected % mCells_x;
-    cy = mSelected / mCells_x - mRowOffset;
-    x0 = mLeft + mCellSize * cx;
-    y0 = screen_info.h - mTop - mCellSize * cy;
+//    cx = mSelected % mCells_x;
+//    cy = mSelected / mCells_x - mRowOffset;
+//    x0 = mLeft + mCellSize * cx;
+//    y0 = screen_info.h - mTop - mCellSize * cy;
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glColor3f(1.0, 0.0, 0.0);
-    glBegin(GL_LINE_LOOP);
-        glVertex2f(x0            , y0            );
-        glVertex2f(x0 + mCellSize, y0            );
-        glVertex2f(x0 + mCellSize, y0 - mCellSize);
-        glVertex2f(x0            , y0 - mCellSize);
-    glEnd();
+//    glBindTexture(GL_TEXTURE_2D, 0);
+//    glColor3f(1.0, 0.0, 0.0);
+//    glBegin(GL_LINE_LOOP);
+//        glVertex2f(x0            , y0            );
+//        glVertex2f(x0 + mCellSize, y0            );
+//        glVertex2f(x0 + mCellSize, y0 - mCellSize);
+//        glVertex2f(x0            , y0 - mCellSize);
+//    glEnd();
+//
+//    glColor3f(0.0, 0.0, 1.0);
+//    glBegin(GL_LINE_LOOP);
+//        glVertex2f(mLeft         , screen_info.h - mTop          );
+//        glVertex2f(mLeft + mWidth, screen_info.h - mTop          );
+//        glVertex2f(mLeft + mWidth, screen_info.h - mTop - mHeight);
+//        glVertex2f(mLeft         , screen_info.h - mTop - mHeight);
+//    glEnd();
 
-    glColor3f(0.0, 0.0, 1.0);
-    glBegin(GL_LINE_LOOP);
-        glVertex2f(mLeft         , screen_info.h - mTop          );
-        glVertex2f(mLeft + mWidth, screen_info.h - mTop          );
-        glVertex2f(mLeft + mWidth, screen_info.h - mTop - mHeight);
-        glVertex2f(mLeft         , screen_info.h - mTop - mHeight);
-    glEnd();
-
+    mAng2 = mAng3 * mMovement * movement_direction;
+    mMovement -= engine_frame_time * 2.1 * movement_direction;
+    if ((mMovement < 0 && movement_direction == 1)||(mMovement > 0 && movement_direction == -1))
+        mMovement = 0;
     mMaxItems = i;
 }
 
@@ -745,6 +792,61 @@ void Gui_DrawBars()
         Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
         Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
     }
+}
+
+void Gui_DrawInventory()
+{
+    if (!main_inventory_menu->IsVisible())
+        return;
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glPopClientAttrib();
+    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
+    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPolygonMode(GL_FRONT, GL_FILL);
+    glFrontFace(GL_CCW);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_ALPHA_TEST);
+    glDepthMask(GL_FALSE);
+
+    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    // Background
+    glBindTexture(GL_TEXTURE_2D, 0);
+    GLfloat rectCoords[8];
+    glColor4f(0,0,0,0.45);
+    rectCoords[0] = 0.0;                        rectCoords[1] = (GLfloat)screen_info.h;
+    rectCoords[2] = 0.0;                        rectCoords[3] = 0.0;
+    rectCoords[4] = (GLfloat)screen_info.w;     rectCoords[5] = 0.0;
+    rectCoords[6] = (GLfloat)screen_info.w;     rectCoords[7] = (GLfloat)screen_info.h;
+
+    glLoadIdentity();
+    glVertexPointer(2, GL_FLOAT, 0, rectCoords);
+    glDrawArrays(GL_POLYGON, 0, 4);
+    glColor3f(1.0, 1.0, 1.0);
+
+    glDepthMask(GL_TRUE);
+    glPopClientAttrib();
+    glPopAttrib();
+
+    glEnable(GL_TEXTURE_2D);
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    //GLfloat color[4] = {0,0,0,0.45};
+    //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
+
+    Gui_SwitchGLMode(0);
+    main_inventory_menu->Render(engine_world.Character->character->inventory);
+    Gui_SwitchGLMode(1);
 }
 
 void Gui_StartNotifier(int item)

@@ -186,22 +186,22 @@ void Engine_Init()
 {
     Con_Init();
     Gui_Init();
-    
+
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-    
+
     Sys_Init();
     Com_Init();
     Render_Init();
     Cam_Init(&engine_camera);
-    
+
     renderer.cam = &engine_camera;
-    
+
     Engine_BTInit();
     Engine_LuaInit();
-    
-    Con_AddLine("Engine inited");
+
+    Con_AddLine("Engine inited!", 1);
 }
 
 void Engine_BTInit()
@@ -212,12 +212,12 @@ void Engine_BTInit()
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
     bt_engine_dispatcher->setNearCallback(Engine_RoomNearCallback);
-    
+
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
     bt_engine_ghostPairCallback = new btGhostPairCallback();
     bt_engine_overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(bt_engine_ghostPairCallback);
-    
+
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
@@ -236,7 +236,7 @@ void Engine_BTInit()
         Engine_LuaRegisterFuncs(engine_lua);
     }
 
-    Con_AddLine("Engine inited", 1);
+    Con_AddLine("Engine initializing...", 1);
     luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
 }
 
@@ -2431,21 +2431,21 @@ int lua_genUVRotateAnimation(lua_State *lua)
 bool Engine_LuaInit()
 {
     engine_lua = luaL_newstate();
-    
+
     if(engine_lua != NULL)
     {
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
-        
-        
+
+
         // Load and run global engine scripts.
-        
+
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
         luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
-        
+
         return true;
     }
     else
@@ -2963,6 +2963,7 @@ int Engine_ExecCmd(char *ch)
         ch = parse_token(ch, token);
         if(!strcmp(token, "help"))
         {
+            Con_AddLine("Available commands:\0", 1);
             Con_AddLine("help - show help info\0", 2);
             Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0", 2);
             Con_AddLine("save, load - save and load game state in \"file_name\"\0", 2);
@@ -2978,6 +2979,7 @@ int Engine_ExecCmd(char *ch)
             Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0", 2);
             Con_AddLine("playsound(id) - play specified sound\0", 2);
             Con_AddLine("stopsound(id) - stop specified sound\0", 2);
+            Con_AddLine("Watch out for case sensitive commands!\0", 1);
         }
         else if(!strcmp(token, "goto"))
         {
