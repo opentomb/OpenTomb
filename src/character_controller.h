@@ -182,10 +182,9 @@ typedef struct character_param_s
 
 typedef struct inventory_node_s
 {
-    float                       mAng;
-    float                       mAng2;
     uint32_t                    id;
     int32_t                     count;
+    uint32_t                    max_count;
     struct inventory_node_s    *next;
 }inventory_node_t, *inventory_node_p;
 

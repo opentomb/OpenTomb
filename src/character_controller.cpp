@@ -224,6 +224,7 @@ void Character_Clean(struct entity_s *ent)
 
 int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
+    Con_Printf("Giving item %i x%i to entity ???", item_id, count);
     if(ent->character == NULL)
     {
         return 0;
@@ -259,7 +260,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     {
         ent->character->inventory = i;
     }
-
+    main_inventory_menu->AddItem(i);
     return count;
 }
 
@@ -300,11 +301,13 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
             if(i->count > count)
             {
                 i->count -= count;
+                main_inventory_menu->UpdateItem(i);
                 return i->count;
             }
             else if(i->count == count)
             {
                 pi->next = i->next;
+                main_inventory_menu->UpdateItem(i);
                 free(i);
                 return 0;
             }
@@ -316,7 +319,7 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
         pi = i;
         i = i->next;
     }
-
+    main_inventory_menu->UpdateItem(i);
     return -count;
 }
 

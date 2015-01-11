@@ -101,14 +101,14 @@ void Controls_Key(int32_t button, int state)
 
                         if(con_base.show)
                         {
-                            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                            //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                             SDL_ShowCursor(1);
                             SDL_SetRelativeMouseMode(SDL_FALSE);
                             SDL_StartTextInput();
                         }
                         else
                         {
-                            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                            //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                             SDL_ShowCursor(0);
                             SDL_SetRelativeMouseMode(SDL_TRUE);
                             SDL_StopTextInput();
