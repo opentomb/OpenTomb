@@ -932,6 +932,23 @@ void Render_DrawList()
     if(renderer.world->Character)
     {
         Render_Entity(renderer.world->Character);
+
+//        glPushMatrix();
+//        glMultMatrixbt(renderer.world->Character->transform);
+//        ss_bone_tag_p btag = renderer.world->Character->bf.bone_tags;
+//
+//        for(uint16_t i=0; i<renderer.world->Character->bf.bone_tag_count; i++,btag++)
+//        {
+//            glPushMatrix();
+//            glMultMatrixbt(btag->full_transform);
+//            Render_Mesh(btag->mesh, NULL, NULL);
+//            if(btag->mesh2)
+//            {
+//                Render_SkinMesh(btag->mesh2, btag->transform);
+//            }
+//            glPopMatrix();
+//        }
+//        glPopMatrix();
     }
     glDisable(GL_LIGHTING);
 
@@ -1313,7 +1330,7 @@ void render_DebugDrawer::draw3dText(const btVector3& location, const char* textS
 
 void render_DebugDrawer::reportErrorWarning(const char* warningString)
 {
-   Con_AddLine(warningString);
+   Con_AddLine(warningString, 3);
 }
 
 void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)

@@ -46,6 +46,12 @@ void Con_Init()
     con_base.font = new FTGLTextureFont(con_base.font_path);
     con_base.font->FaceSize(con_base.font_size);
 
+    con_base.line_color = (uint8_t*) malloc(con_base.shown_lines_count*sizeof(uint8_t));
+    for(uint16_t i=0;i<con_base.shown_lines_count;i++)
+    {
+        con_base.line_color[i] = *(uint8_t*) calloc(sizeof(uint8_t), 1);
+    }
+
     con_base.shown_lines = (char**) malloc(con_base.shown_lines_count*sizeof(char*));
     for(uint16_t i=0;i<con_base.shown_lines_count;i++)
     {
@@ -145,9 +151,31 @@ void Con_Draw()
         Con_DrawBackground();
         x = 8;
         y = con_base.cursor_y;
-        glColor4fv(con_base.font_color);
         for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
+            //void *fcolor;
+            switch(con_base.line_color[i])
+            {
+            case 1:
+                glColor4f(0.1,1,0.1,1); // green
+                break;
+            case 2:
+                glColor4f(0.3,0.6,1,1); // blue
+                break;
+            case 3:
+                glColor4f(1,0.1,0.1,1); // red
+                break;
+            case 4:
+                glColor4f(0.5,0.5,0.5,1); // grey
+                break;
+            default: //con_base.font_color;
+                glColor4f(1,0.1,0.1,1); // red
+                break;
+            }
+            if(i==0)
+                glColor4f(1,1,1,1); // white
+                //fcolor = &fcolor_5;
+            //glColor4fv((GLfloat*)fcolor);
             y += con_base.line_height;
             glPushMatrix();
             glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
@@ -221,7 +249,7 @@ void Con_Filter(char *text)
 
 void Con_Edit(int key)
 {
-    if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || !con_base.inited)
+    if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !con_base.inited)
     {
         return;
     }
@@ -366,7 +394,7 @@ void Con_AddLog(const char *text)
     }
 }
 
-void Con_AddLine(const char *text)
+void Con_AddLine(const char *text, uint8_t color)
 {
     if(con_base.inited && (text != NULL))
     {
@@ -377,9 +405,11 @@ void Con_AddLine(const char *text)
             char *last = con_base.shown_lines[con_base.shown_lines_count-1];    // save pointer to the last log string
             for(uint16_t i=con_base.shown_lines_count-1;i>1;i--)                // shift log
             {
+                con_base.line_color[i] = con_base.line_color[i-1];
                 con_base.shown_lines[i] = con_base.shown_lines[i-1];            // shift is round
             }
             con_base.shown_lines[1] = last;                                     // cycle the shift
+            con_base.line_color[1] = color;
             strncpy(con_base.shown_lines[1], text, con_base.line_size);
             con_base.shown_lines[1][con_base.line_size-1] = 0;                  // paranoid end of string
             text += con_base.line_size-1;
@@ -388,7 +418,7 @@ void Con_AddLine(const char *text)
     }
 }
 
-void Con_AddText(const char *text)
+void Con_AddText(const char *text, uint8_t color)
 {
     char buf[4096], ch;
     size_t j = 0, text_size = strlen(text);
@@ -404,7 +434,7 @@ void Con_AddText(const char *text)
             buf[4095] = 0;
             if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
             {
-                Con_AddLine(buf);
+                Con_AddLine(buf, color);
             }
             j=0;
         }
@@ -421,7 +451,7 @@ void Con_AddText(const char *text)
     }
     if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
     {
-        Con_AddLine(buf);
+        Con_AddLine(buf, color);
     }
 }
 
@@ -434,7 +464,7 @@ void Con_Printf(const char *fmt, ...)
     vsnprintf(buf, 4096, fmt, argptr);
     buf[4096-1] = 0;
     va_end(argptr);
-    Con_AddLine(buf);
+    Con_AddLine(buf, 4);
 }
 
 void Con_Clean()

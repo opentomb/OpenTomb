@@ -49,7 +49,7 @@ strings[026] = "Select Item to Combine";
 
 -- Inventory actions
 
-strings[027] = "Equip";             
+strings[027] = "Equip";
 strings[028] = "Choose Ammo";
 strings[029] = "Choose Fire Mode";
 strings[030] = "Use";
@@ -63,7 +63,7 @@ strings[034] = "Throw Away";
 strings[035] = " - Accept";
 strings[036] = " - Cancel";
 strings[037] = "Hold left mouse button and pan to rotate inventory.";
-strings[038] = "Scoll mouse wheel to switch inventory menu.";
+strings[038] = "Scroll mouse wheel to switch inventory menu.";
 strings[039] = "Hold right mouse button and pan to examine item.";
 
 -- Statistics bar

@@ -496,7 +496,7 @@ int main(int argc, char **argv)
 
     Gui_FadeAssignPic(FADER_LOADSCREEN, "graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
-    
+
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
@@ -561,8 +561,8 @@ void Engine_Display()
         Gui_SwitchGLMode(1);
         {
             GLfloat lp[] = {250.0, 120.0, 0.0, 0.0};
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT0);
+            //glEnable(GL_LIGHTING);
+            //glEnable(GL_LIGHT0);
             //glEnable(GL_BLEND);
             glEnable(GL_ALPHA_TEST);
             glLightfv(GL_LIGHT0, GL_POSITION, lp);
@@ -571,10 +571,11 @@ void Engine_Display()
             Gui_DrawNotifier();
             if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
             {
-                main_inventory_menu->Render(engine_world.Character->character->inventory);
+                Gui_DrawInventory();
             }
 #endif
         }
+
         glPopClientAttrib();
         Gui_Render();
         Gui_SwitchGLMode(0);
@@ -713,7 +714,7 @@ void Engine_Frame(btScalar time)
     {
         screen_info.fps = (20.0 / time_cycl);
         snprintf(system_fps.text, system_fps.buf_size, "%.1f", screen_info.fps);
-        Gui_StringAutoRect(&system_fps);
+        //Gui_StringAutoRect(&system_fps);
         cycles = 0;
         time_cycl = 0.0;
     }
@@ -799,16 +800,16 @@ void ShowDebugInfo()
             case OBJECT_ENTITY:
                 Gui_OutTextXY(NULL, 20, 92, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
                 break;
-                
+
             case OBJECT_STATIC_MESH:
                 Gui_OutTextXY(NULL, 20, 92, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
-                
+
             case OBJECT_ROOM_BASE:
                 Gui_OutTextXY(NULL, 20, 92, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
-        
+
     }
 
     if(engine_camera.current_room != NULL)
@@ -897,7 +898,7 @@ void Engine_PollSDLInput()
                 if(sdl_joystick)
                     Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
                 break;
-                
+
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
                 if(con_base.show && event.key.state)
@@ -969,19 +970,19 @@ void DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_UP:
-                main_inventory_menu->MoveSelectVertical(-1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(-1);
                 break;
 
             case SDLK_DOWN:
-                main_inventory_menu->MoveSelectVertical(1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(1);
                 break;
 
             case SDLK_LEFT:
-                main_inventory_menu->MoveSelectHorisontal(-1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(-1);
                 break;
 
             case SDLK_RIGHT:
-                main_inventory_menu->MoveSelectHorisontal(1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(1);
                 break;
 
                 /*models switching*/
@@ -995,11 +996,6 @@ void DebugKeys(int button, int state)
                 anim = 0;
                 break;
 
-            case SDLK_f:
-                Audio_Send(105);
-                Gui_FadeStart(FADER_EFFECT, TR_FADER_DIR_TIMED);
-                break;
-
             case SDLK_o:
                 model--;
                 if(model < 0)
@@ -1010,8 +1006,19 @@ void DebugKeys(int button, int state)
                 anim = 0;
                 break;
 
-                /*animations switching*/
+                /*rumble*/
+            case SDLK_f:
+                Audio_Send(105);
+                Gui_FadeStart(FADER_EFFECT, TR_FADER_DIR_TIMED);
+                break;
 
+                /*full health*/
+            case SDLK_h:
+                if(Character_ChangeParam(engine_world.Character, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
+                    Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
+                break;
+
+                /*animations switching*/
             case SDLK_u:
                 anim--;
                 if(anim < 0)
@@ -1104,7 +1111,7 @@ void DebugKeys(int button, int state)
                     }
                 }
                 break;
-                
+
             case SDLK_4:
                 if(!con_base.show)
                 {

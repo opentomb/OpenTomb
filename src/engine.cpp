@@ -186,22 +186,22 @@ void Engine_Init()
 {
     Con_Init();
     Gui_Init();
-    
+
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-    
+
     Sys_Init();
     Com_Init();
     Render_Init();
     Cam_Init(&engine_camera);
-    
+
     renderer.cam = &engine_camera;
-    
+
     Engine_BTInit();
     Engine_LuaInit();
-    
-    Con_AddLine("Engine inited");
+
+    Con_AddLine("Engine inited!", 1);
 }
 
 void Engine_BTInit()
@@ -212,12 +212,12 @@ void Engine_BTInit()
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
     bt_engine_dispatcher->setNearCallback(Engine_RoomNearCallback);
-    
+
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
     bt_engine_ghostPairCallback = new btGhostPairCallback();
     bt_engine_overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(bt_engine_ghostPairCallback);
-    
+
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
@@ -228,6 +228,16 @@ void Engine_BTInit()
     debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
     bt_engine_dynamicsWorld->setDebugDrawer(&debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
+
+    engine_lua = luaL_newstate();
+    if(engine_lua != NULL)
+    {
+        luaL_openlibs(engine_lua);
+        Engine_LuaRegisterFuncs(engine_lua);
+    }
+
+    Con_AddLine("Engine initializing...", 1);
+    luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
 }
 
 /*
@@ -244,7 +254,7 @@ void Engine_BTInit()
 
      for(int i=1;i<=top;i++)
      {
-         Con_AddLine(lua_tostring(lua, i));
+         Con_AddLine(lua_tostring(lua, i), 1);
      }
 
      return 0;
@@ -384,7 +394,7 @@ int lua_EnableEntity(lua_State * lua)
 
     if(top < 1)
     {
-        Con_AddLine("You must to enter entity ID");
+        Con_AddLine("You must to enter entity ID", 3);
         return 0;
     }
 
@@ -405,7 +415,7 @@ int lua_DisableEntity(lua_State * lua)
 
     if(top < 1)
     {
-        Con_AddLine("You must to enter entity ID");
+        Con_AddLine("You must to enter entity ID", 3);
         return 0;
     }
 
@@ -426,7 +436,7 @@ int lua_SetEntityCollision(lua_State * lua)
 
     if(top < 1)
     {
-        Con_AddLine("You must to enter entity ID");
+        Con_AddLine("You must to enter entity ID", 3);
         return 0;
     }
 
@@ -501,7 +511,7 @@ int lua_DropEntity(lua_State * lua)                                             
 
     if(top < 2)
     {
-        Con_AddLine("wrong arguments number, must be (entity_id, time)");
+        Con_AddLine("wrong arguments number, must be (entity_id, time)", 3);
         return 0;
     }
 
@@ -2142,7 +2152,7 @@ int lua_LoadMap(lua_State *lua)
 
     if(top < 1)
     {
-        Con_AddLine("wrong arguments number, must be (map_name, (game_id, map_id))");
+        Con_AddLine("wrong arguments number, must be (map_name, (game_id, map_id))", 3);
         return 0;
     }
 
@@ -2173,18 +2183,18 @@ int lua_LoadMap(lua_State *lua)
 /*
  * Flipped (alternate) room functions
  */
- 
+
 int lua_SetFlipRoom(lua_State *lua)
 {
     uint32_t group, state;
-    
+
     int top = lua_gettop(lua);
     if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (flipmap_index, room_state).");
         return 0;
     }
-    
+
     group = (uint32_t)lua_tointeger(lua, 1);
     state = (uint32_t)lua_tointeger(lua, 2);
     state = (state > 1)?(1):(state);                // State is always boolean.
@@ -2192,7 +2202,7 @@ int lua_SetFlipRoom(lua_State *lua)
     if(engine_world.room_flipmap & (1 << group))    // Check flipmap state.
     {
         room_p current_room = engine_world.rooms;
-        
+
         if(engine_world.version > TR_III)
         {
             for(int i=0;i<engine_world.room_count;i++, current_room++)
@@ -2209,11 +2219,11 @@ int lua_SetFlipRoom(lua_State *lua)
                     }
                 }
             }
-        
+
             if(state)
             {
                 engine_world.room_flipstate |= (1 << group);    // Mark group state as alternate.
-            } 
+            }
             else
             {
                 engine_world.room_flipstate ^= (1 << group);    // Mark group state as base.
@@ -2232,7 +2242,7 @@ int lua_SetFlipRoom(lua_State *lua)
                     Room_SwapToBase(current_room);
                 }
             }
-            
+
             engine_world.room_flipstate = state;    // In TR1-3, state is always global.
         }
     }
@@ -2240,25 +2250,25 @@ int lua_SetFlipRoom(lua_State *lua)
     {
         Con_Printf("Flipmap bit %d state is FALSE - no rooms were swapped!", group);
     }
-    
+
     return 0;
 }
 
 int lua_SetFlipFlag(lua_State *lua)
 {
     uint32_t group, state;
-    
+
     int top = lua_gettop(lua);
     if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (flipmap_index, flipmap_state).");
         return 0;
     }
-    
+
     group = (uint32_t)lua_tointeger(lua, 1);
     state = (uint32_t)lua_tointeger(lua, 2);
     state = (state > 1)?(1):(state);                // State is always boolean.
-    
+
     if(state)
     {
         engine_world.room_flipmap |= (1 << group);  // Mark group state as alternate.
@@ -2267,7 +2277,7 @@ int lua_SetFlipFlag(lua_State *lua)
     {
         engine_world.room_flipmap ^= (1 << group);  // Mark group state as base.
     }
-    
+
     return 0;
 }
 
@@ -2302,7 +2312,7 @@ int lua_SetFlipstate(lua_State *lua)
         uint32_t flipstate = (uint32_t)lua_tointeger(lua, 1);
         engine_world.room_flipstate = flipstate;
         room_p current_room = engine_world.rooms;
-        
+
         if(engine_world.version > TR_III)
         {
             for(int i=0;i<engine_world.room_count;i++,current_room++)
@@ -2332,7 +2342,7 @@ int lua_SetFlipstate(lua_State *lua)
             }
         }
     }
-    
+
     return 0;
 }
 
@@ -2348,7 +2358,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 
     if(top < 1)
     {
-        Con_AddLine("wrong arguments number, must be (model_id)");
+        Con_AddLine("wrong arguments number, must be (model_id)", 3);
         return 0;
     }
     id = lua_tointeger(lua, 1);
@@ -2421,21 +2431,21 @@ int lua_genUVRotateAnimation(lua_State *lua)
 bool Engine_LuaInit()
 {
     engine_lua = luaL_newstate();
-    
+
     if(engine_lua != NULL)
     {
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
-        
-        
+
+
         // Load and run global engine scripts.
-        
+
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
         luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
-        
+
         return true;
     }
     else
@@ -2488,7 +2498,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setgame", lua_SetGame);
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
-    
+
     lua_register(lua, "setFlipFlag", lua_SetFlipFlag);
     lua_register(lua, "setFlipRoom", lua_SetFlipRoom);
     lua_register(lua, "setFlipmap", lua_SetFlipmap);
@@ -2640,7 +2650,7 @@ void Engine_Shutdown(int val)
 
 int engine_lua_fputs(const char *str, FILE *f)
 {
-    Con_AddText(str);
+    Con_AddText(str, 2);
     return strlen(str);
 }
 
@@ -2660,7 +2670,7 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     fwrite(buf, 1, ret, f);
 
     // Write it to console, too (if it helps) und
-    Con_AddText(buf);
+    Con_AddText(buf, 2);
 
     return ret;
 }
@@ -2676,7 +2686,7 @@ int engine_lua_printf(const char *fmt, ...)
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
 
-    Con_AddText(buf);
+    Con_AddText(buf, 2);
 
     return ret;
 }
@@ -2953,21 +2963,23 @@ int Engine_ExecCmd(char *ch)
         ch = parse_token(ch, token);
         if(!strcmp(token, "help"))
         {
-            Con_AddLine("help - show help info\0");
-            Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0");
-            Con_AddLine("save, load - save and load game state in \"file_name\"\0");
-            Con_AddLine("exit - close program\0");
-            Con_AddLine("cls - clean console\0");
-            Con_AddLine("show_fps - switch show fps flag\0");
-            Con_AddLine("font_size - get and set font size\0");
-            Con_AddLine("spacing - read and write spacing\0");
-            Con_AddLine("showing_lines - read and write number of showing lines\0");
-            Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0");
-            Con_AddLine("free_look - switch camera mode\0");
-            Con_AddLine("cam_distance - camera distance to actor\0");
-            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0");
-            Con_AddLine("playsound(id) - play specified sound\0");
-            Con_AddLine("stopsound(id) - stop specified sound\0");
+            Con_AddLine("Available commands:\0", 1);
+            Con_AddLine("help - show help info\0", 2);
+            Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0", 2);
+            Con_AddLine("save, load - save and load game state in \"file_name\"\0", 2);
+            Con_AddLine("exit - close program\0", 2);
+            Con_AddLine("cls - clean console\0", 2);
+            Con_AddLine("show_fps - switch show fps flag\0", 2);
+            Con_AddLine("font_size - get and set font size\0", 2);
+            Con_AddLine("spacing - read and write spacing\0", 2);
+            Con_AddLine("showing_lines - read and write number of showing lines\0", 2);
+            Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0", 2);
+            Con_AddLine("free_look - switch camera mode\0", 2);
+            Con_AddLine("cam_distance - camera distance to actor\0", 2);
+            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0", 2);
+            Con_AddLine("playsound(id) - play specified sound\0", 2);
+            Con_AddLine("stopsound(id) - stop specified sound\0", 2);
+            Con_AddLine("Watch out for case sensitive commands!\0", 1);
         }
         else if(!strcmp(token, "goto"))
         {
@@ -3033,7 +3045,7 @@ int Engine_ExecCmd(char *ch)
             if(NULL == ch)
             {
                 snprintf(buf, con_base.line_size + 32, "showing_lines = %d", con_base.showing_lines);
-                Con_AddLine(buf);
+                Con_AddLine(buf, 1);
                 return 1;
             }
             else
@@ -3046,7 +3058,7 @@ int Engine_ExecCmd(char *ch)
                 }
                 else
                 {
-                    Con_AddLine("Invalid showing_lines values\0");
+                    Con_AddLine("Invalid showing_lines values\0", 3);
                 }
             }
             return 1;
@@ -3149,12 +3161,12 @@ int Engine_ExecCmd(char *ch)
                 buf[size] = 0;
                 fclose(f);
                 Con_Clean();
-                Con_AddText(buf);
+                Con_AddText(buf, 2);
                 free(buf);
             }
             else
             {
-                Con_AddText("Not avaliable =(");
+                Con_AddText("Not avaliable =(", 3);
             }
             return 1;
         }
@@ -3168,7 +3180,7 @@ int Engine_ExecCmd(char *ch)
             else
             {
                 snprintf(buf, con_base.line_size + 32, "Command \"%s\" not found", token);
-                Con_AddLine(buf);
+                Con_AddLine(buf, 3);
             }
             return 0;
         }

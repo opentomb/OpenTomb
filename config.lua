@@ -34,6 +34,7 @@ render =
 controls =
 {
     mouse_sensitivity = 25.0;
+    keyboard_type = 0;                          -- Keyboard layout for console - EU (1) or default (0)
 
     use_joy = 0;                                -- Use joystick - yes (1) or no (0)
     joy_number = 0;                             -- If you have one joystick in system, it will be 0.
