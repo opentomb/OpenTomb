@@ -970,11 +970,11 @@ void DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_UP:
-                if(0&&main_inventory_menu->IsVisible())main_inventory_menu->MoveSelectVertical(-1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(-1);
                 break;
 
             case SDLK_DOWN:
-                if(0&&main_inventory_menu->IsVisible())main_inventory_menu->MoveSelectVertical(1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(1);
                 break;
 
             case SDLK_LEFT:

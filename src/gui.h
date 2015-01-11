@@ -330,25 +330,68 @@ void Gui_RenderStrings();
 void Item_Frame(struct ss_bone_frame_s *bf, btScalar time);
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size);
 
+typedef struct gui_invmenu_item_ammo_s
+{
+    inventory_node_s           *linked_item;
+
+    //float                       size;
+    uint16_t                    type;
+    //uint32_t                    id;
+    //uint32_t                    count;
+    //uint32_t                    max_count;
+    char                       *name;
+    char                       *description;
+};
+
+typedef struct gui_invmenu_item_s
+{
+    inventory_node_s           *linked_item;
+
+    float                       angle;
+    int8_t                      angle_dir;              // rotation direction: 0, 1 or -1
+    //float                       size;
+    //uint16_t                    type;
+    //uint32_t                    id;
+    //uint32_t                    count;
+    //char                       *name;
+    char                       *description;
+
+    gui_invmenu_item_ammo_s   **ammo;                   // array of ammo structs
+    gui_invmenu_item_s        **combinables;            // array of items it can be combined with
+    gui_invmenu_item_s         *next;                   // next item in the row
+};
+
 class gui_InventoryMenu
 {
 private:
     bool                        mVisible;
-    int                         mCells_x;
-    int                         mCells_y;
-    int                         mWidth;
-    int                         mHeight;
-    int                         mLeft;
-    int                         mTop;
-    int                         mCellSize;    // x, y...
+    //int                         mCells_x;
+    //int                         mCells_y;
+    //int                         mWidth;
+    //int                         mHeight;
+    //int                         mLeft;
+    //int                         mTop;
+    //int                         mCellSize;    // x, y...
     int                         mRowOffset;
+    int                         mRow1Max;
+    int                         mRow2Max;
+    int                         mRow3Max;
     int                         mSelected;
     int                         mMaxItems;
+
+    gui_invmenu_item_s         *mFirstInRow1;
+    gui_invmenu_item_s         *mFirstInRow2;
+    gui_invmenu_item_s         *mFirstInRow3;
 
     int                         mFrame;
     int                         mAnim;
     float                       mTime;
-    float                       mMovement;
+    float                       mMovementH;
+    float                       mMovementV;
+    float                       mMovementC;
+    int                         mMovementDirectionH;
+    int                         mMovementDirectionV;
+    int                         mMovementDirectionC;
 
     int                         mFontSize;
     int                         mFontHeight;
@@ -360,27 +403,41 @@ public:
     {
         mVisible = 0;
 
-        mCells_x = 4;
-        mCells_y = 2;
-        mWidth = 512;
-        mHeight = 256;
-        mLeft = 0;
-        mTop = 0;
-        mCellSize = 128;
-        mRowOffset = 0;
+        //mCells_x = 4;
+        //mCells_y = 2;
+        //mWidth = 512;
+        //mHeight = 256;
+        //mLeft = 0;
+        //mTop = 0;
+        //mCellSize = 128;
+        mRowOffset = 1;
+        mRow1Max = 0;
+        mRow2Max = 0;
+        mRow3Max = 0;
         mSelected = 0;
         mMaxItems = 0;
+
+        mFirstInRow1 = NULL;
+        mFirstInRow2 = NULL;
+        mFirstInRow3 = NULL;
 
         mFrame = 0;
         mAnim = 0;
         mTime = 0.0;
-        mMovement = 0.0;
+        mMovementH = 0.0;
+        mMovementV = 0.0;
+        mMovementC = 0.0;
+        mMovementDirectionH = 0;
+        mMovementDirectionV = 0;
+        mMovementDirectionC = 0;
 
         mFontSize = 18;
         mFontHeight = 12;
 
         mFont = NULL;
     }
+
+    void DestroyItems();
 
     ~gui_InventoryMenu()
     {
@@ -389,11 +446,24 @@ public:
             delete mFont;
             mFont = NULL;
         }
+        DestroyItems();
     }
 
     void Toggle()
     {
-        mVisible = !mVisible;
+        if(mMovementDirectionC!=0)
+            return;
+        if(mVisible && mMovementDirectionV == 0 && mMovementH == 0)
+        {
+            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+            mMovementDirectionC = -1;
+        }
+        else
+        {
+            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+            mMovementDirectionC = 1;
+        }
+        mVisible = 1;
     }
 
     bool IsVisible()
@@ -403,30 +473,17 @@ public:
 
     bool IsMoving()
     {
-        if (mMovement!=0)
+        if (mMovementH!=0 || mMovementDirectionV!=0 || mMovementDirectionC!=0)
             return true;
         return false;
     }
 
     void InitFont(const char *path);
     void SetFontSize(int size);
-    void SetSize(int width, int height);
-    void SetTableSize(int cells_x, int cells_y);
 
     int GetFontSize()
     {
         return mFontSize;
-    }
-
-    void SetPosition(int left, int top)
-    {
-        mLeft = left;
-        mTop = top;
-    }
-
-    void SetCellSize(int size)
-    {
-        mCellSize = size;
     }
 
     void SetRowOffset(int dy)               /// Scrolling inventory
@@ -434,11 +491,13 @@ public:
         mRowOffset = dy;
     }
 
-    void UpdateSelectionOffset();
+    void AddItem(inventory_node_p item);
+    void UpdateItem(inventory_node_p item);
+    void UpdateItemsOrder(int row);
     void MoveSelectHorisontal(int dx);
     void MoveSelectVertical(int dy);
 
-    void Render(struct inventory_node_s *inv);
+    void Render(); // struct inventory_node_s *inv
     // inventory parameters calculation
     // mouse callback
 };
