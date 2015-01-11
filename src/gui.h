@@ -492,7 +492,8 @@ public:
     }
 
     void AddItem(inventory_node_p item);
-    void UpdateItem(inventory_node_p item);
+    void UpdateItemRemoval(inventory_node_p item);
+    void RemoveAllItems();
     void UpdateItemsOrder(int row);
     void MoveSelectHorisontal(int dx);
     void MoveSelectVertical(int dy);
