@@ -726,6 +726,8 @@ void gui_InventoryMenu::AddItem(inventory_node_p item)
     gui_invmenu_item_s *cur = *inv, *last = NULL;
     while(cur)
     {
+        if(item->id == cur->linked_item->id)
+            return;
         last = cur;
         cur = cur->next;
     }
@@ -751,7 +753,7 @@ void gui_InventoryMenu::AddItem(inventory_node_p item)
     UpdateItemsOrder(correct_row);
 }
 
-void gui_InventoryMenu::UpdateItem(inventory_node_p item)
+void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
 {
     int *items_count;
     gui_invmenu_item_s **inv;
@@ -849,13 +851,64 @@ void gui_InventoryMenu::UpdateItem(inventory_node_p item)
             break;
         }
         last = cur;
-        cur = cur->next;
+        cur = next;
     }
 
     items_count = NULL;
     inv = NULL;
 
     UpdateItemsOrder(correct_row);
+}
+
+void gui_InventoryMenu::RemoveAllItems()
+{
+    int *items_count; bool redo=0;
+    gui_invmenu_item_s *inv;
+    gui_invmenu_item_s *cur = NULL, *last = NULL;
+
+    for(int i=0; i<3; i++)
+    {
+        switch(i)
+        {
+        case 0:
+            items_count = &mRow1Max;
+            inv = mFirstInRow1;
+            break;
+        case 1:
+            items_count = &mRow2Max;
+            inv = mFirstInRow2;
+            break;
+        case 2:
+            items_count = &mRow3Max;
+            inv = mFirstInRow3;
+            break;
+        }
+
+        cur = inv;
+        while(redo)
+        {
+            while(cur)
+            {
+                if(!cur->next)
+                    if(last)
+                    {
+                        redo = 1;
+                        last->next = NULL;
+                        delete cur;
+                    }
+                    else
+                    {
+                        redo = 0;
+                    }
+                last = cur;
+                cur = cur->next;
+            }
+        }
+        *items_count = 0;
+
+        items_count = NULL;
+        inv = NULL;
+    }
 }
 
 
