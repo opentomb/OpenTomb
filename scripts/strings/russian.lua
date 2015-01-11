@@ -78,9 +78,9 @@ strings[045] = "Использовано аптечек: %d";
 -- Notify pop-up tips - FIND A WAY TO USE THEM!
 
 strings[046] = "Нажмите РАЗВОРОТ в приседе для выполнения кувырка.";
-strings[047] = "В движке OpenTomb Лара скользит строго в направлении наклона";
+strings[047] = "В движке OpenTomb Лара скользит строго в направлении наклона.";
 strings[048] = "Знали ли Вы, что над OpenTomb в разное время работали минимум 10 человек?";
-strings[049] = "Знали ли Вы, что Core Design никогда не опубликовали исходные коды Tomb Raider?";
+strings[049] = "Знали ли Вы, что Core Design так и не опубликовали исходные коды Tomb Raider?";
 
 -- Game names - to use with Select Game menu...
 
