@@ -339,7 +339,7 @@ typedef struct gui_invmenu_item_ammo_s
     //uint32_t                    id;
     //uint32_t                    count;
     //uint32_t                    max_count;
-    char                       *name;
+    //char                       *name;
     char                       *description;
 };
 
@@ -355,6 +355,7 @@ typedef struct gui_invmenu_item_s
     //uint32_t                    count;
     //char                       *name;
     char                       *description;
+    int8_t                      selected_ammo;
 
     gui_invmenu_item_ammo_s   **ammo;                   // array of ammo structs
     gui_invmenu_item_s        **combinables;            // array of items it can be combined with
@@ -365,13 +366,7 @@ class gui_InventoryMenu
 {
 private:
     bool                        mVisible;
-    //int                         mCells_x;
-    //int                         mCells_y;
-    //int                         mWidth;
-    //int                         mHeight;
-    //int                         mLeft;
-    //int                         mTop;
-    //int                         mCellSize;    // x, y...
+
     int                         mRowOffset;
     int                         mRow1Max;
     int                         mRow2Max;
@@ -392,6 +387,9 @@ private:
     int                         mMovementDirectionH;
     int                         mMovementDirectionV;
     int                         mMovementDirectionC;
+    float                       mShiftBig;
+    float                       mShiftSmall;
+    float                       mAngle;
 
     int                         mFontSize;
     int                         mFontHeight;
@@ -399,114 +397,31 @@ private:
 public:
     FTGLTextureFont            *mFont;               // Texture font renderer
 
-    gui_InventoryMenu()
-    {
-        mVisible = 0;
-
-        //mCells_x = 4;
-        //mCells_y = 2;
-        //mWidth = 512;
-        //mHeight = 256;
-        //mLeft = 0;
-        //mTop = 0;
-        //mCellSize = 128;
-        mRowOffset = 1;
-        mRow1Max = 0;
-        mRow2Max = 1;
-        mRow3Max = 1;
-        mSelected = 0;
-        mMaxItems = 0;
-
-        mFirstInRow1 = NULL;
-        mFirstInRow2 = new gui_invmenu_item_s;
-        mFirstInRow3 = new gui_invmenu_item_s;
-
-        mFirstInRow2->linked_item = NULL;
-        mFirstInRow2->next = NULL;
-        mFirstInRow2->ammo = NULL;
-        mFirstInRow2->combinables = NULL;
-        mFirstInRow2->description = NULL;
-        mFirstInRow2->angle = 0;
-        mFirstInRow2->angle_dir = 0;
-
-        mFirstInRow3->linked_item = NULL;
-        mFirstInRow3->next = NULL;
-        mFirstInRow3->ammo = NULL;
-        mFirstInRow3->combinables = NULL;
-        mFirstInRow3->description = NULL;
-        mFirstInRow3->angle = 0;
-        mFirstInRow3->angle_dir = 0;
-
-        mFrame = 0;
-        mAnim = 0;
-        mTime = 0.0;
-        mMovementH = 0.0;
-        mMovementV = 0.0;
-        mMovementC = 0.0;
-        mMovementDirectionH = 0;
-        mMovementDirectionV = 0;
-        mMovementDirectionC = 0;
-
-        mFontSize = 18;
-        mFontHeight = 12;
-
-        mFont = NULL;
-    }
+    gui_InventoryMenu();
+    ~gui_InventoryMenu();
 
     void DestroyItems();
-
-    ~gui_InventoryMenu()
-    {
-        if(mFont)
-        {
-            delete mFont;
-            mFont = NULL;
-        }
-        DestroyItems();
-    }
-
-    void Toggle()
-    {
-        if(mMovementDirectionC!=0)
-            return;
-        if(mVisible && mMovementDirectionV == 0 && mMovementH == 0)
-        {
-            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
-            mMovementDirectionC = -1;
-        }
-        else
-        {
-            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
-            mMovementDirectionC = 1;
-        }
-        mVisible = 1;
-    }
-
+    void Toggle();
     bool IsVisible()
     {
         return mVisible;
     }
-
     bool IsMoving()
     {
         if (mMovementH!=0 || mMovementDirectionV!=0 || mMovementDirectionC!=0)
             return true;
         return false;
     }
-
     void InitFont(const char *path);
     void SetFontSize(int size);
-
     int GetFontSize()
     {
         return mFontSize;
     }
-
     void SetRowOffset(int dy)               /// Scrolling inventory
     {
         mRowOffset = dy;
     }
-
     void AddItem(inventory_node_p item);
     void UpdateItemRemoval(inventory_node_p item);
     void RemoveAllItems();
@@ -514,6 +429,7 @@ public:
     void MoveSelectHorisontal(int dx);
     void MoveSelectVertical(int dy);
 
+    void UpdateMovements();
     void Render(); // struct inventory_node_s *inv
     // inventory parameters calculation
     // mouse callback
