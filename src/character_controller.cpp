@@ -224,7 +224,7 @@ void Character_Clean(struct entity_s *ent)
 
 int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
-    Con_Printf("Giving item %i x%i to entity ???", item_id, count);
+    Con_Printf("Giving item %i x%i to entity %x", item_id, count, ent);
     if(ent->character == NULL)
     {
         return 0;
@@ -233,6 +233,8 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     Gui_StartNotifier(item_id);
 
     base_item_p item    = World_GetBaseItemByID(&engine_world, item_id);
+    if(item == NULL)
+        return 0;
     inventory_node_p last, i  = ent->character->inventory;
 
     count = (count == -1)?(item->count):(count);

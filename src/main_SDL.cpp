@@ -607,6 +607,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
  */
 void Engine_PrimaryMouseDown()
 {
+    return;
     engine_container_p cont = Container_Create();
     btScalar *v = engine_camera.pos;
     btScalar *dir = engine_camera.view_dir;
@@ -978,11 +979,11 @@ void DebugKeys(int button, int state)
                 break;
 
             case SDLK_LEFT:
-                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(-1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(1);
                 break;
 
             case SDLK_RIGHT:
-                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(-1);
                 break;
 
                 /*models switching*/

@@ -412,14 +412,30 @@ public:
         //mCellSize = 128;
         mRowOffset = 1;
         mRow1Max = 0;
-        mRow2Max = 0;
-        mRow3Max = 0;
+        mRow2Max = 1;
+        mRow3Max = 1;
         mSelected = 0;
         mMaxItems = 0;
 
         mFirstInRow1 = NULL;
-        mFirstInRow2 = NULL;
-        mFirstInRow3 = NULL;
+        mFirstInRow2 = new gui_invmenu_item_s;
+        mFirstInRow3 = new gui_invmenu_item_s;
+
+        mFirstInRow2->linked_item = NULL;
+        mFirstInRow2->next = NULL;
+        mFirstInRow2->ammo = NULL;
+        mFirstInRow2->combinables = NULL;
+        mFirstInRow2->description = NULL;
+        mFirstInRow2->angle = 0;
+        mFirstInRow2->angle_dir = 0;
+
+        mFirstInRow3->linked_item = NULL;
+        mFirstInRow3->next = NULL;
+        mFirstInRow3->ammo = NULL;
+        mFirstInRow3->combinables = NULL;
+        mFirstInRow3->description = NULL;
+        mFirstInRow3->angle = 0;
+        mFirstInRow3->angle_dir = 0;
 
         mFrame = 0;
         mAnim = 0;
