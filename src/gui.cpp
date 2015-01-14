@@ -28,6 +28,8 @@ gui_Fader           Fader[FADER_LASTINDEX];
 gui_ItemNotifier    Notifier;
 gui_InventoryMenu  *main_inventory_menu = NULL;
 
+uint8_t             gui_inventory_game = 1;
+
 void Gui_Init()
 {
     for(int i=0;i<MAX_TEMP_LINES;i++)
@@ -584,19 +586,16 @@ void gui_InventoryMenu::UpdateItemsOrder(int row)
                     redo = 1;
                 }
             }
-        if(item)
+        if(item->next)
         {
-            if(item->next)
-            {
-                if(last_item)
-                    if(last_item)
-                        last_last_item = last_item;
+            if(last_item)
+                last_last_item = last_item;
+            if(item->linked_item)
                 last_item = item;
-                item = item->next;
-            }
-            else
-                break;
+            item = item->next;
         }
+        else
+            break;
     }
     if(redo)
         UpdateItemsOrder(row);
@@ -658,7 +657,6 @@ void gui_InventoryMenu::AddItem(inventory_node_p item)
 
     switch(item->id)
     {
-    case 0:
     case 1:
     case 2:
     case 3:
@@ -669,6 +667,7 @@ void gui_InventoryMenu::AddItem(inventory_node_p item)
     case 8:
         correct_row = 2;    // options ring
         break;
+    case 0:
     case 10:
     case 11:
     case 12:
@@ -726,8 +725,14 @@ void gui_InventoryMenu::AddItem(inventory_node_p item)
     gui_invmenu_item_s *cur = *inv, *last = NULL;
     while(cur)
     {
-        if(item->id == cur->linked_item->id)
+        if(item->id == 0 || item->id == 1)
+        {
+            cur->linked_item = item;
             return;
+        }
+        if(cur->linked_item)
+            if(item->id == cur->linked_item->id)
+                return;
         last = cur;
         cur = cur->next;
     }
@@ -750,7 +755,8 @@ void gui_InventoryMenu::AddItem(inventory_node_p item)
     items_count = NULL;
     inv = NULL;
 
-    UpdateItemsOrder(correct_row);
+    if(correct_row == 1)
+        UpdateItemsOrder(1);
 }
 
 void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
@@ -761,7 +767,6 @@ void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
 
     switch(item->id)
     {
-    case 0:
     case 1:
     case 2:
     case 3:
@@ -772,6 +777,7 @@ void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
     case 8:
         correct_row = 2;    // options ring
         break;
+    case 0:
     case 10:
     case 11:
     case 12:
@@ -829,23 +835,21 @@ void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
     gui_invmenu_item_s *cur = *inv, *last = NULL, *next = NULL;
     while(cur)
     {
-        if(cur->linked_item->id == item->id)
+        next = cur->next;
+        if(cur->linked_item && cur->linked_item->id == item->id)
         {
             if(cur->linked_item->count<2)
             {
-                if(next)
-                    next = cur->next;
                 if(last)
                 {
-                    delete cur;
                     last->next = next;
                 }
                 else
                 {
-                    delete cur;
                     *inv = NULL;
                 }
-
+                delete cur;
+                cur = NULL;
                 *items_count = *items_count - 1;
             }
             break;
@@ -862,12 +866,13 @@ void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
 
 void gui_InventoryMenu::RemoveAllItems()
 {
-    int *items_count; bool redo=0;
+    int *items_count; bool redo;
     gui_invmenu_item_s *inv;
     gui_invmenu_item_s *cur = NULL, *last = NULL;
 
     for(int i=0; i<3; i++)
     {
+        redo = 1;
         switch(i)
         {
         case 0:
@@ -887,24 +892,39 @@ void gui_InventoryMenu::RemoveAllItems()
         cur = inv;
         while(redo)
         {
-            while(cur)
+            while(cur &&  redo)
             {
                 if(!cur->next)
                     if(last)
                     {
                         redo = 1;
                         last->next = NULL;
+                        last = NULL;
                         delete cur;
+                        cur = inv;
+                        *items_count = *items_count - 1;
                     }
                     else
                     {
+                        if(i == 0)
+                        {
+                            last = NULL;
+                            delete cur;
+                            cur = NULL;
+                            mFirstInRow1 = NULL;
+                            *items_count = *items_count - 1;
+                        }
                         redo = 0;
                     }
-                last = cur;
-                cur = cur->next;
+                else
+                {
+                    last = cur;
+                    cur = cur->next;
+                }
             }
+            if(cur == inv)
+                break;
         }
-        *items_count = 0;
 
         items_count = NULL;
         inv = NULL;
@@ -914,45 +934,9 @@ void gui_InventoryMenu::RemoveAllItems()
 
 void gui_InventoryMenu::DestroyItems()
 {
-    if(mFirstInRow1)
-    {
-        gui_invmenu_item_s **items = new gui_invmenu_item_s*[mRow1Max];
-        for(int i=0;gui_invmenu_item_s *sel=mFirstInRow1;sel=sel->next,i++)
-        {
-            items[i] = sel;
-        }
-        for(int i=0; i<=mRow1Max; i++)
-            delete items[i];
-
-        delete [] items;
-        mFirstInRow1 = NULL;
-    }
-    if(mFirstInRow2)
-    {
-        gui_invmenu_item_s **items = new gui_invmenu_item_s*[mRow2Max];
-        for(int i=0;gui_invmenu_item_s *sel=mFirstInRow2;sel=sel->next,i++)
-        {
-            items[i] = sel;
-        }
-        for(int i=0; i<=mRow2Max; i++)
-            delete items[i];
-
-        delete [] items;
-        mFirstInRow2 = NULL;
-    }
-    if(mFirstInRow3)
-    {
-        gui_invmenu_item_s **items = new gui_invmenu_item_s*[mRow3Max];
-        for(int i=0;gui_invmenu_item_s *sel=mFirstInRow3;sel=sel->next,i++)
-        {
-            items[i] = sel;
-        }
-        for(int i=0; i<=mRow3Max; i++)
-            delete items[i];
-
-        delete [] items;
-        mFirstInRow3 = NULL;
-    }
+    RemoveAllItems();
+    delete mFirstInRow2;
+    delete mFirstInRow3;
 }
 
 
@@ -1027,7 +1011,7 @@ void gui_InventoryMenu::Render()
     }
     if ((items_count==0)||(inv==NULL))
         return;
-    GLfloat rot = 360/items_count;
+    GLfloat rot = -360/(GLfloat)items_count;
 
     int mov_dirC_sign = mMovementDirectionC;
     if(mov_dirC_sign == 0)
@@ -1037,7 +1021,9 @@ void gui_InventoryMenu::Render()
     {
         if(inv==NULL)
             break;
-        base_item_p item = World_GetBaseItemByID(&engine_world, inv->linked_item->id);
+        base_item_p item = NULL;
+        if(inv->linked_item)
+            item = World_GetBaseItemByID(&engine_world, inv->linked_item->id);
         if(item == NULL)
         {
             continue;
@@ -1085,6 +1071,11 @@ void gui_InventoryMenu::Render()
                             if(inv->linked_item->count > 1)
                                 Gui_OutTextXY(mFont, screen_info.w/2 + 150, screen_info.h/2 - 200, "%d", inv->linked_item->count);
                             Gui_OutTextXY(mFont, screen_info.w/2 - 160, screen_info.h/2 - 200, "%s", item->name);
+                        }
+                        else if(inv->linked_item->id == 0)
+                        {
+                            if(engine_world.version == 3 || engine_world.version == 4)
+                                Gui_OutTextXY(mFont, screen_info.w/2 - 160, screen_info.h/2 - 200, "Statistics");
                         }
                     }
                     else
