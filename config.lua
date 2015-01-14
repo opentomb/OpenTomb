@@ -2,18 +2,18 @@
 
 screen =
 {
-    x = 50;
-    y = 20;
-    width = 800;
-    height = 600;
+    x = 350;
+    y = 140;
+    width = 1200;
+    height = 800;
     fullscreen = 0;
     fov = 75.0;
 }
 
 audio =
 {
-    sound_volume = 0.9;
-    music_volume = 0.7;
+    sound_volume = 0.3;
+    music_volume = 0.02;
     use_effects = 1;
     listener_is_player = 0;
     stream_buffer_size = 128;
@@ -34,7 +34,7 @@ render =
 controls =
 {
     mouse_sensitivity = 25.0;
-    keyboard_type = 0;                          -- Keyboard layout for console - EU (1) or default (0)
+    keyboard_type = 1;
 
     use_joy = 0;                                -- Use joystick - yes (1) or no (0)
     joy_number = 0;                             -- If you have one joystick in system, it will be 0.
@@ -57,14 +57,14 @@ controls =
 
 console =
 {
-    font_path = "VeraMono.ttf";
+    font_path = "Roboto_500.ttf";
     font_color = {r = 255, g = 255, b = 255};
     background_color = {r = 112, g = 30, b = 75, a = 202};
     smooth = 1;
 
-    font_size = 16;
+    font_size = 13;
     line_size = 72;
-    log_size = 16;
+    log_size = 13;
     lines_count = 128;
     showing_lines = 128;
     spacing = 1.5;
@@ -94,13 +94,14 @@ bind(act.lookdown, KEY_DOWN, JOY_POVDOWN);
 bind(act.lookleft, KEY_LEFT, JOY_POVLEFT);
 bind(act.lookright, KEY_RIGHT, JOY_POVRIGHT);
 
+bind(act.inventory, KEY_ESCAPE);
 bind(act.screenshot, KEY_PRINTSCREEN);
 bind(act.console, KEY_BACKQUOTE);
 bind(act.savegame, KEY_F5);
 bind(act.loadgame, KEY_F6);
 
-bind(act.smallmedi, KEY_5);
-bind(act.bigmedi, KEY_6);
+bind(act.smallmedi, KEY_8);
+bind(act.bigmedi, KEY_9);
 
 -- CVAR's section. here you can create and delete CVAR's
 cvars.show_fps = 1;
@@ -108,21 +109,19 @@ cvars.free_look_speed = 2500;
 
 
 -- AUTOEXEC LINES
--- GAME_1      -- original TR_I
--- GAME_1_5    -- gold TR_I
--- GAME_2      -- original TR_II
--- GAME_2_5    -- gold TR_II
--- GAME_3      -- original TR_III
--- GAME_3_5    -- gold TR_III
--- GAME_4      -- original TR_IV
--- GAME_5      -- original TR_V
--- setgame(game_id, level_id);
--- setgamef(2.5, 1) -- TR_II gold, map 1
-setgame(GAME_1, 2);
+addItem(player,ITEM_M16,1);
+addItem(player,ITEM_M16_AMMO,1);
+addItem(player,ITEM_MAGNUM,1);
+addItem(player,ITEM_MAGNUM_AMMO,1);
+addItem(player,ITEM_UZI,1);
+addItem(player,ITEM_UZI_AMMO,1);
+addItem(player,ITEM_SHOTGUN,1);
 
-setGravity(0, 0, -5700.0);
+setgame(3);
+setlevel(1);
+
+gravity(0, 0, -5700.0);
 mlook(1);
-freelook(0);
+freelook(1);
 cam_distance(1024.0);
 noclip(0);
-

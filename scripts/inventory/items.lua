@@ -85,9 +85,9 @@ elseif(ver < TR_III) then
     createBaseItem(ITEM_KEY_3, 199, 199, ITEM_TYPE_QUEST, 1);
     createBaseItem(ITEM_KEY_4, 200, 200, ITEM_TYPE_QUEST, 1);
 
-    createBaseItem(ITEM_SECRET_1, 120, 120, ITEM_TYPE_QUEST, 1);
-    createBaseItem(ITEM_SECRET_2, 121, 121, ITEM_TYPE_QUEST, 1);
-    createBaseItem(ITEM_SECRET_3, 133, 133, ITEM_TYPE_QUEST, 1);
+    --createBaseItem(ITEM_SECRET_1, 120, 120, ITEM_TYPE_QUEST, 1);
+    --createBaseItem(ITEM_SECRET_2, 121, 121, ITEM_TYPE_QUEST, 1);
+    --createBaseItem(ITEM_SECRET_3, 133, 133, ITEM_TYPE_QUEST, 1);
 
 elseif(ver < TR_IV) then
     createBaseItem(ITEM_PASSPORT, 145, 145, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);

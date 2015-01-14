@@ -232,9 +232,9 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
 
     Gui_StartNotifier(item_id);
 
-    base_item_p item    = World_GetBaseItemByID(&engine_world, item_id);
-    if(item == NULL)
-        return 0;
+    base_item_p item = World_GetBaseItemByID(&engine_world, item_id);
+//    if(item == NULL)
+//        return 0;
     inventory_node_p last, i  = ent->character->inventory;
 
     count = (count == -1)?(item->count):(count);
