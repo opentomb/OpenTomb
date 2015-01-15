@@ -118,7 +118,7 @@ addItem(player,ITEM_UZI_AMMO,1);
 addItem(player,ITEM_SHOTGUN,1);
 
 setgame(3);
-setlevel(1);
+setlevel(12);
 
 gravity(0, 0, -5700.0);
 mlook(1);
