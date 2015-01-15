@@ -835,6 +835,9 @@ void gui_InventoryMenu::AddItem(inventory_node_p item)
 
 void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
 {
+    if(item == NULL)
+        return;
+
     int *items_count;
     gui_invmenu_item_s **inv;
     int correct_row = 1;
@@ -920,7 +923,10 @@ void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
                 }
                 else
                 {
-                    *inv = NULL;
+                    if(next)
+                        *inv = next;
+                    else
+                        *inv = NULL;
                 }
                 delete cur;
                 cur = NULL;
@@ -935,7 +941,8 @@ void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
     items_count = NULL;
     inv = NULL;
 
-    UpdateItemsOrder(correct_row);
+    if(correct_row == 1)
+        UpdateItemsOrder(1);
 }
 
 
@@ -1154,13 +1161,13 @@ void gui_InventoryMenu::Render()
                             inv->angle_dir = -1;
                         if(item->name[0])
                         {
-                            if(inv->linked_item->count > 1)
-                                Gui_OutTextXY(mFont, screen_info.w/2 + 150, screen_info.h/2 - 200, "%d", inv->linked_item->count);
                             if(inv->linked_item->id == 0 && (engine_world.version == 3 || engine_world.version == 4))
                                 Gui_OutTextXY(mFont, screen_info.w/2 - 160, screen_info.h/2 - 200, "Statistics");
                             else
                                 Gui_OutTextXY(mFont, screen_info.w/2 - 160, screen_info.h/2 - 200, "%s", item->name);
                         }
+                        if(inv->linked_item->count > 1)
+                                Gui_OutTextXY(mFont, screen_info.w/2 + 150, screen_info.h/2 - 200, "%d", inv->linked_item->count);
                     }
                     else
                     {
