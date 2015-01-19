@@ -1354,7 +1354,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
 
     if(top < 10)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)");
+        Con_AddLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1364,7 +1364,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info");
+        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1387,7 +1387,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
 
     if(top < 10)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)");
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1397,7 +1397,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info");
+        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1420,7 +1420,7 @@ int lua_SetSectorPortal(lua_State * lua)
 
     if(top < 4)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)");
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1430,7 +1430,7 @@ int lua_SetSectorPortal(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info");
+        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1451,7 +1451,7 @@ int lua_SetSectorFlags(lua_State * lua)
 
     if(top < 7)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)");
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1461,7 +1461,7 @@ int lua_SetSectorFlags(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info");
+        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1477,8 +1477,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
     int lua_err, top;
     char buf[256], map[LEVEL_NAME_MAX_LEN];
-    
-    Gui_DrawLoadScreen(50);
 
     world->version = tr->game_version;
 
@@ -1560,12 +1558,12 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    Gui_DrawLoadScreen(100);
-
+    Gui_DrawLoadScreen(200);
+    
     TR_GenRBTrees(world);
 
-    Gui_DrawLoadScreen(150);
-
+    Gui_DrawLoadScreen(250);
+    
     TR_GenTextures(world, tr);  // Generate OGL textures
 
     Gui_DrawLoadScreen(300);

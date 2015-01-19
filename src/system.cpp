@@ -45,23 +45,14 @@ void Sys_Init()
     system_fps.buf_size = 16;
     system_fps.text = (char*)malloc(system_fps.buf_size * sizeof(char));
     system_fps.text[0] = 0;
-    system_fps.font_color[0] = 1.0;
-    system_fps.font_color[1] = 0.0;
-    system_fps.font_color[2] = 0.0;
-    system_fps.font_color[3] = 1.0;
-
-    system_fps.rect_color[0] = 0.0;
-    system_fps.rect_color[1] = 1.0;
-    system_fps.rect_color[2] = 0.0;
-    system_fps.rect_color[3] = 0.15;
 
     system_fps.x = -96;
     system_fps.y = -con_base.line_height - 8;
 
-    system_fps.show = 1;
-    system_fps.show_rect = 0;
-    system_fps.rect_border = 2.0;
-    system_fps.font = NULL;
+    system_fps.font  = FontManager->GetFont(FONT_PRIMARY);
+    system_fps.style = FontManager->GetFontStyle(FONTSTYLE_MENU_TITLE);
+    
+    system_fps.show  = 1;
 
     Gui_AddLine(&system_fps);
 }

@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include "script.h"
+#include "gui.h"
 
 #define CON_MIN_LOG 16
 #define CON_MAX_LOG 128
@@ -21,29 +22,31 @@
 
 typedef struct console_info_s
 {
-    char                        font_path[255];             // Font file path
     FTGLTextureFont            *font;                       // Texture font renderer
-
-    uint16_t                    font_size;
-    GLfloat                     font_color[4];
+    
     GLfloat                     background_color[4];
 
     uint16_t                    log_lines_count;            // Amount of log lines to use
     uint16_t                    log_pos;                    // Current log position
+    char                      **log_lines;                  // Console lines
+    
+    uint16_t                    line_count;                 // Amount of shown lines
+    gui_fontstyle_p            *line_style;
+    char                      **line_text;                  // Console text
+    
     uint16_t                    line_size;                  // Console line size
-    uint16_t                    shown_lines_count;          // Amount of shown lines
+    int16_t                     line_height;                // Height, including spacing
+    
     uint16_t                    showing_lines;              // Amount of visible lines
     float                       spacing;                    // Line spacing
-    float                       show_cursor_period;
-    float                       cursor_time;                // Current cursor draw time
-    int8_t                      show_cursor;                // Cursor visibility flag
-
-    int16_t                     line_height;                // Height, including spacing
+    
     int16_t                     cursor_pos;                 // Current cursor position, in symbols
     int16_t                     cursor_x;                   // Cursor position in pixels
     int16_t                     cursor_y;
-    char                      **shown_lines;                // Console text
-    char                      **log_lines;                  // Console lines
+    float                       cursor_time;                // Current cursor draw time
+    float                       show_cursor_period;
+    int8_t                      show_cursor;                // Cursor visibility flag
+
     int8_t                      inited;                     // Ready-to-use flag
     int8_t                      show;                       // Visibility flag
 }console_info_t, *console_info_p;
@@ -53,7 +56,6 @@ extern console_info_t con_base;
 void Con_Init();
 void Con_Destroy();
 
-void Con_SetFontSize(int size);
 void Con_SetLineInterval(float interval);
 
 void Con_Draw();
@@ -64,8 +66,8 @@ void Con_Filter(char *text);
 void Con_Edit(int key);
 void Con_CalcCursorPosition();
 void Con_AddLog(const char *text);
-void Con_AddLine(const char *text);
-void Con_AddText(const char *text);
+void Con_AddLine(const char *text, font_Style style = FONTSTYLE_CONSOLE_INFO);
+void Con_AddText(const char *text, font_Style style = FONTSTYLE_CONSOLE_INFO);
 void Con_Printf(const char *fmt, ...);
 
 void Con_Clean();

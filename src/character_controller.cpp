@@ -224,6 +224,7 @@ void Character_Clean(struct entity_s *ent)
 
 int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
+    Con_Printf("Giving item %i x%i to entity %x", item_id, count, ent);
     if(ent->character == NULL)
     {
         return 0;
@@ -231,7 +232,9 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
 
     Gui_StartNotifier(item_id);
 
-    base_item_p item    = World_GetBaseItemByID(&engine_world, item_id);
+    base_item_p item = World_GetBaseItemByID(&engine_world, item_id);
+    if(item == NULL)
+        return 0;
     inventory_node_p last, i  = ent->character->inventory;
 
     count = (count == -1)?(item->count):(count);
@@ -241,6 +244,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
         if(i->id == item_id)
         {
             i->count += count;
+            main_inventory_menu->AddItem(i);
             return i->count;
         }
         last = i;
@@ -259,7 +263,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     {
         ent->character->inventory = i;
     }
-
+    main_inventory_menu->AddItem(i);
     return count;
 }
 
@@ -279,16 +283,19 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
         if(pi->count > count)
         {
             pi->count -= count;
+            main_inventory_menu->UpdateItemRemoval(pi);
             return pi->count;
         }
         else if(pi->count == count)
         {
             ent->character->inventory = pi->next;
+            main_inventory_menu->UpdateItemRemoval(pi);
             free(pi);
             return 0;
         }
         else // count_to_remove > current_items_count
         {
+            main_inventory_menu->UpdateItemRemoval(pi);
             return (int32_t)pi->count - (int32_t)count;
         }
     }
@@ -300,23 +307,26 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
             if(i->count > count)
             {
                 i->count -= count;
+                main_inventory_menu->UpdateItemRemoval(i);
                 return i->count;
             }
             else if(i->count == count)
             {
                 pi->next = i->next;
+                main_inventory_menu->UpdateItemRemoval(i);
                 free(i);
                 return 0;
             }
             else // count_to_remove > current_items_count
             {
+                main_inventory_menu->UpdateItemRemoval(i);
                 return (int32_t)i->count - (int32_t)count;
             }
         }
         pi = i;
         i = i->next;
     }
-
+    main_inventory_menu->UpdateItemRemoval(i);
     return -count;
 }
 
@@ -340,6 +350,7 @@ int32_t Character_RemoveAllItems(struct entity_s *ent)
     }
     ent->character->inventory = NULL;
 
+    main_inventory_menu->RemoveAllItems();
     return ret;
 }
 

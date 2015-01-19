@@ -834,7 +834,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(track_index >= engine_world.stream_track_map_count)
     {
-        Con_Printf("StreamPlay: CANCEL, track index is out of bounds.");
+        Con_AddLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -843,7 +843,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(Audio_IsTrackPlaying(track_index))
     {
-        Con_Printf("StreamPlay: CANCEL, stream already playing.");
+        Con_AddLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
@@ -855,7 +855,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!lua_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
     {
-        Con_Printf("StreamPlay: CANCEL, wrong track index or broken script.");
+        Con_AddLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -880,7 +880,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
         target_stream = Audio_GetFreeStream();        // Try again to assign free stream.
 
         if(target_stream == -1)
-            Con_Printf("StreamPlay: CANCEL, no free stream.");
+            Con_AddLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
             return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
     }
     else
@@ -897,7 +897,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
     {
-        Con_Printf("StreamPlay: CANCEL, stream load error.");
+        Con_AddLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_LOADERROR;
     }
 
@@ -905,7 +905,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in)))
     {
-        Con_Printf("StreamPlay: CANCEL, stream play error.");
+        Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_PLAYERROR;
     }
 
@@ -1903,15 +1903,16 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 
     file = SDL_RWFromFile(fname, "rb");
 
+    Con_Printf("Reading file: \"%s\"", fname);
     if(!file)
     {
-        Con_Printf("Error: can not open \"%s\"", fname);
+        Con_AddLine("Error: can not open file!", FONTSTYLE_CONSOLE_WARNING);
         return -1;
     }
 
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
-        Con_Printf("Error: bad file format \"%s\"", fname);
+        Con_AddLine("Error: bad file format!", FONTSTYLE_CONSOLE_WARNING);
         return -2;
     }
 
