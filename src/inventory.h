@@ -48,5 +48,9 @@
 #define ITEM_SMALL_MEDIPACK 50
 #define ITEM_LARGE_MEDIPACK 51
 
+#define ITEM_SECRET_1 61
+#define ITEM_SECRET_2 62
+#define ITEM_SECRET_3 63
+
 
 #endif

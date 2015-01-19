@@ -23,12 +23,29 @@ gui_text_line_p     gui_base_lines = NULL;
 gui_text_line_t     gui_temp_lines[MAX_TEMP_LINES];
 uint16_t            temp_lines_used = 0;
 
+gui_ItemNotifier    Notifier;
 gui_ProgressBar     Bar[BAR_LASTINDEX];
 gui_Fader           Fader[FADER_LASTINDEX];
-gui_ItemNotifier    Notifier;
+
+gui_FontManager    *FontManager = NULL;
 gui_InventoryMenu  *main_inventory_menu = NULL;
 
 void Gui_Init()
+{
+    Gui_InitBars();
+    Gui_InitFaders();
+    Gui_InitNotifier();
+    Gui_InitTempLines();
+    
+    main_inventory_menu = new gui_InventoryMenu();
+}
+
+void Gui_InitFontManager()
+{
+    FontManager = new gui_FontManager();
+}
+
+void Gui_InitTempLines()
 {
     for(int i=0;i<MAX_TEMP_LINES;i++)
     {
@@ -36,32 +53,13 @@ void Gui_Init()
         gui_temp_lines[i].text = (char*)malloc(TEMP_LINE_LENGHT * sizeof(char));
         gui_temp_lines[i].text[0] = 0;
         gui_temp_lines[i].show = 0;
-        gui_temp_lines[i].show_rect = 0;
-        gui_temp_lines[i].rect_border = 2.0;
+        
         gui_temp_lines[i].next = NULL;
         gui_temp_lines[i].prev = NULL;
-
-        gui_temp_lines[i].font_color[0] = 0.0;
-        gui_temp_lines[i].font_color[1] = 0.0;
-        gui_temp_lines[i].font_color[2] = 0.0;
-        gui_temp_lines[i].font_color[3] = 1.0;
-
-        gui_temp_lines[i].rect_color[0] = 0.0;
-        gui_temp_lines[i].rect_color[1] = 1.0;
-        gui_temp_lines[i].rect_color[2] = 0.0;
-        gui_temp_lines[i].rect_color[3] = 0.5;
-
-        gui_temp_lines[i].font = NULL;
+        
+        gui_temp_lines[i].style = NULL;
+        gui_temp_lines[i].font  = NULL;
     }
-
-    Gui_InitBars();
-    Gui_InitFaders();
-    Gui_InitNotifier();
-
-    main_inventory_menu = new gui_InventoryMenu();
-    main_inventory_menu->SetSize(512, 512/6);
-    main_inventory_menu->SetTableSize(6, 1);
-    main_inventory_menu->InitFont(con_base.font_path);
 }
 
 void Gui_InitBars()
@@ -206,7 +204,7 @@ void Gui_InitNotifier()
 {
     Notifier.SetPos(850.0, 850.0);
     Notifier.SetRot(180.0, 270.0);
-    Notifier.SetSize(128.0);                            // why here was 1.0???
+    Notifier.SetSize(128.0);
     Notifier.SetRotateTime(2500.0);
 }
 
@@ -231,6 +229,12 @@ void Gui_Destroy()
     {
         delete main_inventory_menu;
         main_inventory_menu = NULL;
+    }
+    
+    if(FontManager)
+    {
+        delete FontManager;
+        FontManager = NULL;
     }
 }
 
@@ -272,16 +276,15 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
     if(l)
     {
         float llx, lly, llz, urx, ury, urz;
+        
         if(l->font == NULL)
-        {
-            l->font = con_base.font;
-        }
+            l->font = FontManager->GetFont(FONT_SECONDARY);
+        
         l->font->BBox(l->text, llx, lly, llz, urx, ury, urz);
         l->rect[0] = llx + l->x;
         l->rect[1] = lly + l->y;
         l->rect[2] = urx + l->x;
         l->rect[3] = ury + l->y;
-        l->show_rect = 1;
     }
 
     return l;
@@ -291,42 +294,45 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
  * For simple temporary lines rendering.
  * Really all strings will be rendered in Gui_Render() function.
  */
-gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *fmt, ...)
+gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...)
 {
     if(temp_lines_used < MAX_TEMP_LINES - 1)
     {
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;
-        l->font = (font)?(font):(con_base.font);
+        
+        if(l->font == NULL)
+            l->font = FontManager->GetFont(FONT_SECONDARY);
+            
+        if(l->style == NULL)
+            l->style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
 
         va_start(argptr, fmt);
         vsnprintf(l->text, TEMP_LINE_LENGHT, fmt, argptr);
         va_end(argptr);
 
-        l->show_rect = 0;
         l->next = NULL;
         l->prev = NULL;
-        l->rect_border = 2.0;
 
-        l->font_color[0] = 0.0;
-        l->font_color[1] = 0.0;
-        l->font_color[2] = 0.0;
-        l->font_color[3] = 1.0;
-
-        l->rect_color[0] = 0.0;
-        l->rect_color[1] = 1.0;
-        l->rect_color[2] = 0.0;
-        l->rect_color[3] = 0.25;
-
-        temp_lines_used ++;
+        temp_lines_used++;
         l->x = x;
         l->y = y;
-        Gui_StringAutoRect(l);
+        
+        if(l->style->rect)
+        {
+            Gui_StringAutoRect(l);
+        }
+        
         l->show = 1;
         return l;
     }
 
     return NULL;
+}
+
+void Gui_Update()
+{
+    FontManager->Update();
 }
 
 void Gui_Render()
@@ -349,8 +355,8 @@ void Gui_Render()
     Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_DrawFaders();
-    Con_Draw();
     Gui_RenderStrings();
+    Con_Draw();
 
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
@@ -359,38 +365,49 @@ void Gui_Render()
 
 void Gui_RenderStringLine(gui_text_line_p l)
 {
-    GLfloat x0, y0, x1, y1;
-    GLfloat rectCoords[8];
-
+    if(l->font == NULL)
+        l->font = FontManager->GetFont(FONT_SECONDARY);
+        
+    if(l->style == NULL)
+        l->style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+        
+    if((!l->show) || (l->style->hidden)) return;
+    
     glBindTexture(GL_TEXTURE_2D, 0);
-    if(l->show_rect)
+    
+    if(l->style->rect)
     {
-        x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0])) - l->rect_border;
-        y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1])) - l->rect_border;
-        x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2])) + l->rect_border;
-        y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3])) + l->rect_border;
+        GLfloat x0 = ((l->rect[0] >= 0)?(l->rect[0]):(screen_info.w + l->rect[0])) - l->style->rect_border;
+        GLfloat y0 = ((l->rect[1] >= 0)?(l->rect[1]):(screen_info.h + l->rect[1])) - l->style->rect_border;
+        GLfloat x1 = ((l->rect[2] >= 0)?(l->rect[2]):(screen_info.w + l->rect[2])) + l->style->rect_border;
+        GLfloat y1 = ((l->rect[3] >= 0)?(l->rect[3]):(screen_info.h + l->rect[3])) + l->style->rect_border;
+        
+        GLfloat rectCoords[8];
         rectCoords[0] = x0; rectCoords[1] = y0;
         rectCoords[2] = x1; rectCoords[3] = y0;
         rectCoords[4] = x1; rectCoords[5] = y1;
         rectCoords[6] = x0; rectCoords[7] = y1;
-        glColor4fv(l->rect_color);
+        glColor4fv(l->style->rect_color);
         glVertexPointer(2, GL_FLOAT, 0, rectCoords);
         glDrawArrays(GL_POLYGON, 0, 4);
     }
-
-    if(l->show)
+    
+    if(l->style->shadowed)
     {
-        if(l->font == NULL)
-        {
-            l->font = con_base.font;
-        }
-
-        glColor4fv(l->font_color);
+        GLfloat temp[4] = {0.0,0.0,0.0,l->style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY}; // Derive alpha from base color.
+        glColor4fv(temp);
         glPushMatrix();
-        glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
+        GLfloat xs = 0.7, ys = -0.9;
+        glTranslatef((GLfloat)((l->x+xs >= 0)?(l->x+xs):(screen_info.w + l->x+xs)), (GLfloat)((l->y+ys >= 0)?(l->y+ys):(screen_info.h + l->y+ys)), 0.0);
         l->font->RenderRaw(l->text);
         glPopMatrix();
     }
+
+    glColor4fv(l->style->real_color);
+    glPushMatrix();
+    glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
+    l->font->RenderRaw(l->text);
+    glPopMatrix();
 }
 
 void Gui_RenderStrings()
@@ -409,7 +426,6 @@ void Gui_RenderStrings()
         if(l->show)
         {
             Gui_RenderStringLine(l);
-            l->show_rect = 0;
             l->show = 0;
         }
     }
@@ -474,133 +490,604 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 {
-    btScalar bb[3];
-    vec3_sub(bb, bf->bb_max, bf->bb_min);
-    if(bb[0] >= bb[1])
+    if(size!=NULL)
     {
-        size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
+        btScalar bb[3];
+        vec3_sub(bb, bf->bb_max, bf->bb_min);
+        if(bb[0] >= bb[1])
+        {
+            size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
+        }
+        else
+        {
+            size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
+        }
+        size *= 0.8;
+
+        glPushMatrix();
+        if(size < 1.0)          // only reduce items size...
+            glScalef(size, size, size);
+        Render_SkeletalModel(bf);
+        glPopMatrix();
+    }
+    else
+        Render_SkeletalModel(bf);
+}
+
+
+gui_InventoryMenu::gui_InventoryMenu()
+{
+    mFont_Primary   = FontManager->GetFont(FONT_PRIMARY);
+    mFont_Secondary = FontManager->GetFont(FONT_SECONDARY);
+    
+    mStyle_Title        = FontManager->GetFontStyle(FONTSTYLE_MENU_TITLE);
+    mStyle_Heading1     = FontManager->GetFontStyle(FONTSTYLE_MENU_HEADING1);
+    mStyle_Heading2     = FontManager->GetFontStyle(FONTSTYLE_MENU_HEADING2);
+    mStyle_ItemActive   = FontManager->GetFontStyle(FONTSTYLE_MENU_ITEM_ACTIVE);
+    mStyle_ItemInactive = FontManager->GetFontStyle(FONTSTYLE_MENU_ITEM_INACTIVE);
+    mStyle_MenuContent  = FontManager->GetFontStyle(FONTSTYLE_MENU_CONTENT);
+    
+    mVisible = 0;
+
+    mRowOffset = 1;
+    mRow1Max = 0;
+    mRow2Max = 1;
+    mRow3Max = 1;
+    mSelected = 0;
+    mMaxItems = 0;
+
+    mFirstInRow1 = NULL;
+    mFirstInRow2 = new gui_invmenu_item_s;
+    mFirstInRow3 = new gui_invmenu_item_s;
+
+    mFirstInRow2->linked_item = NULL;
+    mFirstInRow2->next = NULL;
+    mFirstInRow2->ammo = NULL;
+    mFirstInRow2->combinables = NULL;
+    mFirstInRow2->description = NULL;
+    mFirstInRow2->angle = 0;
+    mFirstInRow2->angle_dir = 0;
+
+    mFirstInRow3->linked_item = NULL;
+    mFirstInRow3->next = NULL;
+    mFirstInRow3->ammo = NULL;
+    mFirstInRow3->combinables = NULL;
+    mFirstInRow3->description = NULL;
+    mFirstInRow3->angle = 0;
+    mFirstInRow3->angle_dir = 0;
+
+    mFrame = 0;
+    mAnim = 0;
+    mTime = 0.0;
+    mMovementH = 0.0;
+    mMovementV = 0.0;
+    mMovementC = 0.0;
+    mMovementDirectionH = 0;
+    mMovementDirectionV = 0;
+    mMovementDirectionC = 0;
+
+    mFontSize = 18;
+    mFontHeight = 12;
+}
+
+
+gui_InventoryMenu::~gui_InventoryMenu()
+{
+    DestroyItems();
+}
+
+
+void gui_InventoryMenu::Toggle()
+{
+    if(mMovementDirectionC!=0) return;
+    
+    if(mVisible && mMovementDirectionV == 0 && mMovementH == 0)
+    {
+        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+        mMovementDirectionC = -1;
     }
     else
     {
-        size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
+        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+        mMovementDirectionC = 1;
     }
-    size *= 0.8;
-
-    glPushMatrix();
-    if(size < 1.0)          // only reduce items size...
-        glScalef(size, size, size);
-    Render_SkeletalModel(bf);
-    glPopMatrix();
+    mVisible = 1;
 }
 
-
-void gui_InventoryMenu::InitFont(const char *path)
+void gui_InventoryMenu::UpdateItemsOrder(int row)
 {
-    if(mFont && path && path[0])
+    gui_invmenu_item_s *item = NULL, *last_item = NULL, *last_last_item = NULL, *temp = NULL;
+    bool redo = 0; int items_count;
+
+    switch(row)
     {
-        delete mFont;
+    case 0:
+        items_count = mRow1Max;
+        item = mFirstInRow1;
+        break;
+    case 1:
+        items_count = mRow2Max;
+        item = mFirstInRow2;
+        break;
+    case 2:
+        items_count = mRow3Max;
+        item = mFirstInRow3;
+        break;
     }
-    mFont = new FTGLTextureFont(path);
-    mFont->FaceSize(mFontSize);
-    mFontHeight = mFont->Ascender();
-}
 
+    if (items_count<=1)
+        return;
 
-void gui_InventoryMenu::SetFontSize(int size)
-{
-    size = (size < 2)?(2):(size);
-    size = (size > 72)?(72):(size);
-
-    if(mFontSize != size)
+    while(item)
     {
-        mFont->FaceSize(size);
-        mFontHeight = mFont->Ascender();
+        if(last_item && last_item->linked_item->id > item->linked_item->id)
+            {
+                if(item->next)
+                    temp = item->next;
+                item->next = last_item;
+                if(temp)
+                    last_item->next = temp;
+                else
+                    last_item->next = NULL;
+                if(last_last_item)
+                {
+                    last_last_item->next = item;
+                    redo = 1;
+                }
+            }
+        if(item->next)
+        {
+            if(last_item)
+                last_last_item = last_item;
+            if(item->linked_item)
+                last_item = item;
+            item = item->next;
+        }
+        else
+            break;
     }
-    mFontSize = size;
-}
-
-
-void gui_InventoryMenu::SetSize(int width, int height)
-{
-    int x, y;
-    mWidth = width;
-    mHeight = height;
-    x = width / mCells_x;
-    y = height / mCells_y;
-    mCellSize = (x > y)?(y):(x);
-}
-
-
-void gui_InventoryMenu::SetTableSize(int cells_x, int cells_y)
-{
-    int x, y;
-    mCells_x = cells_x;
-    mCells_y = cells_y;
-    x = mWidth / cells_x;
-    y = mHeight / cells_y;
-    mCellSize = (x > y)?(y):(x);
-}
-
-
-void gui_InventoryMenu::UpdateSelectionOffset()
-{
-    int min, max;
-    min = mRowOffset * mCells_x;
-    max = min + mCells_x * mCells_y;
-    if(mSelected < min)
-    {
-        mRowOffset = mSelected / mCells_x;
-    }
-    if(mSelected >= max)
-    {
-        mRowOffset = mSelected / mCells_x - mCells_y + 1;
-    }
-
-    mAng = 0.0;
+    if(redo)
+        UpdateItemsOrder(row);
 }
 
 
 void gui_InventoryMenu::MoveSelectHorisontal(int dx)
 {
+    Audio_Send(TR_AUDIO_SOUND_MENUROTATE);
     mSelected += dx;
-    mSelected = (mSelected >= mMaxItems)?(mMaxItems-1):(mSelected);
-    mSelected = (mSelected < 0)?(0.0):(mSelected);
-    UpdateSelectionOffset();
+    mMovementH = (float)dx;
+    mMovementDirectionH = dx;
+
+    int current_row_max = mRow2Max;
+
+    switch(mRowOffset)
+    {
+    case 0:
+        current_row_max = mRow1Max;
+        break;
+    case 1:
+        current_row_max = mRow2Max;
+        break;
+    case 2:
+        current_row_max = mRow3Max;
+        break;
+    }
+
+    if (mSelected < 0)
+        mSelected = current_row_max-1;
+    if (mSelected >= current_row_max)
+        mSelected = 0;
 }
 
 
 void gui_InventoryMenu::MoveSelectVertical(int dy)
 {
-    mSelected += dy * mCells_x;
-    mSelected = (mSelected >= mMaxItems)?(mMaxItems-1):(mSelected);
-    mSelected = (mSelected < 0)?(0.0):(mSelected);
-    UpdateSelectionOffset();
+    mRowOffset += dy;
+    if (mRowOffset < 0)
+        mRowOffset = 0;
+    if (mRowOffset > 2)
+        mRowOffset = 2;
+    if(mRowOffset == 0 && mRow1Max == 0)
+    {
+        mRowOffset = 1;
+        return;
+    }
+
+    mMovementDirectionC = -1;
+    mMovementDirectionV = -dy;
 }
 
 
-void gui_InventoryMenu::Render(struct inventory_node_s *inv)
+void gui_InventoryMenu::AddItem(inventory_node_p item)
 {
-    int cx, cy, i, min, max, x0, y0;
+    int *items_count;
+    gui_invmenu_item_s **inv;
+    int correct_row = 1;
 
-    min = mCells_x * mRowOffset;
-    max = min + mCells_x * mCells_y;
-    x0 = 0.5 * mCellSize + mLeft;
-    y0 = - 0.5 * mCellSize + screen_info.h - mTop;
-
-    for(i=0;inv;inv=inv->next,i++)
+    switch(item->id)
     {
-        if((i < min) || (i >= max))
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+        correct_row = 2;    // options ring
+        break;
+    case 0:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+    case 17:
+    case 18:
+    case 20:
+    case 21:
+    case 22:
+    case 30:
+    case 31:
+    case 32:
+    case 33:
+    case 34:
+    case 35:
+    case 36:
+    case 37:
+    case 38:
+    case 39:
+    case 40:
+    case 41:
+    case 42:
+    case 43:
+    case 45:
+    case 46:
+    case 47:
+    case 50:
+    case 51:
+        correct_row = 1;    // weapons ring
+        break;
+    default:
+        correct_row = 0;    // quest items ring
+        break;
+    }
+
+    switch(correct_row)
+    {
+    case 0:
+        items_count = &mRow1Max;
+        inv = &mFirstInRow1;
+        break;
+    case 1:
+        items_count = &mRow2Max;
+        inv = &mFirstInRow2;
+        break;
+    case 2:
+        items_count = &mRow3Max;
+        inv = &mFirstInRow3;
+        break;
+    }
+
+    gui_invmenu_item_s *cur = *inv, *last = NULL;
+    while(cur)
+    {
+        if(item->id == 0 || item->id == 1)
         {
-            continue;
+            cur->linked_item = item;
+            return;
+        }
+        if(cur->linked_item)
+            if(item->id == cur->linked_item->id)
+                return;
+        last = cur;
+        cur = cur->next;
+    }
+    cur = new gui_invmenu_item_s;
+    cur->linked_item = item;
+    cur->next = NULL;
+    cur->ammo = NULL;
+    cur->combinables = NULL;
+    cur->description = NULL;
+    cur->angle = 0;
+    cur->angle_dir = 0;
+    // other stuff... //TBI
+
+    if(*inv==NULL)
+        *inv = cur;
+    else
+        last->next = cur;
+    *items_count = *items_count + 1;
+
+    items_count = NULL;
+    inv = NULL;
+
+    if(correct_row == 1)
+        UpdateItemsOrder(1);
+}
+
+
+void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
+{
+    if(item == NULL)
+        return;
+
+    int *items_count;
+    gui_invmenu_item_s **inv;
+    int correct_row = 1;
+
+    switch(item->id)
+    {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+        correct_row = 2;    // options ring
+        break;
+    case 0:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+    case 16:
+    case 17:
+    case 18:
+    case 20:
+    case 21:
+    case 22:
+    case 30:
+    case 31:
+    case 32:
+    case 33:
+    case 34:
+    case 35:
+    case 36:
+    case 37:
+    case 38:
+    case 39:
+    case 40:
+    case 41:
+    case 42:
+    case 43:
+    case 45:
+    case 46:
+    case 47:
+    case 50:
+    case 51:
+        correct_row = 1;    // weapons ring
+        break;
+    default:
+        correct_row = 0;    // quest items ring
+        break;
+    }
+
+    switch(correct_row)
+    {
+    case 0:
+        items_count = &mRow1Max;
+        inv = &mFirstInRow1;
+        break;
+    case 1:
+        items_count = &mRow2Max;
+        inv = &mFirstInRow2;
+        break;
+    case 2:
+        items_count = &mRow3Max;
+        inv = &mFirstInRow3;
+        break;
+    }
+
+    gui_invmenu_item_s *cur = *inv, *last = NULL, *next = NULL;
+    while(cur)
+    {
+        next = cur->next;
+        if(cur->linked_item && cur->linked_item->id == item->id)
+        {
+            if(cur->linked_item->count<2)
+            {
+                if(last)
+                {
+                    last->next = next;
+                }
+                else
+                {
+                    if(next)
+                        *inv = next;
+                    else
+                        *inv = NULL;
+                }
+                delete cur;
+                cur = NULL;
+                *items_count = *items_count - 1;
+            }
+            break;
+        }
+        last = cur;
+        cur = next;
+    }
+
+    items_count = NULL;
+    inv = NULL;
+
+    if(correct_row == 1)
+        UpdateItemsOrder(1);
+}
+
+
+void gui_InventoryMenu::RemoveAllItems()
+{
+    int *items_count; bool redo;
+    gui_invmenu_item_s *inv;
+    gui_invmenu_item_s *cur = NULL, *last = NULL;
+
+    for(int i=0; i<3; i++)
+    {
+        redo = 1;
+        switch(i)
+        {
+        case 0:
+            items_count = &mRow1Max;
+            inv = mFirstInRow1;
+            break;
+        case 1:
+            items_count = &mRow2Max;
+            inv = mFirstInRow2;
+            break;
+        case 2:
+            items_count = &mRow3Max;
+            inv = mFirstInRow3;
+            break;
         }
 
-        base_item_p item = World_GetBaseItemByID(&engine_world, inv->id);
-        if(item == NULL)
+        cur = inv;
+        while(redo)
         {
-            continue;
+            while(cur &&  redo)
+            {
+                if(!cur->next)
+                    if(last)
+                    {
+                        redo = 1;
+                        last->next = NULL;
+                        last = NULL;
+                        delete cur;
+                        cur = inv;
+                        *items_count = *items_count - 1;
+                    }
+                    else
+                    {
+                        if(i == 0)
+                        {
+                            last = NULL;
+                            delete cur;
+                            cur = NULL;
+                            mFirstInRow1 = NULL;
+                            *items_count = *items_count - 1;
+                        }
+                        redo = 0;
+                    }
+                else
+                {
+                    last = cur;
+                    cur = cur->next;
+                }
+            }
+            if(cur == inv)
+                break;
         }
 
-        /*int anim = bf->current_animation;
+        items_count = NULL;
+        inv = NULL;
+    }
+}
+
+
+void gui_InventoryMenu::DestroyItems()
+{
+    RemoveAllItems();
+    delete mFirstInRow2;
+    delete mFirstInRow3;
+}
+
+
+void gui_InventoryMenu::UpdateMovements()
+{
+    mShiftBig = 0, mShiftSmall = 0;
+    if(mMovementC == 0 && mMovementDirectionC == 0 && mMovementDirectionV == 0)
+    {
+        mMovementV = 0;
+        mRowOffset = 1;
+        mSelected = 0;
+        mVisible = 0;
+    }
+    mMovementH -= engine_frame_time * 2.1 * mMovementDirectionH;
+    if ((mMovementH < 0 && mMovementDirectionH == 1)||(mMovementH > 0 && mMovementDirectionH == -1))
+    {
+        mMovementH = 0;
+        mMovementDirectionH = 0;
+    }
+    mMovementV += engine_frame_time * 2.3 * mMovementDirectionV;
+    if(mMovementV < -2)
+    {
+        mMovementV = -2; mMovementDirectionV = 0;
+    }
+    if ((mMovementV < 0 && mMovementDirectionV == -1 && mRowOffset == 1)||(mMovementV > 0 && mMovementDirectionV == 1 && mRowOffset == 1))
+    {
+        mMovementV = 0; mMovementDirectionV = 0;
+    }
+    if(mMovementV > 2)
+    {
+        mMovementV = 2; mMovementDirectionV = 0;
+    }
+    mMovementC += engine_frame_time * 2.3 * mMovementDirectionC;
+    if (mMovementC < 0 || mMovementC > 1)
+    {
+        if(mMovementC < 0)
+            mMovementC = 0;
+        else
+            mMovementC = 1;
+        if(mMovementDirectionV == 0)
+            mMovementDirectionC = 0;
+        else
+            mMovementDirectionC = -mMovementDirectionC;
+    }
+    mShiftSmall = 200 * sin(mMovementC*3.14) ;
+}
+
+
+void gui_InventoryMenu::Render()
+{
+    UpdateMovements();
+
+    int items_count, current_row;
+    gui_invmenu_item_s *inv;
+
+    if(mMovementV<=-1)
+    {
+        if (mMovementDirectionV==-1)
+            mSelected = 0;
+        mShiftBig = mMovementV + 2;
+        items_count = mRow3Max;
+        inv = mFirstInRow3;
+        current_row = 2;
+    }
+    else if(mMovementV<1)
+    {
+        if (mMovementV<0 && mMovementDirectionV==1)
+            mSelected = 0;
+        else if (mMovementV>0 && mMovementDirectionV==-1)
+            mSelected = 0;
+        mShiftBig = mMovementV;
+        items_count = mRow2Max;
+        inv = mFirstInRow2;
+        current_row = 1;
+    }
+    else if(mMovementV>=1)
+    {
+        if (mMovementDirectionV==1)
+            mSelected = 0;
+        mShiftBig = mMovementV - 2;
+        items_count = mRow1Max;
+        inv = mFirstInRow1;
+        current_row = 0;
+    }
+    if ((items_count==0)||(inv==NULL))
+        return;
+    mAngle = -360/(GLfloat)items_count;
+
+    int mov_dirC_sign = mMovementDirectionC;
+    if(mov_dirC_sign == 0)
+        mov_dirC_sign = 1;
+
+    /*int anim = bf->current_animation;
         int frame = bf->current_frame;
         btScalar time = bf->frame_time;
         bf->current_animation = mAnim;
@@ -614,34 +1101,70 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         bf->current_frame = frame;
         bf->frame_time = time;*/
 
+    for(int i=0;inv;inv=inv->next,i++)
+    {
+        if(inv==NULL)
+            break;
+        base_item_p item = NULL;
+        if(inv->linked_item)
+            item = World_GetBaseItemByID(&engine_world, inv->linked_item->id);
+        if(item == NULL)
+        {
+            continue;
+        }
         Item_Frame(item->bf, 0.0);
-        cx = i % mCells_x;
-        cy = i / mCells_x - mRowOffset;
-        Gui_OutTextXY(mFont, mLeft + mCellSize * cx, screen_info.h - mCellSize * cy - mFontHeight, "%d", inv->count);
+
+        glLoadIdentity();
         glPushMatrix();
-            glTranslatef(x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
-            glRotatef(-60.0 , 1.0, 0.0, 0.0);
-            glRotatef(180.0, 0.0, 0.0, 1.0);
-            if(i == mSelected)
-            {
-                mAng += engine_frame_time * 30.0;
-                glRotatef(mAng, 0.0, 0.0, 1.0);
-                if(item->name[0])
-                {
-                    Gui_OutTextXY(mFont, mLeft, screen_info.h - mHeight - mFontHeight, "%s", item->name);
-                }
-            }
-            glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
-            Gui_RenderItem(item->bf, (btScalar)mCellSize);
+            glTranslatef(0.0, 50.0 - 800 * mShiftBig + mShiftSmall, -950.0);
+            glRotatef(10 + 80 * cos(1.57 * mMovementC), 1.0, 0.0, 0.0);
+            glPushMatrix();
+                glRotatef((i - mSelected + mMovementH) * mAngle - 90 + (180 * mMovementC * mov_dirC_sign), 0.0, 1.0, 0.0);
+                glPushMatrix();
+                    glTranslatef(-600 * mMovementC, 0.0, 0.0);
+                    glRotatef(-90.0, 1.0, 0.0, 0.0);
+                    glRotatef(90.0, 0.0, 0.0, 1.0);
+                    if(i == mSelected)
+                    {
+                        if(mMovementH==0 && (mMovementV==-2||mMovementV==0||mMovementV==2) && mMovementC==1)
+                            inv->angle -= engine_frame_time * 75.0;
+                        if(inv->angle < -180)
+                        {
+                            inv->angle_dir = 1;
+                            inv->angle += 360;
+                        }
+                        else if (inv->angle < 0)
+                            inv->angle_dir = -1;
+                        if(item->name[0])
+                        {
+                            if(inv->linked_item->id == 0 && (engine_world.version == 3 || engine_world.version == 4))
+                                Gui_OutTextXY(screen_info.w/2 - 160, screen_info.h/2 - 200, "Statistics");
+                            else
+                                Gui_OutTextXY(screen_info.w/2 - 160, screen_info.h/2 - 200, "%s", item->name);
+                        }
+                        if(inv->linked_item->count > 1)
+                                Gui_OutTextXY(screen_info.w/2 + 150, screen_info.h/2 - 200, "%d", inv->linked_item->count);
+                    }
+                    else
+                    {
+                        if((inv->angle_dir==-1 && inv->angle>0)||(inv->angle_dir==1 && inv->angle<0))
+                        {
+                            inv->angle = 0;
+                            inv->angle_dir = 0;
+                        }
+                        if(inv->angle!=0 && inv->angle_dir!=0)
+                            inv->angle -= inv->angle_dir * engine_frame_time * 75.0;
+                    }
+                    glRotatef(inv->angle, 0.0, 0.0, 1.0);
+                    glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
+                    glScalef(0.7, 0.7, 0.7);
+                    Gui_RenderItem(item->bf, NULL);
+                glPopMatrix();
+            glPopMatrix();
         glPopMatrix();
     }
 
-    cx = mSelected % mCells_x;
-    cy = mSelected / mCells_x - mRowOffset;
-    x0 = mLeft + mCellSize * cx;
-    y0 = screen_info.h - mTop - mCellSize * cy;
-
-    glBindTexture(GL_TEXTURE_2D, 0);
+    /*glBindTexture(GL_TEXTURE_2D, 0);
     glColor3f(1.0, 0.0, 0.0);
     glBegin(GL_LINE_LOOP);
         glVertex2f(x0            , y0            );
@@ -656,9 +1179,7 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         glVertex2f(mLeft + mWidth, screen_info.h - mTop          );
         glVertex2f(mLeft + mWidth, screen_info.h - mTop - mHeight);
         glVertex2f(mLeft         , screen_info.h - mTop - mHeight);
-    glEnd();
-
-    mMaxItems = i;
+    glEnd();*/
 }
 
 
@@ -728,6 +1249,61 @@ void Gui_DrawBars()
         Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
         Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
     }
+}
+
+void Gui_DrawInventory()
+{
+    if (!main_inventory_menu->IsVisible())
+        return;
+
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    glPopClientAttrib();
+    glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
+    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glPolygonMode(GL_FRONT, GL_FILL);
+    glFrontFace(GL_CCW);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_ALPHA_TEST);
+    glDepthMask(GL_FALSE);
+
+    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    // Background
+    glBindTexture(GL_TEXTURE_2D, 0);
+    GLfloat rectCoords[8];
+    glColor4f(0,0,0,0.45);
+    rectCoords[0] = 0.0;                        rectCoords[1] = (GLfloat)screen_info.h;
+    rectCoords[2] = 0.0;                        rectCoords[3] = 0.0;
+    rectCoords[4] = (GLfloat)screen_info.w;     rectCoords[5] = 0.0;
+    rectCoords[6] = (GLfloat)screen_info.w;     rectCoords[7] = (GLfloat)screen_info.h;
+
+    glLoadIdentity();
+    glVertexPointer(2, GL_FLOAT, 0, rectCoords);
+    glDrawArrays(GL_POLYGON, 0, 4);
+    glColor3f(1.0, 1.0, 1.0);
+
+    glDepthMask(GL_TRUE);
+    glPopClientAttrib();
+    glPopAttrib();
+
+    glEnable(GL_TEXTURE_2D);
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    //GLfloat color[4] = {0,0,0,0.45};
+    //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
+
+    Gui_SwitchGLMode(0);
+    main_inventory_menu->Render(); //engine_world.Character->character->inventory
+    Gui_SwitchGLMode(1);
 }
 
 void Gui_StartNotifier(int item)
@@ -1953,4 +2529,239 @@ void gui_ItemNotifier::SetSize(float size)
 void gui_ItemNotifier::SetRotateTime(float time)
 {
     mRotateTime = (1000.0 / time) * 360.0;
+}
+
+// ===================================================================================
+// ======================== FONT MANAGER  CLASS IMPLEMENTATION =======================
+// ===================================================================================
+
+gui_FontManager::gui_FontManager()
+{
+    style_count     = 0;
+    styles          = NULL;
+    font_count      = 0;
+    fonts           = NULL;
+    
+    mFadeValue      = 0.0;
+    mFadeDirection  = true;
+}
+
+gui_FontManager::~gui_FontManager()
+{
+    for(uint32_t i = 0; i < font_count; i++)
+    {
+        delete fonts[i].font;
+    }
+    
+    free(fonts);  fonts  = NULL; font_count  = 0;
+    free(styles); styles = NULL; style_count = 0;
+}
+
+FTGLTextureFont* gui_FontManager::GetFont(const font_Type index)
+{
+    gui_font_p current_font = fonts;
+    
+    if(font_count == 0) return NULL;
+    
+    for(uint32_t i = 0; i < font_count; i++, current_font++)
+    {
+        if(current_font->index == index)
+            return current_font->font;
+    }
+    
+    return NULL;
+}
+
+gui_font_s* gui_FontManager::GetFontAddress(const font_Type index)
+{
+    gui_font_s* current_font = fonts;
+    
+    if(font_count == 0) return NULL;
+    
+    for(uint32_t i = 0; i < font_count; i++, current_font++)
+    {
+        if(current_font->index == index)
+            return current_font;
+    }
+    
+    return NULL;
+}
+
+gui_fontstyle_s* gui_FontManager::GetFontStyle(const font_Style index)
+{
+    gui_fontstyle_s* current_style = styles;
+    
+    if(style_count == 0) return NULL;
+    
+    for(uint32_t i = 0; i < style_count; i++, current_style++)
+    {
+        if(current_style->index == index)
+            return current_style;
+    }
+    
+    return NULL;
+}
+
+bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const char* path)
+{
+    if((size < 1) || (size > 72)) return false;
+    
+    gui_font_s* desired_font = GetFontAddress(index);
+    
+    if(desired_font == NULL)
+    {
+        if(font_count == GUI_MAX_FONTS) return false;
+        
+        font_count++;
+        fonts = (gui_font_p)realloc(fonts, font_count * sizeof(gui_font_t));
+        desired_font = fonts+(font_count-1);
+        desired_font->size = (uint16_t)size;
+        desired_font->index = index;
+    }
+    else
+    {
+        delete desired_font->font;
+    }
+    
+    desired_font->font = NULL;
+    desired_font->font = new FTGLTextureFont(path);
+    desired_font->font->FaceSize(size);
+    
+    return true;
+}
+
+bool gui_FontManager::AddFontStyle(const font_Style index,
+                                   const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
+                                   const bool shadow, const bool fading,
+                                   const bool rect, const GLfloat rect_border,
+                                   const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
+                                   const bool hide)
+{
+    gui_fontstyle_p desired_style = GetFontStyle(index);
+    
+    if(desired_style == NULL)
+    {
+        if(style_count == GUI_MAX_FONTSTYLES) return false;
+        
+        style_count++;
+        styles = (gui_fontstyle_p)realloc(styles, style_count * sizeof(gui_fontstyle_t));
+        desired_style = styles+(style_count-1);
+        desired_style->index = index;
+    }
+    
+    desired_style->rect_border   = rect_border;
+    desired_style->rect_color[0] = rect_R;
+    desired_style->rect_color[1] = rect_G;
+    desired_style->rect_color[2] = rect_B;
+    desired_style->rect_color[3] = rect_A;
+    
+    desired_style->color[0]  = R;
+    desired_style->color[1]  = G;
+    desired_style->color[2]  = B;
+    desired_style->color[3]  = A;
+    
+    memcpy(desired_style->real_color, desired_style->color, sizeof(GLfloat) * 4);
+    
+    desired_style->fading    = fading;
+    desired_style->shadowed  = shadow;
+    desired_style->rect      = rect;
+    desired_style->hidden    = hide;
+        
+    return true;
+}
+
+bool gui_FontManager::RemoveFont(const font_Type index)
+{
+    if(font_count == 0) return false;
+    
+    gui_font_p current_font = fonts;
+    
+    for(uint32_t i=0; i<font_count; i++, current_font++)
+    {
+        if(current_font->index == index)
+        {
+            font_count--;
+            if(font_count != 0)
+            {
+                if(font_count != i)
+                    memcpy(current_font, current_font+1, font_count-i);
+                fonts = (gui_font_p)realloc(fonts, font_count * sizeof(gui_font_t));
+            }
+            else
+            {
+                free(fonts); fonts = NULL;
+            }
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+bool gui_FontManager::RemoveFontStyle(const font_Style index)
+{
+    if(style_count == 0) return false;
+    
+    gui_fontstyle_p current_style = styles;
+    
+    for(uint32_t i=0; i<style_count; i++, current_style++)
+    {
+        if(current_style->index == index)
+        {
+            style_count--;
+            if(style_count != 0)
+            {
+                if(style_count != i)
+                    memcpy(current_style, current_style+1, style_count-i);
+                styles = (gui_fontstyle_p)realloc(styles, style_count * sizeof(gui_fontstyle_t));
+            }
+            else
+            {
+                free(styles); styles = NULL;
+            }
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+void gui_FontManager::Update()
+{
+    if(mFadeDirection)
+    {
+        mFadeValue += engine_frame_time * GUI_FONT_FADE_SPEED;
+        
+        if(mFadeValue >= 1.0)
+        {
+            mFadeValue = 1.0;
+            mFadeDirection = false;
+        }
+    }
+    else
+    {
+        mFadeValue -= engine_frame_time * GUI_FONT_FADE_SPEED;
+        
+        if(mFadeValue <= GUI_FONT_FADE_MIN)
+        {
+            mFadeValue = GUI_FONT_FADE_MIN;
+            mFadeDirection = true;
+        }
+    }
+    
+    gui_fontstyle_p current_style = styles;
+    
+    for(uint32_t i = 0; i < style_count; i++, current_style++)
+    {
+        if(current_style->fading)
+        {
+            current_style->real_color[0] = current_style->color[0] * mFadeValue;
+            current_style->real_color[1] = current_style->color[1] * mFadeValue;
+            current_style->real_color[2] = current_style->color[2] * mFadeValue;
+        }
+        else
+        {
+            memcpy(current_style->real_color, current_style->color, sizeof(GLfloat) * 3);
+        }
+    }
 }

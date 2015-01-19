@@ -62,7 +62,7 @@ void Gameflow_Do()
                 }
                 else
                 {
-                    Con_AddLine("Fatal Error: Failed to call GetNextLevel()");
+                    Con_AddLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
                 }
             }
             else

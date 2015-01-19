@@ -608,36 +608,10 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         return -1;
     }
 
-    con_base.inited = 0;
+    cn->inited = 0;
 
     top = lua_gettop(lua);
     lua_getglobal(lua, "console");
-    path = lua_GetStrField(lua, "font_path");
-    if(path && strncmp(path, cn->font_path, 255))
-    {
-        f = fopen(path, "rb");
-        if(f)
-        {
-            fclose(f);
-            strncpy(cn->font_path, path, 255);
-
-            delete con_base.font;
-            con_base.font = new FTGLTextureFont(con_base.font_path);
-        }
-        else
-        {
-            Sys_Warn("Console: could not find font = \"%s\"", con_base.font_path);
-        }
-    }
-    lua_getfield(lua, -1, "font_color");
-    if(lua_istable(lua, -1))
-    {
-        cn->font_color[0] = (GLfloat)lua_GetScalarField(lua, "r") / 255.0;
-        cn->font_color[1] = (GLfloat)lua_GetScalarField(lua, "g") / 255.0;
-        cn->font_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
-        cn->font_color[3] = 1.0;
-    }
-    lua_pop(lua, 1);
 
     lua_getfield(lua, -1, "background_color");
     if(lua_istable(lua, -1))
@@ -648,12 +622,7 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         cn->background_color[3] = (GLfloat)lua_GetScalarField(lua, "a") / 255.0;
     }
     lua_pop(lua, 1);
-
-    t = lua_GetScalarField(lua, "font_size");
-    if(t >= 1 && t <= 128)
-    {
-        cn->font_size = t;
-    }
+    
     tf = lua_GetScalarField(lua, "spacing");
     if(tf >= CON_MIN_LINE_INTERVAL && tf <= CON_MAX_LINE_INTERVAL)
     {
@@ -674,10 +643,10 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     {
         if(t > cn->log_lines_count)
         {
-            con_base.log_lines = (char**) realloc(con_base.log_lines, t * sizeof(char*));
+            cn->log_lines = (char**) realloc(cn->log_lines, t * sizeof(char*));
             for(i=cn->log_lines_count;i<t;i++)
             {
-                con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
+                cn->log_lines[i] = (char*) calloc(cn->line_size * sizeof(char), 1);
             }
         }
         cn->log_lines_count = t;
@@ -685,24 +654,27 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     t = lua_GetScalarField(lua, "lines_count");
     if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
     {
-        if(t > cn->shown_lines_count)
+        if(t > cn->line_count)
         {
-            con_base.shown_lines = (char**) realloc(con_base.shown_lines, t * sizeof(char*));
-            for(i=cn->shown_lines_count;i<t;i++)
+            cn->line_text  = (char**) realloc(cn->line_text, t * sizeof(char*));
+            cn->line_style = (gui_fontstyle_p*) realloc(cn->line_style, t*sizeof(gui_fontstyle_p));
+            
+            for(i=cn->line_count;i<t;i++)
             {
-                con_base.shown_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
+                cn->line_text[i]  = (char*) calloc(cn->line_size * sizeof(char), 1);
+                cn->line_style[i] = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
             }
         }
-        cn->shown_lines_count = t;
+        cn->line_count = t;
     }
 
     cn->show = lua_GetScalarField(lua, "show");
     cn->show_cursor_period = lua_GetScalarField(lua, "show_cursor_period");
-    con_base.inited = 1;
+    
+    cn->inited = 1;
     lua_settop(lua, top);
 
-    Con_SetFontSize(con_base.font_size);
-    Con_SetLineInterval(con_base.spacing);
+    Con_SetLineInterval(cn->spacing);
 
     return 1;
 }
