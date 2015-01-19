@@ -42,7 +42,7 @@ FONTSTYLE_GENERIC               = 14;
 
 addFont(FONT_PRIMARY,   "resource/fonts/RobotoCondensed-Regular.ttf",   20);
 addFont(FONT_SECONDARY, "resource/fonts/Roboto-Regular.ttf",            18);
-addFont(FONT_CONSOLE,   "resource/fonts/Inconsolata-Regular.ttf",       18);
+addFont(FONT_CONSOLE,   "resource/fonts/DroidSansMono.ttf",             16);
 
 --------------------------------------------------------------------------------
 
