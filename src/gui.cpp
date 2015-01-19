@@ -3,7 +3,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "gl_util.h"
-#include "ftgl/FTGLTextureFont.h"
+#include "gl_font.h"
 
 #include "gui.h"
 #include "character_controller.h"
@@ -17,7 +17,9 @@
 #define MAX_TEMP_LINES   (256)
 #define TEMP_LINE_LENGHT (128)
 
-extern SDL_Window  *sdl_window;
+extern SDL_Window       *sdl_window;
+extern FT_Library        engine_ft_library;
+extern gl_tex_font_p     engine_gui_font;
 
 gui_text_line_p     gui_base_lines = NULL;
 gui_text_line_t     gui_temp_lines[MAX_TEMP_LINES];
@@ -51,7 +53,7 @@ void Gui_Init()
         gui_temp_lines[i].rect_color[2] = 0.0;
         gui_temp_lines[i].rect_color[3] = 0.5;
 
-        gui_temp_lines[i].font = NULL;
+        gui_temp_lines[i].gl_font = NULL;
     }
 
     Gui_InitBars();
@@ -61,7 +63,6 @@ void Gui_Init()
     main_inventory_menu = new gui_InventoryMenu();
     main_inventory_menu->SetSize(512, 512/6);
     main_inventory_menu->SetTableSize(6, 1);
-    main_inventory_menu->InitFont(con_base.font_path);
 }
 
 void Gui_InitBars()
@@ -271,16 +272,15 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
 {
     if(l)
     {
-        float llx, lly, llz, urx, ury, urz;
-        if(l->font == NULL)
+        if(l->gl_font == NULL)
         {
-            l->font = con_base.font;
+            l->gl_font = con_base.gl_font;
         }
-        l->font->BBox(l->text, llx, lly, llz, urx, ury, urz);
-        l->rect[0] = llx + l->x;
-        l->rect[1] = lly + l->y;
-        l->rect[2] = urx + l->x;
-        l->rect[3] = ury + l->y;
+        glf_get_string_bb(l->gl_font, l->text, 0, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
+        l->rect[0] += l->x;
+        l->rect[1] += l->y;
+        l->rect[2] += l->x;
+        l->rect[3] += l->y;
         l->show_rect = 1;
     }
 
@@ -291,13 +291,13 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
  * For simple temporary lines rendering.
  * Really all strings will be rendered in Gui_Render() function.
  */
-gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *fmt, ...)
+gui_text_line_p Gui_OutTextXY(gl_tex_font_p font, int x, int y, const char *fmt, ...)
 {
     if(temp_lines_used < MAX_TEMP_LINES - 1)
     {
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;
-        l->font = (font)?(font):(con_base.font);
+        l->gl_font = (font)?(font):(con_base.gl_font);
 
         va_start(argptr, fmt);
         vsnprintf(l->text, TEMP_LINE_LENGHT, fmt, argptr);
@@ -380,16 +380,18 @@ void Gui_RenderStringLine(gui_text_line_p l)
 
     if(l->show)
     {
-        if(l->font == NULL)
+        if(l->gl_font == NULL)
         {
-            l->font = con_base.font;
+            l->gl_font = con_base.gl_font;
         }
-
-        glColor4fv(l->font_color);
-        glPushMatrix();
-        glTranslatef((GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), 0.0);
-        l->font->RenderRaw(l->text);
-        glPopMatrix();
+        if(l->gl_font != NULL)
+        {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glColor4fv(l->font_color);
+            glf_render_str(l->gl_font, (GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), l->text);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }
     }
 }
 
@@ -494,32 +496,6 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 }
 
 
-void gui_InventoryMenu::InitFont(const char *path)
-{
-    if(mFont && path && path[0])
-    {
-        delete mFont;
-    }
-    mFont = new FTGLTextureFont(path);
-    mFont->FaceSize(mFontSize);
-    mFontHeight = mFont->Ascender();
-}
-
-
-void gui_InventoryMenu::SetFontSize(int size)
-{
-    size = (size < 2)?(2):(size);
-    size = (size > 72)?(72):(size);
-
-    if(mFontSize != size)
-    {
-        mFont->FaceSize(size);
-        mFontHeight = mFont->Ascender();
-    }
-    mFontSize = size;
-}
-
-
 void gui_InventoryMenu::SetSize(int width, int height)
 {
     int x, y;
@@ -582,6 +558,11 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
 {
     int cx, cy, i, min, max, x0, y0;
 
+    if(engine_gui_font == NULL)
+    {
+        return;
+    }
+
     min = mCells_x * mRowOffset;
     max = min + mCells_x * mCells_y;
     x0 = 0.5 * mCellSize + mLeft;
@@ -617,7 +598,7 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
         Item_Frame(item->bf, 0.0);
         cx = i % mCells_x;
         cy = i / mCells_x - mRowOffset;
-        Gui_OutTextXY(mFont, mLeft + mCellSize * cx, screen_info.h - mCellSize * cy - mFontHeight, "%d", inv->count);
+        Gui_OutTextXY(engine_gui_font, mLeft + mCellSize * cx, screen_info.h - mCellSize * cy - engine_gui_font->font_size, "%d", inv->count);
         glPushMatrix();
             glTranslatef(x0 + mCellSize * cx, y0 - mCellSize * cy, -2048.0);
             glRotatef(-60.0 , 1.0, 0.0, 0.0);
@@ -628,7 +609,7 @@ void gui_InventoryMenu::Render(struct inventory_node_s *inv)
                 glRotatef(mAng, 0.0, 0.0, 1.0);
                 if(item->name[0])
                 {
-                    Gui_OutTextXY(mFont, mLeft, screen_info.h - mHeight - mFontHeight, "%s", item->name);
+                    Gui_OutTextXY(engine_gui_font, mLeft, screen_info.h - mHeight - engine_gui_font->font_size, "%s", item->name);
                 }
             }
             glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);

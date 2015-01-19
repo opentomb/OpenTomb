@@ -103,7 +103,10 @@ void Entity_Clear(entity_p entity)
                         delete body->getCollisionShape();
                     }
 
-                    bt_engine_dynamicsWorld->removeRigidBody(body);
+                    if(body->isInWorld())
+                    {
+                        bt_engine_dynamicsWorld->removeRigidBody(body);
+                    }
                     delete body;
                     entity->bt_body[i] = NULL;
                 }
@@ -141,7 +144,7 @@ void Entity_Enable(entity_p ent)
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
                 btRigidBody *b = ent->bt_body[i];
-                if(b != NULL)
+                if((b != NULL) && !b->isInWorld())
                 {
                     bt_engine_dynamicsWorld->addRigidBody(b);
                 }
@@ -161,7 +164,7 @@ void Entity_Disable(entity_p ent)
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
                 btRigidBody *b = ent->bt_body[i];
-                if(b != NULL)
+                if((b != NULL) && b->isInWorld())
                 {
                     bt_engine_dynamicsWorld->removeRigidBody(b);
                 }
@@ -261,7 +264,7 @@ void Entity_UpdateRoomPos(entity_p ent)
     {
         if(ent->current_sector)
             Entity_ProcessSector(ent);
-        
+
         new_sector = Room_GetSectorXYZ(new_room, pos);
         if(new_room != new_sector->owner_room)
         {
@@ -788,10 +791,10 @@ void Entity_ProcessSector(struct entity_s *ent)
                                                                                     SECTOR_FLAG_CLIMB_EAST  |
                                                                                     SECTOR_FLAG_CLIMB_NORTH |
                                                                                     SECTOR_FLAG_CLIMB_SOUTH );
-                                                                                    
+
         ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
         ent->character->height_info.ceiling_climb   = (ent->current_sector->flags & SECTOR_FLAG_CLIMB_CEILING);
-        
+
         if(ent->current_sector->flags & SECTOR_FLAG_DEATH)
         {
             if((ent->move_type == MOVE_ON_FLOOR)    ||
@@ -1087,7 +1090,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
             case TR_FD_FUNC_MONKEY:          // Climbable ceiling
                 Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
                 break;
-                
+
             case TR_FD_FUNC_MINECART_LEFT:
                 Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
                 break;

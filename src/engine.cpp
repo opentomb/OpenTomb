@@ -43,6 +43,7 @@ extern "C" {
 #include "character_controller.h"
 #include "gameflow.h"
 #include "redblack.h"
+#include "gl_font.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
@@ -52,6 +53,9 @@ extern SDL_GameController     *sdl_controller;
 extern SDL_Joystick           *sdl_joystick;
 extern SDL_Haptic             *sdl_haptic;
 extern ALCdevice              *al_device;
+
+FT_Library                     engine_ft_library = NULL;
+gl_tex_font_p                  engine_gui_font = NULL;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -178,29 +182,41 @@ void Engine_InitGlobals()
     Game_InitGlobals();
     Render_InitGlobals();
     Audio_InitGlobals();
+    //Cam_Init(&engine_camera);
     Cam_InitGlobals(&engine_camera);
+}
+
+
+void Engine_InitFonts()
+{
+    glEnable(GL_TEXTURE_2D);
+    con_base.gl_font = glf_create_font(engine_ft_library, con_base.font_path, con_base.font_size);
+    Con_SetFontSize(con_base.font_size);
+    engine_gui_font = glf_create_font(engine_ft_library, con_base.font_path, 18);
 }
 
 
 void Engine_Init()
 {
+    FT_Init_FreeType(&engine_ft_library);
+
     Con_Init();
     Gui_Init();
-    
+
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-    
+
     Sys_Init();
     Com_Init();
     Render_Init();
     Cam_Init(&engine_camera);
-    
+
     renderer.cam = &engine_camera;
-    
+
     Engine_BTInit();
     Engine_LuaInit();
-    
+
     Con_AddLine("Engine inited");
 }
 
@@ -212,12 +228,12 @@ void Engine_BTInit()
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
     bt_engine_dispatcher->setNearCallback(Engine_RoomNearCallback);
-    
+
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
     bt_engine_ghostPairCallback = new btGhostPairCallback();
     bt_engine_overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(bt_engine_ghostPairCallback);
-    
+
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
@@ -2173,18 +2189,18 @@ int lua_LoadMap(lua_State *lua)
 /*
  * Flipped (alternate) room functions
  */
- 
+
 int lua_SetFlipRoom(lua_State *lua)
 {
     uint32_t group, state;
-    
+
     int top = lua_gettop(lua);
     if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (flipmap_index, room_state).");
         return 0;
     }
-    
+
     group = (uint32_t)lua_tointeger(lua, 1);
     state = (uint32_t)lua_tointeger(lua, 2);
     state = (state > 1)?(1):(state);                // State is always boolean.
@@ -2192,7 +2208,7 @@ int lua_SetFlipRoom(lua_State *lua)
     if(engine_world.room_flipmap & (1 << group))    // Check flipmap state.
     {
         room_p current_room = engine_world.rooms;
-        
+
         if(engine_world.version > TR_III)
         {
             for(int i=0;i<engine_world.room_count;i++, current_room++)
@@ -2209,11 +2225,11 @@ int lua_SetFlipRoom(lua_State *lua)
                     }
                 }
             }
-        
+
             if(state)
             {
                 engine_world.room_flipstate |= (1 << group);    // Mark group state as alternate.
-            } 
+            }
             else
             {
                 engine_world.room_flipstate ^= (1 << group);    // Mark group state as base.
@@ -2232,7 +2248,7 @@ int lua_SetFlipRoom(lua_State *lua)
                     Room_SwapToBase(current_room);
                 }
             }
-            
+
             engine_world.room_flipstate = state;    // In TR1-3, state is always global.
         }
     }
@@ -2240,25 +2256,25 @@ int lua_SetFlipRoom(lua_State *lua)
     {
         Con_Printf("Flipmap bit %d state is FALSE - no rooms were swapped!", group);
     }
-    
+
     return 0;
 }
 
 int lua_SetFlipFlag(lua_State *lua)
 {
     uint32_t group, state;
-    
+
     int top = lua_gettop(lua);
     if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (flipmap_index, flipmap_state).");
         return 0;
     }
-    
+
     group = (uint32_t)lua_tointeger(lua, 1);
     state = (uint32_t)lua_tointeger(lua, 2);
     state = (state > 1)?(1):(state);                // State is always boolean.
-    
+
     if(state)
     {
         engine_world.room_flipmap |= (1 << group);  // Mark group state as alternate.
@@ -2267,7 +2283,7 @@ int lua_SetFlipFlag(lua_State *lua)
     {
         engine_world.room_flipmap ^= (1 << group);  // Mark group state as base.
     }
-    
+
     return 0;
 }
 
@@ -2302,7 +2318,7 @@ int lua_SetFlipstate(lua_State *lua)
         uint32_t flipstate = (uint32_t)lua_tointeger(lua, 1);
         engine_world.room_flipstate = flipstate;
         room_p current_room = engine_world.rooms;
-        
+
         if(engine_world.version > TR_III)
         {
             for(int i=0;i<engine_world.room_count;i++,current_room++)
@@ -2332,7 +2348,7 @@ int lua_SetFlipstate(lua_State *lua)
             }
         }
     }
-    
+
     return 0;
 }
 
@@ -2421,21 +2437,19 @@ int lua_genUVRotateAnimation(lua_State *lua)
 bool Engine_LuaInit()
 {
     engine_lua = luaL_newstate();
-    
+
     if(engine_lua != NULL)
     {
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
-        
-        
+
         // Load and run global engine scripts.
-        
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
         luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
-        
+
         return true;
     }
     else
@@ -2488,7 +2502,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setgame", lua_SetGame);
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
-    
+
     lua_register(lua, "setFlipFlag", lua_SetFlipFlag);
     lua_register(lua, "setFlipRoom", lua_SetFlipRoom);
     lua_register(lua, "setFlipmap", lua_SetFlipmap);
@@ -2589,6 +2603,8 @@ void Engine_Destroy()
     }
 
     Gui_Destroy();
+
+    FT_Done_FreeType(engine_ft_library);
 }
 
 

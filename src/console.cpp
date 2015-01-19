@@ -3,14 +3,15 @@
 #include <stdlib.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_keycode.h>
-#include "ftgl/FTGLBitmapFont.h"
-#include "ftgl/FTGLTextureFont.h"
+#include "gl_font.h"
 #include "console.h"
 #include "system.h"
 #include "engine.h"
 #include "script.h"
 
 console_info_t con_base;
+extern FT_Library   engine_ft_library;
+
 
 void Con_Init()
 {
@@ -43,8 +44,7 @@ void Con_Init()
         Sys_Error("Console: could not find font = \"%s\"", con_base.font_path);
     }
 
-    con_base.font = new FTGLTextureFont(con_base.font_path);
-    con_base.font->FaceSize(con_base.font_size);
+    con_base.gl_font = NULL;
 
     con_base.shown_lines = (char**) malloc(con_base.shown_lines_count*sizeof(char*));
     for(uint16_t i=0;i<con_base.shown_lines_count;i++)
@@ -58,7 +58,7 @@ void Con_Init()
         con_base.log_lines[i] = (char*) calloc(con_base.line_size*sizeof(char), 1);
     }
 
-    con_base.line_height = con_base.spacing * con_base.font->Ascender();
+    con_base.line_height = con_base.spacing * con_base.font_size;
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -73,9 +73,10 @@ void Con_Destroy()
 {
     if(con_base.inited)
     {
-        if(con_base.font)
+        if(con_base.gl_font)
         {
-            delete con_base.font;
+            glf_free_font(con_base.gl_font);
+            con_base.gl_font = NULL;
         }
 
         for(uint16_t i=0;i<con_base.shown_lines_count;i++)
@@ -96,15 +97,15 @@ void Con_Destroy()
 
 void Con_SetFontSize(int size)
 {
-    if((con_base.inited == 0) || (size < 1) || (size > 72))
+    if((con_base.inited == 0) || (con_base.gl_font == NULL) || (size < 1) || (size > 72))
     {
         return;                                                                 // nothing to do here
     }
 
     con_base.inited = 0;
     con_base.font_size = size;
-    con_base.font->FaceSize(con_base.font_size);
-    con_base.line_height = con_base.spacing * con_base.font->Ascender();
+    glf_resize(con_base.gl_font, size);
+    con_base.line_height = con_base.spacing * size;
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -125,7 +126,7 @@ void Con_SetLineInterval(float interval)
 
     con_base.inited = 0;
     con_base.spacing = interval;
-    con_base.line_height = con_base.spacing * con_base.font->Ascender();
+    con_base.line_height = con_base.spacing * con_base.font_size;
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)
@@ -138,22 +139,22 @@ void Con_SetLineInterval(float interval)
 
 void Con_Draw()
 {
-    if(con_base.inited && con_base.show)
+    if(con_base.inited && con_base.show && con_base.gl_font)
     {
         int x, y;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
         Con_DrawBackground();
         x = 8;
         y = con_base.cursor_y;
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glColor4fv(con_base.font_color);
         for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
             y += con_base.line_height;
-            glPushMatrix();
-            glTranslatef((GLfloat)x, (GLfloat)y, 0.0);
-            con_base.font->RenderRaw(con_base.shown_lines[i]);
-            glPopMatrix();
+            glf_render_str(con_base.gl_font, (GLfloat)x, (GLfloat)y, con_base.shown_lines[i]);
         }
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         Con_DrawCursor();
     }
 }
@@ -335,10 +336,10 @@ void Con_Edit(int key)
 
 void Con_CalcCursorPosition()
 {
-    char ch = con_base.shown_lines[0][con_base.cursor_pos];
-    con_base.shown_lines[0][con_base.cursor_pos] = 0;
-    con_base.cursor_x = 8 + 1 + con_base.font->Advance(con_base.shown_lines[0]);
-    con_base.shown_lines[0][con_base.cursor_pos] = ch;
+    if(con_base.gl_font)
+    {
+        con_base.cursor_x = 8 + 1 + glf_get_string_len(con_base.gl_font, con_base.shown_lines[0], con_base.cursor_pos);
+    }
 }
 
 void Con_AddLog(const char *text)

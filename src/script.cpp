@@ -620,9 +620,6 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         {
             fclose(f);
             strncpy(cn->font_path, path, 255);
-
-            delete con_base.font;
-            con_base.font = new FTGLTextureFont(con_base.font_path);
         }
         else
         {

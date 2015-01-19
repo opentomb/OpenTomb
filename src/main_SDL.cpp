@@ -47,6 +47,9 @@ extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
 #include "al/AL/alext.h"
+#include "lua/lua.h"
+#include "lua/lualib.h"
+#include "lua/lauxlib.h"
 }
 
 #define SKELETAL_TEST   0
@@ -445,7 +448,7 @@ void Engine_InitALAudio()
 
     const char *drv = SDL_GetCurrentAudioDriver();
 
-    Con_Printf("Current SDL audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
+    Con_Printf("Current SDL audio driver: \"%s\"", (drv)?(drv):("(null)"));     ///@PARANOID: null check works correct in native vsnprintf(...)
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
@@ -476,7 +479,7 @@ int main(int argc, char **argv)
 
     Engine_Init();
     Engine_InitGlobals();
-    Engine_LoadConfig();
+    Engine_LoadConfig();                                                        ///@README: do not call any engine functions in LOAD CONFIG code! Only fill structures parameters.
 
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
@@ -485,6 +488,7 @@ int main(int argc, char **argv)
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
     Engine_PrepareOpenGL();
+    Engine_InitFonts();
     Render_DoShaders();
     Engine_InitALAudio();
 
@@ -496,7 +500,7 @@ int main(int argc, char **argv)
 
     Gui_FadeAssignPic(FADER_LOADSCREEN, "graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
-    
+
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
@@ -799,16 +803,16 @@ void ShowDebugInfo()
             case OBJECT_ENTITY:
                 Gui_OutTextXY(NULL, 20, 92, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
                 break;
-                
+
             case OBJECT_STATIC_MESH:
                 Gui_OutTextXY(NULL, 20, 92, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
-                
+
             case OBJECT_ROOM_BASE:
                 Gui_OutTextXY(NULL, 20, 92, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
-        
+
     }
 
     if(engine_camera.current_room != NULL)
@@ -897,7 +901,7 @@ void Engine_PollSDLInput()
                 if(sdl_joystick)
                     Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
                 break;
-                
+
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
                 if(con_base.show && event.key.state)
@@ -1104,7 +1108,7 @@ void DebugKeys(int button, int state)
                     }
                 }
                 break;
-                
+
             case SDLK_4:
                 if(!con_base.show)
                 {

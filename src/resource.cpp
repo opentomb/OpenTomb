@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <SDL2/SDL_opengl.h>
+#include <GL/glu.h>
 
 extern "C" {
 #include "lua/lua.h"
@@ -634,7 +635,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
     {
         return 0;
     }
-    
+
     sector->flags = 0;  // Clear sector flags before parsing.
 
     /*
@@ -936,7 +937,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
             case TR_FD_FUNC_MINECART_LEFT:
                 // Minecart left (TR3) and trigger triggerer mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(world->version < TR_IV)  
+                if(world->version < TR_IV)
                 {
                     sector->flags |= SECTOR_FLAG_MINECART_LEFT;
                 }
@@ -949,7 +950,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
             case TR_FD_FUNC_MINECART_RIGHT:
                 // Minecart right (TR3) and beetle mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(world->version < TR_IV)  
+                if(world->version < TR_IV)
                 {
                     sector->flags |= SECTOR_FLAG_MINECART_RIGHT;
                 }
@@ -1477,7 +1478,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
     int lua_err, top;
     char buf[256], map[LEVEL_NAME_MAX_LEN];
-    
+
     Gui_DrawLoadScreen(50);
 
     world->version = tr->game_version;
@@ -1506,7 +1507,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
     Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
-    
+
     strcat(buf, map);
     strcat(buf, ".lua");
 
@@ -1591,7 +1592,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     Gui_DrawLoadScreen(400);
 
     TR_GenMeshes(world, tr);        // Generate all meshes
-    
+
     Gui_DrawLoadScreen(500);
 
     TR_GenSprites(world, tr);       // Generate all sprites
@@ -1627,11 +1628,11 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     Gui_DrawLoadScreen(700);
 
     TR_GenEntities(world, tr);  // Build all moveables (entities)
-    
+
     Gui_DrawLoadScreen(750);
 
     TR_GenRoomProperties(world, tr);
-    
+
     Gui_DrawLoadScreen(800);
 
     TR_GenRoomCollision(world);
@@ -1802,7 +1803,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->reverb_info = tr->rooms[room_index].reverb_info;
     room->water_scheme = tr->rooms[room_index].water_scheme;
     room->alternate_group = tr->rooms[room_index].alternate_group;
-    
+
     Mat4_E_macro(room->transform);
     room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
     room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
@@ -1956,7 +1957,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         sector->owner_room = room;
         sector->box_index  = tr_room->sector_list[i].box_index;
-        
+
         sector->flags = 0;  // Clear sector flags.
 
         if(sector->box_index == 0xFFFF)
@@ -2289,23 +2290,23 @@ void TR_GenRoomCollision(struct world_s *world)
 void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 {
     room_p r = world->rooms;
-    
+
     for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         if(r->alternate_room != NULL)
         {
             r->alternate_room->base_room = r;   // Refill base room pointer.
         }
-        
+
         // Fill heightmap and translate floordata.
         for(uint32_t j=0;j<r->sectors_count;j++)
         {
             TR_Sector_TranslateFloorData(r->sectors + j, world);
         }
-        
+
         // Generate links to the near rooms.
         Room_BuildNearRoomsList(r);
-        
+
         // Basic sector calculations.
         TR_Sector_Calculate(world, tr, i);
     }
@@ -2359,11 +2360,11 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     lua_getglobal(engine_lua, "render");
     int border_size = lua_GetScalarField(engine_lua, "texture_border");
     lua_settop(engine_lua, top);
-    
+
     border_size = (border_size < 0)?(0):(border_size);
     border_size = (border_size > 128)?(128):(border_size);
     world->tex_atlas = BorderedTextureAtlas_Create(border_size);    // here is border size
-    
+
     for(uint32_t i = 0; i < tr->textile32_count; i++)
     {
         BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
@@ -2385,7 +2386,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelZoom(1, 1);
     BorderedTextureAtlas_CreateTextures(world->tex_atlas, world->textures, 1);
-    
+
         // white texture data for coloured polygons and debug lines.
     GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -2431,7 +2432,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 4, 4, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
 
     //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
-    
+
 }
 
 /**   Animated textures loading.
@@ -2657,7 +2658,7 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
 void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
 {
     base_mesh_p base_mesh;
-    
+
     world->meshes_count = tr->meshes_count;
     base_mesh = world->meshes = (base_mesh_p)malloc(world->meshes_count * sizeof(base_mesh_t));
     for(uint32_t i=0;i<world->meshes_count;i++,base_mesh++)

@@ -2,7 +2,7 @@
 #ifndef ENGINE_GUI_H
 #define ENGINE_GUI_H
 
-#include "ftgl/FTGLTextureFont.h"
+#include "gl_font.h"
 #include "entity.h"
 #include "render.h"
 #include "character_controller.h"
@@ -22,7 +22,7 @@ typedef struct gui_text_line_s
     GLfloat                     rect_border;
     GLfloat                     rect[4];                                        //x0, yo, x1, y1
     
-    FTGLTextureFont            *font;
+    struct gl_tex_font_s       *gl_font;
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;
 } gui_text_line_t, *gui_text_line_p;
@@ -348,11 +348,8 @@ private:
     float                       mTime;
     float                       mAng;
     
-    int                         mFontSize;
-    int                         mFontHeight;
     // background settings
 public:
-    FTGLTextureFont            *mFont;               // Texture font renderer
     
     gui_InventoryMenu()
     {
@@ -371,20 +368,10 @@ public:
         mAnim = 0;
         mTime = 0.0;
         mAng = 0.0;
-        
-        mFontSize = 18;
-        mFontHeight = 12;
-        
-        mFont = NULL;
     }
     
     ~gui_InventoryMenu()
     {
-        if(mFont)
-        {
-            delete mFont;
-            mFont = NULL;
-        }
     }
     
     void InitFont(const char *path);
@@ -392,10 +379,7 @@ public:
     void SetSize(int width, int height);
     void SetTableSize(int cells_x, int cells_y);
     
-    int GetFontSize()
-    {
-        return mFontSize;
-    }
+
     
     void SetPosition(int left, int top)
     {
@@ -432,7 +416,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l);
 /**
  * Draws text using a current console font.
  */
-gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *fmt, ...);
+gui_text_line_p Gui_OutTextXY(gl_tex_font_p font, int x, int y, const char *fmt, ...);
 
 /**
  * Helper method to setup OpenGL state for console drawing.

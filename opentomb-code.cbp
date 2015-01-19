@@ -2532,109 +2532,6 @@
 		<Unit filename="src/frustum.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/ftgl/FTBBox.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTBitmapGlyph.cpp" />
-		<Unit filename="src/ftgl/FTBitmapGlyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTCharToGlyphIndexMap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTCharmap.cpp" />
-		<Unit filename="src/ftgl/FTCharmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTContour.cpp" />
-		<Unit filename="src/ftgl/FTContour.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTExtrdGlyph.cpp" />
-		<Unit filename="src/ftgl/FTExtrdGlyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTFace.cpp" />
-		<Unit filename="src/ftgl/FTFace.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTFont.cpp" />
-		<Unit filename="src/ftgl/FTFont.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGL.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGLBitmapFont.cpp" />
-		<Unit filename="src/ftgl/FTGLBitmapFont.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGLExtrdFont.cpp" />
-		<Unit filename="src/ftgl/FTGLExtrdFont.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGLOutlineFont.cpp" />
-		<Unit filename="src/ftgl/FTGLOutlineFont.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGLPixmapFont.cpp" />
-		<Unit filename="src/ftgl/FTGLPixmapFont.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGLPolygonFont.cpp" />
-		<Unit filename="src/ftgl/FTGLPolygonFont.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGLTextureFont.cpp" />
-		<Unit filename="src/ftgl/FTGLTextureFont.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGlyph.cpp" />
-		<Unit filename="src/ftgl/FTGlyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTGlyphContainer.cpp" />
-		<Unit filename="src/ftgl/FTGlyphContainer.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTLibrary.cpp" />
-		<Unit filename="src/ftgl/FTLibrary.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTList.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTOutlineGlyph.cpp" />
-		<Unit filename="src/ftgl/FTOutlineGlyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTPixmapGlyph.cpp" />
-		<Unit filename="src/ftgl/FTPixmapGlyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTPoint.cpp" />
-		<Unit filename="src/ftgl/FTPoint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTPolyGlyph.cpp" />
-		<Unit filename="src/ftgl/FTPolyGlyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTSize.cpp" />
-		<Unit filename="src/ftgl/FTSize.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTTextureGlyph.cpp" />
-		<Unit filename="src/ftgl/FTTextureGlyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTVector.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ftgl/FTVectoriser.cpp" />
-		<Unit filename="src/ftgl/FTVectoriser.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/game.cpp" />
 		<Unit filename="src/game.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -2643,6 +2540,10 @@
 		<Unit filename="src/gameflow.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/gl_font.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/gl_font.h" />
 		<Unit filename="src/gl_util.cpp" />
 		<Unit filename="src/gl_util.h">
 			<Option target="&lt;{~None~}&gt;" />

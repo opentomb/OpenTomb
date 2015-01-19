@@ -225,6 +225,7 @@ void ReturnTempbtScalar(size_t size);
 void ResetTempbtScalar();
 
 void Engine_InitGlobals();
+void Engine_InitFonts();
 void Engine_Init();
 void Engine_Destroy();
 void Engine_Shutdown(int val);
