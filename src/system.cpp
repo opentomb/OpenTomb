@@ -43,8 +43,8 @@ void Sys_Init()
     screen_info.show_debuginfo = 0;
     screen_info.fov = 75.0;
 
-    system_fps.buf_size = 16;
-    system_fps.text = (char*)malloc(system_fps.buf_size * sizeof(char));
+    system_fps.text_size = 16;
+    system_fps.text = (char*)malloc(system_fps.text_size * sizeof(char));
     system_fps.text[0] = 0;
 
     system_fps.x = (980.0);
@@ -62,7 +62,7 @@ void Sys_Init()
 void Sys_Destroy()
 {
     system_fps.show = 0;
-    system_fps.buf_size = 0;
+    system_fps.text_size = 0;
     free(system_fps.text);
     system_fps.text = NULL;
 }

@@ -712,7 +712,7 @@ void Engine_Frame(btScalar time)
     else
     {
         screen_info.fps = (20.0 / time_cycl);
-        snprintf(system_fps.text, system_fps.buf_size, "%.1f", screen_info.fps);
+        snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
         //Gui_StringAutoRect(&system_fps);
         cycles = 0;
         time_cycl = 0.0;

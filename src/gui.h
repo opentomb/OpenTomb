@@ -143,11 +143,10 @@ private:
 typedef struct gui_text_line_s
 {
     char                       *text;
+    uint16_t                    text_size;
+    
     FTGLTextureFont            *font;
     gui_fontstyle_s            *style;
-    
-    uint16_t                    buf_size;
-    int8_t                      show;
 
     GLfloat                     x;
     GLfloat                     real_x;
@@ -157,6 +156,8 @@ typedef struct gui_text_line_s
     uint8_t                     align;      // Relative horizontal alignment
 
     GLfloat                     rect[4];    //x0, yo, x1, y1
+    
+    int8_t                      show;
 
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;
