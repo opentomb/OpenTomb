@@ -280,9 +280,9 @@ int Game_Save(const char* name)
 
     fprintf(f, "setFlipmap(%d);\n",   engine_world.room_flipmap);
     fprintf(f, "setFlipstate(%d);\n", engine_world.room_flipstate);
-    
+
     Save_Entity(&f, engine_world.Character);    // Save Lara.
-    
+
     if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
     {
         Save_EntityTree(&f, engine_world.entity_tree->root);
@@ -476,9 +476,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     }
     else
     {
-        cam_pos.m_floats[0] = (ent->transform[12] - 32.0 *  ent->transform[4 + 0]);
-        cam_pos.m_floats[1] = (ent->transform[13] - 32.0 *  ent->transform[4 + 1]);
-        cam_pos.m_floats[2] = (ent->transform[14] + 0.5  * (ent->bf.bb_max[2]));
+        Mat4_vec3_mul(cam_pos.m_floats, ent->transform, ent->bf.bone_tags->full_transform+12);
+        cam_pos.m_floats[2] += dz;
     }
 
     float shake_value   = renderer.cam->shake_value;
@@ -726,7 +725,7 @@ void Game_Frame(btScalar time)
     {
         Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
         Entity_Frame(engine_world.Character, engine_frame_time);
-        Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
+        Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0);     // 128.0, 400.0
     }
 
     Game_UpdateCharacters();
