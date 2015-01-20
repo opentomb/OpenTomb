@@ -8,6 +8,7 @@ screen =
     height = 600;
     fullscreen = 0;
     fov = 75.0;
+    debug_info = 0;
 }
 
 audio =
@@ -24,9 +25,9 @@ render =
     mipmap_mode = 3;
     mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
     lod_bias = 0;
-    anisotropy = 8;                             -- Maximum depends and is limited by hardware capabilities.
+    anisotropy = 4;                             -- Maximum depends and is limited by hardware capabilities.
     antialias = 1;
-    antialias_samples = 8;                      -- Maximum depends and is limited by hardware capabilities.
+    antialias_samples = 4;                      -- Maximum depends and is limited by hardware capabilities.
     z_depth = 24;                               -- Maximum and recommended is 24.
     texture_border = 16;
 }
@@ -63,7 +64,7 @@ console =
     log_size = 16;
     lines_count = 128;
     showing_lines = 128;
-    spacing = 1.5;
+    spacing = 1.0;
     show_cursor_period = 0.5;
     show = 0;
 }

@@ -106,12 +106,6 @@ engine_container_p      last_cont = NULL;
  *      - add ADPCM and CDAUDIO.WAD soundtrack support;
  */
 
-void SkeletalModelTestDraw();
-void ShowDebugInfo();
-
-
-void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans);
-
 void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans)
 {
     btScalar tr[16];
@@ -495,7 +489,7 @@ int main(int argc, char **argv)
     SDL_ShowCursor(0);
 
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
-    Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
+    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     
 #if SKELETAL_TEST
     control_states.free_look = 1;
@@ -580,15 +574,21 @@ void Engine_Display()
         Gui_SwitchGLMode(0);
 
         Render_DrawList_DebugLines();
-        ShowDebugInfo();
+        if(screen_info.show_debuginfo) ShowDebugInfo();
         SDL_GL_SwapWindow(sdl_window);
     }
 }
 
 void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
-{
+{    
     screen_info.w = nominalW;
     screen_info.h = nominalH;
+    
+    screen_info.w_unit = (float)nominalW / GUI_SCREEN_METERING_RESOLUTION;
+    screen_info.h_unit = (float)nominalH / GUI_SCREEN_METERING_RESOLUTION;
+    
+    Gui_Resize();
+    Con_SetLineInterval(con_base.spacing);
 
     Cam_SetFovAspect(&engine_camera, screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
     Cam_RecalcClipPlanes(&engine_camera);
@@ -777,18 +777,10 @@ void ShowDebugInfo()
     if(ent && ent->character)
     {
         /*height_info_p fc = &ent->character->height_info
-        txt = Gui_OutTextXY(NULL, 20, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
-        if(txt)
-        {
-            Gui_StringAutoRect(txt);
-            //txt->rect[0] = -420.0;
-            //txt->rect[1] = 4.0;
-            //txt->rect[2] = -20.0;
-            //txt->rect[3] = 132.0;
-            //txt->show_rect = 1;
-        }*/
+        txt = Gui_OutTextXY(20, 80, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
+        */
 
-        Gui_OutTextXY(20, 116, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
+        Gui_OutTextXY(10, 20, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
@@ -797,15 +789,15 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(20, 92, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
+                Gui_OutTextXY(10, 60, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
                 break;
                 
             case OBJECT_STATIC_MESH:
-                Gui_OutTextXY(20, 92, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                Gui_OutTextXY(10, 60, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
                 
             case OBJECT_ROOM_BASE:
-                Gui_OutTextXY(20, 92, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                Gui_OutTextXY(10, 60, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
         
@@ -816,11 +808,11 @@ void ShowDebugInfo()
         room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
         if(rs != NULL)
         {
-            Gui_OutTextXY(20, 68, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
-            Gui_OutTextXY(20, 44, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
+            Gui_OutTextXY(10, 100, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
+            Gui_OutTextXY(10, 140, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
         }
     }
-    Gui_OutTextXY(20, 20, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+    Gui_OutTextXY(10, 180, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
 #endif
 }
 
@@ -1008,7 +1000,7 @@ void DebugKeys(int button, int state)
                 /*rumble*/
             case SDLK_f:
                 Audio_Send(105);
-                Gui_FadeStart(FADER_EFFECT, TR_FADER_DIR_TIMED);
+                Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
                 break;
 
                 /*full health*/

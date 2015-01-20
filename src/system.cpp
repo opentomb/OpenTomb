@@ -40,14 +40,16 @@ void Sys_Init()
     screen_info.w = 800;
     screen_info.h = 600;
     screen_info.FS_flag = 0;
+    screen_info.show_debuginfo = 0;
     screen_info.fov = 75.0;
 
     system_fps.buf_size = 16;
     system_fps.text = (char*)malloc(system_fps.buf_size * sizeof(char));
     system_fps.text[0] = 0;
 
-    system_fps.x = -96;
-    system_fps.y = -con_base.line_height - 8;
+    system_fps.x = (980.0);
+    system_fps.y = (950.0);
+    system_fps.align = GUI_LINE_ALIGN_RIGHT;
 
     system_fps.font  = FontManager->GetFont(FONT_PRIMARY);
     system_fps.style = FontManager->GetFontStyle(FONTSTYLE_MENU_TITLE);

@@ -40,9 +40,9 @@ FONTSTYLE_GENERIC               = 14;
 -- NB: All fonts are open-source, free and GPL-compatible, see licenses in fonts
 -- folder.
 
-addFont(FONT_PRIMARY,   "resource/fonts/RobotoCondensed-Regular.ttf",   20);
-addFont(FONT_SECONDARY, "resource/fonts/Roboto-Regular.ttf",            18);
-addFont(FONT_CONSOLE,   "resource/fonts/DroidSansMono.ttf",             16);
+addFont(FONT_PRIMARY,   "resource/fonts/RobotoCondensed-Regular.ttf",   18);
+addFont(FONT_SECONDARY, "resource/fonts/Roboto-Regular.ttf",            14);
+addFont(FONT_CONSOLE,   "resource/fonts/DroidSansMono.ttf",             12);
 
 --------------------------------------------------------------------------------
 
@@ -72,5 +72,5 @@ addFontStyle(FONTSTYLE_STATS_TITLE,         0.7, 0.7, 0.7, 1.0, false, false, fa
 addFontStyle(FONTSTYLE_STATS_CONTENT,       0.8, 0.8, 0.8, 1.0, false, false, false, 0.0, 0.0, 0.0, 0.0, 0.0, false);
 addFontStyle(FONTSTYLE_NOTIFIER,            1.0, 1.0, 1.0, 1.0, true , false, false, 0.0, 0.0, 0.0, 0.0, 0.0, false);
 addFontStyle(FONTSTYLE_SAVEGAMELIST,        0.9, 0.9, 0.9, 1.0, true , false, false, 0.0, 0.0, 0.0, 0.0, 0.0, false);
-addFontStyle(FONTSTYLE_GENERIC,             1.0, 1.0, 1.0, 0.9, true , false, false, 0.0, 0.0, 0.0, 0.0, 0.4, false);
+addFontStyle(FONTSTYLE_GENERIC,             1.0, 1.0, 1.0, 0.9, true , false, false, 0.0, 0.0, 0.0, 0.0, 0.0, false);
 ---------------------------------------------------------------------------------------------------------------------

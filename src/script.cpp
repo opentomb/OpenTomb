@@ -520,12 +520,15 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
 
     int top = lua_gettop(lua);
     lua_getglobal(lua, "screen");
-    sc->x = lua_GetScalarField(lua, "x");
-    sc->y = lua_GetScalarField(lua, "y");
-    sc->w = lua_GetScalarField(lua, "width");
-    sc->h = lua_GetScalarField(lua, "height");
-    sc->FS_flag = lua_GetScalarField(lua, "fullscreen");
-    sc->fov = lua_GetScalarField(lua, "fov");
+    sc->x = (int16_t)lua_GetScalarField(lua, "x");
+    sc->y = (int16_t)lua_GetScalarField(lua, "y");
+    sc->w = (int16_t)lua_GetScalarField(lua, "width");
+    sc->h = (int16_t)lua_GetScalarField(lua, "height");
+    sc->w_unit = (GLfloat)sc->w / GUI_SCREEN_METERING_RESOLUTION;
+    sc->h_unit = (GLfloat)sc->h / GUI_SCREEN_METERING_RESOLUTION;
+    sc->FS_flag = (int8_t)lua_GetScalarField(lua, "fullscreen");
+    sc->show_debuginfo = (int8_t)lua_GetScalarField(lua, "debug_info");
+    sc->fov = (float)lua_GetScalarField(lua, "fov");
     lua_settop(lua, top);
 
     return 1;

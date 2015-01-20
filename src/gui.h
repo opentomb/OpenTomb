@@ -77,7 +77,9 @@ typedef struct gui_fontstyle_s
 #define GUI_FONT_FADE_SPEED 1.0 // Global fading style speed.
 #define GUI_FONT_FADE_MIN   0.3 // Minimum fade multiplier.
 
-#define GUI_FONT_SHADOW_TRANSPARENCY 0.7
+#define GUI_FONT_SHADOW_TRANSPARENCY     0.7
+#define GUI_FONT_SHADOW_VERTICAL_SHIFT  -0.9
+#define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7
 
 
 // Font manager is a singleton class which is used to manage all in-game fonts
@@ -115,6 +117,7 @@ public:
     }
     
     void             Update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
+    void             Resize(); // Resize fonts on window resize event.
     
 private:
     gui_font_s*      GetFontAddress(const font_Type index);
@@ -129,6 +132,13 @@ private:
     gui_font_p       fonts;
 };
 
+// Horizontal alignment is simple side alignment, like in original TRs.
+// It means that X coordinate will be either used for left, right or
+// center orientation.
+
+#define GUI_LINE_ALIGN_LEFT   0
+#define GUI_LINE_ALIGN_RIGHT  1
+#define GUI_LINE_ALIGN_CENTER 2
 
 typedef struct gui_text_line_s
 {
@@ -139,10 +149,14 @@ typedef struct gui_text_line_s
     uint16_t                    buf_size;
     int8_t                      show;
 
-    GLint                       x;
-    GLint                       y;
+    GLfloat                     x;
+    GLfloat                     real_x;
+    GLfloat                     y;
+    GLfloat                     real_y;
+    
+    uint8_t                     align;      // Relative horizontal alignment
 
-    GLfloat                     rect[4];            //x0, yo, x1, y1
+    GLfloat                     rect[4];    //x0, yo, x1, y1
 
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;
@@ -171,9 +185,9 @@ enum Faders
     FADER_LASTINDEX
 };
 
-#define TR_FADER_DIR_IN    0    // Normal fade-in.
-#define TR_FADER_DIR_OUT   1    // Normal fade-out.
-#define TR_FADER_DIR_TIMED 2    // Timed fade: in -> stay -> out.
+#define GUI_FADER_DIR_IN    0    // Normal fade-in.
+#define GUI_FADER_DIR_OUT   1    // Normal fade-out.
+#define GUI_FADER_DIR_TIMED 2    // Timed fade: in -> stay -> out.
 
 // Scale type specifies how textures with various aspect ratios will be
 // handled. If scale type is set to ZOOM, texture will be zoomed up to
@@ -184,18 +198,18 @@ enum Faders
 // needed for pictures with crucial info that shouldn't be cut by zoom,
 // and STRETCH type is usable for full-screen effects, like vignette.
 
-#define TR_FADER_SCALE_ZOOM      0
-#define TR_FADER_SCALE_LETTERBOX 1
-#define TR_FADER_SCALE_STRETCH   2
+#define GUI_FADER_SCALE_ZOOM      0
+#define GUI_FADER_SCALE_LETTERBOX 1
+#define GUI_FADER_SCALE_STRETCH   2
 
-#define TR_FADER_STATUS_IDLE     0
-#define TR_FADER_STATUS_FADING   1
-#define TR_FADER_STATUS_COMPLETE 2
+#define GUI_FADER_STATUS_IDLE     0
+#define GUI_FADER_STATUS_FADING   1
+#define GUI_FADER_STATUS_COMPLETE 2
 
-#define TR_FADER_CORNER_TOPLEFT     0
-#define TR_FADER_CORNER_TOPRIGHT    1
-#define TR_FADER_CORNER_BOTTOMLEFT  2
-#define TR_FADER_CORNER_BOTTOMRIGHT 3
+#define GUI_FADER_CORNER_TOPLEFT     0
+#define GUI_FADER_CORNER_TOPRIGHT    1
+#define GUI_FADER_CORNER_BOTTOMLEFT  2
+#define GUI_FADER_CORNER_BOTTOMRIGHT 3
 
 // Main fader class.
 
@@ -210,7 +224,7 @@ public:
     
     int  IsFading();              // Get current state of the fader.
     
-    void SetScaleMode(uint8_t mode = TR_FADER_SCALE_ZOOM);
+    void SetScaleMode(uint8_t mode = GUI_FADER_SCALE_ZOOM);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
     void SetBlendingMode(uint32_t mode = BM_OPAQUE);
     void SetAlpha(uint8_t alpha  = 255);
@@ -282,9 +296,16 @@ enum BarColorType
 
 // Screen metering resolution specifies user-friendly relative dimensions of screen,
 // which are not dependent on screen resolution. They're primarily used to parse
-// bar dimensions.
+// bar and string dimensions.
 
-#define TR_GUI_SCREEN_METERING_RESOLUTION 1000.0
+#define GUI_SCREEN_METERING_RESOLUTION 1000.0
+
+// Screen metering factor defines minimum comfortable resolution (both in width and
+// height) which could possibly be used on any possible screen. Since contemporary
+// devices rarely use resolutions lower than 480p (SD), we use it as a basis.
+// Screen metering factor primarily used to set up font scaling factor. 
+
+#define GUI_SCREEN_METERING_FACTOR     480.0
 
 // Main bar class.
 
@@ -374,12 +395,12 @@ private:
 // width, but if you want to increase or decrease notifier size, you must
 // change this value properly.
 
-#define TR_GUI_OFFSCREEN_DIVIDER 8.0
+#define GUI_NOTIFIER_OFFSCREEN_DIVIDER 8.0
 
 // Notifier show time is a time notifier stays on screen (excluding slide
 // effect). Maybe it's better to move it to script later.
 
-#define TR_GUI_NOTIFIER_SHOWTIME 2.0
+#define GUI_NOTIFIER_SHOWTIME 2.0
 
 class gui_ItemNotifier
 {
@@ -558,7 +579,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l);
 /**
  * Draws text using a current console font.
  */
-gui_text_line_p Gui_OutTextXY(int x, int y, const char *fmt, ...);
+gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
 
 /**
  * Helper method to setup OpenGL state for console drawing.
@@ -630,9 +651,10 @@ void Gui_DrawLoadScreen(int value);
 void Gui_DrawInventory();
 
 /**
- * General GUI update routine.
+ * General GUI update routines.
  */
 
 void Gui_Update();
+void Gui_Resize();  // Called every resize event.
 
 #endif
