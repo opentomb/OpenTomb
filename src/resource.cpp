@@ -1740,7 +1740,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
     // Set loadscreen fader to fade-in state.
-    Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_IN);
+    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
 }
 
 

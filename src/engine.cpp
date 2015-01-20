@@ -2232,7 +2232,7 @@ int lua_SetGame(lua_State *lua)
         lua_pushnumber(lua, gameflow_manager.CurrentGameID);           // add to stack first argument
         lua_pcall(lua, 1, 1, 0);                                       // call that function
         Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
-        Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
+        Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     }
     lua_settop(lua, top);   // restore LUA stack
 
