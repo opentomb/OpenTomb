@@ -15,7 +15,7 @@
 #include "camera.h"
 
 #define MAX_TEMP_LINES   (256)
-#define TEMP_LINE_LENGHT (128)
+#define TEMP_LINE_LENGTH (128)
 
 extern SDL_Window  *sdl_window;
 
@@ -49,8 +49,8 @@ void Gui_InitTempLines()
 {
     for(int i=0;i<MAX_TEMP_LINES;i++)
     {
-        gui_temp_lines[i].buf_size = TEMP_LINE_LENGHT;
-        gui_temp_lines[i].text = (char*)malloc(TEMP_LINE_LENGHT * sizeof(char));
+        gui_temp_lines[i].text_size = TEMP_LINE_LENGTH;
+        gui_temp_lines[i].text = (char*)malloc(TEMP_LINE_LENGTH * sizeof(char));
         gui_temp_lines[i].text[0] = 0;
         gui_temp_lines[i].show = 0;
         
@@ -213,7 +213,7 @@ void Gui_Destroy()
     for(int i = 0; i < MAX_TEMP_LINES ;i++)
     {
         gui_temp_lines[i].show = 0;
-        gui_temp_lines[i].buf_size = 0;
+        gui_temp_lines[i].text_size = 0;
         free(gui_temp_lines[i].text);
         gui_temp_lines[i].text = NULL;
     }
@@ -305,7 +305,7 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
             l->style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
 
         va_start(argptr, fmt);
-        vsnprintf(l->text, TEMP_LINE_LENGHT, fmt, argptr);
+        vsnprintf(l->text, TEMP_LINE_LENGTH, fmt, argptr);
         va_end(argptr);
 
         l->next = NULL;
