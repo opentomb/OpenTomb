@@ -1,3 +1,9 @@
+/* 
+ * File:   gl_font.c
+ * Author: TeslaRus
+ *
+ * Created on January 16, 2015, 10:46 PM
+ */
 
 #include <stdint.h>
 #include <SDL2/SDL_opengl.h>
@@ -77,7 +83,7 @@ void glf_free_font(gl_tex_font_p glf)
 }
 
 
-/*__inline*/ GLuint NextPowerOf2( GLuint in)
+__inline GLuint NextPowerOf2(GLuint in)
 {
      in -= 1;
 
@@ -355,7 +361,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
                 glVertexPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), box);
                 glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), box + 2);
-                glDrawArrays(GL_QUADS, 0, 4);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             }
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;
             y += (GLfloat)(kern.y + g->advance_y) / 64.0;

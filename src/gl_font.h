@@ -1,6 +1,6 @@
 /* 
  * File:   gl_font.h
- * Author: nTesla
+ * Author: TeslaRus
  *
  * Created on January 16, 2015, 10:46 PM
  */

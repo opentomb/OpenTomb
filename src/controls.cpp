@@ -123,6 +123,13 @@ void Controls_Key(int32_t button, int state)
                     }
                     break;
 
+                case ACT_INVENTORY:
+                    if(!state)
+                    {
+                        control_states.gui_inventory = !control_states.gui_inventory;
+                    }
+                    break;
+
                 case ACT_SAVEGAME:
                     if(!state)
                     {
