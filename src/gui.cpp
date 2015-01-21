@@ -360,7 +360,7 @@ void Gui_Render()
 void Gui_RenderStringLine(gui_text_line_p l)
 {
     GLfloat x0, y0, x1, y1;
-    GLfloat rectCoords[8];
+    GLfloat rectCoords[16];
 
     glBindTexture(GL_TEXTURE_2D, 0);
     if(l->show_rect)
@@ -373,8 +373,11 @@ void Gui_RenderStringLine(gui_text_line_p l)
         rectCoords[2] = x1; rectCoords[3] = y0;
         rectCoords[4] = x1; rectCoords[5] = y1;
         rectCoords[6] = x0; rectCoords[7] = y1;
+        vec4_set_zero(rectCoords+8);                                            ///@PARANOID
+        vec4_set_zero(rectCoords+12);
         glColor4fv(l->rect_color);
         glVertexPointer(2, GL_FLOAT, 0, rectCoords);
+        glTexCoordPointer(2, GL_FLOAT, 0, rectCoords+8);
         glDrawArrays(GL_POLYGON, 0, 4);
     }
 
@@ -386,11 +389,8 @@ void Gui_RenderStringLine(gui_text_line_p l)
         }
         if(l->gl_font != NULL)
         {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glColor4fv(l->font_color);
             glf_render_str(l->gl_font, (GLfloat)((l->x >= 0)?(l->x):(screen_info.w + l->x)), (GLfloat)((l->y >= 0)?(l->y):(screen_info.h + l->y)), l->text);
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         }
     }
 }
@@ -399,6 +399,8 @@ void Gui_RenderStrings()
 {
     gui_text_line_p l = gui_base_lines;
 
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     while(l)
     {
         Gui_RenderStringLine(l);
@@ -415,6 +417,7 @@ void Gui_RenderStrings()
             l->show = 0;
         }
     }
+    glPopClientAttrib();
     temp_lines_used = 0;
 }
 
