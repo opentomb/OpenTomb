@@ -335,36 +335,111 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         return;
     }
 
-    kern.x = 0;
-    kern.y = 0;
-    for(;*ch;ch++)
+    if(glf->gl_real_tex_indexes_count == 1)
     {
-        if(*ch < glf->glyphs_count)
+        GLfloat *p, buffer[24 * strlen(text)];
+        GLuint elements_count = 0;
+        GLuint active_texture = 0;
+        for(p = buffer;*ch;ch++)
         {
-            char_info_p g = glf->glyphs + *ch;
-
-            FT_Get_Kerning(glf->ft_face, *ch, *(ch+1), FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
-            if(g->tex_index != 0)
+            if(*ch < glf->glyphs_count)
             {
-                glBindTexture(GL_TEXTURE_2D, g->tex_index);
-                ///RENDER
-                GLfloat x0 = x  + g->left;
-                GLfloat x1 = x0 + g->width;
-                GLfloat y0 = y  + g->top;
-                GLfloat y1 = y0 - g->height;
+                char_info_p g = glf->glyphs + *ch;
 
-                GLfloat box[] = {
-                x0, y0, g->tex_x0, g->tex_y0,
-                x1, y0, g->tex_x1, g->tex_y0,
-                x1, y1, g->tex_x1, g->tex_y1,
-                x0, y1, g->tex_x0, g->tex_y1};
-
-                glVertexPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), box);
-                glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), box + 2);
-                glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+                FT_Get_Kerning(glf->ft_face, *ch, *(ch+1), FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
+                if(g->tex_index != 0)
+                {
+                    GLfloat x0 = x  + g->left;
+                    GLfloat x1 = x0 + g->width;
+                    GLfloat y0 = y  + g->top;
+                    GLfloat y1 = y0 - g->height;
+                    
+                    if(active_texture != g->tex_index)
+                    {
+                        active_texture = g->tex_index;
+                    }
+                    
+                    *p = x0;            p++;
+                    *p = y0;            p++;
+                    *p = g->tex_x0;     p++;
+                    *p = g->tex_y0;     p++;
+                    
+                    *p = x1;            p++;
+                    *p = y0;            p++;
+                    *p = g->tex_x1;     p++;
+                    *p = g->tex_y0;     p++;
+                    
+                    *p = x1;            p++;
+                    *p = y1;            p++;
+                    *p = g->tex_x1;     p++;
+                    *p = g->tex_y1;     p++;
+                    elements_count++;
+                    
+                    *p = x0;            p++;
+                    *p = y0;            p++;
+                    *p = g->tex_x0;     p++;
+                    *p = g->tex_y0;     p++;
+                    
+                    *p = x1;            p++;
+                    *p = y1;            p++;
+                    *p = g->tex_x1;     p++;
+                    *p = g->tex_y1;     p++;
+                    
+                    *p = x0;            p++;
+                    *p = y1;            p++;
+                    *p = g->tex_x0;     p++;
+                    *p = g->tex_y1;     p++;
+                    elements_count++;
+                }
+                x += (GLfloat)(kern.x + g->advance_x) / 64.0;
+                y += (GLfloat)(kern.y + g->advance_y) / 64.0;
             }
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+        }
+        ///RENDER
+        if(active_texture != 0)
+        {
+            glBindTexture(GL_TEXTURE_2D, active_texture);
+            glVertexPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), buffer);
+            glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), buffer + 2);
+            glDrawArrays(GL_TRIANGLES, 0, elements_count * 3);
+        }
+    }
+    else
+    {
+        GLuint active_texture = 0;
+        for(;*ch;ch++)
+        {
+            if(*ch < glf->glyphs_count)
+            {
+                char_info_p g = glf->glyphs + *ch;
+
+                FT_Get_Kerning(glf->ft_face, *ch, *(ch+1), FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
+                if(g->tex_index != 0)
+                {
+                    if(active_texture != g->tex_index)
+                    {
+                        glBindTexture(GL_TEXTURE_2D, g->tex_index);
+                        active_texture = g->tex_index;
+                    }
+                    ///RENDER
+                    GLfloat x0 = x  + g->left;
+                    GLfloat x1 = x0 + g->width;
+                    GLfloat y0 = y  + g->top;
+                    GLfloat y1 = y0 - g->height;
+
+                    GLfloat box[] = {
+                    x0, y0, g->tex_x0, g->tex_y0,
+                    x1, y0, g->tex_x1, g->tex_y0,
+                    x1, y1, g->tex_x1, g->tex_y1,
+                    x0, y1, g->tex_x0, g->tex_y1};
+
+                    glVertexPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), box);
+                    glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), box + 2);
+                    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+                }
+                x += (GLfloat)(kern.x + g->advance_x) / 64.0;
+                y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+            }
         }
     }
 }

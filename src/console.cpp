@@ -146,7 +146,7 @@ void Con_Draw()
         Con_DrawBackground();
         x = 8;
         y = con_base.cursor_y;
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glColor4fv(con_base.font_color);
         for(uint16_t i=0;i<con_base.showing_lines;i++)
@@ -154,7 +154,7 @@ void Con_Draw()
             y += con_base.line_height;
             glf_render_str(con_base.gl_font, (GLfloat)x, (GLfloat)y, con_base.shown_lines[i]);
         }
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glPopClientAttrib();
         Con_DrawCursor();
     }
 }
