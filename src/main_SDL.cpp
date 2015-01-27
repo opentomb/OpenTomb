@@ -780,7 +780,7 @@ void ShowDebugInfo()
         txt = Gui_OutTextXY(20, 80, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         */
 
-        Gui_OutTextXY(10, 20, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
+        Gui_OutTextXY(10, 790, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
@@ -789,15 +789,15 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(10, 60, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
+                Gui_OutTextXY(10, 830, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
                 break;
                 
             case OBJECT_STATIC_MESH:
-                Gui_OutTextXY(10, 60, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                Gui_OutTextXY(10, 830, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
                 
             case OBJECT_ROOM_BASE:
-                Gui_OutTextXY(10, 60, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                Gui_OutTextXY(10, 830, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
         
@@ -808,11 +808,11 @@ void ShowDebugInfo()
         room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
         if(rs != NULL)
         {
-            Gui_OutTextXY(10, 100, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
-            Gui_OutTextXY(10, 140, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
+            Gui_OutTextXY(10, 870, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
+            Gui_OutTextXY(10, 910, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
         }
     }
-    Gui_OutTextXY(10, 180, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+    Gui_OutTextXY(10, 950, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
 #endif
 }
 

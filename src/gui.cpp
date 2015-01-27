@@ -75,7 +75,8 @@ void Gui_InitBars()
                     Bar[i].Invert =       false;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(50, 30, 250, 25, 3);
+                    Bar[i].SetSize(250, 15, 3);
+                    Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 30); 
                     Bar[i].SetColor(BASE_MAIN, 255, 50, 50, 200);
                     Bar[i].SetColor(BASE_FADE, 100, 255, 50, 200);
                     Bar[i].SetColor(ALT_MAIN, 255, 180, 0, 255);
@@ -97,7 +98,8 @@ void Gui_InitBars()
                     Bar[i].Invert =       true;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(700, 30, 250, 25, 3);
+                    Bar[i].SetSize(250, 15, 3);
+                    Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 30);
                     Bar[i].SetColor(BASE_MAIN, 0, 50, 255, 200);
                     Bar[i].SetColor(BASE_FADE, 190, 190, 255, 200);
                     Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
@@ -117,7 +119,8 @@ void Gui_InitBars()
                     Bar[i].Invert =       false;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(50, 70, 250, 25, 3);
+                    Bar[i].SetSize(250, 15, 3);
+                    Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 55);
                     Bar[i].SetColor(BASE_MAIN, 255, 100, 50, 200);
                     Bar[i].SetColor(BASE_FADE, 255, 200, 0, 200);
                     Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
@@ -136,7 +139,8 @@ void Gui_InitBars()
                     Bar[i].Invert =       true;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(700, 70, 250, 25, 3);
+                    Bar[i].SetSize(250, 15, 3);
+                    Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 55);
                     Bar[i].SetColor(BASE_MAIN, 255, 0, 255, 255);
                     Bar[i].SetColor(BASE_FADE, 190, 120, 255, 255);
                     Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
@@ -157,7 +161,8 @@ void Gui_InitBars()
                     Bar[i].Invert =       false;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetDimensions(100, 860, 800, 35, 3);
+                    Bar[i].SetSize(800, 25, 3);
+                    Bar[i].SetPosition(GUI_ANCHOR_HOR_CENTER, 0, GUI_ANCHOR_VERT_BOTTOM, 40);
                     Bar[i].SetColor(BASE_MAIN, 255, 225, 127, 230);
                     Bar[i].SetColor(BASE_FADE, 255, 187, 136, 230);
                     Bar[i].SetColor(BACK_MAIN, 30, 30, 30, 100);
@@ -318,7 +323,7 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         
         l->align  = GUI_LINE_ALIGN_LEFT;
         l->real_x = x * screen_info.w_unit;
-        l->real_y = y * screen_info.h_unit;
+        l->real_y = screen_info.h - y * screen_info.h_unit;
         
         l->show = 1;
         return l;
@@ -339,9 +344,14 @@ void Gui_Resize()
     while(l)
     {
         l->real_x = l->x * screen_info.w_unit;
-        l->real_y = l->y * screen_info.h_unit;
+        l->real_y = screen_info.h - l->y * screen_info.h_unit;
         
         l = l->next;
+    }
+    
+    for(int i = 0; i < BAR_LASTINDEX; i++)
+    {
+        Bar[i].Resize();
     }
     
     FontManager->Resize();
@@ -427,14 +437,14 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glColor4fv(temp);
         glPushMatrix();
         glTranslatef((real_x+GUI_FONT_SHADOW_HORIZONTAL_SHIFT), (l->real_y+GUI_FONT_SHADOW_VERTICAL_SHIFT), 0.0);
-        l->font->RenderRaw(l->text);
+        l->font->Render(l->text);
         glPopMatrix();
     }
 
     glColor4fv(l->style->real_color);
     glPushMatrix();
     glTranslatef(real_x, l->real_y, 0.0);
-    l->font->RenderRaw(l->text);
+    l->font->Render(l->text);
     glPopMatrix();
 }
 
@@ -1301,21 +1311,16 @@ void Gui_DrawInventory()
 
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
+    
     // Background
-    glBindTexture(GL_TEXTURE_2D, 0);
-    GLfloat rectCoords[8];
-    glColor4f(0,0,0,0.45);
-    rectCoords[0] = 0.0;                        rectCoords[1] = (GLfloat)screen_info.h;
-    rectCoords[2] = 0.0;                        rectCoords[3] = 0.0;
-    rectCoords[4] = (GLfloat)screen_info.w;     rectCoords[5] = 0.0;
-    rectCoords[6] = (GLfloat)screen_info.w;     rectCoords[7] = (GLfloat)screen_info.h;
+    
+    GLfloat upper_color[4] = {0.0,0.0,0.0,0.45};
+    GLfloat lower_color[4] = {0.0,0.0,0.0,0.75};
 
-    glLoadIdentity();
-    glVertexPointer(2, GL_FLOAT, 0, rectCoords);
-    glDrawArrays(GL_POLYGON, 0, 4);
-    glColor3f(1.0, 1.0, 1.0);
-
+    Gui_DrawRect(0.0, 0.0, (GLfloat)screen_info.w, (GLfloat)screen_info.h,
+                 upper_color, upper_color, lower_color, lower_color,
+                 BM_OPAQUE);
+                 
     glDepthMask(GL_TRUE);
     glPopClientAttrib();
     glPopAttrib();
@@ -1409,52 +1414,46 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
+    GLfloat texCoords[8];
     if(texture)
     {
         glBindTexture(GL_TEXTURE_2D, texture);
-
-        glBegin(GL_POLYGON);
-
-            glColor4fv(colorUpperLeft);     // Upper left
-            glTexCoord2i( 0, 0 );           // Upper left
-            glVertex2f(x, y + height);
-
-            glColor4fv(colorUpperRight);    // Upper right
-            glTexCoord2i( 1, 0 );           // Upper right
-            glVertex2f(x + width, y + height);
-
-            glColor4fv(colorLowerRight);    // Lower right
-            glTexCoord2i( 1, 1 );           // Lower right
-            glVertex2f(x + width, y);
-
-            glColor4fv(colorLowerLeft);     // Lower left
-            glTexCoord2i( 0, 1 );           // Lower left
-            glVertex2f(x, y);
-
-        glEnd();
-
-        glBindTexture(GL_TEXTURE_2D, 0);
+        texCoords[0] = 0; texCoords[1] = 1;
+        texCoords[2] = 1; texCoords[3] = 1;
+        texCoords[4] = 1; texCoords[5] = 0;
+        texCoords[6] = 0; texCoords[7] = 0;
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
     }
     else
     {
-        glBegin(GL_POLYGON);
-
-            glColor4fv(colorUpperLeft);     // Upper left
-            glVertex2f(x, y + height);
-
-            glColor4fv(colorUpperRight);    // Upper right
-            glVertex2f(x + width, y + height);
-
-            glColor4fv(colorLowerRight);    // Lower right
-            glVertex2f(x + width, y);
-
-            glColor4fv(colorLowerLeft);     // Lower left
-            glVertex2f(x, y);
-
-        glEnd();
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
 
-
+    GLfloat rectCoords[8];
+    rectCoords[0] = x; rectCoords[1] = y;
+    rectCoords[2] = x + width; rectCoords[3] = y;
+    rectCoords[4] = x + width; rectCoords[5] = y + height;
+    rectCoords[6] = x; rectCoords[7] = y + height;
+    glVertexPointer(2, GL_FLOAT, 0, rectCoords);
+    
+    GLfloat rectColors[16];
+    memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 4,  colorLowerRight, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 12, colorUpperLeft,  sizeof(GLfloat) * 4);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glColorPointer(4, GL_FLOAT, 0, rectColors);
+    
+    glDrawArrays(GL_POLYGON, 0, 4);
+    
+    glDisableClientState(GL_COLOR_ARRAY);
+    
+    if(texture)
+    {
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
 }
 
 bool Gui_FadeStart(int fader, int fade_direction)
@@ -1996,7 +1995,8 @@ gui_ProgressBar::gui_ProgressBar()
 
     // Initialize parameters.
     // By default, bar is initialized with TR5-like health bar properties.
-    SetDimensions(20, 20, 250, 25, 3);
+    SetPosition(GUI_ANCHOR_HOR_LEFT, 20, GUI_ANCHOR_VERT_TOP, 20);
+    SetSize(250, 25, 3);
     SetColor(BASE_MAIN, 255, 50, 50, 150);
     SetColor(BASE_FADE, 100, 255, 50, 150);
     SetColor(ALT_MAIN, 255, 180, 0, 220);
@@ -2011,20 +2011,13 @@ gui_ProgressBar::gui_ProgressBar()
     SetAutoshow(true, 5000, true, 1000);
 }
 
-// Update bar resolution.
-// This function is also used to compare if resolution is changed.
-bool gui_ProgressBar::UpdateResolution(int scrWidth, int scrHeight)
+// Resize bar.
+// This function should be called every time resize event occurs.
+
+void gui_ProgressBar::Resize()
 {
-    if( (scrWidth != mLastScrWidth) || (scrHeight != mLastScrHeight) )
-    {
-        mLastScrWidth  = scrWidth;
-        mLastScrHeight = scrHeight;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    RecalculateSize();
+    RecalculatePosition();
 }
 
 // Set specified color.
@@ -2096,46 +2089,75 @@ void gui_ProgressBar::SetColor(BarColorType colType,
     }
 }
 
-// Set bar dimensions (coordinates and size)
-void gui_ProgressBar::SetDimensions(float X, float Y,
-                                float width, float height, float borderSize)
+void gui_ProgressBar::SetPosition(int8_t anchor_X, float offset_X, int8_t anchor_Y, float offset_Y)
+{
+    mXanchor = anchor_X;
+    mYanchor = anchor_Y;
+    mAbsXoffset = offset_X;
+    mAbsYoffset = offset_Y;
+    
+    RecalculatePosition();
+}
+
+// Set bar size
+void gui_ProgressBar::SetSize(float width, float height, float borderSize)
 {
     // Absolute values are needed to recalculate actual bar size according to resolution.
-    mAbsX = X;
-    mAbsY = Y;
     mAbsWidth  = width;
     mAbsHeight = height;
     mAbsBorderSize = borderSize;
 
-    // If resolution has changed (or bar is being initialized), recalculate dimensions.
-    if(UpdateResolution(screen_info.w, screen_info.h))
-    {
-        RecalculateSize();
-        RecalculatePosition();
-    }
+    RecalculateSize();
 }
 
 // Recalculate size, according to viewport resolution.
 void gui_ProgressBar::RecalculateSize()
-{
-    mWidth  = mLastScrWidth  * ( (float)mAbsWidth  / GUI_SCREEN_METERING_RESOLUTION );
-    mHeight = mLastScrHeight * ( (float)mAbsHeight / GUI_SCREEN_METERING_RESOLUTION );
+{    
+    mWidth  = (float)mAbsWidth  * screen_info.w_unit;
+    mHeight = (float)mAbsHeight * screen_info.h_unit * ((float)screen_info.w / screen_info.h);
 
-    mBorderWidth  = mLastScrWidth  * ( (float)mAbsBorderSize / GUI_SCREEN_METERING_RESOLUTION );
-    mBorderHeight = mLastScrHeight * ( (float)mAbsBorderSize / GUI_SCREEN_METERING_RESOLUTION ) *
-                    ((float)mLastScrWidth / (float)mLastScrHeight);
+    mBorderWidth  = (float)mAbsBorderSize  * screen_info.w_unit;
+    mBorderHeight = (float)mAbsBorderSize  * screen_info.h_unit * ((float)screen_info.w / screen_info.h);
 
     // Calculate range unit, according to maximum bar value set up.
     // If bar alignment is set to horizontal, calculate it from bar width.
     // If bar is vertical, then calculate it from height.
+    
     mRangeUnit = (!Vertical)?( (mWidth) / mMaxValue ):( (mHeight) / mMaxValue );
 }
 
 // Recalculate position, according to viewport resolution.
 void gui_ProgressBar::RecalculatePosition()
 {
-    mX = (mLastScrWidth  * ( (float)mAbsX / GUI_SCREEN_METERING_RESOLUTION ) );
-    mY = mLastScrHeight - mLastScrHeight * ( (mAbsY + mAbsHeight + (mAbsBorderSize * 2 * ((float)mLastScrWidth / (float)mLastScrHeight))) / GUI_SCREEN_METERING_RESOLUTION );
+    float offset_ratio = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
+    
+    switch(mXanchor)
+    {
+        case GUI_ANCHOR_HOR_LEFT:
+            mX = (float)(mAbsXoffset+mAbsBorderSize) * offset_ratio;
+            break;
+        case GUI_ANCHOR_HOR_CENTER:
+            mX = ((float)screen_info.w - ((float)(mAbsWidth+mAbsBorderSize*2) * screen_info.w_unit)) / 2 +
+                 ((float)mAbsXoffset * offset_ratio);
+            break;
+        case GUI_ANCHOR_HOR_RIGHT:
+            mX = (float)screen_info.w - ((float)(mAbsXoffset+mAbsWidth+mAbsBorderSize*2)) * offset_ratio;
+            break;
+    }
+    
+    switch(mYanchor)
+    {
+        case GUI_ANCHOR_VERT_TOP:
+            mY = (float)screen_info.h - ((float)(mAbsYoffset+mAbsHeight+mAbsBorderSize*2)) * offset_ratio;
+            break;
+        case GUI_ANCHOR_VERT_CENTER:
+            mY = ((float)screen_info.h - ((float)(mAbsHeight+mAbsBorderSize*2) * screen_info.h_unit)) / 2 +
+                 ((float)mAbsYoffset * offset_ratio);
+            break;
+        case GUI_ANCHOR_VERT_BOTTOM:
+            mY = (mAbsYoffset + mAbsBorderSize) * offset_ratio;
+            break;
+    }
 }
 
 // Set maximum and warning state values.
@@ -2267,15 +2289,6 @@ void gui_ProgressBar::Show(float value)
         if(!Visible) return;   // Obviously, quit, if bar is not visible.
     } // end if(mAutoShowFade)
 
-
-    // If user changed screen resolution, automatically recalculate bar size:
-    if( UpdateResolution(screen_info.w, screen_info.h) )
-    {
-        RecalculatePosition();
-        RecalculateSize();
-    }
-
-
     // Draw border rect.
     // Border rect should be rendered first, as it lies beneath actual bar,
     // and additionally, we need to show it in any case, even if bar is in
@@ -2284,7 +2297,6 @@ void gui_ProgressBar::Show(float value)
                  mBorderMainColor, mBorderMainColor,
                  mBorderFadeColor, mBorderFadeColor,
                  BM_OPAQUE);
-
 
     // SECTION FOR BASE BAR RECTANGLE.
 
@@ -2632,7 +2644,7 @@ gui_fontstyle_s* gui_FontManager::GetFontStyle(const font_Style index)
 
 bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const char* path)
 {
-    if((size < 1) || (size > 72)) return false;
+    if((size < GUI_MIN_FONT_SIZE) || (size > GUI_MAX_FONT_SIZE)) return false;
     
     gui_font_s* desired_font = GetFontAddress(index);
     
@@ -2654,6 +2666,7 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
     desired_font->font = NULL;
     desired_font->font = new FTGLTextureFont(path);
     desired_font->font->FaceSize(size);
+    desired_font->font->CharMap(FT_ENCODING_UNICODE);
     
     return true;
 }

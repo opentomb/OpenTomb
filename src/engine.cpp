@@ -43,6 +43,7 @@ extern "C" {
 #include "character_controller.h"
 #include "gameflow.h"
 #include "redblack.h"
+#include "string.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
@@ -2538,11 +2539,35 @@ bool Engine_LuaInit()
         // Load and run global engine scripts.
         
         luaL_dofile(engine_lua, "scripts/gui/fonts.lua");
+        luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
         luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
+        
+        // ------------------------------------------------------------------
+        // DUMP TEST UTF-32 STRING
+        
+        const char* tempstring = NULL;
+        uint32_t* utf32_string = NULL;
+        uint32_t string_length = 0;
+        
+        tempstring = lua_GetString(engine_lua, 0, &string_length);
+        utf32_string = String_MakeUTF32(tempstring, &string_length);
+        
+            FILE *fp;
+            fp = fopen("string_dump.bin", "w");
+            
+            if(fp != NULL)
+            {
+                fwrite(utf32_string, string_length * sizeof(uint32_t), 1, fp);
+                fclose(fp);
+            }
+        
+        if(utf32_string) free(utf32_string);
+        
+        // ------------------------------------------------------------------
         
         return true;
     }
@@ -3300,7 +3325,7 @@ void Engine_LoadConfig()
     lua_ParseRender(engine_lua, &renderer.settings);
     lua_ParseAudio(engine_lua, &audio_settings);
     lua_ParseConsole(engine_lua, &con_base);
-    lua_ParseControlSettings(engine_lua, &control_mapper);
+    lua_ParseControls(engine_lua, &control_mapper);
 }
 
 

@@ -7,6 +7,32 @@
 #include "render.h"
 #include "character_controller.h"
 
+// Screen metering resolution specifies user-friendly relative dimensions of screen,
+// which are not dependent on screen resolution. They're primarily used to parse
+// bar and string dimensions.
+
+#define GUI_SCREEN_METERING_RESOLUTION 1000.0
+
+// Screen metering factor defines minimum comfortable resolution (both in width and
+// height) which could possibly be used on any possible screen. Since contemporary
+// devices rarely use resolutions lower than 480p (SD), we use it as a basis.
+// Screen metering factor primarily used to set up font scaling factor. 
+
+#define GUI_SCREEN_METERING_FACTOR     480.0
+
+// Anchoring is needed to link specific GUI element to specific screen position,
+// independent of screen resolution and aspect ratio. Vertical and horizontal
+// anchorings are seperated, so you can link element at any place - top, bottom,
+// center, left or right.
+
+#define GUI_ANCHOR_VERT_TOP         0
+#define GUI_ANCHOR_VERT_BOTTOM      1
+#define GUI_ANCHOR_VERT_CENTER      2
+
+#define GUI_ANCHOR_HOR_LEFT         0
+#define GUI_ANCHOR_HOR_RIGHT        1
+#define GUI_ANCHOR_HOR_CENTER       2
+
 // OpenTomb has three types of fonts - primary, secondary and console
 // font. This should be enough for most of the cases. However, user 
 // can generate and use additional font types via script, but engine
@@ -20,6 +46,9 @@ enum font_Type
 };
 
 #define GUI_MAX_FONTS 8     // 8 fonts is PLENTY.
+
+#define GUI_MIN_FONT_SIZE 1
+#define GUI_MAX_FONT_SIZE 72
 
 // This is predefined enumeration of font styles, which can be extended
 // with user-defined script functions.
@@ -74,8 +103,8 @@ typedef struct gui_fontstyle_s
     bool        hidden;         // Used to bypass certain GUI lines easily.
 } gui_fontstyle_t, *gui_fontstyle_p;
 
-#define GUI_FONT_FADE_SPEED 1.0 // Global fading style speed.
-#define GUI_FONT_FADE_MIN   0.3 // Minimum fade multiplier.
+#define GUI_FONT_FADE_SPEED 1.0                 // Global fading style speed.
+#define GUI_FONT_FADE_MIN   0.3                 // Minimum fade multiplier.
 
 #define GUI_FONT_SHADOW_TRANSPARENCY     0.7
 #define GUI_FONT_SHADOW_VERTICAL_SHIFT  -0.9
@@ -162,6 +191,36 @@ typedef struct gui_text_line_s
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;
 } gui_text_line_t, *gui_text_line_p;
+
+
+typedef struct gui_rect_s
+{
+    GLfloat                     rect[4];
+    GLfloat                     absRect[4];
+    
+    GLfloat                     X;  GLfloat absX;
+    GLfloat                     Y;  GLfloat absY;
+    int8_t                      align;
+    
+    GLuint                      texture;
+    GLfloat                     color[16]; // TL, TR, BL, BR x 4
+    uint32_t                    blending_mode;
+    
+    int16_t                     line_count;
+    gui_text_line_s            *lines;
+    
+    int8_t                      state;      // Opening / static / closing
+    int8_t                      show;
+    GLfloat                     current_alpha;
+    
+    int8_t                      focused;
+    int8_t                      focus_index;
+    
+    int8_t                      selectable;
+    int8_t                      selection_index;
+    
+    char                       *lua_click_function;
+} gui_rect_t, *gui_rect_p;
 
 
 // Fader is a simple full-screen rectangle, which always sits above the scene,
@@ -295,19 +354,6 @@ enum BarColorType
     BORDER_FADE
 };
 
-// Screen metering resolution specifies user-friendly relative dimensions of screen,
-// which are not dependent on screen resolution. They're primarily used to parse
-// bar and string dimensions.
-
-#define GUI_SCREEN_METERING_RESOLUTION 1000.0
-
-// Screen metering factor defines minimum comfortable resolution (both in width and
-// height) which could possibly be used on any possible screen. Since contemporary
-// devices rarely use resolutions lower than 480p (SD), we use it as a basis.
-// Screen metering factor primarily used to set up font scaling factor. 
-
-#define GUI_SCREEN_METERING_FACTOR     480.0
-
 // Main bar class.
 
 class gui_ProgressBar
@@ -316,9 +362,11 @@ public:
     gui_ProgressBar();  // Bar constructor.
 
     void Show(float value);    // Main show bar procedure.
+    void Resize();
 
     void SetColor(BarColorType colType, uint8_t R, uint8_t G, uint8_t B, uint8_t alpha);
-    void SetDimensions(float X, float Y, float width, float height, float borderSize);
+    void SetSize(float width, float height, float borderSize);
+    void SetPosition(int8_t anchor_X, float offset_X, int8_t anchor_Y, float offset_Y);
     void SetValues(float maxValue, float warnValue);
     void SetBlink(int interval);
     void SetExtrude(bool enabled, uint8_t depth);
@@ -331,23 +379,20 @@ public:
     bool          Vertical;             // Change bar style to vertical.
     
 private:
-
-    bool          UpdateResolution      // Try to update bar resolution.
-                       (int ScrWidth,
-                        int ScrHeight);
-
     void          RecalculateSize();    // Recalculate size and position.
     void          RecalculatePosition();
-
-    float         mX;                   // Real X position.
-    float         mY;                   // Real Y position.
+    
+    float         mX;                   // Horizontal position.
+    float         mY;                   // Vertical position.
     float         mWidth;               // Real width.
     float         mHeight;              // Real height.
     float         mBorderWidth;         // Real border size (horizontal).
     float         mBorderHeight;        // Real border size (vertical).
 
-    float         mAbsX;                // Absolute (resolution-independent) X position.
-    float         mAbsY;                // Absolute Y position.
+    int8_t        mXanchor;             // Horizontal anchoring: left, right or center.
+    int8_t        mYanchor;             // Vertical anchoring: top, bottom or center.
+    float         mAbsXoffset;          // Absolute (resolution-independent) X offset.
+    float         mAbsYoffset;          // Absolute Y offset.
     float         mAbsWidth;            // Absolute width.
     float         mAbsHeight;           // Absolute height.
     float         mAbsBorderSize;       // Absolute border size (horizontal).
@@ -386,9 +431,6 @@ private:
     float         mRangeUnit;           // Range unit used to set base bar size.
     float         mBaseSize;            // Base bar size.
     float         mBaseRatio;           // Max. / actual value ratio.
-
-    int           mLastScrWidth;        // Back-up to check resolution change.
-    int           mLastScrHeight;
 };
 
 // Offscreen divider specifies how far item notifier will be placed from
