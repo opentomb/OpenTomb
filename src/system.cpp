@@ -48,7 +48,7 @@ void Sys_Init()
     system_fps.text[0] = 0;
 
     system_fps.x = (980.0);
-    system_fps.y = (950.0);
+    system_fps.y = (50.0);
     system_fps.align = GUI_LINE_ALIGN_RIGHT;
 
     system_fps.font  = FontManager->GetFont(FONT_PRIMARY);

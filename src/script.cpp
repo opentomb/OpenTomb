@@ -359,6 +359,32 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 }
 
 
+const char* lua_GetString(lua_State *lua, int string_index, size_t *string_length)
+{
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+
+        lua_getglobal(lua, "getString");
+        
+        Sys_DebugLog("LUA.TXT", "Trying to get string %d", string_index);
+
+        if(lua_isfunction(lua, -1))
+        {
+            lua_pushinteger(lua, string_index);
+            lua_pcall(lua, 1, 1, 0);
+            const char* result = lua_tolstring(lua, -1, string_length);
+            lua_settop(lua, top);
+            return result;
+        }
+         lua_settop(lua, top);
+    }
+    
+    string_length = 0;
+    return NULL;
+}
+
+
 bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 {
     size_t  string_length  = 0;
@@ -481,7 +507,7 @@ int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator, int id_c
 /*
  * Game structures parse
  */
-int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs)
+int lua_ParseControls(lua_State *lua, struct control_settings_s *cs)
 {
     if(!lua)
     {
