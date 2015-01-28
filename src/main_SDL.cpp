@@ -10,6 +10,13 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
+extern "C" {
+#include "lua/lua.h"
+#include "lua/lualib.h"
+#include "lua/lauxlib.h"
+#include "lua/lstate.h"
+}
+
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "vt/vt_level.h"
@@ -38,6 +45,7 @@
 #include "entity.h"
 #include "audio.h"
 #include "gameflow.h"
+#include "string.h"
 
 #if defined(__MACOSX__)
 #include "FindConfigFile.h"
@@ -47,9 +55,6 @@ extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
 #include "al/AL/alext.h"
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
 }
 
 #define SKELETAL_TEST   0
@@ -108,12 +113,6 @@ engine_container_p      last_cont = NULL;
  *      - click removal;
  *      - add ADPCM and CDAUDIO.WAD soundtrack support;
  */
-
-void SkeletalModelTestDraw();
-void ShowDebugInfo();
-
-
-void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans);
 
 void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans)
 {
@@ -200,12 +199,12 @@ void SkeletalModelTestDraw()
     bframe = smodel->animations[anim].frames + frame;
 
     glColor3b(0, 0, 0);
-    Gui_OutTextXY(NULL, screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
-    Gui_OutTextXY(NULL, screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
-    Gui_OutTextXY(NULL, screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
-    Gui_OutTextXY(NULL, screen_info.w-632, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
-    Gui_OutTextXY(NULL, screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
-    Gui_OutTextXY(NULL, screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
+    Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
+    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
+    Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
+    Gui_OutTextXY(screen_info.w-632, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
+    Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
+    Gui_OutTextXY(screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
 
     y = screen_info.h - 24;
     for(i=0;i<af->state_change_count;i++)
@@ -213,7 +212,7 @@ void SkeletalModelTestDraw()
         for(j=0;j<af->state_change[i].anim_dispath_count;j++)
         {
             adsp = af->state_change[i].anim_dispath + j;
-            Gui_OutTextXY(NULL, 8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
+            Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
                           i, j, af->state_change[i].id, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
             y -= 24;
         }
@@ -284,7 +283,7 @@ void SkeletalModelTestDraw()
     glPopMatrix();
 }
 
-void Engine_PrepareOpenGL()
+void Engine_InitGL()
 {
     InitGLExtFuncs();
 #if SKELETAL_TEST
@@ -320,6 +319,7 @@ void Engine_PrepareOpenGL()
     // anything). They have to enable other arrays based on their need and then
     // return to default state
     glEnableClientState(GL_VERTEX_ARRAY);
+    
     // Default state for Alpha func: >=, 0.5. That's what all users of alpha
     // function use anyway.
     glAlphaFunc(GL_GEQUAL, 0.5);
@@ -414,10 +414,34 @@ void Engine_InitSDLVideo()
         video_flags |= (SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     }
 
+
+    // Check for correct number of antialias samples.
+
+    if(renderer.settings.antialias)
+    {
+        sdl_window     = SDL_CreateWindow(NULL, 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+        sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+        GLint maxSamples = 0;
+        glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        if ((maxSamples == 0) || (renderer.settings.antialias_samples > maxSamples))
+        {
+            renderer.settings.antialias_samples = maxSamples;   // Limit to max.
+            Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
+        }
+        SDL_GL_DeleteContext(sdl_gl_context);
+        SDL_DestroyWindow(sdl_window);
+        
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
+    }
+    else
+    {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+    }
+    
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
-
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
 
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
@@ -438,7 +462,7 @@ void Engine_InitSDLImage()
     }
 }
 
-void Engine_InitALAudio()
+void Engine_InitAL()
 {
 #if !NO_AUDIO
     ALCint paramList[] = {
@@ -447,18 +471,18 @@ void Engine_InitALAudio()
         ALC_FREQUENCY,       44100, 0};
 
     const char *drv = SDL_GetCurrentAudioDriver();
-
-    Con_Printf("Current SDL audio driver: \"%s\"", (drv)?(drv):("(null)"));     ///@PARANOID: null check works correct in native vsnprintf(...)
+    
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
-        Con_Printf("We have no AL audio devices");
+        Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
         return;
     }
+    
     al_context = alcCreateContext(al_device, paramList);
     if(!alcMakeContextCurrent(al_context))
     {
-        Con_Printf("AL context is not current!");
+        Sys_DebugLog(LOG_FILENAME, "InitAL: AL context is not current!");
         return;
     }
 
@@ -477,34 +501,48 @@ int main(int argc, char **argv)
     FindConfigFile();
 #endif
 
-    Engine_Init();
+    // Primary initialization and loading defaults.
+    Engine_Init_Pre();
     Engine_InitGlobals();
-    Engine_LoadConfig();                                                        ///@README: do not call any engine functions in LOAD CONFIG code! Only fill structures parameters.
 
+    // Loading config file.
+    Engine_LoadConfig();
+
+    // Init generic SDL interfaces.
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
     Engine_InitSDLImage();
 
-    Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
-
-    Engine_PrepareOpenGL();
-    Engine_InitFonts();
+    // Additional OpenGL initialization.
+    Engine_InitGL();
     Render_DoShaders();
-    Engine_InitALAudio();
+    
+    // Secondary (deferred) initialization.
+    Engine_Init_Post();
+    
+    // Initial window resize.
+    Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
+    
+    // OpenAL initialization.
+    Engine_InitAL();
 
+    // Clearing up memory for initial level loading.
     World_Prepare(&engine_world);
-
+    
+    // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
-
-    Gui_FadeAssignPic(FADER_LOADSCREEN, "graphics/legal.png");
-    Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
-
+    
+    // Make splash screen.
+    Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
+    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+    
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
 
+    // Entering main loop.
     while(!done)
     {
         newtime = Sys_FloatTime();
@@ -512,7 +550,8 @@ int main(int argc, char **argv)
         oldtime = newtime;
         Engine_Frame(time);
     }
-
+    
+    // Main loop interrupted; shutting down.
     Engine_Shutdown(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
 }
@@ -565,8 +604,8 @@ void Engine_Display()
         Gui_SwitchGLMode(1);
         {
             GLfloat lp[] = {250.0, 120.0, 0.0, 0.0};
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT0);
+            //glEnable(GL_LIGHTING);
+            //glEnable(GL_LIGHT0);
             //glEnable(GL_BLEND);
             glEnable(GL_ALPHA_TEST);
             glLightfv(GL_LIGHT0, GL_POSITION, lp);
@@ -575,7 +614,7 @@ void Engine_Display()
             Gui_DrawNotifier();
             if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
             {
-                main_inventory_menu->Render(engine_world.Character->character->inventory);
+                Gui_DrawInventory();
             }
 #endif
         }
@@ -584,15 +623,21 @@ void Engine_Display()
         Gui_SwitchGLMode(0);
 
         Render_DrawList_DebugLines();
-        ShowDebugInfo();
+        if(screen_info.show_debuginfo) ShowDebugInfo();
         SDL_GL_SwapWindow(sdl_window);
     }
 }
 
 void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
-{
+{    
     screen_info.w = nominalW;
     screen_info.h = nominalH;
+    
+    screen_info.w_unit = (float)nominalW / GUI_SCREEN_METERING_RESOLUTION;
+    screen_info.h_unit = (float)nominalH / GUI_SCREEN_METERING_RESOLUTION;
+    
+    Gui_Resize();
+    Con_SetLineInterval(con_base.spacing);
 
     Cam_SetFovAspect(&engine_camera, screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
     Cam_RecalcClipPlanes(&engine_camera);
@@ -716,8 +761,8 @@ void Engine_Frame(btScalar time)
     else
     {
         screen_info.fps = (20.0 / time_cycl);
-        snprintf(system_fps.text, system_fps.buf_size, "%.1f", screen_info.fps);
-        Gui_StringAutoRect(&system_fps);
+        snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
+        //Gui_StringAutoRect(&system_fps);
         cycles = 0;
         time_cycl = 0.0;
     }
@@ -781,18 +826,10 @@ void ShowDebugInfo()
     if(ent && ent->character)
     {
         /*height_info_p fc = &ent->character->height_info
-        txt = Gui_OutTextXY(NULL, 20, 88, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
-        if(txt)
-        {
-            Gui_StringAutoRect(txt);
-            //txt->rect[0] = -420.0;
-            //txt->rect[1] = 4.0;
-            //txt->rect[2] = -20.0;
-            //txt->rect[3] = 132.0;
-            //txt->show_rect = 1;
-        }*/
+        txt = Gui_OutTextXY(20, 80, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
+        */
 
-        Gui_OutTextXY(NULL, 20, 116, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
+        Gui_OutTextXY(10, 790, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
@@ -801,18 +838,18 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(NULL, 20, 92, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
+                Gui_OutTextXY(10, 830, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
                 break;
-
+                
             case OBJECT_STATIC_MESH:
-                Gui_OutTextXY(NULL, 20, 92, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                Gui_OutTextXY(10, 830, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
-
+                
             case OBJECT_ROOM_BASE:
-                Gui_OutTextXY(NULL, 20, 92, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                Gui_OutTextXY(10, 830, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
-
+        
     }
 
     if(engine_camera.current_room != NULL)
@@ -820,11 +857,11 @@ void ShowDebugInfo()
         room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
         if(rs != NULL)
         {
-            Gui_OutTextXY(NULL, 20, 68, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
-            Gui_OutTextXY(NULL, 20, 44, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
+            Gui_OutTextXY(10, 870, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
+            Gui_OutTextXY(10, 910, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
         }
     }
-    Gui_OutTextXY(NULL, 20, 20, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+    Gui_OutTextXY(10, 950, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
 #endif
 }
 
@@ -901,7 +938,7 @@ void Engine_PollSDLInput()
                 if(sdl_joystick)
                     Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
                 break;
-
+                
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
                 if(con_base.show && event.key.state)
@@ -973,19 +1010,19 @@ void DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_UP:
-                main_inventory_menu->MoveSelectVertical(-1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(-1);
                 break;
 
             case SDLK_DOWN:
-                main_inventory_menu->MoveSelectVertical(1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(1);
                 break;
 
             case SDLK_LEFT:
-                main_inventory_menu->MoveSelectHorisontal(-1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(1);
                 break;
 
             case SDLK_RIGHT:
-                main_inventory_menu->MoveSelectHorisontal(1);
+                if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(-1);
                 break;
 
                 /*models switching*/
@@ -999,11 +1036,6 @@ void DebugKeys(int button, int state)
                 anim = 0;
                 break;
 
-            case SDLK_f:
-                Audio_Send(105);
-                Gui_FadeStart(FADER_EFFECT, TR_FADER_DIR_TIMED);
-                break;
-
             case SDLK_o:
                 model--;
                 if(model < 0)
@@ -1012,6 +1044,18 @@ void DebugKeys(int button, int state)
                 }
                 frame = 0;
                 anim = 0;
+                break;
+
+                /*rumble*/
+            case SDLK_f:
+                Audio_Send(105);
+                Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
+                break;
+
+                /*full health*/
+            case SDLK_h:
+                if(Character_ChangeParam(engine_world.Character, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
+                    Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
                 break;
 
                 /*animations switching*/
@@ -1108,7 +1152,7 @@ void DebugKeys(int button, int state)
                     }
                 }
                 break;
-
+                
             case SDLK_4:
                 if(!con_base.show)
                 {

@@ -3,6 +3,7 @@
 #define SYSTEM_H
 
 #include <stdint.h>
+#include "gl_util.h"
 #include "bullet/LinearMath/btScalar.h"
 
 #define LOG_FILENAME "d_log.txt"
@@ -11,16 +12,19 @@ typedef struct screen_info_s
 {
     int16_t     x;
     int16_t     y;
-    int16_t     w;
-    int16_t     h;
-    int8_t      FS_flag;
+    int16_t     w;  GLfloat w_unit;   // Metering unit.
+    int16_t     h;  GLfloat h_unit;   // Metering unit.
+    
     float       fps;
     float       fov;
+    int8_t      FS_flag;
+    int8_t      show_debuginfo;
 } screen_info_t, *screen_info_p;
 
 extern screen_info_t screen_info;
 
 void Sys_Init();
+void Sys_InitGlobals();
 void Sys_Destroy();
 
 void Sys_Strtime(char *buf, size_t buf_size);

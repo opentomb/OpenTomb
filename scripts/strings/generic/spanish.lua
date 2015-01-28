@@ -21,15 +21,15 @@ strings[005] = "Cargar Juego";
 strings[006] = "Opciones";
 strings[007] = "Salir";
 strings[008] = "Reiniciar Nivel";
-strings[009] = "Salir a los Títulos";
+strings[009] = "Salir a los TÃ­tulos";
 
 -- Dialog components
 
-strings[010] = "Sí";
+strings[010] = "SÃ­";
 strings[011] = "No";
 strings[012] = "Aplicar";
 strings[013] = "Cancelar";
-strings[014] = "Atrás";
+strings[014] = "AtrÃ¡s";
 strings[015] = "Siguiente";
 strings[016] = "Aceptar";
 strings[017] = "Descartar";
@@ -39,12 +39,12 @@ strings[017] = "Descartar";
 strings[018] = "INVENTARIO";
 strings[019] = "DIARIO";
 strings[020] = "PAUSA";
-strings[021] = "ESTADÍSTICAS";
+strings[021] = "ESTADÃSTICAS";
 strings[022] = "CARGANDO";
 
 -- Dialogs
 
-strings[023] = "¿Salir del Juego?";
+strings[023] = "Â¿Salir del Juego?";
 strings[024] = "Selecciona Juego a Cargar";
 strings[025] = "Selecciona Juego a Guardar";
 strings[026] = "Selecciona Objeto a Combinar";
@@ -52,7 +52,7 @@ strings[026] = "Selecciona Objeto a Combinar";
 -- Inventory actions
 
 strings[027] = "Equipar";             
-strings[028] = "Seleccionar Munición";
+strings[028] = "Seleccionar MuniciÃ³n";
 strings[029] = "Seleccionar Modo de Disparo";
 strings[030] = "Usar";
 strings[031] = "Combinar";
@@ -64,35 +64,35 @@ strings[034] = "Desechar";
 
 strings[035] = " - Aceptar";
 strings[036] = " - Cancelar";
-strings[037] = "Mantén pulsado el botón derecho del ratón y mueve el ratón para rotar el inventario.";
-strings[038] = "Desplaza la rueda del ratón para cambiar el menú del inventario.";
-strings[039] = "Mantén pulsado el botón izquierdo del ratón y mueve el ratón para examinar un objeto.";
+strings[037] = "MantÃ©n pulsado el botÃ³n derecho del ratÃ³n y mueve el ratÃ³n para rotar el inventario.";
+strings[038] = "Desplaza la rueda del ratÃ³n para cambiar el menÃº del inventario.";
+strings[039] = "MantÃ©n pulsado el botÃ³n izquierdo del ratÃ³n y mueve el ratÃ³n para examinar un objeto.";
 
 -- Statistics bar
 
-strings[040] = "Localización: %s";
+strings[040] = "LocalizaciÃ³n: %s";
 strings[041] = "Secretos: %d / %d";
 strings[042] = "Distancia: %d km";
-strings[043] = "Munición Utilizada: %d";
+strings[043] = "MuniciÃ³n Utilizada: %d";
 strings[044] = "Enemigos Eliminados: %d";
 strings[045] = "Botiquines Utilizados: %d";
 
 -- Notify pop-up tips - FIND A WAY TO USE THEM!
 
-strings[046] = "Pulsa RODAR mientras estás agachado en TR3-5 para rodar hacia delante.";
-strings[047] = "En OpenTomb, Lara se desliza por las pendientes en su dirección exacta.";
-strings[048] = "¿Sabías que al menos hubo diez programadores diferentes trabajando en OpenTomb?";      -- ;)
-strings[049] = "¿Sabías que Core Design nunca liberó el código fuente de ningún Tomb Raider?";     -- Whatever... :]
+strings[046] = "Pulsa RODAR mientras estÃ¡s agachado en TR3-5 para rodar hacia delante.";
+strings[047] = "En OpenTomb, Lara se desliza por las pendientes en su direcciÃ³n exacta.";
+strings[048] = "Â¿SabÃ­as que al menos hubo diez programadores diferentes trabajando en OpenTomb?";      -- ;)
+strings[049] = "Â¿SabÃ­as que Core Design nunca liberÃ³ el cÃ³digo fuente de ningÃºn Tomb Raider?";     -- Whatever... :]
 
 -- Game names - to use with Select Game menu...
 
 strings[100] = "Tomb Raider I";
 strings[101] = "Tomb Raider I Gold: Asuntos Pendientes";
 strings[200] = "Tomb Raider II";
-strings[201] = "Tomb Raider II Gold: La Máscara Dorada";
+strings[201] = "Tomb Raider II Gold: La MÃ¡scara Dorada";
 strings[300] = "Tomb Raider III";
 strings[301] = "Tomb Raider III Gold: El Artefacto Perdido";
-strings[400] = "Tomb Raider IV: La Última Revelación";
+strings[400] = "Tomb Raider IV: La Ãšltima RevelaciÃ³n";
 strings[401] = "Tomb Raider IV: La Exclusiva del The Times";
-strings[500] = "Tomb Raider V: Crónicas";
+strings[500] = "Tomb Raider V: CrÃ³nicas";
 strings[600] = "Niveles Personalizados";

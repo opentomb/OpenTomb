@@ -1,37 +1,38 @@
 -- LUA config file
 
-screen =
+screen = 
 {
     x = 50;
     y = 20;
-    width = 800;
-    height = 600;
+    width = 720;
+    height = 400;
     fullscreen = 0;
     fov = 75.0;
+    debug_info = 0;
 }
 
-audio =
+audio = 
 {
-    sound_volume = 0.9;
-    music_volume = 0.7;
+    sound_volume = 0.8;
+    music_volume = 0.9;
     use_effects = 1;
     listener_is_player = 0;
     stream_buffer_size = 128;
 }
 
-render =
+render = 
 {
     mipmap_mode = 3;
     mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
     lod_bias = 0;
-    anisotropy = 8;                             -- Maximum depends and is limited by hardware capabilities.
+    anisotropy = 4;                             -- Maximum depends and is limited by hardware capabilities.
     antialias = 1;
-    antialias_samples = 8;                      -- Maximum depends and is limited by hardware capabilities.
+    antialias_samples = 4;                      -- Maximum depends and is limited by hardware capabilities.
     z_depth = 24;                               -- Maximum and recommended is 24.
     texture_border = 16;
 }
 
-controls =
+controls = 
 {
     mouse_sensitivity = 25.0;
 
@@ -54,21 +55,17 @@ controls =
     joy_look_deadzone = 1500;
 }
 
-console =
+console = 
 {
-    font_path = "VeraMono.ttf";
-    font_color = {r = 255, g = 255, b = 255};
-    background_color = {r = 112, g = 30, b = 75, a = 202};
-    smooth = 1;
+    background_color = {r = 0, g = 0, b = 0, a = 200};
 
-    font_size = 16;
     line_size = 72;
     log_size = 16;
     lines_count = 128;
     showing_lines = 128;
-    spacing = 1.5;
+    spacing = 1.0;
     show_cursor_period = 0.5;
-    show = 0;
+    show = 0; 
 }
 
 -- Keys binding
@@ -97,31 +94,21 @@ bind(act.screenshot, KEY_PRINTSCREEN);
 bind(act.console, KEY_BACKQUOTE);
 bind(act.savegame, KEY_F5);
 bind(act.loadgame, KEY_F6);
+bind(act.inventory, KEY_ESCAPE);
 
-bind(act.smallmedi, KEY_5);
-bind(act.bigmedi, KEY_6);
+bind(act.smallmedi, KEY_9);
+bind(act.bigmedi, KEY_0);
 
 -- CVAR's section. here you can create and delete CVAR's
-cvars.show_fps = 1;
+cvars.show_fps = 1; 
 cvars.free_look_speed = 2500;
 
-
 -- AUTOEXEC LINES
--- GAME_1      -- original TR_I
--- GAME_1_5    -- gold TR_I
--- GAME_2      -- original TR_II
--- GAME_2_5    -- gold TR_II
--- GAME_3      -- original TR_III
--- GAME_3_5    -- gold TR_III
--- GAME_4      -- original TR_IV
--- GAME_5      -- original TR_V
--- setgame(game_id, level_id);
--- setgamef(2.5, 1) -- TR_II gold, map 1
-setgame(GAME_1, 2);
+setgamef(2);
+setlevel(1);
 
 setGravity(0, 0, -5700.0);
 mlook(1);
 freelook(0);
 cam_distance(1024.0);
 noclip(0);
-

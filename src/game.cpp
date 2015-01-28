@@ -280,9 +280,9 @@ int Game_Save(const char* name)
 
     fprintf(f, "setFlipmap(%d);\n",   engine_world.room_flipmap);
     fprintf(f, "setFlipstate(%d);\n", engine_world.room_flipstate);
-
+    
     Save_Entity(&f, engine_world.Character);    // Save Lara.
-
+    
     if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
     {
         Save_EntityTree(&f, engine_world.entity_tree->root);
@@ -476,6 +476,19 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     }
     else
     {
+        btScalar temp[16], transform[16];
+        glGetFloatv (GL_MODELVIEW_MATRIX, temp);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glMultMatrixbt(ent->transform);
+        glMultMatrixbt(ent->bf.bone_tags->full_transform);
+        glGetFloatv (GL_MODELVIEW_MATRIX, transform);
+
+        glLoadIdentity();
+        glMultMatrixbt(temp);
+
+        // bone_tags->mesh->centre[0] ent->bf.pos[0]*0.5 (ent->bf.bone_tags+ent->bf.bone_tag_count)->full_transform[12]  - 32.0 *  ent->transform[4 + 1]
         Mat4_vec3_mul(cam_pos.m_floats, ent->transform, ent->bf.bone_tags->full_transform+12);
         cam_pos.m_floats[2] += dz;
     }
@@ -682,9 +695,21 @@ void Game_Frame(btScalar time)
     static btScalar game_logic_time  = 0.0;
                     game_logic_time += time;
 
-    // If console is active, only thing to update is audio.
+    // GUI should be updated at all times!
 
-    if(con_base.show)
+    Gui_Update();
+
+    ///@FIXME: I have no idea what's happening here! - Lwmte 
+
+    if(!con_base.show && control_states.gui_inventory)
+    {
+        main_inventory_menu->Toggle();
+        control_states.gui_inventory = !control_states.gui_inventory;
+    }
+
+    // If console or inventory is active, only thing to update is audio.
+    
+    if(con_base.show || main_inventory_menu->IsVisible())
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
@@ -725,7 +750,7 @@ void Game_Frame(btScalar time)
     {
         Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
         Entity_Frame(engine_world.Character, engine_frame_time);
-        Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0);     // 128.0, 400.0
+        Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0); // 128.0 400.0
     }
 
     Game_UpdateCharacters();
@@ -763,6 +788,6 @@ void Game_LevelTransition(uint16_t level_index)
     char file_path[MAX_ENGINE_PATH];
     lua_GetLoadingScreen(engine_lua, level_index, file_path);
     Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
-    Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
+    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     Audio_EndStreams();
 }
