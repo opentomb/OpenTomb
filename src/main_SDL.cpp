@@ -10,6 +10,13 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
+extern "C" {
+#include "lua/lua.h"
+#include "lua/lualib.h"
+#include "lua/lauxlib.h"
+#include "lua/lstate.h"
+}
+
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "vt/vt_level.h"
@@ -38,6 +45,7 @@
 #include "entity.h"
 #include "audio.h"
 #include "gameflow.h"
+#include "string.h"
 
 #if defined(__MACOSX__)
 #include "FindConfigFile.h"
@@ -275,7 +283,7 @@ void SkeletalModelTestDraw()
     glPopMatrix();
 }
 
-void Engine_PrepareOpenGL()
+void Engine_InitGL()
 {
     InitGLExtFuncs();
 #if SKELETAL_TEST
@@ -311,6 +319,7 @@ void Engine_PrepareOpenGL()
     // anything). They have to enable other arrays based on their need and then
     // return to default state
     glEnableClientState(GL_VERTEX_ARRAY);
+    
     // Default state for Alpha func: >=, 0.5. That's what all users of alpha
     // function use anyway.
     glAlphaFunc(GL_GEQUAL, 0.5);
@@ -405,10 +414,34 @@ void Engine_InitSDLVideo()
         video_flags |= (SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     }
 
+
+    // Check for correct number of antialias samples.
+
+    if(renderer.settings.antialias)
+    {
+        sdl_window     = SDL_CreateWindow(NULL, 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+        sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+        GLint maxSamples = 0;
+        glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        if ((maxSamples == 0) || (renderer.settings.antialias_samples > maxSamples))
+        {
+            renderer.settings.antialias_samples = maxSamples;   // Limit to max.
+            Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
+        }
+        SDL_GL_DeleteContext(sdl_gl_context);
+        SDL_DestroyWindow(sdl_window);
+        
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
+    }
+    else
+    {
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+    }
+    
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
-
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
 
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
@@ -429,7 +462,7 @@ void Engine_InitSDLImage()
     }
 }
 
-void Engine_InitALAudio()
+void Engine_InitAL()
 {
 #if !NO_AUDIO
     ALCint paramList[] = {
@@ -438,18 +471,18 @@ void Engine_InitALAudio()
         ALC_FREQUENCY,       44100, 0};
 
     const char *drv = SDL_GetCurrentAudioDriver();
-
-    Con_Printf("Current SDL audio driver: \"%s\"", (drv)?(drv):("(null)"));         ///@PARANOID: null check works correct in native vsnprintf(...)
+    
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
-        Con_Printf("We have no AL audio devices");
+        Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
         return;
     }
+    
     al_context = alcCreateContext(al_device, paramList);
     if(!alcMakeContextCurrent(al_context))
     {
-        Con_Printf("AL context is not current!");
+        Sys_DebugLog(LOG_FILENAME, "InitAL: AL context is not current!");
         return;
     }
 
@@ -468,26 +501,40 @@ int main(int argc, char **argv)
     FindConfigFile();
 #endif
 
-    Engine_Init();
+    // Primary initialization and loading defaults.
+    Engine_Init_Pre();
     Engine_InitGlobals();
+
+    // Loading config file.
     Engine_LoadConfig();
 
+    // Init generic SDL interfaces.
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
     Engine_InitSDLImage();
 
-    Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
-
-    Engine_PrepareOpenGL();
+    // Additional OpenGL initialization.
+    Engine_InitGL();
     Render_DoShaders();
-    Engine_InitALAudio();
+    
+    // Secondary (deferred) initialization.
+    Engine_Init_Post();
+    
+    // Initial window resize.
+    Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
+    
+    // OpenAL initialization.
+    Engine_InitAL();
 
+    // Clearing up memory for initial level loading.
     World_Prepare(&engine_world);
-
+    
+    // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
-
+    
+    // Make splash screen.
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     
@@ -495,6 +542,7 @@ int main(int argc, char **argv)
     control_states.free_look = 1;
 #endif
 
+    // Entering main loop.
     while(!done)
     {
         newtime = Sys_FloatTime();
@@ -502,7 +550,8 @@ int main(int argc, char **argv)
         oldtime = newtime;
         Engine_Frame(time);
     }
-
+    
+    // Main loop interrupted; shutting down.
     Engine_Shutdown(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
 }

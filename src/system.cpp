@@ -35,14 +35,6 @@ void Sys_Printf(char *fmt, ...)
 
 void Sys_Init()
 {
-    screen_info.x = 50;
-    screen_info.y = 20;
-    screen_info.w = 800;
-    screen_info.h = 600;
-    screen_info.FS_flag = 0;
-    screen_info.show_debuginfo = 0;
-    screen_info.fov = 75.0;
-
     system_fps.text_size = 16;
     system_fps.text = (char*)malloc(system_fps.text_size * sizeof(char));
     system_fps.text[0] = 0;
@@ -57,6 +49,17 @@ void Sys_Init()
     system_fps.show  = 1;
 
     Gui_AddLine(&system_fps);
+}
+
+void Sys_InitGlobals()
+{
+    screen_info.x = 50;
+    screen_info.y = 20;
+    screen_info.w = 800;
+    screen_info.h = 600;
+    screen_info.FS_flag = 0;
+    screen_info.show_debuginfo = 0;
+    screen_info.fov = 75.0;
 }
 
 void Sys_Destroy()

@@ -21,6 +21,7 @@ extern "C" {
 }
 
 #include "vt/vt_level.h"
+
 #include "engine.h"
 #include "vmath.h"
 #include "controls.h"
@@ -43,6 +44,7 @@ extern "C" {
 #include "character_controller.h"
 #include "gameflow.h"
 #include "redblack.h"
+#include "gl_font.h"
 #include "string.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
@@ -175,6 +177,7 @@ void ResetTempbtScalar()
 
 void Engine_InitGlobals()
 {
+    Con_InitGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
     Render_InitGlobals();
@@ -183,27 +186,60 @@ void Engine_InitGlobals()
 }
 
 
-void Engine_Init()
-{   
-    Gui_InitFontManager();
+void Engine_Init_Pre()
+{
     Engine_LuaInit();
-    
-    Gui_Init();
-    Con_Init();
     
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
     
-    Sys_Init();
     Com_Init();
+    
     Render_Init();
     Cam_Init(&engine_camera);
     
     renderer.cam = &engine_camera;
     
     Engine_BTInit();
+}
 
+void Engine_Init_Post()
+{    
+    /*
+    // ------------------------------------------------------------------
+    // DUMP TEST UTF-32 STRING
+    
+    const char* tempstring    = NULL;
+    uint32_t*   utf32_string  = NULL;
+    uint32_t    string_length = 0;
+    
+    tempstring   = lua_GetString(engine_lua, 0, &string_length);
+    
+    utf32_string = String_MakeUTF32(tempstring, &string_length);
+    
+    FILE *fp;
+    fp = fopen("string_dump.bin", "w");
+    
+    if(fp != NULL)
+    {
+        fwrite(utf32_string, string_length * sizeof(uint32_t), 1, fp);
+        fclose(fp);
+    }
+    
+    if(utf32_string) free(utf32_string);
+    
+    // ------------------------------------------------------------------
+    */
+    
+    Gui_InitFontManager();
+    
+    luaL_dofile(engine_lua, "scripts/gui/fonts.lua");
+    
+    Gui_Init(); 
+    Con_Init();
+    Sys_Init();
+    
     Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
 }
 
@@ -2536,38 +2572,15 @@ bool Engine_LuaInit()
         Engine_LuaRegisterFuncs(engine_lua);
         
         
-        // Load and run global engine scripts.
+        // Load and run global engine scripts, except font script, which
+        // should be called AFTER OpenGL/SDL are initialized.
         
-        luaL_dofile(engine_lua, "scripts/gui/fonts.lua");
         luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
         luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
-        
-        // ------------------------------------------------------------------
-        // DUMP TEST UTF-32 STRING
-        
-        const char* tempstring = NULL;
-        uint32_t* utf32_string = NULL;
-        uint32_t string_length = 0;
-        
-        tempstring = lua_GetString(engine_lua, 0, &string_length);
-        utf32_string = String_MakeUTF32(tempstring, &string_length);
-        
-            FILE *fp;
-            fp = fopen("string_dump.bin", "w");
-            
-            if(fp != NULL)
-            {
-                fwrite(utf32_string, string_length * sizeof(uint32_t), 1, fp);
-                fclose(fp);
-            }
-        
-        if(utf32_string) free(utf32_string);
-        
-        // ------------------------------------------------------------------
         
         return true;
     }

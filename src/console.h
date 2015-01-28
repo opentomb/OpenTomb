@@ -2,11 +2,11 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include "ftgl/FTGLTextureFont.h"
-
 #include <stdint.h>
-#include "script.h"
+#include <SDL2/SDL_opengl.h>
+
 #include "gui.h"
+#include "gl_font.h"
 
 #define CON_MIN_LOG 16
 #define CON_MAX_LOG 128
@@ -17,12 +17,12 @@
 #define CON_MIN_LINE_SIZE 80
 #define CON_MAX_LINE_SIZE 256
 
-#define CON_MIN_LINE_INTERVAL 1.2
+#define CON_MIN_LINE_INTERVAL 1.0
 #define CON_MAX_LINE_INTERVAL 4.0
 
 typedef struct console_info_s
 {
-    FTGLTextureFont            *font;                       // Texture font renderer
+    struct gl_tex_font_s       *font;                       // Texture font renderer
     
     GLfloat                     background_color[4];
 
@@ -54,6 +54,7 @@ typedef struct console_info_s
 extern console_info_t con_base;
 
 void Con_Init();
+void Con_InitGlobals();
 void Con_Destroy();
 
 void Con_SetLineInterval(float interval);

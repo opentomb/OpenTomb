@@ -13,15 +13,15 @@ strings = {};
 -- Game menu entries
 
 strings[000] = "Nouvelle partie";
-strings[001] = "Sélectionner Jeu";
-strings[002] = "Sélectionner Niveau";
+strings[001] = "SÃ©lectionner Jeu";
+strings[002] = "SÃ©lectionner Niveau";
 strings[003] = "La Demeure de Lara";
 strings[004] = "Saugarder Partie";
 strings[005] = "Charger Partie";
 strings[006] = "Options";
 strings[007] = "Quitter";
 strings[008] = "Recommencer niveau";
-strings[009] = "Retour à l'écran Titre";
+strings[009] = "Retour Ã  l'Ã©cran Titre";
 
 -- Dialog components
 
@@ -29,7 +29,7 @@ strings[010] = "Oui";
 strings[011] = "Non";
 strings[012] = "Appliquer";
 strings[013] = "Annuler";
-strings[014] = "Précédent";
+strings[014] = "PrÃ©cÃ©dent";
 strings[015] = "Suivant";
 strings[016] = "OK";
 strings[017] = "Abandonner";
@@ -45,18 +45,18 @@ strings[022] = "CHARGEMENT";
 -- Dialogs
 
 strings[023] = "Quitter le jeu ?";
-strings[024] = "Sélectionner jeu à charger";
-strings[025] = "Sélectionner jeu à sauvegarder";
-strings[026] = "Sélectionner objet à combiner";
+strings[024] = "SÃ©lectionner jeu Ã  charger";
+strings[025] = "SÃ©lectionner jeu Ã  sauvegarder";
+strings[026] = "SÃ©lectionner objet Ã  combiner";
 
 -- Inventory actions
 
-strings[027] = "Équiper";             
+strings[027] = "Ã‰quiper";             
 strings[028] = "Choisir Munitions";
 strings[029] = "Choisir Mode Arme";
 strings[030] = "Utiliser";
 strings[031] = "Combiner";
-strings[032] = "Désolidariser";
+strings[032] = "DÃ©solidariser";
 strings[033] = "Examiner";
 strings[034] = "Jeter";
 
@@ -73,15 +73,15 @@ strings[039] = "Maintenez le bouton droit de la souris et bougez pour examiner l
 strings[040] = "Position actuelle : %s";
 strings[041] = "Secrets : %d / %d";
 strings[042] = "Distance parcourue : %d km";
-strings[043] = "Munitions consommées : %d";
+strings[043] = "Munitions consommÃ©es : %d";
 strings[044] = "Victimes : %d";
-strings[045] = "Trousses de secours utilisées : %d";
+strings[045] = "Trousses de secours utilisÃ©es : %d";
 
 -- Notify pop-up tips - FIND A WAY TO USE THEM!
 
-strings[046] = "Appuyez sur ROULADE lorsque vous êtes accroupis dans TR3-5 pour effectuer une roulade.";
+strings[046] = "Appuyez sur ROULADE lorsque vous Ãªtes accroupis dans TR3-5 pour effectuer une roulade.";
 strings[047] = "Dans OpenTomb, Lara glisse sur les pentes dans leur direction exacte.";
-strings[048] = "Saviez-vous qu'au moins dix programmeurs différents ont travaillé sur OpenTomb ?";      -- ;)
+strings[048] = "Saviez-vous qu'au moins dix programmeurs diffÃ©rents ont travaillÃ© sur OpenTomb ?";      -- ;)
 strings[049] = "Saviez-vous que Core Design n'a jamais sorti un seul code source de Tomb Raider ?";     -- Whatever... :]
 
 -- Game names - to use with Select Game menu...
@@ -92,7 +92,7 @@ strings[200] = "Tomb Raider II";
 strings[201] = "Tomb Raider II Gold: The Golden Mask";         -- This title wasn't translated either...
 strings[300] = "Tomb Raider III";
 strings[301] = "Tomb Raider III Gold: Le Dernier Artefact";    -- And this one has been translated badly... the French title means the "LAST" Artifact instead of the "LOST".
-strings[400] = "Tomb Raider IV: La Révélation Finale";
-strings[401] = "Tomb Raider IV Bonus: L'Exclusivité du Times"; -- Title taken from the French Translation by Alex Fly, ErisGoddessDiscord and C'hoari Del Croft.
+strings[400] = "Tomb Raider IV: La RÃ©vÃ©lation Finale";
+strings[401] = "Tomb Raider IV Bonus: L'ExclusivitÃ© du Times"; -- Title taken from the French Translation by Alex Fly, ErisGoddessDiscord and C'hoari Del Croft.
 strings[500] = "Tomb Raider V: Sur les Traces de Lara Croft";
-strings[600] = "Niveaux personnalisés";
+strings[600] = "Niveaux personnalisÃ©s";

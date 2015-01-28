@@ -2,7 +2,7 @@
 #ifndef ENGINE_GUI_H
 #define ENGINE_GUI_H
 
-#include "ftgl/FTGLTextureFont.h"
+#include "gl_font.h"
 #include "entity.h"
 #include "render.h"
 #include "character_controller.h"
@@ -79,9 +79,9 @@ enum font_Style
 
 typedef struct gui_font_s
 {
-    font_Type           index;
-    uint16_t            size;
-    FTGLTextureFont    *font;
+    font_Type             index;
+    uint16_t              size;
+    struct gl_tex_font_s *font;
 }gui_font_t, *gui_font_p;
 
 // Font style is different to font itself - whereas engine can have
@@ -125,7 +125,7 @@ public:
                              const uint32_t size,
                              const char* path);
     bool             RemoveFont(const font_Type index);
-    FTGLTextureFont* GetFont(const font_Type index);
+    gl_tex_font_s*   GetFont(const font_Type index);
     
     bool             AddFontStyle(const font_Style index,
                                   const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
@@ -159,6 +159,8 @@ private:
     
     uint32_t         font_count;
     gui_font_p       fonts;
+    
+    FT_Library       font_library;  // GLF font library unit.
 };
 
 // Horizontal alignment is simple side alignment, like in original TRs.
@@ -174,8 +176,8 @@ typedef struct gui_text_line_s
     char                       *text;
     uint16_t                    text_size;
     
-    FTGLTextureFont            *font;
-    gui_fontstyle_s            *style;
+    struct gl_tex_font_s       *font;
+    struct gui_fontstyle_s     *style;
 
     GLfloat                     x;
     GLfloat                     real_x;
@@ -570,8 +572,8 @@ private:
     int                         mFontHeight;
     // background settings
 public:
-    FTGLTextureFont            *mFont_Primary;               // Texture font renderers
-    FTGLTextureFont            *mFont_Secondary;
+    gl_tex_font_s              *mFont_Primary;               // Texture font renderers
+    gl_tex_font_s              *mFont_Secondary;
     gui_fontstyle_s            *mStyle_Title;                // Styles
     gui_fontstyle_s            *mStyle_Heading1;
     gui_fontstyle_s            *mStyle_Heading2;

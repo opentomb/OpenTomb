@@ -453,6 +453,36 @@ void World_Empty(world_p world)
     }
 
     // Now we can delete all other. Be carefull: OpenAL uses multithreading!
+    for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--)
+    {
+        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+        btRigidBody* body = btRigidBody::upcast(obj);
+        if(body && body->getMotionState())
+        {
+            engine_container_p cont = ((engine_container_p)body->getUserPointer());
+            if(cont != NULL)
+            {
+                body->setUserPointer(NULL);
+                if(cont->object_type == OBJECT_BULLET_MISC)
+                {
+                    free(cont);
+                    cont = NULL;
+                    delete body->getMotionState();
+                    if(body->getCollisionShape())
+                    {
+                        delete body->getCollisionShape();
+                    }
+                    if(body->isInWorld())
+                    {
+                        bt_engine_dynamicsWorld->removeRigidBody(body);
+                    }
+                    delete body;
+                }
+            }
+        }
+    }
+
+
     for(uint32_t i=0;i<world->room_count;i++)
     {
         Room_Empty(world->rooms+i);

@@ -366,8 +366,6 @@ const char* lua_GetString(lua_State *lua, int string_index, size_t *string_lengt
         int top = lua_gettop(lua);
 
         lua_getglobal(lua, "getString");
-        
-        Sys_DebugLog("LUA.TXT", "Trying to get string %d", string_index);
 
         if(lua_isfunction(lua, -1))
         {
@@ -377,7 +375,7 @@ const char* lua_GetString(lua_State *lua, int string_index, size_t *string_lengt
             lua_settop(lua, top);
             return result;
         }
-         lua_settop(lua, top);
+        lua_settop(lua, top);
     }
     
     string_length = 0;
@@ -637,8 +635,6 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         return -1;
     }
 
-    cn->inited = 0;
-
     top = lua_gettop(lua);
     lua_getglobal(lua, "console");
 
@@ -670,40 +666,18 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     t = lua_GetScalarField(lua, "log_size");
     if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
     {
-        if(t > cn->log_lines_count)
-        {
-            cn->log_lines = (char**) realloc(cn->log_lines, t * sizeof(char*));
-            for(i=cn->log_lines_count;i<t;i++)
-            {
-                cn->log_lines[i] = (char*) calloc(cn->line_size * sizeof(char), 1);
-            }
-        }
         cn->log_lines_count = t;
     }
     t = lua_GetScalarField(lua, "lines_count");
     if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
     {
-        if(t > cn->line_count)
-        {
-            cn->line_text  = (char**) realloc(cn->line_text, t * sizeof(char*));
-            cn->line_style = (gui_fontstyle_p*) realloc(cn->line_style, t*sizeof(gui_fontstyle_p));
-            
-            for(i=cn->line_count;i<t;i++)
-            {
-                cn->line_text[i]  = (char*) calloc(cn->line_size * sizeof(char), 1);
-                cn->line_style[i] = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
-            }
-        }
         cn->line_count = t;
     }
 
     cn->show = lua_GetScalarField(lua, "show");
     cn->show_cursor_period = lua_GetScalarField(lua, "show_cursor_period");
     
-    cn->inited = 1;
     lua_settop(lua, top);
-
-    Con_SetLineInterval(cn->spacing);
 
     return 1;
 }
