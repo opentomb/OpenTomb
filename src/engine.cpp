@@ -21,6 +21,7 @@ extern "C" {
 }
 
 #include "vt/vt_level.h"
+
 #include "engine.h"
 #include "vmath.h"
 #include "controls.h"
@@ -44,6 +45,7 @@ extern "C" {
 #include "gameflow.h"
 #include "redblack.h"
 #include "gl_font.h"
+#include "string.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
@@ -53,9 +55,6 @@ extern SDL_GameController     *sdl_controller;
 extern SDL_Joystick           *sdl_joystick;
 extern SDL_Haptic             *sdl_haptic;
 extern ALCdevice              *al_device;
-
-FT_Library                     engine_ft_library = NULL;
-gl_tex_font_p                  engine_gui_font = NULL;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -178,46 +177,70 @@ void ResetTempbtScalar()
 
 void Engine_InitGlobals()
 {
+    Con_InitGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
     Render_InitGlobals();
     Audio_InitGlobals();
-    //Cam_Init(&engine_camera);
     Cam_InitGlobals(&engine_camera);
 }
 
 
-void Engine_InitFonts()
+void Engine_Init_Pre()
 {
-    glEnable(GL_TEXTURE_2D);
-    con_base.gl_font = glf_create_font(engine_ft_library, con_base.font_path, con_base.font_size);
-    Con_SetFontSize(con_base.font_size);
-    engine_gui_font = glf_create_font(engine_ft_library, con_base.font_path, 18);
-}
-
-
-void Engine_Init()
-{
-    FT_Init_FreeType(&engine_ft_library);
-
-    Con_Init();
-    Gui_Init();
-
+    Engine_LuaInit();
+    
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-
-    Sys_Init();
+    
     Com_Init();
+    
     Render_Init();
     Cam_Init(&engine_camera);
-
+    
     renderer.cam = &engine_camera;
-
+    
     Engine_BTInit();
-    Engine_LuaInit();
+}
 
-    Con_AddLine("Engine inited");
+void Engine_Init_Post()
+{    
+    /*
+    // ------------------------------------------------------------------
+    // DUMP TEST UTF-32 STRING
+    
+    const char* tempstring    = NULL;
+    uint32_t*   utf32_string  = NULL;
+    uint32_t    string_length = 0;
+    
+    tempstring   = lua_GetString(engine_lua, 0, &string_length);
+    
+    utf32_string = String_MakeUTF32(tempstring, &string_length);
+    
+    FILE *fp;
+    fp = fopen("string_dump.bin", "w");
+    
+    if(fp != NULL)
+    {
+        fwrite(utf32_string, string_length * sizeof(uint32_t), 1, fp);
+        fclose(fp);
+    }
+    
+    if(utf32_string) free(utf32_string);
+    
+    // ------------------------------------------------------------------
+    */
+    
+    Gui_InitFontManager();
+    
+    luaL_dofile(engine_lua, "scripts/gui/fonts.lua");
+    
+    Gui_Init(); 
+    Con_Init();
+    Sys_Init();
+    
+    Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
 }
 
 void Engine_BTInit()
@@ -228,12 +251,12 @@ void Engine_BTInit()
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
     bt_engine_dispatcher->setNearCallback(Engine_RoomNearCallback);
-
+    
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
     bt_engine_ghostPairCallback = new btGhostPairCallback();
     bt_engine_overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(bt_engine_ghostPairCallback);
-
+    
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
@@ -260,7 +283,7 @@ void Engine_BTInit()
 
      for(int i=1;i<=top;i++)
      {
-         Con_AddLine(lua_tostring(lua, i));
+         Con_AddLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
      }
 
      return 0;
@@ -400,7 +423,7 @@ int lua_EnableEntity(lua_State * lua)
 
     if(top < 1)
     {
-        Con_AddLine("You must to enter entity ID");
+        Con_AddLine("You must enter entity ID!", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -421,7 +444,7 @@ int lua_DisableEntity(lua_State * lua)
 
     if(top < 1)
     {
-        Con_AddLine("You must to enter entity ID");
+        Con_AddLine("You must to enter entity ID", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -442,7 +465,7 @@ int lua_SetEntityCollision(lua_State * lua)
 
     if(top < 1)
     {
-        Con_AddLine("You must to enter entity ID");
+        Con_AddLine("You must to enter entity ID", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -517,7 +540,7 @@ int lua_DropEntity(lua_State * lua)                                             
 
     if(top < 2)
     {
-        Con_AddLine("wrong arguments number, must be (entity_id, time)");
+        Con_AddLine("Wrong arguments number, must be (entity_id, time)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -833,6 +856,111 @@ int lua_BindKey(lua_State *lua)
     return 0;
 }
 
+int lua_AddFont(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top != 3)
+    {
+        Con_Printf("Wrong arguments. Must be [font index], [font path], [font size].");
+        return 0;
+    }
+    
+    if(FontManager->AddFont( (font_Type)lua_tointeger(lua, 1),
+                             (uint32_t) lua_tointeger(lua, 3),
+                                        lua_tostring (lua, 2)) )
+    {
+        return 1;
+    }
+    else
+    {
+        Con_Printf("Error: can't create font. Possibly max. fonts? (%d / %d)", FontManager->GetFontCount(), GUI_MAX_FONTS);
+        return 0;
+    }
+}
+
+int lua_AddFontStyle(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top != 14)
+    {
+        Con_Printf("Wrong arguments. Must be [index], [R], [G], [B], [A], [fading], [shadow], [rect], [hide].");
+        return 0;
+    }
+    
+    font_Style  style_index = (font_Style)lua_tointeger(lua, 1);
+    GLfloat     color_R     = (GLfloat)lua_tonumber(lua, 2);
+    GLfloat     color_G     = (GLfloat)lua_tonumber(lua, 3);
+    GLfloat     color_B     = (GLfloat)lua_tonumber(lua, 4);
+    GLfloat     color_A     = (GLfloat)lua_tonumber(lua, 5);
+    bool        shadowed    = lua_toboolean(lua, 6);
+    bool        fading      = lua_toboolean(lua, 7);
+    bool        rect        = lua_toboolean(lua, 8);
+    GLfloat     rect_border = (GLfloat)lua_tonumber(lua, 9);
+    GLfloat     rect_R      = (GLfloat)lua_tonumber(lua, 10);
+    GLfloat     rect_G      = (GLfloat)lua_tonumber(lua, 11);
+    GLfloat     rect_B      = (GLfloat)lua_tonumber(lua, 12);
+    GLfloat     rect_A      = (GLfloat)lua_tonumber(lua, 13);
+    bool        hide        = lua_toboolean(lua, 14);
+    
+    
+    if(FontManager->AddFontStyle(style_index,
+                                 color_R, color_G, color_B, color_A,
+                                 shadowed, fading,
+                                 rect, rect_border, rect_R, rect_G, rect_B, rect_A,
+                                 hide))
+    {
+        return 1;
+    }
+    else
+    {
+        Con_Printf("Error: can't create font. Possibly max. styles? (%d / %d)", FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
+        return 0;
+    }
+}
+
+int lua_DeleteFont(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments. Must be [font index].");
+        return 0;
+    }
+    
+    if(FontManager->RemoveFont((font_Type)lua_tointeger(lua, 1)))
+    {
+        return 1;
+    }
+    else
+    {
+        Con_Printf("Error: font with given ID doesn't exist or couldn't be removed!");
+        return 0;
+    }
+}
+
+int lua_DeleteFontStyle(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top != 1)
+    {
+        Con_Printf("Wrong arguments. Must be [style index].");
+        return 0;
+    }
+    
+    if(FontManager->RemoveFontStyle((font_Style)lua_tointeger(lua, 1)))
+    {
+        return 1;
+    }
+    else
+    {
+        Con_Printf("Error: style with given ID doesn't exist or couldn't be removed!");
+        return 0;
+    }
+}
 
 int lua_AddItem(lua_State * lua)
 {
@@ -2141,7 +2269,7 @@ int lua_SetGame(lua_State *lua)
         lua_pushnumber(lua, gameflow_manager.CurrentGameID);           // add to stack first argument
         lua_pcall(lua, 1, 1, 0);                                       // call that function
         Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
-        Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
+        Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     }
     lua_settop(lua, top);   // restore LUA stack
 
@@ -2158,7 +2286,7 @@ int lua_LoadMap(lua_State *lua)
 
     if(top < 1)
     {
-        Con_AddLine("wrong arguments number, must be (map_name, (game_id, map_id))");
+        Con_AddLine("wrong arguments number, must be (map_name, (game_id, map_id))", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -2189,18 +2317,18 @@ int lua_LoadMap(lua_State *lua)
 /*
  * Flipped (alternate) room functions
  */
-
+ 
 int lua_SetFlipRoom(lua_State *lua)
 {
     uint32_t group, state;
-
+    
     int top = lua_gettop(lua);
     if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (flipmap_index, room_state).");
         return 0;
     }
-
+    
     group = (uint32_t)lua_tointeger(lua, 1);
     state = (uint32_t)lua_tointeger(lua, 2);
     state = (state > 1)?(1):(state);                // State is always boolean.
@@ -2208,7 +2336,7 @@ int lua_SetFlipRoom(lua_State *lua)
     if(engine_world.room_flipmap & (1 << group))    // Check flipmap state.
     {
         room_p current_room = engine_world.rooms;
-
+        
         if(engine_world.version > TR_III)
         {
             for(int i=0;i<engine_world.room_count;i++, current_room++)
@@ -2225,11 +2353,11 @@ int lua_SetFlipRoom(lua_State *lua)
                     }
                 }
             }
-
+        
             if(state)
             {
                 engine_world.room_flipstate |= (1 << group);    // Mark group state as alternate.
-            }
+            } 
             else
             {
                 engine_world.room_flipstate ^= (1 << group);    // Mark group state as base.
@@ -2248,7 +2376,7 @@ int lua_SetFlipRoom(lua_State *lua)
                     Room_SwapToBase(current_room);
                 }
             }
-
+            
             engine_world.room_flipstate = state;    // In TR1-3, state is always global.
         }
     }
@@ -2256,25 +2384,25 @@ int lua_SetFlipRoom(lua_State *lua)
     {
         Con_Printf("Flipmap bit %d state is FALSE - no rooms were swapped!", group);
     }
-
+    
     return 0;
 }
 
 int lua_SetFlipFlag(lua_State *lua)
 {
     uint32_t group, state;
-
+    
     int top = lua_gettop(lua);
     if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (flipmap_index, flipmap_state).");
         return 0;
     }
-
+    
     group = (uint32_t)lua_tointeger(lua, 1);
     state = (uint32_t)lua_tointeger(lua, 2);
     state = (state > 1)?(1):(state);                // State is always boolean.
-
+    
     if(state)
     {
         engine_world.room_flipmap |= (1 << group);  // Mark group state as alternate.
@@ -2283,7 +2411,7 @@ int lua_SetFlipFlag(lua_State *lua)
     {
         engine_world.room_flipmap ^= (1 << group);  // Mark group state as base.
     }
-
+    
     return 0;
 }
 
@@ -2318,7 +2446,7 @@ int lua_SetFlipstate(lua_State *lua)
         uint32_t flipstate = (uint32_t)lua_tointeger(lua, 1);
         engine_world.room_flipstate = flipstate;
         room_p current_room = engine_world.rooms;
-
+        
         if(engine_world.version > TR_III)
         {
             for(int i=0;i<engine_world.room_count;i++,current_room++)
@@ -2348,7 +2476,7 @@ int lua_SetFlipstate(lua_State *lua)
             }
         }
     }
-
+    
     return 0;
 }
 
@@ -2364,7 +2492,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 
     if(top < 1)
     {
-        Con_AddLine("wrong arguments number, must be (model_id)");
+        Con_AddLine("wrong arguments number, must be (model_id)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
     id = lua_tointeger(lua, 1);
@@ -2437,19 +2565,23 @@ int lua_genUVRotateAnimation(lua_State *lua)
 bool Engine_LuaInit()
 {
     engine_lua = luaL_newstate();
-
+    
     if(engine_lua != NULL)
     {
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
-
-        // Load and run global engine scripts.
+        
+        
+        // Load and run global engine scripts, except font script, which
+        // should be called AFTER OpenGL/SDL are initialized.
+        
+        luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
         luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
-
+        
         return true;
     }
     else
@@ -2502,7 +2634,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setgame", lua_SetGame);
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
-
+    
     lua_register(lua, "setFlipFlag", lua_SetFlipFlag);
     lua_register(lua, "setFlipRoom", lua_SetFlipRoom);
     lua_register(lua, "setFlipmap", lua_SetFlipmap);
@@ -2563,12 +2695,17 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getActionState", lua_GetActionState);
     lua_register(lua, "getActionChange", lua_GetActionChange);
 
+    lua_register(lua, "genUVRotateAnimation", lua_genUVRotateAnimation);
+    
     lua_register(lua, "getGravity", lua_GetGravity);
     lua_register(lua, "setGravity", lua_SetGravity);                            // get and set gravity function
     lua_register(lua, "dropEntity", lua_DropEntity);
     lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
 
-    lua_register(lua, "genUVRotateAnimation", lua_genUVRotateAnimation);
+    lua_register(lua, "addFont", lua_AddFont);
+    lua_register(lua, "deleteFont", lua_DeleteFont);
+    lua_register(lua, "addFontStyle", lua_AddFontStyle);
+    lua_register(lua, "deleteFontStyle", lua_DeleteFontStyle);
 }
 
 
@@ -2603,8 +2740,6 @@ void Engine_Destroy()
     }
 
     Gui_Destroy();
-
-    FT_Done_FreeType(engine_ft_library);
 }
 
 
@@ -2656,7 +2791,7 @@ void Engine_Shutdown(int val)
 
 int engine_lua_fputs(const char *str, FILE *f)
 {
-    Con_AddText(str);
+    Con_AddText(str, FONTSTYLE_CONSOLE_NOTIFY);
     return strlen(str);
 }
 
@@ -2676,7 +2811,7 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     fwrite(buf, 1, ret, f);
 
     // Write it to console, too (if it helps) und
-    Con_AddText(buf);
+    Con_AddText(buf, FONTSTYLE_CONSOLE_NOTIFY);
 
     return ret;
 }
@@ -2692,7 +2827,7 @@ int engine_lua_printf(const char *fmt, ...)
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
 
-    Con_AddText(buf);
+    Con_AddText(buf, FONTSTYLE_CONSOLE_NOTIFY);
 
     return ret;
 }
@@ -2924,7 +3059,6 @@ int Engine_LoadMap(const char *name)
     tr_level.read_level(name, trv);
     tr_level.prepare_level();
 
-    Gui_DrawLoadScreen(50);
     //tr_level.dump_textures();
 
     Gui_DrawLoadScreen(100);
@@ -2933,7 +3067,7 @@ int Engine_LoadMap(const char *name)
     World_Prepare(&engine_world);
 
     Gui_DrawLoadScreen(150);
-
+    
     TR_GenWorld(&engine_world, &tr_level);
 
     engine_world.id   = 0;
@@ -2969,21 +3103,22 @@ int Engine_ExecCmd(char *ch)
         ch = parse_token(ch, token);
         if(!strcmp(token, "help"))
         {
-            Con_AddLine("help - show help info\0");
-            Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0");
-            Con_AddLine("save, load - save and load game state in \"file_name\"\0");
-            Con_AddLine("exit - close program\0");
-            Con_AddLine("cls - clean console\0");
-            Con_AddLine("show_fps - switch show fps flag\0");
-            Con_AddLine("font_size - get and set font size\0");
-            Con_AddLine("spacing - read and write spacing\0");
-            Con_AddLine("showing_lines - read and write number of showing lines\0");
-            Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0");
-            Con_AddLine("free_look - switch camera mode\0");
-            Con_AddLine("cam_distance - camera distance to actor\0");
-            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0");
-            Con_AddLine("playsound(id) - play specified sound\0");
-            Con_AddLine("stopsound(id) - stop specified sound\0");
+            Con_AddLine("Available commands:\0", FONTSTYLE_CONSOLE_WARNING);
+            Con_AddLine("help - show help info\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("save, load - save and load game state in \"file_name\"\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("exit - close program\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("cls - clean console\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("show_fps - switch show fps flag\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("spacing - read and write spacing\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("showing_lines - read and write number of showing lines\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("free_look - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("cam_distance - camera distance to actor\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("playsound(id) - play specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("stopsound(id) - stop specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("Watch out for case sensitive commands!\0", FONTSTYLE_CONSOLE_WARNING);
         }
         else if(!strcmp(token, "goto"))
         {
@@ -3021,17 +3156,6 @@ int Engine_ExecCmd(char *ch)
             Con_Clean();
             return 1;
         }
-        else if(!strcmp(token, "font_size"))
-        {
-            ch = parse_token(ch, token);
-            if(NULL == ch)
-            {
-                Con_Printf("font size = %d", con_base.font_size);
-                return 1;
-            }
-            Con_SetFontSize(atoi(token));
-            return 1;
-        }
         else if(!strcmp(token, "spacing"))
         {
             ch = parse_token(ch, token);
@@ -3049,20 +3173,20 @@ int Engine_ExecCmd(char *ch)
             if(NULL == ch)
             {
                 snprintf(buf, con_base.line_size + 32, "showing_lines = %d", con_base.showing_lines);
-                Con_AddLine(buf);
+                Con_AddLine(buf, FONTSTYLE_CONSOLE_INFO);
                 return 1;
             }
             else
             {
                 val = atoi(token);
-                if((val >=2 ) && (val <= con_base.shown_lines_count))
+                if((val >=2 ) && (val <= con_base.line_count))
                 {
                     con_base.showing_lines = val;
                     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
                 }
                 else
                 {
-                    Con_AddLine("Invalid showing_lines values\0");
+                    Con_AddLine("Invalid showing_lines values\0", FONTSTYLE_CONSOLE_WARNING);
                 }
             }
             return 1;
@@ -3165,12 +3289,12 @@ int Engine_ExecCmd(char *ch)
                 buf[size] = 0;
                 fclose(f);
                 Con_Clean();
-                Con_AddText(buf);
+                Con_AddText(buf, FONTSTYLE_CONSOLE_INFO);
                 free(buf);
             }
             else
             {
-                Con_AddText("Not avaliable =(");
+                Con_AddText("Not avaliable =(", FONTSTYLE_CONSOLE_WARNING);
             }
             return 1;
         }
@@ -3184,7 +3308,7 @@ int Engine_ExecCmd(char *ch)
             else
             {
                 snprintf(buf, con_base.line_size + 32, "Command \"%s\" not found", token);
-                Con_AddLine(buf);
+                Con_AddLine(buf, FONTSTYLE_CONSOLE_WARNING);
             }
             return 0;
         }
@@ -3214,7 +3338,7 @@ void Engine_LoadConfig()
     lua_ParseRender(engine_lua, &renderer.settings);
     lua_ParseAudio(engine_lua, &audio_settings);
     lua_ParseConsole(engine_lua, &con_base);
-    lua_ParseControlSettings(engine_lua, &control_mapper);
+    lua_ParseControls(engine_lua, &control_mapper);
 }
 
 
