@@ -88,10 +88,12 @@ void Con_SetLineInterval(float interval)
     {
         return; // nothing to do
     }
+    
+    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
 
     con_base.inited = 0;
     con_base.spacing = interval;
-    con_base.line_height = con_base.spacing * glf_get_ascender(con_base.font) * screen_info.h_unit;
+    con_base.line_height = con_base.spacing * glf_get_ascender(con_base.font) * scale_factor;
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)

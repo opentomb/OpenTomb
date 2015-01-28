@@ -312,12 +312,15 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 
         temp_lines_used++;
         
-        l->x = x;
-        l->y = y;
+        l->X = x;
+        l->Y = y;
+        l->Xanchor = GUI_ANCHOR_HOR_LEFT;
+        l->Yanchor = GUI_ANCHOR_VERT_BOTTOM;
         
-        l->align  = GUI_LINE_ALIGN_LEFT;
-        l->real_x = x * screen_info.w_unit;
-        l->real_y = screen_info.h - y * screen_info.h_unit;
+        float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
+        
+        l->absXoffset = l->X * scale_factor;
+        l->absYoffset = l->Y * scale_factor;
         
         l->show = 1;
         return l;
@@ -333,14 +336,23 @@ void Gui_Update()
 
 void Gui_Resize()
 {
+    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
+    
     gui_text_line_p l = gui_base_lines;
 
     while(l)
     {
-        l->real_x = l->x * screen_info.w_unit;
-        l->real_y = screen_info.h - l->y * screen_info.h_unit;
+        l->absXoffset = l->X * scale_factor;
+        l->absYoffset = l->Y * scale_factor;
         
         l = l->next;
+    }
+    
+    l = gui_temp_lines;
+    for(uint16_t i=0;i<temp_lines_used;i++,l++)
+    {
+        l->absXoffset = l->X * scale_factor;
+        l->absYoffset = l->Y * scale_factor;
     }
     
     for(int i = 0; i < BAR_LASTINDEX; i++)
@@ -380,8 +392,8 @@ void Gui_Render()
 }
 
 void Gui_RenderStringLine(gui_text_line_p l)
-{
-    GLfloat real_x = l->real_x;   // Used with center and right alignments.
+{    
+    GLfloat real_x, real_y;
     
     if(l->font == NULL)
         l->font = FontManager->GetFont(FONT_SECONDARY);
@@ -393,26 +405,40 @@ void Gui_RenderStringLine(gui_text_line_p l)
     
     glBindTexture(GL_TEXTURE_2D, 0);
     
-    if((l->style->rect) || (l->align != GUI_LINE_ALIGN_LEFT))
+    Gui_StringAutoRect(l);
+    
+    switch(l->Xanchor)
     {
-        Gui_StringAutoRect(l);
-        
-        if(l->align == GUI_LINE_ALIGN_RIGHT)
-        {
-            real_x -= l->rect[2];
-        }
-        else if(l->align == GUI_LINE_ALIGN_CENTER)
-        {
-            real_x -= l->rect[2] / 2.0;
-        }
+        case GUI_ANCHOR_HOR_LEFT:
+            real_x = l->absXoffset;   // Used with center and right alignments.
+            break;
+        case GUI_ANCHOR_HOR_RIGHT:
+            real_x = (float)screen_info.w - (l->rect[2] - l->rect[0]) - l->absXoffset;
+            break;
+        case GUI_ANCHOR_HOR_CENTER:
+            real_x = ((float)screen_info.w / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
+            break;
+    }
+    
+    switch(l->Yanchor)
+    {
+        case GUI_ANCHOR_VERT_BOTTOM:
+            real_y += l->absYoffset;
+            break;
+        case GUI_ANCHOR_VERT_TOP:
+            real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->absYoffset;
+            break;
+        case GUI_ANCHOR_VERT_CENTER:
+            real_x = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            break;
     }
     
     if(l->style->rect)
     {
-        GLfloat x0 = l->rect[0] + real_x    - l->style->rect_border * screen_info.w_unit;
-        GLfloat y0 = l->rect[1] + l->real_y - l->style->rect_border * screen_info.h_unit;
-        GLfloat x1 = l->rect[2] + real_x    + l->style->rect_border * screen_info.w_unit;
-        GLfloat y1 = l->rect[3] + l->real_y + l->style->rect_border * screen_info.h_unit;
+        GLfloat x0 = l->rect[0] + real_x - l->style->rect_border * screen_info.w_unit;
+        GLfloat y0 = l->rect[1] + real_y - l->style->rect_border * screen_info.h_unit;
+        GLfloat x1 = l->rect[2] + real_x + l->style->rect_border * screen_info.w_unit;
+        GLfloat y1 = l->rect[3] + real_y + l->style->rect_border * screen_info.h_unit;
         
         GLfloat rectCoords[8];
         rectCoords[0] = x0; rectCoords[1] = y0;
@@ -431,12 +457,12 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glColor4fv(temp);
         glf_render_str(l->font,
                        (real_x    + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
-                       (l->real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
+                       (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
                        l->text);
     }
 
     glColor4fv(l->style->real_color);
-    glf_render_str(l->font, real_x, l->real_y, l->text);
+    glf_render_str(l->font, real_x, real_y, l->text);
 }
 
 void Gui_RenderStrings()
@@ -2110,11 +2136,13 @@ void gui_ProgressBar::SetSize(float width, float height, float borderSize)
 // Recalculate size, according to viewport resolution.
 void gui_ProgressBar::RecalculateSize()
 {    
-    mWidth  = (float)mAbsWidth  * screen_info.w_unit;
-    mHeight = (float)mAbsHeight * screen_info.h_unit * ((float)screen_info.w / screen_info.h);
+    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
+    
+    mWidth  = (float)mAbsWidth  * scale_factor;
+    mHeight = (float)mAbsHeight * scale_factor;
 
-    mBorderWidth  = (float)mAbsBorderSize  * screen_info.w_unit;
-    mBorderHeight = (float)mAbsBorderSize  * screen_info.h_unit * ((float)screen_info.w / screen_info.h);
+    mBorderWidth  = (float)mAbsBorderSize  * scale_factor;
+    mBorderHeight = (float)mAbsBorderSize  * scale_factor;
 
     // Calculate range unit, according to maximum bar value set up.
     // If bar alignment is set to horizontal, calculate it from bar width.
@@ -2126,33 +2154,33 @@ void gui_ProgressBar::RecalculateSize()
 // Recalculate position, according to viewport resolution.
 void gui_ProgressBar::RecalculatePosition()
 {
-    float offset_ratio = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
+    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
     
     switch(mXanchor)
     {
         case GUI_ANCHOR_HOR_LEFT:
-            mX = (float)(mAbsXoffset+mAbsBorderSize) * offset_ratio;
+            mX = (float)(mAbsXoffset+mAbsBorderSize) * scale_factor;
             break;
         case GUI_ANCHOR_HOR_CENTER:
-            mX = ((float)screen_info.w - ((float)(mAbsWidth+mAbsBorderSize*2) * screen_info.w_unit)) / 2 +
-                 ((float)mAbsXoffset * offset_ratio);
+            mX = ((float)screen_info.w - ((float)(mAbsWidth+mAbsBorderSize*2) * scale_factor)) / 2 +
+                 ((float)mAbsXoffset * scale_factor);
             break;
         case GUI_ANCHOR_HOR_RIGHT:
-            mX = (float)screen_info.w - ((float)(mAbsXoffset+mAbsWidth+mAbsBorderSize*2)) * offset_ratio;
+            mX = (float)screen_info.w - ((float)(mAbsXoffset+mAbsWidth+mAbsBorderSize*2)) * scale_factor;
             break;
     }
     
     switch(mYanchor)
     {
         case GUI_ANCHOR_VERT_TOP:
-            mY = (float)screen_info.h - ((float)(mAbsYoffset+mAbsHeight+mAbsBorderSize*2)) * offset_ratio;
+            mY = (float)screen_info.h - ((float)(mAbsYoffset+mAbsHeight+mAbsBorderSize*2)) * scale_factor;
             break;
         case GUI_ANCHOR_VERT_CENTER:
             mY = ((float)screen_info.h - ((float)(mAbsHeight+mAbsBorderSize*2) * screen_info.h_unit)) / 2 +
-                 ((float)mAbsYoffset * offset_ratio);
+                 ((float)mAbsYoffset * scale_factor);
             break;
         case GUI_ANCHOR_VERT_BOTTOM:
-            mY = (mAbsYoffset + mAbsBorderSize) * offset_ratio;
+            mY = (mAbsYoffset + mAbsBorderSize) * scale_factor;
             break;
     }
 }
@@ -2814,7 +2842,7 @@ void gui_FontManager::Resize()
 {
     gui_font_p current_font = fonts;
     
-    float scale_factor = (float)((screen_info.w > screen_info.h)?(screen_info.h):(screen_info.w)) / GUI_SCREEN_METERING_FACTOR;
+    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
     
     for(uint32_t i = 0; i < font_count; i++, current_font++)
     {
