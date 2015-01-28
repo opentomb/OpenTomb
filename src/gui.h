@@ -179,12 +179,12 @@ typedef struct gui_text_line_s
     struct gl_tex_font_s       *font;
     struct gui_fontstyle_s     *style;
 
-    GLfloat                     x;
-    GLfloat                     real_x;
-    GLfloat                     y;
-    GLfloat                     real_y;
-    
-    uint8_t                     align;      // Relative horizontal alignment
+    GLfloat                     X;
+    uint8_t                     Xanchor;
+    GLfloat                     absXoffset;
+    GLfloat                     Y;
+    uint8_t                     Yanchor;
+    GLfloat                     absYoffset;
 
     GLfloat                     rect[4];    //x0, yo, x1, y1
     

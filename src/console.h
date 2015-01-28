@@ -17,7 +17,7 @@
 #define CON_MIN_LINE_SIZE 80
 #define CON_MAX_LINE_SIZE 256
 
-#define CON_MIN_LINE_INTERVAL 1.0
+#define CON_MIN_LINE_INTERVAL 0.5
 #define CON_MAX_LINE_INTERVAL 4.0
 
 typedef struct console_info_s
