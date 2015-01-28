@@ -103,7 +103,10 @@ void Entity_Clear(entity_p entity)
                         delete body->getCollisionShape();
                     }
 
-                    bt_engine_dynamicsWorld->removeRigidBody(body);
+                    if(body->isInWorld())
+                    {
+                        bt_engine_dynamicsWorld->removeRigidBody(body);
+                    }
                     delete body;
                     entity->bt_body[i] = NULL;
                 }
@@ -141,7 +144,7 @@ void Entity_Enable(entity_p ent)
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
                 btRigidBody *b = ent->bt_body[i];
-                if(b != NULL)
+                if((b != NULL) && !b->isInWorld())
                 {
                     bt_engine_dynamicsWorld->addRigidBody(b);
                 }
@@ -161,7 +164,7 @@ void Entity_Disable(entity_p ent)
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
                 btRigidBody *b = ent->bt_body[i];
-                if(b != NULL)
+                if((b != NULL) && b->isInWorld())
                 {
                     bt_engine_dynamicsWorld->removeRigidBody(b);
                 }

@@ -1,26 +1,26 @@
 -- LUA config file
 
-screen =
+screen = 
 {
     x = 50;
     y = 20;
-    width = 800;
-    height = 600;
+    width = 720;
+    height = 400;
     fullscreen = 0;
     fov = 75.0;
     debug_info = 0;
 }
 
-audio =
+audio = 
 {
-    sound_volume = 0.9;
-    music_volume = 0.7;
+    sound_volume = 0.8;
+    music_volume = 0.9;
     use_effects = 1;
     listener_is_player = 0;
     stream_buffer_size = 128;
 }
 
-render =
+render = 
 {
     mipmap_mode = 3;
     mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
@@ -32,7 +32,7 @@ render =
     texture_border = 16;
 }
 
-controls =
+controls = 
 {
     mouse_sensitivity = 25.0;
 
@@ -55,10 +55,9 @@ controls =
     joy_look_deadzone = 1500;
 }
 
-console =
+console = 
 {
     background_color = {r = 0, g = 0, b = 0, a = 200};
-    smooth = 1;
 
     line_size = 72;
     log_size = 16;
@@ -66,7 +65,7 @@ console =
     showing_lines = 128;
     spacing = 1.0;
     show_cursor_period = 0.5;
-    show = 0;
+    show = 0; 
 }
 
 -- Keys binding
@@ -101,9 +100,8 @@ bind(act.smallmedi, KEY_9);
 bind(act.bigmedi, KEY_0);
 
 -- CVAR's section. here you can create and delete CVAR's
-cvars.show_fps = 1;
+cvars.show_fps = 1; 
 cvars.free_look_speed = 2500;
-
 
 -- AUTOEXEC LINES
 setgamef(2);
@@ -114,4 +112,3 @@ mlook(1);
 freelook(0);
 cam_distance(1024.0);
 noclip(0);
-

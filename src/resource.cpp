@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <SDL2/SDL_opengl.h>
+#include <GL/glu.h>
 
 extern "C" {
 #include "lua/lua.h"

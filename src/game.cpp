@@ -489,9 +489,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         glMultMatrixbt(temp);
 
         // bone_tags->mesh->centre[0] ent->bf.pos[0]*0.5 (ent->bf.bone_tags+ent->bf.bone_tag_count)->full_transform[12]  - 32.0 *  ent->transform[4 + 1]
-        cam_pos.m_floats[0] = ((transform[12]));
-        cam_pos.m_floats[1] = ((transform[13]));
-        cam_pos.m_floats[2] = ((transform[14]) + dz ); // + 0.5  * (ent->bf.bb_max[2])
+        Mat4_vec3_mul(cam_pos.m_floats, ent->transform, ent->bf.bone_tags->full_transform+12);
+        cam_pos.m_floats[2] += dz;
     }
 
     float shake_value   = renderer.cam->shake_value;

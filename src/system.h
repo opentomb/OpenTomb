@@ -24,6 +24,7 @@ typedef struct screen_info_s
 extern screen_info_t screen_info;
 
 void Sys_Init();
+void Sys_InitGlobals();
 void Sys_Destroy();
 
 void Sys_Strtime(char *buf, size_t buf_size);

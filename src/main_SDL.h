@@ -12,11 +12,11 @@
 
 void Engine_Display();
 
-void Engine_PrepareOpenGL();
+void Engine_InitGL();
 void Engine_InitSDLControls();
 void Engine_InitSDLVideo();
 void Engine_InitSDLImage();
-void Engine_InitALAudio();
+void Engine_InitAL();
 
 // Nominal values are used e.g. to set the size for the console.
 // pixel values are used for glViewport. Both will be the same on

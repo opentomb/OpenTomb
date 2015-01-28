@@ -3,7 +3,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "gl_util.h"
-#include "ftgl/FTGLTextureFont.h"
+#include "gl_font.h"
 
 #include "gui.h"
 #include "character_controller.h"
@@ -41,7 +41,7 @@ void Gui_Init()
 }
 
 void Gui_InitFontManager()
-{
+{    
     FontManager = new gui_FontManager();
 }
 
@@ -280,13 +280,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
 {
     if(l)
     {
-        float llx, lly, llz, urx, ury, urz;
-        
-        l->font->BBox(l->text, llx, lly, llz, urx, ury, urz);
-        l->rect[0] = llx;
-        l->rect[1] = lly;
-        l->rect[2] = urx;
-        l->rect[3] = ury;
+        glf_get_string_bb(l->font, l->text, 0, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
     }
 
     return l;
@@ -354,7 +348,7 @@ void Gui_Resize()
         Bar[i].Resize();
     }
     
-    FontManager->Resize();
+    if(FontManager) FontManager->Resize();
 }
 
 void Gui_Render()
@@ -429,29 +423,29 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glVertexPointer(2, GL_FLOAT, 0, rectCoords);
         glDrawArrays(GL_POLYGON, 0, 4);
     }
-    
+        
     if(l->style->shadowed)
     {
         GLfloat temp[4] = {0.0,0.0,0.0,l->style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY}; // Derive alpha from base color.
         
         glColor4fv(temp);
-        glPushMatrix();
-        glTranslatef((real_x+GUI_FONT_SHADOW_HORIZONTAL_SHIFT), (l->real_y+GUI_FONT_SHADOW_VERTICAL_SHIFT), 0.0);
-        l->font->Render(l->text);
-        glPopMatrix();
+        glf_render_str(l->font,
+                       (real_x    + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
+                       (l->real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
+                       l->text);
     }
 
     glColor4fv(l->style->real_color);
-    glPushMatrix();
-    glTranslatef(real_x, l->real_y, 0.0);
-    l->font->Render(l->text);
-    glPopMatrix();
+    glf_render_str(l->font, real_x, l->real_y, l->text);
 }
 
 void Gui_RenderStrings()
 {
     gui_text_line_p l = gui_base_lines;
 
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    
     while(l)
     {
         Gui_RenderStringLine(l);
@@ -467,6 +461,9 @@ void Gui_RenderStrings()
             l->show = 0;
         }
     }
+    
+    glPopClientAttrib();
+    
     temp_lines_used = 0;
 }
 
@@ -528,7 +525,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 {
-    if(size!=NULL)
+    if(size != NULL)
     {
         btScalar bb[3];
         vec3_sub(bb, bf->bb_max, bf->bb_min);
@@ -2577,6 +2574,9 @@ void gui_ItemNotifier::SetRotateTime(float time)
 
 gui_FontManager::gui_FontManager()
 {
+    font_library   = NULL;
+    FT_Init_FreeType(&font_library);
+    
     style_count     = 0;
     styles          = NULL;
     font_count      = 0;
@@ -2595,9 +2595,12 @@ gui_FontManager::~gui_FontManager()
     
     free(fonts);  fonts  = NULL; font_count  = 0;
     free(styles); styles = NULL; style_count = 0;
+    
+    FT_Done_FreeType(font_library);
+    font_library = NULL;
 }
 
-FTGLTextureFont* gui_FontManager::GetFont(const font_Type index)
+gl_tex_font_s* gui_FontManager::GetFont(const font_Type index)
 {
     gui_font_p current_font = fonts;
     
@@ -2660,13 +2663,11 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
     }
     else
     {
-        delete desired_font->font;
+        glf_free_font(desired_font->font);
     }
     
     desired_font->font = NULL;
-    desired_font->font = new FTGLTextureFont(path);
-    desired_font->font->FaceSize(size);
-    desired_font->font->CharMap(FT_ENCODING_UNICODE);
+    desired_font->font = glf_create_font(font_library, path, size);
     
     return true;
 }
@@ -2722,6 +2723,8 @@ bool gui_FontManager::RemoveFont(const font_Type index)
         if(current_font->index == index)
         {
             font_count--;
+            glf_free_font(current_font->font);
+            
             if(font_count != 0)
             {
                 if(font_count != i)
@@ -2815,6 +2818,6 @@ void gui_FontManager::Resize()
     
     for(uint32_t i = 0; i < font_count; i++, current_font++)
     {
-        current_font->font->FaceSize((unsigned int)(((float)current_font->size) * scale_factor));
+        glf_resize(current_font->font, (uint16_t)(((float)current_font->size) * scale_factor));
     }
 }
