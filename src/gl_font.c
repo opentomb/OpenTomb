@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   gl_font.cpp
  * Author: TeslaRus
  *
@@ -40,10 +40,8 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
         glf->gl_tex_indexes_count = 0;
         glf->gl_real_tex_indexes_count = 0;
         glf_resize(glf, font_size);
-        //FT_Select_Charmap(glf->ft_face, FT_ENCODING_NONE);
-        //FT_Select_Charmap(glf->ft_face, FT_ENCODING_UNICODE);
-        FT_Set_Charmap(glf->ft_face, glf->ft_face->charmaps[0]);
-        
+        FT_Select_Charmap(glf->ft_face, FT_ENCODING_UNICODE);
+
         return glf;
     }
 
@@ -106,7 +104,7 @@ static uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
     uint8_t b = *u_utf8++;
     uint32_t c, shift;
     int len = 0;
-    
+
     // save ASC symbol as is
     if(!(b & 0x80))
     {
@@ -137,11 +135,11 @@ static uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
 
 
 
-static __inline void bbox_add(float *x0, float *y0, float *x1, float *y1, 
+static __inline void bbox_add(float *x0, float *y0, float *x1, float *y1,
                               float *x_min, float *x_max, float *y_min, float *y_max)
 {
     float min, max;
-    
+
     if(*x0 > *x1)
     {
         min = *x1;
@@ -152,7 +150,7 @@ static __inline void bbox_add(float *x0, float *y0, float *x1, float *y1,
         min = *x0;
         max = *x1;
     }
-    
+
     if(*x_min > min)
     {
         *x_min = min;
@@ -161,7 +159,7 @@ static __inline void bbox_add(float *x0, float *y0, float *x1, float *y1,
     {
         *x_max = max;
     }
-    
+
     if(*y0 > *y1)
     {
         min = *y1;
@@ -172,7 +170,7 @@ static __inline void bbox_add(float *x0, float *y0, float *x1, float *y1,
         min = *y0;
         max = *y1;
     }
-    
+
     if(*y_min > min)
     {
         *y_min = min;
@@ -237,7 +235,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
             glf->glyphs[i].tex_index = 0;
 
             /* load glyph image into the slot (erase previous one) */
-            if(FT_Load_Char(glf->ft_face, i, FT_LOAD_RENDER))
+            if(FT_Load_Glyph(glf->ft_face, i, FT_LOAD_RENDER))
             {
                 continue;
             }
@@ -340,7 +338,7 @@ float glf_get_ascender(gl_tex_font_p glf)
     {
         return 0.0;
     }
-        
+
     return (float)(glf->ft_face->ascender) / 64.0f;
 }
 
@@ -367,23 +365,19 @@ float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
         uint8_t *nch, *nch2, *ch = (uint8_t*)text;
         uint32_t curr_utf32, next_utf32;
         int i;
-        
+
         nch = utf8_to_utf32(ch, &curr_utf32);
-        //curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        curr_utf32 = (curr_utf32 < glf->glyphs_count)?(curr_utf32):(0);
-        
+        curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
+
         for(i=0;(*ch!=0) && !((n>0)&&(i>=n));i++)
         {
             FT_Vector kern;
-            char_info_p g;
-            
+
             nch2 = utf8_to_utf32(nch, &next_utf32);
-            //next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
-            next_utf32 = (next_utf32 < glf->glyphs_count)?(next_utf32):(0);
+            next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
             ch = nch;
             nch = nch2;
-            
-            g = glf->glyphs + curr_utf32;
+
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
             x += (GLfloat)(kern.x + glf->glyphs[curr_utf32].advance_x) / 64.0;
@@ -403,30 +397,28 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
 
     if((glf != NULL) && (glf->ft_face != NULL))
     {
-        
+
         uint8_t *nch, *nch2, *ch = (uint8_t*)text;
         float x = 0.0;
         float y = 0.0;
         float xx0, xx1, yy0, yy1;
         int i;
         uint32_t curr_utf32, next_utf32;
-        
+
         nch = utf8_to_utf32(ch, &curr_utf32);
-        //curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        curr_utf32 = (curr_utf32 < glf->glyphs_count)?(curr_utf32):(0);
-        
+        curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
+
         for(i=0;(*ch!=0) && !((n>0)&&(i>=n));i++)
         {
             FT_Vector kern;
             char_info_p g;
-            
+
             nch2 = utf8_to_utf32(nch, &next_utf32);
-            
-            //next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
-            next_utf32 = (next_utf32 < glf->glyphs_count)?(next_utf32):(0);
+
+            next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
             ch = nch;
             nch = nch2;
-            
+
             g = glf->glyphs + curr_utf32;
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
@@ -460,22 +452,21 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         GLuint elements_count = 0;
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
-        //curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        curr_utf32 = (curr_utf32 < glf->glyphs_count)?(curr_utf32):(0);
+        curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
+
         for(p=buffer;*ch;)
         {
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
-            
-            //next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
-            next_utf32 = (next_utf32 < glf->glyphs_count)?(next_utf32):(0);
+
+            next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
             ch = nch;
             nch = nch2;
-            
+
             g = glf->glyphs + curr_utf32;
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
-            
+
             if(g->tex_index != 0)
             {
                 GLfloat x0 = x  + g->left;
@@ -532,22 +523,20 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         GLuint active_texture = 0;
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
-        //curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        curr_utf32 = (curr_utf32 < glf->glyphs_count)?(curr_utf32):(0);
+        curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
         for(;*ch;)
         {
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
-            
-            //next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
-            next_utf32 = (next_utf32 < glf->glyphs_count)?(next_utf32):(0);
+
+            next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
             ch = nch;
             nch = nch2;
-            
+
             g = glf->glyphs + curr_utf32;
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
-                
+
             if(g->tex_index != 0)
             {
                 if(active_texture != g->tex_index)
