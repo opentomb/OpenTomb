@@ -45,7 +45,7 @@ extern "C" {
 #include "entity.h"
 #include "audio.h"
 #include "gameflow.h"
-#include "string.h"
+//#include "string.h"
 
 #if defined(__MACOSX__)
 #include "FindConfigFile.h"

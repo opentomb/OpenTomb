@@ -216,7 +216,7 @@ void Con_Edit(int key)
     con_base.cursor_time = 0.0;
     con_base.show_cursor = 1;
 
-    int16_t oldLength = strlen(con_base.line_text[0]);    // int16_t is absolutly enough
+    int16_t oldLength = utf8_strlen(con_base.line_text[0]);    // int16_t is absolutly enough
 
     switch(key)
     {
@@ -228,7 +228,7 @@ void Con_Edit(int key)
             {
                 con_base.log_pos = 0;
             }
-            con_base.cursor_pos = strlen(con_base.line_text[0]);
+            con_base.cursor_pos = utf8_strlen(con_base.line_text[0]);
             break;
 
         case SDLK_DOWN:
@@ -242,7 +242,7 @@ void Con_Edit(int key)
             {
                 con_base.log_pos--;
             }
-            con_base.cursor_pos = strlen(con_base.line_text[0]);
+            con_base.cursor_pos = utf8_strlen(con_base.line_text[0]);
             break;
 
         case SDLK_LEFT:
@@ -298,8 +298,9 @@ void Con_Edit(int key)
                 {
                     con_base.line_text[0][i] = con_base.line_text[0][i-1];
                 }
-                con_base.line_text[0][con_base.cursor_pos++] = key;
-                con_base.line_text[0][oldLength+1] = 0;
+                con_base.line_text[0][con_base.cursor_pos] = key;
+                con_base.line_text[0][++oldLength] = 0;
+                con_base.cursor_pos++;
             }
             break;
     }

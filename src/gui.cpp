@@ -280,7 +280,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
 {
     if(l)
     {
-        glf_get_string_bb(l->font, l->text, 0, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
+        glf_get_string_bb(l->font, l->text, -1, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
     }
 
     return l;
@@ -551,7 +551,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 {
-    if(size != NULL)
+    if(size != 0.0)
     {
         btScalar bb[3];
         vec3_sub(bb, bf->bb_max, bf->bb_min);
@@ -682,20 +682,20 @@ void gui_InventoryMenu::UpdateItemsOrder(int row)
     while(item)
     {
         if(last_item && last_item->linked_item->id > item->linked_item->id)
+        {
+            if(item->next)
+                temp = item->next;
+            item->next = last_item;
+            if(temp)
+                last_item->next = temp;
+            else
+                last_item->next = NULL;
+            if(last_last_item)
             {
-                if(item->next)
-                    temp = item->next;
-                item->next = last_item;
-                if(temp)
-                    last_item->next = temp;
-                else
-                    last_item->next = NULL;
-                if(last_last_item)
-                {
-                    last_last_item->next = item;
-                    redo = 1;
-                }
+                last_last_item->next = item;
+                redo = 1;
             }
+        }
         if(item->next)
         {
             if(last_item)

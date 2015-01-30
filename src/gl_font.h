@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   gl_font.h
  * Author: TeslaRus
  *
@@ -16,8 +16,8 @@ extern "C" {
 #include <SDL2/SDL_opengl.h>
 #include "freetype2/ft2build.h"
 #include "freetype2/freetype/freetype.h"
-    
-    
+
+
 typedef struct char_info_s
 {
     GLuint          tex_index;
@@ -25,12 +25,12 @@ typedef struct char_info_s
     GLint           height;
     GLint           left;
     GLint           top;
-    
+
     GLfloat         tex_x0;
     GLfloat         tex_y0;
     GLfloat         tex_x1;
     GLfloat         tex_y1;
-    
+
     GLfloat         advance_x;
     GLfloat         advance_y;
 }char_info_t, *char_info_p;
@@ -40,10 +40,10 @@ typedef struct gl_tex_font_s
     FT_Library               ft_library;
     FT_Face                  ft_face;
     uint16_t                 font_size;
-    
+
     struct char_info_s      *glyphs;
     uint16_t                 glyphs_count;
-    
+
     uint16_t                 gl_tex_indexes_count;
     uint16_t                 gl_real_tex_indexes_count;
     GLuint                  *gl_tex_indexes;
@@ -63,6 +63,9 @@ uint16_t glf_get_font_size(gl_tex_font_p glf);
 void     glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1);
 
 void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text);     // ASCII
+
+uint32_t utf8_strlen(const char *str);
+uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
 
 #ifdef	__cplusplus
 }

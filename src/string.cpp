@@ -1,3 +1,4 @@
+#if 0
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,3 +78,4 @@ char* String_UTF8char_to_UTF32char(char* utf8, uint32_t* utf32)
 
     return (char*) u_utf8;
 }
+#endif

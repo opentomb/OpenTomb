@@ -45,7 +45,7 @@ extern "C" {
 #include "gameflow.h"
 #include "redblack.h"
 #include "gl_font.h"
-#include "string.h"
+//#include "string.h"
 
 #define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
 
@@ -132,7 +132,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
             btTransform trans;
             body->getMotionState()->getWorldTransform(trans);
             engine_container_p cont = (engine_container_p)body->getUserPointer();
-            if(cont /*&& cont->object_type == OBJECT_BULLET_MISC*/)
+            if(cont && (cont->object_type == OBJECT_BULLET_MISC))
             {
                 cont->room = Room_FindPosCogerrence(&engine_world, trans.getOrigin().m_floats, cont->room);
             }
@@ -189,57 +189,57 @@ void Engine_InitGlobals()
 void Engine_Init_Pre()
 {
     Engine_LuaInit();
-    
+
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
-    
+
     Com_Init();
-    
+
     Render_Init();
     Cam_Init(&engine_camera);
-    
+
     renderer.cam = &engine_camera;
-    
+
     Engine_BTInit();
 }
 
 void Engine_Init_Post()
-{    
+{
     /*
     // ------------------------------------------------------------------
     // DUMP TEST UTF-32 STRING
-    
+
     const char* tempstring    = NULL;
     uint32_t*   utf32_string  = NULL;
     uint32_t    string_length = 0;
-    
+
     tempstring   = lua_GetString(engine_lua, 0, &string_length);
-    
+
     utf32_string = String_MakeUTF32(tempstring, &string_length);
-    
+
     FILE *fp;
     fp = fopen("string_dump.bin", "w");
-    
+
     if(fp != NULL)
     {
         fwrite(utf32_string, string_length * sizeof(uint32_t), 1, fp);
         fclose(fp);
     }
-    
+
     if(utf32_string) free(utf32_string);
-    
+
     // ------------------------------------------------------------------
     */
-    
+
     Gui_InitFontManager();
-    
+
     luaL_dofile(engine_lua, "scripts/gui/fonts.lua");
-    
-    Gui_Init(); 
+
+    Gui_Init();
     Con_Init();
     Sys_Init();
-    
+
     Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
 }
 
@@ -251,12 +251,12 @@ void Engine_BTInit()
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
     bt_engine_dispatcher->setNearCallback(Engine_RoomNearCallback);
-    
+
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
     bt_engine_ghostPairCallback = new btGhostPairCallback();
     bt_engine_overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(bt_engine_ghostPairCallback);
-    
+
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
@@ -859,13 +859,13 @@ int lua_BindKey(lua_State *lua)
 int lua_AddFont(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top != 3)
     {
         Con_Printf("Wrong arguments. Must be [font index], [font path], [font size].");
         return 0;
     }
-    
+
     if(FontManager->AddFont( (font_Type)lua_tointeger(lua, 1),
                              (uint32_t) lua_tointeger(lua, 3),
                                         lua_tostring (lua, 2)) )
@@ -882,13 +882,13 @@ int lua_AddFont(lua_State *lua)
 int lua_AddFontStyle(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top != 14)
     {
         Con_Printf("Wrong arguments. Must be [index], [R], [G], [B], [A], [fading], [shadow], [rect], [hide].");
         return 0;
     }
-    
+
     font_Style  style_index = (font_Style)lua_tointeger(lua, 1);
     GLfloat     color_R     = (GLfloat)lua_tonumber(lua, 2);
     GLfloat     color_G     = (GLfloat)lua_tonumber(lua, 3);
@@ -903,8 +903,8 @@ int lua_AddFontStyle(lua_State *lua)
     GLfloat     rect_B      = (GLfloat)lua_tonumber(lua, 12);
     GLfloat     rect_A      = (GLfloat)lua_tonumber(lua, 13);
     bool        hide        = lua_toboolean(lua, 14);
-    
-    
+
+
     if(FontManager->AddFontStyle(style_index,
                                  color_R, color_G, color_B, color_A,
                                  shadowed, fading,
@@ -923,13 +923,13 @@ int lua_AddFontStyle(lua_State *lua)
 int lua_DeleteFont(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top != 1)
     {
         Con_Printf("Wrong arguments. Must be [font index].");
         return 0;
     }
-    
+
     if(FontManager->RemoveFont((font_Type)lua_tointeger(lua, 1)))
     {
         return 1;
@@ -944,13 +944,13 @@ int lua_DeleteFont(lua_State *lua)
 int lua_DeleteFontStyle(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top != 1)
     {
         Con_Printf("Wrong arguments. Must be [style index].");
         return 0;
     }
-    
+
     if(FontManager->RemoveFontStyle((font_Style)lua_tointeger(lua, 1)))
     {
         return 1;
@@ -2317,18 +2317,18 @@ int lua_LoadMap(lua_State *lua)
 /*
  * Flipped (alternate) room functions
  */
- 
+
 int lua_SetFlipRoom(lua_State *lua)
 {
     uint32_t group, state;
-    
+
     int top = lua_gettop(lua);
     if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (flipmap_index, room_state).");
         return 0;
     }
-    
+
     group = (uint32_t)lua_tointeger(lua, 1);
     state = (uint32_t)lua_tointeger(lua, 2);
     state = (state > 1)?(1):(state);                // State is always boolean.
@@ -2336,7 +2336,7 @@ int lua_SetFlipRoom(lua_State *lua)
     if(engine_world.room_flipmap & (1 << group))    // Check flipmap state.
     {
         room_p current_room = engine_world.rooms;
-        
+
         if(engine_world.version > TR_III)
         {
             for(int i=0;i<engine_world.room_count;i++, current_room++)
@@ -2353,11 +2353,11 @@ int lua_SetFlipRoom(lua_State *lua)
                     }
                 }
             }
-        
+
             if(state)
             {
                 engine_world.room_flipstate |= (1 << group);    // Mark group state as alternate.
-            } 
+            }
             else
             {
                 engine_world.room_flipstate ^= (1 << group);    // Mark group state as base.
@@ -2376,7 +2376,7 @@ int lua_SetFlipRoom(lua_State *lua)
                     Room_SwapToBase(current_room);
                 }
             }
-            
+
             engine_world.room_flipstate = state;    // In TR1-3, state is always global.
         }
     }
@@ -2384,25 +2384,25 @@ int lua_SetFlipRoom(lua_State *lua)
     {
         Con_Printf("Flipmap bit %d state is FALSE - no rooms were swapped!", group);
     }
-    
+
     return 0;
 }
 
 int lua_SetFlipFlag(lua_State *lua)
 {
     uint32_t group, state;
-    
+
     int top = lua_gettop(lua);
     if(top != 2)
     {
         Con_Printf("Wrong arguments count. Must be (flipmap_index, flipmap_state).");
         return 0;
     }
-    
+
     group = (uint32_t)lua_tointeger(lua, 1);
     state = (uint32_t)lua_tointeger(lua, 2);
     state = (state > 1)?(1):(state);                // State is always boolean.
-    
+
     if(state)
     {
         engine_world.room_flipmap |= (1 << group);  // Mark group state as alternate.
@@ -2411,7 +2411,7 @@ int lua_SetFlipFlag(lua_State *lua)
     {
         engine_world.room_flipmap ^= (1 << group);  // Mark group state as base.
     }
-    
+
     return 0;
 }
 
@@ -2446,7 +2446,7 @@ int lua_SetFlipstate(lua_State *lua)
         uint32_t flipstate = (uint32_t)lua_tointeger(lua, 1);
         engine_world.room_flipstate = flipstate;
         room_p current_room = engine_world.rooms;
-        
+
         if(engine_world.version > TR_III)
         {
             for(int i=0;i<engine_world.room_count;i++,current_room++)
@@ -2476,7 +2476,7 @@ int lua_SetFlipstate(lua_State *lua)
             }
         }
     }
-    
+
     return 0;
 }
 
@@ -2565,23 +2565,23 @@ int lua_genUVRotateAnimation(lua_State *lua)
 bool Engine_LuaInit()
 {
     engine_lua = luaL_newstate();
-    
+
     if(engine_lua != NULL)
     {
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
-        
-        
+
+
         // Load and run global engine scripts, except font script, which
         // should be called AFTER OpenGL/SDL are initialized.
-        
+
         luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
         luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
-        
+
         return true;
     }
     else
@@ -2634,7 +2634,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setgame", lua_SetGame);
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
-    
+
     lua_register(lua, "setFlipFlag", lua_SetFlipFlag);
     lua_register(lua, "setFlipRoom", lua_SetFlipRoom);
     lua_register(lua, "setFlipmap", lua_SetFlipmap);
@@ -2696,7 +2696,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getActionChange", lua_GetActionChange);
 
     lua_register(lua, "genUVRotateAnimation", lua_genUVRotateAnimation);
-    
+
     lua_register(lua, "getGravity", lua_GetGravity);
     lua_register(lua, "setGravity", lua_SetGravity);                            // get and set gravity function
     lua_register(lua, "dropEntity", lua_DropEntity);
@@ -3067,7 +3067,7 @@ int Engine_LoadMap(const char *name)
     World_Prepare(&engine_world);
 
     Gui_DrawLoadScreen(150);
-    
+
     TR_GenWorld(&engine_world, &tr_level);
 
     engine_world.id   = 0;
@@ -3346,4 +3346,3 @@ void Engine_SaveConfig()
 {
 
 }
-

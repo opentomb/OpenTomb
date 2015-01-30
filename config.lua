@@ -104,8 +104,7 @@ cvars.show_fps = 1;
 cvars.free_look_speed = 2500;
 
 -- AUTOEXEC LINES
-setgamef(2);
-setlevel(1);
+setgamef(3, 1);
 
 setGravity(0, 0, -5700.0);
 mlook(1);

@@ -1,5 +1,5 @@
 /*
- * File:   gl_font.cpp
+ * File:   gl_font.c
  * Author: TeslaRus
  *
  * Created on January 16, 2015, 10:46 PM
@@ -98,44 +98,7 @@ static __inline GLuint NextPowerOf2(GLuint in)
 }
 
 
-static uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
-{
-    uint8_t *u_utf8 = utf8;
-    uint8_t b = *u_utf8++;
-    uint32_t c, shift;
-    int len = 0;
-
-    // save ASC symbol as is
-    if(!(b & 0x80))
-    {
-       *utf32 = b;
-        return utf8 + 1;
-    }
-
-    // calculate lenght
-    while(b & 0x80)
-    {
-        b <<= 1;
-        ++len;
-    }
-
-    c = b;
-    shift = 6 - len;
-
-    while(--len)
-    {
-        c <<= shift;
-        c |= (*u_utf8++) & 0x3f;
-        shift = 6;
-    }
-
-   *utf32 = c;
-    return u_utf8;
-}
-
-
-
-static __inline void bbox_add(float *x0, float *y0, float *x1, float *y1,
+static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
                               float *x_min, float *x_max, float *y_min, float *y_max)
 {
     float min, max;
@@ -369,7 +332,7 @@ float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(i=0;(*ch!=0) && !((n>0)&&(i>=n));i++)
+        for(i=0;(*ch!=0) && !((n>=0)&&(i>=n));i++)
         {
             FT_Vector kern;
 
@@ -408,10 +371,10 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(i=0;(*ch!=0) && !((n>0)&&(i>=n));i++)
+        for(i=0;(*ch!=0) && !((n>=0)&&(i>=n));i++)
         {
             FT_Vector kern;
-            char_info_p g;
+            char_info_p g = glf->glyphs + curr_utf32;
 
             nch2 = utf8_to_utf32(nch, &next_utf32);
 
@@ -419,7 +382,6 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
             ch = nch;
             nch = nch2;
 
-            g = glf->glyphs + curr_utf32;
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
 
@@ -427,7 +389,7 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
             xx1 = xx0 + g->width;
             yy0 = y  + g->top;
             yy1 = yy0 - g->height;
-            bbox_add(&xx0, &yy0, &xx1, &yy1, x0, x1, y0, y1);
+            bbox_add(&xx0, &xx1, &yy0, &yy1, x0, x1, y0, y1);
 
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;
             y += (GLfloat)(kern.y + g->advance_y) / 64.0;
@@ -564,4 +526,76 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
             y += (GLfloat)(kern.y + g->advance_y) / 64.0;
         }
     }
+}
+
+/** Additional functions */
+
+static uint8_t* utf8_next_symbol(uint8_t *utf8)
+{
+    uint8_t b = *utf8;
+
+    // save ASC symbol as is
+    if(!(b & 0x80))
+    {
+        return utf8 + 1;
+    }
+
+    // calculate lenght
+    while(b & 0x80)
+    {
+        b <<= 1;
+        utf8++;
+    }
+
+    return utf8;
+}
+
+
+uint32_t utf8_strlen(const char *str)
+{
+    uint32_t i = 0;
+    uint8_t *ch = (uint8_t*)str;
+
+    for(;*ch;i++)
+    {
+        ch = utf8_next_symbol(ch);
+    }
+
+    return i;
+}
+
+
+uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
+{
+    uint8_t *u_utf8 = utf8;
+    uint8_t b = *u_utf8++;
+    uint32_t c, shift;
+    int len = 0;
+
+    // save ASC symbol as is
+    if(!(b & 0x80))
+    {
+       *utf32 = b;
+        return utf8 + 1;
+    }
+
+    // calculate lenght
+    while(b & 0x80)
+    {
+        b <<= 1;
+        ++len;
+    }
+
+    c = b;
+    shift = 6 - len;
+
+    while(--len)
+    {
+        c <<= shift;
+        c |= (*u_utf8++) & 0x3f;
+        shift = 6;
+    }
+
+   *utf32 = c;
+    return u_utf8;
 }
