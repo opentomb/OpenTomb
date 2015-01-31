@@ -128,7 +128,7 @@ public:
                              const uint32_t size,
                              const char* path);
     bool             RemoveFont(const font_Type index);
-    gl_tex_font_s*   GetFont(const font_Type index);
+    gl_tex_font_p    GetFont(const font_Type index);
     
     bool             AddFontStyle(const font_Style index,
                                   const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
@@ -137,7 +137,7 @@ public:
                                   const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
                                   const bool hide);
     bool             RemoveFontStyle(const font_Style index);
-    gui_fontstyle_s* GetFontStyle(const font_Style index);
+    gui_fontstyle_p GetFontStyle(const font_Style index);
     
     uint32_t         GetFontCount()
     {
@@ -152,7 +152,7 @@ public:
     void             Resize(); // Resize fonts on window resize event.
     
 private:
-    gui_font_s*      GetFontAddress(const font_Type index);
+    gui_font_p       GetFontAddress(const font_Type index);
     
     GLfloat          mFadeValue; // Multiplier used with font RGB values to animate fade.
     bool             mFadeDirection;

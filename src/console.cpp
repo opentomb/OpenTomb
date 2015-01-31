@@ -18,15 +18,65 @@ void Con_Init()
     con_base.inited = 0;
     con_base.log_pos = 0;
 
-    con_base.font = FontManager->GetFont(FONT_CONSOLE);
+    con_base.font = NULL;
 
-    con_base.line_text  = (char**) realloc(con_base.line_text, con_base.line_count*sizeof(char*));
-    con_base.line_style = (gui_fontstyle_p*) realloc(con_base.line_style, con_base.line_count*sizeof(gui_fontstyle_p));
+    // lines count check
+    if(con_base.line_count < CON_MIN_LOG)
+    {
+        con_base.line_count = CON_MIN_LOG;
+    }
+    if(con_base.line_count > CON_MAX_LOG)
+    {
+        con_base.line_count = CON_MAX_LOG;
+    }
+
+    // log size check
+    if(con_base.log_lines_count < CON_MIN_LOG)
+    {
+        con_base.log_lines_count = CON_MIN_LOG;
+    }
+    if(con_base.log_lines_count > CON_MAX_LOG)
+    {
+        con_base.log_lines_count = CON_MAX_LOG;
+    }
+
+    // showing lines count check
+    if(con_base.showing_lines < CON_MIN_LINES)
+    {
+        con_base.showing_lines = CON_MIN_LINES;
+    }
+    if(con_base.showing_lines > CON_MAX_LINES)
+    {
+        con_base.showing_lines = CON_MAX_LINES;
+    }
+
+    // spacing check
+    if(con_base.spacing < CON_MIN_LINE_INTERVAL)
+    {
+        con_base.spacing = CON_MIN_LINE_INTERVAL;
+    }
+    if(con_base.spacing > CON_MAX_LINE_INTERVAL)
+    {
+        con_base.spacing = CON_MAX_LINE_INTERVAL;
+    }
+
+    // linesize check
+    if(con_base.line_size < CON_MIN_LINE_SIZE)
+    {
+        con_base.line_size = CON_MIN_LINE_SIZE;
+    }
+    if(con_base.line_size > CON_MAX_LINE_SIZE)
+    {
+        con_base.line_size = CON_MAX_LINE_SIZE;
+    }
+
+    con_base.line_text  = (char**)malloc(con_base.line_count*sizeof(char*));
+    con_base.line_style = (gui_fontstyle_p*)malloc(con_base.line_count*sizeof(gui_fontstyle_p));
 
     for(uint16_t i=0;i<con_base.line_count;i++)
     {
         con_base.line_text[i]  = (char*) calloc(con_base.line_size*sizeof(char), 1);
-        con_base.line_style[i] = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+        con_base.line_style[i] = NULL;
     }
 
     con_base.log_lines = (char**) realloc(con_base.log_lines, con_base.log_lines_count * sizeof(char*));
@@ -34,10 +84,17 @@ void Con_Init()
     {
         con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
     }
-
-    Con_SetLineInterval(con_base.spacing);
-
     con_base.inited = 1;
+}
+
+void Con_InitFonts()
+{
+    for(uint16_t i=0;i<con_base.line_count;i++)
+    {
+        con_base.line_style[i] = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+    }
+    con_base.font = FontManager->GetFont(FONT_CONSOLE);
+    Con_SetLineInterval(con_base.spacing);
 }
 
 void Con_InitGlobals()
@@ -349,8 +406,8 @@ void Con_AddLine(const char *text, font_Style style)
         do
         {
             len = strlen(text);
-            char *last = con_base.line_text[con_base.line_count-1];    // save pointer to the last log string
-            for(uint16_t i=con_base.line_count-1;i>1;i--)                // shift log
+            char *last = con_base.line_text[con_base.line_count-1];             // save pointer to the last log string
+            for(uint16_t i=con_base.line_count-1;i>1;i--)                       // shift log
             {
                 con_base.line_style[i] = con_base.line_style[i-1];
                 con_base.line_text[i]  = con_base.line_text[i-1];            // shift is round

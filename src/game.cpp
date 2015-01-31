@@ -105,15 +105,19 @@ void Game_InitGlobals()
     control_states.free_look = 0;
     control_states.noclip = 0;
     control_states.cam_distance = 800.0;
+}
 
-    if(engine_lua)
+void Game_RegisterLuaFunctions(lua_State *lua)
+{
+    if(lua != NULL)
     {
-        lua_register(engine_lua, "mlook", lua_mlook);
-        lua_register(engine_lua, "freelook", lua_freelook);
-        lua_register(engine_lua, "noclip", lua_noclip);
-        lua_register(engine_lua, "cam_distance", lua_cam_distance);
+        lua_register(lua, "mlook", lua_mlook);
+        lua_register(lua, "freelook", lua_freelook);
+        lua_register(lua, "noclip", lua_noclip);
+        lua_register(lua, "cam_distance", lua_cam_distance);
     }
 }
+
 
 /**
  * Load game state
@@ -280,9 +284,9 @@ int Game_Save(const char* name)
 
     fprintf(f, "setFlipmap(%d);\n",   engine_world.room_flipmap);
     fprintf(f, "setFlipstate(%d);\n", engine_world.room_flipstate);
-    
+
     Save_Entity(&f, engine_world.Character);    // Save Lara.
-    
+
     if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
     {
         Save_EntityTree(&f, engine_world.entity_tree->root);
@@ -699,7 +703,7 @@ void Game_Frame(btScalar time)
 
     Gui_Update();
 
-    ///@FIXME: I have no idea what's happening here! - Lwmte 
+    ///@FIXME: I have no idea what's happening here! - Lwmte
 
     if(!con_base.show && control_states.gui_inventory)
     {
@@ -708,7 +712,7 @@ void Game_Frame(btScalar time)
     }
 
     // If console or inventory is active, only thing to update is audio.
-    
+
     if(con_base.show || main_inventory_menu->IsVisible())
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)

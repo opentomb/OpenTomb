@@ -40,6 +40,7 @@
 		<Linker>
 			<Add option="-static -lmingw32 -lSDL2main -lSDL2.dll -lglu32 -lopengl32 -lz -lpthread" />
 		</Linker>
+		<Unit filename="autoexec.lua" />
 		<Unit filename="config.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -3343,6 +3344,7 @@
 			<code_completion>
 				<search_path add="src\bullet" />
 				<search_path add="src\freetype2" />
+				<search_path add="src\image" />
 			</code_completion>
 			<envvars />
 			<debugger />
