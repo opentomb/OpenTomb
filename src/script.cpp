@@ -377,7 +377,7 @@ const char* lua_GetString(lua_State *lua, int string_index, size_t *string_lengt
         }
         lua_settop(lua, top);
     }
-    
+
     string_length = 0;
     return NULL;
 }
@@ -624,11 +624,7 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
 
 int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
 {
-    const char *path;
-    FILE *f;
-    int32_t t, i;
     int top;
-    float tf;
 
     if(!lua)
     {
@@ -646,14 +642,14 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         cn->background_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
         cn->background_color[3] = (GLfloat)lua_GetScalarField(lua, "a") / 255.0;
     }
-    lua_pop(lua, 1);
-    
-    tf = lua_GetScalarField(lua, "spacing");
+    lua_settop(lua, top);
+
+    float tf = lua_GetScalarField(lua, "spacing");
     if(tf >= CON_MIN_LINE_INTERVAL && tf <= CON_MAX_LINE_INTERVAL)
     {
         cn->spacing = tf;
     }
-    t = lua_GetScalarField(lua, "line_size");
+    int t = lua_GetScalarField(lua, "line_size");
     if(t >= CON_MIN_LINE_SIZE && t <= CON_MAX_LINE_SIZE)
     {
         cn->line_size = t;
@@ -676,7 +672,7 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
 
     cn->show = lua_GetScalarField(lua, "show");
     cn->show_cursor_period = lua_GetScalarField(lua, "show_cursor_period");
-    
+
     lua_settop(lua, top);
 
     return 1;

@@ -457,7 +457,7 @@ void World_Empty(world_p world)
     {
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
-        if(body && body->getMotionState())
+        if(body)
         {
             engine_container_p cont = ((engine_container_p)body->getUserPointer());
             if(cont != NULL)
@@ -467,7 +467,10 @@ void World_Empty(world_p world)
                 {
                     free(cont);
                     cont = NULL;
-                    delete body->getMotionState();
+                    if(body->getMotionState())
+                    {
+                        delete body->getMotionState();
+                    }
                     if(body->getCollisionShape())
                     {
                         delete body->getCollisionShape();
@@ -477,11 +480,11 @@ void World_Empty(world_p world)
                         bt_engine_dynamicsWorld->removeRigidBody(body);
                     }
                     delete body;
+                    body = NULL;
                 }
             }
         }
     }
-
 
     for(uint32_t i=0;i<world->room_count;i++)
     {

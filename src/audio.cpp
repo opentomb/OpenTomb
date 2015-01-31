@@ -1779,13 +1779,6 @@ int Audio_DeInit()
         engine_world.audio_effects_count = 0;
     }
 
-    if(engine_world.audio_sources)
-    {
-        free(engine_world.audio_sources);
-        engine_world.audio_sources = NULL;
-        engine_world.audio_effects_count = 0;
-    }
-
     if(engine_world.audio_map)
     {
         free(engine_world.audio_map);

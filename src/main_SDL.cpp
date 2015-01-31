@@ -319,7 +319,7 @@ void Engine_InitGL()
     // anything). They have to enable other arrays based on their need and then
     // return to default state
     glEnableClientState(GL_VERTEX_ARRAY);
-    
+
     // Default state for Alpha func: >=, 0.5. That's what all users of alpha
     // function use anyway.
     glAlphaFunc(GL_GEQUAL, 0.5);
@@ -419,7 +419,8 @@ void Engine_InitSDLVideo()
 
     if(renderer.settings.antialias)
     {
-        sdl_window     = SDL_CreateWindow(NULL, 0, 0, 0, 0, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+        /* I do not why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
+        sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         sdl_gl_context = SDL_GL_CreateContext(sdl_window);
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
@@ -430,7 +431,7 @@ void Engine_InitSDLVideo()
         }
         SDL_GL_DeleteContext(sdl_gl_context);
         SDL_DestroyWindow(sdl_window);
-        
+
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
     }
@@ -439,7 +440,7 @@ void Engine_InitSDLVideo()
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
     }
-    
+
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
 
@@ -470,15 +471,15 @@ void Engine_InitAL()
         ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
         ALC_FREQUENCY,       44100, 0};
 
-    const char *drv = SDL_GetCurrentAudioDriver();
-    
+    //const char *drv = SDL_GetCurrentAudioDriver();
+
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
         Sys_DebugLog(LOG_FILENAME, "InitAL: No AL audio devices!");
         return;
     }
-    
+
     al_context = alcCreateContext(al_device, paramList);
     if(!alcMakeContextCurrent(al_context))
     {
@@ -516,28 +517,28 @@ int main(int argc, char **argv)
     // Additional OpenGL initialization.
     Engine_InitGL();
     Render_DoShaders();
-    
+
     // Secondary (deferred) initialization.
     Engine_Init_Post();
-    
+
     // Initial window resize.
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
-    
+
     // OpenAL initialization.
     Engine_InitAL();
 
     // Clearing up memory for initial level loading.
     World_Prepare(&engine_world);
-    
+
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
-    
+
     // Make splash screen.
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
-    
+
 #if SKELETAL_TEST
     control_states.free_look = 1;
 #endif
@@ -550,7 +551,7 @@ int main(int argc, char **argv)
         oldtime = newtime;
         Engine_Frame(time);
     }
-    
+
     // Main loop interrupted; shutting down.
     Engine_Shutdown(EXIT_SUCCESS);
     return(EXIT_SUCCESS);
@@ -629,13 +630,13 @@ void Engine_Display()
 }
 
 void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
-{    
+{
     screen_info.w = nominalW;
     screen_info.h = nominalH;
-    
+
     screen_info.w_unit = (float)nominalW / GUI_SCREEN_METERING_RESOLUTION;
     screen_info.h_unit = (float)nominalH / GUI_SCREEN_METERING_RESOLUTION;
-    
+
     Gui_Resize();
     Con_SetLineInterval(con_base.spacing);
 
@@ -840,16 +841,16 @@ void ShowDebugInfo()
             case OBJECT_ENTITY:
                 Gui_OutTextXY(30, 60, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
                 break;
-                
+
             case OBJECT_STATIC_MESH:
                 Gui_OutTextXY(30, 60, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
-                
+
             case OBJECT_ROOM_BASE:
                 Gui_OutTextXY(30, 60, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
-        
+
     }
 
     if(engine_camera.current_room != NULL)
@@ -938,7 +939,7 @@ void Engine_PollSDLInput()
                 if(sdl_joystick)
                     Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
                 break;
-                
+
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
                 if(con_base.show && event.key.state)
@@ -1085,6 +1086,7 @@ void DebugKeys(int button, int state)
                 break;
 
             case SDLK_y:
+                screen_info.show_debuginfo != screen_info.show_debuginfo;
                 mesh++;
                 if((uint32_t)mesh + 1 > engine_world.meshes_count)
                 {
@@ -1152,7 +1154,7 @@ void DebugKeys(int button, int state)
                     }
                 }
                 break;
-                
+
             case SDLK_4:
                 if(!con_base.show)
                 {

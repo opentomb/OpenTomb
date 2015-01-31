@@ -79,9 +79,10 @@ enum font_Style
 
 typedef struct gui_font_s
 {
-    font_Type             index;
-    uint16_t              size;
-    struct gl_tex_font_s *font;
+    font_Type                   index;
+    uint16_t                    size;
+    struct gl_tex_font_s       *font;
+    struct gui_font_s          *next;
 }gui_font_t, *gui_font_p;
 
 // Font style is different to font itself - whereas engine can have
@@ -90,17 +91,19 @@ typedef struct gui_font_s
 
 typedef struct gui_fontstyle_s
 {
-    font_Style  index;          // Unique index which is used to identify style.
+    font_Style                  index;          // Unique index which is used to identify style.
     
-    GLfloat     color[4];
-    GLfloat     real_color[4];
-    GLfloat     rect_color[4];
-    GLfloat     rect_border;
+    GLfloat                     color[4];
+    GLfloat                     real_color[4];
+    GLfloat                     rect_color[4];
+    GLfloat                     rect_border;
     
-    bool        shadowed;
-    bool        rect;
-    bool        fading;         // TR4-like looped fading font effect.
-    bool        hidden;         // Used to bypass certain GUI lines easily.
+    bool                        shadowed;
+    bool                        rect;
+    bool                        fading;         // TR4-like looped fading font effect.
+    bool                        hidden;         // Used to bypass certain GUI lines easily.
+    
+    struct gui_fontstyle_s     *next;
 } gui_fontstyle_t, *gui_fontstyle_p;
 
 #define GUI_FONT_FADE_SPEED 1.0                 // Global fading style speed.
