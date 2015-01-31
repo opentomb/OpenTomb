@@ -180,6 +180,18 @@ typedef struct character_param_s
     float       maximum[PARAM_LASTINDEX];
 }character_param_t, *character_param_p;
 
+typedef struct character_stats_s
+{
+    float       distance;
+    uint32_t    secrets_level;         // Level amount of secrets.
+    uint32_t    secrets_game;          // Overall amount of secrets.
+    uint32_t    ammo_used;
+    uint32_t    hits;
+    uint32_t    kills;
+    uint32_t    medipacks_used;
+    uint32_t    saves_used;
+}character_stats_t, *character_stats_p;
+
 typedef struct inventory_node_s
 {
     uint32_t                    id;
@@ -194,6 +206,7 @@ typedef struct character_s
     struct character_command_s   cmd;                    // character control commands
     struct inventory_node_s     *inventory;
     struct character_param_s     parameters;
+    struct character_stats_s     statistics;
 
     int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
     int16_t                      max_move_iterations;
