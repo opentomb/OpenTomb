@@ -502,12 +502,11 @@ int main(int argc, char **argv)
     FindConfigFile();
 #endif
 
-    // Primary initialization and loading defaults.
-    Engine_Init_Pre();
-    Engine_InitGlobals();
+    // Set defaults parameters and load config file.
+    Engine_InitConfig("config.lua");
 
-    // Loading config file.
-    Engine_LoadConfig();
+    // Primary initialization.
+    Engine_Init_Pre();
 
     // Init generic SDL interfaces.
     Engine_InitSDLControls();
@@ -538,6 +537,8 @@ int main(int argc, char **argv)
     // Make splash screen.
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+
+    luaL_dofile(engine_lua, "autoexec.lua");
 
 #if SKELETAL_TEST
     control_states.free_look = 1;

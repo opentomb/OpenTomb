@@ -2616,14 +2616,18 @@ gui_FontManager::gui_FontManager()
 
 gui_FontManager::~gui_FontManager()
 {
+    this->font_count = 0;
+    this->style_count = 0;
+
     for(gui_font_p next_font;this->fonts!=NULL;)
     {
         next_font=this->fonts->next;
+        glf_free_font(this->fonts->font);
+        this->fonts->font = NULL;
         free(this->fonts);
         this->fonts = next_font;
     }
     this->fonts = NULL;
-    this->font_count = 0;
 
     for(gui_fontstyle_p next_style;this->styles!=NULL;)
     {
@@ -2632,7 +2636,6 @@ gui_FontManager::~gui_FontManager()
         this->styles = next_style;
     }
     this->styles = NULL;
-    this->style_count = 0;
 
     FT_Done_FreeType(this->font_library);
     this->font_library = NULL;
@@ -2706,7 +2709,7 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
     }
 
     desired_font->font = NULL;                                                  ///@PARANOID
-    desired_font->font = glf_create_font(font_library, path, size);
+    desired_font->font = glf_create_font(this->font_library, path, size);
 
     return true;
 }

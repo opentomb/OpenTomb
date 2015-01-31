@@ -54,6 +54,7 @@ typedef struct console_info_s
 extern console_info_t con_base;
 
 void Con_Init();
+void Con_InitFonts();
 void Con_InitGlobals();
 void Con_Destroy();
 

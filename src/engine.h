@@ -227,7 +227,7 @@ void ResetTempbtScalar();
 void Engine_Init_Pre();     // Initial init
 void Engine_Init_Post();    // Finalizing init
 
-void Engine_InitGlobals();
+void Engine_InitDefaultGlobals();
 
 void Engine_Destroy();
 void Engine_Shutdown(int val);
@@ -248,7 +248,7 @@ int  Engine_LoadMap(const char *name);
 
 int  Engine_ExecCmd(char *ch);
 
-void Engine_LoadConfig();
+void Engine_InitConfig(const char *filename);
 void Engine_SaveConfig();
 
 void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);

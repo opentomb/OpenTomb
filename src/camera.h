@@ -37,7 +37,6 @@ typedef struct camera_s
     struct room_s               *current_room;
 }camera_t, *camera_p;
 
-void Cam_InitGlobals(camera_p cam);
 void Cam_Init(camera_p cam);                                                    // set default camera parameters + frustum initialization
 void Cam_Apply(camera_p cam);                                                   // set OpenGL projection matrix + model wiev matrix
 void Cam_SetFovAspect(camera_p cam, btScalar fov, btScalar aspect);

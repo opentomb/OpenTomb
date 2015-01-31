@@ -642,7 +642,7 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         cn->background_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
         cn->background_color[3] = (GLfloat)lua_GetScalarField(lua, "a") / 255.0;
     }
-    lua_settop(lua, top);
+    lua_pop(lua, 1);
 
     float tf = lua_GetScalarField(lua, "spacing");
     if(tf >= CON_MIN_LINE_INTERVAL && tf <= CON_MAX_LINE_INTERVAL)

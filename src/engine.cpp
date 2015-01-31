@@ -175,19 +175,22 @@ void ResetTempbtScalar()
 }
 
 
-void Engine_InitGlobals()
+void Engine_InitDefaultGlobals()
 {
     Con_InitGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
     Render_InitGlobals();
     Audio_InitGlobals();
-    Cam_InitGlobals(&engine_camera);
 }
 
 
 void Engine_Init_Pre()
 {
+    /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
+     * Rendering activation may be done later. */
+    Gui_InitFontManager();
+    Con_Init();
     Engine_LuaInit();
 
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
@@ -195,10 +198,8 @@ void Engine_Init_Pre()
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
 
     Com_Init();
-
     Render_Init();
     Cam_Init(&engine_camera);
-
     renderer.cam = &engine_camera;
 
     Engine_BTInit();
@@ -206,38 +207,10 @@ void Engine_Init_Pre()
 
 void Engine_Init_Post()
 {
-    /*
-    // ------------------------------------------------------------------
-    // DUMP TEST UTF-32 STRING
-
-    const char* tempstring    = NULL;
-    uint32_t*   utf32_string  = NULL;
-    uint32_t    string_length = 0;
-
-    tempstring   = lua_GetString(engine_lua, 0, &string_length);
-
-    utf32_string = String_MakeUTF32(tempstring, &string_length);
-
-    FILE *fp;
-    fp = fopen("string_dump.bin", "w");
-
-    if(fp != NULL)
-    {
-        fwrite(utf32_string, string_length * sizeof(uint32_t), 1, fp);
-        fclose(fp);
-    }
-
-    if(utf32_string) free(utf32_string);
-
-    // ------------------------------------------------------------------
-    */
-
-    Gui_InitFontManager();
-
     luaL_dofile(engine_lua, "scripts/gui/fonts.lua");
+    Con_InitFonts();
 
     Gui_Init();
-    Con_Init();
     Sys_Init();
 
     Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
@@ -866,9 +839,9 @@ int lua_AddFont(lua_State *lua)
         return 0;
     }
 
-    if(FontManager->AddFont( (font_Type)lua_tointeger(lua, 1),
-                             (uint32_t) lua_tointeger(lua, 3),
-                                        lua_tostring (lua, 2)) )
+    if(FontManager->AddFont((font_Type)lua_tointeger(lua, 1),
+                            (uint32_t) lua_tointeger(lua, 3),
+                                       lua_tostring(lua, 2)))
     {
         return 1;
     }
@@ -2610,6 +2583,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
      * register functions
      */
 
+    Game_RegisterLuaFunctions(lua);
+
     lua_register(lua, "print", lua_print);
     lua_register(lua, "dumpRoom", lua_DumpRoom);
     lua_register(lua, "setRoomEnabled", lua_SetRoomEnabled);
@@ -3318,27 +3293,32 @@ int Engine_ExecCmd(char *ch)
 }
 
 
-void Engine_LoadConfig()
+void Engine_InitConfig(const char *filename)
 {
-    if(!engine_lua)
-    {
-        return;
-    }
+    lua_State *lua = luaL_newstate();
 
-    if(Engine_FileFound("config.lua"))
-    {
-        luaL_dofile(engine_lua, "config.lua");
-    }
-    else
-    {
-        Sys_Warn("Could not find \"config.lua\"");
-    }
+    Engine_InitDefaultGlobals();
 
-    lua_ParseScreen(engine_lua, &screen_info);
-    lua_ParseRender(engine_lua, &renderer.settings);
-    lua_ParseAudio(engine_lua, &audio_settings);
-    lua_ParseConsole(engine_lua, &con_base);
-    lua_ParseControls(engine_lua, &control_mapper);
+    if(lua != NULL)
+    {
+        if((filename != NULL) && Engine_FileFound(filename))
+        {
+            luaL_openlibs(lua);
+            lua_register(lua, "bind", lua_BindKey);                                 // get and set key bindings
+            luaL_dofile(lua, filename);
+
+            lua_ParseScreen(lua, &screen_info);
+            lua_ParseRender(lua, &renderer.settings);
+            lua_ParseAudio(lua, &audio_settings);
+            lua_ParseConsole(lua, &con_base);
+            lua_ParseControls(lua, &control_mapper);
+            lua_close(lua);
+        }
+        else
+        {
+            Sys_Warn("Could not find \"%s\"", filename);
+        }
+    }
 }
 
 
