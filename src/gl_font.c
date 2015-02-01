@@ -68,6 +68,7 @@ void glf_free_font(gl_tex_font_p glf)
         }
         glf->glyphs_count = 0;
 
+        glf->gl_real_tex_indexes_count = 0;
         if(glf->gl_tex_indexes != NULL)
         {
             if(glf->gl_tex_indexes_count > 0)
