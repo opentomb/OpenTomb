@@ -450,10 +450,10 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glDrawArrays(GL_POLYGON, 0, 4);
     }
 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if(l->style->shadowed)
     {
-        GLfloat temp[4] = {0.0,0.0,0.0,l->style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY}; // Derive alpha from base color.
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        GLfloat temp[4] = {0.0f,0.0f,0.0f,(float)l->style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY}; // Derive alpha from base color.
         glColor4fv(temp);
         glf_render_str(l->font,
                        (real_x    + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),

@@ -2725,14 +2725,7 @@ void Engine_Shutdown(int val)
     World_Empty(&engine_world);
     Engine_Destroy();
 
-    if(frame_vertex_buffer)
-    {
-        free(frame_vertex_buffer);
-    }
-    frame_vertex_buffer = NULL;
-    frame_vertex_buffer_size = 0;
-    frame_vertex_buffer_size_left = 0;
-
+    /* no more renderings */
     SDL_GL_DeleteContext(sdl_gl_context);
     SDL_DestroyWindow(sdl_window);
 
@@ -2756,10 +2749,18 @@ void Engine_Shutdown(int val)
         alcCloseDevice(al_device);
     }
 
+    /* free temporary memory */
+    if(frame_vertex_buffer)
+    {
+        free(frame_vertex_buffer);
+    }
+    frame_vertex_buffer = NULL;
+    frame_vertex_buffer_size = 0;
+    frame_vertex_buffer_size_left = 0;
+
     IMG_Quit();
     SDL_Quit();
 
-    //printf("\nSDL_Quit...");
     exit(val);
 }
 
@@ -3027,6 +3028,8 @@ int Engine_LoadMap(const char *name)
         return 0;
     }
 
+    renderer.style &= ~R_DRAW_SKYBOX;
+    renderer.r_list_active_count = 0;
     renderer.world = NULL;
 
     strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.
@@ -3304,7 +3307,7 @@ void Engine_InitConfig(const char *filename)
         if((filename != NULL) && Engine_FileFound(filename))
         {
             luaL_openlibs(lua);
-            lua_register(lua, "bind", lua_BindKey);                                 // get and set key bindings
+            lua_register(lua, "bind", lua_BindKey);                             // get and set key bindings
             luaL_dofile(lua, filename);
 
             lua_ParseScreen(lua, &screen_info);
