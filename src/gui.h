@@ -179,8 +179,9 @@ typedef struct gui_text_line_s
     char                       *text;
     uint16_t                    text_size;
     
-    struct gl_tex_font_s       *font;
-    struct gui_fontstyle_s     *style;
+    struct gl_tex_font_s       *gl_font;
+    uint16_t                    font;
+    uint16_t                    style;
 
     GLfloat                     X;
     uint8_t                     Xanchor;

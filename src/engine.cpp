@@ -2713,7 +2713,7 @@ void Engine_Destroy()
         lua_close(engine_lua);
         engine_lua = NULL;
     }
-
+    
     Gui_Destroy();
 }
 
@@ -2748,7 +2748,7 @@ void Engine_Shutdown(int val)
     {
         alcCloseDevice(al_device);
     }
-
+    
     /* free temporary memory */
     if(frame_vertex_buffer)
     {
@@ -2757,7 +2757,7 @@ void Engine_Shutdown(int val)
     frame_vertex_buffer = NULL;
     frame_vertex_buffer_size = 0;
     frame_vertex_buffer_size_left = 0;
-
+    
     IMG_Quit();
     SDL_Quit();
 

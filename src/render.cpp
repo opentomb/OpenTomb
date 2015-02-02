@@ -944,7 +944,6 @@ void Render_DrawList()
     }
 
     glDisable(GL_CULL_FACE);
-    glDisableClientState(GL_COLOR_ARRAY);                                       ///@FIXME: reduce number of gl state changes
     if(renderer.style & R_DRAW_WIRE)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -953,6 +952,7 @@ void Render_DrawList()
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+    glDisableClientState(GL_COLOR_ARRAY);                                       ///@FIXME: reduce number of gl state changes
     glDisableClientState(GL_NORMAL_ARRAY);
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {

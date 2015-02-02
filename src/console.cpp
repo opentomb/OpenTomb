@@ -140,7 +140,7 @@ void Con_Destroy()
 
 void Con_SetLineInterval(float interval)
 {
-    if((con_base.inited == 0) ||
+    if((con_base.inited == 0) || (FontManager == NULL) ||
        (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
     {
         return; // nothing to do
@@ -162,7 +162,7 @@ void Con_SetLineInterval(float interval)
 
 void Con_Draw()
 {
-    if(con_base.inited && con_base.show)
+    if(FontManager && con_base.inited && con_base.show)
     {
         int x, y;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture

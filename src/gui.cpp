@@ -57,8 +57,9 @@ void Gui_InitTempLines()
         gui_temp_lines[i].next = NULL;
         gui_temp_lines[i].prev = NULL;
 
-        gui_temp_lines[i].style = NULL;
-        gui_temp_lines[i].font  = NULL;
+        gui_temp_lines[i].style = FONTSTYLE_GENERIC;
+        gui_temp_lines[i].font  = FONT_SECONDARY;
+        gui_temp_lines[i].gl_font = NULL;
     }
 }
 
@@ -280,7 +281,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
 {
     if(l)
     {
-        glf_get_string_bb(l->font, l->text, -1, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
+        glf_get_string_bb(l->gl_font, l->text, -1, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
     }
 
     return l;
@@ -292,16 +293,14 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
  */
 gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
-    if(temp_lines_used < MAX_TEMP_LINES - 1)
+    if(FontManager && (temp_lines_used < MAX_TEMP_LINES - 1))
     {
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;
 
-        if(l->font == NULL)
-            l->font = FontManager->GetFont(FONT_SECONDARY);
-
-        if(l->style == NULL)
-            l->style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+        l->font = FONT_SECONDARY;
+        l->style = FONTSTYLE_GENERIC;
+        l->gl_font = FontManager->GetFont((font_Type)l->font);
 
         va_start(argptr, fmt);
         vsnprintf(l->text, TEMP_LINE_LENGTH, fmt, argptr);
@@ -317,10 +316,8 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         l->Xanchor = GUI_ANCHOR_HOR_LEFT;
         l->Yanchor = GUI_ANCHOR_VERT_BOTTOM;
 
-        float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
-
-        l->absXoffset = l->X * scale_factor;
-        l->absYoffset = l->Y * scale_factor;
+        l->absXoffset = l->X * screen_info.scale_factor;
+        l->absYoffset = l->Y * screen_info.scale_factor;
 
         l->show = 1;
         return l;
@@ -336,14 +333,12 @@ void Gui_Update()
 
 void Gui_Resize()
 {
-    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
-
     gui_text_line_p l = gui_base_lines;
 
     while(l)
     {
-        l->absXoffset = l->X * scale_factor;
-        l->absYoffset = l->Y * scale_factor;
+        l->absXoffset = l->X * screen_info.scale_factor;
+        l->absYoffset = l->Y * screen_info.scale_factor;
 
         l = l->next;
     }
@@ -351,8 +346,8 @@ void Gui_Resize()
     l = gui_temp_lines;
     for(uint16_t i=0;i<temp_lines_used;i++,l++)
     {
-        l->absXoffset = l->X * scale_factor;
-        l->absYoffset = l->Y * scale_factor;
+        l->absXoffset = l->X * screen_info.scale_factor;
+        l->absYoffset = l->Y * screen_info.scale_factor;
     }
 
     for(int i = 0; i < BAR_LASTINDEX; i++)
@@ -395,13 +390,18 @@ void Gui_RenderStringLine(gui_text_line_p l)
 {
     GLfloat real_x, real_y;
 
-    if(l->font == NULL)
-        l->font = FontManager->GetFont(FONT_SECONDARY);
+    if(l->gl_font == NULL)
+    {
+        l->gl_font = FontManager->GetFont((font_Type)l->font);
+        if(l->gl_font == NULL)
+        {
+            return;
+        }
+    }
 
-    if(l->style == NULL)
-        l->style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+    gui_fontstyle_p style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
 
-    if((!l->show) || (l->style->hidden)) return;
+    if((style == NULL) || (!l->show) || (style->hidden)) return;
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -433,64 +433,66 @@ void Gui_RenderStringLine(gui_text_line_p l)
             break;
     }
 
-    if(l->style->rect)
+    if(style->rect)
     {
-        GLfloat x0 = l->rect[0] + real_x - l->style->rect_border * screen_info.w_unit;
-        GLfloat y0 = l->rect[1] + real_y - l->style->rect_border * screen_info.h_unit;
-        GLfloat x1 = l->rect[2] + real_x + l->style->rect_border * screen_info.w_unit;
-        GLfloat y1 = l->rect[3] + real_y + l->style->rect_border * screen_info.h_unit;
+        GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_info.w_unit;
+        GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_info.h_unit;
+        GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_info.w_unit;
+        GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_info.h_unit;
 
         GLfloat rectCoords[8];
         rectCoords[0] = x0; rectCoords[1] = y0;
         rectCoords[2] = x1; rectCoords[3] = y0;
         rectCoords[4] = x1; rectCoords[5] = y1;
         rectCoords[6] = x0; rectCoords[7] = y1;
-        glColor4fv(l->style->rect_color);
+        glColor4fv(style->rect_color);
         glVertexPointer(2, GL_FLOAT, 0, rectCoords);
         glDrawArrays(GL_POLYGON, 0, 4);
     }
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    if(l->style->shadowed)
+    if(style->shadowed)
     {
-        GLfloat temp[4] = {0.0f,0.0f,0.0f,(float)l->style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY}; // Derive alpha from base color.
+        GLfloat temp[4] = {0.0f,0.0f,0.0f,(float)style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY}; // Derive alpha from base color.
         glColor4fv(temp);
-        glf_render_str(l->font,
+        glf_render_str(l->gl_font,
                        (real_x    + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
                        (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
                        l->text);
     }
 
-    glColor4fv(l->style->real_color);
-    glf_render_str(l->font, real_x, real_y, l->text);
+    glColor4fv(style->real_color);
+    glf_render_str(l->gl_font, real_x, real_y, l->text);
 }
 
 void Gui_RenderStrings()
 {
-    gui_text_line_p l = gui_base_lines;
-
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    while(l)
+    if(FontManager != NULL)
     {
-        Gui_RenderStringLine(l);
-        l = l->next;
-    }
+        gui_text_line_p l = gui_base_lines;
 
-    l = gui_temp_lines;
-    for(uint16_t i=0;i<temp_lines_used;i++,l++)
-    {
-        if(l->show)
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        while(l)
         {
             Gui_RenderStringLine(l);
-            l->show = 0;
+            l = l->next;
         }
+
+        l = gui_temp_lines;
+        for(uint16_t i=0;i<temp_lines_used;i++,l++)
+        {
+            if(l->show)
+            {
+                Gui_RenderStringLine(l);
+                l->show = 0;
+            }
+        }
+
+        glPopClientAttrib();
+        temp_lines_used = 0;
     }
-
-    glPopClientAttrib();
-
-    temp_lines_used = 0;
 }
 
 
@@ -567,12 +569,16 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 
         glPushMatrix();
         if(size < 1.0)          // only reduce items size...
+        {
             glScalef(size, size, size);
+        }
         Render_SkeletalModel(bf);
         glPopMatrix();
     }
     else
+    {
         Render_SkeletalModel(bf);
+    }
 }
 
 
@@ -1195,16 +1201,34 @@ void gui_InventoryMenu::Render()
                             inv->angle += 360;
                         }
                         else if (inv->angle < 0)
+                        {
                             inv->angle_dir = -1;
+                        }
+
                         if(item->name[0])
                         {
+                            char buf[128];
                             if(inv->linked_item->id == 0 && (engine_world.version == 3 || engine_world.version == 4))
-                                Gui_OutTextXY(screen_info.w/2 - 160, screen_info.h/2 - 200, "Statistics");
+                            {
+                                strcpy(buf, "Statistics");
+                            }
                             else
-                                Gui_OutTextXY(screen_info.w/2 - 160, screen_info.h/2 - 200, "%s", item->name);
+                            {
+                                if(inv->linked_item->count > 1)
+                                {
+                                    snprintf(buf, 128, "%s (%d)", item->name, inv->linked_item->count);
+                                }
+                                else
+                                {
+                                    strncpy(buf, item->name, 128);
+                                }
+                            }
+                            /* STICK! abs. coords. to ralative and after relative to abs.
+                             * maybe it will be better to use Gui_OutTextXY with ABSOLUTE coords.
+                             * and made addition function with relative coords. */
+                            float x = ((float)screen_info.w - glf_get_string_len(FontManager->GetFont(FONT_SECONDARY), buf, -1)) / 2.0;
+                            Gui_OutTextXY(x / screen_info.scale_factor, screen_info.h/2 - 200, buf);
                         }
-                        if(inv->linked_item->count > 1)
-                                Gui_OutTextXY(screen_info.w/2 + 150, screen_info.h/2 - 200, "%d", inv->linked_item->count);
                     }
                     else
                     {
@@ -1214,12 +1238,14 @@ void gui_InventoryMenu::Render()
                             inv->angle_dir = 0;
                         }
                         if(inv->angle!=0 && inv->angle_dir!=0)
+                        {
                             inv->angle -= inv->angle_dir * engine_frame_time * 75.0;
+                        }
                     }
                     glRotatef(inv->angle, 0.0, 0.0, 1.0);
                     glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
                     glScalef(0.7, 0.7, 0.7);
-                    Gui_RenderItem(item->bf, NULL);
+                    Gui_RenderItem(item->bf, 0.0);
                 glPopMatrix();
             glPopMatrix();
         glPopMatrix();
@@ -2136,13 +2162,11 @@ void gui_ProgressBar::SetSize(float width, float height, float borderSize)
 // Recalculate size, according to viewport resolution.
 void gui_ProgressBar::RecalculateSize()
 {
-    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
+    mWidth  = (float)mAbsWidth  * screen_info.scale_factor;
+    mHeight = (float)mAbsHeight * screen_info.scale_factor;
 
-    mWidth  = (float)mAbsWidth  * scale_factor;
-    mHeight = (float)mAbsHeight * scale_factor;
-
-    mBorderWidth  = (float)mAbsBorderSize  * scale_factor;
-    mBorderHeight = (float)mAbsBorderSize  * scale_factor;
+    mBorderWidth  = (float)mAbsBorderSize  * screen_info.scale_factor;
+    mBorderHeight = (float)mAbsBorderSize  * screen_info.scale_factor;
 
     // Calculate range unit, according to maximum bar value set up.
     // If bar alignment is set to horizontal, calculate it from bar width.
@@ -2154,33 +2178,31 @@ void gui_ProgressBar::RecalculateSize()
 // Recalculate position, according to viewport resolution.
 void gui_ProgressBar::RecalculatePosition()
 {
-    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
-
     switch(mXanchor)
     {
         case GUI_ANCHOR_HOR_LEFT:
-            mX = (float)(mAbsXoffset+mAbsBorderSize) * scale_factor;
+            mX = (float)(mAbsXoffset+mAbsBorderSize) * screen_info.scale_factor;
             break;
         case GUI_ANCHOR_HOR_CENTER:
-            mX = ((float)screen_info.w - ((float)(mAbsWidth+mAbsBorderSize*2) * scale_factor)) / 2 +
-                 ((float)mAbsXoffset * scale_factor);
+            mX = ((float)screen_info.w - ((float)(mAbsWidth+mAbsBorderSize*2) * screen_info.scale_factor)) / 2 +
+                 ((float)mAbsXoffset * screen_info.scale_factor);
             break;
         case GUI_ANCHOR_HOR_RIGHT:
-            mX = (float)screen_info.w - ((float)(mAbsXoffset+mAbsWidth+mAbsBorderSize*2)) * scale_factor;
+            mX = (float)screen_info.w - ((float)(mAbsXoffset+mAbsWidth+mAbsBorderSize*2)) * screen_info.scale_factor;
             break;
     }
 
     switch(mYanchor)
     {
         case GUI_ANCHOR_VERT_TOP:
-            mY = (float)screen_info.h - ((float)(mAbsYoffset+mAbsHeight+mAbsBorderSize*2)) * scale_factor;
+            mY = (float)screen_info.h - ((float)(mAbsYoffset+mAbsHeight+mAbsBorderSize*2)) * screen_info.scale_factor;
             break;
         case GUI_ANCHOR_VERT_CENTER:
             mY = ((float)screen_info.h - ((float)(mAbsHeight+mAbsBorderSize*2) * screen_info.h_unit)) / 2 +
-                 ((float)mAbsYoffset * scale_factor);
+                 ((float)mAbsYoffset * screen_info.scale_factor);
             break;
         case GUI_ANCHOR_VERT_BOTTOM:
-            mY = (mAbsYoffset + mAbsBorderSize) * scale_factor;
+            mY = (mAbsYoffset + mAbsBorderSize) * screen_info.scale_factor;
             break;
     }
 }
@@ -2876,10 +2898,9 @@ void gui_FontManager::Update()
 
 void gui_FontManager::Resize()
 {
-    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
-
     for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
     {
-        glf_resize(current_font->font, (uint16_t)(((float)current_font->size) * scale_factor));
+        ///@FIXME: check / found why we need magick 2, without it font is too little.
+        glf_resize(current_font->font, (uint16_t)(((float)current_font->size) * screen_info.scale_factor * 2.0));
     }
 }

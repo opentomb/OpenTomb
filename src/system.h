@@ -17,6 +17,7 @@ typedef struct screen_info_s
     
     float       fps;
     float       fov;
+    float       scale_factor;
     int8_t      FS_flag;
     int8_t      show_debuginfo;
 } screen_info_t, *screen_info_p;
