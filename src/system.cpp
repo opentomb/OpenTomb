@@ -39,8 +39,8 @@ void Sys_Init()
     system_fps.text = (char*)malloc(system_fps.text_size * sizeof(char));
     system_fps.text[0] = 0;
 
-    system_fps.X = (30.0);
-    system_fps.Y = (30.0);
+    system_fps.X = (10.0);
+    system_fps.Y = (10.0);
     system_fps.Xanchor = GUI_ANCHOR_HOR_RIGHT;
     system_fps.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
 

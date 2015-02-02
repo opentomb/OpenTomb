@@ -2900,7 +2900,6 @@ void gui_FontManager::Resize()
 {
     for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
     {
-        ///@FIXME: check / found why we need magick 2, without it font is too little.
-        glf_resize(current_font->font, (uint16_t)(((float)current_font->size) * screen_info.scale_factor * 2.0));
+        glf_resize(current_font->font, (uint16_t)(((float)current_font->size) * screen_info.scale_factor));
     }
 }

@@ -641,7 +641,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
     screen_info.w_unit = (float)nominalW / GUI_SCREEN_METERING_RESOLUTION;
     screen_info.h_unit = (float)nominalH / GUI_SCREEN_METERING_RESOLUTION;
-    screen_info.scale_factor = (screen_info.w >= screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
+    screen_info.scale_factor = (screen_info.w < screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
 
     Gui_Resize();
     Con_SetLineInterval(con_base.spacing);
