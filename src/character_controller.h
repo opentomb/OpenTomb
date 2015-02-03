@@ -207,7 +207,7 @@ typedef struct character_s
     struct inventory_node_s     *inventory;
     struct character_param_s     parameters;
     struct character_stats_s     statistics;
-
+    
     int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
     int16_t                      max_move_iterations;
     int16_t                      no_fix;

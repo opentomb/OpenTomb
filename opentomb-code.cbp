@@ -12,7 +12,10 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-g3 -fno-exceptions -Wall" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+					<Add option="-g" />
+					<Add option="-g3" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -23,7 +26,8 @@
 				<Compiler>
 					<Add option="-march=prescott" />
 					<Add option="-O2" />
-					<Add option="-static -Wall" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -33,9 +37,8 @@
 		<Compiler>
 			<Add option="-O2" />
 			<Add option="-Wall" />
-			<Add option='-I&quot;src\bullet&quot; -I&quot;src\freetype2&quot; -I&quot;src\image\jpeg-9&quot; -I&quot;src\image\libpng-1.6.2&quot; -fno-exceptions -static' />
-			<Add option="-Wno-sign-compare" />
-			<Add option="-DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS" />
+			<Add option='-I&quot;src\bullet&quot; -I&quot;src\freetype2&quot; -I&quot;src\image\jpeg-9&quot; -I&quot;src\image\libpng-1.6.2&quot; -Wno-sign-compare' />
+			<Add option="-DLOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS" />
 		</Compiler>
 		<Linker>
 			<Add option="-static -lmingw32 -lSDL2main -lSDL2.dll -lglu32 -lopengl32 -lz -lpthread" />

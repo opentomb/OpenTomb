@@ -44,9 +44,8 @@ void Sys_Init()
     system_fps.Xanchor = GUI_ANCHOR_HOR_RIGHT;
     system_fps.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
 
-    system_fps.gl_font = NULL;
-    system_fps.font  = FONT_PRIMARY;
-    system_fps.style = FONTSTYLE_MENU_TITLE;
+    system_fps.font_id  = FONT_PRIMARY;
+    system_fps.style_id = FONTSTYLE_MENU_TITLE;
 
     system_fps.show  = 1;
 

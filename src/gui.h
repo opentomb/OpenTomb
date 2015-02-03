@@ -81,7 +81,7 @@ typedef struct gui_font_s
 {
     font_Type                   index;
     uint16_t                    size;
-    struct gl_tex_font_s       *font;
+    struct gl_tex_font_s       *gl_font;
     struct gui_font_s          *next;
 }gui_font_t, *gui_font_p;
 
@@ -179,10 +179,9 @@ typedef struct gui_text_line_s
     char                       *text;
     uint16_t                    text_size;
     
-    struct gl_tex_font_s       *gl_font;
-    uint16_t                    font;
-    uint16_t                    style;
-
+    uint16_t                    font_id;
+    uint16_t                    style_id;
+    
     GLfloat                     X;
     uint8_t                     Xanchor;
     GLfloat                     absXoffset;
@@ -578,6 +577,7 @@ private:
     // background settings
 public:
     gui_text_line_s             mLabel_Title;                // Styles
+    char                        mLabel_Title_text[128];
     gui_text_line_s             mLabel_ItemName;
     char                        mLabel_ItemName_text[128];
 
@@ -617,12 +617,7 @@ extern gui_InventoryMenu     *main_inventory_menu;
 extern gui_FontManager       *FontManager;
 
 /**
- * Calculates rect coordinates around the text
- */
-gui_text_line_p Gui_StringAutoRect(gui_text_line_p l);
-
-/**
- * Draws text using a current console font.
+ * Draws text using a FONT_SECONDARY.
  */
 gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
 

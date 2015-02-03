@@ -780,9 +780,9 @@ void Game_Prepare()
     Character_SetParam       (engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
     Character_SetParamMaximum(engine_world.Character, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
     Character_SetParam       (engine_world.Character, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
-    
+
     // Set character statistics to default.
-    
+
     engine_world.Character->character->statistics.distance       = 0.0;
     engine_world.Character->character->statistics.ammo_used      = 0;
     engine_world.Character->character->statistics.hits           = 0;
