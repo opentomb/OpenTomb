@@ -689,7 +689,8 @@ void gui_InventoryMenu::Toggle()
         
         size_t title_length = 0;
         const char* lua_string = lua_GetString(engine_lua, STR_GEN_INVENTORY, &title_length);
-        mLabel_Title.text = (char*)malloc(title_length);
+        mLabel_Title.text = (char*)malloc(title_length+1);
+        memset(mLabel_Title.text, 0, title_length+1);
         strncpy(mLabel_Title.text, lua_string, title_length);
         
         mLabel_ItemName_text[0] = 0;
