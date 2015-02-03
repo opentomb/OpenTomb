@@ -502,6 +502,7 @@ void Gui_InitTempLines();
 
 void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);
+void Gui_MoveLine(gui_text_line_p line);
 void Gui_RenderStringLine(gui_text_line_p l);
 void Gui_RenderStrings();
 
@@ -576,14 +577,9 @@ private:
     int                         mFontHeight;
     // background settings
 public:
-    gl_tex_font_s              *mFont_Primary;               // Texture font renderers
-    gl_tex_font_s              *mFont_Secondary;
-    gui_fontstyle_s            *mStyle_Title;                // Styles
-    gui_fontstyle_s            *mStyle_Heading1;
-    gui_fontstyle_s            *mStyle_Heading2;
-    gui_fontstyle_s            *mStyle_ItemActive;
-    gui_fontstyle_s            *mStyle_ItemInactive;
-    gui_fontstyle_s            *mStyle_MenuContent;
+    gui_text_line_s             mLabel_Title;                // Styles
+    gui_text_line_s             mLabel_ItemName;
+    char                        mLabel_ItemName_text[128];
 
     gui_InventoryMenu();
     ~gui_InventoryMenu();
