@@ -2,10 +2,10 @@
 
 screen =
 {
-    x = 50;
-    y = 20;
-    width = 720;
-    height = 400;
+    x = 350;
+    y = 140;
+    width = 1200;
+    height = 800;
     fullscreen = 0;
     fov = 75.0;
     debug_info = 0;
@@ -13,8 +13,8 @@ screen =
 
 audio =
 {
-    sound_volume = 0.8;
-    music_volume = 0.9;
+    sound_volume = 0.3;
+    music_volume = 0.02;
     use_effects = 1;
     listener_is_player = 0;
     stream_buffer_size = 128;
@@ -25,9 +25,9 @@ render =
     mipmap_mode = 3;
     mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
     lod_bias = 0;
-    anisotropy = 4;                             -- Maximum depends and is limited by hardware capabilities.
+    anisotropy = 8;                             -- Maximum depends and is limited by hardware capabilities.
     antialias = 1;
-    antialias_samples = 4;                      -- Maximum depends and is limited by hardware capabilities.
+    antialias_samples = 8;                      -- Maximum depends and is limited by hardware capabilities.
     z_depth = 24;                               -- Maximum and recommended is 24.
     texture_border = 16;
     fog_color = {r = 255, g = 255, b = 255};
@@ -58,7 +58,7 @@ controls =
 
 console =
 {
-    background_color = {r = 0, g = 0, b = 0, a = 200};
+    background_color = {r = 112, g = 30, b = 75, a = 202};
 
     line_size = 72;
     log_size = 16;
@@ -93,11 +93,15 @@ bind(act.lookdown, KEY_DOWN, JOY_POVDOWN);
 bind(act.lookleft, KEY_LEFT, JOY_POVLEFT);
 bind(act.lookright, KEY_RIGHT, JOY_POVRIGHT);
 
+bind(act.inventory, KEY_ESCAPE);
 bind(act.screenshot, KEY_PRINTSCREEN);
 bind(act.console, KEY_BACKQUOTE);
 bind(act.savegame, KEY_F5);
 bind(act.loadgame, KEY_F6);
-bind(act.inventory, KEY_ESCAPE);
 
-bind(act.smallmedi, KEY_9);
-bind(act.bigmedi, KEY_0);
+bind(act.smallmedi, KEY_8);
+bind(act.bigmedi, KEY_9);
+
+-- CVAR's section. here you can create and delete CVAR's
+cvars.show_fps = 1;
+cvars.free_look_speed = 2500;
