@@ -8,3 +8,13 @@ syntax: glob
 *.html
 CMakeLists.txt.user
 build
+.hgignore.orig
+opentomb-code.depend
+scripts\config\control_constants.lua.orig
+src\main_SDL.cpp.orig
+opentomb-code.layout
+opentomb-code.cbp
+opentomb-code.cscope_file_list
+config.lua.orig
+obj/
+*.orig
