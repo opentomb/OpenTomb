@@ -133,6 +133,7 @@ void Con_Destroy()
             free(con_base.log_lines[i]);
         }
         free(con_base.log_lines);
+        con_base.log_lines = NULL;
 
         con_base.inited = 0;
     }
@@ -146,11 +147,10 @@ void Con_SetLineInterval(float interval)
         return; // nothing to do
     }
 
-    float scale_factor = (screen_info.w >= screen_info.h)?(screen_info.w_unit):(screen_info.h_unit);
-
     con_base.inited = 0;
     con_base.spacing = interval;
-    con_base.line_height = con_base.spacing * glf_get_ascender(con_base.font) * scale_factor;
+    // con_base.font->font_size has absolute size (after scaling)
+    con_base.line_height = (1.0 + con_base.spacing) * con_base.font->font_size;
     con_base.cursor_x = 8 + 1;
     con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
     if(con_base.cursor_y < 8)

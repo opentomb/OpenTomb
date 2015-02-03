@@ -58,9 +58,8 @@ void Gui_InitTempLines()
         gui_temp_lines[i].next = NULL;
         gui_temp_lines[i].prev = NULL;
 
-        gui_temp_lines[i].style = FONTSTYLE_GENERIC;
-        gui_temp_lines[i].font  = FONT_SECONDARY;
-        gui_temp_lines[i].gl_font = NULL;
+        gui_temp_lines[i].font_id  = FONT_SECONDARY;
+        gui_temp_lines[i].style_id = FONTSTYLE_GENERIC;
     }
 }
 
@@ -267,7 +266,10 @@ void Gui_DeleteLine(gui_text_line_p line)
     if(line == gui_base_lines)
     {
         gui_base_lines = line->next;
-        gui_base_lines->prev = NULL;
+        if(gui_base_lines != NULL)
+        {
+            gui_base_lines->prev = NULL;
+        }
         return;
     }
 
@@ -284,16 +286,6 @@ void Gui_MoveLine(gui_text_line_p line)
     line->absYoffset = line->Y * screen_info.scale_factor;
 }
 
-gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
-{
-    if(l)
-    {
-        glf_get_string_bb(l->gl_font, l->text, -1, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
-    }
-
-    return l;
-}
-
 /**
  * For simple temporary lines rendering.
  * Really all strings will be rendered in Gui_Render() function.
@@ -305,9 +297,8 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;
 
-        l->font = FONT_SECONDARY;
-        l->style = FONTSTYLE_GENERIC;
-        l->gl_font = FontManager->GetFont((font_Type)l->font);
+        l->font_id = FONT_SECONDARY;
+        l->style_id = FONTSTYLE_GENERIC;
 
         va_start(argptr, fmt);
         vsnprintf(l->text, TEMP_LINE_LENGTH, fmt, argptr);
@@ -335,7 +326,10 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 
 void Gui_Update()
 {
-    FontManager->Update();
+    if(FontManager != NULL)
+    {
+        FontManager->Update();
+    }
 }
 
 void Gui_Resize()
@@ -362,7 +356,13 @@ void Gui_Resize()
         Bar[i].Resize();
     }
 
-    if(FontManager) FontManager->Resize();
+    if(FontManager)
+    {
+        FontManager->Resize();
+    }
+
+    /* let us update console too */
+    Con_SetLineInterval(con_base.spacing);
 }
 
 void Gui_Render()
@@ -395,29 +395,22 @@ void Gui_Render()
 
 void Gui_RenderStringLine(gui_text_line_p l)
 {
-    GLfloat real_x, real_y;
+    GLfloat real_x = 0.0, real_y = 0.0;
 
-    if(l->gl_font == NULL)
+    if(FontManager == NULL)
     {
-        l->gl_font = FontManager->GetFont((font_Type)l->font);
-        if(l->gl_font == NULL)
-        {
-            return;
-        }
-    }
-    
-    gui_fontstyle_p style = FontManager->GetFontStyle((font_Style)l->style);
-    
-    if(style == NULL)
-    {
-        style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+        return;
     }
 
-    if((style == NULL) || (!l->show) || (style->hidden)) return;
+    gl_tex_font_p gl_font = FontManager->GetFont((font_Type)l->font_id);
+    gui_fontstyle_p style = FontManager->GetFontStyle((font_Style)l->style_id);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    if((gl_font == NULL) || (style == NULL) || (!l->show) || (style->hidden))
+    {
+        return;
+    }
 
-    Gui_StringAutoRect(l);
+    glf_get_string_bb(gl_font, l->text, -1, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
 
     switch(l->Xanchor)
     {
@@ -441,12 +434,14 @@ void Gui_RenderStringLine(gui_text_line_p l)
             real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->absYoffset;
             break;
         case GUI_ANCHOR_VERT_CENTER:
-            real_x = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            real_y = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
             break;
     }
 
-    if(style->rect)
+    // missing texture_coord pointer... GL_TEXTURE_COORD_ARRAY state are enabled here!
+    /*if(style->rect)
     {
+        glBindTexture(GL_TEXTURE_2D, 0);
         GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_info.w_unit;
         GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_info.h_unit;
         GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_info.w_unit;
@@ -460,21 +455,21 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glColor4fv(style->rect_color);
         glVertexPointer(2, GL_FLOAT, 0, rectCoords);
         glDrawArrays(GL_POLYGON, 0, 4);
-    }
+    }*/
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if(style->shadowed)
     {
         GLfloat temp[4] = {0.0f,0.0f,0.0f,(float)style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY}; // Derive alpha from base color.
         glColor4fv(temp);
-        glf_render_str(l->gl_font,
-                       (real_x    + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
+        glf_render_str(gl_font,
+                       (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
                        (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
                        l->text);
     }
 
     glColor4fv(style->real_color);
-    glf_render_str(l->gl_font, real_x, real_y, l->text);
+    glf_render_str(gl_font, real_x, real_y, l->text);
 }
 
 void Gui_RenderStrings()
@@ -598,24 +593,24 @@ gui_InventoryMenu::gui_InventoryMenu()
 {
     mLabel_Title.X = 0.0;
     mLabel_Title.Y = 30.0;
-    mLabel_Title.Xanchor = GUI_ANCHOR_HOR_CENTER;
-    mLabel_Title.Yanchor = GUI_ANCHOR_VERT_TOP;
-    
-    mLabel_Title.gl_font = NULL;
-    mLabel_Title.font    = FONT_PRIMARY;
-    mLabel_Title.style   = FONTSTYLE_MENU_TITLE;
-        
+    mLabel_Title.Xanchor    = GUI_ANCHOR_HOR_CENTER;
+    mLabel_Title.Yanchor    = GUI_ANCHOR_VERT_TOP;
+
+    mLabel_Title.font_id    = FONT_PRIMARY;
+    mLabel_Title.style_id   = FONTSTYLE_MENU_TITLE;
+    mLabel_Title.text       = mLabel_Title_text;
+    mLabel_Title_text[0] = 0;
     mLabel_Title.show    = 1;
-    
+
     mLabel_ItemName.X = 0.0;
     mLabel_ItemName.Y = 50.0;
     mLabel_ItemName.Xanchor = GUI_ANCHOR_HOR_CENTER;
     mLabel_ItemName.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
-    
-    mLabel_ItemName.gl_font = NULL;
-    mLabel_ItemName.font    = FONT_PRIMARY;
-    mLabel_ItemName.style   = FONTSTYLE_MENU_CONTENT;
-    
+
+    mLabel_ItemName.font_id     = FONT_PRIMARY;
+    mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
+    mLabel_ItemName.text        = mLabel_ItemName_text;
+    mLabel_ItemName_text[0] = 0;
     mLabel_ItemName.show    = 1;
 
     mVisible = 0;
@@ -676,9 +671,7 @@ void gui_InventoryMenu::Toggle()
     {
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
         mMovementDirectionC = -1;
-        
-        free(mLabel_Title.text);
-        
+
         Gui_DeleteLine(&mLabel_ItemName);
         Gui_DeleteLine(&mLabel_Title);
     }
@@ -686,15 +679,13 @@ void gui_InventoryMenu::Toggle()
     {
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
         mMovementDirectionC = 1;
-        
+
         size_t title_length = 0;
         const char* lua_string = lua_GetString(engine_lua, STR_GEN_INVENTORY, &title_length);
-        mLabel_Title.text = (char*)malloc(title_length);
-        strncpy(mLabel_Title.text, lua_string, title_length);
-        
+        strncpy(mLabel_Title_text, lua_string, 128);
+
         mLabel_ItemName_text[0] = 0;
-        mLabel_ItemName.text = mLabel_ItemName_text;
-        
+
         Gui_AddLine(&mLabel_ItemName);
         Gui_MoveLine(&mLabel_ItemName);
         Gui_AddLine(&mLabel_Title);
@@ -866,6 +857,7 @@ void gui_InventoryMenu::AddItem(inventory_node_p item)
 
     switch(correct_row)
     {
+    default:
     case 0:
         items_count = &mRow1Max;
         inv = &mFirstInRow1;
@@ -980,6 +972,7 @@ void gui_InventoryMenu::UpdateItemRemoval(inventory_node_p item)
 
     switch(correct_row)
     {
+    default:
     case 0:
         items_count = &mRow1Max;
         inv = &mFirstInRow1;
@@ -1154,10 +1147,15 @@ void gui_InventoryMenu::UpdateMovements()
 
 void gui_InventoryMenu::Render()
 {
+    if(FontManager == NULL)
+    {
+        return;
+    }
+
     UpdateMovements();
 
-    int items_count, current_row;
-    gui_invmenu_item_s *inv;
+    int items_count = mRow1Max, current_row;
+    gui_invmenu_item_s *inv = mFirstInRow1;
 
     if(mMovementV<=-1)
     {
@@ -1263,6 +1261,10 @@ void gui_InventoryMenu::Render()
                                 {
                                     strncpy(mLabel_ItemName_text, item->name, 128);
                                 }
+                                /*gui_text_line_p l = Gui_OutTextXY(0.5 * screen_info.w / screen_info.scale_factor, screen_info.h/2 - 200, mLabel_ItemName_text);
+                                l->font_id = FONT_PRIMARY;
+                                //l->style_id = xxxx;
+                                l->Xanchor = GUI_ANCHOR_HOR_CENTER;*/
                             }
                         }
                     }
@@ -1813,7 +1815,11 @@ bool gui_Fader::SetTexture(const char *texture_path)
     }
     else
     {
-        glDeleteTextures(1, &mTexture);
+        /// if mTexture == 0 then trouble
+        if(glIsTexture(mTexture))
+        {
+            glDeleteTextures(1, &mTexture);
+        }
         mTexture = 0;
         return false;
     }
@@ -1824,7 +1830,11 @@ bool gui_Fader::DropTexture()
     if(mTexture)
     {
         glBindTexture(GL_TEXTURE_2D, 0);
-        glDeleteTextures(1, &mTexture);
+        /// if mTexture == 0 then trouble
+        if(glIsTexture(mTexture))
+        {
+            glDeleteTextures(1, &mTexture);
+        }
         mTexture = 0;
         return true;
     }
@@ -2386,15 +2396,15 @@ void gui_ProgressBar::Show(float value)
     // We check if bar is in a warning state. If it is, we blink it continously.
     if(mBlink)
     {
-      mBlinkCnt -= engine_frame_time;
-      if(mBlinkCnt > mBlinkInterval)
-      {
-          value = 0; // Force zero value, which results in empty bar.
-      }
-      else if(mBlinkCnt <= 0)
-      {
-          mBlinkCnt = mBlinkInterval * 2;
-      }
+        mBlinkCnt -= engine_frame_time;
+        if(mBlinkCnt > mBlinkInterval)
+        {
+            value = 0; // Force zero value, which results in empty bar.
+        }
+        else if(mBlinkCnt <= 0)
+        {
+            mBlinkCnt = mBlinkInterval * 2;
+        }
     }
 
     // If bar value is zero, just render background overlay and immediately exit.
@@ -2680,8 +2690,8 @@ gui_FontManager::~gui_FontManager()
     for(gui_font_p next_font;this->fonts!=NULL;)
     {
         next_font=this->fonts->next;
-        glf_free_font(this->fonts->font);
-        this->fonts->font = NULL;
+        glf_free_font(this->fonts->gl_font);
+        this->fonts->gl_font = NULL;
         free(this->fonts);
         this->fonts = next_font;
     }
@@ -2705,7 +2715,7 @@ gl_tex_font_p gui_FontManager::GetFont(const font_Type index)
     {
         if(current_font->index == index)
         {
-            return current_font->font;
+            return current_font->gl_font;
         }
     }
 
@@ -2763,11 +2773,11 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
     }
     else
     {
-        glf_free_font(desired_font->font);
+        glf_free_font(desired_font->gl_font);
     }
 
-    desired_font->font = NULL;                                                  ///@PARANOID
-    desired_font->font = glf_create_font(this->font_library, path, size);
+    desired_font->gl_font = NULL;                                               ///@PARANOID
+    desired_font->gl_font = glf_create_font(this->font_library, path, size);
 
     return true;
 }
@@ -2829,8 +2839,8 @@ bool gui_FontManager::RemoveFont(const font_Type index)
     {
         previous_font = this->fonts;
         this->fonts = this->fonts->next;
-        glf_free_font(previous_font->font);
-        previous_font->font = NULL;                                             ///@PARANOID
+        glf_free_font(previous_font->gl_font);
+        previous_font->gl_font = NULL;                                          ///@PARANOID
         free(previous_font);
         this->font_count--;
         return true;
@@ -2843,8 +2853,8 @@ bool gui_FontManager::RemoveFont(const font_Type index)
         if(current_font->index == index)
         {
             previous_font->next = current_font->next;
-            glf_free_font(current_font->font);
-            current_font->font = NULL;                                          ///@PARANOID
+            glf_free_font(current_font->gl_font);
+            current_font->gl_font = NULL;                                       ///@PARANOID
             free(current_font);
             this->font_count--;
             return true;
@@ -2936,6 +2946,6 @@ void gui_FontManager::Resize()
 {
     for(gui_font_p current_font=this->fonts;current_font!=NULL;current_font=current_font->next)
     {
-        glf_resize(current_font->font, (uint16_t)(((float)current_font->size) * screen_info.scale_factor));
+        glf_resize(current_font->gl_font, (uint16_t)(((float)current_font->size) * screen_info.scale_factor));
     }
 }

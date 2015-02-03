@@ -1476,7 +1476,6 @@ int lua_SetSectorFlags(lua_State * lua)
 
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
-    int lua_err, top;
     char buf[256], map[LEVEL_NAME_MAX_LEN];
 
     world->version = tr->game_version;
@@ -1518,7 +1517,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
 
-        lua_err = luaL_loadfile(level_script, buf);
+        int lua_err = luaL_loadfile(level_script, buf);
         lua_pcall(level_script, 0, 0, 0);
         if(lua_err)
         {
@@ -1533,7 +1532,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     if(objects_flags_conf != NULL)
     {
         luaL_openlibs(objects_flags_conf);
-        lua_err = luaL_loadfile(objects_flags_conf, "scripts/entity/entity_flags.lua");
+        int lua_err = luaL_loadfile(objects_flags_conf, "scripts/entity/entity_flags.lua");
         lua_pcall(objects_flags_conf, 0, 0, 0);
         if(lua_err)
         {
@@ -1548,7 +1547,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     if(ent_ID_override != NULL)
     {
         luaL_openlibs(ent_ID_override);
-        lua_err = luaL_loadfile(ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
+        int lua_err = luaL_loadfile(ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
         lua_pcall(ent_ID_override, 0, 0, 0);
         if(lua_err)
         {
