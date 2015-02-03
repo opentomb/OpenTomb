@@ -11,7 +11,16 @@
 -- won't be processed correctly.
 --------------------------------------------------------------------------------
 
+-- Load default (english) resources at first.
+
 dofile("scripts/strings/generic/english.lua");
+dofile("scripts/strings/global_items/english.lua");
+
+
+function setLanguage(lang_name)
+    dofile("scripts/strings/generic/" .. lang_name .. ".lua");
+    dofile("scripts/strings/global_items/" .. lang_name .. ".lua");
+end;
 
 function getString(id)
    if(strings[id] ~= nil) then
