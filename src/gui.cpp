@@ -13,6 +13,7 @@
 #include "console.h"
 #include "vmath.h"
 #include "camera.h"
+#include "string.h"
 
 #define MAX_TEMP_LINES   (256)
 #define TEMP_LINE_LENGTH (128)
@@ -277,6 +278,12 @@ void Gui_DeleteLine(gui_text_line_p line)
     }
 }
 
+void Gui_MoveLine(gui_text_line_p line)
+{
+    line->absXoffset = line->X * screen_info.scale_factor;
+    line->absYoffset = line->Y * screen_info.scale_factor;
+}
+
 gui_text_line_p Gui_StringAutoRect(gui_text_line_p l)
 {
     if(l)
@@ -398,8 +405,13 @@ void Gui_RenderStringLine(gui_text_line_p l)
             return;
         }
     }
-
-    gui_fontstyle_p style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+    
+    gui_fontstyle_p style = FontManager->GetFontStyle((font_Style)l->style);
+    
+    if(style == NULL)
+    {
+        style = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+    }
 
     if((style == NULL) || (!l->show) || (style->hidden)) return;
 
@@ -584,15 +596,27 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
 
 gui_InventoryMenu::gui_InventoryMenu()
 {
-    mFont_Primary   = FontManager->GetFont(FONT_PRIMARY);
-    mFont_Secondary = FontManager->GetFont(FONT_SECONDARY);
-
-    mStyle_Title        = FontManager->GetFontStyle(FONTSTYLE_MENU_TITLE);
-    mStyle_Heading1     = FontManager->GetFontStyle(FONTSTYLE_MENU_HEADING1);
-    mStyle_Heading2     = FontManager->GetFontStyle(FONTSTYLE_MENU_HEADING2);
-    mStyle_ItemActive   = FontManager->GetFontStyle(FONTSTYLE_MENU_ITEM_ACTIVE);
-    mStyle_ItemInactive = FontManager->GetFontStyle(FONTSTYLE_MENU_ITEM_INACTIVE);
-    mStyle_MenuContent  = FontManager->GetFontStyle(FONTSTYLE_MENU_CONTENT);
+    mLabel_Title.X = 0.0;
+    mLabel_Title.Y = 30.0;
+    mLabel_Title.Xanchor = GUI_ANCHOR_HOR_CENTER;
+    mLabel_Title.Yanchor = GUI_ANCHOR_VERT_TOP;
+    
+    mLabel_Title.gl_font = NULL;
+    mLabel_Title.font    = FONT_PRIMARY;
+    mLabel_Title.style   = FONTSTYLE_MENU_TITLE;
+        
+    mLabel_Title.show    = 1;
+    
+    mLabel_ItemName.X = 0.0;
+    mLabel_ItemName.Y = 50.0;
+    mLabel_ItemName.Xanchor = GUI_ANCHOR_HOR_CENTER;
+    mLabel_ItemName.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
+    
+    mLabel_ItemName.gl_font = NULL;
+    mLabel_ItemName.font    = FONT_PRIMARY;
+    mLabel_ItemName.style   = FONTSTYLE_MENU_CONTENT;
+    
+    mLabel_ItemName.show    = 1;
 
     mVisible = 0;
 
@@ -652,11 +676,29 @@ void gui_InventoryMenu::Toggle()
     {
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
         mMovementDirectionC = -1;
+        
+        free(mLabel_Title.text);
+        
+        Gui_DeleteLine(&mLabel_ItemName);
+        Gui_DeleteLine(&mLabel_Title);
     }
     else
     {
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
         mMovementDirectionC = 1;
+        
+        size_t title_length = 0;
+        const char* lua_string = lua_GetString(engine_lua, STR_GEN_INVENTORY, &title_length);
+        mLabel_Title.text = (char*)malloc(title_length);
+        strncpy(mLabel_Title.text, lua_string, title_length);
+        
+        mLabel_ItemName_text[0] = 0;
+        mLabel_ItemName.text = mLabel_ItemName_text;
+        
+        Gui_AddLine(&mLabel_ItemName);
+        Gui_MoveLine(&mLabel_ItemName);
+        Gui_AddLine(&mLabel_Title);
+        Gui_MoveLine(&mLabel_Title);
     }
     mVisible = 1;
 }
@@ -1207,27 +1249,21 @@ void gui_InventoryMenu::Render()
 
                         if(item->name[0])
                         {
-                            char buf[128];
                             if(inv->linked_item->id == 0 && (engine_world.version == 3 || engine_world.version == 4))
                             {
-                                strcpy(buf, "Statistics");
+                                strcpy(mLabel_ItemName_text, "Statistics");
                             }
                             else
                             {
                                 if(inv->linked_item->count > 1)
                                 {
-                                    snprintf(buf, 128, "%s (%d)", item->name, inv->linked_item->count);
+                                    snprintf(mLabel_ItemName_text, 128, "%s (%d)", item->name, inv->linked_item->count);
                                 }
                                 else
                                 {
-                                    strncpy(buf, item->name, 128);
+                                    strncpy(mLabel_ItemName_text, item->name, 128);
                                 }
                             }
-                            /* STICK! abs. coords. to ralative and after relative to abs.
-                             * maybe it will be better to use Gui_OutTextXY with ABSOLUTE coords.
-                             * and made addition function with relative coords. */
-                            float x = ((float)screen_info.w - glf_get_string_len(FontManager->GetFont(FONT_SECONDARY), buf, -1)) / 2.0;
-                            Gui_OutTextXY(x / screen_info.scale_factor, screen_info.h/2 - 200, buf);
                         }
                     }
                     else
