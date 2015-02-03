@@ -453,6 +453,39 @@ void World_Empty(world_p world)
     }
 
     // Now we can delete all other. Be carefull: OpenAL uses multithreading!
+    for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--)
+    {
+        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+        btRigidBody* body = btRigidBody::upcast(obj);
+        if(body)
+        {
+            engine_container_p cont = ((engine_container_p)body->getUserPointer());
+            if(cont != NULL)
+            {
+                body->setUserPointer(NULL);
+                if(cont->object_type == OBJECT_BULLET_MISC)
+                {
+                    free(cont);
+                    cont = NULL;
+                    if(body->getMotionState())
+                    {
+                        delete body->getMotionState();
+                    }
+                    if(body->getCollisionShape())
+                    {
+                        delete body->getCollisionShape();
+                    }
+                    if(body->isInWorld())
+                    {
+                        bt_engine_dynamicsWorld->removeRigidBody(body);
+                    }
+                    delete body;
+                    body = NULL;
+                }
+            }
+        }
+    }
+
     for(uint32_t i=0;i<world->room_count;i++)
     {
         Room_Empty(world->rooms+i);
@@ -1269,7 +1302,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
         return 1;
     else
     {
-        Con_AddLine("Error: could not create item", 3);
+        Con_AddLine("Error: could not create item", FONTSTYLE_CONSOLE_WARNING);
         Con_Printf("item: %i %i %i %i %i %s", item_id, model_id, world_model_id, type, count, name);
         return 0;
     }

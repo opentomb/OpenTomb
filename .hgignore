@@ -15,3 +15,6 @@ src\main_SDL.cpp.orig
 opentomb-code.layout
 opentomb-code.cbp
 opentomb-code.cscope_file_list
+config.lua.orig
+obj/
+*.orig

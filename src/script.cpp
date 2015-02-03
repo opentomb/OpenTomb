@@ -359,6 +359,30 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 }
 
 
+const char* lua_GetString(lua_State *lua, int string_index, size_t *string_length)
+{
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+
+        lua_getglobal(lua, "getString");
+
+        if(lua_isfunction(lua, -1))
+        {
+            lua_pushinteger(lua, string_index);
+            lua_pcall(lua, 1, 1, 0);
+            const char* result = lua_tolstring(lua, -1, string_length);
+            lua_settop(lua, top);
+            return result;
+        }
+        lua_settop(lua, top);
+    }
+
+    string_length = 0;
+    return NULL;
+}
+
+
 bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 {
     size_t  string_length  = 0;
@@ -481,7 +505,7 @@ int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator, int id_c
 /*
  * Game structures parse
  */
-int lua_ParseControlSettings(lua_State *lua, struct control_settings_s *cs)
+int lua_ParseControls(lua_State *lua, struct control_settings_s *cs)
 {
     if(!lua)
     {
@@ -520,12 +544,15 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
 
     int top = lua_gettop(lua);
     lua_getglobal(lua, "screen");
-    sc->x = lua_GetScalarField(lua, "x");
-    sc->y = lua_GetScalarField(lua, "y");
-    sc->w = lua_GetScalarField(lua, "width");
-    sc->h = lua_GetScalarField(lua, "height");
-    sc->FS_flag = lua_GetScalarField(lua, "fullscreen");
-    sc->fov = lua_GetScalarField(lua, "fov");
+    sc->x = (int16_t)lua_GetScalarField(lua, "x");
+    sc->y = (int16_t)lua_GetScalarField(lua, "y");
+    sc->w = (int16_t)lua_GetScalarField(lua, "width");
+    sc->h = (int16_t)lua_GetScalarField(lua, "height");
+    sc->w_unit = (GLfloat)sc->w / GUI_SCREEN_METERING_RESOLUTION;
+    sc->h_unit = (GLfloat)sc->h / GUI_SCREEN_METERING_RESOLUTION;
+    sc->FS_flag = (int8_t)lua_GetScalarField(lua, "fullscreen");
+    sc->show_debuginfo = (int8_t)lua_GetScalarField(lua, "debug_info");
+    sc->fov = (float)lua_GetScalarField(lua, "fov");
     lua_settop(lua, top);
 
     return 1;
@@ -597,47 +624,15 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
 
 int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
 {
-    const char *path;
-    FILE *f;
-    int32_t t, i;
     int top;
-    float tf;
 
     if(!lua)
     {
         return -1;
     }
 
-    con_base.inited = 0;
-
     top = lua_gettop(lua);
     lua_getglobal(lua, "console");
-    path = lua_GetStrField(lua, "font_path");
-    if(path && strncmp(path, cn->font_path, 255))
-    {
-        f = fopen(path, "rb");
-        if(f)
-        {
-            fclose(f);
-            strncpy(cn->font_path, path, 255);
-
-            delete con_base.font;
-            con_base.font = new FTGLTextureFont(con_base.font_path);
-        }
-        else
-        {
-            Sys_Warn("Console: could not find font = \"%s\"", con_base.font_path);
-        }
-    }
-    lua_getfield(lua, -1, "font_color");
-    if(lua_istable(lua, -1))
-    {
-        cn->font_color[0] = (GLfloat)lua_GetScalarField(lua, "r") / 255.0;
-        cn->font_color[1] = (GLfloat)lua_GetScalarField(lua, "g") / 255.0;
-        cn->font_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
-        cn->font_color[3] = 1.0;
-    }
-    lua_pop(lua, 1);
 
     lua_getfield(lua, -1, "background_color");
     if(lua_istable(lua, -1))
@@ -649,17 +644,12 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     }
     lua_pop(lua, 1);
 
-    t = lua_GetScalarField(lua, "font_size");
-    if(t >= 1 && t <= 128)
-    {
-        cn->font_size = t;
-    }
-    tf = lua_GetScalarField(lua, "spacing");
+    float tf = lua_GetScalarField(lua, "spacing");
     if(tf >= CON_MIN_LINE_INTERVAL && tf <= CON_MAX_LINE_INTERVAL)
     {
         cn->spacing = tf;
     }
-    t = lua_GetScalarField(lua, "line_size");
+    int t = lua_GetScalarField(lua, "line_size");
     if(t >= CON_MIN_LINE_SIZE && t <= CON_MAX_LINE_SIZE)
     {
         cn->line_size = t;
@@ -672,37 +662,18 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     t = lua_GetScalarField(lua, "log_size");
     if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
     {
-        if(t > cn->log_lines_count)
-        {
-            con_base.log_lines = (char**) realloc(con_base.log_lines, t * sizeof(char*));
-            for(i=cn->log_lines_count;i<t;i++)
-            {
-                con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
-            }
-        }
         cn->log_lines_count = t;
     }
     t = lua_GetScalarField(lua, "lines_count");
     if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
     {
-        if(t > cn->shown_lines_count)
-        {
-            con_base.shown_lines = (char**) realloc(con_base.shown_lines, t * sizeof(char*));
-            for(i=cn->shown_lines_count;i<t;i++)
-            {
-                con_base.shown_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
-            }
-        }
-        cn->shown_lines_count = t;
+        cn->line_count = t;
     }
 
     cn->show = lua_GetScalarField(lua, "show");
     cn->show_cursor_period = lua_GetScalarField(lua, "show_cursor_period");
-    con_base.inited = 1;
-    lua_settop(lua, top);
 
-    Con_SetFontSize(con_base.font_size);
-    Con_SetLineInterval(con_base.spacing);
+    lua_settop(lua, top);
 
     return 1;
 }

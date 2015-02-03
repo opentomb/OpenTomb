@@ -2,31 +2,231 @@
 #ifndef ENGINE_GUI_H
 #define ENGINE_GUI_H
 
-#include "ftgl/FTGLTextureFont.h"
+#include "gl_font.h"
 #include "entity.h"
 #include "render.h"
 #include "character_controller.h"
 
+// Screen metering resolution specifies user-friendly relative dimensions of screen,
+// which are not dependent on screen resolution. They're primarily used to parse
+// bar and string dimensions.
+
+#define GUI_SCREEN_METERING_RESOLUTION 1000.0
+
+// Screen metering factor defines minimum comfortable resolution (both in width and
+// height) which could possibly be used on any possible screen. Since contemporary
+// devices rarely use resolutions lower than 480p (SD), we use it as a basis.
+// Screen metering factor primarily used to set up font scaling factor. 
+
+#define GUI_SCREEN_METERING_FACTOR     480.0
+
+// Anchoring is needed to link specific GUI element to specific screen position,
+// independent of screen resolution and aspect ratio. Vertical and horizontal
+// anchorings are seperated, so you can link element at any place - top, bottom,
+// center, left or right.
+
+#define GUI_ANCHOR_VERT_TOP         0
+#define GUI_ANCHOR_VERT_BOTTOM      1
+#define GUI_ANCHOR_VERT_CENTER      2
+
+#define GUI_ANCHOR_HOR_LEFT         0
+#define GUI_ANCHOR_HOR_RIGHT        1
+#define GUI_ANCHOR_HOR_CENTER       2
+
+// OpenTomb has three types of fonts - primary, secondary and console
+// font. This should be enough for most of the cases. However, user 
+// can generate and use additional font types via script, but engine
+// behaviour with extra font types is undefined.
+
+enum font_Type
+{
+    FONT_PRIMARY,
+    FONT_SECONDARY,
+    FONT_CONSOLE
+};
+
+#define GUI_MAX_FONTS 8     // 8 fonts is PLENTY.
+
+#define GUI_MIN_FONT_SIZE 1
+#define GUI_MAX_FONT_SIZE 72
+
+// This is predefined enumeration of font styles, which can be extended
+// with user-defined script functions.
+
+enum font_Style
+{
+        FONTSTYLE_CONSOLE_INFO,
+        FONTSTYLE_CONSOLE_WARNING,
+        FONTSTYLE_CONSOLE_EVENT,
+        FONTSTYLE_CONSOLE_NOTIFY,
+        FONTSTYLE_MENU_TITLE,
+        FONTSTYLE_MENU_HEADING1,
+        FONTSTYLE_MENU_HEADING2,
+        FONTSTYLE_MENU_ITEM_ACTIVE,
+        FONTSTYLE_MENU_ITEM_INACTIVE,
+        FONTSTYLE_MENU_CONTENT,
+        FONTSTYLE_STATS_TITLE,
+        FONTSTYLE_STATS_CONTENT,
+        FONTSTYLE_NOTIFIER,
+        FONTSTYLE_SAVEGAMELIST,
+        FONTSTYLE_GENERIC
+};
+
+#define GUI_MAX_FONTSTYLES 32   // Who even needs so many? 
+
+// Font struct contains additional field for font type which is
+// used to dynamically create or delete fonts.
+
+typedef struct gui_font_s
+{
+    font_Type                   index;
+    uint16_t                    size;
+    struct gl_tex_font_s       *font;
+    struct gui_font_s          *next;
+}gui_font_t, *gui_font_p;
+
+// Font style is different to font itself - whereas engine can have
+// only three fonts, there could be unlimited amount of font styles.
+// Font style management is done via font manager.
+
+typedef struct gui_fontstyle_s
+{
+    font_Style                  index;          // Unique index which is used to identify style.
+    
+    GLfloat                     color[4];
+    GLfloat                     real_color[4];
+    GLfloat                     rect_color[4];
+    GLfloat                     rect_border;
+    
+    bool                        shadowed;
+    bool                        rect;
+    bool                        fading;         // TR4-like looped fading font effect.
+    bool                        hidden;         // Used to bypass certain GUI lines easily.
+    
+    struct gui_fontstyle_s     *next;
+} gui_fontstyle_t, *gui_fontstyle_p;
+
+#define GUI_FONT_FADE_SPEED 1.0                 // Global fading style speed.
+#define GUI_FONT_FADE_MIN   0.3                 // Minimum fade multiplier.
+
+#define GUI_FONT_SHADOW_TRANSPARENCY     0.7
+#define GUI_FONT_SHADOW_VERTICAL_SHIFT  -0.9
+#define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7
+
+
+// Font manager is a singleton class which is used to manage all in-game fonts
+// and font styles. Every time you want to change font or style, font manager
+// functions should be used.
+
+class gui_FontManager
+{
+public:
+    gui_FontManager();
+   ~gui_FontManager();
+    
+    bool             AddFont(const font_Type index,
+                             const uint32_t size,
+                             const char* path);
+    bool             RemoveFont(const font_Type index);
+    gl_tex_font_p    GetFont(const font_Type index);
+    
+    bool             AddFontStyle(const font_Style index,
+                                  const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
+                                  const bool shadow, const bool fading,
+                                  const bool rect, const GLfloat rect_border,
+                                  const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
+                                  const bool hide);
+    bool             RemoveFontStyle(const font_Style index);
+    gui_fontstyle_p GetFontStyle(const font_Style index);
+    
+    uint32_t         GetFontCount()
+    {
+        return font_count;
+    }
+    uint32_t         GetFontStyleCount()
+    {
+        return style_count;
+    }
+    
+    void             Update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
+    void             Resize(); // Resize fonts on window resize event.
+    
+private:
+    gui_font_p       GetFontAddress(const font_Type index);
+    
+    GLfloat          mFadeValue; // Multiplier used with font RGB values to animate fade.
+    bool             mFadeDirection;
+    
+    uint32_t         style_count;
+    gui_fontstyle_p  styles;
+    
+    uint32_t         font_count;
+    gui_font_p       fonts;
+    
+    FT_Library       font_library;  // GLF font library unit.
+};
+
+// Horizontal alignment is simple side alignment, like in original TRs.
+// It means that X coordinate will be either used for left, right or
+// center orientation.
+
+#define GUI_LINE_ALIGN_LEFT   0
+#define GUI_LINE_ALIGN_RIGHT  1
+#define GUI_LINE_ALIGN_CENTER 2
+
 typedef struct gui_text_line_s
 {
     char                       *text;
-    uint16_t                    buf_size;
-    int8_t                      show_rect;
+    uint16_t                    text_size;
+    
+    struct gl_tex_font_s       *gl_font;
+    uint16_t                    font;
+    uint16_t                    style;
+
+    GLfloat                     X;
+    uint8_t                     Xanchor;
+    GLfloat                     absXoffset;
+    GLfloat                     Y;
+    uint8_t                     Yanchor;
+    GLfloat                     absYoffset;
+
+    GLfloat                     rect[4];    //x0, yo, x1, y1
+    
     int8_t                      show;
-    int8_t                      shadowed;
 
-    GLint                       x;
-    GLint                       y;
-
-    GLfloat                     rect_color[4];
-    GLfloat                     font_color[4];
-    GLfloat                     rect_border;
-    GLfloat                     rect[4];                                        //x0, yo, x1, y1
-
-    FTGLTextureFont            *font;
     struct gui_text_line_s     *next;
     struct gui_text_line_s     *prev;
 } gui_text_line_t, *gui_text_line_p;
+
+
+typedef struct gui_rect_s
+{
+    GLfloat                     rect[4];
+    GLfloat                     absRect[4];
+    
+    GLfloat                     X;  GLfloat absX;
+    GLfloat                     Y;  GLfloat absY;
+    int8_t                      align;
+    
+    GLuint                      texture;
+    GLfloat                     color[16]; // TL, TR, BL, BR x 4
+    uint32_t                    blending_mode;
+    
+    int16_t                     line_count;
+    gui_text_line_s            *lines;
+    
+    int8_t                      state;      // Opening / static / closing
+    int8_t                      show;
+    GLfloat                     current_alpha;
+    
+    int8_t                      focused;
+    int8_t                      focus_index;
+    
+    int8_t                      selectable;
+    int8_t                      selection_index;
+    
+    char                       *lua_click_function;
+} gui_rect_t, *gui_rect_p;
 
 
 // Fader is a simple full-screen rectangle, which always sits above the scene,
@@ -51,9 +251,9 @@ enum Faders
     FADER_LASTINDEX
 };
 
-#define TR_FADER_DIR_IN    0    // Normal fade-in.
-#define TR_FADER_DIR_OUT   1    // Normal fade-out.
-#define TR_FADER_DIR_TIMED 2    // Timed fade: in -> stay -> out.
+#define GUI_FADER_DIR_IN    0    // Normal fade-in.
+#define GUI_FADER_DIR_OUT   1    // Normal fade-out.
+#define GUI_FADER_DIR_TIMED 2    // Timed fade: in -> stay -> out.
 
 // Scale type specifies how textures with various aspect ratios will be
 // handled. If scale type is set to ZOOM, texture will be zoomed up to
@@ -64,18 +264,18 @@ enum Faders
 // needed for pictures with crucial info that shouldn't be cut by zoom,
 // and STRETCH type is usable for full-screen effects, like vignette.
 
-#define TR_FADER_SCALE_ZOOM      0
-#define TR_FADER_SCALE_LETTERBOX 1
-#define TR_FADER_SCALE_STRETCH   2
+#define GUI_FADER_SCALE_ZOOM      0
+#define GUI_FADER_SCALE_LETTERBOX 1
+#define GUI_FADER_SCALE_STRETCH   2
 
-#define TR_FADER_STATUS_IDLE     0
-#define TR_FADER_STATUS_FADING   1
-#define TR_FADER_STATUS_COMPLETE 2
+#define GUI_FADER_STATUS_IDLE     0
+#define GUI_FADER_STATUS_FADING   1
+#define GUI_FADER_STATUS_COMPLETE 2
 
-#define TR_FADER_CORNER_TOPLEFT     0
-#define TR_FADER_CORNER_TOPRIGHT    1
-#define TR_FADER_CORNER_BOTTOMLEFT  2
-#define TR_FADER_CORNER_BOTTOMRIGHT 3
+#define GUI_FADER_CORNER_TOPLEFT     0
+#define GUI_FADER_CORNER_TOPRIGHT    1
+#define GUI_FADER_CORNER_BOTTOMLEFT  2
+#define GUI_FADER_CORNER_BOTTOMRIGHT 3
 
 // Main fader class.
 
@@ -87,45 +287,45 @@ public:
     void Show();                  // Shows and updates fader.
     void Engage(int fade_dir);    // Resets and starts fader.
     void Cut();                   // Immediately cuts fader.
-
+    
     int  IsFading();              // Get current state of the fader.
-
-    void SetScaleMode(uint8_t mode = TR_FADER_SCALE_ZOOM);
+    
+    void SetScaleMode(uint8_t mode = GUI_FADER_SCALE_ZOOM);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
     void SetBlendingMode(uint32_t mode = BM_OPAQUE);
     void SetAlpha(uint8_t alpha  = 255);
     void SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary = 200);
     void SetDelay(uint32_t delay_msec);
-
+    
     bool SetTexture(const char* texture_path);
-
+    
 private:
     void SetAspect();
     bool DropTexture();
-
+    
     GLfloat         mTopLeftColor[4];       // All colors are defined separately, for
     GLfloat         mTopRightColor[4];      // further possibility of advanced full
     GLfloat         mBottomLeftColor[4];    // screen effects with gradients.
     GLfloat         mBottomRightColor[4];
-
+    
     uint32_t        mBlendingMode;          // Fader's blending mode.
-
+    
     GLfloat         mCurrentAlpha;          // Current alpha value.
     GLfloat         mMaxAlpha;              // Maximum reachable alpha value.
     GLfloat         mSpeed;                 // Fade speed.
     GLfloat         mSpeedSecondary;        // Secondary speed - used with TIMED type.
-
+    
     GLuint          mTexture;               // Texture (optional).
     uint16_t        mTextureWidth;
     uint16_t        mTextureHeight;
     bool            mTextureWide;           // Set, if texture width is greater than height.
     float           mTextureAspectRatio;    // Pre-calculated aspect ratio.
     uint8_t         mTextureScaleMode;      // Fader texture's scale mode.
-
+    
     bool            mActive;                // Specifies if fader active or not.
     bool            mComplete;              // Specifies if fading is complete or not.
     int8_t          mDirection;             // Specifies fade direction.
-
+    
     float           mCurrentTime;           // Current fader time.
     float           mMaxTime;               // Maximum delay time.
 };
@@ -160,12 +360,6 @@ enum BarColorType
     BORDER_FADE
 };
 
-// Screen metering resolution specifies user-friendly relative dimensions of screen,
-// which are not dependent on screen resolution. They're primarily used to parse
-// bar dimensions.
-
-#define TR_GUI_SCREEN_METERING_RESOLUTION 1000.0
-
 // Main bar class.
 
 class gui_ProgressBar
@@ -174,9 +368,11 @@ public:
     gui_ProgressBar();  // Bar constructor.
 
     void Show(float value);    // Main show bar procedure.
+    void Resize();
 
     void SetColor(BarColorType colType, uint8_t R, uint8_t G, uint8_t B, uint8_t alpha);
-    void SetDimensions(float X, float Y, float width, float height, float borderSize);
+    void SetSize(float width, float height, float borderSize);
+    void SetPosition(int8_t anchor_X, float offset_X, int8_t anchor_Y, float offset_Y);
     void SetValues(float maxValue, float warnValue);
     void SetBlink(int interval);
     void SetExtrude(bool enabled, uint8_t depth);
@@ -187,25 +383,22 @@ public:
 
     bool          Invert;               // Invert decrease direction flag.
     bool          Vertical;             // Change bar style to vertical.
-
+    
 private:
-
-    bool          UpdateResolution      // Try to update bar resolution.
-                       (int ScrWidth,
-                        int ScrHeight);
-
     void          RecalculateSize();    // Recalculate size and position.
     void          RecalculatePosition();
-
-    float         mX;                   // Real X position.
-    float         mY;                   // Real Y position.
+    
+    float         mX;                   // Horizontal position.
+    float         mY;                   // Vertical position.
     float         mWidth;               // Real width.
     float         mHeight;              // Real height.
     float         mBorderWidth;         // Real border size (horizontal).
     float         mBorderHeight;        // Real border size (vertical).
 
-    float         mAbsX;                // Absolute (resolution-independent) X position.
-    float         mAbsY;                // Absolute Y position.
+    int8_t        mXanchor;             // Horizontal anchoring: left, right or center.
+    int8_t        mYanchor;             // Vertical anchoring: top, bottom or center.
+    float         mAbsXoffset;          // Absolute (resolution-independent) X offset.
+    float         mAbsYoffset;          // Absolute Y offset.
     float         mAbsWidth;            // Absolute width.
     float         mAbsHeight;           // Absolute height.
     float         mAbsBorderSize;       // Absolute border size (horizontal).
@@ -244,21 +437,6 @@ private:
     float         mRangeUnit;           // Range unit used to set base bar size.
     float         mBaseSize;            // Base bar size.
     float         mBaseRatio;           // Max. / actual value ratio.
-
-    int           mLastScrWidth;        // Back-up to check resolution change.
-    int           mLastScrHeight;
-};
-
-
-enum NotifierAnimType
-{
-    ANIMTYPE_NONE,
-    ANIMTYPE_SLIDELEFT,
-    ANIMTYPE_SLIDERIGHT,
-    ANIMTYPE_SLIDETOP,
-    ANIMTYPE_SLIDEBOTTOM,
-    ANIMTYPE_ZOOM,
-    ANIMTYPE_FADE
 };
 
 // Offscreen divider specifies how far item notifier will be placed from
@@ -266,28 +444,28 @@ enum NotifierAnimType
 // width, but if you want to increase or decrease notifier size, you must
 // change this value properly.
 
-#define TR_GUI_OFFSCREEN_DIVIDER 8.0
+#define GUI_NOTIFIER_OFFSCREEN_DIVIDER 8.0
 
 // Notifier show time is a time notifier stays on screen (excluding slide
 // effect). Maybe it's better to move it to script later.
 
-#define TR_GUI_NOTIFIER_SHOWTIME 2.0
+#define GUI_NOTIFIER_SHOWTIME 2.0
 
 class gui_ItemNotifier
 {
 public:
     gui_ItemNotifier();
-
+    
     void    Start(int item, float time);
     void    Reset();
     void    Animate();
     void    Draw();
-
+    
     void    SetPos(float X, float Y);
     void    SetRot(float X, float Y);
     void    SetSize(float size);
     void    SetRotateTime(float time);
-
+        
 private:
     bool    mActive;
     int     mItem;
@@ -299,18 +477,20 @@ private:
     float   mStartPosX;
     float   mEndPosX;
     float   mCurrPosX;
-
+    
     float   mRotX;
     float   mRotY;
     float   mCurrRotX;
     float   mCurrRotY;
-
+    
     float   mSize;
-
+    
     float   mShowTime;
     float   mCurrTime;
     float   mRotateTime;
 };
+
+void Gui_InitFontManager();
 
 void Gui_Init();
 void Gui_Destroy();
@@ -318,6 +498,7 @@ void Gui_Destroy();
 void Gui_InitBars();
 void Gui_InitFaders();
 void Gui_InitNotifier();
+void Gui_InitTempLines();
 
 void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);
@@ -341,7 +522,7 @@ typedef struct gui_invmenu_item_ammo_s
     //uint32_t                    max_count;
     //char                       *name;
     char                       *description;
-};
+}gui_invmenu_item_ammo_t, *gui_invmenu_item_ammo_p;
 
 typedef struct gui_invmenu_item_s
 {
@@ -360,7 +541,7 @@ typedef struct gui_invmenu_item_s
     gui_invmenu_item_ammo_s   **ammo;                   // array of ammo structs
     gui_invmenu_item_s        **combinables;            // array of items it can be combined with
     gui_invmenu_item_s         *next;                   // next item in the row
-};
+}gui_invmenu_item_t, *gui_invmenu_item_p;
 
 class gui_InventoryMenu
 {
@@ -395,7 +576,14 @@ private:
     int                         mFontHeight;
     // background settings
 public:
-    FTGLTextureFont            *mFont;               // Texture font renderer
+    gl_tex_font_s              *mFont_Primary;               // Texture font renderers
+    gl_tex_font_s              *mFont_Secondary;
+    gui_fontstyle_s            *mStyle_Title;                // Styles
+    gui_fontstyle_s            *mStyle_Heading1;
+    gui_fontstyle_s            *mStyle_Heading2;
+    gui_fontstyle_s            *mStyle_ItemActive;
+    gui_fontstyle_s            *mStyle_ItemInactive;
+    gui_fontstyle_s            *mStyle_MenuContent;
 
     gui_InventoryMenu();
     ~gui_InventoryMenu();
@@ -411,12 +599,6 @@ public:
         if (mMovementH!=0 || mMovementDirectionV!=0 || mMovementDirectionC!=0)
             return true;
         return false;
-    }
-    void InitFont(const char *path);
-    void SetFontSize(int size);
-    int GetFontSize()
-    {
-        return mFontSize;
     }
     void SetRowOffset(int dy)               /// Scrolling inventory
     {
@@ -436,6 +618,7 @@ public:
 };
 
 extern gui_InventoryMenu     *main_inventory_menu;
+extern gui_FontManager       *FontManager;
 
 /**
  * Calculates rect coordinates around the text
@@ -445,7 +628,7 @@ gui_text_line_p Gui_StringAutoRect(gui_text_line_p l);
 /**
  * Draws text using a current console font.
  */
-gui_text_line_p Gui_OutTextXY(FTGLTextureFont *font, int x, int y, const char *fmt, ...);
+gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
 
 /**
  * Helper method to setup OpenGL state for console drawing.
@@ -490,7 +673,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
                   const int &blendMode,
                   const GLuint texture = 0);
-
+                  
 /**
  *  Initiate fade or check if fade is active.
  *  When Gui_Fade function is called without second argument, it will act like
@@ -500,13 +683,13 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeAssignPic(int fader, const char* pic_name);
 int  Gui_FadeCheck(int fader);
-
+                  
 /**
  * Draw item notifier.
  */
 void Gui_StartNotifier(int item);
 void Gui_DrawNotifier();
-
+ 
 /**
  * General GUI drawing routines.
  */
@@ -515,5 +698,12 @@ void Gui_DrawFaders();
 void Gui_DrawBars();
 void Gui_DrawLoadScreen(int value);
 void Gui_DrawInventory();
+
+/**
+ * General GUI update routines.
+ */
+
+void Gui_Update();
+void Gui_Resize();  // Called every resize event.
 
 #endif

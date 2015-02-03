@@ -932,23 +932,6 @@ void Render_DrawList()
     if(renderer.world->Character)
     {
         Render_Entity(renderer.world->Character);
-
-//        glPushMatrix();
-//        glMultMatrixbt(renderer.world->Character->transform);
-//        ss_bone_tag_p btag = renderer.world->Character->bf.bone_tags;
-//
-//        for(uint16_t i=0; i<renderer.world->Character->bf.bone_tag_count; i++,btag++)
-//        {
-//            glPushMatrix();
-//            glMultMatrixbt(btag->full_transform);
-//            Render_Mesh(btag->mesh, NULL, NULL);
-//            if(btag->mesh2)
-//            {
-//                Render_SkinMesh(btag->mesh2, btag->transform);
-//            }
-//            glPopMatrix();
-//        }
-//        glPopMatrix();
     }
     glDisable(GL_LIGHTING);
 
@@ -961,7 +944,6 @@ void Render_DrawList()
     }
 
     glDisable(GL_CULL_FACE);
-    glDisableClientState(GL_COLOR_ARRAY);                                       ///@FIXME: reduce number of gl state changes
     if(renderer.style & R_DRAW_WIRE)
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -970,6 +952,7 @@ void Render_DrawList()
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
+    glDisableClientState(GL_COLOR_ARRAY);                                       ///@FIXME: reduce number of gl state changes
     glDisableClientState(GL_NORMAL_ARRAY);
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
@@ -1330,7 +1313,7 @@ void render_DebugDrawer::draw3dText(const btVector3& location, const char* textS
 
 void render_DebugDrawer::reportErrorWarning(const char* warningString)
 {
-   Con_AddLine(warningString, 3);
+   Con_AddLine(warningString, FONTSTYLE_CONSOLE_WARNING);
 }
 
 void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)

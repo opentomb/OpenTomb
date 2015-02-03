@@ -4,6 +4,12 @@
 
 #include "bullet/LinearMath/btScalar.h"
 #include <stdint.h>
+extern "C" {
+#include "lua/lua.h"
+#include "lua/lualib.h"
+#include "lua/lauxlib.h"
+#include "lua/lstate.h"
+}
 
 // This is the global game logic refresh interval.
 // All game logic should be refreshed at this rate, including
@@ -23,8 +29,8 @@ struct RedBlackNode_s;
 
 extern btScalar cam_angles[3];
 
-
 void Game_InitGlobals();
+void Game_RegisterLuaFunctions(lua_State *lua);
 int  Game_Load(const char* name);
 int  Game_Save(const char* name);
 

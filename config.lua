@@ -8,6 +8,7 @@ screen =
     height = 800;
     fullscreen = 0;
     fov = 75.0;
+    debug_info = 1;
 }
 
 audio =
@@ -29,12 +30,12 @@ render =
     antialias_samples = 8;                      -- Maximum depends and is limited by hardware capabilities.
     z_depth = 24;                               -- Maximum and recommended is 24.
     texture_border = 16;
+    fog_color = {r = 255, g = 255, b = 255};
 }
 
 controls =
 {
     mouse_sensitivity = 25.0;
-    keyboard_type = 1;
 
     use_joy = 0;                                -- Use joystick - yes (1) or no (0)
     joy_number = 0;                             -- If you have one joystick in system, it will be 0.
@@ -57,17 +58,13 @@ controls =
 
 console =
 {
-    font_path = "Roboto_500.ttf";
-    font_color = {r = 255, g = 255, b = 255};
     background_color = {r = 112, g = 30, b = 75, a = 202};
-    smooth = 1;
 
-    font_size = 13;
     line_size = 72;
-    log_size = 13;
+    log_size = 16;
     lines_count = 128;
     showing_lines = 128;
-    spacing = 1.5;
+    spacing = 0.5;
     show_cursor_period = 0.5;
     show = 0;
 }
@@ -76,6 +73,8 @@ console =
 -- Please note that on XInput game controllers (XBOX360 and such), triggers are NOT
 -- coded as joystick buttons. Instead, they have unique names: JOY_TRIGGERLEFT and
 -- JOY_TRIGGERRIGHT.
+
+dofile("scripts/config/control_constants.lua");
 
 bind(act.jump, KEY_SPACE, JOY_3);
 bind(act.action, KEY_LCTRL, JOY_1);
@@ -106,22 +105,3 @@ bind(act.bigmedi, KEY_9);
 -- CVAR's section. here you can create and delete CVAR's
 cvars.show_fps = 1;
 cvars.free_look_speed = 2500;
-
-
--- AUTOEXEC LINES
-addItem(player,ITEM_M16,1);
-addItem(player,ITEM_M16_AMMO,1);
-addItem(player,ITEM_MAGNUM,1);
-addItem(player,ITEM_MAGNUM_AMMO,1);
-addItem(player,ITEM_UZI,1);
-addItem(player,ITEM_UZI_AMMO,1);
-addItem(player,ITEM_SHOTGUN,1);
-
-setgame(3);
-setlevel(12);
-
-gravity(0, 0, -5700.0);
-mlook(1);
-freelook(1);
-cam_distance(1024.0);
-noclip(0);

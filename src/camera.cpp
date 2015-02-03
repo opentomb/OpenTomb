@@ -15,7 +15,7 @@ void Cam_Init(camera_p cam)
     cam->aspect = 1.0;
     cam->fov = 75.0;
     cam->dist_near = 1.0;
-    cam->dist_far = 16384.0;
+    cam->dist_far = 65536.0;
 
     cam->h = 2.0 * cam->dist_near * tan( M_PI * cam->fov / 360.0);
     cam->w = cam->h * cam->aspect;
@@ -32,7 +32,7 @@ void Cam_Init(camera_p cam)
     cam->frustum->vertex = (btScalar*)malloc(3*4*sizeof(btScalar));
 
     cam->pos[0] = 0.0;
-    cam->pos[1] = 0.0;http://i.imgur.com/RYc9qWE.png
+    cam->pos[1] = 0.0;
     cam->pos[2] = 0.0;
 
     cam->prev_pos[0] = 0.0;
@@ -57,17 +57,6 @@ void Cam_Init(camera_p cam)
     cam->shake_value    = 0.0;
     cam->shake_time     = 0.0;
 
-    cam->current_room = NULL;
-}
-
-void Cam_InitGlobals(camera_p cam)
-{
-    cam->dist_near = 10.0;
-    cam->dist_far = 65536.0;
-    cam->pos[0] = 300.0;
-    cam->pos[1] = 850.0;
-    cam->pos[2] = 150.0;
-    cam->frustum->next = NULL;
     cam->current_room = NULL;
 }
 

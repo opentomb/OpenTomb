@@ -105,15 +105,19 @@ void Game_InitGlobals()
     control_states.free_look = 0;
     control_states.noclip = 0;
     control_states.cam_distance = 800.0;
+}
 
-    if(engine_lua)
+void Game_RegisterLuaFunctions(lua_State *lua)
+{
+    if(lua != NULL)
     {
-        lua_register(engine_lua, "mlook", lua_mlook);
-        lua_register(engine_lua, "freelook", lua_freelook);
-        lua_register(engine_lua, "noclip", lua_noclip);
-        lua_register(engine_lua, "cam_distance", lua_cam_distance);
+        lua_register(lua, "mlook", lua_mlook);
+        lua_register(lua, "freelook", lua_freelook);
+        lua_register(lua, "noclip", lua_noclip);
+        lua_register(lua, "cam_distance", lua_cam_distance);
     }
 }
+
 
 /**
  * Load game state
@@ -489,9 +493,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         glMultMatrixbt(temp);
 
         // bone_tags->mesh->centre[0] ent->bf.pos[0]*0.5 (ent->bf.bone_tags+ent->bf.bone_tag_count)->full_transform[12]  - 32.0 *  ent->transform[4 + 1]
-        cam_pos.m_floats[0] = ((transform[12]));
-        cam_pos.m_floats[1] = ((transform[13]));
-        cam_pos.m_floats[2] = ((transform[14]) + dz ); // + 0.5  * (ent->bf.bb_max[2])
+        Mat4_vec3_mul(cam_pos.m_floats, ent->transform, ent->bf.bone_tags->full_transform+12);
+        cam_pos.m_floats[2] += dz;
     }
 
     float shake_value   = renderer.cam->shake_value;
@@ -696,13 +699,19 @@ void Game_Frame(btScalar time)
     static btScalar game_logic_time  = 0.0;
                     game_logic_time += time;
 
-    // If console is active, only thing to update is audio.
+    // GUI should be updated at all times!
+
+    Gui_Update();
+
+    ///@FIXME: I have no idea what's happening here! - Lwmte
 
     if(!con_base.show && control_states.gui_inventory)
-        {
-            main_inventory_menu->Toggle();
-            control_states.gui_inventory = !control_states.gui_inventory;
-        }
+    {
+        main_inventory_menu->Toggle();
+        control_states.gui_inventory = !control_states.gui_inventory;
+    }
+
+    // If console or inventory is active, only thing to update is audio.
 
     if(con_base.show || main_inventory_menu->IsVisible())
     {
@@ -771,6 +780,17 @@ void Game_Prepare()
     Character_SetParam       (engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
     Character_SetParamMaximum(engine_world.Character, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
     Character_SetParam       (engine_world.Character, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
+    
+    // Set character statistics to default.
+    
+    engine_world.Character->character->statistics.distance       = 0.0;
+    engine_world.Character->character->statistics.ammo_used      = 0;
+    engine_world.Character->character->statistics.hits           = 0;
+    engine_world.Character->character->statistics.kills          = 0;
+    engine_world.Character->character->statistics.medipacks_used = 0;
+    engine_world.Character->character->statistics.saves_used     = 0;
+    engine_world.Character->character->statistics.secrets_game   = 0;
+    engine_world.Character->character->statistics.secrets_level  = 0;
 
     // Set gameflow parameters to default.
     // Reset secret trigger map.
@@ -783,6 +803,6 @@ void Game_LevelTransition(uint16_t level_index)
     char file_path[MAX_ENGINE_PATH];
     lua_GetLoadingScreen(engine_lua, level_index, file_path);
     Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
-    Gui_FadeStart(FADER_LOADSCREEN, TR_FADER_DIR_OUT);
+    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     Audio_EndStreams();
 }
