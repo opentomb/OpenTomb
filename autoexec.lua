@@ -9,14 +9,7 @@ cvars.show_fps = 1;
 cvars.free_look_speed = 2500;
 
 -- AUTOEXEC LINES
-addItem(player,ITEM_M16,1);
-addItem(player,ITEM_M16_AMMO,1);
-addItem(player,ITEM_MAGNUM,1);
-addItem(player,ITEM_MAGNUM_AMMO,1);
-addItem(player,ITEM_UZI,1);
-addItem(player,ITEM_UZI_AMMO,1);
-addItem(player,ITEM_SHOTGUN,1);
-
+setLanguage("italian");
 setgame(3);
 setlevel(12);
 

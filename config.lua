@@ -8,7 +8,7 @@ screen =
     height = 800;
     fullscreen = 0;
     fov = 75.0;
-    debug_info = 1;
+    debug_info = 0;
 }
 
 audio =
@@ -23,10 +23,10 @@ audio =
 render =
 {
     mipmap_mode = 3;
-    mipmaps = 3;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
+    mipmaps = 0;                                -- It's not recommended to set it higher than 3 to prevent border bleeding.
     lod_bias = 0;
-    anisotropy = 8;                             -- Maximum depends and is limited by hardware capabilities.
-    antialias = 1;
+    anisotropy = 0;                             -- Maximum depends and is limited by hardware capabilities.
+    antialias = 0;
     antialias_samples = 8;                      -- Maximum depends and is limited by hardware capabilities.
     z_depth = 24;                               -- Maximum and recommended is 24.
     texture_border = 16;
