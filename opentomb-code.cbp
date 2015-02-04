@@ -34,7 +34,6 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-O2" />
 			<Add option="-w" />
 			<Add option='-I&quot;src\bullet&quot; -I&quot;src\freetype2&quot; -I&quot;src\image\jpeg-9&quot; -I&quot;src\image\libpng-1.6.2&quot; -fno-exceptions -static' />
 			<Add option="-Wno-sign-compare" />
@@ -50,11 +49,9 @@
 		<Unit filename="scripts/audio/common_sounds.lua" />
 		<Unit filename="scripts/audio/sample_override.lua" />
 		<Unit filename="scripts/audio/soundtrack.lua" />
+		<Unit filename="scripts/autoexec.lua" />
 		<Unit filename="scripts/config/control_constants.lua" />
 		<Unit filename="scripts/entity/character.lua" />
-		<Unit filename="scripts/entity/collide_flags.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="scripts/entity/door_script.lua" />
 		<Unit filename="scripts/entity/entity_flags.lua" />
 		<Unit filename="scripts/entity/entity_model_ID_override.lua" />
@@ -71,7 +68,6 @@
 		<Unit filename="scripts/gui/fonts.lua" />
 		<Unit filename="scripts/inventory/item_combine.lua" />
 		<Unit filename="scripts/inventory/item_list.lua" />
-		<Unit filename="scripts/inventory/item_names.lua" />
 		<Unit filename="scripts/inventory/items.lua" />
 		<Unit filename="scripts/level/tr1/GYM.lua" />
 		<Unit filename="scripts/level/tr1/LEVEL1.lua" />
@@ -199,14 +195,15 @@
 		<Unit filename="scripts/level/tr5/RICH2_autoexec.lua" />
 		<Unit filename="scripts/level/tr5/RICH3_autoexec.lua" />
 		<Unit filename="scripts/level/tr5/RICHCUT_autoexec.lua" />
-		<Unit filename="scripts/strings/english.lua" />
 		<Unit filename="scripts/strings/generic/english.lua" />
 		<Unit filename="scripts/strings/generic/french.lua" />
 		<Unit filename="scripts/strings/generic/italian.lua" />
 		<Unit filename="scripts/strings/generic/russian.lua" />
 		<Unit filename="scripts/strings/generic/spanish.lua" />
 		<Unit filename="scripts/strings/getstring.lua" />
-		<Unit filename="scripts/strings/italian.lua" />
+		<Unit filename="scripts/strings/global_items/english.lua" />
+		<Unit filename="scripts/strings/global_items/italian.lua" />
+		<Unit filename="scripts/strings/global_items/russian.lua" />
 		<Unit filename="scripts/system/sys_scripts.lua" />
 		<Unit filename="src/al/AL/al.h">
 			<Option target="&lt;{~None~}&gt;" />
