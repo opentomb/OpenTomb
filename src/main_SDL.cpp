@@ -644,7 +644,6 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.scale_factor = (screen_info.w < screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
 
     Gui_Resize();
-    Con_SetLineInterval(con_base.spacing);
 
     Cam_SetFovAspect(&engine_camera, screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
     Cam_RecalcClipPlanes(&engine_camera);
