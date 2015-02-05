@@ -59,7 +59,7 @@ bsp_tree_2d_p BSPTree2D_Create(unsigned width, unsigned height)
     bsp_tree_2d_p result = malloc(sizeof(struct bsp_tree_2d_s));
     result->nodeCapacity = BSP_TREE_CAPACITY_GROWTH;
     
-    result->nodes = malloc(result->nodeCapacity * sizeof(result->nodes[0]));
+    result->nodes = malloc(result->nodeCapacity * sizeof(struct bsp_tree_2d_node_s));
     result->lastUsedNode = 0;
     result->numUnusedNodes = 0;
     

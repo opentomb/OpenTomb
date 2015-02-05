@@ -654,11 +654,19 @@ gui_InventoryMenu::gui_InventoryMenu()
 
     mFontSize = 18;
     mFontHeight = 12;
+
+    Gui_AddLine(&mLabel_ItemName);
+    Gui_AddLine(&mLabel_Title);
 }
 
 
 gui_InventoryMenu::~gui_InventoryMenu()
 {
+    mLabel_ItemName.show = 0;
+    Gui_DeleteLine(&mLabel_ItemName);
+
+    mLabel_Title.show = 0;
+    Gui_DeleteLine(&mLabel_Title);
     DestroyItems();
 }
 
@@ -672,8 +680,8 @@ void gui_InventoryMenu::Toggle()
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
         mMovementDirectionC = -1;
 
-        Gui_DeleteLine(&mLabel_ItemName);
-        Gui_DeleteLine(&mLabel_Title);
+        mLabel_ItemName.show = 0;
+        mLabel_Title.show = 0;
     }
     else
     {
@@ -686,9 +694,9 @@ void gui_InventoryMenu::Toggle()
 
         mLabel_ItemName_text[0] = 0;
 
-        Gui_AddLine(&mLabel_ItemName);
+        mLabel_ItemName.show = 1;
         Gui_MoveLine(&mLabel_ItemName);
-        Gui_AddLine(&mLabel_Title);
+        mLabel_Title.show = 1;
         Gui_MoveLine(&mLabel_Title);
     }
     mVisible = 1;
@@ -1154,8 +1162,8 @@ void gui_InventoryMenu::Render()
 
     UpdateMovements();
 
-    int items_count = mRow1Max, current_row;
-    gui_invmenu_item_s *inv = mFirstInRow1;
+    int items_count = 0, current_row;
+    gui_invmenu_item_s *inv = NULL;
 
     if(mMovementV<=-1)
     {
@@ -1261,10 +1269,6 @@ void gui_InventoryMenu::Render()
                                 {
                                     strncpy(mLabel_ItemName_text, item->name, 128);
                                 }
-                                /*gui_text_line_p l = Gui_OutTextXY(0.5 * screen_info.w / screen_info.scale_factor, screen_info.h/2 - 200, mLabel_ItemName_text);
-                                l->font_id = FONT_PRIMARY;
-                                //l->style_id = xxxx;
-                                l->Xanchor = GUI_ANCHOR_HOR_CENTER;*/
                             }
                         }
                     }
@@ -1378,9 +1382,10 @@ void Gui_DrawBars()
 
 void Gui_DrawInventory()
 {
-    if (!main_inventory_menu->IsVisible())
+    /*if (!main_inventory_menu->IsVisible())*/
         return;
 
+#if 0
     glClear(GL_DEPTH_BUFFER_BIT);
 
     glPopClientAttrib();
@@ -1424,6 +1429,7 @@ void Gui_DrawInventory()
     Gui_SwitchGLMode(0);
     main_inventory_menu->Render(); //engine_world.Character->character->inventory
     Gui_SwitchGLMode(1);
+#endif
 }
 
 void Gui_StartNotifier(int item)
@@ -2776,7 +2782,6 @@ bool gui_FontManager::AddFont(const font_Type index, const uint32_t size, const 
         glf_free_font(desired_font->gl_font);
     }
 
-    desired_font->gl_font = NULL;                                               ///@PARANOID
     desired_font->gl_font = glf_create_font(this->font_library, path, size);
 
     return true;

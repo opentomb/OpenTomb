@@ -77,13 +77,15 @@ void Room_Empty(room_p room)
             if(body)
             {
                 body->setUserPointer(NULL);
-                if(body && body->getMotionState())
+                if(body->getMotionState())
                 {
                     delete body->getMotionState();
+                    body->setMotionState(NULL);
                 }
-                if(body && body->getCollisionShape())
+                if(body->getCollisionShape())
                 {
                     delete body->getCollisionShape();
+                    body->setCollisionShape(NULL);
                 }
 
                 bt_engine_dynamicsWorld->removeRigidBody(body);
@@ -96,6 +98,7 @@ void Room_Empty(room_p room)
             room->static_mesh[i].obb = NULL;
             if(room->static_mesh[i].self)
             {
+                room->static_mesh[i].self->room = NULL;
                 free(room->static_mesh[i].self);
                 room->static_mesh[i].self = NULL;
             }
@@ -111,13 +114,15 @@ void Room_Empty(room_p room)
         if(body)
         {
             body->setUserPointer(NULL);
-            if(body && body->getMotionState())
+            if(body->getMotionState())
             {
                 delete body->getMotionState();
+                body->setMotionState(NULL);
             }
-            if(body && body->getCollisionShape())
+            if(body->getCollisionShape())
             {
                 delete body->getCollisionShape();
+                body->setCollisionShape(NULL);
             }
 
             bt_engine_dynamicsWorld->removeRigidBody(body);
@@ -151,6 +156,7 @@ void Room_Empty(room_p room)
 
     if(room->self)
     {
+        room->self->room = NULL;
         free(room->self);
         room->self = NULL;
     }
@@ -435,7 +441,6 @@ void World_Prepare(world_p world)
 
 void World_Empty(world_p world)
 {
-    engine_container_p cont;
     extern engine_container_p last_cont;
 
     last_cont = NULL;
@@ -451,36 +456,45 @@ void World_Empty(world_p world)
         world->Character->self->next = NULL;
         world->Character->current_sector = NULL;
     }
-
-    // Now we can delete all other. Be carefull: OpenAL uses multithreading!
-    for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--)
+    
+    /* entity empty must be done before rooms destroy */
+    RB_Free(world->entity_tree);
+    world->entity_tree = NULL;
+    
+    /* Now we can delete bullet misc */
+    if(bt_engine_dynamicsWorld != NULL)
     {
-        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if(body)
+        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
         {
-            engine_container_p cont = ((engine_container_p)body->getUserPointer());
-            if(cont != NULL)
+            btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+            btRigidBody* body = btRigidBody::upcast(obj);
+            if(body != NULL)
             {
+                engine_container_p cont = (engine_container_p)body->getUserPointer();
                 body->setUserPointer(NULL);
-                if(cont->object_type == OBJECT_BULLET_MISC)
+                
+                if(cont && (cont->object_type == OBJECT_BULLET_MISC))
                 {
-                    free(cont);
-                    cont = NULL;
                     if(body->getMotionState())
                     {
                         delete body->getMotionState();
+                        body->setMotionState(NULL);
                     }
+
                     if(body->getCollisionShape())
                     {
                         delete body->getCollisionShape();
+                        body->setCollisionShape(NULL);
                     }
+
                     if(body->isInWorld())
                     {
                         bt_engine_dynamicsWorld->removeRigidBody(body);
                     }
+
+                    cont->room = NULL;
+                    free(cont);
                     delete body;
-                    body = NULL;
                 }
             }
         }
@@ -508,23 +522,19 @@ void World_Empty(world_p world)
         world->sprites_count = 0;
     }
 
-    /*entity empty*/
-    RB_Free(world->entity_tree);
-    world->entity_tree = NULL;
-
     /*items empty*/
     RB_Free(world->items_tree);
     world->items_tree = NULL;
-
+    
     if(world->Character)
     {
         Entity_Clear(world->Character);
         free(world->Character);
         world->Character = NULL;
     }
-
+ 
     if(world->skeletal_model_count)
-    {
+    {   
         for(uint32_t i=0;i<world->skeletal_model_count;i++)
         {
             SkeletalModel_Clear(world->skeletal_models+i);
@@ -557,32 +567,6 @@ void World_Empty(world_p world)
         world->floor_data_size = 0;
     }
 
-    if(bt_engine_dynamicsWorld)
-    {
-        for(int i=bt_engine_dynamicsWorld->getNumCollisionObjects()-1;i>=0;i--)
-        {
-            btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
-            btRigidBody* body = btRigidBody::upcast(obj);
-            if(body && body->getMotionState())
-            {
-                delete body->getMotionState();
-            }
-            if(body && body->getCollisionShape())
-            {
-                delete body->getCollisionShape();
-            }
-            cont = (engine_container_p)body->getUserPointer();
-            if(cont && cont->object_type == OBJECT_BULLET_MISC)
-            {
-                body->setUserPointer(NULL);
-                cont->room = NULL;
-                free(cont);
-            }
-
-            bt_engine_dynamicsWorld->removeCollisionObject(obj);
-            delete obj;
-        }
-    }
     if(world->tex_count)
     {
         glDeleteTextures(world->tex_count ,world->textures);

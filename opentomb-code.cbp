@@ -35,7 +35,6 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-O2" />
 			<Add option="-Wall" />
 			<Add option='-I&quot;src\bullet&quot; -I&quot;src\freetype2&quot; -I&quot;src\image\jpeg-9&quot; -I&quot;src\image\libpng-1.6.2&quot; -Wno-sign-compare' />
 			<Add option="-DLOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS" />

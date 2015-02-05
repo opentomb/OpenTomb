@@ -64,9 +64,6 @@
 /* Define if we have stdint.h */
 #define HAVE_STDINT_H 1
 
-/* Define if we have windows.h */
-#define HAVE_WINDOWS_H 1
-
 /* Define if we have pthread_np.h */
 //#define HAVE_PTHREAD_NP_H 1
 

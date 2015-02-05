@@ -56,7 +56,6 @@ void glf_free_font(gl_tex_font_p glf)
         if(glf->ft_face != NULL)
         {
             FT_Done_Face(glf->ft_face);
-            free(glf->ft_face);
             glf->ft_face = NULL;
         }
 

@@ -9,7 +9,7 @@
 
 struct bsp_node_s *dynamicBSP::createBSPNode()
 {
-    bsp_node_p ret = (bsp_node_p)(m_data + m_allocated);
+    bsp_node_p ret = (bsp_node_p)((uint8_t*)m_data + m_allocated);
     m_allocated += sizeof(bsp_node_t);
     ret->front = NULL;
     ret->back = NULL;
@@ -21,11 +21,11 @@ struct bsp_node_s *dynamicBSP::createBSPNode()
 
 struct polygon_s *dynamicBSP::createPolygon(uint16_t vertex_count)
 {
-    polygon_p ret = (polygon_p)(m_data + m_allocated);
+    polygon_p ret = (polygon_p)((uint8_t*)m_data + m_allocated);
     m_allocated += sizeof(polygon_t);
     ret->next = NULL;
     ret->vertex_count = vertex_count;
-    ret->vertices = (vertex_p)(m_data + m_allocated);
+    ret->vertices = (vertex_p)((uint8_t*)m_data + m_allocated);
     m_allocated += vertex_count * sizeof(vertex_t);
     return ret;
 }

@@ -3883,9 +3883,10 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             if(replace_anim_id > 0)
             {
                 skeletal_model_s* replace_anim_model = World_FindModelByID(world, replace_anim_id);
-
-                entity->bf.model->animations = replace_anim_model->animations;
-                entity->bf.model->animation_count = replace_anim_model->animation_count;
+                animation_frame_p ta;
+                uint16_t tc;
+                SWAPT(entity->bf.model->animations, replace_anim_model->animations, ta);
+                SWAPT(entity->bf.model->animation_count, replace_anim_model->animation_count, tc);
             }
 
             lua_settop(ent_ID_override, top);

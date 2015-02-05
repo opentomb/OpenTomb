@@ -407,7 +407,7 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 
             // For some reason, Lua returns constant string pointer, which we can't assign to
             // provided argument; so we need to straightly copy it.
-            strcpy(pic_path, real_path);
+            strncpy(pic_path, real_path, MAX_ENGINE_PATH);
             lua_settop(lua, top);                                               // restore LUA stack
 
             return true;

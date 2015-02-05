@@ -707,13 +707,13 @@ void Game_Frame(btScalar time)
 
     if(!con_base.show && control_states.gui_inventory)
     {
-        main_inventory_menu->Toggle();
+        //main_inventory_menu->Toggle();
         control_states.gui_inventory = !control_states.gui_inventory;
     }
 
     // If console or inventory is active, only thing to update is audio.
 
-    if(con_base.show || main_inventory_menu->IsVisible())
+    if(con_base.show/* || main_inventory_menu->IsVisible()*/)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {

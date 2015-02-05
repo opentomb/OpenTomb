@@ -614,10 +614,10 @@ void Engine_Display()
             glColor3f(1.0, 1.0, 1.0);
 #if !SKELETAL_TEST
             Gui_DrawNotifier();
-            if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
+            /*if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
             {
                 Gui_DrawInventory();
-            }
+            }*/
 #endif
         }
         glPopClientAttrib();
@@ -1014,7 +1014,7 @@ void DebugKeys(int button, int state)
     if(state)
     {
         switch(button)
-        {
+        {/*
             case SDLK_UP:
                 if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(-1);
                 break;
@@ -1030,7 +1030,7 @@ void DebugKeys(int button, int state)
             case SDLK_RIGHT:
                 if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(-1);
                 break;
-
+*/
                 /*models switching*/
             case SDLK_p:
                 model++;

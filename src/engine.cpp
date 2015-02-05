@@ -2278,7 +2278,7 @@ int lua_LoadMap(lua_State *lua)
             }
             char file_path[MAX_ENGINE_PATH];
             lua_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
-            Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
+            //Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
             Engine_LoadMap(s);
         }
     }

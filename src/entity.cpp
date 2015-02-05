@@ -94,13 +94,15 @@ void Entity_Clear(entity_p entity)
                 if(body)
                 {
                     body->setUserPointer(NULL);
-                    if(body && body->getMotionState())
+                    if(body->getMotionState())
                     {
                         delete body->getMotionState();
+                        body->setMotionState(NULL);
                     }
-                    if(body && body->getCollisionShape())
+                    if(body->getCollisionShape())
                     {
                         delete body->getCollisionShape();
+                        body->setCollisionShape(NULL);
                     }
 
                     if(body->isInWorld())
@@ -112,7 +114,6 @@ void Entity_Clear(entity_p entity)
                 }
             }
         }
-
 
         if(entity->character)
         {
@@ -264,7 +265,7 @@ void Entity_UpdateRoomPos(entity_p ent)
     {
         if(ent->current_sector)
             Entity_ProcessSector(ent);
-        
+
         new_sector = Room_GetSectorXYZ(new_room, pos);
         if(new_room != new_sector->owner_room)
         {
@@ -791,10 +792,10 @@ void Entity_ProcessSector(struct entity_s *ent)
                                                                                     SECTOR_FLAG_CLIMB_EAST  |
                                                                                     SECTOR_FLAG_CLIMB_NORTH |
                                                                                     SECTOR_FLAG_CLIMB_SOUTH );
-                                                                                    
+
         ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
         ent->character->height_info.ceiling_climb   = (ent->current_sector->flags & SECTOR_FLAG_CLIMB_CEILING);
-        
+
         if(ent->current_sector->flags & SECTOR_FLAG_DEATH)
         {
             if((ent->move_type == MOVE_ON_FLOOR)    ||
@@ -1090,7 +1091,7 @@ int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
             case TR_FD_FUNC_MONKEY:          // Climbable ceiling
                 Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
                 break;
-                
+
             case TR_FD_FUNC_MINECART_LEFT:
                 Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
                 break;
@@ -1176,15 +1177,12 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
 
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
 {
-    if(id >= 0)
+    state_change_p ret = anim->state_change;
+    for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
     {
-        state_change_p ret = anim->state_change;
-        for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
+        if(ret->id == id)
         {
-            if(ret->id == id)
-            {
-                return ret;
-            }
+            return ret;
         }
     }
 
@@ -1194,23 +1192,20 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 
 int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
 {
-    if(id >= 0)
+    animation_frame_p anim = entity->bf.model->animations + entity->bf.current_animation;
+    state_change_p stc = anim->state_change;
+    anim_dispath_p disp;
+    for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
     {
-        animation_frame_p anim = entity->bf.model->animations + entity->bf.current_animation;
-        state_change_p stc = anim->state_change;
-        anim_dispath_p disp;
-        for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
+        if(stc->id == id)
         {
-            if(stc->id == id)
+            disp = stc->anim_dispath;
+            for(uint16_t j=0;j<stc->anim_dispath_count;j++,disp++)
             {
-                disp = stc->anim_dispath;
-                for(uint16_t j=0;j<stc->anim_dispath_count;j++,disp++)
+                if((disp->frame_high >= disp->frame_low) && (entity->bf.current_frame >= disp->frame_low) && (entity->bf.current_frame <= disp->frame_high))// ||
+                   //(disp->frame_high <  disp->frame_low) && ((entity->bf.current_frame >= disp->frame_low) || (entity->bf.current_frame <= disp->frame_high)))
                 {
-                    if((disp->frame_high >= disp->frame_low) && (entity->bf.current_frame >= disp->frame_low) && (entity->bf.current_frame <= disp->frame_high))// ||
-                       //(disp->frame_high <  disp->frame_low) && ((entity->bf.current_frame >= disp->frame_low) || (entity->bf.current_frame <= disp->frame_high)))
-                    {
-                        return (int)j;
-                    }
+                    return (int)j;
                 }
             }
         }

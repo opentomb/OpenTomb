@@ -191,7 +191,7 @@ void SkeletalModel_Clear(skeletal_model_p model)
 {
     if(model != NULL)
     {
-        if(model->mesh_count)
+        if(model->mesh_tree)
         {
             model->mesh_count = 0;
             free(model->mesh_tree);
