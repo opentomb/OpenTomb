@@ -1,6 +1,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
@@ -661,6 +662,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
  */
 void Engine_PrimaryMouseDown()
 {
+    return;
     engine_container_p cont = Container_Create();
     btScalar *v = engine_camera.pos;
     btScalar *dir = engine_camera.view_dir;
@@ -693,6 +695,7 @@ void Engine_PrimaryMouseDown()
 
 void Engine_SecondaryMouseDown()
 {
+    return;
     engine_container_t *c0;
     btVector3 from, to, place;
     engine_container_t cam_cont;
@@ -887,8 +890,8 @@ void Engine_PollSDLInput()
                 {
                     if(mouse_setup)                                             // it is not perfect way, but cursor
                     {                                                           // every engine start is in one place
-                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
-                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
+                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * std::max(double(engine_frame_time), 0.01);
+                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * std::max(double(engine_frame_time), 0.01);
                     }
 
                     if((event.motion.x < ((screen_info.w/2)-(screen_info.w/4))) ||

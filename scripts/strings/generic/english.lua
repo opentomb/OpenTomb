@@ -35,9 +35,11 @@ strings[017] = "Discard";
 -- Interface headers
 
 strings[018] = "INVENTORY";
-strings[019] = "DIARY";
+--strings[019] = "DIARY";    -- There is no "OPTIONS" or "ITEMS" header - I temporarily changed the "DIARY" and "STATISTICS" ones to them - Banderi (@TBF?)
+strings[019] = "ITEMS";
 strings[020] = "PAUSED";
-strings[021] = "STATISTICS";
+--strings[021] = "STATISTICS";
+strings[021] = "OPTIONS";
 strings[022] = "LOADING";
 
 -- Dialogs
