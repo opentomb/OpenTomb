@@ -417,6 +417,7 @@ bool StreamTrack::Load_Ogg(const char *path)
     if(!(audio_file = fopen(path, "rb")))
     {
         Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
+        method = -1;    // T4Larson <t4larson@gmail.com>: vorbis_Stream is uninitialised, avoid ov_clear()
         return false;
     }
 
@@ -1739,7 +1740,6 @@ int Audio_DeInit()
     audio_blocked = 1;
     Audio_StopAllSources();
     Audio_StopStreams();
-    SDL_Delay(500);
 
     if(engine_world.audio_sources)
     {

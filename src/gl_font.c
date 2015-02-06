@@ -22,11 +22,10 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
     if(ft_library != NULL)
     {
         gl_tex_font_p glf = (gl_tex_font_p)malloc(sizeof(gl_tex_font_t));
-        glf->ft_face = (FT_Face)calloc(sizeof(struct FT_FaceRec_), 1);
+        glf->ft_face = NULL;
 
-        if(FT_New_Face(ft_library, file_name, 0, &glf->ft_face))
+        if(FT_New_Face(ft_library, file_name, 0, &glf->ft_face))                //T4Larson <t4larson@gmail.com>: fixed font construction and destruction!
         {
-            free(glf->ft_face);
             free(glf);
             return NULL;
         }
@@ -56,7 +55,6 @@ void glf_free_font(gl_tex_font_p glf)
         if(glf->ft_face != NULL)
         {
             FT_Done_Face(glf->ft_face);
-            glf->ft_face = NULL;
         }
 
         glf->ft_face = NULL;
