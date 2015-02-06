@@ -17,9 +17,9 @@ How to use model_view
 
 *How to build
     1) You need GCC compiler, use -O2 optimization, -O3 prevents to crash (bullet).
-    2) You need libraryes: SDL library (do not forget to enable GL support in this library), OpenGL library, zlib.
+    2) You need libraryes: SDL2 library (do not forget to enable GL support in this library), OpenGL library, zlib.
     3) In "vt" folder is modyfied vt project.
-    4) In src folder there is *.bat files for manual engine building. Use build_all to rebuild engine fully or see inside to know other script running order.
+    4) In src folder there is "build.sh" file for manual engine building. Use it to rebuild engine fully or see inside to know other script running order.
     *) It is my own engine, not a branch of OpenRaider, but I use some useful code from it.
 
 Used here:
@@ -34,17 +34,15 @@ Used here:
         - quaketenebrae (parser) http://tenebrae.sourceforge.net/
         - vt project http://icculus.org/vt/vt/website/
         - freetype2 http://freetype.sourceforge.net/freetype2/index.html
-        - ftgl http://sourceforge.net/projects/ftgl/
         - BULLET http://bulletphysics.org/wordpress/
         - SDL_Image http://www.libsdl.org/projects/SDL_image/
             + jpeg-9 http://www.ijg.org/
             + libpng-1.6.2 http://www.libpng.org/pub/png/libpng.html
     
 Note:
-Added test object interaction like doors and statics (test it in TR_I). To change selected object animation press "e" (next animation), or "q" (previous animation).
     
 P.S. If i forget some information or share that I should not, please tell about it, I will try to fix it. 
 PPS. If you have some useful advises about engine or alghoritms, please write it to me.
 
-Thanks for helping to 'Lwmte', 'Cochrane', 'godmodder' and 'Ado Croft' from http://www.tombraiderforums.com (http://www.tombraiderforums.com/showthread.php?p=6873088)
+Thanks for helping to 'Lwmte', 'Cochrane', 'godmodder' and 'Ado Croft' from http://www.tombraiderforums.com (http://www.tombraiderforums.com/showthread.php?t=197508)
 

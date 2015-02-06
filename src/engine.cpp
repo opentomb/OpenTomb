@@ -55,6 +55,7 @@ extern SDL_GameController     *sdl_controller;
 extern SDL_Joystick           *sdl_joystick;
 extern SDL_Haptic             *sdl_haptic;
 extern ALCdevice              *al_device;
+extern ALCcontext             *al_context;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -2006,7 +2007,6 @@ int lua_SetEntityState(lua_State * lua)
     return 0;
 }
 
-///@TODO: current realisation is not correct: if entity is outside the room than entity will not be saved (see savegame function)
 int lua_SetEntityRoomMove(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -2278,7 +2278,8 @@ int lua_LoadMap(lua_State *lua)
             }
             char file_path[MAX_ENGINE_PATH];
             lua_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
-            //Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
+            Gui_FadeAssignPic(FADER_LOADSCREEN, file_path);
+            Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
             Engine_LoadMap(s);
         }
     }
@@ -2713,7 +2714,7 @@ void Engine_Destroy()
         lua_close(engine_lua);
         engine_lua = NULL;
     }
-    
+
     Gui_Destroy();
 }
 
@@ -2744,11 +2745,17 @@ void Engine_Shutdown(int val)
         SDL_HapticClose(sdl_haptic);
     }
 
+    if(al_context)                                                              // T4Larson <t4larson@gmail.com>: fixed
+    {
+        alcMakeContextCurrent(NULL);
+        alcDestroyContext(al_context);
+    }
+
     if(al_device)
     {
         alcCloseDevice(al_device);
     }
-    
+
     /* free temporary memory */
     if(frame_vertex_buffer)
     {
@@ -2757,7 +2764,7 @@ void Engine_Shutdown(int val)
     frame_vertex_buffer = NULL;
     frame_vertex_buffer_size = 0;
     frame_vertex_buffer_size_left = 0;
-    
+
     IMG_Quit();
     SDL_Quit();
 
@@ -3012,6 +3019,7 @@ int Engine_LoadMap(const char *name)
     int trv;
     VT_Level tr_level;
     char buf[LEVEL_NAME_MAX_LEN] = {0x00};
+    extern gui_Fader Fader[];
 
     Gui_DrawLoadScreen(0);
 
@@ -3060,6 +3068,7 @@ int Engine_LoadMap(const char *name)
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
+    Fader[FADER_LOADSCREEN].Cut();
 
     return 1;
 }

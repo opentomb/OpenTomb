@@ -264,13 +264,31 @@ void Entity_UpdateRoomPos(entity_p ent)
     if(new_room)
     {
         if(ent->current_sector)
+        {
             Entity_ProcessSector(ent);
+        }
 
         new_sector = Room_GetSectorXYZ(new_room, pos);
         if(new_room != new_sector->owner_room)
         {
             new_room = new_sector->owner_room;
         }
+
+        if(!ent->character && (ent->self->room != new_room))
+        {
+            if((ent->self->room != NULL) && !Room_IsOverlapped(ent->self->room, new_room))
+            {
+                if(ent->self->room)
+                {
+                    Room_RemoveEntity(ent->self->room, ent);
+                }
+                if(new_room)
+                {
+                    Room_AddEntity(new_room, ent);
+                }
+            }
+        }
+
         ent->self->room = new_room;
         if(ent->current_sector != new_sector)
         {
@@ -295,25 +313,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         return;
     }
 
-    old_room = ent->self->room;
     Entity_UpdateRoomPos(ent);
-
-#if 1
-    if(!ent->character && (ent->self->room != old_room))
-    {
-        if((ent->self->room != NULL) && !Room_IsOverlapped(ent->self->room, old_room))
-        {
-            if(ent->self->room && old_room)
-            {
-                Room_RemoveEntity(old_room, ent);
-            }
-            if(ent->self->room)
-            {
-                Room_AddEntity(ent->self->room, ent);
-            }
-        }
-    }
-#endif
 
     if(ent->self->collide_flag != 0x00)
     {

@@ -35,14 +35,6 @@ void Room_Empty(room_p room)
         return;
     }
 
-    engine_container_p cont = room->containers;
-    for(;cont!=NULL;)
-    {
-        engine_container_p dl = cont;
-        cont=cont->next;
-        dl->room = NULL;
-        dl->next = NULL;
-    }
     room->containers = NULL;
 
     p = room->portals;
@@ -169,51 +161,50 @@ void Room_AddEntity(room_p room, struct entity_s *entity)
 
     for(curr=room->containers;curr!=NULL;curr=curr->next)
     {
-        if((curr->object_type == OBJECT_ENTITY) && (((entity_p)curr->object)->id == entity->id))
+        if(curr == entity->self)
         {
             return;
         }
     }
 
-    curr = entity->self;
-    curr->object = entity;
-    curr->object_type = OBJECT_ENTITY;
-
-    curr->next = room->containers;
-    room->containers = curr;
+    entity->self->room = room;
+    entity->self->next = room->containers;
+    room->containers = entity->self;
 }
 
 
 int Room_RemoveEntity(room_p room, struct entity_s *entity)
 {
-    engine_container_p cont, prev;
+    engine_container_p previous_cont, current_cont;
 
-    prev = NULL;
-    for(cont=room->containers;cont;)
+    if((entity == NULL) || (room->containers == NULL))
     {
-        if(entity == (entity_p)cont->object)
+        return 0;
+    }
+
+    if(room->containers == entity->self)
+    {
+        room->containers = entity->self->next;
+        entity->self->room = NULL;
+        return 1;
+    }
+
+    previous_cont = room->containers;
+    current_cont = previous_cont->next;
+    for(;current_cont!=NULL;)
+    {
+        if(current_cont == entity->self)
         {
-            break;
+            previous_cont->next = current_cont->next;
+            entity->self->room = NULL;
+            return 1;
         }
-        prev = cont;
-        cont = cont->next;
-    }
-    if(cont == NULL)
-    {
-        return 0;                                                               // Entity not found
+
+        previous_cont = current_cont;
+        current_cont = current_cont->next;
     }
 
-    if(prev == NULL)                                                            // start list
-    {
-        room->containers = room->containers->next;
-    }
-    else
-    {
-        prev->next = cont->next;
-    }
-    cont->next = NULL;
-
-    return 1;
+    return 0;
 }
 
 
@@ -449,18 +440,18 @@ void World_Empty(world_p world)
     Engine_LuaClearTasks();
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
-    SDL_Delay(500);                                                             ///@FIXME: find correct time, or way to waiting ALL audio tracks stopping and destroing.
+
     if(world->Character != NULL)
     {
         world->Character->self->room = NULL;
         world->Character->self->next = NULL;
         world->Character->current_sector = NULL;
     }
-    
+
     /* entity empty must be done before rooms destroy */
     RB_Free(world->entity_tree);
     world->entity_tree = NULL;
-    
+
     /* Now we can delete bullet misc */
     if(bt_engine_dynamicsWorld != NULL)
     {
@@ -472,7 +463,7 @@ void World_Empty(world_p world)
             {
                 engine_container_p cont = (engine_container_p)body->getUserPointer();
                 body->setUserPointer(NULL);
-                
+
                 if(cont && (cont->object_type == OBJECT_BULLET_MISC))
                 {
                     if(body->getMotionState())
@@ -525,16 +516,16 @@ void World_Empty(world_p world)
     /*items empty*/
     RB_Free(world->items_tree);
     world->items_tree = NULL;
-    
+
     if(world->Character)
     {
         Entity_Clear(world->Character);
         free(world->Character);
         world->Character = NULL;
     }
- 
+
     if(world->skeletal_model_count)
-    {   
+    {
         for(uint32_t i=0;i<world->skeletal_model_count;i++)
         {
             SkeletalModel_Clear(world->skeletal_models+i);
