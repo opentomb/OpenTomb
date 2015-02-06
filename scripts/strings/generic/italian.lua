@@ -36,9 +36,11 @@ strings[017] = "Annulla";
 -- Interface headers
 
 strings[018] = "INVENTARIO";
-strings[019] = "DIARIO";
+--strings[019] = "DIARIO";
+strings[019] = "OGGETTI";
 strings[020] = "PAUSA";
-strings[021] = "STATISTICHE";
+--strings[021] = "STATISTICHE";
+strings[021] = "OPZIONI";
 strings[022] = "CARICAMENTO";
 
 -- Dialogs

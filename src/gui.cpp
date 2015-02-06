@@ -783,10 +783,16 @@ void gui_InventoryMenu::MoveSelectHorisontal(int dx)
 void gui_InventoryMenu::MoveSelectVertical(int dy)
 {
     mRowOffset += dy;
-    if (mRowOffset < 0)
+    if(mRowOffset < 0)
+    {
         mRowOffset = 0;
-    if (mRowOffset > 2)
+        return;
+    }
+    if(mRowOffset > 2)
+    {
         mRowOffset = 2;
+        return;
+    }
     if(mRowOffset == 0 && mRow1Max == 0)
     {
         mRowOffset = 1;
@@ -1249,7 +1255,9 @@ void gui_InventoryMenu::Render()
                         {
                             if(inv->linked_item->id == 0 && (engine_world.version == 3 || engine_world.version == 4))
                             {
-                                strcpy(mLabel_ItemName_text, "Statistics");
+                                //strcpy(mLabel_ItemName_text, "Statistics");
+                                strncpy(mLabel_ItemName_text, item->name, 128); // <-- Not so easy. Gotta either implement a separate item
+                                                                                // for each name or mess with the strings!
                             }
                             else
                             {
