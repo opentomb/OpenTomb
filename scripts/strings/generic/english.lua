@@ -35,10 +35,10 @@ strings[017] = "Discard";
 -- Interface headers
 
 strings[018] = "INVENTORY";
-strings[019] = "DIARY";
+strings[019] = "ITEMS";
 strings[020] = "PAUSED";
-strings[021] = "STATISTICS";
-strings[022] = "LOADING";
+strings[021] = "OPTIONS";
+strings[022] = "STATISTICS";
 
 -- Dialogs
 

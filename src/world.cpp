@@ -1258,7 +1258,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
         Mat4_E_macro(bf->bone_tags[j].full_transform);
     }
 
-    base_item_p item = (base_item_p)malloc(sizeof(base_item_t));
+    base_item_p itmp, item = (base_item_p)malloc(sizeof(base_item_t));
     item->id = item_id;
     item->world_model_id = world_model_id;
     item->type = type;
@@ -1271,7 +1271,16 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     item->bf = bf;
 
     RB_InsertReplace(&item->id, item, world->items_tree);
-    return 1;
+    itmp = World_GetBaseItemByID(&engine_world, 0);
+    itmp = World_GetBaseItemByID(&engine_world, item->id);
+    if(itmp == item)
+        return 1;
+    else
+    {
+        Con_AddLine("Error: could not create item", FONTSTYLE_CONSOLE_WARNING);
+        Con_Printf("item: %i %i %i %i %i %s", item_id, model_id, world_model_id, type, count, name);
+        return 0;
+    }
 }
 
 
