@@ -613,6 +613,64 @@ public:
     // mouse callback
 };
 
+/*
+ * Other inventory renderer class
+ */
+class gui_InventoryManager
+{
+public:
+    enum inventoryState
+    {
+        INVENTORY_DISABLED = 0,
+        INVENTORY_IDLE,
+        INVENTORY_OPEN,
+        INVENTORY_CLOSE,
+        INVENTORY_R_LEFT,
+        INVENTORY_R_RIGHT,
+        INVENTORY_UP,
+        INVENTORY_DOWN,
+        INVENTORY_ACTIVATE
+    };
+    
+    gui_text_line_s             mLabel_Title;
+    char                        mLabel_Title_text[128];
+    gui_text_line_s             mLabel_ItemName;
+    char                        mLabel_ItemName_text[128];
+    
+    gui_InventoryManager();
+   ~gui_InventoryManager();
+      
+    setInventory(struct inventory_node_s **i)
+    {
+        mInventory = i;
+    }
+    
+    int getCurrentState()
+    {
+        return mCurrentState;
+    }
+    
+    int getNextState()
+    {
+        return mNextState;
+    }
+    
+    send(inventoryState state)
+    {
+        mNextState = state;
+    }
+    
+    void frame(float time);
+    void render();
+    
+private:
+    struct inventory_node_s   **mInventory;
+    int                         mCurrentState;
+    int                         mNextState;
+};
+
+
+extern gui_InventoryManager  *main_inventory_manager;
 extern gui_InventoryMenu     *main_inventory_menu;
 extern gui_FontManager       *FontManager;
 

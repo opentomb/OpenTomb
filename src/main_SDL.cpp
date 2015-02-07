@@ -614,10 +614,10 @@ void Engine_Display()
             glColor3f(1.0, 1.0, 1.0);
 #if !SKELETAL_TEST
             Gui_DrawNotifier();
-            /*if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
+            if(engine_world.Character && engine_world.Character->character && main_inventory_menu)
             {
                 Gui_DrawInventory();
-            }*/
+            }
 #endif
         }
         glPopClientAttrib();
@@ -1014,23 +1014,62 @@ void DebugKeys(int button, int state)
     if(state)
     {
         switch(button)
-        {/*
+        {
+            case SDLK_ESCAPE:
+                if(main_inventory_manager)
+                {
+                    if((main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED) &&
+                       (engine_world.Character != NULL) && (engine_world.Character->character))
+                    {
+                        main_inventory_manager->setInventory(&engine_world.Character->character->inventory);
+                        main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
+                    }
+                    if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
+                    {
+                        main_inventory_manager->send(gui_InventoryManager::INVENTORY_CLOSE);
+                    }
+                }
+                break;
+
+            case SDLK_RETURN:
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_ACTIVATE);
+                }
+                break;
+
             case SDLK_UP:
                 if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(-1);
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_UP);
+                }
                 break;
 
             case SDLK_DOWN:
                 if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(1);
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_DOWN);
+                }
                 break;
 
             case SDLK_LEFT:
                 if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(1);
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_LEFT);
+                }
                 break;
 
             case SDLK_RIGHT:
                 if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(-1);
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_RIGHT);
+                }
                 break;
-*/
+
                 /*models switching*/
             case SDLK_p:
                 model++;

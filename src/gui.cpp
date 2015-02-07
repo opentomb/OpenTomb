@@ -28,8 +28,9 @@ gui_ItemNotifier    Notifier;
 gui_ProgressBar     Bar[BAR_LASTINDEX];
 gui_Fader           Fader[FADER_LASTINDEX];
 
-gui_FontManager    *FontManager = NULL;
-gui_InventoryMenu  *main_inventory_menu = NULL;
+gui_FontManager       *FontManager = NULL;
+gui_InventoryMenu     *main_inventory_menu = NULL;
+gui_InventoryManager  *main_inventory_manager = NULL;
 
 void Gui_Init()
 {
@@ -39,6 +40,7 @@ void Gui_Init()
     Gui_InitTempLines();
 
     main_inventory_menu = new gui_InventoryMenu();
+    main_inventory_manager = new gui_InventoryManager();
 }
 
 void Gui_InitFontManager()
@@ -235,6 +237,12 @@ void Gui_Destroy()
     {
         delete main_inventory_menu;
         main_inventory_menu = NULL;
+    }
+
+    if(main_inventory_manager)
+    {
+        delete main_inventory_manager;
+        main_inventory_manager = NULL;
     }
 
     if(FontManager)
@@ -682,11 +690,17 @@ void gui_InventoryMenu::Toggle()
 
         mLabel_ItemName.show = 0;
         mLabel_Title.show = 0;
+        RemoveAllItems();
     }
     else
     {
         Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
         mMovementDirectionC = 1;
+
+        for(inventory_node_p i=engine_world.Character->character->inventory;i!=NULL;i=i->next)
+        {
+            AddItem(i);
+        }
 
         size_t title_length = 0;
         const char* lua_string = lua_GetString(engine_lua, STR_GEN_INVENTORY, &title_length);
@@ -1319,6 +1333,62 @@ void gui_InventoryMenu::Render()
     glEnd();*/
 }
 
+/*
+ * GUI RENDEDR CLASS
+ */
+gui_InventoryManager::gui_InventoryManager()
+{
+    mCurrentState = INVENTORY_DISABLED;
+    mNextState = INVENTORY_DISABLED;
+    mInventory = NULL;
+
+    mLabel_Title.X = 0.0;
+    mLabel_Title.Y = 30.0;
+    mLabel_Title.Xanchor    = GUI_ANCHOR_HOR_CENTER;
+    mLabel_Title.Yanchor    = GUI_ANCHOR_VERT_TOP;
+
+    mLabel_Title.font_id    = FONT_PRIMARY;
+    mLabel_Title.style_id   = FONTSTYLE_MENU_TITLE;
+    mLabel_Title.text       = mLabel_Title_text;
+    mLabel_Title_text[0] = 0;
+    mLabel_Title.show    = 1;
+
+    mLabel_ItemName.X = 0.0;
+    mLabel_ItemName.Y = 50.0;
+    mLabel_ItemName.Xanchor = GUI_ANCHOR_HOR_CENTER;
+    mLabel_ItemName.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
+
+    mLabel_ItemName.font_id     = FONT_PRIMARY;
+    mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
+    mLabel_ItemName.text        = mLabel_ItemName_text;
+    mLabel_ItemName_text[0] = 0;
+    mLabel_ItemName.show    = 1;
+
+    Gui_AddLine(&mLabel_ItemName);
+    Gui_AddLine(&mLabel_Title);
+}
+
+gui_InventoryManager::~gui_InventoryManager()
+{
+    mLabel_ItemName.show = 0;
+    Gui_DeleteLine(&mLabel_ItemName);
+
+    mLabel_Title.show = 0;
+    Gui_DeleteLine(&mLabel_Title);
+}
+
+void gui_InventoryManager::frame(float time)
+{
+
+}
+
+void gui_InventoryManager::render()
+{
+    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL))
+    {
+
+    }
+}
 
 void Gui_SwitchGLMode(char is_gui)
 {
@@ -1390,10 +1460,9 @@ void Gui_DrawBars()
 
 void Gui_DrawInventory()
 {
-    /*if (!main_inventory_menu->IsVisible())*/
+    if (!main_inventory_menu->IsVisible())
         return;
 
-#if 0
     glClear(GL_DEPTH_BUFFER_BIT);
 
     glPopClientAttrib();
@@ -1437,7 +1506,6 @@ void Gui_DrawInventory()
     Gui_SwitchGLMode(0);
     main_inventory_menu->Render(); //engine_world.Character->character->inventory
     Gui_SwitchGLMode(1);
-#endif
 }
 
 void Gui_StartNotifier(int item)
@@ -1842,7 +1910,7 @@ bool gui_Fader::DropTexture()
     if(mTexture)
     {
         glBindTexture(GL_TEXTURE_2D, 0);
-        /// if mTexture == 0 then trouble
+        /// if mTexture is incorrect then maybe trouble
         if(glIsTexture(mTexture))
         {
             glDeleteTextures(1, &mTexture);

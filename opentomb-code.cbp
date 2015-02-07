@@ -29,6 +29,7 @@
 					<Add option="-O2" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
+					<Add option="-fno-exceptions -funsafe-math-optimizations" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
