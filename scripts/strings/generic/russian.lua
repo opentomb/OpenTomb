@@ -35,10 +35,10 @@ strings[017] = "Сбросить";
 -- Interface headers
 
 strings[018] = "ИНВЕНТАРЬ";
-strings[019] = "ДНЕВНИК";
+strings[019] = "ПРЕДМЕТЫ";
 strings[020] = "ПАУЗА";
-strings[021] = "СТАТИСТИКА";
-strings[022] = "ЗАГРУЗКА";
+strings[021] = "НАСТРОЙКИ";
+strings[022] = "СТАТИСТИКА";
 
 -- Dialogs
 
