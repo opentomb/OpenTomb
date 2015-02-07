@@ -9,7 +9,7 @@ cvars.show_fps = 1;
 cvars.free_look_speed = 2500;
 
 -- AUTOEXEC LINES
-setLanguage("italian");
+setLanguage("english");
 setgame(3);
 setlevel(12);
 

@@ -37,10 +37,10 @@ strings[017] = "Abandonner";
 -- Interface headers
 
 strings[018] = "INVENTAIRE";
-strings[019] = "JOURNAL";
+strings[019] = "ARTICLES";
 strings[020] = "PAUSE";
-strings[021] = "STATISTIQUES";
-strings[022] = "CHARGEMENT";
+strings[021] = "PARAMÈTRES";
+strings[022] = "STATISTIQUES";
 
 -- Dialogs
 
