@@ -1271,10 +1271,11 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     item->bf = bf;
 
     RB_InsertReplace(&item->id, item, world->items_tree);
-    itmp = World_GetBaseItemByID(&engine_world, 0);
     itmp = World_GetBaseItemByID(&engine_world, item->id);
     if(itmp == item)
+    {
         return 1;
+    }
     else
     {
         Con_AddLine("Error: could not create item", FONTSTYLE_CONSOLE_WARNING);

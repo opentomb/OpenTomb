@@ -185,7 +185,6 @@ void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
             }
             else
             {
-
                 /* uncle is Black */
                 if (x == x->parent->right)
                 {

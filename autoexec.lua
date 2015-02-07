@@ -2,19 +2,19 @@
 -- CVAR's section. here you can create and delete CVAR's
 
 if(cvars == nil) then
-	cvars = {};
+    cvars = {};
 end;
 
+-- CVAR's section. here you can create and delete CVAR's
 cvars.show_fps = 1;
 cvars.free_look_speed = 2500;
 
 -- AUTOEXEC LINES
 setLanguage("english");
-setgame(3);
-setlevel(12);
+setgamef(1, 1);
 
-gravity(0, 0, -5700.0);
+setGravity(0, 0, -5700.0);
 mlook(1);
-freelook(1);
+freelook(0);
 cam_distance(1024.0);
 noclip(0);
