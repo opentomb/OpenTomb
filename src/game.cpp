@@ -567,13 +567,13 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         cam_pos += cb->m_hitNormalWorld * 2.0;
     }
 
-    alpha = cam_pos.distance2(old_pos);
-    if(alpha > 54.0 * 54.0 && alpha < 1024.0 * 1024.0)
-    {
-        cam_pos -= old_pos;
-        cam_pos *= 54.0 * 60.0 * engine_frame_time / cam_pos.length();
-        cam_pos += old_pos;
-    }
+//    alpha = cam_pos.distance2(old_pos);
+//    if(alpha > 54.0 * 54.0 && alpha < 1024.0 * 1024.0)
+//    {
+//        cam_pos -= old_pos;
+//        cam_pos *= 54.0 * 60.0 * engine_frame_time / cam_pos.length();
+//        cam_pos += old_pos;
+//    }
 
     if(control_states.mouse_look == 0)//If mouse look is off
     {

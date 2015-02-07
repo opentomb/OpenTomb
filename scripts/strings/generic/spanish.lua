@@ -39,8 +39,8 @@ strings[017] = "Descartar";
 strings[018] = "INVENTARIO";
 strings[019] = "DIARIO";
 strings[020] = "PAUSA";
-strings[021] = "ESTADÍSTICAS";
-strings[022] = "CARGANDO";
+strings[021] = "OPCIONES";
+strings[022] = "ESTADÍSTICAS";
 
 -- Dialogs
 

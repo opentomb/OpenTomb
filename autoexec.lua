@@ -9,17 +9,12 @@ cvars.show_fps = 1;
 cvars.free_look_speed = 2500;
 
 -- AUTOEXEC LINES
+setLanguage("english");
+setgame(3);
+setlevel(12);
 
-setgamef(2, 2);
-
-setGravity(0, 0, -5700.0);
+gravity(0, 0, -5700.0);
 mlook(1);
-freelook(0);
+freelook(1);
 cam_distance(1024.0);
 noclip(0);
-
--- Here you can change interface language. Just enter language name, and string
--- resources with corresponding names will be loaded. Please note that if certain
--- resources are absent, default (English) resource will be loaded.
-
---setLanguage("russian");
