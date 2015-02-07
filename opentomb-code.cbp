@@ -25,6 +25,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-march=prescott" />
+					<Add option="-fexpensive-optimizations" />
 					<Add option="-O2" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
