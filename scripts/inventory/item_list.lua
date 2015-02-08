@@ -20,15 +20,15 @@ ITEM_TYPE_QUEST  = 2
 -- recreating this menu type, thus reserving these menu slots for future use.
 --------------------------------------------------------------------------------
 
-ITEM_COMPASS = 0    -- Compass is an omnipresent menu / inventory item.
-ITEM_PASSPORT = 1   -- Not used in TR4 (as diary).
-ITEM_LARAHOME = 2
-ITEM_VIDEO = 3
-ITEM_AUDIO = 4
-ITEM_CONTROLS = 5
-ITEM_LOAD = 6       -- Only used in TR4-5, technically the same as passport.
-ITEM_SAVE = 7       -- Only used in TR4-5, technically the same as passport.
-ITEM_MAP = 8        -- Not used in TR1-3, but exist as model. Not used in TR4.
+ITEM_COMPASS = 1    -- Compass is an omnipresent menu / inventory item.
+ITEM_PASSPORT = 2   -- Not used in TR4 (as diary).
+ITEM_LARAHOME = 3
+ITEM_VIDEO = 4
+ITEM_AUDIO = 5
+ITEM_CONTROLS = 6
+ITEM_LOAD = 7       -- Only used in TR4-5, technically the same as passport.
+ITEM_SAVE = 8       -- Only used in TR4-5, technically the same as passport.
+ITEM_MAP = 9        -- Not used in TR1-3, but exist as model. Not used in TR4.
 
 --------------------------------------------------------------------------------
 -- Defines global inventory items.
@@ -58,20 +58,19 @@ ITEM_BINOCULARS = 21    -- Exist only in TR4-5.
 ITEM_SILENCER   = 22    -- Exist only in TR5, not used.
 
 ITEM_PISTOL_AMMO = 30
-ITEM_SHOTGUN_NORMAL_AMMO = 31
+ITEM_SHOTGUN_NORMAL_AMMO = 31       -- Equal to generic shotgun ammo in TR1-3.
 ITEM_SHOTGUN_WIDESHOT_AMMO = 32
 ITEM_MAGNUM_AMMO = 33
 ITEM_UZI_AMMO = 34
 ITEM_M16_AMMO = 35
-ITEM_GRENADEGUN_AMMO = 36     -- Exist only in TR2-3. Prevents the compass item to be erroneously mixed with the grenade item (@TBF)
-ITEM_GRENADEGUN_NORMAL_AMMO = 37
-ITEM_GRENADEGUN_SUPER_AMMO = 38
-ITEM_GRENADEGUN_FLASH_AMMO = 39
-ITEM_ROCKETGUN_AMMO = 40
-ITEM_HARPOONGUN_AMMO = 41
-ITEM_CROSSBOW_NORMAL_AMMO = 42
-ITEM_CROSSBOW_POISON_AMMO = 43
-ITEM_CROSSBOW_EXPLOSIVE_AMMO = 44
+ITEM_GRENADEGUN_NORMAL_AMMO = 36    -- Equal to generic grenadegun ammo in TR3.
+ITEM_GRENADEGUN_SUPER_AMMO = 37
+ITEM_GRENADEGUN_FLASH_AMMO = 38
+ITEM_ROCKETGUN_AMMO = 39            -- Equal to generic grenadegun ammo in TR2.
+ITEM_HARPOONGUN_AMMO = 40
+ITEM_CROSSBOW_NORMAL_AMMO = 41
+ITEM_CROSSBOW_POISON_AMMO = 42
+ITEM_CROSSBOW_EXPLOSIVE_AMMO = 43
 
 ITEM_FLARES = 45
 ITEM_SINGLE_FLARE = 46
@@ -143,9 +142,9 @@ ITEM_QUEST_8 = 117
 -- level of TR4. In TR2, there are three secret items, while in TR4 and
 -- TR5, there is only one secret item slot.
 
-SECRET_ITEM_1 = 120
-SECRET_ITEM_2 = 121
-SECRET_ITEM_3 = 122
+ITEM_SECRET_1 = 120
+ITEM_SECRET_2 = 121
+ITEM_SECRET_3 = 122
 
 --------------------------------------------------------------------------------
 -- Defines TR4-5-specific items.

@@ -2,15 +2,15 @@
 #define ENGINE_INVENTORY_H
 
 
-#define ITEM_COMPASS  0     // Aka Watch in TR2-3, Timex in TR5
-#define ITEM_PASSPORT 1     // Exists only in TR1-3, not used in TR4 (diary)
-#define ITEM_LARAHOME 2
-#define ITEM_VIDEO    3     // Video settings. Exists only in TR1-3.
-#define ITEM_AUDIO    4     // Audio settings. Exists only in TR1-3.
-#define ITEM_CONTROLS 5     // Control settings. Exists only in TR1-3.
-#define ITEM_LOAD     6     // Load game. Exists only in TR4-5.
-#define ITEM_SAVE     7     // Save game. Exists only in TR4-5.
-#define ITEM_MAP      8     // Map item only existed in TR1-3, not used.
+#define ITEM_COMPASS  1     // Aka Watch in TR2-3, Timex in TR5
+#define ITEM_PASSPORT 2     // Exists only in TR1-3, not used in TR4 (diary)
+#define ITEM_LARAHOME 3
+#define ITEM_VIDEO    4     // Video settings. Exists only in TR1-3.
+#define ITEM_AUDIO    5     // Audio settings. Exists only in TR1-3.
+#define ITEM_CONTROLS 6     // Control settings. Exists only in TR1-3.
+#define ITEM_LOAD     7     // Load game. Exists only in TR4-5.
+#define ITEM_SAVE     8     // Save game. Exists only in TR4-5.
+#define ITEM_MAP      9     // Map item only existed in TR1-3, not used.
 
 #define ITEM_PISTOLS    10  // Exists in all game versions
 #define ITEM_SHOTGUN    11  // Exists in all game versions
@@ -48,8 +48,8 @@
 #define ITEM_SMALL_MEDIPACK 50
 #define ITEM_LARGE_MEDIPACK 51
 
-#define ITEM_SECRET_1 61
-#define ITEM_SECRET_2 62
-#define ITEM_SECRET_3 63
+#define ITEM_SECRET_1 120
+#define ITEM_SECRET_2 121
+#define ITEM_SECRET_3 122
 
 #endif

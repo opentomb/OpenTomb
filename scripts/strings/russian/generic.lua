@@ -82,6 +82,15 @@ strings[047] = "В движке OpenTomb Лара скользит строго 
 strings[048] = "Знали ли Вы, что над OpenTomb в разное время работали минимум 10 человек?";
 strings[049] = "Знали ли Вы, что Core Design так и не опубликовали исходные коды Tomb Raider?";
 
+strings[050] = "Нажмите клавишу инвентаря для пропуска.";
+
+-- String masks
+
+strings[090] = "%s (%d)"            -- Inventory item header
+strings[091] = "%dx %s"             -- Ammo header
+strings[092] = "%02d:%02d:%02d"     -- Timer
+strings[093] = "%d days, %02d:%02d" -- Time passed
+
 -- Game names - to use with Select Game menu...
 
 strings[100] = "Tomb Raider I";

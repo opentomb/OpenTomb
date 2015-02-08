@@ -13,13 +13,13 @@
 
 -- Load default (english) resources at first.
 
-dofile("scripts/strings/generic/english.lua");
-dofile("scripts/strings/global_items/english.lua");
+dofile("scripts/strings/english/generic.lua");
+dofile("scripts/strings/english/global_items.lua");
 
 
 function setLanguage(lang_name)
-    dofile("scripts/strings/generic/" .. lang_name .. ".lua");
-    dofile("scripts/strings/global_items/" .. lang_name .. ".lua");
+    dofile("scripts/strings/" .. lang_name .. "/generic.lua");
+    dofile("scripts/strings/" .. lang_name .. "/global_items.lua");
 end;
 
 function getString(id)

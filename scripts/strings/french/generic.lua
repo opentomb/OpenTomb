@@ -84,6 +84,13 @@ strings[047] = "Dans OpenTomb, Lara glisse sur les pentes dans leur direction ex
 strings[048] = "Saviez-vous qu'au moins dix programmeurs différents ont travaillé sur OpenTomb ?";      -- ;)
 strings[049] = "Saviez-vous que Core Design n'a jamais sorti un seul code source de Tomb Raider ?";     -- Whatever... :]
 
+-- String masks
+
+strings[090] = "%s (%d)"            -- Inventory item header
+strings[091] = "%dx %s"             -- Ammo header
+strings[092] = "%02d:%02d:%02d"     -- Timer
+strings[093] = "%d days, %02d:%02d" -- Time passed
+
 -- Game names - to use with Select Game menu...
 
 strings[100] = "Tomb Raider I";

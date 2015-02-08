@@ -37,7 +37,7 @@ strings[017] = "Descartar";
 -- Interface headers
 
 strings[018] = "INVENTARIO";
-strings[019] = "DIARIO";
+strings[019] = "ARTÍCULOS";
 strings[020] = "PAUSA";
 strings[021] = "OPCIONES";
 strings[022] = "ESTADÍSTICAS";
@@ -83,6 +83,13 @@ strings[046] = "Pulsa RODAR mientras estás agachado en TR3-5 para rodar hacia d
 strings[047] = "En OpenTomb, Lara se desliza por las pendientes en su dirección exacta.";
 strings[048] = "¿Sabías que al menos hubo diez programadores diferentes trabajando en OpenTomb?";      -- ;)
 strings[049] = "¿Sabías que Core Design nunca liberó el código fuente de ningún Tomb Raider?";     -- Whatever... :]
+
+-- String masks
+
+strings[090] = "%s (%d)"            -- Inventory item header
+strings[091] = "%dx %s"             -- Ammo header
+strings[092] = "%02d:%02d:%02d"     -- Timer
+strings[093] = "%d days, %02d:%02d" -- Time count
 
 -- Game names - to use with Select Game menu...
 
