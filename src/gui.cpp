@@ -1377,6 +1377,11 @@ gui_InventoryManager::~gui_InventoryManager()
     Gui_DeleteLine(&mLabel_Title);
 }
 
+void gui_InventoryManager::setInventory(struct inventory_node_s **i)
+{
+    mInventory = i;
+}
+
 void gui_InventoryManager::frame(float time)
 {
 
@@ -1390,6 +1395,10 @@ void gui_InventoryManager::render()
     }
 }
 
+
+/*
+ * Other GUI options
+ */
 void Gui_SwitchGLMode(char is_gui)
 {
     static char curr_mode = 0;
