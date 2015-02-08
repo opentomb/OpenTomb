@@ -16,7 +16,7 @@
 // Screen metering factor defines minimum comfortable resolution (both in width and
 // height) which could possibly be used on any possible screen. Since contemporary
 // devices rarely use resolutions lower than 480p (SD), we use it as a basis.
-// Screen metering factor primarily used to set up font scaling factor. 
+// Screen metering factor primarily used to set up font scaling factor.
 
 #define GUI_SCREEN_METERING_FACTOR     480.0
 
@@ -34,7 +34,7 @@
 #define GUI_ANCHOR_HOR_CENTER       2
 
 // OpenTomb has three types of fonts - primary, secondary and console
-// font. This should be enough for most of the cases. However, user 
+// font. This should be enough for most of the cases. However, user
 // can generate and use additional font types via script, but engine
 // behaviour with extra font types is undefined.
 
@@ -72,7 +72,9 @@ enum font_Style
         FONTSTYLE_GENERIC
 };
 
-#define GUI_MAX_FONTSTYLES 32   // Who even needs so many? 
+#define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
+
+struct inventory_node_s;
 
 // Font struct contains additional field for font type which is
 // used to dynamically create or delete fonts.
@@ -92,17 +94,17 @@ typedef struct gui_font_s
 typedef struct gui_fontstyle_s
 {
     font_Style                  index;          // Unique index which is used to identify style.
-    
+
     GLfloat                     color[4];
     GLfloat                     real_color[4];
     GLfloat                     rect_color[4];
     GLfloat                     rect_border;
-    
+
     bool                        shadowed;
     bool                        rect;
     bool                        fading;         // TR4-like looped fading font effect.
     bool                        hidden;         // Used to bypass certain GUI lines easily.
-    
+
     struct gui_fontstyle_s     *next;
 } gui_fontstyle_t, *gui_fontstyle_p;
 
@@ -123,13 +125,13 @@ class gui_FontManager
 public:
     gui_FontManager();
    ~gui_FontManager();
-    
+
     bool             AddFont(const font_Type index,
                              const uint32_t size,
                              const char* path);
     bool             RemoveFont(const font_Type index);
     gl_tex_font_p    GetFont(const font_Type index);
-    
+
     bool             AddFontStyle(const font_Style index,
                                   const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
                                   const bool shadow, const bool fading,
@@ -138,7 +140,7 @@ public:
                                   const bool hide);
     bool             RemoveFontStyle(const font_Style index);
     gui_fontstyle_p GetFontStyle(const font_Style index);
-    
+
     uint32_t         GetFontCount()
     {
         return font_count;
@@ -147,22 +149,22 @@ public:
     {
         return style_count;
     }
-    
+
     void             Update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
     void             Resize(); // Resize fonts on window resize event.
-    
+
 private:
     gui_font_p       GetFontAddress(const font_Type index);
-    
+
     GLfloat          mFadeValue; // Multiplier used with font RGB values to animate fade.
     bool             mFadeDirection;
-    
+
     uint32_t         style_count;
     gui_fontstyle_p  styles;
-    
+
     uint32_t         font_count;
     gui_font_p       fonts;
-    
+
     FT_Library       font_library;  // GLF font library unit.
 };
 
@@ -178,10 +180,10 @@ typedef struct gui_text_line_s
 {
     char                       *text;
     uint16_t                    text_size;
-    
+
     uint16_t                    font_id;
     uint16_t                    style_id;
-    
+
     GLfloat                     X;
     uint8_t                     Xanchor;
     GLfloat                     absXoffset;
@@ -190,7 +192,7 @@ typedef struct gui_text_line_s
     GLfloat                     absYoffset;
 
     GLfloat                     rect[4];    //x0, yo, x1, y1
-    
+
     int8_t                      show;
 
     struct gui_text_line_s     *next;
@@ -202,28 +204,28 @@ typedef struct gui_rect_s
 {
     GLfloat                     rect[4];
     GLfloat                     absRect[4];
-    
+
     GLfloat                     X;  GLfloat absX;
     GLfloat                     Y;  GLfloat absY;
     int8_t                      align;
-    
+
     GLuint                      texture;
     GLfloat                     color[16]; // TL, TR, BL, BR x 4
     uint32_t                    blending_mode;
-    
+
     int16_t                     line_count;
     gui_text_line_s            *lines;
-    
+
     int8_t                      state;      // Opening / static / closing
     int8_t                      show;
     GLfloat                     current_alpha;
-    
+
     int8_t                      focused;
     int8_t                      focus_index;
-    
+
     int8_t                      selectable;
     int8_t                      selection_index;
-    
+
     char                       *lua_click_function;
 } gui_rect_t, *gui_rect_p;
 
@@ -286,45 +288,45 @@ public:
     void Show();                  // Shows and updates fader.
     void Engage(int fade_dir);    // Resets and starts fader.
     void Cut();                   // Immediately cuts fader.
-    
+
     int  IsFading();              // Get current state of the fader.
-    
+
     void SetScaleMode(uint8_t mode = GUI_FADER_SCALE_ZOOM);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, int corner = -1);
     void SetBlendingMode(uint32_t mode = BM_OPAQUE);
     void SetAlpha(uint8_t alpha  = 255);
     void SetSpeed(uint16_t fade_speed, uint16_t fade_speed_secondary = 200);
     void SetDelay(uint32_t delay_msec);
-    
+
     bool SetTexture(const char* texture_path);
-    
+
 private:
     void SetAspect();
     bool DropTexture();
-    
+
     GLfloat         mTopLeftColor[4];       // All colors are defined separately, for
     GLfloat         mTopRightColor[4];      // further possibility of advanced full
     GLfloat         mBottomLeftColor[4];    // screen effects with gradients.
     GLfloat         mBottomRightColor[4];
-    
+
     uint32_t        mBlendingMode;          // Fader's blending mode.
-    
+
     GLfloat         mCurrentAlpha;          // Current alpha value.
     GLfloat         mMaxAlpha;              // Maximum reachable alpha value.
     GLfloat         mSpeed;                 // Fade speed.
     GLfloat         mSpeedSecondary;        // Secondary speed - used with TIMED type.
-    
+
     GLuint          mTexture;               // Texture (optional).
     uint16_t        mTextureWidth;
     uint16_t        mTextureHeight;
     bool            mTextureWide;           // Set, if texture width is greater than height.
     float           mTextureAspectRatio;    // Pre-calculated aspect ratio.
     uint8_t         mTextureScaleMode;      // Fader texture's scale mode.
-    
+
     bool            mActive;                // Specifies if fader active or not.
     bool            mComplete;              // Specifies if fading is complete or not.
     int8_t          mDirection;             // Specifies fade direction.
-    
+
     float           mCurrentTime;           // Current fader time.
     float           mMaxTime;               // Maximum delay time.
 };
@@ -382,11 +384,11 @@ public:
 
     bool          Invert;               // Invert decrease direction flag.
     bool          Vertical;             // Change bar style to vertical.
-    
+
 private:
     void          RecalculateSize();    // Recalculate size and position.
     void          RecalculatePosition();
-    
+
     float         mX;                   // Horizontal position.
     float         mY;                   // Vertical position.
     float         mWidth;               // Real width.
@@ -454,17 +456,17 @@ class gui_ItemNotifier
 {
 public:
     gui_ItemNotifier();
-    
+
     void    Start(int item, float time);
     void    Reset();
     void    Animate();
     void    Draw();
-    
+
     void    SetPos(float X, float Y);
     void    SetRot(float X, float Y);
     void    SetSize(float size);
     void    SetRotateTime(float time);
-        
+
 private:
     bool    mActive;
     int     mItem;
@@ -476,14 +478,14 @@ private:
     float   mStartPosX;
     float   mEndPosX;
     float   mCurrPosX;
-    
+
     float   mRotX;
     float   mRotY;
     float   mCurrRotX;
     float   mCurrRotY;
-    
+
     float   mSize;
-    
+
     float   mShowTime;
     float   mCurrTime;
     float   mRotateTime;
@@ -513,7 +515,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size);
 
 typedef struct gui_invmenu_item_ammo_s
 {
-    inventory_node_s           *linked_item;
+    struct inventory_node_s    *linked_item;
 
     //float                       size;
     uint16_t                    type;
@@ -526,7 +528,7 @@ typedef struct gui_invmenu_item_ammo_s
 
 typedef struct gui_invmenu_item_s
 {
-    inventory_node_s           *linked_item;
+    struct inventory_node_s    *linked_item;
 
     float                       angle;
     int8_t                      angle_dir;              // rotation direction: 0, 1 or -1
@@ -608,7 +610,7 @@ public:
     void MoveSelectVertical(int dy);
 
     void UpdateMovements();
-    void Render(); // struct inventory_node_s *inv
+    void Render();
     // inventory parameters calculation
     // mouse callback
 };
@@ -618,6 +620,11 @@ public:
  */
 class gui_InventoryManager
 {
+private:
+    struct inventory_node_s   **mInventory;
+    int                         mCurrentState;
+    int                         mNextState;
+
 public:
     enum inventoryState
     {
@@ -631,42 +638,33 @@ public:
         INVENTORY_DOWN,
         INVENTORY_ACTIVATE
     };
-    
+
     gui_text_line_s             mLabel_Title;
     char                        mLabel_Title_text[128];
     gui_text_line_s             mLabel_ItemName;
     char                        mLabel_ItemName_text[128];
-    
+
     gui_InventoryManager();
    ~gui_InventoryManager();
-      
-    setInventory(struct inventory_node_s **i)
-    {
-        mInventory = i;
-    }
-    
+
     int getCurrentState()
     {
         return mCurrentState;
     }
-    
+
     int getNextState()
     {
         return mNextState;
     }
-    
-    send(inventoryState state)
+
+    void send(inventoryState state)
     {
         mNextState = state;
     }
-    
+
+    void setInventory(struct inventory_node_s **i);
     void frame(float time);
     void render();
-    
-private:
-    struct inventory_node_s   **mInventory;
-    int                         mCurrentState;
-    int                         mNextState;
 };
 
 
@@ -722,7 +720,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
                   const int &blendMode,
                   const GLuint texture = 0);
-                  
+
 /**
  *  Initiate fade or check if fade is active.
  *  When Gui_Fade function is called without second argument, it will act like
@@ -732,13 +730,13 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeAssignPic(int fader, const char* pic_name);
 int  Gui_FadeCheck(int fader);
-                  
+
 /**
  * Draw item notifier.
  */
 void Gui_StartNotifier(int item);
 void Gui_DrawNotifier();
- 
+
 /**
  * General GUI drawing routines.
  */
