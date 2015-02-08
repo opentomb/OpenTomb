@@ -3068,7 +3068,6 @@ int Engine_LoadMap(const char *name)
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
-    Fader[FADER_LOADSCREEN].Cut();
 
     return 1;
 }
