@@ -425,6 +425,7 @@ bool StreamTrack::Load_Ogg(const char *path)
     {
         fclose(audio_file);
         Sys_DebugLog(LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
+        method = -1;
         return false;
     }
 

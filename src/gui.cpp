@@ -29,7 +29,7 @@ gui_ProgressBar     Bar[BAR_LASTINDEX];
 gui_Fader           Fader[FADER_LASTINDEX];
 
 gui_FontManager       *FontManager = NULL;
-gui_InventoryMenu     *main_inventory_menu = NULL;
+//gui_InventoryMenu     *main_inventory_menu = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 void Gui_Init()
@@ -39,7 +39,7 @@ void Gui_Init()
     Gui_InitNotifier();
     Gui_InitTempLines();
 
-    main_inventory_menu = new gui_InventoryMenu();
+    //main_inventory_menu = new gui_InventoryMenu();
     main_inventory_manager = new gui_InventoryManager();
 }
 
@@ -233,11 +233,11 @@ void Gui_Destroy()
 
     temp_lines_used = MAX_TEMP_LINES;
 
-    if(main_inventory_menu)
+    /*if(main_inventory_menu)
     {
         delete main_inventory_menu;
         main_inventory_menu = NULL;
-    }
+    }*/
 
     if(main_inventory_manager)
     {
@@ -596,7 +596,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
     }
 }
 
-
+#if 0
 gui_InventoryMenu::gui_InventoryMenu()
 {
     mLabel_Title.X = 0.0;
@@ -1332,37 +1332,54 @@ void gui_InventoryMenu::Render()
         glVertex2f(mLeft         , screen_info.h - mTop - mHeight);
     glEnd();*/
 }
+#endif
 
 /*
  * GUI RENDEDR CLASS
  */
 gui_InventoryManager::gui_InventoryManager()
 {
-    mCurrentState = INVENTORY_DISABLED;
-    mNextState = INVENTORY_DISABLED;
-    mInventory = NULL;
+    mCurrentState               = INVENTORY_DISABLED;
+    mNextState                  = INVENTORY_DISABLED;
+    mCurrentItemsType           = 1;                  ///@TODO: add constants: ITEM_TYPE_SYSTEM = 0, ITEM_TYPE_SUPPLY = 1, ITEM_TYPE_QUEST = 2
+    mCurrentItemsCount          = 0;
+    mItemsOffset                = 0;
+    mNextItemsCount             = 0;
 
-    mLabel_Title.X = 0.0;
-    mLabel_Title.Y = 30.0;
-    mLabel_Title.Xanchor    = GUI_ANCHOR_HOR_CENTER;
-    mLabel_Title.Yanchor    = GUI_ANCHOR_VERT_TOP;
+    mRingRotatePeriod           = 0.5;
+    mRingTime                   = 0.0;
+    mRingAngle                  = 0.0;
+    mRingAngleStep              = 0.0;
+    mBaseRingRadius             = 600.0;
+    mRingRadius                 = 600.0;
+    mVerticalOffset             = 0.0;
 
-    mLabel_Title.font_id    = FONT_PRIMARY;
-    mLabel_Title.style_id   = FONTSTYLE_MENU_TITLE;
-    mLabel_Title.text       = mLabel_Title_text;
-    mLabel_Title_text[0] = 0;
-    mLabel_Title.show    = 1;
+    mItemRotatePeriod           = 4.0;
+    mItemAngle                  = 0.0;
 
-    mLabel_ItemName.X = 0.0;
-    mLabel_ItemName.Y = 50.0;
-    mLabel_ItemName.Xanchor = GUI_ANCHOR_HOR_CENTER;
-    mLabel_ItemName.Yanchor = GUI_ANCHOR_VERT_BOTTOM;
+    mInventory                  = NULL;
+
+    mLabel_Title.X              = 0.0;
+    mLabel_Title.Y              = 30.0;
+    mLabel_Title.Xanchor        = GUI_ANCHOR_HOR_CENTER;
+    mLabel_Title.Yanchor        = GUI_ANCHOR_VERT_TOP;
+
+    mLabel_Title.font_id        = FONT_PRIMARY;
+    mLabel_Title.style_id       = FONTSTYLE_MENU_TITLE;
+    mLabel_Title.text           = mLabel_Title_text;
+    mLabel_Title_text[0]        = 0;
+    mLabel_Title.show           = 1;
+
+    mLabel_ItemName.X           = 0.0;
+    mLabel_ItemName.Y           = 50.0;
+    mLabel_ItemName.Xanchor     = GUI_ANCHOR_HOR_CENTER;
+    mLabel_ItemName.Yanchor     = GUI_ANCHOR_VERT_BOTTOM;
 
     mLabel_ItemName.font_id     = FONT_PRIMARY;
     mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
     mLabel_ItemName.text        = mLabel_ItemName_text;
-    mLabel_ItemName_text[0] = 0;
-    mLabel_ItemName.show    = 1;
+    mLabel_ItemName_text[0]     = 0;
+    mLabel_ItemName.show        = 1;
 
     Gui_AddLine(&mLabel_ItemName);
     Gui_AddLine(&mLabel_Title);
@@ -1370,11 +1387,52 @@ gui_InventoryManager::gui_InventoryManager()
 
 gui_InventoryManager::~gui_InventoryManager()
 {
+    mCurrentState = INVENTORY_DISABLED;
+    mNextState = INVENTORY_DISABLED;
+    mInventory = NULL;
+
     mLabel_ItemName.show = 0;
     Gui_DeleteLine(&mLabel_ItemName);
 
     mLabel_Title.show = 0;
     Gui_DeleteLine(&mLabel_Title);
+}
+
+int gui_InventoryManager::getItemsTypeCount(int type)
+{
+    int ret = 0;
+    for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+    {
+        base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
+        if((bi != NULL) && (bi->type == type))
+        {
+            ret++;
+        }
+    }
+    return ret;
+}
+
+void gui_InventoryManager::restoreItemAngle(float time)
+{
+    if(mItemAngle > 0.0)
+    {
+        if(mItemAngle <= 180)
+        {
+            mItemAngle -= 180.0 * time / mRingRotatePeriod;
+            if(mItemAngle < 0.0)
+            {
+                mItemAngle = 0.0;
+            }
+        }
+        else
+        {
+            mItemAngle += 180.0 * time / mRingRotatePeriod;
+            if(mItemAngle >= 360.0)
+            {
+                mItemAngle = 0.0;
+            }
+        }
+    }
 }
 
 void gui_InventoryManager::setInventory(struct inventory_node_s **i)
@@ -1384,17 +1442,302 @@ void gui_InventoryManager::setInventory(struct inventory_node_s **i)
 
 void gui_InventoryManager::frame(float time)
 {
+    if((mInventory == NULL) || (*mInventory == NULL))
+    {
+        mCurrentState = INVENTORY_DISABLED;
+        mNextState = INVENTORY_DISABLED;
+        return;
+    }
 
+    switch(mCurrentState)
+    {
+        case INVENTORY_R_LEFT:
+            mRingTime += time;
+            mRingAngle = mRingAngleStep * mRingTime / mRingRotatePeriod;
+            mNextState = INVENTORY_R_LEFT;
+            if(mRingTime >= mRingRotatePeriod)
+            {
+                mRingTime = 0.0;
+                mRingAngle = 0.0;
+                mNextState = INVENTORY_IDLE;
+                mCurrentState = INVENTORY_IDLE;
+                mItemsOffset--;
+                if(mItemsOffset < 0)
+                {
+                    mItemsOffset = mCurrentItemsCount - 1;
+                }
+            }
+            restoreItemAngle(time);
+            break;
+
+        case INVENTORY_R_RIGHT:
+            mRingTime += time;
+            mRingAngle = -mRingAngleStep * mRingTime / mRingRotatePeriod;
+            mNextState = INVENTORY_R_RIGHT;
+            if(mRingTime >= mRingRotatePeriod)
+            {
+                mRingTime = 0.0;
+                mRingAngle = 0.0;
+                mNextState = INVENTORY_IDLE;
+                mCurrentState = INVENTORY_IDLE;
+                mItemsOffset++;
+                if(mItemsOffset >= mCurrentItemsCount)
+                {
+                    mItemsOffset = 0;
+                }
+            }
+            restoreItemAngle(time);
+            break;
+
+        case INVENTORY_IDLE:
+            mRingTime = 0.0;
+            switch(mNextState)
+            {
+                default:
+                case INVENTORY_IDLE:
+                    mItemTime += time;
+                    mItemAngle = 360.0 * mItemTime / mItemRotatePeriod;
+                    if(mItemTime >= mItemRotatePeriod)
+                    {
+                        mItemTime = 0.0;
+                        mItemAngle = 0.0;
+                    }
+                    break;
+
+                case INVENTORY_CLOSE:
+                    Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                    mCurrentState = mNextState;
+                    break;
+
+                case INVENTORY_R_LEFT:
+                case INVENTORY_R_RIGHT:
+                    Audio_Send(TR_AUDIO_SOUND_MENUROTATE);
+                    mCurrentState = mNextState;
+                    mItemTime = 0.0;
+                    break;
+
+                case INVENTORY_UP:
+                    mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType + 1);
+                    if(mNextItemsCount > 0)
+                    {
+                        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                        mCurrentState = mNextState;
+                        mRingTime = 0.0;
+                    }
+                    else
+                    {
+                        mNextState = INVENTORY_IDLE;
+                    }
+                    break;
+
+                case INVENTORY_DOWN:
+                    mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType - 1);
+                    if(mNextItemsCount > 0)
+                    {
+                        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                        mCurrentState = mNextState;
+                        mRingTime = 0.0;
+                    }
+                    else
+                    {
+                        mNextState = INVENTORY_IDLE;
+                    }
+                    break;
+            };
+            break;
+
+        case INVENTORY_DISABLED:
+            if(mNextState == INVENTORY_OPEN)
+            {
+                mCurrentItemsCount = this->getItemsTypeCount(mCurrentItemsType);
+                if(mCurrentItemsCount == 0)
+                {
+                    for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+                    {
+                        base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
+                        if(bi != NULL)
+                        {
+                            mCurrentItemsType = bi->type;
+                            mCurrentItemsCount = this->getItemsTypeCount(mCurrentItemsType);
+                            break;
+                        }
+                    }
+                }
+                if(mCurrentItemsCount > 0)
+                {
+                    Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                    mCurrentState = INVENTORY_OPEN;
+
+                    mRingAngleStep = 360.0 / mCurrentItemsCount;
+                    mRingAngle = 180.0;
+                    mRingRadius = 0.0;
+                    mItemsOffset = 0;
+                    mRingTime = 0.0;
+                }
+            }
+            break;
+
+        case INVENTORY_UP:
+            mCurrentState = INVENTORY_UP;
+            mNextState = INVENTORY_UP;
+            mRingTime += time;
+            if(mRingTime < mRingRotatePeriod)
+            {
+                restoreItemAngle(time);
+                mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
+                mVerticalOffset = - mBaseRingRadius * mRingTime / mRingRotatePeriod;
+                mRingAngle += 180.0 * time / mRingRotatePeriod;
+            }
+            else if(mRingTime < 2.0 * mRingRotatePeriod)
+            {
+                if(mRingTime - time <= mRingRotatePeriod)
+                {
+                    Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                    mRingRadius = 0.0;
+                    mVerticalOffset = mBaseRingRadius;
+                    mRingAngleStep = 360.0 / mNextItemsCount;
+                    mRingAngle = 180.0;
+                    mCurrentItemsType++;
+                    mCurrentItemsCount = mNextItemsCount;
+                    mItemsOffset = 0;
+                }
+                mRingRadius = mBaseRingRadius * (mRingTime - mRingRotatePeriod) / mRingRotatePeriod;
+                mVerticalOffset -= mBaseRingRadius * time / mRingRotatePeriod;
+                mRingAngle -= 180.0 * time / mRingRotatePeriod;
+            }
+            else
+            {
+                mNextState = INVENTORY_IDLE;
+                mCurrentState = INVENTORY_IDLE;
+                mRingAngle = 0.0;
+                mVerticalOffset = 0.0;
+            }
+            break;
+
+        case INVENTORY_DOWN:
+            mCurrentState = INVENTORY_DOWN;
+            mNextState = INVENTORY_DOWN;
+            mRingTime += time;
+            if(mRingTime < mRingRotatePeriod)
+            {
+                restoreItemAngle(time);
+                mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
+                mVerticalOffset = mBaseRingRadius * mRingTime / mRingRotatePeriod;
+                mRingAngle += 180.0 * time / mRingRotatePeriod;
+            }
+            else if(mRingTime < 2.0 * mRingRotatePeriod)
+            {
+                if(mRingTime - time <= mRingRotatePeriod)
+                {
+                    Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                    mRingRadius = 0.0;
+                    mVerticalOffset = -mBaseRingRadius;
+                    mRingAngleStep = 360.0 / mNextItemsCount;
+                    mRingAngle = 180.0;
+                    mCurrentItemsType--;
+                    mCurrentItemsCount = mNextItemsCount;
+                    mItemsOffset = 0;
+                }
+                mRingRadius = mBaseRingRadius * (mRingTime - mRingRotatePeriod) / mRingRotatePeriod;
+                mVerticalOffset += mBaseRingRadius * time / mRingRotatePeriod;
+                mRingAngle -= 180.0 * time / mRingRotatePeriod;
+            }
+            else
+            {
+                mNextState = INVENTORY_IDLE;
+                mCurrentState = INVENTORY_IDLE;
+                mRingAngle = 0.0;
+                mVerticalOffset = 0.0;
+            }
+            break;
+
+        case INVENTORY_OPEN:
+            mRingTime += time;
+            mRingRadius = mBaseRingRadius * mRingTime / mRingRotatePeriod;
+            mVerticalOffset = - mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
+            mRingAngle -= 180.0 * time / mRingRotatePeriod;
+            if(mRingTime >= mRingRotatePeriod)
+            {
+                mCurrentState = INVENTORY_IDLE;
+                mNextState = INVENTORY_IDLE;
+                mLabel_Title.show = 1;
+                mLabel_ItemName.show = 1;
+
+                mRingRadius = mBaseRingRadius;
+                mRingTime = 0.0;
+                mRingAngle = 0.0;
+                mVerticalOffset = 0.0;
+            }
+            break;
+
+        case INVENTORY_CLOSE:
+            mRingTime += time;
+            mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
+            mVerticalOffset = - mBaseRingRadius * mRingTime / mRingRotatePeriod;
+            mRingAngle += 180.0 * time / mRingRotatePeriod;
+            if(mRingTime >= mRingRotatePeriod)
+            {
+                mCurrentState = INVENTORY_DISABLED;
+                mNextState = INVENTORY_DISABLED;
+                mRingTime = 0.0;
+                mLabel_Title.show = 0;
+                mLabel_ItemName.show = 0;
+                mRingRadius = mBaseRingRadius;
+            }
+            break;
+    }
 }
 
 void gui_InventoryManager::render()
 {
-    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL))
+    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL) && (FontManager != NULL))
     {
+        int num = 0;
+        for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+        {
+            base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
+            if((bi == NULL) || (bi->type != mCurrentItemsType))
+            {
+                continue;
+            }
+            Item_Frame(bi->bf, 0.0);
 
+            glLoadIdentity();
+            glPushMatrix();
+                glTranslatef(0.0, 0.0, - mBaseRingRadius * 2.0);
+                glRotatef(25.0, 1.0, 0.0, 0.0);
+                glPushMatrix();
+                    glRotatef(mRingAngleStep * (-mItemsOffset + num) + mRingAngle, 0.0, 1.0, 0.0);
+                    glTranslatef(0.0, mVerticalOffset, mRingRadius);
+                    glPushMatrix();
+                        glRotatef(-90.0, 1.0, 0.0, 0.0);
+                        glRotatef(90.0, 0.0, 0.0, 1.0);
+                        if(num == mItemsOffset)
+                        {
+                            if(bi->name[0])
+                            {
+                                if(i->count > 1)
+                                {
+                                    snprintf(mLabel_ItemName_text, 128, "%s (%d)", bi->name, i->count);
+                                }
+                                else
+                                {
+                                    strncpy(mLabel_ItemName_text, bi->name, 128);
+                                }
+                            }
+                            glRotatef(mItemAngle, 0.0, 0.0, 1.0);
+                        }
+                        glTranslatef(-0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
+                        glScalef(0.7, 0.7, 0.7);
+                        Gui_RenderItem(bi->bf, 0.0);
+                    glPopMatrix();
+                glPopMatrix();
+            glPopMatrix();
+
+            num++;
+        }
     }
 }
-
 
 /*
  * Other GUI options
@@ -1469,8 +1812,12 @@ void Gui_DrawBars()
 
 void Gui_DrawInventory()
 {
-    if (!main_inventory_menu->IsVisible())
+    //if (!main_inventory_menu->IsVisible())
+    main_inventory_manager->frame(engine_frame_time);
+    if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED)
+    {
         return;
+    }
 
     glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -1513,7 +1860,8 @@ void Gui_DrawInventory()
     //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
 
     Gui_SwitchGLMode(0);
-    main_inventory_menu->Render(); //engine_world.Character->character->inventory
+    //main_inventory_menu->Render(); //engine_world.Character->character->inventory
+    main_inventory_manager->render();
     Gui_SwitchGLMode(1);
 }
 

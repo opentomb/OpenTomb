@@ -512,7 +512,7 @@ void Gui_RenderStrings();
  */
 void Item_Frame(struct ss_bone_frame_s *bf, btScalar time);
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size);
-
+#if 0
 typedef struct gui_invmenu_item_ammo_s
 {
     struct inventory_node_s    *linked_item;
@@ -614,7 +614,7 @@ public:
     // inventory parameters calculation
     // mouse callback
 };
-
+#endif
 /*
  * Other inventory renderer class
  */
@@ -624,7 +624,27 @@ private:
     struct inventory_node_s   **mInventory;
     int                         mCurrentState;
     int                         mNextState;
+    int                         mNextItemsCount;
 
+    int                         mCurrentItemsType;
+    int                         mCurrentItemsCount;
+    int                         mItemsOffset;
+    
+    float                       mRingRotatePeriod;
+    float                       mRingTime;
+    float                       mRingAngle;
+    float                       mRingAngleStep;
+    float                       mBaseRingRadius;
+    float                       mRingRadius;
+    float                       mVerticalOffset;
+    
+    float                       mItemRotatePeriod;
+    float                       mItemTime;
+    float                       mItemAngle;
+    
+    int getItemsTypeCount(int type);
+    void restoreItemAngle(float time);
+    
 public:
     enum inventoryState
     {
@@ -662,6 +682,16 @@ public:
         mNextState = state;
     }
 
+    int getItemsType()
+    {
+        return mCurrentItemsType;
+    }
+    
+    void setItemsType(int type)
+    {
+        mCurrentItemsType = type;
+    }
+    
     void setInventory(struct inventory_node_s **i);
     void frame(float time);
     void render();
@@ -669,7 +699,7 @@ public:
 
 
 extern gui_InventoryManager  *main_inventory_manager;
-extern gui_InventoryMenu     *main_inventory_menu;
+//extern gui_InventoryMenu     *main_inventory_menu;
 extern gui_FontManager       *FontManager;
 
 /**
