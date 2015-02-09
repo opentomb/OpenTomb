@@ -441,6 +441,12 @@ void World_Empty(world_p world)
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
 
+    if(main_inventory_manager != NULL)
+    {
+        main_inventory_manager->setInventory(NULL);
+        main_inventory_manager->setItemsType(1);                                // see base items
+    }
+
     if(world->Character != NULL)
     {
         world->Character->self->room = NULL;
@@ -1271,7 +1277,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     item->bf = bf;
 
     RB_InsertReplace(&item->id, item, world->items_tree);
-    
+
     return 1;
 }
 

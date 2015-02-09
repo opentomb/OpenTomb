@@ -705,15 +705,22 @@ void Game_Frame(btScalar time)
 
     ///@FIXME: I have no idea what's happening here! - Lwmte
 
-    if(!con_base.show && control_states.gui_inventory)
+    if(!con_base.show && control_states.gui_inventory && main_inventory_manager)
     {
-        main_inventory_menu->Toggle();
-        control_states.gui_inventory = !control_states.gui_inventory;
+        if((main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED) &&
+           (engine_world.Character != NULL) && (engine_world.Character->character != NULL))
+        {
+            main_inventory_manager->setInventory(&engine_world.Character->character->inventory);
+            main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
+        }
+        if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
+        {
+            main_inventory_manager->send(gui_InventoryManager::INVENTORY_CLOSE);
+        }
     }
 
     // If console or inventory is active, only thing to update is audio.
-
-    if(con_base.show || main_inventory_menu->IsVisible())
+    if(con_base.show || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {
