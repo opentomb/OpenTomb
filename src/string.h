@@ -22,10 +22,10 @@
 #define STR_GEN_OK                  16
 #define STR_GEN_DISCARD             17
 #define STR_GEN_INVENTORY           18
-#define STR_GEN_DIARY               19
+#define STR_GEN_ITEMS               19
 #define STR_GEN_PAUSED              20
-#define STR_GEN_STATISTICS          21
-#define STR_GEN_LOADING             22
+#define STR_GEN_OPTIONS_TITLE       21
+#define STR_GEN_STATISTICS          22
 #define STR_GEN_EXITGAME            23
 #define STR_GEN_SELECTTOLOAD        24
 #define STR_GEN_SELECTTOSAVE        25

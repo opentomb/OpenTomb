@@ -13,13 +13,6 @@
 
 #define GUI_SCREEN_METERING_RESOLUTION 1000.0
 
-// Screen metering factor defines minimum comfortable resolution (both in width and
-// height) which could possibly be used on any possible screen. Since contemporary
-// devices rarely use resolutions lower than 480p (SD), we use it as a basis.
-// Screen metering factor primarily used to set up font scaling factor.
-
-#define GUI_SCREEN_METERING_FACTOR     480.0
-
 // Anchoring is needed to link specific GUI element to specific screen position,
 // independent of screen resolution and aspect ratio. Vertical and horizontal
 // anchorings are seperated, so you can link element at any place - top, bottom,
@@ -176,6 +169,11 @@ private:
 #define GUI_LINE_ALIGN_RIGHT  1
 #define GUI_LINE_ALIGN_CENTER 2
 
+// Default line size is generally used for static in-game strings. Strings
+// that are created dynamically may have variable string sizes.
+
+#define GUI_LINE_DEFAULTSIZE 128
+
 typedef struct gui_text_line_s
 {
     char                       *text;
@@ -277,6 +275,10 @@ enum Faders
 #define GUI_FADER_CORNER_TOPRIGHT    1
 #define GUI_FADER_CORNER_BOTTOMLEFT  2
 #define GUI_FADER_CORNER_BOTTOMRIGHT 3
+
+#define GUI_MENU_ITEMTYPE_SYSTEM 0
+#define GUI_MENU_ITEMTYPE_SUPPLY 1
+#define GUI_MENU_ITEMTYPE_QUEST  2
 
 // Main fader class.
 
@@ -633,6 +635,7 @@ private:
     float                       mRingRotatePeriod;
     float                       mRingTime;
     float                       mRingAngle;
+    float                       mRingVerticalAngle;
     float                       mRingAngleStep;
     float                       mBaseRingRadius;
     float                       mRingRadius;
@@ -693,6 +696,7 @@ public:
     }
     
     void setInventory(struct inventory_node_s **i);
+    void setTitle(int items_type);
     void frame(float time);
     void render();
 };

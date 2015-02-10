@@ -16,7 +16,6 @@
 #include "string.h"
 
 #define MAX_TEMP_LINES   (256)
-#define TEMP_LINE_LENGTH (128)
 
 extern SDL_Window  *sdl_window;
 
@@ -52,8 +51,8 @@ void Gui_InitTempLines()
 {
     for(int i=0;i<MAX_TEMP_LINES;i++)
     {
-        gui_temp_lines[i].text_size = TEMP_LINE_LENGTH;
-        gui_temp_lines[i].text = (char*)malloc(TEMP_LINE_LENGTH * sizeof(char));
+        gui_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
+        gui_temp_lines[i].text = (char*)malloc(GUI_LINE_DEFAULTSIZE * sizeof(char));
         gui_temp_lines[i].text[0] = 0;
         gui_temp_lines[i].show = 0;
 
@@ -309,7 +308,7 @@ gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         l->style_id = FONTSTYLE_GENERIC;
 
         va_start(argptr, fmt);
-        vsnprintf(l->text, TEMP_LINE_LENGTH, fmt, argptr);
+        vsnprintf(l->text, GUI_LINE_DEFAULTSIZE, fmt, argptr);
         va_end(argptr);
 
         l->next = NULL;
@@ -1341,7 +1340,7 @@ gui_InventoryManager::gui_InventoryManager()
 {
     mCurrentState               = INVENTORY_DISABLED;
     mNextState                  = INVENTORY_DISABLED;
-    mCurrentItemsType           = 1;                  ///@TODO: add constants: ITEM_TYPE_SYSTEM = 0, ITEM_TYPE_SUPPLY = 1, ITEM_TYPE_QUEST = 2
+    mCurrentItemsType           = GUI_MENU_ITEMTYPE_SYSTEM;
     mCurrentItemsCount          = 0;
     mItemsOffset                = 0;
     mNextItemsCount             = 0;
@@ -1349,6 +1348,7 @@ gui_InventoryManager::gui_InventoryManager()
     mRingRotatePeriod           = 0.5;
     mRingTime                   = 0.0;
     mRingAngle                  = 0.0;
+    mRingVerticalAngle          = 285.0;
     mRingAngleStep              = 0.0;
     mBaseRingRadius             = 600.0;
     mRingRadius                 = 600.0;
@@ -1368,7 +1368,7 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_Title.style_id       = FONTSTYLE_MENU_TITLE;
     mLabel_Title.text           = mLabel_Title_text;
     mLabel_Title_text[0]        = 0;
-    mLabel_Title.show           = 1;
+    mLabel_Title.show           = 0;
 
     mLabel_ItemName.X           = 0.0;
     mLabel_ItemName.Y           = 50.0;
@@ -1379,7 +1379,7 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
     mLabel_ItemName.text        = mLabel_ItemName_text;
     mLabel_ItemName_text[0]     = 0;
-    mLabel_ItemName.show        = 1;
+    mLabel_ItemName.show        = 0;
 
     Gui_AddLine(&mLabel_ItemName);
     Gui_AddLine(&mLabel_Title);
@@ -1438,6 +1438,27 @@ void gui_InventoryManager::restoreItemAngle(float time)
 void gui_InventoryManager::setInventory(struct inventory_node_s **i)
 {
     mInventory = i;
+}
+
+void gui_InventoryManager::setTitle(int items_type)
+{
+    int string_index;
+    
+    switch(items_type)
+    {
+        case GUI_MENU_ITEMTYPE_SYSTEM:
+            string_index = STR_GEN_OPTIONS_TITLE;
+            break;
+        case GUI_MENU_ITEMTYPE_QUEST:
+            string_index = STR_GEN_ITEMS;
+            break;
+        case GUI_MENU_ITEMTYPE_SUPPLY:
+        default:
+            string_index = STR_GEN_INVENTORY;
+            break;
+    }
+    
+    strncpy(mLabel_Title_text, lua_GetString(engine_lua, string_index), GUI_LINE_DEFAULTSIZE);
 }
 
 void gui_InventoryManager::frame(float time)
@@ -1502,16 +1523,21 @@ void gui_InventoryManager::frame(float time)
                         mItemTime = 0.0;
                         mItemAngle = 0.0;
                     }
+                    mLabel_ItemName.show = 1;
+                    mLabel_Title.show = 1;
                     break;
 
                 case INVENTORY_CLOSE:
                     Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                    mLabel_ItemName.show = 0;
+                    mLabel_Title.show = 0;
                     mCurrentState = mNextState;
                     break;
 
                 case INVENTORY_R_LEFT:
                 case INVENTORY_R_RIGHT:
                     Audio_Send(TR_AUDIO_SOUND_MENUROTATE);
+                    mLabel_ItemName.show = 0;
                     mCurrentState = mNextState;
                     mItemTime = 0.0;
                     break;
@@ -1520,7 +1546,6 @@ void gui_InventoryManager::frame(float time)
                     mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType + 1);
                     if(mNextItemsCount > 0)
                     {
-                        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         mCurrentState = mNextState;
                         mRingTime = 0.0;
                     }
@@ -1528,13 +1553,14 @@ void gui_InventoryManager::frame(float time)
                     {
                         mNextState = INVENTORY_IDLE;
                     }
+                    mLabel_ItemName.show = 0;
+                    mLabel_Title.show = 0;  
                     break;
 
                 case INVENTORY_DOWN:
                     mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType - 1);
                     if(mNextItemsCount > 0)
                     {
-                        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         mCurrentState = mNextState;
                         mRingTime = 0.0;
                     }
@@ -1542,6 +1568,8 @@ void gui_InventoryManager::frame(float time)
                     {
                         mNextState = INVENTORY_IDLE;
                     }
+                    mLabel_ItemName.show = 0;
+                    mLabel_Title.show = 0;
                     break;
             };
             break;
@@ -1592,7 +1620,6 @@ void gui_InventoryManager::frame(float time)
             {
                 if(mRingTime - time <= mRingRotatePeriod)
                 {
-                    Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     mRingRadius = 0.0;
                     mVerticalOffset = mBaseRingRadius;
                     mRingAngleStep = 360.0 / mNextItemsCount;
@@ -1600,6 +1627,7 @@ void gui_InventoryManager::frame(float time)
                     mCurrentItemsType++;
                     mCurrentItemsCount = mNextItemsCount;
                     mItemsOffset = 0;
+                    setTitle(mCurrentItemsType);
                 }
                 mRingRadius = mBaseRingRadius * (mRingTime - mRingRotatePeriod) / mRingRotatePeriod;
                 mVerticalOffset -= mBaseRingRadius * time / mRingRotatePeriod;
@@ -1629,7 +1657,6 @@ void gui_InventoryManager::frame(float time)
             {
                 if(mRingTime - time <= mRingRotatePeriod)
                 {
-                    Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     mRingRadius = 0.0;
                     mVerticalOffset = -mBaseRingRadius;
                     mRingAngleStep = 360.0 / mNextItemsCount;
@@ -1637,6 +1664,7 @@ void gui_InventoryManager::frame(float time)
                     mCurrentItemsType--;
                     mCurrentItemsCount = mNextItemsCount;
                     mItemsOffset = 0;
+                    setTitle(mCurrentItemsType);
                 }
                 mRingRadius = mBaseRingRadius * (mRingTime - mRingRotatePeriod) / mRingRotatePeriod;
                 mVerticalOffset += mBaseRingRadius * time / mRingRotatePeriod;
@@ -1654,34 +1682,34 @@ void gui_InventoryManager::frame(float time)
         case INVENTORY_OPEN:
             mRingTime += time;
             mRingRadius = mBaseRingRadius * mRingTime / mRingRotatePeriod;
-            mVerticalOffset = - mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
             mRingAngle -= 180.0 * time / mRingRotatePeriod;
+            mRingVerticalAngle += 180.0 * time;
             if(mRingTime >= mRingRotatePeriod)
             {
                 mCurrentState = INVENTORY_IDLE;
                 mNextState = INVENTORY_IDLE;
-                mLabel_Title.show = 1;
-                mLabel_ItemName.show = 1;
 
                 mRingRadius = mBaseRingRadius;
                 mRingTime = 0.0;
                 mRingAngle = 0.0;
                 mVerticalOffset = 0.0;
+                
+                setTitle(GUI_MENU_ITEMTYPE_SUPPLY);
             }
             break;
 
         case INVENTORY_CLOSE:
             mRingTime += time;
             mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
-            mVerticalOffset = - mBaseRingRadius * mRingTime / mRingRotatePeriod;
             mRingAngle += 180.0 * time / mRingRotatePeriod;
+            mRingVerticalAngle -= 180.0 * time;
+            
             if(mRingTime >= mRingRotatePeriod)
             {
                 mCurrentState = INVENTORY_DISABLED;
                 mNextState = INVENTORY_DISABLED;
                 mRingTime = 0.0;
                 mLabel_Title.show = 0;
-                mLabel_ItemName.show = 0;
                 mRingRadius = mBaseRingRadius;
             }
             break;
@@ -1705,24 +1733,25 @@ void gui_InventoryManager::render()
             glLoadIdentity();
             glPushMatrix();
                 glTranslatef(0.0, 0.0, - mBaseRingRadius * 2.0);
-                glRotatef(25.0, 1.0, 0.0, 0.0);
+                glRotatef(mRingVerticalAngle, 1.0, 0.0, 0.0);
                 glPushMatrix();
                     glRotatef(mRingAngleStep * (-mItemsOffset + num) + mRingAngle, 0.0, 1.0, 0.0);
                     glTranslatef(0.0, mVerticalOffset, mRingRadius);
                     glPushMatrix();
                         glRotatef(-90.0, 1.0, 0.0, 0.0);
                         glRotatef(90.0, 0.0, 0.0, 1.0);
+                        
                         if(num == mItemsOffset)
                         {
                             if(bi->name[0])
                             {
                                 if(i->count > 1)
                                 {
-                                    snprintf(mLabel_ItemName_text, 128, "%s (%d)", bi->name, i->count);
+                                    snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER), bi->name, i->count);
                                 }
                                 else
                                 {
-                                    strncpy(mLabel_ItemName_text, bi->name, 128);
+                                    strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
                                 }
                             }
                             glRotatef(mItemAngle, 0.0, 0.0, 1.0);

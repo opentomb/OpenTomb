@@ -33,7 +33,7 @@ int  lua_GetSecretTrackNumber(lua_State *lua);
 int  lua_GetNumTracks(lua_State *lua);
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *track_path, int *load_method, int *stream_type);
 bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path);
-const char* lua_GetString(lua_State *lua, int string_index, size_t *string_length);
+const char* lua_GetString(lua_State *lua, int string_index, size_t *string_length = NULL);
 
 btScalar lua_GetScalarField(lua_State *lua, const char *key);
 int lua_SetScalarField(lua_State *lua, const char *key, btScalar val);
