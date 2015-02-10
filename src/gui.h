@@ -690,11 +690,7 @@ public:
         return mCurrentItemsType;
     }
     
-    void setItemsType(int type)
-    {
-        mCurrentItemsType = type;
-    }
-    
+    int setItemsType(int type);
     void setInventory(struct inventory_node_s **i);
     void setTitle(int items_type);
     void frame(float time);
