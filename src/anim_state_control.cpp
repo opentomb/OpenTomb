@@ -587,13 +587,13 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 Character_UpdateCurrentSpeed(ent, 1);
             }
+            else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
+            {
+                ent->bf.next_state = TR_STATE_LARA_FREEFALL;                    // free falling
+            }
             else if(cmd->roll)
             {
                 ent->bf.next_state = TR_STATE_LARA_JUMP_ROLL;
-            }
-            else
-            {
-                ent->bf.next_state = TR_STATE_LARA_FREEFALL;
             }
             break;
 
@@ -2182,6 +2182,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
             else if(cmd->shift == 1)
             {
                 ent->bf.next_state = TR_STATE_LARA_SWANDIVE_BEGIN;              // fly like fish
+            }
+            else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
+            {
+                ent->bf.next_state = TR_STATE_LARA_FREEFALL;                    // free falling
             }
             else if(cmd->roll)
             {
