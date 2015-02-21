@@ -419,7 +419,7 @@ void Engine_InitSDLVideo()
 
     if(renderer.settings.antialias)
     {
-        /* I do not why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
+        /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         sdl_gl_context = SDL_GL_CreateContext(sdl_window);
         GLint maxSamples = 0;
@@ -687,7 +687,6 @@ void Engine_PrimaryMouseDown()
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
-    //body->setAngularFactor(0);
 }
 
 
@@ -1023,7 +1022,6 @@ void DebugKeys(int button, int state)
                 break;
 
             case SDLK_UP:
-                //if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(-1);
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_UP);
@@ -1031,7 +1029,6 @@ void DebugKeys(int button, int state)
                 break;
 
             case SDLK_DOWN:
-                //if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectVertical(1);
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_DOWN);
@@ -1039,7 +1036,6 @@ void DebugKeys(int button, int state)
                 break;
 
             case SDLK_LEFT:
-                //if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(1);
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_LEFT);
@@ -1047,7 +1043,6 @@ void DebugKeys(int button, int state)
                 break;
 
             case SDLK_RIGHT:
-                //if(main_inventory_menu->IsVisible() && !main_inventory_menu->IsMoving())main_inventory_menu->MoveSelectHorisontal(-1);
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_RIGHT);

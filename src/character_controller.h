@@ -15,6 +15,14 @@
 #include "engine.h"
 
 /*
+ * default legs offsets
+ */
+#define LEFT_LEG                    (3)
+#define RIGHT_LEG                   (6)
+#define LEFT_HAND                   (13)
+#define RIGHT_HAND                  (10)
+
+/*
  * ENTITY MOVEMENT TYPES
  */
 

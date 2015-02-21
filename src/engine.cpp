@@ -3068,7 +3068,7 @@ int Engine_LoadMap(const char *name)
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
-
+    Fader[FADER_LOADSCREEN].Cut();                      ///@FIXME: if I load custom levels with "loadMap("data/newlevel.tr4");" in autoexec.lua, load screen fader does not stop!
     return 1;
 }
 

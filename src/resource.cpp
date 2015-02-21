@@ -2586,7 +2586,6 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world)
 {
     polygon->anim_id = 0;                           // Reset to 0 by default.
-    tex_index = tex_index & TR_TEXTURE_INDEX_MASK;  ///@FIXME: Is it really needed?
 
     for(uint32_t i = 0; i < world->anim_sequences_count; i++)
     {
@@ -2671,6 +2670,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     polygon_p p;
     btScalar *t, n;
     vertex_p vertex;
+    uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
     /* TR WAD FORMAT DOCUMENTATION!
      * tr4_face[3,4]_t:
@@ -2721,13 +2721,13 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     for(int16_t i=0;i<tr_mesh->num_textured_triangles;i++,p++)
     {
         face3 = &tr_mesh->textured_triangles[i];
-        tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
+        tex = &tr->object_textures[face3->texture & tex_mask];
 
         Polygon_Resize(p, 3);
 
         p->double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
-        SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
+        SetAnimTexture(p, face3->texture & tex_mask, world);
 
         if(face3->lighting & 0x01)
         {
@@ -2772,7 +2772,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
             vec4_set_one(p->vertices[2].color);
         }
 
-        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 0, p);
+        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & tex_mask, 0, p);
     }
 
     /*
@@ -2855,12 +2855,12 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     for(int16_t i=0;i<tr_mesh->num_textured_rectangles;i++,p++)
     {
         face4 = &tr_mesh->textured_rectangles[i];
-        tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
+        tex = &tr->object_textures[face4->texture & tex_mask];
         Polygon_Resize(p, 4);
 
         p->double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
-        SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
+        SetAnimTexture(p, face4->texture & tex_mask, world);
 
         if(face4->lighting & 0x01)
         {
@@ -2914,7 +2914,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         }
 
 
-        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 0, p);
+        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & tex_mask, 0, p);
     }
 
     /*
@@ -3080,6 +3080,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     base_mesh_p mesh;
     btScalar *t, n;
     vertex_p vertex;
+    uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
     tr_room = &tr->rooms[room_index];
 
@@ -3122,8 +3123,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
     {
         face3 = &tr_room->triangles[i];
-        tex = &tr->object_textures[face3->texture & TR_TEXTURE_INDEX_MASK];
-        SetAnimTexture(p, face3->texture & TR_TEXTURE_INDEX_MASK, world);
+        tex = &tr->object_textures[face3->texture & tex_mask];
+        SetAnimTexture(p, face3->texture & tex_mask, world);
         Polygon_Resize(p, 3);
         p->transparency = tex->transparency_flags;
 
@@ -3142,7 +3143,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         TR_color_to_arr(p->vertices[1].color, &tr_room->vertices[face3->vertices[1]].colour);
         TR_color_to_arr(p->vertices[2].color, &tr_room->vertices[face3->vertices[2]].colour);
 
-        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & TR_TEXTURE_INDEX_MASK, 0, p);
+        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & tex_mask, 0, p);
     }
 
     /*
@@ -3151,8 +3152,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
         face4 = &tr_room->rectangles[i];
-        tex = &tr->object_textures[face4->texture & TR_TEXTURE_INDEX_MASK];
-        SetAnimTexture(p, face4->texture & TR_TEXTURE_INDEX_MASK, world);
+        tex = &tr->object_textures[face4->texture & tex_mask];
+        SetAnimTexture(p, face4->texture & tex_mask, world);
         Polygon_Resize(p, 4);
         p->transparency = tex->transparency_flags;
 
@@ -3175,7 +3176,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         TR_color_to_arr(p->vertices[2].color, &tr_room->vertices[face4->vertices[2]].colour);
         TR_color_to_arr(p->vertices[3].color, &tr_room->vertices[face4->vertices[3]].colour);
 
-        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & TR_TEXTURE_INDEX_MASK, 0, p);
+        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & tex_mask, 0, p);
     }
 
     /*
