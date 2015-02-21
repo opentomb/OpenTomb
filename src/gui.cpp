@@ -28,7 +28,6 @@ gui_ProgressBar     Bar[BAR_LASTINDEX];
 gui_Fader           Fader[FADER_LASTINDEX];
 
 gui_FontManager       *FontManager = NULL;
-//gui_InventoryMenu     *main_inventory_menu = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 void Gui_Init()

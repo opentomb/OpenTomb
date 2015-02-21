@@ -262,7 +262,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     {
         ent->character->inventory = i;
     }
-    
+
     return count;
 }
 
@@ -319,7 +319,7 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
         pi = i;
         i = i->next;
     }
-    
+
     return -count;
 }
 
@@ -537,9 +537,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset)
 {
     btVector3 from, to;
-    btTransform tr1, tr2;
     bt_engine_ClosestRayResultCallback *cb = fc->cb;
-    bt_engine_ClosestConvexResultCallback *ccb = fc->ccb;
     room_p r = (cb->m_cont)?(cb->m_cont->room):(NULL);
     room_sector_p rs;
 
@@ -572,7 +570,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
             while(rs->sector_above)
             {
                 rs = Sector_CheckFlip(rs->sector_above);
-                if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)        // find air
+                if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
                     if(fc->transition_level - fc->floor_point.m_floats[2] > v_offset)
@@ -623,34 +621,15 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
     vec3_copy(from.m_floats, pos);
     to = from;
     to.m_floats[2] -= 4096.0;
-    tr1.setIdentity();
-    tr1.setOrigin(from);
-    tr2.setIdentity();
-    tr2.setOrigin(to);
-    ccb->m_closestHitFraction = 1.0;
-    ccb->m_hitCollisionObject = NULL;
-    bt_engine_dynamicsWorld->convexSweepTest(fc->sp, tr1, tr2, *ccb);
-    fc->floor_hit = (int)ccb->hasHit();
+    cb->m_closestHitFraction = 1.0;
+    cb->m_collisionObject = NULL;
+    bt_engine_dynamicsWorld->rayTest(from, to, *cb);
+    fc->floor_hit = (int)cb->hasHit();
     if(fc->floor_hit)
     {
         fc->floor_normale = cb->m_hitNormalWorld;
-        fc->floor_point = base_pos;
-        fc->floor_point.m_floats[2] = ccb->m_hitPointWorld.m_floats[2];
-        fc->floor_normale = ccb->m_hitNormalWorld;
-        fc->floor_obj = (btCollisionObject*)ccb->m_hitCollisionObject;
-
-        from.m_floats[0] = to.m_floats[0] = ccb->m_hitPointWorld.m_floats[0];
-        from.m_floats[1] = to.m_floats[1] = ccb->m_hitPointWorld.m_floats[1];
-        cb->m_closestHitFraction = 1.0;
-        cb->m_collisionObject = NULL;
-        //cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
-        bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-        if(cb->hasHit())
-        {
-            fc->floor_normale = cb->m_hitNormalWorld;
-        }
-        from.m_floats[0] = to.m_floats[0] = base_pos.m_floats[0];
-        from.m_floats[1] = to.m_floats[1] = base_pos.m_floats[1];
+        fc->floor_point.setInterpolate3(from, to, cb->m_closestHitFraction);
+        fc->floor_obj = (btCollisionObject*)cb->m_collisionObject;
     }
 
     to = from;

@@ -353,9 +353,10 @@ void Game_ApplyControls(struct entity_s *ent)
         }
 
         Cam_SetRotation(renderer.cam, cam_angles);
-        Cam_MoveAlong(renderer.cam, control_states.free_look_speed * move_logic[0] * engine_frame_time);
-        Cam_MoveStrafe(renderer.cam, control_states.free_look_speed * move_logic[1] * engine_frame_time);
-        Cam_MoveVertical(renderer.cam, control_states.free_look_speed * move_logic[2] * engine_frame_time);
+        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
+        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
+        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
+        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
 
         return;
     }
@@ -381,19 +382,21 @@ void Game_ApplyControls(struct entity_s *ent)
     }
     if(control_states.free_look != 0)
     {
+        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(renderer.cam, cam_angles);
-        Cam_MoveAlong(renderer.cam, control_states.free_look_speed * move_logic[0] * engine_frame_time);
-        Cam_MoveStrafe(renderer.cam, control_states.free_look_speed * move_logic[1] * engine_frame_time);
-        Cam_MoveVertical(renderer.cam, control_states.free_look_speed * move_logic[2] * engine_frame_time);
+        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
+        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
+        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
         renderer.cam->current_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);
     }
     else if(control_states.noclip != 0)
     {
         btVector3 pos;
+        btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(renderer.cam, cam_angles);
-        Cam_MoveAlong(renderer.cam, control_states.free_look_speed * move_logic[0] * engine_frame_time);
-        Cam_MoveStrafe(renderer.cam, control_states.free_look_speed * move_logic[1] * engine_frame_time);
-        Cam_MoveVertical(renderer.cam, control_states.free_look_speed * move_logic[2] * engine_frame_time);
+        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
+        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
+        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
         renderer.cam->current_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);
 
         ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
@@ -757,7 +760,7 @@ void Game_Frame(btScalar time)
         Game_ApplyControls(engine_world.Character);
     }
 
-    if((engine_world.Character != NULL) && !control_states.noclip)
+    if((engine_world.Character != NULL) && !control_states.noclip && !control_states.free_look)
     {
         Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
         Entity_Frame(engine_world.Character, engine_frame_time);
