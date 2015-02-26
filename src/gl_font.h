@@ -62,7 +62,7 @@ float    glf_get_ascender(gl_tex_font_p glf);
 uint16_t glf_get_font_size(gl_tex_font_p glf);
 void     glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1);
 
-void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text);     // ASCII
+void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text);     // UTF-8
 
 uint32_t utf8_strlen(const char *str);
 uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);

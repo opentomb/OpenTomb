@@ -31,6 +31,7 @@
 
 #define PENETRATION_TEST_OFFSET     (0.16 * ent->character->ry)
 #define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
+#define WALK_BACK_OFFSET            (16.0)
 #define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
 #define RUN_FORWARD_OFFSET          (128.0)       ///@FIXME: find real offset
 #define RUN_FORWARD_STEP_UP         (320.0)       // by bone frame bb
@@ -200,7 +201,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 {
     int i;
     btScalar t, *pos = ent->transform + 12;
-    btScalar local_offset[3], global_offset[3], move[3];
+    btScalar /*local_offset[3], */global_offset[3], move[3];
     height_info_t next_fc, *curr_fc;
     climb_info_t *climb = &ent->character->climb;
 
@@ -445,7 +446,7 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 {
                     vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
                     Character_CheckNextPenetration(ent, cmd, move);
-                    vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_FORWARD_OFFSET);
+                    vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);
                     global_offset[2] += ent->bf.bb_max[2];
                     vec3_add(global_offset, global_offset, pos);
                     Character_GetHeightInfo(global_offset, &next_fc);
@@ -1109,10 +1110,10 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
 
         case TR_STATE_LARA_WALK_BACK:
             cmd->rot[0] *= 0.4;
-            vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_FORWARD_OFFSET);
+            vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);
             global_offset[2] += ent->bf.bb_max[2];
             i = Character_CheckNextStep(ent, global_offset, &next_fc);
-            ent->dir_flag = ENT_MOVE_BACKWARD;
+            //ent->dir_flag = ENT_MOVE_BACKWARD;
 
             if(ent->character->height_info.quicksand)
             {
@@ -1136,22 +1137,29 @@ int State_Control_Lara(struct entity_s *ent, struct character_command_s *cmd)
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_2CLICK_END, 0);
             }
             else if((next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_DOWN_BIG))
-            {                                                                   // works correct
-                ent->dir_flag = ENT_STAY;
-                i = Entity_GetAnimDispatchCase(ent, TR_STATE_LARA_STOP);
-                if(i == 0)
+            {
+                if(ent->character->no_fix == 0x00)
                 {
-                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, 0);
-                    vec3_copy(pos, next_fc.floor_point);
-                    ent->move_type = MOVE_ON_FLOOR;
-                    ent->dir_flag = ENT_MOVE_BACKWARD;
-                }
-                else //if(i == 1)
-                {
-                    Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, 0);
-                    vec3_copy(pos, next_fc.floor_point);
-                    ent->move_type = MOVE_ON_FLOOR;
-                    ent->dir_flag = ENT_MOVE_BACKWARD;
+                    int frames_count = ent->bf.model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames_count;
+                    int frames_count2 = (frames_count + 1) / 2;
+                    if((ent->bf.current_frame >= 0) && (ent->bf.current_frame <= frames_count2))
+                    {
+                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, ent->bf.current_frame);
+                        ent->dir_flag = ENT_MOVE_BACKWARD;
+                        ent->transform[12 + 2] -= (curr_fc->floor_point.m_floats[2] - next_fc.floor_point.m_floats[2]);
+                        ent->character->no_fix = 0x01;
+                    }
+                    else if((ent->bf.current_frame >= frames_count) && (ent->bf.current_frame <= frames_count + frames_count2))
+                    {
+                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, ent->bf.current_frame - frames_count);
+                        ent->dir_flag = ENT_MOVE_BACKWARD;
+                        ent->transform[12 + 2] -= (curr_fc->floor_point.m_floats[2] - next_fc.floor_point.m_floats[2]);
+                        ent->character->no_fix = 0x01;
+                    }
+                    else
+                    {
+                        ent->dir_flag = ENT_STAY;                               // waiting for correct frame
+                    }
                 }
             }
             else if((cmd->move[0] == -1) && ((cmd->shift) || (ent->character->height_info.quicksand)))
