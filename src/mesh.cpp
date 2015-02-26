@@ -485,7 +485,7 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
 {
     vertex_p v = mesh->vertices;
     uint32_t ind = 0;
-    
+
     for(ind=0;ind<mesh->vertex_count;ind++,v++)
     {
         if(v->position[0] == vertex->position[0] && v->position[1] == vertex->position[1] && v->position[2] == vertex->position[2] &&
@@ -645,7 +645,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     return ret;
 }
 
-
+///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
 btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
@@ -655,11 +655,6 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
     for(uint32_t i = 0; i < r->sectors_count; i++)
     {
-        if(heightmap->floor > heightmap->ceiling)
-        {
-            continue;
-        }
-
         if( (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
             (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
         {
@@ -755,7 +750,6 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
     for(int i=0; i<tweens_size; i++)
     {
-
         switch(tweens[i].ceiling_tween_type)
         {
             case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:

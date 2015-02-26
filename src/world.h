@@ -347,6 +347,7 @@ int Room_IsOverlapped(room_p r0, room_p r1);
 int Room_IsInNearRoomsList(room_p room, room_p r);
 room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs);
 room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs);
+room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs);
 room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs);
 int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
 

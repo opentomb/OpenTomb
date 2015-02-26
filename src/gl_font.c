@@ -408,7 +408,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
     if(glf->gl_real_tex_indexes_count == 1)
     {
-        GLfloat *p, buffer[24 * strlen(text)];
+        GLfloat *p, buffer[24 * utf8_strlen(text)];
         GLuint elements_count = 0;
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);

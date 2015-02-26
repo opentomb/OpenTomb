@@ -253,11 +253,36 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
 }
 
 
+room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs)
+{
+    if((rs != NULL) && (rs->portal_to_room >= 0))
+    {
+        room_p r = engine_world.rooms + rs->portal_to_room;
+        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        {
+            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+        }
+    }
+
+    return rs;
+}
+
+
 room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs)
 {
     if((rs != NULL) && (rs->portal_to_room >= 0))
     {
         room_p r = engine_world.rooms + rs->portal_to_room;
+        if((rs->owner_room->base_room != NULL) && (r->alternate_room != NULL))
+        {
+            r = r->alternate_room;
+        }
+        else if((rs->owner_room->alternate_room != NULL) && (r->base_room != NULL))
+        {
+            r = r->base_room;
+        }
         int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
         int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
@@ -306,28 +331,18 @@ room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs)
 
 int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
 {
-    if(s1->portal_to_room >= 0)
-    {
-        s1 = Room_GetSectorRaw(engine_world.rooms + s1->portal_to_room, s1->pos);
-    }
-    if(s2->portal_to_room >= 0)
-    {
-        s2 = Room_GetSectorRaw(engine_world.rooms + s2->portal_to_room, s2->pos);
-    }
+    s1 = TR_Sector_CheckPortalPointer(s1);
+    s2 = TR_Sector_CheckPortalPointer(s2);
 
-    if((s1->owner_room == s2->owner_room) || !Room_IsJoined(s1->owner_room, s2->owner_room))
+    if(s1->owner_room == s2->owner_room)
     {
         return 0;
     }
-
-    s1 = TR_Sector_CheckBaseRoom(s1);
-    s2 = TR_Sector_CheckBaseRoom(s2);
 
     room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
-    if(s1p == NULL)
-    {
-        return 0;
-    }
+    room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
+
+    // 2 next conditions are the stick for TR_V door-roll-wall
     if(s1p->portal_to_room < 0)
     {
         s1p = TR_Sector_CheckAlternateRoom(s1p);
@@ -335,12 +350,6 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
         {
             return 0;
         }
-    }
-
-    room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
-    if(s2p == NULL)
-    {
-        return 0;
     }
     if(s2p->portal_to_room < 0)
     {
@@ -351,16 +360,8 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
         }
     }
 
-    if((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room))
-    {
-        return 1;
-    }
-
-    ///@QUESTION: is next code necessary?
-    s1p = TR_Sector_CheckBaseRoom(s1p);
-    s2p = TR_Sector_CheckBaseRoom(s2p);
-
-    if((engine_world.rooms + s1p->portal_to_room == s1->owner_room) && (engine_world.rooms + s2p->portal_to_room == s2->owner_room))
+    if((TR_Sector_CheckPortalPointer(s1p) == TR_Sector_CheckBaseRoom(s1)) && (TR_Sector_CheckPortalPointer(s2p) == TR_Sector_CheckBaseRoom(s2)) ||
+       (TR_Sector_CheckPortalPointer(s1p) == TR_Sector_CheckAlternateRoom(s1)) && (TR_Sector_CheckPortalPointer(s2p) == TR_Sector_CheckAlternateRoom(s2)))
     {
         return 1;
     }
@@ -830,7 +831,8 @@ room_p Room_FindPos2d(world_p w, btScalar pos[3])
     room_p r = w->rooms;
     for(uint32_t i=0;i<w->room_count;i++,r++)
     {
-        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
+        if(r->active &&
+           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]))
         {
             return r;

@@ -2259,6 +2259,10 @@ void TR_GenRoomCollision(struct world_s *world)
         // Most difficult task with converting floordata collision to trimesh collision is
         // building inbetween polygons which will block out gaps between sector heights.
 
+        if(r->id == 76)
+        {
+            Con_AddLine("XXX");
+        }
         TR_Sector_GenTweens(r, room_tween);
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
