@@ -41,6 +41,7 @@ AudioSource::AudioSource()
     effect_index = 0;
     sample_index = 0;
     sample_count = 0;
+    is_water     = false;
     alGenSources(1, &source_index);
 
     if(alIsSource(source_index))
@@ -343,6 +344,11 @@ StreamTrack::StreamTrack()
 {
     alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);              // Generate all buffers at once.
     alGenSources(1, &source);
+    audio_file = NULL;
+    data       = NULL;
+    format     = 0x00;
+    rate       = 0;
+    dampable   = false;
 
     if(alIsSource(source))
     {

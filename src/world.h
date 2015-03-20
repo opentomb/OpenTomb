@@ -273,9 +273,7 @@ typedef struct world_s
     struct entity_s            *Character;              // this is an unique Lara's pointer =)
     struct skeletal_model_s    *sky_box;                // global skybox
 
-    struct entity_s            *last_finded_entity;
     struct RedBlackHeader_s    *entity_tree;            // tree of world active objects
-    struct base_item_s         *last_finded_item;
     struct RedBlackHeader_s    *items_tree;             // tree of world items
 
     uint32_t                    type;

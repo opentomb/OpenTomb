@@ -649,10 +649,10 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
         }
         if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
-            ent->character->cmd.kill = 1;                                       // Kill, if no HP.
+            ent->character->resp.kill = 1;                                      // Kill, if no HP.
         }
 
-        Character_ApplyCommands(ent, &ent->character->cmd);
+        Character_ApplyCommands(ent);
     }
 
     if(x->left != NULL)
@@ -678,7 +678,7 @@ void Game_UpdateCharacters()
         }
         if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
-            ent->character->cmd.kill = 1;   // Kill, if no HP.
+            ent->character->resp.kill = 1;   // Kill, if no HP.
         }
     }
 
@@ -762,7 +762,7 @@ void Game_Frame(btScalar time)
 
     if((engine_world.Character != NULL) && !control_states.noclip && !control_states.free_look)
     {
-        Character_ApplyCommands(engine_world.Character, &engine_world.Character->character->cmd);
+        Character_ApplyCommands(engine_world.Character);
         Entity_Frame(engine_world.Character, engine_frame_time);
         Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0); // 128.0 400.0
     }
