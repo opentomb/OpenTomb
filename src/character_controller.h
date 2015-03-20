@@ -167,11 +167,6 @@ typedef struct character_command_s
     btScalar    rot[3];
     int8_t      move[3];
 
-    int8_t      kill;
-    int8_t      vertical_collide;
-    int8_t      horizontal_collide;
-    int8_t      slide;
-
     int8_t      roll;
     int8_t      jump;
     int8_t      crouch;
@@ -181,6 +176,14 @@ typedef struct character_command_s
 
     int8_t      flags;
 }character_command_t, *character_command_p;
+
+typedef struct character_response_s
+{
+    int8_t      kill;
+    int8_t      vertical_collide;
+    int8_t      horizontal_collide;
+    int8_t      slide;
+}character_response_t, *character_response_p;
 
 typedef struct character_param_s
 {
@@ -212,11 +215,12 @@ typedef struct character_s
 {
     struct entity_s             *ent;                    // actor entity
     struct character_command_s   cmd;                    // character control commands
+    struct character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
     struct inventory_node_s     *inventory;
     struct character_param_s     parameters;
     struct character_stats_s     statistics;
     
-    int                        (*state_func)(struct entity_s *ent, struct character_command_s *cmd);
+    int                        (*state_func)(struct entity_s *ent);
     int16_t                      max_move_iterations;
     int16_t                      no_fix;
     int8_t                       cam_follow_center;
@@ -271,8 +275,8 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
 int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
-void Character_FixPenetrations(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
-void Character_CheckNextPenetration(struct entity_s *ent, character_command_p cmd, btScalar move[3]);
+void Character_FixPenetrations(struct entity_s *ent, btScalar move[3]);
+void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
@@ -284,19 +288,19 @@ void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_h
 void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);
 void Character_Inertia(struct entity_s *ent, int8_t command, btScalar max_speed, btScalar in_speed, btScalar out_speed);
 
-int Character_MoveOnFloor(struct entity_s *ent, character_command_p cmd);
-int Character_FreeFalling(struct entity_s *ent, character_command_p cmd);
-int Character_MonkeyClimbing(struct entity_s *ent, character_command_p cmd);
-int Character_WallsClimbing(struct entity_s *ent, character_command_p cmd);
-int Character_Climbing(struct entity_s *ent, character_command_p cmd);
-int Character_MoveUnderWater(struct entity_s *ent, character_command_p cmd);
-int Character_MoveOnWater(struct entity_s *ent, character_command_p cmd);
+int Character_MoveOnFloor(struct entity_s *ent);
+int Character_FreeFalling(struct entity_s *ent);
+int Character_MonkeyClimbing(struct entity_s *ent);
+int Character_WallsClimbing(struct entity_s *ent);
+int Character_Climbing(struct entity_s *ent);
+int Character_MoveUnderWater(struct entity_s *ent);
+int Character_MoveOnWater(struct entity_s *ent);
 
 int Character_FindTraverse(struct entity_s *ch);
 int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine_container_s *cont);
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj);
 
-void Character_ApplyCommands(struct entity_s *ent, struct character_command_s *cmd);
+void Character_ApplyCommands(struct entity_s *ent);
 void Character_UpdateParams(struct entity_s *ent);
 
 float Character_GetParam(struct entity_s *ent, int parameter);

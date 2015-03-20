@@ -609,7 +609,7 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                 {
                     if(entity->character)
                     {
-                        entity->character->cmd.kill = 1;
+                        entity->character->resp.kill = 1;
                     }
                 }
 
@@ -805,7 +805,7 @@ void Entity_ProcessSector(struct entity_s *ent)
                (ent->move_type == MOVE_QUICKSAND)    )
             {
                 Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                ent->character->cmd.kill = 1;
+                ent->character->resp.kill = 1;
             }
         }
     }

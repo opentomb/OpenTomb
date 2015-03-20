@@ -22,6 +22,7 @@ typedef struct RedBlackNode_s
 typedef struct RedBlackHeader_s
 {     
     RedBlackNode_p              root;                 /* header pointer */
+    RedBlackNode_p              last_founded;         /* increases search speed if we askone element twice and more */
     uint32_t                    node_count;           /* node count in tree */
     uint16_t                    height;               /* tree's height */
     int (*rb_compLT)(void *key1, void *key2);

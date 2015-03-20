@@ -414,9 +414,13 @@ void Engine_InitSDLVideo()
         video_flags |= (SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     }
 
+    ///@TODO: is it really needede for correct work?
+    if(SDL_GL_LoadLibrary(NULL) < 0)
+    {
+        Sys_Error("Could not init OpenGL driver");
+    }
 
     // Check for correct number of antialias samples.
-
     if(renderer.settings.antialias)
     {
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
@@ -1121,7 +1125,7 @@ void DebugKeys(int button, int state)
                 paused = !paused;
                 if(engine_world.Character != NULL)
                 {
-                    engine_world.Character->character->cmd.kill = 0;
+                    engine_world.Character->character->resp.kill = 0;
 
                     if(engine_world.Character->move_type == MOVE_UNDER_WATER)
                     {

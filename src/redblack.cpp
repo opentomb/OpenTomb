@@ -11,10 +11,16 @@ RedBlackNode_p RB_SearchNode(void *key, RedBlackHeader_p header)
 {
     RedBlackNode_p current = header->root;
 
+    if((header->last_founded != NULL) && (header->rb_compEQ(key, header->last_founded)))
+    {
+        return header->last_founded;
+    }
+
     while(current != NULL)
     {
         if(header->rb_compEQ(key, current->key))                                                       //data1 == data2
         {
+            header->last_founded = current;
             return (current);
         }
         current = (header->rb_compLT(key, current->key)) ? current->left : current->right;             //data1 < data2
@@ -123,6 +129,7 @@ RedBlackHeader_p RB_Init()
     p->rb_compLT = NULL;
     p->rb_free_data = NULL;
     p->root = NULL;
+    p->last_founded = NULL;
     p->height = 0;
     p->node_count = 0;
 
@@ -154,9 +161,13 @@ void RB_EmptyTree(RedBlackNode_p n, RedBlackHeader_p p)
 
 void RB_MakeEmpty(RedBlackHeader_p header)
 {
-    if(header && header->root)
+    if(header != NULL)
     {
-        RB_EmptyTree(header->root, header);
+        header->last_founded = NULL;
+        if(header->root != NULL)
+        {
+            RB_EmptyTree(header->root, header);
+        }
     }
 }
 
@@ -441,6 +452,11 @@ void RB_Delete(RedBlackHeader_p header, RedBlackNode_p z)
     if (z == NULL)
     {
         return;
+    }
+
+    if(z == header->last_founded)
+    {
+        header->last_founded = NULL;
     }
 
     data = z->data;
