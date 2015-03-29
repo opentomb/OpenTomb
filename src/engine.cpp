@@ -300,8 +300,7 @@ int lua_DumpRoom(lua_State * lua)
 
 int lua_SetRoomEnabled(lua_State * lua)
 {
-    int val, top;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 2)
     {
@@ -316,7 +315,7 @@ int lua_SetRoomEnabled(lua_State * lua)
         return 0;
     }
 
-    val = lua_tointeger(lua, 2);
+    int val = lua_tointeger(lua, 2);
     if(val == 0)
     {
         Room_Disable(engine_world.rooms + id);
@@ -335,8 +334,7 @@ int lua_SetRoomEnabled(lua_State * lua)
 
 int lua_SetModelCollisionMapSize(lua_State * lua)
 {
-    int size, top;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 2)
     {
@@ -351,7 +349,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
         return 0;
     }
 
-    size = lua_tointeger(lua, 2);
+    int size = lua_tointeger(lua, 2);
     if(size >= 0 && size < engine_world.skeletal_models[id].mesh_count)
     {
         engine_world.skeletal_models[id].collision_map_size = size;
@@ -363,8 +361,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
 
 int lua_SetModelCollisionMap(lua_State * lua)
 {
-    int arg, val, top;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 3)
     {
@@ -379,8 +376,8 @@ int lua_SetModelCollisionMap(lua_State * lua)
         return 0;
     }
 
-    arg = lua_tointeger(lua, 2);
-    val = lua_tointeger(lua, 3);
+    int arg = lua_tointeger(lua, 2);
+    int val = lua_tointeger(lua, 3);
     if(arg >= 0 && arg < engine_world.skeletal_models[id].mesh_count)
     {
         engine_world.skeletal_models[id].collision_map[arg] = val;
@@ -393,7 +390,6 @@ int lua_SetModelCollisionMap(lua_State * lua)
 int lua_EnableEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);                                                  // get # of arguments
-    entity_p ent;
 
     if(top < 1)
     {
@@ -401,7 +397,7 @@ int lua_EnableEntity(lua_State * lua)
         return 0;
     }
 
-    ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent != NULL)
     {
         Entity_Enable(ent);
@@ -414,7 +410,6 @@ int lua_EnableEntity(lua_State * lua)
 int lua_DisableEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);                                                  // get # of arguments
-    entity_p ent;
 
     if(top < 1)
     {
@@ -422,7 +417,7 @@ int lua_DisableEntity(lua_State * lua)
         return 0;
     }
 
-    ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent != NULL)
     {
         Entity_Disable(ent);
@@ -435,7 +430,6 @@ int lua_DisableEntity(lua_State * lua)
 int lua_SetEntityCollision(lua_State * lua)
 {
     int top = lua_gettop(lua);                                                  // get # of arguments
-    entity_p ent;
 
     if(top < 1)
     {
@@ -443,7 +437,7 @@ int lua_SetEntityCollision(lua_State * lua)
         return 0;
     }
 
-    ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent != NULL)
     {
         if(lua_tointeger(lua, 2) != 0)
@@ -557,9 +551,7 @@ int lua_DropEntity(lua_State * lua)                                             
 
 int lua_GetModelID(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 1)
     {
@@ -567,8 +559,8 @@ int lua_GetModelID(lua_State * lua)
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
@@ -586,9 +578,7 @@ int lua_GetModelID(lua_State * lua)
 
 int lua_GetActivationOffset(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 1)
     {
@@ -596,8 +586,8 @@ int lua_GetActivationOffset(lua_State * lua)
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
@@ -615,12 +605,16 @@ int lua_GetActivationOffset(lua_State * lua)
 
 int lua_SetActivationOffset(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-    id = lua_tointeger(lua, 1);
+    int top = lua_gettop(lua);
 
-    ent = World_GetEntityByID(&engine_world, id);
+    if(top < 1)
+    {
+        Con_AddLine("not set entity id");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
@@ -643,10 +637,7 @@ int lua_SetActivationOffset(lua_State * lua)
 
 int lua_GetCharacterParam(lua_State * lua)
 {
-    int id, top, parameter;
-    entity_p ent;
-
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 2)
     {
@@ -654,9 +645,9 @@ int lua_GetCharacterParam(lua_State * lua)
         return 0;
     }
 
-    id         = lua_tointeger(lua, 1);
-    parameter  = lua_tointeger(lua, 2);
-    ent        = World_GetEntityByID(&engine_world, id);
+    int id         = lua_tointeger(lua, 1);
+    int parameter  = lua_tointeger(lua, 2);
+    entity_p ent   = World_GetEntityByID(&engine_world, id);
 
     if(parameter >= PARAM_LASTINDEX)
     {
@@ -678,10 +669,7 @@ int lua_GetCharacterParam(lua_State * lua)
 
 int lua_SetCharacterParam(lua_State * lua)
 {
-    int id, top, parameter;
-    entity_p ent;
-
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 3)
     {
@@ -689,9 +677,9 @@ int lua_SetCharacterParam(lua_State * lua)
         return 0;
     }
 
-    id        = lua_tointeger(lua, 1);
-    parameter = lua_tointeger(lua, 2);
-    ent       = World_GetEntityByID(&engine_world, id);
+    int id           = lua_tointeger(lua, 1);
+    int parameter    = lua_tointeger(lua, 2);
+    entity_p ent     = World_GetEntityByID(&engine_world, id);
 
     if(parameter >= PARAM_LASTINDEX)
     {
@@ -718,11 +706,7 @@ int lua_SetCharacterParam(lua_State * lua)
 
 int lua_ChangeCharacterParam(lua_State * lua)
 {
-    int id, top, parameter;
-    float value;
-    entity_p ent;
-
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 3)
     {
@@ -730,10 +714,10 @@ int lua_ChangeCharacterParam(lua_State * lua)
         return 0;
     }
 
-    id         = lua_tointeger(lua, 1);
-    parameter  = lua_tointeger(lua, 2);
-    value      = lua_tonumber(lua, 3);
-    ent        = World_GetEntityByID(&engine_world, id);
+    int id         = lua_tointeger(lua, 1);
+    int parameter  = lua_tointeger(lua, 2);
+    int value      = lua_tonumber(lua, 3);
+    entity_p ent   = World_GetEntityByID(&engine_world, id);
 
     if(parameter >= PARAM_LASTINDEX)
     {
@@ -752,10 +736,8 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
 int lua_GetActionState(lua_State *lua)
 {
-    int act, top;
-
-    top = lua_gettop(lua);
-    act = lua_tointeger(lua, 1);
+    int top = lua_gettop(lua);
+    int act = lua_tointeger(lua, 1);
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
         Con_Printf("wrong action number");
@@ -774,10 +756,8 @@ int lua_GetActionState(lua_State *lua)
 
 int lua_GetActionChange(lua_State *lua)
 {
-    int act, top;
-
-    top = lua_gettop(lua);
-    act = lua_tointeger(lua, 1);
+    int top = lua_gettop(lua);
+    int act = lua_tointeger(lua, 1);
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
@@ -804,10 +784,8 @@ int lua_GetLevelVersion(lua_State *lua)
 
 int lua_BindKey(lua_State *lua)
 {
-    int act, top;
-
-    top = lua_gettop(lua);
-    act = lua_tointeger(lua, 1);
+    int top = lua_gettop(lua);
+    int act = lua_tointeger(lua, 1);
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
         Con_Printf("wrong action number");
@@ -973,17 +951,17 @@ int lua_AddItem(lua_State * lua)
 
 int lua_RemoveItem(lua_State * lua)
 {
-    int top, entity_id, item_id, count;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 3)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id, item_id, items_count)");
         return 0;
     }
-    entity_id = lua_tointeger(lua, 1);
-    item_id = lua_tointeger(lua, 2);
-    count = lua_tointeger(lua, 3);
+
+    int entity_id = lua_tointeger(lua, 1);
+    int item_id = lua_tointeger(lua, 2);
+    int count = lua_tointeger(lua, 3);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
@@ -999,8 +977,7 @@ int lua_RemoveItem(lua_State * lua)
 
 int lua_RemoveAllItems(lua_State * lua)
 {
-    int top, entity_id;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 1)
     {
@@ -1008,7 +985,7 @@ int lua_RemoveAllItems(lua_State * lua)
         return 0;
     }
 
-    entity_id = lua_tointeger(lua, 1);
+    int entity_id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
@@ -1023,16 +1000,15 @@ int lua_RemoveAllItems(lua_State * lua)
 
 int lua_GetItemsCount(lua_State * lua)
 {
-    int top, entity_id, item_id;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 2)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id, item_id)");
         return 0;
     }
-    entity_id = lua_tointeger(lua, 1);
-    item_id = lua_tointeger(lua, 2);
+    int entity_id = lua_tointeger(lua, 1);
+    int item_id = lua_tointeger(lua, 2);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
@@ -1048,8 +1024,7 @@ int lua_GetItemsCount(lua_State * lua)
 
 int lua_CreateBaseItem(lua_State * lua)
 {
-    int top, item_id, model_id, type, world_model_id, count;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 5)
     {
@@ -1057,11 +1032,11 @@ int lua_CreateBaseItem(lua_State * lua)
         return 0;
     }
 
-    item_id         = lua_tointeger(lua, 1);
-    model_id        = lua_tointeger(lua, 2);
-    world_model_id  = lua_tointeger(lua, 3);
-    type            = lua_tointeger(lua, 4);
-    count           = lua_tointeger(lua, 5);
+    int item_id         = lua_tointeger(lua, 1);
+    int model_id        = lua_tointeger(lua, 2);
+    int world_model_id  = lua_tointeger(lua, 3);
+    int type            = lua_tointeger(lua, 4);
+    int count           = lua_tointeger(lua, 5);
 
     World_CreateItem(&engine_world, item_id, model_id, world_model_id, type, count, lua_tostring(lua, 6));
 
@@ -1071,8 +1046,7 @@ int lua_CreateBaseItem(lua_State * lua)
 
 int lua_DeleteBaseItem(lua_State * lua)
 {
-    int top, item_id;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 1)
     {
@@ -1080,24 +1054,22 @@ int lua_DeleteBaseItem(lua_State * lua)
         return 0;
     }
 
-    item_id = lua_tointeger(lua, 1);
-    World_DeleteItem(&engine_world, item_id);
+    World_DeleteItem(&engine_world, lua_tointeger(lua, 1));
     return 0;
 }
 
 
 int lua_PrintItems(lua_State * lua)
 {
-    int top, entity_id;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 1)
     {
         Con_Printf("Wrong arguments count. Must be (entity_id)");
         return 0;
     }
-    entity_id = lua_tointeger(lua, 1);
 
+    int entity_id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
@@ -1119,8 +1091,7 @@ int lua_PrintItems(lua_State * lua)
 
 int lua_SetStateChangeRange(lua_State * lua)
 {
-    int top, id, anim, state, dispath, frame_low, frame_high;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 6)
     {
@@ -1128,7 +1099,7 @@ int lua_SetStateChangeRange(lua_State * lua)
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
+    int id = lua_tointeger(lua, 1);
     skeletal_model_p model = World_FindModelByID(&engine_world, id);
 
     if(model == NULL)
@@ -1137,11 +1108,11 @@ int lua_SetStateChangeRange(lua_State * lua)
         return 0;
     }
 
-    anim = lua_tointeger(lua, 2);
-    state = lua_tointeger(lua, 3);
-    dispath = lua_tointeger(lua, 4);
-    frame_low = lua_tointeger(lua, 5);
-    frame_high = lua_tointeger(lua, 6);
+    int anim = lua_tointeger(lua, 2);
+    int state = lua_tointeger(lua, 3);
+    int dispath = lua_tointeger(lua, 4);
+    int frame_low = lua_tointeger(lua, 5);
+    int frame_high = lua_tointeger(lua, 6);
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
@@ -1178,18 +1149,17 @@ int lua_SetStateChangeRange(lua_State * lua)
 
 int lua_GetAnimCommandTransform(lua_State * lua)
 {
-    int top, id, anim, frame;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 3)
     {
         Con_Printf("Wrong arguments count. Must be (model_id, anim_num, frame_num");
         return 0;
     }
-    id = lua_tointeger(lua, 1);
-    anim = lua_tointeger(lua, 2);
-    frame = lua_tointeger(lua, 3);
 
+    int id = lua_tointeger(lua, 1);
+    int anim = lua_tointeger(lua, 2);
+    int frame = lua_tointeger(lua, 3);
     skeletal_model_p model = World_FindModelByID(&engine_world, id);
     if(model == NULL)
     {
@@ -1225,18 +1195,17 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 
 int lua_SetAnimCommandTransform(lua_State * lua)
 {
-    int top, id, anim, frame;
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
 
     if(top < 4)
     {
         Con_Printf("Wrong arguments count. Must be (model_id, anim_num, frame_num, flag, (option: dx, dy, dz))");
         return 0;
     }
-    id = lua_tointeger(lua, 1);
-    anim = lua_tointeger(lua, 2);
-    frame = lua_tointeger(lua, 3);
 
+    int id = lua_tointeger(lua, 1);
+    int anim = lua_tointeger(lua, 2);
+    int frame = lua_tointeger(lua, 3);
     skeletal_model_p model = World_FindModelByID(&engine_world, id);
     if(model == NULL)
     {
@@ -1275,10 +1244,8 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
 int lua_SpawnEntity(lua_State * lua)
 {
-    int top;
-    btScalar pos[3], ang[3];
+    int top = lua_gettop(lua);
 
-    top = lua_gettop(lua);
     if(top < 5)
     {
         ///uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3])
@@ -1286,6 +1253,7 @@ int lua_SpawnEntity(lua_State * lua)
         return 0;
     }
 
+    btScalar pos[3], ang[3];
     int model_id = lua_tointeger(lua, 1);
     int room_id = lua_tointeger(lua, 2);
     pos[0] = lua_tonumber(lua, 3);
@@ -1320,24 +1288,21 @@ int lua_SpawnEntity(lua_State * lua)
  */
 int lua_GetEntityVector(lua_State * lua)
 {
-    int id, top;
-    entity_p e1, e2;
-
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
     if(top < 2)
     {
         Con_Printf("Wrong arguments count. Must be (id1, id2)");
         return 0;
     }
-    id = lua_tointeger(lua, 1);
-    e1 = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
-    e2 = World_GetEntityByID(&engine_world, id);
+    entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
@@ -1353,24 +1318,22 @@ int lua_GetEntityVector(lua_State * lua)
 
 int lua_GetEntityDirDot(lua_State * lua)
 {
-    int id, top;
-    entity_p e1, e2;
-
-    top = lua_gettop(lua);
+    int top = lua_gettop(lua);
     if(top < 2)
     {
         Con_Printf("Wrong arguments count. Must be (id1, id2)");
         return 0;
     }
-    id = lua_tointeger(lua, 1);
-    e1 = World_GetEntityByID(&engine_world, id);
+
+    int id = lua_tointeger(lua, 1);
+    entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
-    e2 = World_GetEntityByID(&engine_world, id);
+    entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
@@ -1384,17 +1347,16 @@ int lua_GetEntityDirDot(lua_State * lua)
 
 int lua_GetEntityPosition(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-    id = lua_tointeger(lua, 1);
+    int top = lua_gettop(lua);
+
     if(top != 1)
     {
         Con_Printf("Wrong arguments count. Must be (id)");
         return 0;
     }
-    ent = World_GetEntityByID(&engine_world, id);
 
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
         Con_Printf("can not find entity with id = %d", id);
@@ -1414,41 +1376,47 @@ int lua_GetEntityPosition(lua_State * lua)
 
 int lua_SetEntityPosition(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-    id = lua_tointeger(lua, 1);
-
-    ent = World_GetEntityByID(&engine_world, id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", id);
-        return 0;
-    }
-
-    switch(top)
+    switch(lua_gettop(lua))
     {
         case 4:
-            ent->transform[12+0] = lua_tonumber(lua, 2);
-            ent->transform[12+1] = lua_tonumber(lua, 3);
-            ent->transform[12+2] = lua_tonumber(lua, 4);
-            if(ent->character)
             {
-                Character_UpdatePlatformPreStep(ent);
+                int id = lua_tointeger(lua, 1);
+                entity_p ent = World_GetEntityByID(&engine_world, id);
+                if(ent == NULL)
+                {
+                    Con_Printf("can not find entity with id = %d", id);
+                    return 0;
+                }
+                ent->transform[12+0] = lua_tonumber(lua, 2);
+                ent->transform[12+1] = lua_tonumber(lua, 3);
+                ent->transform[12+2] = lua_tonumber(lua, 4);
+                if(ent->character)
+                {
+                    Character_UpdatePlatformPreStep(ent);
+                }
             }
             return 0;
 
         case 7:
-            ent->transform[12+0] = lua_tonumber(lua, 2);
-            ent->transform[12+1] = lua_tonumber(lua, 3);
-            ent->transform[12+2] = lua_tonumber(lua, 4);
-            ent->angles[0] = lua_tonumber(lua, 5);
-            ent->angles[1] = lua_tonumber(lua, 6);
-            ent->angles[2] = lua_tonumber(lua, 7);
-            Entity_UpdateRotation(ent);
-            if(ent->character)
             {
-                Character_UpdatePlatformPreStep(ent);
+                int id = lua_tointeger(lua, 1);
+                entity_p ent = World_GetEntityByID(&engine_world, id);
+                if(ent == NULL)
+                {
+                    Con_Printf("can not find entity with id = %d", id);
+                    return 0;
+                }
+                ent->transform[12+0] = lua_tonumber(lua, 2);
+                ent->transform[12+1] = lua_tonumber(lua, 3);
+                ent->transform[12+2] = lua_tonumber(lua, 4);
+                ent->angles[0] = lua_tonumber(lua, 5);
+                ent->angles[1] = lua_tonumber(lua, 6);
+                ent->angles[2] = lua_tonumber(lua, 7);
+                Entity_UpdateRotation(ent);
+                if(ent->character)
+                {
+                    Character_UpdatePlatformPreStep(ent);
+                }
             }
             return 0;
 
@@ -1463,25 +1431,22 @@ int lua_SetEntityPosition(lua_State * lua)
 
 int lua_MoveEntityGlobal(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-    id = lua_tointeger(lua, 1);
-
-    ent = World_GetEntityByID(&engine_world, id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", id);
-        return 0;
-    }
-
-    switch(top)
+    switch(lua_gettop(lua))
     {
         case 4:
-            ent->transform[12+0] += lua_tonumber(lua, 2);
-            ent->transform[12+1] += lua_tonumber(lua, 3);
-            ent->transform[12+2] += lua_tonumber(lua, 4);
-            Entity_UpdateRigidBody(ent, 1);
+            {
+                int id = lua_tointeger(lua, 1);
+                entity_p ent = World_GetEntityByID(&engine_world, id);
+                if(ent == NULL)
+                {
+                    Con_Printf("can not find entity with id = %d", id);
+                    return 0;
+                }
+                ent->transform[12+0] += lua_tonumber(lua, 2);
+                ent->transform[12+1] += lua_tonumber(lua, 3);
+                ent->transform[12+2] += lua_tonumber(lua, 4);
+                Entity_UpdateRigidBody(ent, 1);
+            }
             return 0;
 
         default:

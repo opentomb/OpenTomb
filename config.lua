@@ -1,5 +1,4 @@
 -- LUA config file
-
 screen =
 {
     x = 50;

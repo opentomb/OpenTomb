@@ -274,8 +274,9 @@ int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct hei
 int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
-int Character_RecoverFromPenetration(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
-void Character_FixPenetrations(struct entity_s *ent, btScalar move[3]);
+int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
+int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]);
+void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar step_up_check);
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);

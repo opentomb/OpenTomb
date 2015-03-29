@@ -2519,7 +2519,7 @@ int State_Control_Lara(struct entity_s *ent)
             {
                 t = pos[2];
                 Character_GetHeightInfo(pos, &next_fc);
-                Character_FixPenetrations(ent, NULL);
+                Character_FixPenetrations(ent, NULL, 0.0);
                 pos[2] = t;
                 ent->bf.next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
                 ent->onFrame = ent_set_underwater;                         // dive
