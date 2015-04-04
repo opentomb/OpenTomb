@@ -34,6 +34,19 @@ static void memset_pattern4(void *b, const void *pattern, const size_t len)
 }
 #endif
 
+static __inline GLuint NextPowerOf2(GLuint in)
+{
+     in -= 1;
+
+     in |= in >> 16;
+     in |= in >> 8;
+     in |= in >> 4;
+     in |= in >> 2;
+     in |= in >> 1;
+
+     return in + 1;
+}
+
 /*!
  * @abstract Identifies a corner.
  * @discussion This is used for mapping a corner in a file object texture to the corresponding corner in the canonical object texture.
@@ -88,7 +101,7 @@ struct bordered_texture_atlas_s
     int data_has_been_laid_out;
 
     // Whether non-power-of-two textures are supported.
-    int supports_npot;
+    //int supports_npot;
 
     // Result pages
     // Note: No capacity here, this is handled internally by the layout method. Also, all result pages have the same width, which will always be less than or equal to the height.
@@ -220,11 +233,11 @@ static void borderedTextureAtlas_LayOutTextures(bordered_texture_atlas_p atlas)
     }
 
     // Fix up heights if necessary
-    if (!atlas->supports_npot)
+    //if (!atlas->supports_npot)
     {
         for (unsigned page = 0; page < atlas->number_result_pages; page++)
         {
-            atlas->result_page_height[page] = pow(ceil(log2((double) atlas->result_page_height[page])), 2);
+            atlas->result_page_height[page] = NextPowerOf2(atlas->result_page_height[page]);
         }
     }
 
@@ -249,7 +262,7 @@ bordered_texture_atlas_p BorderedTextureAtlas_Create(int border)
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
     atlas->result_page_width = max_texture_edge_length;
-    atlas->supports_npot = IsGLExtensionSupported("GL_ARB_texture_non_power_of_two");
+    //atlas->supports_npot = 0;//IsGLExtensionSupported("GL_ARB_texture_non_power_of_two");
 
     return atlas;
 }
@@ -551,7 +564,7 @@ void BorderedTextureAtlas_CreateTextures(bordered_texture_atlas_p atlas, GLuint 
     if (!atlas->data_has_been_laid_out)
         borderedTextureAtlas_LayOutTextures(atlas);
 
-    char *data = (char *) malloc(4 * atlas->result_page_width * atlas->result_page_width);
+    GLubyte *data = (GLubyte *) malloc(4 * atlas->result_page_width * atlas->result_page_width);
 
     glGenTextures((GLsizei) atlas->number_result_pages + additionalTextureNames, textureNames);
 
@@ -633,9 +646,58 @@ void BorderedTextureAtlas_CreateTextures(bordered_texture_atlas_p atlas, GLuint 
         }
 
         glBindTexture(GL_TEXTURE_2D, textureNames[page]);
-        ///gluBuild2DMipmaps(GL_TEXTURE_2D, 4, (GLsizei) atlas->result_page_width, (GLsizei) atlas->result_page_height[page], GL_RGBA, GL_UNSIGNED_BYTE, data);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)atlas->result_page_width, (GLsizei) atlas->result_page_height[page], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        if(glGenerateMipmap != NULL)
+        {
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
+        else
+        {
+            int mip_level = 1;
+            int w = atlas->result_page_width / 2;
+            int h = atlas->result_page_height[page] / 2;
+            GLubyte *mip_data = (GLubyte *) malloc(4 * w * h);
+
+            w = (w==0)?1:w;                                                     ///@PARANOID: tex atlas size can't been less or equal 2 x 2
+            h = (h==0)?1:h;
+            for(int i=0;i<h;i++)
+            {
+                for(int j=0;j<w;j++)
+                {
+                    mip_data[i * w * 4 + j * 4 + 0] = 0.25 * ((int)data[i * w * 16 + j * 8 + 0] + (int)data[i * w * 16 + j * 8 + 4 + 0] + (int)data[i * w * 16 + w * 8 + j * 8 + 0] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 0]);
+                    mip_data[i * w * 4 + j * 4 + 1] = 0.25 * ((int)data[i * w * 16 + j * 8 + 1] + (int)data[i * w * 16 + j * 8 + 4 + 1] + (int)data[i * w * 16 + w * 8 + j * 8 + 1] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 1]);
+                    mip_data[i * w * 4 + j * 4 + 2] = 0.25 * ((int)data[i * w * 16 + j * 8 + 2] + (int)data[i * w * 16 + j * 8 + 4 + 2] + (int)data[i * w * 16 + w * 8 + j * 8 + 2] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 2]);
+                    mip_data[i * w * 4 + j * 4 + 3] = 0.25 * ((int)data[i * w * 16 + j * 8 + 3] + (int)data[i * w * 16 + j * 8 + 4 + 3] + (int)data[i * w * 16 + w * 8 + j * 8 + 3] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 3]);
+                }
+            }
+
+            //char tgan[128];
+            //WriteTGAfile("mip_00.tga", data, atlas->result_page_width, atlas->result_page_height[page], 0);
+            //sprintf(tgan, "mip_%0.2d.tga", mip_level);
+            //WriteTGAfile(tgan, mip_data, w, h, 0);
+            glTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data);
+
+            while((w > 1) && (h > 1) /*&& (mip_level < 4)*/)
+            {
+                mip_level++;
+                w /= 2; w = (w==0)?1:w;
+                h /= 2; h = (h==0)?1:h;
+                for(int i=0;i<h;i++)
+                {
+                    for(int j=0;j<w;j++)
+                    {
+                        mip_data[i * w * 4 + j * 4 + 0] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 0] + (int)mip_data[i * w * 16 + j * 8 + 4 + 0] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 0] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 0]);
+                        mip_data[i * w * 4 + j * 4 + 1] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 1] + (int)mip_data[i * w * 16 + j * 8 + 4 + 1] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 1] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 1]);
+                        mip_data[i * w * 4 + j * 4 + 2] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 2] + (int)mip_data[i * w * 16 + j * 8 + 4 + 2] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 2] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 2]);
+                        mip_data[i * w * 4 + j * 4 + 3] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 3] + (int)mip_data[i * w * 16 + j * 8 + 4 + 3] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 3] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 3]);
+                    }
+                }
+                //sprintf(tgan, "mip_%0.2d.tga", mip_level);
+                //WriteTGAfile(tgan, mip_data, w, h, 0);
+                glTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data);
+            }
+            free(mip_data);
+        }
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
