@@ -84,7 +84,7 @@ void Cam_Apply(camera_p cam)
 
     M[3 * 4 + 0] = 0.0;
     M[3 * 4 + 1] = 0.0;
-    M[3 * 4 + 2] = 2.0 * cam->dist_near * cam->dist_far / (cam->dist_near - cam->dist_far);//-1.0;
+    M[3 * 4 + 2] = 2.0 * cam->dist_near * cam->dist_far / (cam->dist_near - cam->dist_far);
     M[3 * 4 + 3] = 0.0;
 
     glMatrixMode(GL_PROJECTION);
@@ -118,7 +118,7 @@ void Cam_Apply(camera_p cam)
 void Cam_SetFovAspect(camera_p cam, btScalar fov, btScalar aspect)
 {
     cam->fov = fov;
-    cam->aspect = aspect;tan(M_PI * cam->fov / 360.0);
+    cam->aspect = aspect;
     cam->f = tan(M_PI * cam->fov / 360.0);
     cam->h = 2.0 * cam->dist_near * cam->f;
     cam->w = cam->h * aspect;
