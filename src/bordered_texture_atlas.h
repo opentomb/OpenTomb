@@ -27,6 +27,7 @@
  */
 
 #include <stdint.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include "vt/tr_types.h"
 #include "polygon.h"

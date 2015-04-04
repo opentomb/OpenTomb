@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
 #include "bullet/LinearMath/btScalar.h"
@@ -80,9 +81,9 @@ void Frustum_Copy(frustum_p p, frustum_p src)
 int Frustum_GetFrustumsCount(struct frustum_s *f)
 {
     int i;
-    
+
     for(i=0;f;f=f->next,i++);
-    
+
     return i - 1;
 }
 

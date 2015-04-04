@@ -45,7 +45,7 @@ enum font_Type
 
 // This is predefined enumeration of font styles, which can be extended
 // with user-defined script functions.
-
+///@TODO: add system message console style
 enum font_Style
 {
         FONTSTYLE_CONSOLE_INFO,

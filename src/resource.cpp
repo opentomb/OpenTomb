@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <SDL2/SDL_opengl.h>
-#include <GL/glu.h>
+#include <SDL2/SDL.h>
+#include "gl_util.h"
 
 extern "C" {
 #include "lua/lua.h"
@@ -2421,7 +2421,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    gluBuild2DMipmaps(GL_TEXTURE_2D, 4, 4, 4, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
 
     //glDisable(GL_TEXTURE_2D); // Why it is here? It is blocking loading screen.
 

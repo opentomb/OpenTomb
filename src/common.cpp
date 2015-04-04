@@ -1,5 +1,6 @@
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_opengl.h>
 #include <stdio.h>
@@ -46,7 +47,7 @@ void Com_TakeScreenShot()
     surface->format->format = SDL_PIXELFORMAT_RGBA8888;
     surface->pixels = pixels;
     IMG_SavePNG(surface, fname);
-    
+
     surface->pixels = NULL;
     SDL_FreeSurface(surface);
     free(pixels);

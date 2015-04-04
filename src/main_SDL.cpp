@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
 #include <SDL2/SDL_image.h>
@@ -79,9 +80,6 @@ static int frame =  0;
 static int anim =   0;
 static int sprite = 0;
 
-static GLUquadricObj   *dbgSphere;
-static GLUquadricObj   *dbgCyl;
-static btScalar         dbgR = 128.0;
 
 engine_container_p      last_cont = NULL;
 
@@ -113,31 +111,6 @@ engine_container_p      last_cont = NULL;
  *      - click removal;
  *      - add ADPCM and CDAUDIO.WAD soundtrack support;
  */
-
-void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans)
-{
-    btScalar tr[16];
-    btScalar r = cshape->getRadius();
-    btScalar h = cshape->getHalfHeight();
-
-    gluQuadricDrawStyle(dbgSphere, GLU_LINE);
-    gluQuadricDrawStyle(dbgCyl, GLU_LINE);
-    glColor3f(1.0, 1.0, 1.0);
-    trans->getOpenGLMatrix(tr);
-
-    glPushMatrix();
-    glTranslatef(0.0, 0.0, -h);
-    glMultMatrixf(tr);
-    gluSphere(dbgSphere, r, 12, 12);
-    gluCylinder(dbgCyl, r, r, 2.0 * h, 12, 12);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(0.0, 0.0, h);
-    glMultMatrixf(tr);
-    gluSphere(dbgSphere, r, 12, 12);
-    glPopMatrix();
-}
 
 // =======================================================================
 // MAIN
@@ -307,13 +280,6 @@ void Engine_InitGL()
         glDisable(GL_MULTISAMPLE);
     }
 
-    dbgSphere = gluNewQuadric();
-    dbgCyl = gluNewQuadric();
-    gluQuadricDrawStyle(dbgSphere, GLU_FILL);
-    gluQuadricTexture(dbgSphere, true);
-    gluQuadricDrawStyle(dbgCyl, GLU_FILL);
-    gluQuadricTexture(dbgCyl, true);
-
     // Default state: Vertex array is enabled, all others disabled.. Drawable
     // items can rely on Vertex array to be enabled (but pointer can be
     // anything). They have to enable other arrays based on their need and then
@@ -426,6 +392,7 @@ void Engine_InitSDLVideo()
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+        SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
         if ((maxSamples == 0) || (renderer.settings.antialias_samples > maxSamples))
@@ -448,12 +415,22 @@ void Engine_InitSDLVideo()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
 
-    sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
-    sdl_gl_context = SDL_GL_CreateContext(sdl_window);
-
     // set the opengl context version
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+
+    sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
+    sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+    SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+
+    Con_AddLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_EVENT);
+    Con_AddLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_EVENT);
+    char buf[con_base.line_size];
+    snprintf(buf, con_base.line_size, "OpenGL version %s", glGetString(GL_VERSION));
+    Con_AddLine((const char*)buf, FONTSTYLE_CONSOLE_EVENT);
+    Con_AddLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_EVENT);
 }
 
 void Engine_InitSDLImage()
@@ -666,6 +643,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 void Engine_PrimaryMouseDown()
 {
     engine_container_p cont = Container_Create();
+    btScalar dbgR = 128.0;
     btScalar *v = engine_camera.pos;
     btScalar *dir = engine_camera.view_dir;
     btScalar new_pos[3];
@@ -819,8 +797,6 @@ void ShowDebugInfo()
                 trans.getOpenGLMatrix(tr);
                 glMultMatrixf(tr);
                 glColor3f(1.0, 1.0, 1.0);
-                gluQuadricDrawStyle(dbgSphere, GLU_LINE);
-                gluSphere(dbgSphere, dbgR, 12, 12);
                 //Render_DrawAxis();
                 glPopMatrix();
             }

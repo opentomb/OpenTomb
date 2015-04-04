@@ -24,20 +24,16 @@
 #ifndef GL_UTIL_H
 #define GL_UTIL_H
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #if defined(__MACOSX__)
-#include <OpenGL/gl.h>  /* Header File For The OpenGL Library */
-#include <OpenGL/glu.h> /* Header File For The GLU Library */
+#include <OpenGL/gl.h>          /* Header File For The OpenGL Library */
 #elif defined(__MACOS__)
-#include <gl.h>         /* Header File For The OpenGL Library */
-#include <glu.h>        /* Header File For The GLU Library */
+#include <gl.h>                 /* Header File For The OpenGL Library */
 #else
-#include <GL/gl.h>      /* Header File For The OpenGL Library */
-#include <GL/glu.h>     /* Header File For The GLU Library */
+#include <SDL2/SDL_platform.h>
+#include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */  
 #endif
 
-#define SAFE_GET_PROC( func, type, name) func = (type) SDL_GL_GetProcAddress(name)
+#define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
 //extern char *engine_gl_ext_str;
 #ifndef GL_GLEXT_PROTOTYPES
@@ -135,6 +131,7 @@ extern PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB;
 extern PFNGLGETBUFFERPARAMETERIVARBPROC glGetBufferParameterivARB;
 extern PFNGLGETBUFFERPOINTERVARBPROC glGetBufferPointervARB;
 
+extern PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 #endif
 
 void InitGLExtFuncs();

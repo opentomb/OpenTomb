@@ -3,6 +3,7 @@
 #define SYS_DEF_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_opengl.h>
 
@@ -33,6 +34,5 @@ void DebugKeys(int button, int state);
 
 void ShowDebugInfo();
 void SkeletalModelTestDraw();
-void Draw_CapsuleZ(btCapsuleShapeZ *cshape, btTransform *trans);
 
 #endif

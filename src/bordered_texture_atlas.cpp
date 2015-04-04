@@ -633,7 +633,9 @@ void BorderedTextureAtlas_CreateTextures(bordered_texture_atlas_p atlas, GLuint 
         }
 
         glBindTexture(GL_TEXTURE_2D, textureNames[page]);
-        gluBuild2DMipmaps(GL_TEXTURE_2D, 4, (GLsizei) atlas->result_page_width, (GLsizei) atlas->result_page_height[page], GL_RGBA, GL_UNSIGNED_BYTE, data);
+        ///gluBuild2DMipmaps(GL_TEXTURE_2D, 4, (GLsizei) atlas->result_page_width, (GLsizei) atlas->result_page_height[page], GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)atlas->result_page_width, (GLsizei) atlas->result_page_height[page], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }

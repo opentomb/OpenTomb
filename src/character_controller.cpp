@@ -225,7 +225,7 @@ void Character_Clean(struct entity_s *ent)
 
 int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
-    Con_Printf("Giving item %i x%i to entity %x", item_id, count, ent);
+    //Con_Printf("Giving item %i x%i to entity %x", item_id, count, ent);
     if(ent->character == NULL)
     {
         return 0;
@@ -1237,8 +1237,9 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar 
         return;
     }
 
-    resp->horizontal_collide = 0x00;
-    resp->vertical_collide = 0x00;
+    resp->horizontal_collide    = 0x00;
+    resp->vertical_collide      = 0x00;
+    resp->step_up               = 0x00;
 
     int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction);
     if((numPenetrationLoops > 0) && (step_up_check != 0.0))
@@ -1248,6 +1249,7 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar 
         {
             numPenetrationLoops = 0;
             vec3_set_zero(reaction);
+            resp->step_up = 0x01;
         }
         ent->character->collision_transform[12 + 2] -= step_up_check;
     }

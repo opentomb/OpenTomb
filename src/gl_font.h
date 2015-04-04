@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include "freetype2/ft2build.h"
 #include "freetype2/freetype/freetype.h"
