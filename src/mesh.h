@@ -14,6 +14,7 @@
 #define COLLISION_BOX                             (0x00000002)
 
 
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 #include "bullet/LinearMath/btScalar.h"

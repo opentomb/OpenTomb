@@ -28,6 +28,7 @@ typedef struct camera_s
     
     btScalar                    fov;
     btScalar                    aspect;
+    btScalar                    f;
     btScalar                    h;
     btScalar                    w;
     

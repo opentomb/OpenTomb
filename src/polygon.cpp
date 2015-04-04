@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include "polygon.h"
 #include "vmath.h"
@@ -196,7 +197,7 @@ int Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar
 {
     btScalar tt, u, v, E1[3], E2[3], P[3], Q[3], T[3];
     vertex_p vp;
-    
+
     u = vec3_dot(p->plane, dir);
     if(fabs(u) < 0.001 /*|| vec3_plane_dist(p->plane, dot) < -0.001*/)          // FIXME: magick
     {

@@ -1,25 +1,26 @@
 /* -*- Mode: C++; tab-width: 3; indent-tabs-mode: t; c-basic-offset: 3 -*- */
 /*================================================================
- * 
+ *
  * Project : OpenRaider
  * Author  : Terry 'Mongoose' Hendrix II
  * Website : http://www.westga.edu/~stu7440/
  * Email   : stu7440@westga.edu
  * Object  : gl_util
  * License : No use w/o permission (C) 2001 Mongoose
- * Comments: 
+ * Comments:
  *
  *
- *           This file was generated using Mongoose's C++ 
+ *           This file was generated using Mongoose's C++
  *           template generator script.  <stu7440@westga.edu>
- * 
- *-- History ------------------------------------------------- 
+ *
+ *-- History -------------------------------------------------
  *
  * 2001.12.31:
  * Mongoose - Created
  * TeslaRus - modyfied
  =================================================================*/
 
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_opengl.h>
 #include <string.h>
@@ -123,6 +124,8 @@ PFNGLMAPBUFFERARBPROC                   glMapBufferARB =                        
 PFNGLUNMAPBUFFERARBPROC                 glUnmapBufferARB =                      NULL;
 PFNGLGETBUFFERPARAMETERIVARBPROC        glGetBufferParameterivARB =             NULL;
 PFNGLGETBUFFERPOINTERVARBPROC           glGetBufferPointervARB =                NULL;
+
+PFNGLGENERATEMIPMAPEXTPROC              glGenerateMipmap =                      NULL;
 #endif
 
 char *engine_gl_ext_str = NULL;
@@ -135,8 +138,8 @@ void InitGLExtFuncs()
     const char* buf = (const char*)glGetString(GL_EXTENSIONS);                  ///@PARANOID: I do not know exactly, how much time returned string pointer is valid, so I made a copy;
     engine_gl_ext_str = (char*)malloc(strlen(buf) + 1);
     strcpy(engine_gl_ext_str, buf);
-    
-#ifndef GL_GLEXT_PROTOTYPES        
+
+#ifndef GL_GLEXT_PROTOTYPES
     /// VBO funcs
     if(IsGLExtensionSupported("GL_ARB_vertex_buffer_object"))
     {
@@ -148,10 +151,10 @@ void InitGLExtFuncs()
         SAFE_GET_PROC(glBufferSubDataARB, PFNGLBUFFERSUBDATAARBPROC, "glBufferSubDataARB");
         SAFE_GET_PROC(glGetBufferSubDataARB, PFNGLGETBUFFERSUBDATAARBPROC, "glGetBufferSubDataARB");
         SAFE_GET_PROC(glMapBufferARB, PFNGLMAPBUFFERARBPROC, "glMapBufferARB");
-        SAFE_GET_PROC(glUnmapBufferARB, PFNGLUNMAPBUFFERARBPROC, "glUnmapBufferARB");    
+        SAFE_GET_PROC(glUnmapBufferARB, PFNGLUNMAPBUFFERARBPROC, "glUnmapBufferARB");
         SAFE_GET_PROC(glGetBufferParameterivARB, PFNGLGETBUFFERPARAMETERIVARBPROC, "glGetBufferParameterivARB");
         SAFE_GET_PROC(glGetBufferPointervARB, PFNGLGETBUFFERPOINTERVARBPROC, "glGetBufferPointervARB");
-        
+
         SAFE_GET_PROC(glActiveTextureARB, PFNGLACTIVETEXTUREARBPROC, "glActiveTextureARB");
         SAFE_GET_PROC(glClientActiveTextureARB, PFNGLCLIENTACTIVETEXTUREARBPROC, "glClientActiveTextureARB");
 
@@ -190,6 +193,8 @@ void InitGLExtFuncs()
         SAFE_GET_PROC(glMultiTexCoord4ivARB, PFNGLMULTITEXCOORD4IVARBPROC, "glMultiTexCoord4ivARB");
         SAFE_GET_PROC(glMultiTexCoord4sARB, PFNGLMULTITEXCOORD4SARBPROC, "glMultiTexCoord4sARB");
         SAFE_GET_PROC(glMultiTexCoord4svARB, PFNGLMULTITEXCOORD4SVARBPROC, "glMultiTexCoord4svARB");
+
+        SAFE_GET_PROC(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC, "glGenerateMipmap");
     }
     if(IsGLExtensionSupported("GL_ARB_shading_language_100"))
     {
@@ -249,7 +254,7 @@ int IsGLExtensionSupported(const char *ext)
 {
     char *ch = engine_gl_ext_str, *chh;
     int len = strlen(ext);
-    
+
     if(ch && ch[0])
     {
         while((chh = strstr(ch, ext)) != NULL)
@@ -277,8 +282,45 @@ int checkOpenGLError()
         {
             return 0;
         }
-        Sys_DebugLog(GL_LOG_FILENAME, "glError: %s", gluErrorString(glErr));
-        Sys_DebugLog(GL_LOG_FILENAME, (const char*)gluErrorString(glErr));
+
+        switch(glErr)
+        {
+            case GL_INVALID_VALUE:
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_VALUE");
+                break;
+
+            case GL_INVALID_ENUM:
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_ENUM");
+                break;
+
+            case GL_INVALID_OPERATION:
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_INVALID_OPERATION");
+                break;
+
+            case GL_STACK_OVERFLOW:
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_OVERFLOW");
+                break;
+
+            case GL_STACK_UNDERFLOW:
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_STACK_UNDERFLOW");
+                break;
+
+            case GL_OUT_OF_MEMORY:
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: GL_OUT_OF_MEMORY");
+                break;
+
+               /* GL_CONTEXT_FLAG_ROBUST_ACCESS_BIT_ARB
+                  GL_LOSE_CONTEXT_ON_RESET_ARB
+                  GL_GUILTY_CONTEXT_RESET_ARB
+                  GL_INNOCENT_CONTEXT_RESET_ARB
+                  GL_UNKNOWN_CONTEXT_RESET_ARB
+                  GL_RESET_NOTIFICATION_STRATEGY_ARB
+                  GL_NO_RESET_NOTIFICATION_ARB*/
+
+            default:
+                Sys_DebugLog(GL_LOG_FILENAME, "glError: uncnown error = 0x%X", glErr);
+                break;
+        };
     }
     return 1;
 }
@@ -317,7 +359,7 @@ int loadShaderFromBuff(GLhandleARB ShaderObj, char * source)
     }
     glGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
     printInfoLog(ShaderObj);
-    
+
     return compileStatus != 0;
 }
 
@@ -348,7 +390,7 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName)
     fseek(file, 0, SEEK_SET);
     fread(buf, 1, size, file);
     fclose(file);
-    
+
     //printf ( "source = %s\n", buf );
     glShaderSourceARB(ShaderObj, 1, (const char **)&buf, &size);
     Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
@@ -361,6 +403,6 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName)
     }
     glGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
     printInfoLog(ShaderObj);
-    
+
     return compileStatus != 0;
 }

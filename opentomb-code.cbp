@@ -464,6 +464,7 @@
 		<Unit filename="scripts/system/sys_scripts.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="shaders/color_mult.vsh" />
 		<Unit filename="src/al/AL/al.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

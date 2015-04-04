@@ -1,5 +1,6 @@
 
 #include <stdint.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include "bullet/LinearMath/btScalar.h"
 #include "polygon.h"
@@ -157,7 +158,7 @@ void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform)
     {
         return;
     }
-    
+
     for(;p!=NULL;p=p->next)
     {
         polygon_p np = this->createPolygon(p->vertex_count);

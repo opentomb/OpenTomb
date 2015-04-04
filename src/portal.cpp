@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL_platform.h>
+#include <SDL2/SDL_opengl.h>
+
+#include "bullet/LinearMath/btScalar.h"
 #include "polygon.h"
 #include "portal.h"
 #include "vmath.h"
@@ -7,8 +11,6 @@
 #include "world.h"
 #include "render.h"
 #include "frustum.h"
-#include <SDL2/SDL_opengl.h>
-#include "bullet/LinearMath/btScalar.h"
 #include "engine.h"
 
 /*

@@ -1,4 +1,5 @@
 
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include <stdlib.h>
 #include <math.h>
@@ -17,8 +18,10 @@ void Cam_Init(camera_p cam)
     cam->dist_near = 1.0;
     cam->dist_far = 65536.0;
 
-    cam->h = 2.0 * cam->dist_near * tan( M_PI * cam->fov / 360.0);
+    cam->f = tan(M_PI * cam->fov / 360.0);
+    cam->h = 2.0 * cam->dist_near * cam->f;
     cam->w = cam->h * cam->aspect;
+    cam->f = 1.0 / cam->f;
 
     cam->frustum = Frustum_Create();
     cam->frustum->active = 1;
@@ -62,22 +65,64 @@ void Cam_Init(camera_p cam)
 
 void Cam_Apply(camera_p cam)
 {
+    GLfloat M[16];
+
+    M[0 * 4 + 0] = cam->f / cam->aspect;
+    M[0 * 4 + 1] = 0.0;
+    M[0 * 4 + 2] = 0.0;
+    M[0 * 4 + 3] = 0.0;
+
+    M[1 * 4 + 0] = 0.0;
+    M[1 * 4 + 1] = cam->f;
+    M[1 * 4 + 2] = 0.0;
+    M[1 * 4 + 3] = 0.0;
+
+    M[2 * 4 + 0] = 0.0;
+    M[2 * 4 + 1] = 0.0;
+    M[2 * 4 + 2] = (cam->dist_near + cam->dist_far) / (cam->dist_near - cam->dist_far);
+    M[2 * 4 + 3] =-1.0;
+
+    M[3 * 4 + 0] = 0.0;
+    M[3 * 4 + 1] = 0.0;
+    M[3 * 4 + 2] = 2.0 * cam->dist_near * cam->dist_far / (cam->dist_near - cam->dist_far);//-1.0;
+    M[3 * 4 + 3] = 0.0;
+
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(cam->fov, cam->aspect, cam->dist_near, cam->dist_far);
+    glLoadMatrixf(M);
+
+    M[0 * 4 + 0] = cam->right_dir[0];
+    M[1 * 4 + 0] = cam->right_dir[1];
+    M[2 * 4 + 0] = cam->right_dir[2];
+
+    M[0 * 4 + 1] = cam->up_dir[0];
+    M[1 * 4 + 1] = cam->up_dir[1];
+    M[2 * 4 + 1] = cam->up_dir[2];
+
+    M[0 * 4 + 2] = -cam->view_dir[0];
+    M[1 * 4 + 2] = -cam->view_dir[1];
+    M[2 * 4 + 2] = -cam->view_dir[2];
+
+    M[3 * 4 + 0] = -(M[0] * cam->pos[0] + M[4] * cam->pos[1] + M[8]  * cam->pos[2]);
+    M[3 * 4 + 1] = -(M[1] * cam->pos[0] + M[5] * cam->pos[1] + M[9]  * cam->pos[2]);
+    M[3 * 4 + 2] = -(M[2] * cam->pos[0] + M[6] * cam->pos[1] + M[10] * cam->pos[2]);
+
+    M[0 * 4 + 3] = 0.0;
+    M[1 * 4 + 3] = 0.0;
+    M[2 * 4 + 3] = 0.0;
+    M[3 * 4 + 3] = 1.0;
+
     glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    gluLookAt(cam->pos[0], cam->pos[1], cam->pos[2],                                                             // eye
-              cam->pos[0]+cam->view_dir[0], cam->pos[1]+cam->view_dir[1], cam->pos[2]+cam->view_dir[2],          // centre
-              cam->up_dir[0], cam->up_dir[1], cam->up_dir[2]);                                                   // UP dir
+    glLoadMatrixf(M);
 }
 
 void Cam_SetFovAspect(camera_p cam, btScalar fov, btScalar aspect)
 {
     cam->fov = fov;
-    cam->aspect = aspect;
-    cam->h = 2.0 * cam->dist_near * tan( M_PI * cam->fov / 360.0);
+    cam->aspect = aspect;tan(M_PI * cam->fov / 360.0);
+    cam->f = tan(M_PI * cam->fov / 360.0);
+    cam->h = 2.0 * cam->dist_near * cam->f;
     cam->w = cam->h * aspect;
+    cam->f = 1.0 / cam->f;
 }
 
 void Cam_MoveAlong(camera_p cam, btScalar dist)
