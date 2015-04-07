@@ -50,10 +50,12 @@ typedef struct gl_tex_font_s
     GLuint                  *gl_tex_indexes;
     GLint                    gl_max_tex_width;
     GLint                    gl_tex_width;
+    GLfloat                  gl_font_color[4];
 }gl_tex_font_t, *gl_tex_font_p;
 
 
 gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size);
+gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size);
 void glf_free_font(gl_tex_font_p glf);
 void glf_resize(gl_tex_font_p glf, uint16_t font_size);
 void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size);

@@ -171,7 +171,6 @@ void SkeletalModelTestDraw()
     frame %= smodel->animations[anim].frames_count;
     bframe = smodel->animations[anim].frames + frame;
 
-    glColor3b(0, 0, 0);
     Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
     Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
     Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
@@ -202,7 +201,6 @@ void SkeletalModelTestDraw()
     vec3_add(tr+12, mt->offset, bframe->pos);
     Mat4_set_qrotation(tr, btag->qrotate);
     //glEnable(GL_TEXTURE_2D);
-    glColor3f(1.0, 1.0, 1.0);
     glMultMatrixf(tr);
     Render_Mesh(mt->mesh, NULL, NULL);
     btag++;
@@ -280,13 +278,14 @@ void Engine_InitGL()
         glDisable(GL_MULTISAMPLE);
     }
 
-    // Default state: Vertex array is enabled, all others disabled.. Drawable
+    // Default state: Vertex array and color array are enabled, all others disabled.. Drawable
     // items can rely on Vertex array to be enabled (but pointer can be
     // anything). They have to enable other arrays based on their need and then
     // return to default state
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
 
-    // Default state for Alpha func: >=, 0.5. That's what all users of alpha
+    // Default state for Alpha func: >= 0.5. That's what all users of alpha
     // function use anyway.
     glAlphaFunc(GL_GEQUAL, 0.5);
 }
@@ -416,21 +415,21 @@ void Engine_InitSDLVideo()
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
 
     // set the opengl context version
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
-    Con_AddLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_EVENT);
-    Con_AddLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_EVENT);
+    Con_AddLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
+    Con_AddLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
     char buf[con_base.line_size];
     snprintf(buf, con_base.line_size, "OpenGL version %s", glGetString(GL_VERSION));
-    Con_AddLine((const char*)buf, FONTSTYLE_CONSOLE_EVENT);
-    Con_AddLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_EVENT);
+    Con_AddLine((const char*)buf, FONTSTYLE_CONSOLE_INFO);
+    Con_AddLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
 }
 
 void Engine_InitSDLImage()
@@ -544,12 +543,10 @@ void Engine_Display()
 {
     if(!done)
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );//| GL_ACCUM_BUFFER_BIT);
-        glColor4f(0.0, 0.0, 0.0, 1.0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
         glEnable(GL_TEXTURE_2D);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glEnableClientState(GL_COLOR_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
@@ -592,7 +589,7 @@ void Engine_Display()
             //glEnable(GL_BLEND);
             glEnable(GL_ALPHA_TEST);
             glLightfv(GL_LIGHT0, GL_POSITION, lp);
-            glColor3f(1.0, 1.0, 1.0);
+
 #if !SKELETAL_TEST
             Gui_DrawNotifier();
             if(engine_world.Character && engine_world.Character->character && main_inventory_manager)
@@ -771,18 +768,20 @@ void ShowDebugInfo()
     entity_p ent;
     btScalar tr[16];
     btTransform trans;
+    GLfloat color_array[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+
     vec3_copy(light_position, engine_camera.pos);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
-    glColor3f(1.0, 1.0, 1.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);
+    glColorPointer(3, GL_FLOAT, 0, color_array);
     glDrawArrays(GL_LINES, 0, 2);
 
 #if !SKELETAL_TEST
 
-    glColor3f(0.0, 0.0, 0.0);
+    /*//color3f(0.0, 0.0, 0.0);
     for(int j=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
     {
         btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[j];
@@ -796,12 +795,12 @@ void ShowDebugInfo()
                 glPushMatrix();
                 trans.getOpenGLMatrix(tr);
                 glMultMatrixf(tr);
-                glColor3f(1.0, 1.0, 1.0);
+                //color3f(1.0, 1.0, 1.0);
                 //Render_DrawAxis();
                 glPopMatrix();
             }
         }
-    }
+    }*/
 
 #endif
 

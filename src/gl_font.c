@@ -17,6 +17,7 @@
 
 #include "gl_font.h"
 
+#define vec4_copy(x, y) {(x)[0] = (y)[0]; (x)[1] = (y)[1]; (x)[2] = (y)[2]; (x)[3] = (y)[3];}
 
 gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size)
 {
@@ -26,6 +27,42 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
         glf->ft_face = NULL;
 
         if(FT_New_Face(ft_library, file_name, 0, &glf->ft_face))                //T4Larson <t4larson@gmail.com>: fixed font construction and destruction!
+        {
+            free(glf);
+            return NULL;
+        }
+
+        glf->glyphs_count = glf->ft_face->num_glyphs;
+        glf->glyphs = (char_info_p)malloc(glf->glyphs_count * sizeof(char_info_t));
+
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
+        glf->gl_tex_width = glf->gl_max_tex_width;
+        glf->gl_tex_indexes = NULL;
+        glf->gl_tex_indexes_count = 0;
+        glf->gl_real_tex_indexes_count = 0;
+        glf->gl_font_color[0] = 0.0;
+        glf->gl_font_color[1] = 0.0;
+        glf->gl_font_color[2] = 0.0;
+        glf->gl_font_color[3] = 1.0;
+        
+        glf_resize(glf, font_size);
+        FT_Select_Charmap(glf->ft_face, FT_ENCODING_UNICODE);
+
+        return glf;
+    }
+
+    return NULL;
+}
+
+
+gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size)
+{
+    if(ft_library != NULL)
+    {
+        gl_tex_font_p glf = (gl_tex_font_p)malloc(sizeof(gl_tex_font_t));
+        glf->ft_face = NULL;
+
+        if(FT_New_Memory_Face(ft_library, (const FT_Byte*)face_data, face_data_size, 0, &glf->ft_face))
         {
             free(glf);
             return NULL;
@@ -409,7 +446,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
     if(glf->gl_real_tex_indexes_count == 1)
     {
-        GLfloat *p, buffer[24 * utf8_strlen(text)];
+        GLfloat *p, buffer[48 * utf8_strlen(text)];
         GLuint elements_count = 0;
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
@@ -439,32 +476,38 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                 *p = y0;            p++;
                 *p = g->tex_x0;     p++;
                 *p = g->tex_y0;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
 
                 *p = x1;            p++;
                 *p = y0;            p++;
                 *p = g->tex_x1;     p++;
                 *p = g->tex_y0;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
 
                 *p = x1;            p++;
                 *p = y1;            p++;
                 *p = g->tex_x1;     p++;
                 *p = g->tex_y1;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
                 elements_count++;
 
                 *p = x0;            p++;
                 *p = y0;            p++;
                 *p = g->tex_x0;     p++;
                 *p = g->tex_y0;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
 
                 *p = x1;            p++;
                 *p = y1;            p++;
                 *p = g->tex_x1;     p++;
                 *p = g->tex_y1;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
 
                 *p = x0;            p++;
                 *p = y1;            p++;
                 *p = g->tex_x0;     p++;
                 *p = g->tex_y1;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
                 elements_count++;
             }
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;
@@ -474,13 +517,15 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         if(elements_count != 0)
         {
             glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[0]);
-            glVertexPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), buffer);
-            glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), buffer + 2);
+            glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer);
+            glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer + 2);
+            glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer + 4);
             glDrawArrays(GL_TRIANGLES, 0, elements_count * 3);
         }
     }
     else
     {
+        GLfloat *p, buffer[32];
         GLuint active_texture = 0;
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
@@ -489,7 +534,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         {
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
-
+            
             next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
             ch = nch;
             nch = nch2;
@@ -511,14 +556,34 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                 GLfloat y0 = y  + g->top;
                 GLfloat y1 = y0 - g->height;
 
-                GLfloat box[] = {
-                x0, y0, g->tex_x0, g->tex_y0,
-                x1, y0, g->tex_x1, g->tex_y0,
-                x1, y1, g->tex_x1, g->tex_y1,
-                x0, y1, g->tex_x0, g->tex_y1};
+                p = buffer;
+                *p = x0;            p++;
+                *p = y0;            p++;
+                *p = g->tex_x0;     p++;
+                *p = g->tex_y0;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
 
-                glVertexPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), box);
-                glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(GLfloat), box + 2);
+                *p = x1;            p++;
+                *p = y0;            p++;
+                *p = g->tex_x1;     p++;
+                *p = g->tex_y0;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                *p = x1;            p++;
+                *p = y1;            p++;
+                *p = g->tex_x1;     p++;
+                *p = g->tex_y1;     p++;
+                vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                *p = x0;            p++;
+                *p = y1;            p++;
+                *p = g->tex_x0;     p++;
+                *p = g->tex_y1;     p++;
+                vec4_copy(p, glf->gl_font_color);
+
+                glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer);
+                glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer + 2);
+                glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer + 4);
                 glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             }
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;

@@ -338,8 +338,8 @@ void printInfoLog (GLhandleARB object)
     {
         infoLog = (GLcharARB*)malloc(logLength);
         glGetInfoLogARB(object, logLength, &charsWritten, infoLog);
-        Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog:");
-        Sys_DebugLog(GL_LOG_FILENAME, (const char*)infoLog);
+        Sys_DebugLog(GL_LOG_FILENAME, "GL_InfoLog[%d]:", charsWritten);
+        Sys_DebugLog(GL_LOG_FILENAME, "%s", (const char*)infoLog);
         free(infoLog);
     }
 }

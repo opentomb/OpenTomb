@@ -29,7 +29,7 @@
 					<Add option="-O2" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
-					<Add option="-fno-exceptions -funsafe-math-optimizations -m32 -msse4 -mavx" />
+					<Add option="-fno-exceptions -funsafe-math-optimizations -m32 -msse3" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -42,7 +42,7 @@
 			<Add option="-DLOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS" />
 		</Compiler>
 		<Linker>
-			<Add option="-static -lmingw32 -lSDL2main -lSDL2.dll -lglu32 -lopengl32 -lz -lpthread" />
+			<Add option="-static -lmingw32 -lSDL2main -lSDL2.dll -lopengl32 -lz -lpthread" />
 		</Linker>
 		<Unit filename="autoexec.lua" />
 		<Unit filename="config.lua">
@@ -2522,15 +2522,6 @@
 		</Unit>
 		<Unit filename="src/freetype2/src/type42/type42.c">
 			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/winfonts/fnterrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/winfonts/winfnt.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/winfonts/winfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/frustum.cpp" />
 		<Unit filename="src/frustum.h">

@@ -30,7 +30,10 @@ extern render_DebugDrawer debugDrawer;
  * Shaders section
  */
 GLhandleARB color_mult_vsh, color_mult_program;
-GLint color_mult_tint_pos;
+GLint       color_mult_tint_pos;
+
+GLhandleARB main_vsh, main_fsh, main_program;
+GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
 
 bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
@@ -62,6 +65,20 @@ void Render_InitGlobals()
 
 void Render_DoShaders()
 {
+    main_program = glCreateProgramObjectARB();
+    main_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+    loadShaderFromFile(main_vsh, "shaders/main.vsh");
+    glAttachObjectARB(main_program, main_vsh);
+    glLinkProgramARB(main_program);
+    printInfoLog(main_program);
+
+    glUseProgramObjectARB(main_program);
+    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "modelViewProjectionMat");   //uniform	mat4
+    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "modelViewMat");   //uniform	mat4
+    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "projectionMat");   //uniform	mat4
+    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "transformMat");   //uniform	mat4
+    glUseProgramObjectARB(0);
+
     color_mult_program = glCreateProgramObjectARB();
     color_mult_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
     loadShaderFromFile(color_mult_vsh, "shaders/color_mult.vsh");
@@ -132,35 +149,39 @@ render_list_p Render_CreateRoomListArray(unsigned int count)
  */
 void Render_Sprite(struct sprite_s *sprite)
 {
-    btScalar v[12], *up, *right;
+    GLfloat *v, buf[24], *up, *right;
 
     up = renderer.cam->up_dir;
     right = renderer.cam->right_dir;
+    v = buf;
+    *v = sprite->right * right[0] + sprite->top * up[0];    v++;
+    *v = sprite->right * right[1] + sprite->top * up[1];    v++;
+    *v = sprite->right * right[2] + sprite->top * up[2];    v++;
+    vec3_set_one(v);    v += 3;
 
-    v[0] = sprite->right * right[0] + sprite->top * up[0];
-    v[1] = sprite->right * right[1] + sprite->top * up[1];
-    v[2] = sprite->right * right[2] + sprite->top * up[2];
+    *v = sprite->left * right[0] + sprite->top * up[0];     v++;
+    *v = sprite->left * right[1] + sprite->top * up[1];     v++;
+    *v = sprite->left * right[2] + sprite->top * up[2];     v++;
+    vec3_set_one(v);    v += 3;
 
-    v[3] = sprite->left * right[0] + sprite->top * up[0];
-    v[4] = sprite->left * right[1] + sprite->top * up[1];
-    v[5] = sprite->left * right[2] + sprite->top * up[2];
+    *v = sprite->left * right[0] + sprite->bottom * up[0];  v++;
+    *v = sprite->left * right[1] + sprite->bottom * up[1];  v++;
+    *v = sprite->left * right[2] + sprite->bottom * up[2];  v++;
+    vec3_set_one(v);    v += 3;
 
-    v[6] = sprite->left * right[0] + sprite->bottom * up[0];
-    v[7] = sprite->left * right[1] + sprite->bottom * up[1];
-    v[8] = sprite->left * right[2] + sprite->bottom * up[2];
-
-    v[9] = sprite->right * right[0] + sprite->bottom * up[0];
-    v[10]= sprite->right * right[1] + sprite->bottom * up[1];
-    v[11]= sprite->right * right[2] + sprite->bottom * up[2];
+    *v = sprite->right * right[0] + sprite->bottom * up[0]; v++;
+    *v = sprite->right * right[1] + sprite->bottom * up[1]; v++;
+    *v = sprite->right * right[2] + sprite->bottom * up[2]; v++;
+    vec3_set_one(v);
 
     glBindTexture(GL_TEXTURE_2D, renderer.world->textures[sprite->texture]);
 
     /// Perfect and easy Cochrane's optimisation!
-    glColor3f(1.0, 1.0, 1.0);
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glVertexPointer(3, GL_BT_SCALAR, 0, v);
+    glVertexPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), buf);
+    glColorPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), buf + 3);
     glTexCoordPointer(2, GL_FLOAT, 0, sprite->tex_coord);
-    glDrawArrays(GL_QUADS, 0, 4);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
 
@@ -952,8 +973,8 @@ void Render_DrawList()
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     }
-    glDisableClientState(GL_COLOR_ARRAY);                                       ///@FIXME: reduce number of gl state changes
-    glDisableClientState(GL_NORMAL_ARRAY);
+
+    glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer);
@@ -1023,7 +1044,6 @@ void Render_DrawList()
 
     if(render_dBSP.m_root->polygons_front != NULL)
     {
-        glEnableClientState(GL_COLOR_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
@@ -1075,12 +1095,10 @@ void Render_DrawList_DebugLines()
     {
         if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
-        glEnableClientState(GL_COLOR_ARRAY);
         if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
         debugDrawer.render();
-        glDisableClientState(GL_COLOR_ARRAY);
     }
 }
 
@@ -1318,18 +1336,26 @@ void render_DebugDrawer::reportErrorWarning(const char* warningString)
 
 void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
 {
-   {
-      //btVector3 to=pointOnB+normalOnB*distance;
-      //const btVector3&from = pointOnB;
-      //glColor4f(color.getX(), color.getY(), color.getZ(), 1.0f);
+    if(m_lines + 2 < m_max_lines)
+    {
+        GLfloat *v = m_buffer + 3 * 4 * m_lines;
+        m_lines += 2;
+        btVector3 to = pointOnB + normalOnB * distance;
 
-      //GLDebugDrawer::drawLine(from, to, color);
+        vec3_copy(v, pointOnB.m_floats);
+        v += 3;
+        vec3_copy(v, color.m_floats);
+        v += 3;
 
-      //glRasterPos3f(from.x(),  from.y(),  from.z());
-      //char buf[12];
-      //sprintf(buf," %d",lifeTime);
-      //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),buf);
-   }
+        vec3_copy(v, to.m_floats);
+        v += 3;
+        vec3_copy(v, color.m_floats);
+
+        //glRasterPos3f(from.x(),  from.y(),  from.z());
+        //char buf[12];
+        //sprintf(buf," %d",lifeTime);
+        //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),buf);
+    }
 }
 
 void render_DebugDrawer::render()

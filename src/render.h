@@ -162,7 +162,7 @@ void Render_Init();
 render_list_p Render_CreateRoomListArray(unsigned int count);
 void Render_Entity(struct entity_s *entity);                                    // отрисовка одного фрейма скелетной анимации
 void Render_RoomSprite(struct room_sprite_s *sp);
-void Render_SkeletalModel(struct ss_bone_frame_s *bframe);
+void Render_SkeletalModel(struct ss_bone_frame_s *bframe);//, GLfloat transform[16]);
 void Render_Sprite(struct sprite_s *sprite);
 void Render_SkyBox();
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
