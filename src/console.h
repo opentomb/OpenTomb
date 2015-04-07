@@ -32,7 +32,7 @@ typedef struct console_info_s
     char                      **log_lines;                  // Console lines
     
     uint16_t                    line_count;                 // Amount of shown lines
-    gui_fontstyle_p            *line_style;
+    uint16_t                   *line_style_id;
     char                      **line_text;                  // Console text
     
     uint16_t                    line_size;                  // Console line size

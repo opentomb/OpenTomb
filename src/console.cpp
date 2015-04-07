@@ -11,6 +11,7 @@
 #include "engine.h"
 #include "script.h"
 #include "gui.h"
+#include "vmath.h"
 
 console_info_t con_base;
 
@@ -72,12 +73,12 @@ void Con_Init()
     }
 
     con_base.line_text  = (char**)malloc(con_base.line_count*sizeof(char*));
-    con_base.line_style = (gui_fontstyle_p*)malloc(con_base.line_count*sizeof(gui_fontstyle_p));
+    con_base.line_style_id = (uint16_t*)malloc(con_base.line_count * sizeof(uint16_t));
 
     for(uint16_t i=0;i<con_base.line_count;i++)
     {
         con_base.line_text[i]  = (char*) calloc(con_base.line_size*sizeof(char), 1);
-        con_base.line_style[i] = NULL;
+        con_base.line_style_id[i] = FONTSTYLE_GENERIC;
     }
 
     con_base.log_lines = (char**) realloc(con_base.log_lines, con_base.log_lines_count * sizeof(char*));
@@ -90,10 +91,10 @@ void Con_Init()
 
 void Con_InitFonts()
 {
-    for(uint16_t i=0;i<con_base.line_count;i++)
+    /*for(uint16_t i=0;i<con_base.line_count;i++)
     {
         con_base.line_style[i] = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
-    }
+    }*/
     con_base.font = FontManager->GetFont(FONT_CONSOLE);
     Con_SetLineInterval(con_base.spacing);
 }
@@ -108,11 +109,11 @@ void Con_InitGlobals()
     con_base.log_lines_count = CON_MIN_LOG;
     con_base.log_lines       = NULL;
 
-    con_base.spacing    = CON_MIN_LINE_INTERVAL;
-    con_base.line_count = CON_MIN_LINES;
-    con_base.line_size  = CON_MIN_LINE_SIZE;
-    con_base.line_text  = NULL;
-    con_base.line_style = NULL;
+    con_base.spacing         = CON_MIN_LINE_INTERVAL;
+    con_base.line_count      = CON_MIN_LINES;
+    con_base.line_size       = CON_MIN_LINE_SIZE;
+    con_base.line_text       = NULL;
+    con_base.line_style_id   = NULL;
 
     con_base.showing_lines = con_base.line_count;
     con_base.show_cursor_period = 0.5;
@@ -127,7 +128,7 @@ void Con_Destroy()
             free(con_base.line_text[i]);
         }
         free(con_base.line_text);
-        free(con_base.line_style);
+        free(con_base.line_style_id);
 
         for(uint16_t i=0;i<con_base.log_lines_count;i++)
         {
@@ -167,24 +168,22 @@ void Con_Draw()
     {
         int x, y;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         Con_DrawBackground();
+        Con_DrawCursor();
+
         x = 8;
         y = con_base.cursor_y;
-
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
         for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
-            glColor4fv(con_base.line_style[i]->real_color);
-
+            GLfloat *col = FontManager->GetFontStyle((font_Style)con_base.line_style_id[i])->real_color;
             y += con_base.line_height;
+            vec4_copy(con_base.font->gl_font_color, col);
             glf_render_str(con_base.font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
         }
-
         glPopClientAttrib();
-        Con_DrawCursor();
     }
 }
 
@@ -193,22 +192,33 @@ void Con_DrawBackground()
     /*
      * Draw console background to see the text
      */
-    GLfloat rectCoords[8];
-    glColor4fv(con_base.background_color);
-    rectCoords[0] = 0.0;                        rectCoords[1] = (GLfloat)screen_info.h;
-    rectCoords[2] = 0.0;                        rectCoords[3] = (GLfloat)(con_base.cursor_y + con_base.line_height - 8);
-    rectCoords[4] = (GLfloat)screen_info.w;     rectCoords[5] = (GLfloat)(con_base.cursor_y + con_base.line_height - 8);
-    rectCoords[6] = (GLfloat)screen_info.w;     rectCoords[7] = (GLfloat)screen_info.h;
+    GLfloat *v, rect_array[24];
+    v = rect_array;
+    *v = 0.0;                                               v++;
+    *v = screen_info.h;                                     v++;
+    vec4_copy(v, con_base.background_color);                v += 4;
+    *v = 0.0;                                               v++;
+    *v = con_base.cursor_y + con_base.line_height - 8;      v++;
+    vec4_copy(v, con_base.background_color);                v += 4;
+    *v = screen_info.w;                                     v++;
+    *v = con_base.cursor_y + con_base.line_height - 8;      v++;
+    vec4_copy(v, con_base.background_color);                v += 4;
+    *v = screen_info.w;                                     v++;
+    *v = screen_info.h;                                     v++;
+    vec4_copy(v, con_base.background_color);
 
-    glVertexPointer(2, GL_FLOAT, 0, rectCoords);
+    glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), rect_array);
+    glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), rect_array + 2);
     glDrawArrays(GL_POLYGON, 0, 4);
 
     /*
      * Draw finalise line
      */
-    GLfloat white_color[4] = {1.0,1.0,1.0,0.7};
-    glColor4fv(white_color);
-    glVertexPointer(2, GL_FLOAT, 0, rectCoords + 2);
+    v = rect_array + 8;
+    v[0] = 1.0; v[1] = 1.0; v[2] = 1.0; v[3] = 0.7;     v += 6;
+    v[0] = 1.0; v[1] = 1.0; v[2] = 1.0; v[3] = 0.7;
+    glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), rect_array + 6);
+    glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), rect_array + 8);
     glDrawArrays(GL_LINES, 0, 2);
 }
 
@@ -228,13 +238,16 @@ void Con_DrawCursor()
 
     if(con_base.show_cursor)
     {
-        GLfloat coords[4];
-        GLfloat white_color[4] = {1.0,1.0,1.0,0.7};
-        glColor4fv(white_color);
-        coords[0] = (GLfloat)con_base.cursor_x;     coords[1] = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
-        coords[2] = (GLfloat)con_base.cursor_x;     coords[3] = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
-        glBindTexture(GL_TEXTURE_2D, 0);   // otherways cursor does not swown in smooth font case
-        glVertexPointer(2, GL_FLOAT, 0, coords);
+        GLfloat *v, cursor_array[12];
+        v = cursor_array;
+        *v = (GLfloat)con_base.cursor_x;                            v++;
+        *v = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;      v++;
+        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
+        *v = (GLfloat)con_base.cursor_x;                            v++;
+        *v = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;      v++;
+        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;
+        glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array);
+        glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array + 2);
         glDrawArrays(GL_LINES, 0, 2);
     }
 }
@@ -410,12 +423,12 @@ void Con_AddLine(const char *text, font_Style style)
             char *last = con_base.line_text[con_base.line_count-1];             // save pointer to the last log string
             for(uint16_t i=con_base.line_count-1;i>1;i--)                       // shift log
             {
-                con_base.line_style[i] = con_base.line_style[i-1];
+                con_base.line_style_id[i] = con_base.line_style_id[i-1];
                 con_base.line_text[i]  = con_base.line_text[i-1];            // shift is round
             }
 
             con_base.line_text[1] = last;                                     // cycle the shift
-            con_base.line_style[1] = FontManager->GetFontStyle(style);
+            con_base.line_style_id[1] = style;
             strncpy(con_base.line_text[1], text, con_base.line_size);
             con_base.line_text[1][con_base.line_size-1] = 0;                  // paranoid end of string
             text += con_base.line_size-1;
@@ -477,8 +490,8 @@ void Con_Clean()
 {
     for(uint16_t i=0;i<con_base.line_count;i++)
     {
-        con_base.line_text[i][0] = 0;
-        con_base.line_style[i]   = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
+        con_base.line_text[i][0]  = 0;
+        con_base.line_style_id[i] = FONTSTYLE_GENERIC;
     }
 }
 

@@ -458,7 +458,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
         rectCoords[2] = x1; rectCoords[3] = y0;
         rectCoords[4] = x1; rectCoords[5] = y1;
         rectCoords[6] = x0; rectCoords[7] = y1;
-        glColor4fv(style->rect_color);
+        color(style->rect_color);
         glVertexPointer(2, GL_FLOAT, 0, rectCoords);
         glDrawArrays(GL_POLYGON, 0, 4);
     }*/
@@ -466,15 +466,17 @@ void Gui_RenderStringLine(gui_text_line_p l)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if(style->shadowed)
     {
-        GLfloat temp[4] = {0.0f,0.0f,0.0f,(float)style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY}; // Derive alpha from base color.
-        glColor4fv(temp);
+        gl_font->gl_font_color[0] = 0.0f;
+        gl_font->gl_font_color[1] = 0.0f;
+        gl_font->gl_font_color[2] = 0.0f;
+        gl_font->gl_font_color[3] = (float)style->color[3] * GUI_FONT_SHADOW_TRANSPARENCY;// Derive alpha from base color.
         glf_render_str(gl_font,
                        (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
                        (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
                        l->text);
     }
 
-    glColor4fv(style->real_color);
+    vec4_copy(gl_font->gl_font_color, style->real_color);
     glf_render_str(gl_font, real_x, real_y, l->text);
 }
 
@@ -1285,20 +1287,19 @@ void Gui_SwitchGLMode(char is_gui)
 void Gui_DrawCrosshair()
 {
     GLfloat crosshairCoords[] = {
-            (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f),
-            (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f),
-            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f),
-            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f)
+            (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 1.0, 0.0, 0.0,
+            (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 1.0, 0.0, 0.0,
+            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 1.0, 0.0, 0.0,
+            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 1.0, 0.0, 0.0
     };
 
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);
 
-    glColor3f(1.0, 0.0, 0.0);
-
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glVertexPointer(2, GL_FLOAT, 0, crosshairCoords);
+    glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), crosshairCoords);
+    glColorPointer(3, GL_FLOAT, 5 * sizeof(GLfloat), crosshairCoords + 2);
     glDrawArrays(GL_LINES, 0, 4);
 
     glPopAttrib();
@@ -1365,7 +1366,6 @@ void Gui_DrawInventory()
 
     glEnable(GL_TEXTURE_2D);
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
@@ -1481,12 +1481,9 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     memcpy(rectColors + 4,  colorLowerRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
     memcpy(rectColors + 12, colorUpperLeft,  sizeof(GLfloat) * 4);
-    glEnableClientState(GL_COLOR_ARRAY);
     glColorPointer(4, GL_FLOAT, 0, rectColors);
 
     glDrawArrays(GL_POLYGON, 0, 4);
-
-    glDisableClientState(GL_COLOR_ARRAY);
 
     if(texture)
     {

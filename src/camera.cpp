@@ -23,6 +23,10 @@ void Cam_Init(camera_p cam)
     cam->w = cam->h * cam->aspect;
     cam->f = 1.0 / cam->f;
 
+    Mat4_E_macro(cam->gl_view_mat);
+    Mat4_E_macro(cam->gl_proj_mat);
+    Mat4_E_macro(cam->gl_view_proj_mat);
+
     cam->frustum = Frustum_Create();
     cam->frustum->active = 1;
     cam->frustum->cam_pos = cam->pos;
@@ -65,8 +69,9 @@ void Cam_Init(camera_p cam)
 
 void Cam_Apply(camera_p cam)
 {
-    GLfloat M[16];
+    GLfloat *M;
 
+    M = cam->gl_proj_mat;
     M[0 * 4 + 0] = cam->f / cam->aspect;
     M[0 * 4 + 1] = 0.0;
     M[0 * 4 + 2] = 0.0;
@@ -90,6 +95,7 @@ void Cam_Apply(camera_p cam)
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(M);
 
+    M = cam->gl_view_mat;
     M[0 * 4 + 0] = cam->right_dir[0];
     M[1 * 4 + 0] = cam->right_dir[1];
     M[2 * 4 + 0] = cam->right_dir[2];
@@ -113,9 +119,11 @@ void Cam_Apply(camera_p cam)
 
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(M);
+
+    Mat4_Mat4_mul_macro(cam->gl_view_proj_mat, cam->gl_view_mat, cam->gl_proj_mat);
 }
 
-void Cam_SetFovAspect(camera_p cam, btScalar fov, btScalar aspect)
+void Cam_SetFovAspect(camera_p cam, GLfloat fov, GLfloat aspect)
 {
     cam->fov = fov;
     cam->aspect = aspect;
@@ -125,43 +133,43 @@ void Cam_SetFovAspect(camera_p cam, btScalar fov, btScalar aspect)
     cam->f = 1.0 / cam->f;
 }
 
-void Cam_MoveAlong(camera_p cam, btScalar dist)
+void Cam_MoveAlong(camera_p cam, GLfloat dist)
 {
     cam->pos[0] += cam->view_dir[0] * dist;
     cam->pos[1] += cam->view_dir[1] * dist;
     cam->pos[2] += cam->view_dir[2] * dist;
 }
 
-void Cam_MoveStrafe(camera_p cam, btScalar dist)
+void Cam_MoveStrafe(camera_p cam, GLfloat dist)
 {
     cam->pos[0] += cam->right_dir[0] * dist;
     cam->pos[1] += cam->right_dir[1] * dist;
     cam->pos[2] += cam->right_dir[2] * dist;
 }
 
-void Cam_MoveVertical(camera_p cam, btScalar dist)
+void Cam_MoveVertical(camera_p cam, GLfloat dist)
 {
     cam->pos[0] += cam->up_dir[0] * dist;
     cam->pos[1] += cam->up_dir[1] * dist;
     cam->pos[2] += cam->up_dir[2] * dist;
 }
 
-void Cam_Shake(camera_p cam, btScalar power, btScalar time)
+void Cam_Shake(camera_p cam, GLfloat power, GLfloat time)
 {
     cam->shake_value = power;
     cam->shake_time  = time;
 }
 
-void Cam_DeltaRotation(camera_p cam, btScalar angles[3])                        //angles = {OX, OY, OZ}
+void Cam_DeltaRotation(camera_p cam, GLfloat angles[3])                         //angles = {OX, OY, OZ}
 {
-    btScalar R[4], Rt[4], temp[4];
-    btScalar sin_t2, cos_t2, t;
+    GLfloat R[4], Rt[4], temp[4];
+    GLfloat sin_t2, cos_t2, t;
 
     vec3_add(cam->ang, cam->ang, angles)
 
     t = -angles[2] / 2.0;                                                       // ROLL
-    sin_t2 = sin(t);
-    cos_t2 = cos(t);
+    sin_t2 = sinf(t);
+    cos_t2 = cosf(t);
     R[3] = cos_t2;
     R[0] = cam->view_dir[0] * sin_t2;
     R[1] = cam->view_dir[1] * sin_t2;
@@ -174,8 +182,8 @@ void Cam_DeltaRotation(camera_p cam, btScalar angles[3])                        
     vec4_mul(cam->up_dir, temp, Rt)
 
     t = -angles[0] / 2.0;                                                       // LEFT - RIGHT
-    sin_t2 = sin(t);
-    cos_t2 = cos(t);
+    sin_t2 = sinf(t);
+    cos_t2 = cosf(t);
     R[3] = cos_t2;
     R[0] = cam->up_dir[0] * sin_t2;
     R[1] = cam->up_dir[1] * sin_t2;
@@ -188,8 +196,8 @@ void Cam_DeltaRotation(camera_p cam, btScalar angles[3])                        
     vec4_mul(cam->view_dir, temp, Rt)
 
     t = angles[1] / 2.0;                                                        // UP - DOWN
-    sin_t2 = sin(t);
-    cos_t2 = cos(t);
+    sin_t2 = sinf(t);
+    cos_t2 = cosf(t);
     R[3] = cos_t2;
     R[0] = cam->right_dir[0] * sin_t2;
     R[1] = cam->right_dir[1] * sin_t2;
@@ -204,13 +212,13 @@ void Cam_DeltaRotation(camera_p cam, btScalar angles[3])                        
 
 void Cam_SetRotation(camera_p cam, btScalar angles[3])                          //angles = {OX, OY, OZ}
 {
-    btScalar R[4], Rt[4], temp[4];
-    btScalar sin_t2, cos_t2, t;
+    GLfloat R[4], Rt[4], temp[4];
+    GLfloat sin_t2, cos_t2, t;
 
     vec3_copy(cam->ang, angles);
 
-    sin_t2 = sin(angles[0]);
-    cos_t2 = cos(angles[0]);
+    sin_t2 = sinf(angles[0]);
+    cos_t2 = cosf(angles[0]);
 
     /*
      * LEFT - RIGHT INIT
@@ -231,8 +239,8 @@ void Cam_SetRotation(camera_p cam, btScalar angles[3])                          
     cam->up_dir[3] = 0.0;
 
     t = angles[1] / 2.0;                                                        // UP - DOWN
-    sin_t2 = sin(t);
-    cos_t2 = cos(t);
+    sin_t2 = sinf(t);
+    cos_t2 = cosf(t);
     R[3] = cos_t2;
     R[0] = cam->right_dir[0] * sin_t2;
     R[1] = cam->right_dir[1] * sin_t2;
@@ -245,8 +253,8 @@ void Cam_SetRotation(camera_p cam, btScalar angles[3])                          
     vec4_mul(cam->view_dir, temp, Rt);
 
     t = angles[2] / 2.0;                                                        // ROLL
-    sin_t2 = sin(t);
-    cos_t2 = cos(t);
+    sin_t2 = sinf(t);
+    cos_t2 = cosf(t);
     R[3] = cos_t2;
     R[0] = cam->view_dir[0] * sin_t2;
     R[1] = cam->view_dir[1] * sin_t2;
@@ -261,7 +269,7 @@ void Cam_SetRotation(camera_p cam, btScalar angles[3])                          
 
 void Cam_RecalcClipPlanes(camera_p cam)
 {
-    btScalar T[4], LU[4], V[3], *n = cam->clip_planes;
+    GLfloat T[4], LU[4], V[3], *n = cam->clip_planes;
 
     V[0] = cam->view_dir[0] * cam->dist_near;                                   // вектор - от позиции камеры до центра плоскости проекции
     V[1] = cam->view_dir[1] * cam->dist_near;
