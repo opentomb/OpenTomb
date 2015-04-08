@@ -1259,28 +1259,30 @@ void gui_InventoryManager::render()
  */
 void Gui_SwitchGLMode(char is_gui)
 {
-    static char curr_mode = 0;
-    if((0 != is_gui) && (0 == curr_mode))                                       // set gui coordinate system
+    if(0 != is_gui)                                                             // set gui coordinate system
     {
+        GLfloat M[16];
+        const GLfloat far_dist = 4096.0f;
+        const GLfloat near_dist = -1.0f;
+        Mat4_E_macro(M);
         glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+        glLoadMatrixf(M);
         glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho(0.0, (GLdouble)screen_info.w, 0.0, (GLdouble)screen_info.h, -1.0, 4096.0);
+        M[0 * 4 + 0] = 2.0 / ((GLfloat)screen_info.w);
+        M[1 * 4 + 1] = 2.0 / ((GLfloat)screen_info.h);
+        M[2 * 4 + 2] =-2.0 / (far_dist - near_dist);
+        M[3 * 4 + 0] =-1.0;
+        M[3 * 4 + 1] =-1.0;
+        M[3 * 4 + 2] =-(far_dist + near_dist) / (far_dist - near_dist);
+        glLoadMatrixf(M);
         glMatrixMode(GL_MODELVIEW);
-
-        curr_mode = is_gui;
     }
-    else if((0 == is_gui) && (0 != curr_mode))                                  // restore coordinate system
+    else                                                                        // set camera coordinate system
     {
         glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
+        glLoadMatrixf(engine_camera.gl_proj_mat);
         glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
-
-        curr_mode = is_gui;
+        glLoadMatrixf(engine_camera.gl_view_mat);
     }
 }
 
