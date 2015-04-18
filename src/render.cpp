@@ -577,9 +577,13 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
         glPushMatrix();
         glMultMatrixbt(btag->full_transform);
         Render_Mesh(btag->mesh, NULL, NULL);
-        if(btag->mesh2)
+        if(btag->mesh_slot)
         {
-            Render_SkinMesh(btag->mesh2, btag->transform);
+            Render_Mesh(btag->mesh_slot, NULL, NULL);
+        }
+        if(btag->mesh_skin)
+        {
+            Render_SkinMesh(btag->mesh_skin, btag->transform);
         }
         glPopMatrix();
     }

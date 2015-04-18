@@ -2696,10 +2696,11 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
     return 1;
 }
 
-///@TODO: Add override flag filling to script!
+///@TODO: update override flag filling script (TR_III+)
 // overrided == 0x00: no overriding;
 // overrided == 0x01: overriding weapons in the hands;
 // overrided == 0x02: overriding slots for weapons;
+// overrided == 0x03: draw weapon and original meshes;
 int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, weapon_model);
@@ -2707,52 +2708,51 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
     if((sm != NULL) && (ent->bf.bone_tag_count == sm->mesh_count))
     {
         skeletal_model_p bm = ent->bf.model;
-        const int tors_id = 7;
-        const int left_leg_id = 1;
-        const int right_leg_id = 4;
-        const int left_hand_id = 13;
-        const int right_hand_id = 10;
+        uint8_t map[] = {0, 0, 0, 0, 0, 0, 0, 0,    ///@FIXME: magick stick!
+                         1, 1, 1, 1, 1, 1, 0, 0};   // override hands;
+        if(ent->bf.next == NULL)
+        {
+            Entity_AddOverrideAnim(ent, weapon_model, map);
+        }
+        else
+        {
+            for(uint8_t i=0;i<bm->mesh_count;i++)
+            {
+                ent->bf.next->replace_map[i] = map[i];
+            }
+            ent->bf.next->model = sm;
+        }
 
         for(int i=0;i<bm->mesh_count;i++)
         {
             ent->bf.bone_tags[i].mesh = bm->mesh_tree[i].mesh;
+            ent->bf.bone_tags[i].mesh_slot = NULL;
         }
 
         if(armed != 0)
         {
-            if((bm->mesh_count > left_hand_id) && (sm->mesh_tree[left_hand_id].overrided == 0x01))
+            for(int i=0;i<bm->mesh_count;i++)
             {
-                ent->bf.bone_tags[left_hand_id].mesh = sm->mesh_tree[left_hand_id].mesh;
-            }
-            if((bm->mesh_count > right_hand_id) && (sm->mesh_tree[right_hand_id].overrided == 0x01))
-            {
-                ent->bf.bone_tags[right_hand_id].mesh = sm->mesh_tree[right_hand_id].mesh;
+                if(sm->mesh_tree[i].overrided == 0x01)
+                {
+                    ent->bf.bone_tags[i].mesh = sm->mesh_tree[i].mesh;
+                }
             }
         }
         else
         {
-            // disarm hands
-            if(bm->mesh_count > left_hand_id)
+            for(int i=0;i<bm->mesh_count;i++)
             {
-                ent->bf.bone_tags[left_hand_id].mesh = bm->mesh_tree[left_hand_id].mesh;
+                if(sm->mesh_tree[i].overrided == 0x02)
+                {
+                    ent->bf.bone_tags[i].mesh = sm->mesh_tree[i].mesh;
+                }
+                else if(sm->mesh_tree[i].overrided == 0x03)
+                {
+                    ent->bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh;
+                }
             }
-            if(bm->mesh_count > right_hand_id)
-            {
-                ent->bf.bone_tags[right_hand_id].mesh = bm->mesh_tree[right_hand_id].mesh;
-            }
-
-            if((bm->mesh_count > left_leg_id) && (sm->mesh_tree[left_leg_id].overrided == 0x02))
-            {
-                ent->bf.bone_tags[left_leg_id].mesh = sm->mesh_tree[left_leg_id].mesh;
-            }
-            if((bm->mesh_count > right_leg_id) && (sm->mesh_tree[right_leg_id].overrided == 0x02))
-            {
-                ent->bf.bone_tags[right_leg_id].mesh = sm->mesh_tree[right_leg_id].mesh;
-            }
-            if((bm->mesh_count > tors_id) && (sm->mesh_tree[tors_id].overrided == 0x02))
-            {
-                ent->bf.bone_tags[tors_id].mesh = sm->mesh_tree[tors_id].mesh;
-            }
+            ent->bf.next->model = NULL;
         }
 
         return 1;
@@ -2764,6 +2764,11 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         for(int i=0;i<bm->mesh_count;i++)
         {
             ent->bf.bone_tags[i].mesh = bm->mesh_tree[i].mesh;
+            ent->bf.bone_tags[i].mesh_slot = NULL;
+        }
+        if(ent->bf.next != NULL)
+        {
+            ent->bf.next->model = NULL;
         }
     }
 

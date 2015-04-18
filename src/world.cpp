@@ -714,7 +714,8 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
                 ent->bf.bone_tags[j].flag = ent->bf.model->mesh_tree[j].flag;
                 ent->bf.bone_tags[j].overrided = ent->bf.model->mesh_tree[j].overrided;
                 ent->bf.bone_tags[j].mesh = ent->bf.model->mesh_tree[j].mesh;
-                ent->bf.bone_tags[j].mesh2 = ent->bf.model->mesh_tree[j].mesh2;
+                ent->bf.bone_tags[j].mesh_skin = ent->bf.model->mesh_tree[j].mesh2;
+                ent->bf.bone_tags[j].mesh_slot = NULL;
 
                 vec3_copy(ent->bf.bone_tags[j].offset, ent->bf.model->mesh_tree[j].offset);
                 vec4_set_zero(ent->bf.bone_tags[j].qrotate);
@@ -1240,7 +1241,8 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
         bf->bone_tags[j].flag = bf->model->mesh_tree[j].flag;
         bf->bone_tags[j].overrided = bf->model->mesh_tree[j].overrided;
         bf->bone_tags[j].mesh = bf->model->mesh_tree[j].mesh;
-        bf->bone_tags[j].mesh2 = bf->model->mesh_tree[j].mesh2;
+        bf->bone_tags[j].mesh_skin = bf->model->mesh_tree[j].mesh2;
+        bf->bone_tags[j].mesh_slot = NULL;
 
         vec3_copy(bf->bone_tags[j].offset, bf->model->mesh_tree[j].offset);
         vec4_set_zero(bf->bone_tags[j].qrotate);

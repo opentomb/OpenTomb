@@ -480,7 +480,8 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint8_t *map)
             bf->bone_tags[i].flag = sm->mesh_tree[i].flag;
             bf->bone_tags[i].overrided = sm->mesh_tree[i].overrided;
             bf->bone_tags[i].mesh = sm->mesh_tree[i].mesh;
-            bf->bone_tags[i].mesh2 = sm->mesh_tree[i].mesh2;
+            bf->bone_tags[i].mesh_skin = sm->mesh_tree[i].mesh2;
+            bf->bone_tags[i].mesh_slot = NULL;
 
             vec3_copy(bf->bone_tags[i].offset, sm->mesh_tree[i].offset);
             vec4_set_zero(bf->bone_tags[i].qrotate);

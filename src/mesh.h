@@ -181,7 +181,8 @@ typedef struct static_mesh_s
 typedef struct ss_bone_tag_s
 {
     base_mesh_p         mesh;                                                   // base mesh - pointer to the first mesh in array
-    base_mesh_p         mesh2;                                                  // base skinned mesh for ТР4+
+    base_mesh_p         mesh_skin;                                              // base skinned mesh for ТР4+
+    base_mesh_p         mesh_slot;
     btScalar            offset[3];                                              // model position offset
 
     btScalar            qrotate[4];                                             // quaternion rotation

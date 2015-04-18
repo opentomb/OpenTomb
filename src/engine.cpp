@@ -2046,8 +2046,40 @@ int lua_SetEntityMeshswap(lua_State * lua)
 
     for(int i = 0; i < meshes_to_copy; i++)
     {
-        ent_dest->bf.bone_tags[i].mesh  = model_src->mesh_tree[i].mesh;
-        ent_dest->bf.bone_tags[i].mesh2 = model_src->mesh_tree[i].mesh2;
+        ent_dest->bf.bone_tags[i].mesh      = model_src->mesh_tree[i].mesh;
+        ent_dest->bf.bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh2;
+    }
+
+    return 0;
+}
+
+int lua_SetModelOverrideFlag(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (id_model, bone_num, flag)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    skeletal_model_p sm = World_GetModelByID(&engine_world, id);
+    if(sm != NULL)
+    {
+        int bone = lua_tointeger(lua, 2);
+        if(bone < sm->mesh_count)
+        {
+            sm->mesh_tree[bone].overrided = lua_tointeger(lua, 3);
+        }
+        else
+        {
+            Con_Printf("wrong bone number = %d", bone);
+        }
+    }
+    else
+    {
+        Con_Printf("can not find model with id = %d", id);
     }
 
     return 0;
@@ -2651,6 +2683,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
     lua_register(lua, "getEntityMoveType", lua_GetEntityMoveType);
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
+    lua_register(lua, "setModelOverrideFlag", lua_SetModelOverrideFlag);
     lua_register(lua, "setWeaponModel", lua_Character_SetWeaponModel);
 
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);

@@ -3930,7 +3930,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->bf.bone_tags[j].flag = entity->bf.model->mesh_tree[j].flag;
             entity->bf.bone_tags[j].overrided = entity->bf.model->mesh_tree[j].overrided;
             entity->bf.bone_tags[j].mesh = entity->bf.model->mesh_tree[j].mesh;
-            entity->bf.bone_tags[j].mesh2 = entity->bf.model->mesh_tree[j].mesh2;
+            entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh2;
+            entity->bf.bone_tags[j].mesh_slot = NULL;
 
             vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.model->mesh_tree[j].offset);
             vec4_set_zero(entity->bf.bone_tags[j].qrotate);
@@ -4002,16 +4003,14 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
             {
                 entity->bf.bone_tags[j].mesh = entity->bf.model->mesh_tree[j].mesh;
-                entity->bf.bone_tags[j].mesh2 = entity->bf.model->mesh_tree[j].mesh2;
+                entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh2;
+                entity->bf.bone_tags[j].mesh_slot = NULL;
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             BT_GenEntityRigidBody(entity);
             Character_Create(entity, 128.0, 60.0, 780.0);
             entity->character->state_func = State_Control_Lara;
 
-            uint8_t map[] = {0, 0, 0, 0, 0, 0, 0, 0,
-                             1, 1, 1, 1, 1, 1, 0, 0};   // override hands
-            Entity_AddOverrideAnim(entity, 3, map);
             continue;
         }
 
