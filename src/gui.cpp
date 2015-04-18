@@ -1288,11 +1288,11 @@ void Gui_SwitchGLMode(char is_gui)
 
 void Gui_DrawCrosshair()
 {
-    GLfloat crosshairCoords[] = {
-            (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 1.0, 0.0, 0.0,
-            (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 1.0, 0.0, 0.0,
-            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 1.0, 0.0, 0.0,
-            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 1.0, 0.0, 0.0
+    GLfloat crosshair_buf[] = {
+            (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
+            (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
+            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 1.0f, 0.0f, 0.0f,
+            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 1.0f, 0.0f, 0.0f
     };
 
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
@@ -1300,8 +1300,8 @@ void Gui_DrawCrosshair()
     glLineWidth(2.0);
 
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), crosshairCoords);
-    glColorPointer(3, GL_FLOAT, 5 * sizeof(GLfloat), crosshairCoords + 2);
+    glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), crosshair_buf);
+    glColorPointer(3, GL_FLOAT, 5 * sizeof(GLfloat), crosshair_buf + 2);
     glDrawArrays(GL_LINES, 0, 4);
 
     glPopAttrib();
@@ -1455,6 +1455,8 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
+    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    
     GLfloat texCoords[8];
     if(texture)
     {

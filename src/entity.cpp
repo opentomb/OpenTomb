@@ -52,7 +52,8 @@ entity_p Entity_Create()
     ret->bf.current_frame = 0;
     ret->bf.next_animation = 0;
     ret->bf.next_frame = 0;
-
+    ret->bf.replace_map = NULL;
+    ret->bf.next = NULL;
     ret->bf.bone_tag_count = 0;
     ret->bf.bone_tags = 0;
     vec3_set_zero(ret->bf.bb_max);
@@ -132,6 +133,33 @@ void Entity_Clear(entity_p entity)
             entity->bf.bone_tags = NULL;
             entity->bf.bone_tag_count = 0;
         }
+
+        if(entity->bf.replace_map != NULL)
+        {
+            free(entity->bf.replace_map);
+            entity->bf.replace_map = NULL;
+        }
+
+        for(ss_bone_frame_p bf=entity->bf.next;bf!=NULL;)
+        {
+            ss_bone_frame_p bf_next = bf->next;
+            bf->next = NULL;
+
+            if(bf->bone_tag_count)
+            {
+                free(bf->bone_tags);
+                bf->bone_tags = NULL;
+                bf->bone_tag_count = 0;
+            }
+            if(bf->replace_map != NULL)
+            {
+                free(bf->replace_map);
+                bf->replace_map = NULL;
+            }
+            free(bf);
+            bf = bf_next;
+        }
+        entity->bf.next = NULL;
     }
 }
 
@@ -306,7 +334,6 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
 {
     btScalar tr[16];
     btTransform bt_tr;
-    room_p old_room;
 
     if((ent->bf.model == NULL) || (ent->bt_body == NULL) || ((force == 0) && (ent->bf.model->animation_count == 1) && (ent->bf.model->animations->frames_count == 1)))
     {
@@ -417,6 +444,59 @@ void Entity_UpdateRotation(entity_p entity)
 }
 
 
+void Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint8_t *map)
+{
+    skeletal_model_p sm = World_GetModelByID(&engine_world, model_id);
+
+    if((sm != NULL) && (map != NULL) && (sm->mesh_count == ent->bf.model->mesh_count))
+    {
+        ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
+
+        bf->model = sm;
+        bf->next = ent->bf.next;
+        ent->bf.next = bf;
+
+        bf->frame_time = 0.0;
+        bf->next_state = 0;
+        bf->lerp = 0.0;
+        bf->current_animation = 0;
+        bf->current_frame = 0;
+        bf->next_animation = 0;
+        bf->next_frame = 0;
+        bf->replace_map = NULL;
+        bf->period = 1.0 / 30.0;;
+
+        vec3_set_zero(bf->bb_max);
+        vec3_set_zero(bf->bb_min);
+        vec3_set_zero(bf->centre);
+        vec3_set_zero(bf->pos);
+
+        bf->bone_tag_count = sm->mesh_count;
+        bf->replace_map = (uint8_t*)malloc(bf->bone_tag_count * sizeof(uint8_t));
+        bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
+        for(uint16_t i=0;i<bf->bone_tag_count;i++)
+        {
+            bf->replace_map[i] = map[i];
+            bf->bone_tags[i].flag = sm->mesh_tree[i].flag;
+            bf->bone_tags[i].overrided = sm->mesh_tree[i].overrided;
+            bf->bone_tags[i].mesh = sm->mesh_tree[i].mesh;
+            bf->bone_tags[i].mesh2 = sm->mesh_tree[i].mesh2;
+
+            vec3_copy(bf->bone_tags[i].offset, sm->mesh_tree[i].offset);
+            vec4_set_zero(bf->bone_tags[i].qrotate);
+            Mat4_E_macro(bf->bone_tags[i].transform);
+            Mat4_E_macro(bf->bone_tags[i].full_transform);
+        }
+    }
+}
+
+
+void Entity_SetModelToOverrideAnim(struct ss_bone_frame_s *bf, int model_id)
+{
+
+}
+
+
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
 {
     btScalar cmd_tr[3], tr[3];
@@ -481,7 +561,22 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
         }
         else
         {
-            vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, bf->lerp);
+            bone_tag_p ov_src_btag = src_btag;
+            bone_tag_p ov_next_btag = next_btag;
+            btScalar ov_lerp = bf->lerp;
+            for(ss_bone_frame_p ov_bf=bf->next;ov_bf!=NULL;ov_bf = ov_bf->next)
+            {
+                if((ov_bf->model != NULL) && (ov_bf->replace_map != NULL) && (ov_bf->replace_map[k] != 0))
+                {
+                    bone_frame_p ov_curr_bf = ov_bf->model->animations[ov_bf->current_animation].frames + ov_bf->current_frame;
+                    bone_frame_p ov_next_bf = ov_bf->model->animations[ov_bf->next_animation].frames + ov_bf->next_frame;
+                    ov_src_btag = ov_curr_bf->bone_tags + k;
+                    ov_next_btag = ov_next_bf->bone_tags + k;
+                    ov_lerp = ov_bf->lerp;
+                    break;
+                }
+            }
+            vec4_slerp(btag->qrotate, ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
         }
         Mat4_set_qrotation(btag->transform, btag->qrotate);
     }
@@ -794,7 +889,28 @@ void Entity_ProcessSector(struct entity_s *ent)
                                                                                     SECTOR_FLAG_CLIMB_SOUTH );
 
         ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
-        ent->character->height_info.ceiling_climb   = (ent->current_sector->flags & SECTOR_FLAG_CLIMB_CEILING);
+        ent->character->height_info.ceiling_climb   = 0x00;
+
+        for(room_sector_p rs=ent->current_sector;rs!=NULL;rs=rs->sector_above)
+        {
+            if(rs->flags & SECTOR_FLAG_CLIMB_CEILING)
+            {
+                ent->character->height_info.ceiling_climb = 0x01;
+                break;
+            }
+        }
+
+        if(ent->character->height_info.ceiling_climb == 0x00)
+        {
+            for(room_sector_p rs = ent->current_sector->sector_below;rs!=NULL;rs=rs->sector_below)
+            {
+                if(rs->flags & SECTOR_FLAG_CLIMB_CEILING)
+                {
+                    ent->character->height_info.ceiling_climb = 0x01;
+                    break;
+                }
+            }
+        }
 
         if(ent->current_sector->flags & SECTOR_FLAG_DEATH)
         {
@@ -802,7 +918,7 @@ void Entity_ProcessSector(struct entity_s *ent)
                (ent->move_type == MOVE_UNDER_WATER) ||
                (ent->move_type == MOVE_WADE)        ||
                (ent->move_type == MOVE_ON_WATER)    ||
-               (ent->move_type == MOVE_QUICKSAND)    )
+               (ent->move_type == MOVE_QUICKSAND))
             {
                 Character_SetParam(ent, PARAM_HEALTH, 0.0);
                 ent->character->resp.kill = 1;
@@ -1362,6 +1478,27 @@ int Entity_Frame(entity_p entity, btScalar time)
     entity->bf.frame_time = (btScalar)frame * entity->bf.period + dt;
     entity->bf.lerp = (entity->smooth_anim)?(dt / entity->bf.period):(0.0);
     Entity_GetNextFrame(&entity->bf, entity->bf.period, stc, &entity->bf.next_frame, &entity->bf.next_animation, entity->anim_flags);
+
+    /* There are stick code for multianimation (weapon mode) testing
+     * Model replacing will be upgraded too, I have to add override
+     * flags to model manually in the script*/
+    for(ss_bone_frame_p bf=entity->bf.next;bf!=NULL;bf=bf->next)
+    {
+        if((bf->model != NULL) && (bf->replace_map != NULL))
+        {
+            if((entity->character != NULL) && (entity->character->cmd.action == 0) && (bf->current_frame == 0))
+            {
+                continue;
+            }
+            Entity_GetNextFrame(bf, time, NULL, &bf->current_frame, &bf->current_animation, 0x00);
+            bf->frame_time += time;
+            t = (bf->frame_time) / bf->period;
+            dt = bf->frame_time - (btScalar)t * bf->period;
+            bf->frame_time = (btScalar)bf->current_frame * bf->period + dt;
+            bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+            Entity_GetNextFrame(bf, bf->period, NULL, &bf->next_frame, &bf->next_animation, 0x00);
+        }
+    }
 
     /*
      * Update acceleration

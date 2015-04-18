@@ -10,10 +10,10 @@
 #include <SDL2/SDL_opengl.h>
 #include <math.h>
 
-#include "freetype2/ft2build.h"
-#include "freetype2/freetype/freetype.h"
-#include "freetype2/freetype/ftglyph.h"
-#include "freetype2/freetype/ftmodapi.h"
+#include <ft2build.h>
+#include <freetype.h>
+#include <ftglyph.h>
+#include <ftmodapi.h>
 
 #include "gl_font.h"
 
@@ -44,7 +44,7 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
         glf->gl_font_color[1] = 0.0;
         glf->gl_font_color[2] = 0.0;
         glf->gl_font_color[3] = 1.0;
-        
+
         glf_resize(glf, font_size);
         FT_Select_Charmap(glf->ft_face, FT_ENCODING_UNICODE);
 
@@ -55,6 +55,14 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
 }
 
 
+/**
+ * Creates gl texture font from true type font;
+ * @param ft_library: base font library;
+ * @param face_data: pointer to the buffer with font file content; DO NOT FREE that pointer otherway using FT_Face prevets to crash;
+ * @param face_data_size: size of buffer with font file content;
+ * @param font_size: size of font glyph?
+ * @return pointer to the gl_tex_font_s structure;
+ */
 gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size)
 {
     if(ft_library != NULL)
@@ -534,7 +542,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         {
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
-            
+
             next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
             ch = nch;
             nch = nch2;

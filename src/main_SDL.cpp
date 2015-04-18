@@ -90,6 +90,12 @@ engine_container_p      last_cont = NULL;
  * 2) LUA enngine global script:
  *      - add base functions for entity manipulation, I.E.: health, collision callbacks,
  *        spawn, new, delete, inventory manipulation.
+ * 3) Skeletal models functionality:
+ *      - add multianimation system: weapon animations (not a car / byke case: it ia two entities
+ *        with the same coordinates / orientation);
+ *      - add head, torso rotation for actor->look_at (additional and final multianimation);
+ *      - add mesh replace system (I.E. Lara's head wit emotion / speek);
+ *      - fix animation interpolation in animations switch case;
  * 6) Menu (create own menu)
  *      - settings
  *      - map loading list
@@ -204,7 +210,7 @@ void SkeletalModelTestDraw()
     glMultMatrixf(tr);
     Render_Mesh(mt->mesh, NULL, NULL);
     btag++;
-    mt++;;
+    mt++;
     for(stack=0,i=1;i<bframe->bone_tag_count;i++,btag++,mt++)
     {
         tr[15] = 1.0;
@@ -258,7 +264,7 @@ void Engine_InitGL()
 {
     InitGLExtFuncs();
 #if SKELETAL_TEST
-    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClearColor(0.3, 0.3, 0.3, 1.0);
 #else
     glClearColor(0.0, 0.0, 0.0, 1.0);
 #endif
@@ -545,13 +551,23 @@ void Engine_Display()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
+        Cam_RecalcClipPlanes(&engine_camera);
+        Cam_Apply(&engine_camera);
+
+        // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
+        if(screen_info.show_debuginfo)
+        {
+            ShowDebugInfo();
+        }
+
         glEnable(GL_TEXTURE_2D);
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT); ///@PUSH <- GL_VERTEX_ARRAY | GL_COLOR_ARRAY
         glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
         glFrontFace(GL_CW);
 
+        // GL_VERTEX_ARRAY | GL_COLOR_ARRAY | GL_NORMAL_ARRAY | GL_TEXTURE_COORD_ARRAY
         if (renderer.settings.fog_enabled == 1)
         {
             glFogi(GL_FOG_MODE, GL_LINEAR);
@@ -562,11 +578,10 @@ void Engine_Display()
             glEnable(GL_FOG);
         }
 
-        Cam_RecalcClipPlanes(&engine_camera);
-        Cam_Apply(&engine_camera);
 #if !SKELETAL_TEST
         Render_GenWorldList();
         Render_DrawList();
+        if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 #else
         SkeletalModelTestDraw();
 #endif
@@ -598,11 +613,8 @@ void Engine_Display()
             }
 #endif
         }
-        glPopClientAttrib();
-        if(screen_info.show_debuginfo)
-        {
-            ShowDebugInfo();
-        }
+        glPopClientAttrib();        ///@POP -> GL_VERTEX_ARRAY | GL_COLOR_ARRAY
+
         Gui_Render();
         Gui_SwitchGLMode(0);
 
@@ -768,11 +780,12 @@ void ShowDebugInfo()
     entity_p ent;
     btScalar tr[16];
     btTransform trans;
-    GLfloat color_array[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
     vec3_copy(light_position, engine_camera.pos);
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
+    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);

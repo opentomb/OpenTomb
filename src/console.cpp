@@ -91,10 +91,6 @@ void Con_Init()
 
 void Con_InitFonts()
 {
-    /*for(uint16_t i=0;i<con_base.line_count;i++)
-    {
-        con_base.line_style[i] = FontManager->GetFontStyle(FONTSTYLE_GENERIC);
-    }*/
     con_base.font = FontManager->GetFont(FONT_CONSOLE);
     Con_SetLineInterval(con_base.spacing);
 }
@@ -169,6 +165,7 @@ void Con_Draw()
         int x, y;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         Con_DrawBackground();
         Con_DrawCursor();
 

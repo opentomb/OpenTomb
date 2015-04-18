@@ -32,9 +32,9 @@ extern render_DebugDrawer debugDrawer;
 GLhandleARB color_mult_vsh, color_mult_program;
 GLint       color_mult_tint_pos;
 
-GLhandleARB main_vsh, main_fsh, main_program;
+/*GLhandleARB main_vsh, main_fsh, main_program;
 GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
-
+*/
 bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
     engine_container_p cont = (engine_container_p)colObj->getUserPointer();
@@ -65,7 +65,7 @@ void Render_InitGlobals()
 
 void Render_DoShaders()
 {
-    main_program = glCreateProgramObjectARB();
+    /*main_program = glCreateProgramObjectARB();
     main_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
     loadShaderFromFile(main_vsh, "shaders/main.vsh");
     glAttachObjectARB(main_program, main_vsh);
@@ -73,11 +73,11 @@ void Render_DoShaders()
     printInfoLog(main_program);
 
     glUseProgramObjectARB(main_program);
-    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "modelViewProjectionMat");   //uniform	mat4
-    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "modelViewMat");   //uniform	mat4
-    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "projectionMat");   //uniform	mat4
-    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "transformMat");   //uniform	mat4
-    glUseProgramObjectARB(0);
+    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "modelViewProjectionMat");      //uniform   mat4
+    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "modelViewMat");                //uniform   mat4
+    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "projectionMat");               //uniform   mat4
+    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "transformMat");                //uniform   mat4
+    glUseProgramObjectARB(0);*/
 
     color_mult_program = glCreateProgramObjectARB();
     color_mult_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
@@ -87,7 +87,7 @@ void Render_DoShaders()
     printInfoLog(color_mult_program);
 
     glUseProgramObjectARB(color_mult_program);
-    color_mult_tint_pos = glGetUniformLocationARB(color_mult_program, "tintMult");   //uniform	vec4	tintMult;
+    color_mult_tint_pos = glGetUniformLocationARB(color_mult_program, "tintMult");                              //uniform   vec4;
     glUseProgramObjectARB(0);
 }
 
@@ -979,6 +979,7 @@ void Render_DrawList()
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer);
     }
+    glEnableClientState(GL_NORMAL_ARRAY);
 
     /*
      * NOW render transparency polygons
@@ -1044,7 +1045,6 @@ void Render_DrawList()
 
     if(render_dBSP.m_root->polygons_front != NULL)
     {
-        glEnableClientState(GL_NORMAL_ARRAY);
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);

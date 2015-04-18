@@ -1,0 +1,23 @@
+loadMap("data/tut1.tr4", 0, 0);
+
+setEntityPos(0, 11776.00, 11776.00, 0.00, 0.00, 0.00, 0.00);
+setEntitySpeed(0, 0.00, 0.00, 0.00);
+setEntityAnim(0, 103, 25);
+setEntityState(0, 2, 2);
+enableEntity(0);
+setEntityFlags(0, 0x0007, 0x0002);
+setEntityActivationMask(0, 0x0000);
+setEntityRoomMove(0, 0, 1, 0);
+removeAllItems(0);
+addItem(0, 0, 1);
+addItem(0, 10, 1);
+addItem(0, 50, 3);
+addItem(0, 51, 1);
+setCharacterParam(0, 0, 1000.00, 1000.00);
+setCharacterParam(0, 1, 1800.00, 1800.00);
+setCharacterParam(0, 2, 120.00, 120.00);
+setCharacterParam(0, 3, 240.00, 240.00);
+setCharacterParam(0, 4, 0.00, 0.00);
+setCharacterParam(0, 5, 0.00, 0.00);
+setCharacterParam(0, 6, 0.00, 0.00);
+setCharacterParam(0, 7, 0.00, 0.00);

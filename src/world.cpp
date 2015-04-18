@@ -627,7 +627,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
 {
     if(engine_world.entity_tree != NULL)
     {
-        skeletal_model_p model = World_FindModelByID(&engine_world, model_id);
+        skeletal_model_p model = World_GetModelByID(&engine_world, model_id);
         if(model != NULL)
         {
             entity_p ent = World_GetEntityByID(&engine_world, id);
@@ -1210,7 +1210,7 @@ int World_DeleteEntity(world_p world, struct entity_s *entity)
 
 int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
-    skeletal_model_p model = World_FindModelByID(world, model_id);
+    skeletal_model_p model = World_GetModelByID(world, model_id);
     if((model == NULL) || (world->items_tree == NULL))
     {
         return 0;
@@ -1230,6 +1230,8 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     bf->next_animation = 0;
     bf->next_frame = 0;
 
+    bf->replace_map = NULL;
+    bf->next = NULL;
     bf->model = model;
     bf->bone_tag_count = model->mesh_count;
     bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
@@ -1271,7 +1273,7 @@ int World_DeleteItem(world_p world, uint32_t item_id)
 }
 
 
-struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id)
+struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id)
 {
     long int i, min, max;
 
@@ -1312,7 +1314,7 @@ struct skeletal_model_s* World_FindModelByID(world_p w, uint32_t id)
  * find sprite by ID.
  * not a binary search - sprites may be not sorted by ID
  */
-struct sprite_s* World_FindSpriteByID(unsigned int ID, world_p world)
+struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world)
 {
     sprite_p sp = world->sprites;
     for(uint32_t i=0;i<world->sprites_count;i++,sp++)

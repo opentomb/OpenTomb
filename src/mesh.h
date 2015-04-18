@@ -217,7 +217,9 @@ typedef struct ss_bone_frame_s
     btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
 
-    struct skeletal_model_s    *model;                                          //
+    struct skeletal_model_s    *model;                                          // pointer to the base model
+    uint8_t                    *replace_map;
+    struct ss_bone_frame_s     *next;                                           // pointer to the multianimation mutators
 }ss_bone_frame_t, *ss_bone_frame_p;
 
 /*

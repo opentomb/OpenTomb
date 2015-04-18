@@ -18,7 +18,7 @@ void Cam_Init(camera_p cam)
     cam->dist_near = 1.0;
     cam->dist_far = 65536.0;
 
-    cam->f = tan(M_PI * cam->fov / 360.0);
+    cam->f = tanf(M_PI * cam->fov / 360.0);
     cam->h = 2.0 * cam->dist_near * cam->f;
     cam->w = cam->h * cam->aspect;
     cam->f = 1.0 / cam->f;
@@ -127,7 +127,7 @@ void Cam_SetFovAspect(camera_p cam, GLfloat fov, GLfloat aspect)
 {
     cam->fov = fov;
     cam->aspect = aspect;
-    cam->f = tan(M_PI * cam->fov / 360.0);
+    cam->f = tanf(M_PI * cam->fov / 360.0);
     cam->h = 2.0 * cam->dist_near * cam->f;
     cam->w = cam->h * aspect;
     cam->f = 1.0 / cam->f;

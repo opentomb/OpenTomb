@@ -121,7 +121,7 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 }
 
 /**
- * update current room of object
+ * update current room of bullet object
  */
 void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 {
@@ -1101,7 +1101,7 @@ int lua_SetStateChangeRange(lua_State * lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    skeletal_model_p model = World_GetModelByID(&engine_world, id);
 
     if(model == NULL)
     {
@@ -1161,7 +1161,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     int anim = lua_tointeger(lua, 2);
     int frame = lua_tointeger(lua, 3);
-    skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
         Con_Printf("can not find skeletal model with id = %d", id);
@@ -1207,7 +1207,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     int anim = lua_tointeger(lua, 2);
     int frame = lua_tointeger(lua, 3);
-    skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
         Con_Printf("can not find skeletal model with id = %d", id);
@@ -2040,7 +2040,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
     skeletal_model_p model_src;
 
     ent_dest   = World_GetEntityByID(&engine_world, id_dest);
-    model_src  = World_FindModelByID(&engine_world, id_src );
+    model_src  = World_GetModelByID(&engine_world, id_src );
 
     int meshes_to_copy = (ent_dest->bf.bone_tag_count > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->bf.bone_tag_count);
 
@@ -2048,6 +2048,30 @@ int lua_SetEntityMeshswap(lua_State * lua)
     {
         ent_dest->bf.bone_tags[i].mesh  = model_src->mesh_tree[i].mesh;
         ent_dest->bf.bone_tags[i].mesh2 = model_src->mesh_tree[i].mesh2;
+    }
+
+    return 0;
+}
+
+int lua_Character_SetWeaponModel(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_Printf("Wrong arguments count. Must be (id_entity, id_weapon_model, armed_state)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    if(ent != NULL)
+    {
+        Character_SetWeaponModel(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+    }
+    else
+    {
+        Con_Printf("can not find entity with id = %d", id);
     }
 
     return 0;
@@ -2437,7 +2461,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
     }
     id = lua_tointeger(lua, 1);
 
-    skeletal_model_p model = World_FindModelByID(&engine_world, id);
+    skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model != NULL)
     {
         polygon_p p=model->mesh_tree->mesh->transparency_polygons;
@@ -2627,6 +2651,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
     lua_register(lua, "getEntityMoveType", lua_GetEntityMoveType);
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
+    lua_register(lua, "setWeaponModel", lua_Character_SetWeaponModel);
+
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
 

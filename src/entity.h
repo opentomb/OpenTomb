@@ -111,6 +111,7 @@ int  Entity_Frame(entity_p entity, btScalar time);                 // frame + tr
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateRotation(entity_p entity);
+void Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint8_t *map);
 void Entity_CheckActivators(struct entity_s *ent);
 
 int  Entity_GetSubstanceState(entity_p entity);

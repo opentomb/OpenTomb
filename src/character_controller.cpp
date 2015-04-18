@@ -74,6 +74,12 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * ry)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * ry);
     ret->wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;
 
+    for(int i=0;i<PARAM_LASTINDEX;i++)
+    {
+        ret->parameters.param[i] = 0.0;
+        ret->parameters.maximum[i] = 0.0;
+    }
+
     ret->rx = rx;
     ret->ry = ry;
     ret->Height = h;
@@ -2688,4 +2694,78 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
     }
 
     return 1;
+}
+
+///@TODO: Add override flag filling to script!
+// overrided == 0x00: no overriding;
+// overrided == 0x01: overriding weapons in the hands;
+// overrided == 0x02: overriding slots for weapons;
+int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
+{
+    skeletal_model_p sm = World_GetModelByID(&engine_world, weapon_model);
+
+    if((sm != NULL) && (ent->bf.bone_tag_count == sm->mesh_count))
+    {
+        skeletal_model_p bm = ent->bf.model;
+        const int tors_id = 7;
+        const int left_leg_id = 1;
+        const int right_leg_id = 4;
+        const int left_hand_id = 13;
+        const int right_hand_id = 10;
+
+        for(int i=0;i<bm->mesh_count;i++)
+        {
+            ent->bf.bone_tags[i].mesh = bm->mesh_tree[i].mesh;
+        }
+
+        if(armed != 0)
+        {
+            if((bm->mesh_count > left_hand_id) && (sm->mesh_tree[left_hand_id].overrided == 0x01))
+            {
+                ent->bf.bone_tags[left_hand_id].mesh = sm->mesh_tree[left_hand_id].mesh;
+            }
+            if((bm->mesh_count > right_hand_id) && (sm->mesh_tree[right_hand_id].overrided == 0x01))
+            {
+                ent->bf.bone_tags[right_hand_id].mesh = sm->mesh_tree[right_hand_id].mesh;
+            }
+        }
+        else
+        {
+            // disarm hands
+            if(bm->mesh_count > left_hand_id)
+            {
+                ent->bf.bone_tags[left_hand_id].mesh = bm->mesh_tree[left_hand_id].mesh;
+            }
+            if(bm->mesh_count > right_hand_id)
+            {
+                ent->bf.bone_tags[right_hand_id].mesh = bm->mesh_tree[right_hand_id].mesh;
+            }
+
+            if((bm->mesh_count > left_leg_id) && (sm->mesh_tree[left_leg_id].overrided == 0x02))
+            {
+                ent->bf.bone_tags[left_leg_id].mesh = sm->mesh_tree[left_leg_id].mesh;
+            }
+            if((bm->mesh_count > right_leg_id) && (sm->mesh_tree[right_leg_id].overrided == 0x02))
+            {
+                ent->bf.bone_tags[right_leg_id].mesh = sm->mesh_tree[right_leg_id].mesh;
+            }
+            if((bm->mesh_count > tors_id) && (sm->mesh_tree[tors_id].overrided == 0x02))
+            {
+                ent->bf.bone_tags[tors_id].mesh = sm->mesh_tree[tors_id].mesh;
+            }
+        }
+
+        return 1;
+    }
+    else
+    {
+        // do unarmed default model
+        skeletal_model_p bm = ent->bf.model;
+        for(int i=0;i<bm->mesh_count;i++)
+        {
+            ent->bf.bone_tags[i].mesh = bm->mesh_tree[i].mesh;
+        }
+    }
+
+    return 0;
 }
