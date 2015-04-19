@@ -1440,261 +1440,94 @@
 		<Unit filename="src/entity.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/freetype2/freetype/config/ftconfig.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/config/ftheader.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/config/ftmodule.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/config/ftoption.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/config/ftstdlib.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/freetype.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftadvanc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftbbox.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftbdf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftbitmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftcache.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftchapters.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftcid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/fterrdef.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/fterrors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftgasp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftglyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftgxval.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftgzip.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftimage.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftincrem.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftlcdfil.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftlist.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftlzw.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftmac.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftmm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftmodapi.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftmoderr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftotval.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftoutln.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftpfr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftrender.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftsizes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftsnames.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftstroke.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftsynth.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftsystem.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/fttrigon.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/fttypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftwinfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ftxf86.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/autohint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftcalc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftdebug.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftdriver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftgloadr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftmemory.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftrfork.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftserv.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftstream.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/fttrace.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/ftvalid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/internal.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/pcftypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/psaux.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/pshints.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svbdf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svcid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svgldict.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svgxval.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svkern.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svmm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svotval.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svpfr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svpostnm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svpscmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svpsinfo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svsfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svttcmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svtteng.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svttglyf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svwinfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/services/svxf86nm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/sfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/t1types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/internal/tttypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/t1tables.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ttnameid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/tttables.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/tttags.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/freetype/ttunpat.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/ft2build.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/ftmodule.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/include/config/ftconfig.h" />
+		<Unit filename="src/freetype2/include/config/ftheader.h" />
+		<Unit filename="src/freetype2/include/config/ftmodule.h" />
+		<Unit filename="src/freetype2/include/config/ftoption.h" />
+		<Unit filename="src/freetype2/include/config/ftstdlib.h" />
+		<Unit filename="src/freetype2/include/freetype.h" />
+		<Unit filename="src/freetype2/include/ft2build.h" />
+		<Unit filename="src/freetype2/include/ftadvanc.h" />
+		<Unit filename="src/freetype2/include/ftautoh.h" />
+		<Unit filename="src/freetype2/include/ftbbox.h" />
+		<Unit filename="src/freetype2/include/ftbdf.h" />
+		<Unit filename="src/freetype2/include/ftbitmap.h" />
+		<Unit filename="src/freetype2/include/ftbzip2.h" />
+		<Unit filename="src/freetype2/include/ftcache.h" />
+		<Unit filename="src/freetype2/include/ftcffdrv.h" />
+		<Unit filename="src/freetype2/include/ftchapters.h" />
+		<Unit filename="src/freetype2/include/ftcid.h" />
+		<Unit filename="src/freetype2/include/fterrdef.h" />
+		<Unit filename="src/freetype2/include/fterrors.h" />
+		<Unit filename="src/freetype2/include/ftgasp.h" />
+		<Unit filename="src/freetype2/include/ftglyph.h" />
+		<Unit filename="src/freetype2/include/ftgxval.h" />
+		<Unit filename="src/freetype2/include/ftgzip.h" />
+		<Unit filename="src/freetype2/include/ftimage.h" />
+		<Unit filename="src/freetype2/include/ftincrem.h" />
+		<Unit filename="src/freetype2/include/ftlcdfil.h" />
+		<Unit filename="src/freetype2/include/ftlist.h" />
+		<Unit filename="src/freetype2/include/ftlzw.h" />
+		<Unit filename="src/freetype2/include/ftmac.h" />
+		<Unit filename="src/freetype2/include/ftmm.h" />
+		<Unit filename="src/freetype2/include/ftmodapi.h" />
+		<Unit filename="src/freetype2/include/ftmoderr.h" />
+		<Unit filename="src/freetype2/include/ftotval.h" />
+		<Unit filename="src/freetype2/include/ftoutln.h" />
+		<Unit filename="src/freetype2/include/ftpfr.h" />
+		<Unit filename="src/freetype2/include/ftrender.h" />
+		<Unit filename="src/freetype2/include/ftsizes.h" />
+		<Unit filename="src/freetype2/include/ftsnames.h" />
+		<Unit filename="src/freetype2/include/ftstroke.h" />
+		<Unit filename="src/freetype2/include/ftsynth.h" />
+		<Unit filename="src/freetype2/include/ftsystem.h" />
+		<Unit filename="src/freetype2/include/fttrigon.h" />
+		<Unit filename="src/freetype2/include/ftttdrv.h" />
+		<Unit filename="src/freetype2/include/fttypes.h" />
+		<Unit filename="src/freetype2/include/ftwinfnt.h" />
+		<Unit filename="src/freetype2/include/ftxf86.h" />
+		<Unit filename="src/freetype2/include/internal/autohint.h" />
+		<Unit filename="src/freetype2/include/internal/ftcalc.h" />
+		<Unit filename="src/freetype2/include/internal/ftdebug.h" />
+		<Unit filename="src/freetype2/include/internal/ftdriver.h" />
+		<Unit filename="src/freetype2/include/internal/ftgloadr.h" />
+		<Unit filename="src/freetype2/include/internal/ftmemory.h" />
+		<Unit filename="src/freetype2/include/internal/ftobjs.h" />
+		<Unit filename="src/freetype2/include/internal/ftpic.h" />
+		<Unit filename="src/freetype2/include/internal/ftrfork.h" />
+		<Unit filename="src/freetype2/include/internal/ftserv.h" />
+		<Unit filename="src/freetype2/include/internal/ftstream.h" />
+		<Unit filename="src/freetype2/include/internal/fttrace.h" />
+		<Unit filename="src/freetype2/include/internal/ftvalid.h" />
+		<Unit filename="src/freetype2/include/internal/internal.h" />
+		<Unit filename="src/freetype2/include/internal/psaux.h" />
+		<Unit filename="src/freetype2/include/internal/pshints.h" />
+		<Unit filename="src/freetype2/include/internal/services/svbdf.h" />
+		<Unit filename="src/freetype2/include/internal/services/svcid.h" />
+		<Unit filename="src/freetype2/include/internal/services/svgldict.h" />
+		<Unit filename="src/freetype2/include/internal/services/svgxval.h" />
+		<Unit filename="src/freetype2/include/internal/services/svkern.h" />
+		<Unit filename="src/freetype2/include/internal/services/svmm.h" />
+		<Unit filename="src/freetype2/include/internal/services/svotval.h" />
+		<Unit filename="src/freetype2/include/internal/services/svpfr.h" />
+		<Unit filename="src/freetype2/include/internal/services/svpostnm.h" />
+		<Unit filename="src/freetype2/include/internal/services/svprop.h" />
+		<Unit filename="src/freetype2/include/internal/services/svpscmap.h" />
+		<Unit filename="src/freetype2/include/internal/services/svpsinfo.h" />
+		<Unit filename="src/freetype2/include/internal/services/svsfnt.h" />
+		<Unit filename="src/freetype2/include/internal/services/svttcmap.h" />
+		<Unit filename="src/freetype2/include/internal/services/svtteng.h" />
+		<Unit filename="src/freetype2/include/internal/services/svttglyf.h" />
+		<Unit filename="src/freetype2/include/internal/services/svwinfnt.h" />
+		<Unit filename="src/freetype2/include/internal/services/svxf86nm.h" />
+		<Unit filename="src/freetype2/include/internal/sfnt.h" />
+		<Unit filename="src/freetype2/include/internal/t1types.h" />
+		<Unit filename="src/freetype2/include/internal/tttypes.h" />
+		<Unit filename="src/freetype2/include/t1tables.h" />
+		<Unit filename="src/freetype2/include/ttnameid.h" />
+		<Unit filename="src/freetype2/include/tttables.h" />
+		<Unit filename="src/freetype2/include/tttags.h" />
+		<Unit filename="src/freetype2/include/ttunpat.h" />
 		<Unit filename="src/freetype2/src/autofit/afangles.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

@@ -1,0 +1,14 @@
+*.a
+*.o
+*.d
+*.txt
+*.htm
+*.html
+build
+opentomb-code.depend
+opentomb-code.layout
+opentomb-code.cbp
+opentomb-code.cscope_file_list
+obj/
+bin/
+*.orig
