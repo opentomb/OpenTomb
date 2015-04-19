@@ -3311,7 +3311,8 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         tree_tag->mesh = world->meshes + (mesh_index[k]);
         tree_tag->mesh2 = NULL;
         tree_tag->flag = 0x00;
-        tree_tag->overrided = 0x00;
+        tree_tag->replace_anim = 0x00;
+        tree_tag->replace_mesh = 0x00;
         vec3_set_zero(tree_tag->offset);
         if(k == 0)
         {
@@ -3928,7 +3929,6 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
         {
             entity->bf.bone_tags[j].flag = entity->bf.model->mesh_tree[j].flag;
-            entity->bf.bone_tags[j].overrided = entity->bf.model->mesh_tree[j].overrided;
             entity->bf.bone_tags[j].mesh = entity->bf.model->mesh_tree[j].mesh;
             entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh2;
             entity->bf.bone_tags[j].mesh_slot = NULL;

@@ -2708,18 +2708,12 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
     if((sm != NULL) && (ent->bf.bone_tag_count == sm->mesh_count))
     {
         skeletal_model_p bm = ent->bf.model;
-        uint8_t map[] = {0, 0, 0, 0, 0, 0, 0, 0,    ///@FIXME: magick stick!
-                         1, 1, 1, 1, 1, 1, 0, 0};   // override hands;
         if(ent->bf.next == NULL)
         {
-            Entity_AddOverrideAnim(ent, weapon_model, map);
+            Entity_AddOverrideAnim(ent, weapon_model);
         }
         else
         {
-            for(uint8_t i=0;i<bm->mesh_count;i++)
-            {
-                ent->bf.next->replace_map[i] = map[i];
-            }
             ent->bf.next->model = sm;
         }
 
@@ -2733,7 +2727,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         {
             for(int i=0;i<bm->mesh_count;i++)
             {
-                if(sm->mesh_tree[i].overrided == 0x01)
+                if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
                     ent->bf.bone_tags[i].mesh = sm->mesh_tree[i].mesh;
                 }
@@ -2743,11 +2737,11 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         {
             for(int i=0;i<bm->mesh_count;i++)
             {
-                if(sm->mesh_tree[i].overrided == 0x02)
+                if(sm->mesh_tree[i].replace_mesh == 0x02)
                 {
                     ent->bf.bone_tags[i].mesh = sm->mesh_tree[i].mesh;
                 }
-                else if(sm->mesh_tree[i].overrided == 0x03)
+                else if(sm->mesh_tree[i].replace_mesh == 0x03)
                 {
                     ent->bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh;
                 }

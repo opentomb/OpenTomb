@@ -388,7 +388,8 @@ mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
         ret[i].mesh = src[i].mesh;
         ret[i].flag = src[i].flag;
         vec3_copy(ret[i].offset, src[i].offset);
-        ret[i].overrided = src[i].overrided;
+        ret[i].replace_anim = src[i].replace_anim;
+        ret[i].replace_mesh = src[i].replace_mesh;
     }
     return ret;
 }

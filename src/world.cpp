@@ -712,7 +712,6 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             for(uint16_t j=0;j<model->mesh_count;j++)
             {
                 ent->bf.bone_tags[j].flag = ent->bf.model->mesh_tree[j].flag;
-                ent->bf.bone_tags[j].overrided = ent->bf.model->mesh_tree[j].overrided;
                 ent->bf.bone_tags[j].mesh = ent->bf.model->mesh_tree[j].mesh;
                 ent->bf.bone_tags[j].mesh_skin = ent->bf.model->mesh_tree[j].mesh2;
                 ent->bf.bone_tags[j].mesh_slot = NULL;
@@ -723,7 +722,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
                 Mat4_E_macro(ent->bf.bone_tags[j].full_transform);
             }
 
-            Entity_SetAnimation(ent, 0, 0);                                      // Set zero animation and zero frame
+            Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
             BT_GenEntityRigidBody(ent);
 
             Entity_RebuildBV(ent);
@@ -1231,7 +1230,6 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     bf->next_animation = 0;
     bf->next_frame = 0;
 
-    bf->replace_map = NULL;
     bf->next = NULL;
     bf->model = model;
     bf->bone_tag_count = model->mesh_count;
@@ -1239,7 +1237,6 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     for(uint16_t j=0;j<bf->bone_tag_count;j++)
     {
         bf->bone_tags[j].flag = bf->model->mesh_tree[j].flag;
-        bf->bone_tags[j].overrided = bf->model->mesh_tree[j].overrided;
         bf->bone_tags[j].mesh = bf->model->mesh_tree[j].mesh;
         bf->bone_tags[j].mesh_skin = bf->model->mesh_tree[j].mesh2;
         bf->bone_tags[j].mesh_slot = NULL;

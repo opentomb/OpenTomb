@@ -52,7 +52,6 @@ entity_p Entity_Create()
     ret->bf.current_frame = 0;
     ret->bf.next_animation = 0;
     ret->bf.next_frame = 0;
-    ret->bf.replace_map = NULL;
     ret->bf.next = NULL;
     ret->bf.bone_tag_count = 0;
     ret->bf.bone_tags = 0;
@@ -134,12 +133,6 @@ void Entity_Clear(entity_p entity)
             entity->bf.bone_tag_count = 0;
         }
 
-        if(entity->bf.replace_map != NULL)
-        {
-            free(entity->bf.replace_map);
-            entity->bf.replace_map = NULL;
-        }
-
         for(ss_bone_frame_p bf=entity->bf.next;bf!=NULL;)
         {
             ss_bone_frame_p bf_next = bf->next;
@@ -151,11 +144,7 @@ void Entity_Clear(entity_p entity)
                 bf->bone_tags = NULL;
                 bf->bone_tag_count = 0;
             }
-            if(bf->replace_map != NULL)
-            {
-                free(bf->replace_map);
-                bf->replace_map = NULL;
-            }
+
             free(bf);
             bf = bf_next;
         }
@@ -444,11 +433,11 @@ void Entity_UpdateRotation(entity_p entity)
 }
 
 
-void Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint8_t *map)
+void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, model_id);
 
-    if((sm != NULL) && (map != NULL) && (sm->mesh_count == ent->bf.model->mesh_count))
+    if((sm != NULL) && (sm->mesh_count == ent->bf.model->mesh_count))
     {
         ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
 
@@ -463,7 +452,6 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint8_t *map)
         bf->current_frame = 0;
         bf->next_animation = 0;
         bf->next_frame = 0;
-        bf->replace_map = NULL;
         bf->period = 1.0 / 30.0;;
 
         vec3_set_zero(bf->bb_max);
@@ -472,13 +460,10 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint8_t *map)
         vec3_set_zero(bf->pos);
 
         bf->bone_tag_count = sm->mesh_count;
-        bf->replace_map = (uint8_t*)malloc(bf->bone_tag_count * sizeof(uint8_t));
         bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
         for(uint16_t i=0;i<bf->bone_tag_count;i++)
         {
-            bf->replace_map[i] = map[i];
             bf->bone_tags[i].flag = sm->mesh_tree[i].flag;
-            bf->bone_tags[i].overrided = sm->mesh_tree[i].overrided;
             bf->bone_tags[i].mesh = sm->mesh_tree[i].mesh;
             bf->bone_tags[i].mesh_skin = sm->mesh_tree[i].mesh2;
             bf->bone_tags[i].mesh_slot = NULL;
@@ -489,12 +474,6 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint8_t *map)
             Mat4_E_macro(bf->bone_tags[i].full_transform);
         }
     }
-}
-
-
-void Entity_SetModelToOverrideAnim(struct ss_bone_frame_s *bf, int model_id)
-{
-
 }
 
 
@@ -567,7 +546,7 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
             btScalar ov_lerp = bf->lerp;
             for(ss_bone_frame_p ov_bf=bf->next;ov_bf!=NULL;ov_bf = ov_bf->next)
             {
-                if((ov_bf->model != NULL) && (ov_bf->replace_map != NULL) && (ov_bf->replace_map[k] != 0))
+                if((ov_bf->model != NULL) && (ov_bf->model->mesh_tree[k].replace_anim != 0))
                 {
                     bone_frame_p ov_curr_bf = ov_bf->model->animations[ov_bf->current_animation].frames + ov_bf->current_frame;
                     bone_frame_p ov_next_bf = ov_bf->model->animations[ov_bf->next_animation].frames + ov_bf->next_frame;
@@ -1485,7 +1464,7 @@ int Entity_Frame(entity_p entity, btScalar time)
      * flags to model manually in the script*/
     for(ss_bone_frame_p bf=entity->bf.next;bf!=NULL;bf=bf->next)
     {
-        if((bf->model != NULL) && (bf->replace_map != NULL))
+        if(bf->model != NULL)
         {
             if((entity->character != NULL) && (entity->character->cmd.action == 0) && (bf->current_frame == 0))
             {
