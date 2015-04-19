@@ -38,7 +38,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option='-I&quot;src\bullet&quot; -I&quot;src\freetype2&quot; -I&quot;src\image\jpeg-9&quot; -I&quot;src\image\libpng-1.6.2&quot; -Wno-sign-compare' />
+			<Add option='-I&quot;src\bullet&quot; -I&quot;src\freetype2\include&quot; -I&quot;src\image\jpeg-9&quot; -I&quot;src\image\libpng-1.6.2&quot; -Wno-sign-compare' />
 			<Add option="-DLOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS" />
 		</Compiler>
 		<Linker>
@@ -1528,105 +1528,55 @@
 		<Unit filename="src/freetype2/include/tttables.h" />
 		<Unit filename="src/freetype2/include/tttags.h" />
 		<Unit filename="src/freetype2/include/ttunpat.h" />
-		<Unit filename="src/freetype2/src/autofit/afangles.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afangles.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afcjk.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afcjk.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afdummy.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afdummy.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aferrors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afglobal.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afglobal.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afhints.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afhints.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afindic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afindic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aflatin.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aflatin.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aflatin2.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aflatin2.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afloader.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afloader.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afmodule.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afmodule.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aftypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afwarp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afwarp.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/autofit/afangles.h" />
+		<Unit filename="src/freetype2/src/autofit/afangles.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afblue.h" />
+		<Unit filename="src/freetype2/src/autofit/afblue.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afcjk.h" />
+		<Unit filename="src/freetype2/src/autofit/afcjk.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afcover.h" />
+		<Unit filename="src/freetype2/src/autofit/afdummy.h" />
+		<Unit filename="src/freetype2/src/autofit/afdummy.hpp" />
+		<Unit filename="src/freetype2/src/autofit/aferrors.h" />
+		<Unit filename="src/freetype2/src/autofit/afglobal.h" />
+		<Unit filename="src/freetype2/src/autofit/afglobal.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afhints.h" />
+		<Unit filename="src/freetype2/src/autofit/afhints.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afindic.h" />
+		<Unit filename="src/freetype2/src/autofit/afindic.hpp" />
+		<Unit filename="src/freetype2/src/autofit/aflatin.h" />
+		<Unit filename="src/freetype2/src/autofit/aflatin.hpp" />
+		<Unit filename="src/freetype2/src/autofit/aflatin2.h" />
+		<Unit filename="src/freetype2/src/autofit/aflatin2.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afloader.h" />
+		<Unit filename="src/freetype2/src/autofit/afloader.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afmodule.h" />
+		<Unit filename="src/freetype2/src/autofit/afmodule.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afpic.h" />
+		<Unit filename="src/freetype2/src/autofit/afpic.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afranges.h" />
+		<Unit filename="src/freetype2/src/autofit/afranges.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afscript.h" />
+		<Unit filename="src/freetype2/src/autofit/afstyles.h" />
+		<Unit filename="src/freetype2/src/autofit/aftypes.h" />
+		<Unit filename="src/freetype2/src/autofit/afwarp.h" />
+		<Unit filename="src/freetype2/src/autofit/afwarp.hpp" />
+		<Unit filename="src/freetype2/src/autofit/afwrtsys.h" />
 		<Unit filename="src/freetype2/src/autofit/autofit.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/basepic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/basepic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftadvanc.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/autofit/hbshim.h" />
+		<Unit filename="src/freetype2/src/autofit/hbshim.hpp" />
+		<Unit filename="src/freetype2/src/base/basepic.h" />
+		<Unit filename="src/freetype2/src/base/basepic.hpp" />
+		<Unit filename="src/freetype2/src/base/ftadvanc.hpp" />
 		<Unit filename="src/freetype2/src/base/ftapi.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/freetype2/src/base/ftbase.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftbase.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftbase.h" />
 		<Unit filename="src/freetype2/src/base/ftbbox.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1636,15 +1586,11 @@
 		<Unit filename="src/freetype2/src/base/ftbitmap.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftcalc.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftcalc.hpp" />
 		<Unit filename="src/freetype2/src/base/ftcid.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftdbgmem.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftdbgmem.hpp" />
 		<Unit filename="src/freetype2/src/base/ftdebug.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1654,9 +1600,7 @@
 		<Unit filename="src/freetype2/src/base/ftgasp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftgloadr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftgloadr.hpp" />
 		<Unit filename="src/freetype2/src/base/ftglyph.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1669,39 +1613,25 @@
 		<Unit filename="src/freetype2/src/base/ftlcdfil.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftmac.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftmac.hpp" />
 		<Unit filename="src/freetype2/src/base/ftmm.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftobjs.hpp" />
 		<Unit filename="src/freetype2/src/base/ftotval.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftoutln.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftoutln.hpp" />
 		<Unit filename="src/freetype2/src/base/ftpatent.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/freetype2/src/base/ftpfr.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftrfork.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftsnames.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftstream.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftpic.hpp" />
+		<Unit filename="src/freetype2/src/base/ftrfork.hpp" />
+		<Unit filename="src/freetype2/src/base/ftsnames.hpp" />
+		<Unit filename="src/freetype2/src/base/ftstream.hpp" />
 		<Unit filename="src/freetype2/src/base/ftstroke.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1711,651 +1641,332 @@
 		<Unit filename="src/freetype2/src/base/ftsystem.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/fttrigon.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/fttrigon.hpp" />
 		<Unit filename="src/freetype2/src/base/fttype1.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/base/ftutil.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/base/ftutil.hpp" />
 		<Unit filename="src/freetype2/src/base/ftwinfnt.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/freetype2/src/base/ftxf86.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/freetype2/src/base/md5.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/freetype2/src/base/md5.h" />
 		<Unit filename="src/freetype2/src/bdf/bdf.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdfdrivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdfdrivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdferror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdflib.hpp">
-			<Option target="&lt;{~None~}&gt;" />
+		<Unit filename="src/freetype2/src/bdf/bdf.h" />
+		<Unit filename="src/freetype2/src/bdf/bdfdrivr.h" />
+		<Unit filename="src/freetype2/src/bdf/bdfdrivr.hpp" />
+		<Unit filename="src/freetype2/src/bdf/bdferror.h" />
+		<Unit filename="src/freetype2/src/bdf/bdflib.hpp" />
+		<Unit filename="src/freetype2/src/bzip2/ftbzip2.c">
+			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/freetype2/src/cache/ftcache.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcbasic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftccache.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftccache.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftccback.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftccmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcerror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcglyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcglyph.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcimage.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcimage.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcmanag.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcmanag.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcmru.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcmru.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcsbits.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcsbits.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/cache/ftcbasic.hpp" />
+		<Unit filename="src/freetype2/src/cache/ftccache.h" />
+		<Unit filename="src/freetype2/src/cache/ftccache.hpp" />
+		<Unit filename="src/freetype2/src/cache/ftccback.h" />
+		<Unit filename="src/freetype2/src/cache/ftccmap.hpp" />
+		<Unit filename="src/freetype2/src/cache/ftcerror.h" />
+		<Unit filename="src/freetype2/src/cache/ftcglyph.h" />
+		<Unit filename="src/freetype2/src/cache/ftcglyph.hpp" />
+		<Unit filename="src/freetype2/src/cache/ftcimage.h" />
+		<Unit filename="src/freetype2/src/cache/ftcimage.hpp" />
+		<Unit filename="src/freetype2/src/cache/ftcmanag.h" />
+		<Unit filename="src/freetype2/src/cache/ftcmanag.hpp" />
+		<Unit filename="src/freetype2/src/cache/ftcmru.h" />
+		<Unit filename="src/freetype2/src/cache/ftcmru.hpp" />
+		<Unit filename="src/freetype2/src/cache/ftcsbits.h" />
+		<Unit filename="src/freetype2/src/cache/ftcsbits.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2arrst.h" />
+		<Unit filename="src/freetype2/src/cff/cf2arrst.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2blues.h" />
+		<Unit filename="src/freetype2/src/cff/cf2blues.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2error.h" />
+		<Unit filename="src/freetype2/src/cff/cf2error.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2fixed.h" />
+		<Unit filename="src/freetype2/src/cff/cf2font.h" />
+		<Unit filename="src/freetype2/src/cff/cf2font.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2ft.h" />
+		<Unit filename="src/freetype2/src/cff/cf2ft.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2glue.h" />
+		<Unit filename="src/freetype2/src/cff/cf2hints.h" />
+		<Unit filename="src/freetype2/src/cff/cf2hints.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2intrp.h" />
+		<Unit filename="src/freetype2/src/cff/cf2intrp.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2read.h" />
+		<Unit filename="src/freetype2/src/cff/cf2read.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2stack.h" />
+		<Unit filename="src/freetype2/src/cff/cf2stack.hpp" />
+		<Unit filename="src/freetype2/src/cff/cf2types.h" />
 		<Unit filename="src/freetype2/src/cff/cff.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffcmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffcmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffdrivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffdrivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cfferrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffgload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffgload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffparse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffparse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cfftoken.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cfftypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/ciderrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidgload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidgload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidparse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidparse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidriver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidriver.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidtoken.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/cff/cffcmap.h" />
+		<Unit filename="src/freetype2/src/cff/cffcmap.hpp" />
+		<Unit filename="src/freetype2/src/cff/cffdrivr.h" />
+		<Unit filename="src/freetype2/src/cff/cffdrivr.hpp" />
+		<Unit filename="src/freetype2/src/cff/cfferrs.h" />
+		<Unit filename="src/freetype2/src/cff/cffgload.h" />
+		<Unit filename="src/freetype2/src/cff/cffgload.hpp" />
+		<Unit filename="src/freetype2/src/cff/cffload.h" />
+		<Unit filename="src/freetype2/src/cff/cffload.hpp" />
+		<Unit filename="src/freetype2/src/cff/cffobjs.h" />
+		<Unit filename="src/freetype2/src/cff/cffobjs.hpp" />
+		<Unit filename="src/freetype2/src/cff/cffparse.h" />
+		<Unit filename="src/freetype2/src/cff/cffparse.hpp" />
+		<Unit filename="src/freetype2/src/cff/cffpic.h" />
+		<Unit filename="src/freetype2/src/cff/cffpic.hpp" />
+		<Unit filename="src/freetype2/src/cff/cfftoken.h" />
+		<Unit filename="src/freetype2/src/cff/cfftypes.h" />
+		<Unit filename="src/freetype2/src/cid/ciderrs.h" />
+		<Unit filename="src/freetype2/src/cid/cidgload.h" />
+		<Unit filename="src/freetype2/src/cid/cidgload.hpp" />
+		<Unit filename="src/freetype2/src/cid/cidload.h" />
+		<Unit filename="src/freetype2/src/cid/cidload.hpp" />
+		<Unit filename="src/freetype2/src/cid/cidobjs.h" />
+		<Unit filename="src/freetype2/src/cid/cidobjs.hpp" />
+		<Unit filename="src/freetype2/src/cid/cidparse.h" />
+		<Unit filename="src/freetype2/src/cid/cidparse.hpp" />
+		<Unit filename="src/freetype2/src/cid/cidriver.h" />
+		<Unit filename="src/freetype2/src/cid/cidriver.hpp" />
+		<Unit filename="src/freetype2/src/cid/cidtoken.h" />
 		<Unit filename="src/freetype2/src/cid/type1cid.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/freetype2/src/gxvalid/gxvalid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/freetype2/src/gxvalid/gxvalid.h" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvbsln.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvcommn.h" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvcommn.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxverror.h" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvfeat.h" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvfeat.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvjust.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvkern.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvlcar.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmod.h" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmod.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmort.h" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmort.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmort0.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmort1.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmort2.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmort4.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmort5.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmorx.h" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmorx.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmorx0.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmorx1.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmorx2.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmorx4.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvmorx5.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvopbd.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvprop.hpp" />
+		<Unit filename="src/freetype2/src/gxvalid/gxvtrak.hpp" />
 		<Unit filename="src/freetype2/src/gzip/ftgzip.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/freetype2/src/gzip/inffixed.h" />
 		<Unit filename="src/freetype2/src/lzw/ftlzw.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/lzw/ftzopen.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/lzw/ftzopen.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/lzw/ftzopen.h" />
+		<Unit filename="src/freetype2/src/lzw/ftzopen.hpp" />
 		<Unit filename="src/freetype2/src/otvalid/otvalid.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvalid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvbase.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvcommn.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvcommn.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otverror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvgdef.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvgpos.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvgpos.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvgsub.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvjstf.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvmath.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvmod.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvmod.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/otvalid/otvalid.h" />
+		<Unit filename="src/freetype2/src/otvalid/otvbase.hpp" />
+		<Unit filename="src/freetype2/src/otvalid/otvcommn.h" />
+		<Unit filename="src/freetype2/src/otvalid/otvcommn.hpp" />
+		<Unit filename="src/freetype2/src/otvalid/otverror.h" />
+		<Unit filename="src/freetype2/src/otvalid/otvgdef.hpp" />
+		<Unit filename="src/freetype2/src/otvalid/otvgpos.h" />
+		<Unit filename="src/freetype2/src/otvalid/otvgpos.hpp" />
+		<Unit filename="src/freetype2/src/otvalid/otvgsub.hpp" />
+		<Unit filename="src/freetype2/src/otvalid/otvjstf.hpp" />
+		<Unit filename="src/freetype2/src/otvalid/otvmath.hpp" />
+		<Unit filename="src/freetype2/src/otvalid/otvmod.h" />
+		<Unit filename="src/freetype2/src/otvalid/otvmod.hpp" />
 		<Unit filename="src/freetype2/src/pcf/pcf.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfdrivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfdrivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcferror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfread.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfread.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfutil.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfutil.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/pcf/pcf.h" />
+		<Unit filename="src/freetype2/src/pcf/pcfdrivr.h" />
+		<Unit filename="src/freetype2/src/pcf/pcfdrivr.hpp" />
+		<Unit filename="src/freetype2/src/pcf/pcferror.h" />
+		<Unit filename="src/freetype2/src/pcf/pcfread.h" />
+		<Unit filename="src/freetype2/src/pcf/pcfread.hpp" />
+		<Unit filename="src/freetype2/src/pcf/pcfutil.h" />
+		<Unit filename="src/freetype2/src/pcf/pcfutil.hpp" />
 		<Unit filename="src/freetype2/src/pfr/pfr.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrcmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrcmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrdrivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrdrivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrerror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrgload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrgload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrsbit.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrsbit.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrtypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/afmparse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/afmparse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/pfr/pfrcmap.h" />
+		<Unit filename="src/freetype2/src/pfr/pfrcmap.hpp" />
+		<Unit filename="src/freetype2/src/pfr/pfrdrivr.h" />
+		<Unit filename="src/freetype2/src/pfr/pfrdrivr.hpp" />
+		<Unit filename="src/freetype2/src/pfr/pfrerror.h" />
+		<Unit filename="src/freetype2/src/pfr/pfrgload.h" />
+		<Unit filename="src/freetype2/src/pfr/pfrgload.hpp" />
+		<Unit filename="src/freetype2/src/pfr/pfrload.h" />
+		<Unit filename="src/freetype2/src/pfr/pfrload.hpp" />
+		<Unit filename="src/freetype2/src/pfr/pfrobjs.h" />
+		<Unit filename="src/freetype2/src/pfr/pfrobjs.hpp" />
+		<Unit filename="src/freetype2/src/pfr/pfrsbit.h" />
+		<Unit filename="src/freetype2/src/pfr/pfrsbit.hpp" />
+		<Unit filename="src/freetype2/src/pfr/pfrtypes.h" />
+		<Unit filename="src/freetype2/src/psaux/afmparse.h" />
+		<Unit filename="src/freetype2/src/psaux/afmparse.hpp" />
 		<Unit filename="src/freetype2/src/psaux/psaux.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psauxerr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psauxmod.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psauxmod.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psconv.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psconv.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/t1cmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/t1cmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/t1decode.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/t1decode.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshalgo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshalgo.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshglob.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshglob.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/psaux/psauxerr.h" />
+		<Unit filename="src/freetype2/src/psaux/psauxmod.h" />
+		<Unit filename="src/freetype2/src/psaux/psauxmod.hpp" />
+		<Unit filename="src/freetype2/src/psaux/psconv.h" />
+		<Unit filename="src/freetype2/src/psaux/psconv.hpp" />
+		<Unit filename="src/freetype2/src/psaux/psobjs.h" />
+		<Unit filename="src/freetype2/src/psaux/psobjs.hpp" />
+		<Unit filename="src/freetype2/src/psaux/t1cmap.h" />
+		<Unit filename="src/freetype2/src/psaux/t1cmap.hpp" />
+		<Unit filename="src/freetype2/src/psaux/t1decode.h" />
+		<Unit filename="src/freetype2/src/psaux/t1decode.hpp" />
+		<Unit filename="src/freetype2/src/pshinter/pshalgo.h" />
+		<Unit filename="src/freetype2/src/pshinter/pshalgo.hpp" />
+		<Unit filename="src/freetype2/src/pshinter/pshglob.h" />
+		<Unit filename="src/freetype2/src/pshinter/pshglob.hpp" />
 		<Unit filename="src/freetype2/src/pshinter/pshinter.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshmod.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshmod.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshnterr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshrec.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshrec.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/psmodule.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/psmodule.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/psnamerr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/pshinter/pshmod.h" />
+		<Unit filename="src/freetype2/src/pshinter/pshmod.hpp" />
+		<Unit filename="src/freetype2/src/pshinter/pshnterr.h" />
+		<Unit filename="src/freetype2/src/pshinter/pshpic.h" />
+		<Unit filename="src/freetype2/src/pshinter/pshpic.hpp" />
+		<Unit filename="src/freetype2/src/pshinter/pshrec.h" />
+		<Unit filename="src/freetype2/src/pshinter/pshrec.hpp" />
+		<Unit filename="src/freetype2/src/psnames/psmodule.h" />
+		<Unit filename="src/freetype2/src/psnames/psmodule.hpp" />
+		<Unit filename="src/freetype2/src/psnames/psnamerr.h" />
 		<Unit filename="src/freetype2/src/psnames/psnames.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/psnames/pspic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/pspic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/pstables.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftmisc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftraster.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftraster.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftrend1.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftrend1.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/psnames/pspic.h" />
+		<Unit filename="src/freetype2/src/psnames/pspic.hpp" />
+		<Unit filename="src/freetype2/src/psnames/pstables.h" />
+		<Unit filename="src/freetype2/src/raster/ftmisc.h" />
+		<Unit filename="src/freetype2/src/raster/ftraster.h" />
+		<Unit filename="src/freetype2/src/raster/ftraster.hpp" />
+		<Unit filename="src/freetype2/src/raster/ftrend1.h" />
+		<Unit filename="src/freetype2/src/raster/ftrend1.hpp" />
 		<Unit filename="src/freetype2/src/raster/raster.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/raster/rasterrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/rastpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/rastpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfdriver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfdriver.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sferrors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/raster/rasterrs.h" />
+		<Unit filename="src/freetype2/src/raster/rastpic.h" />
+		<Unit filename="src/freetype2/src/raster/rastpic.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/pngshim.h" />
+		<Unit filename="src/freetype2/src/sfnt/pngshim.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/sfdriver.h" />
+		<Unit filename="src/freetype2/src/sfnt/sfdriver.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/sferrors.h" />
 		<Unit filename="src/freetype2/src/sfnt/sfnt.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfntpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfntpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttbdf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttbdf.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttcmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttcmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttcmapc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttkern.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttkern.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttmtx.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttmtx.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttpost.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttpost.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttsbit.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttsbit.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttsbit0.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftgrays.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftgrays.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftsmerrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftsmooth.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftsmooth.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftspic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftspic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/sfnt/sfntpic.h" />
+		<Unit filename="src/freetype2/src/sfnt/sfntpic.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/sfobjs.h" />
+		<Unit filename="src/freetype2/src/sfnt/sfobjs.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/ttbdf.h" />
+		<Unit filename="src/freetype2/src/sfnt/ttbdf.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/ttcmap.h" />
+		<Unit filename="src/freetype2/src/sfnt/ttcmap.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/ttcmapc.h" />
+		<Unit filename="src/freetype2/src/sfnt/ttkern.h" />
+		<Unit filename="src/freetype2/src/sfnt/ttkern.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/ttload.h" />
+		<Unit filename="src/freetype2/src/sfnt/ttload.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/ttmtx.h" />
+		<Unit filename="src/freetype2/src/sfnt/ttmtx.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/ttpost.h" />
+		<Unit filename="src/freetype2/src/sfnt/ttpost.hpp" />
+		<Unit filename="src/freetype2/src/sfnt/ttsbit.h" />
+		<Unit filename="src/freetype2/src/sfnt/ttsbit.hpp" />
+		<Unit filename="src/freetype2/src/smooth/ftgrays.h" />
+		<Unit filename="src/freetype2/src/smooth/ftgrays.hpp" />
+		<Unit filename="src/freetype2/src/smooth/ftsmerrs.h" />
+		<Unit filename="src/freetype2/src/smooth/ftsmooth.h" />
+		<Unit filename="src/freetype2/src/smooth/ftsmooth.hpp" />
+		<Unit filename="src/freetype2/src/smooth/ftspic.h" />
+		<Unit filename="src/freetype2/src/smooth/ftspic.hpp" />
 		<Unit filename="src/freetype2/src/smooth/smooth.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/freetype2/src/truetype/truetype.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttdriver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttdriver.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/tterrors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttgload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttgload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttgxvar.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttgxvar.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttinterp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttinterp.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttpload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttpload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1afm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1afm.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1driver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1driver.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1errors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1gload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1gload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1load.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1load.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1objs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1objs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1parse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1parse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1tokens.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/truetype/ttdriver.h" />
+		<Unit filename="src/freetype2/src/truetype/ttdriver.hpp" />
+		<Unit filename="src/freetype2/src/truetype/tterrors.h" />
+		<Unit filename="src/freetype2/src/truetype/ttgload.h" />
+		<Unit filename="src/freetype2/src/truetype/ttgload.hpp" />
+		<Unit filename="src/freetype2/src/truetype/ttgxvar.h" />
+		<Unit filename="src/freetype2/src/truetype/ttgxvar.hpp" />
+		<Unit filename="src/freetype2/src/truetype/ttinterp.h" />
+		<Unit filename="src/freetype2/src/truetype/ttinterp.hpp" />
+		<Unit filename="src/freetype2/src/truetype/ttobjs.h" />
+		<Unit filename="src/freetype2/src/truetype/ttobjs.hpp" />
+		<Unit filename="src/freetype2/src/truetype/ttpic.h" />
+		<Unit filename="src/freetype2/src/truetype/ttpic.hpp" />
+		<Unit filename="src/freetype2/src/truetype/ttpload.h" />
+		<Unit filename="src/freetype2/src/truetype/ttpload.hpp" />
+		<Unit filename="src/freetype2/src/truetype/ttsubpix.h" />
+		<Unit filename="src/freetype2/src/truetype/ttsubpix.hpp" />
+		<Unit filename="src/freetype2/src/type1/t1afm.h" />
+		<Unit filename="src/freetype2/src/type1/t1afm.hpp" />
+		<Unit filename="src/freetype2/src/type1/t1driver.h" />
+		<Unit filename="src/freetype2/src/type1/t1driver.hpp" />
+		<Unit filename="src/freetype2/src/type1/t1errors.h" />
+		<Unit filename="src/freetype2/src/type1/t1gload.h" />
+		<Unit filename="src/freetype2/src/type1/t1gload.hpp" />
+		<Unit filename="src/freetype2/src/type1/t1load.h" />
+		<Unit filename="src/freetype2/src/type1/t1load.hpp" />
+		<Unit filename="src/freetype2/src/type1/t1objs.h" />
+		<Unit filename="src/freetype2/src/type1/t1objs.hpp" />
+		<Unit filename="src/freetype2/src/type1/t1parse.h" />
+		<Unit filename="src/freetype2/src/type1/t1parse.hpp" />
+		<Unit filename="src/freetype2/src/type1/t1tokens.h" />
 		<Unit filename="src/freetype2/src/type1/type1.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42drivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42drivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42error.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42objs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42objs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42parse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42parse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/freetype2/src/type42/t42drivr.h" />
+		<Unit filename="src/freetype2/src/type42/t42drivr.hpp" />
+		<Unit filename="src/freetype2/src/type42/t42error.h" />
+		<Unit filename="src/freetype2/src/type42/t42objs.h" />
+		<Unit filename="src/freetype2/src/type42/t42objs.hpp" />
+		<Unit filename="src/freetype2/src/type42/t42parse.h" />
+		<Unit filename="src/freetype2/src/type42/t42parse.hpp" />
+		<Unit filename="src/freetype2/src/type42/t42types.h" />
 		<Unit filename="src/freetype2/src/type42/type42.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/freetype2/src/winfonts/fnterrs.h" />
+		<Unit filename="src/freetype2/src/winfonts/winfnt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/freetype2/src/winfonts/winfnt.h" />
 		<Unit filename="src/frustum.cpp" />
 		<Unit filename="src/frustum.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -3172,7 +2783,7 @@
 		<Extensions>
 			<code_completion>
 				<search_path add="src\bullet" />
-				<search_path add="src\freetype2" />
+				<search_path add="src\freetype2\include" />
 				<search_path add="src\image" />
 			</code_completion>
 			<envvars />
