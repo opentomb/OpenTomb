@@ -96,8 +96,7 @@ INCLUDE_DIRECTORIES(
     ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
 
-    src/freetype2
-    src/freetype2/freetype
+    src/freetype2/include
 )
 
 FILE(GLOB OPENAL_FILES
@@ -139,22 +138,17 @@ FILE(GLOB OGG_FILES
 
 FILE(GLOB PRJ_HDR
     src/*.h*
-    src/freetype2/*.h
-    src/freetype2/*/*.h
-    src/freetype2/*/*/*.h
-    src/freetype2/*/*/*/*.h
-    src/ftgl/*.h
+    src/freetype2/include/*.h
+    src/freetype2/include/*/*.h
+    src/freetype2/include/*/*/*.h
     src/lua/*.h*
     src/vt/*.h
 )
 
 FILE(GLOB PRJ_SRC
     src/*.c*
-    src/freetype2/*.c
-    src/freetype2/*/*.c
-    src/freetype2/*/*/*.c
-    src/freetype2/*/*/*/*.c
-    src/ftgl/*.cpp
+    src/freetype2/src/*.c
+    src/freetype2/src/*/*.c
     src/vt/*.cpp
 )
 
