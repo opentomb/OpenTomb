@@ -200,7 +200,7 @@ void Render_SkyBox()
         p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
         glMultMatrixf(tr);
-        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh, NULL, NULL);
+        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base, NULL, NULL);
         glPopMatrix();
         glDepthMask(GL_TRUE);
     }
@@ -576,7 +576,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
     {
         glPushMatrix();
         glMultMatrixbt(btag->full_transform);
-        Render_Mesh(btag->mesh, NULL, NULL);
+        Render_Mesh(btag->mesh_base, NULL, NULL);
         if(btag->mesh_slot)
         {
             Render_Mesh(btag->mesh_slot, NULL, NULL);
@@ -1022,10 +1022,10 @@ void Render_DrawList()
                     btScalar tr[16];
                     for(uint16_t j=0;j<ent->bf.model->mesh_count;j++)
                     {
-                        if(ent->bf.model->mesh_tree[j].mesh->transparency_polygons != NULL)
+                        if(ent->bf.model->mesh_tree[j].mesh_base->transparency_polygons != NULL)
                         {
                             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf.model->mesh_tree[j].mesh->transparency_polygons, tr);
+                            render_dBSP.addNewPolygonList(ent->bf.model->mesh_tree[j].mesh_base->transparency_polygons, tr);
                         }
                     }
                 }
@@ -1039,10 +1039,10 @@ void Render_DrawList()
         entity_p ent = engine_world.Character;
         for(uint16_t j=0;j<ent->bf.model->mesh_count;j++)
         {
-            if(ent->bf.model->mesh_tree[j].mesh->transparency_polygons != NULL)
+            if(ent->bf.model->mesh_tree[j].mesh_base->transparency_polygons != NULL)
             {
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf.model->mesh_tree[j].mesh->transparency_polygons, tr);
+                render_dBSP.addNewPolygonList(ent->bf.model->mesh_tree[j].mesh_base->transparency_polygons, tr);
             }
         }
     }
@@ -1082,7 +1082,7 @@ void Render_DrawList_DebugLines()
         vec3_add(tr+12, renderer.cam->pos, p);
         p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
-        debugDrawer.drawMeshDebugLines(renderer.world->sky_box->mesh_tree->mesh, tr, NULL, NULL);
+        debugDrawer.drawMeshDebugLines(renderer.world->sky_box->mesh_tree->mesh_base, tr, NULL, NULL);
     }
 
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
@@ -1636,7 +1636,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
         for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
         {
             Mat4_Mat4_mul_macro(tr, transform, btag->full_transform);
-            drawMeshDebugLines(btag->mesh, tr, NULL, NULL);
+            drawMeshDebugLines(btag->mesh_base, tr, NULL, NULL);
         }
     }
 }

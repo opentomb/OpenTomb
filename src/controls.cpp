@@ -38,6 +38,10 @@ void Controls_Key(int32_t button, int state)
                     control_states.move_right = state;
                     break;
 
+                case ACT_DRAWWEAPON:
+                    control_states.do_draw_weapon = state;
+                    break;
+
                 case ACT_ACTION:
                     control_states.state_action = state;
                     break;

@@ -264,6 +264,29 @@ void Engine_BTInit()
      return 0;
  }
 
+ int lua_DumpModel(lua_State * lua)
+ {
+     int id = 0;
+     if(lua_gettop(lua) > 0)
+     {
+         id = lua_tointeger(lua, 1);
+     }
+
+     skeletal_model_p sm = World_GetModelByID(&engine_world, id);
+     if(sm == NULL)
+     {
+        Con_Printf("wrong model id = %d", id);
+        return 0;
+     }
+
+     for(int i=0;i<sm->mesh_count;i++)
+     {
+         Con_Printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->id);
+     }
+
+     return 0;
+ }
+
 int lua_DumpRoom(lua_State * lua)
 {
     room_p r = NULL;
@@ -305,7 +328,7 @@ int lua_SetRoomEnabled(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (id, value)");
+        Con_AddLine("Wrong arguments count. Must be (id, value)");
         return 0;
     }
 
@@ -2046,8 +2069,8 @@ int lua_SetEntityMeshswap(lua_State * lua)
 
     for(int i = 0; i < meshes_to_copy; i++)
     {
-        ent_dest->bf.bone_tags[i].mesh      = model_src->mesh_tree[i].mesh;
-        ent_dest->bf.bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh2;
+        ent_dest->bf.bone_tags[i].mesh_base = model_src->mesh_tree[i].mesh_base;
+        ent_dest->bf.bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh_skin;
     }
 
     return 0;
@@ -2121,9 +2144,9 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 3)
+    if(top < 4)
     {
-        Con_Printf("Wrong arguments count. Must be (id_model1, id_model2, bone_num)");
+        Con_Printf("Wrong arguments count. Must be (id_model1, id_model2, bone_num1, bone_num2)");
         return 0;
     }
 
@@ -2143,15 +2166,16 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
         return 0;
     }
 
-    int bone = lua_tointeger(lua, 3);
+    int bone1 = lua_tointeger(lua, 3);
+    int bone2 = lua_tointeger(lua, 4);
 
-    if((bone >= 0) && (bone < sm1->mesh_count) && (bone < sm2->mesh_count))
+    if((bone1 >= 0) && (bone1 < sm1->mesh_count) && (bone2 >= 0) && (bone2 < sm2->mesh_count))
     {
-        sm1->mesh_tree[bone].mesh = sm2->mesh_tree[bone].mesh;
+        sm1->mesh_tree[bone1].mesh_base = sm2->mesh_tree[bone2].mesh_base;
     }
     else
     {
-        Con_Printf("wrong bone number = %d", bone);
+        Con_AddLine("wrong bone number = %d");
     }
 
     return 0;
@@ -2568,7 +2592,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model != NULL)
     {
-        polygon_p p=model->mesh_tree->mesh->transparency_polygons;
+        polygon_p p=model->mesh_tree->mesh_base->transparency_polygons;
         if((p != NULL) && (p->anim_id == 0))
         {
             engine_world.anim_sequences_count++;
@@ -2681,6 +2705,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     Game_RegisterLuaFunctions(lua);
 
     lua_register(lua, "print", lua_print);
+    lua_register(lua, "dumpModel", lua_DumpModel);
     lua_register(lua, "dumpRoom", lua_DumpRoom);
     lua_register(lua, "setRoomEnabled", lua_SetRoomEnabled);
 

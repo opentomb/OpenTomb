@@ -252,7 +252,7 @@ void BT_GenEntityRigidBody(entity_p ent)
     for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
     {
         ent->bt_body[i] = NULL;
-        cshape = BT_CSfromMesh(ent->bf.model->mesh_tree[i].mesh, true, true, ent->self->collide_flag);
+        cshape = BT_CSfromMesh(ent->bf.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag);
         if(cshape)
         {
             Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -464,8 +464,8 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
         for(uint16_t i=0;i<bf->bone_tag_count;i++)
         {
             bf->bone_tags[i].flag = sm->mesh_tree[i].flag;
-            bf->bone_tags[i].mesh = sm->mesh_tree[i].mesh;
-            bf->bone_tags[i].mesh_skin = sm->mesh_tree[i].mesh2;
+            bf->bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+            bf->bone_tags[i].mesh_skin = sm->mesh_tree[i].mesh_skin;
             bf->bone_tags[i].mesh_slot = NULL;
 
             vec3_copy(bf->bone_tags[i].offset, sm->mesh_tree[i].offset);
@@ -1408,6 +1408,14 @@ void Entity_DoAnimMove(entity_p entity)
 }
 
 
+#define WEAPON_STATE_HIDE               (0x00)
+#define WEAPON_STATE_HIDE_TO_READY      (0x01)
+#define WEAPON_STATE_IDLE               (0x02)
+#define WEAPON_STATE_IDLE_TO_FIRE       (0x03)
+#define WEAPON_STATE_FIRE               (0x04)
+#define WEAPON_STATE_FIRE_TO_IDLE       (0x05)
+#define WEAPON_STATE_IDLE_TO_HIDE       (0x06)
+
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
@@ -1462,21 +1470,393 @@ int Entity_Frame(entity_p entity, btScalar time)
     /* There are stick code for multianimation (weapon mode) testing
      * Model replacing will be upgraded too, I have to add override
      * flags to model manually in the script*/
-    for(ss_bone_frame_p bf=entity->bf.next;bf!=NULL;bf=bf->next)
+    if(entity->character != NULL)
     {
-        if(bf->model != NULL)
+        /* anims (TR_I - TR_V):
+         * pistols:
+         * 0: idle to fire;
+         * 1: draw weapon (short?);
+         * 2: draw weapon (full);
+         * 3: fire process;
+         *
+         * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons):
+         * 0: idle to fire;
+         * 1: draw weapon;
+         * 2: fire process;
+         * 3: hide weapon;
+         * 4: idle to fire (targeted);
+         */
+        if((entity->character->cmd.ready_weapon != 0x00) && (entity->character->current_weapon > 0) && (entity->character->weapon_current_state == WEAPON_STATE_HIDE))
         {
-            if((entity->character != NULL) && (entity->character->cmd.action == 0) && (bf->current_frame == 0))
+            Character_SetWeaponModel(entity, entity->character->current_weapon, 1);
+        }
+
+        for(ss_bone_frame_p bf=entity->bf.next;bf!=NULL;bf=bf->next)
+        {
+            if((bf->model != NULL) && (bf->model->animation_count > 4))
             {
-                continue;
+                switch(entity->character->weapon_current_state)
+                {
+                    case WEAPON_STATE_HIDE:
+                        if(entity->character->cmd.ready_weapon)   // ready weapon
+                        {
+                            bf->current_animation = 1;
+                            bf->next_animation = 1;
+                            bf->current_frame = 0;
+                            bf->next_frame = 0;
+                            bf->frame_time = 0.0;
+                            entity->character->weapon_current_state = WEAPON_STATE_HIDE_TO_READY;
+                        }
+                        break;
+
+                    case WEAPON_STATE_HIDE_TO_READY:
+                        bf->frame_time += time;
+                        bf->current_frame = (bf->frame_time) / bf->period;
+                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                        t = bf->model->animations[bf->current_animation].frames_count;
+
+                        if(bf->current_frame < t - 1)
+                        {
+                            bf->next_frame = (bf->current_frame + 1) % t;
+                            bf->next_animation = bf->current_animation;
+                        }
+                        else if(bf->current_frame < t)
+                        {
+                            bf->next_frame = 0;
+                            bf->next_animation = 0;
+                        }
+                        else
+                        {
+                            bf->current_frame = 0;
+                            bf->current_animation = 0;
+                            bf->next_frame = 0;
+                            bf->next_animation = 0;
+                            bf->frame_time = 0.0;
+                            entity->character->weapon_current_state = WEAPON_STATE_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE:
+                        bf->current_frame = 0;
+                        bf->current_animation = 0;
+                        bf->next_frame = 0;
+                        bf->next_animation = 0;
+                        bf->frame_time = 0.0;
+                        if(entity->character->cmd.ready_weapon)
+                        {
+                            bf->current_animation = 3;
+                            bf->next_animation = 3;
+                            bf->current_frame = bf->next_frame = 0;
+                            bf->frame_time = 0.0;
+                            entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
+                        }
+                        else if(entity->character->cmd.action)
+                        {
+                            entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_FIRE;
+                        }
+                        else
+                        {
+                            // do nothing here, may be;
+                        }
+                        break;
+
+                    case WEAPON_STATE_FIRE_TO_IDLE:
+                        // Yes, same animation, reverse frames order;
+                        t = bf->model->animations[bf->current_animation].frames_count;
+                        bf->frame_time += time;
+                        bf->current_frame = (bf->frame_time) / bf->period;
+                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                        bf->current_frame = t - 1 - bf->current_frame;
+                        if(bf->current_frame > 0)
+                        {
+                            bf->next_frame = bf->current_frame - 1;
+                            bf->next_animation = bf->current_animation;
+                        }
+                        else
+                        {
+                            bf->next_frame = bf->current_frame = 0;
+                            bf->next_animation = bf->current_animation;
+                            entity->character->weapon_current_state = WEAPON_STATE_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE_TO_FIRE:
+                        bf->frame_time += time;
+                        bf->current_frame = (bf->frame_time) / bf->period;
+                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                        t = bf->model->animations[bf->current_animation].frames_count;
+
+                        if(bf->current_frame < t - 1)
+                        {
+                            bf->next_frame = bf->current_frame + 1;
+                            bf->next_animation = bf->current_animation;
+                        }
+                        else if(bf->current_frame < t)
+                        {
+                            bf->next_frame = 0;
+                            bf->next_animation = 2;
+                        }
+                        else if(entity->character->cmd.action)
+                        {
+                            bf->current_frame = 0;
+                            bf->next_frame = 1;
+                            bf->current_animation = 2;
+                            bf->next_animation = bf->current_animation;
+                            entity->character->weapon_current_state = WEAPON_STATE_FIRE;
+                        }
+                        else
+                        {
+                            bf->frame_time = 0.0;
+                            bf->current_frame = bf->model->animations[bf->current_animation].frames_count - 1;
+                            entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_FIRE:
+                        if(entity->character->cmd.action)
+                        {
+                            // inc time, loop;
+                            bf->frame_time += time;
+                            bf->current_frame = (bf->frame_time) / bf->period;
+                            dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                            bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                            t = bf->model->animations[bf->current_animation].frames_count;
+
+                            if(bf->current_frame < t - 1)
+                            {
+                                bf->next_frame = bf->current_frame + 1;
+                                bf->next_animation = bf->current_animation;
+                            }
+                            else if(bf->current_frame < t)
+                            {
+                                bf->next_frame = 0;
+                                bf->next_animation = bf->current_animation;
+                            }
+                            else
+                            {
+                                bf->frame_time = dt;
+                                bf->current_frame = 0;
+                                bf->next_frame = 1;
+                            }
+                        }
+                        else
+                        {
+                            bf->frame_time = 0.0;
+                            bf->current_animation = 0;
+                            bf->next_animation = bf->current_animation;
+                            bf->current_frame = bf->model->animations[bf->current_animation].frames_count - 1;
+                            bf->next_frame = (bf->current_frame > 0)?(bf->current_frame - 1):(0);
+                            entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE_TO_HIDE:
+                        t = bf->model->animations[bf->current_animation].frames_count;
+                        bf->frame_time += time;
+                        bf->current_frame = (bf->frame_time) / bf->period;
+                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                        if(bf->current_frame < t - 1)
+                        {
+                            bf->next_frame = bf->current_frame + 1;
+                            bf->next_animation = bf->current_animation;
+                        }
+                        else
+                        {
+                            bf->next_frame = bf->current_frame = 0;
+                            bf->next_animation = bf->current_animation;
+                            entity->character->weapon_current_state = WEAPON_STATE_HIDE;
+                            Character_SetWeaponModel(entity, entity->character->current_weapon, 0);
+                        }
+                        break;
+                };
             }
-            Entity_GetNextFrame(bf, time, NULL, &bf->current_frame, &bf->current_animation, 0x00);
-            bf->frame_time += time;
-            t = (bf->frame_time) / bf->period;
-            dt = bf->frame_time - (btScalar)t * bf->period;
-            bf->frame_time = (btScalar)bf->current_frame * bf->period + dt;
-            bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-            Entity_GetNextFrame(bf, bf->period, NULL, &bf->next_frame, &bf->next_animation, 0x00);
+            else if((bf->model != NULL) && (bf->model->animation_count == 4))
+            {
+                switch(entity->character->weapon_current_state)
+                {
+                    case WEAPON_STATE_HIDE:
+                        if(entity->character->cmd.ready_weapon)   // ready weapon
+                        {
+                            bf->current_animation = 2;
+                            bf->next_animation = 2;
+                            bf->current_frame = 0;
+                            bf->next_frame = 0;
+                            bf->frame_time = 0.0;
+                            entity->character->weapon_current_state = WEAPON_STATE_HIDE_TO_READY;
+                        }
+                        break;
+
+                    case WEAPON_STATE_HIDE_TO_READY:
+                        bf->frame_time += time;
+                        bf->current_frame = (bf->frame_time) / bf->period;
+                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                        t = bf->model->animations[bf->current_animation].frames_count;
+
+                        if(bf->current_frame < t - 1)
+                        {
+                            bf->next_frame = (bf->current_frame + 1) % t;
+                            bf->next_animation = bf->current_animation;
+                        }
+                        else if(bf->current_frame < t)
+                        {
+                            bf->next_frame = 0;
+                            bf->next_animation = 0;
+                        }
+                        else
+                        {
+                            bf->current_frame = 0;
+                            bf->current_animation = 0;
+                            bf->next_frame = 0;
+                            bf->next_animation = 0;
+                            bf->frame_time = 0.0;
+                            entity->character->weapon_current_state = WEAPON_STATE_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE:
+                        bf->current_frame = 0;
+                        bf->current_animation = 0;
+                        bf->next_frame = 0;
+                        bf->next_animation = 0;
+                        bf->frame_time = 0.0;
+                        if(entity->character->cmd.ready_weapon)
+                        {
+                            bf->current_animation = 2;
+                            bf->next_animation = 2;
+                            bf->current_frame = bf->next_frame = bf->model->animations[bf->current_animation].frames_count - 1;
+                            bf->frame_time = 0.0;
+                            entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
+                        }
+                        else if(entity->character->cmd.action)
+                        {
+                            entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_FIRE;
+                        }
+                        else
+                        {
+                            // do nothing here, may be;
+                        }
+                        break;
+
+                    case WEAPON_STATE_FIRE_TO_IDLE:
+                        // Yes, same animation, reverse frames order;
+                        t = bf->model->animations[bf->current_animation].frames_count;
+                        bf->frame_time += time;
+                        bf->current_frame = (bf->frame_time) / bf->period;
+                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                        bf->current_frame = t - 1 - bf->current_frame;
+                        if(bf->current_frame > 0)
+                        {
+                            bf->next_frame = bf->current_frame - 1;
+                            bf->next_animation = bf->current_animation;
+                        }
+                        else
+                        {
+                            bf->next_frame = bf->current_frame = 0;
+                            bf->next_animation = bf->current_animation;
+                            entity->character->weapon_current_state = WEAPON_STATE_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE_TO_FIRE:
+                        bf->frame_time += time;
+                        bf->current_frame = (bf->frame_time) / bf->period;
+                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                        t = bf->model->animations[bf->current_animation].frames_count;
+
+                        if(bf->current_frame < t - 1)
+                        {
+                            bf->next_frame = bf->current_frame + 1;
+                            bf->next_animation = bf->current_animation;
+                        }
+                        else if(bf->current_frame < t)
+                        {
+                            bf->next_frame = 0;
+                            bf->next_animation = 3;
+                        }
+                        else if(entity->character->cmd.action)
+                        {
+                            bf->current_frame = 0;
+                            bf->next_frame = 1;
+                            bf->current_animation = 3;
+                            bf->next_animation = bf->current_animation;
+                            entity->character->weapon_current_state = WEAPON_STATE_FIRE;
+                        }
+                        else
+                        {
+                            bf->frame_time = 0.0;
+                            bf->current_frame = bf->model->animations[bf->current_animation].frames_count - 1;
+                            entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_FIRE:
+                        if(entity->character->cmd.action)
+                        {
+                            // inc time, loop;
+                            bf->frame_time += time;
+                            bf->current_frame = (bf->frame_time) / bf->period;
+                            dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                            bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                            t = bf->model->animations[bf->current_animation].frames_count;
+
+                            if(bf->current_frame < t - 1)
+                            {
+                                bf->next_frame = bf->current_frame + 1;
+                                bf->next_animation = bf->current_animation;
+                            }
+                            else if(bf->current_frame < t)
+                            {
+                                bf->next_frame = 0;
+                                bf->next_animation = bf->current_animation;
+                            }
+                            else
+                            {
+                                bf->frame_time = dt;
+                                bf->current_frame = 0;
+                                bf->next_frame = 1;
+                            }
+                        }
+                        else
+                        {
+                            bf->frame_time = 0.0;
+                            bf->current_animation = 0;
+                            bf->next_animation = bf->current_animation;
+                            bf->current_frame = bf->model->animations[bf->current_animation].frames_count - 1;
+                            bf->next_frame = (bf->current_frame > 0)?(bf->current_frame - 1):(0);
+                            entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE_TO_HIDE:
+                        // Yes, same animation, reverse frames order;
+                        t = bf->model->animations[bf->current_animation].frames_count;
+                        bf->frame_time += time;
+                        bf->current_frame = (bf->frame_time) / bf->period;
+                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
+                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
+                        bf->current_frame = t - 1 - bf->current_frame;
+                        if(bf->current_frame > 0)
+                        {
+                            bf->next_frame = bf->current_frame - 1;
+                            bf->next_animation = bf->current_animation;
+                        }
+                        else
+                        {
+                            bf->next_frame = bf->current_frame = 0;
+                            bf->next_animation = bf->current_animation;
+                            entity->character->weapon_current_state = WEAPON_STATE_HIDE;
+                            Character_SetWeaponModel(entity, entity->character->current_weapon, 0);
+                        }
+                        break;
+                };
+            }
         }
     }
 

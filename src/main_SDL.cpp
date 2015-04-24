@@ -208,7 +208,7 @@ void SkeletalModelTestDraw()
     Mat4_set_qrotation(tr, btag->qrotate);
     //glEnable(GL_TEXTURE_2D);
     glMultMatrixf(tr);
-    Render_Mesh(mt->mesh, NULL, NULL);
+    Render_Mesh(mt->mesh_base, NULL, NULL);
     btag++;
     mt++;
     for(stack=0,i=1;i<bframe->bone_tag_count;i++,btag++,mt++)
@@ -230,11 +230,11 @@ void SkeletalModelTestDraw()
             stack++;
         }
         glMultMatrixf(tr);
-        Render_Mesh(mt->mesh, NULL, NULL);
+        Render_Mesh(mt->mesh_base, NULL, NULL);
         //Render_BBox(tree_tag->mesh->bb_min, tree_tag->mesh->bb_max);
-        if(mt->mesh2)
+        if(mt->mesh_skin)
         {
-            Render_SkinMesh(mt->mesh2, tr);
+            Render_SkinMesh(mt->mesh_skin, tr);
         }
     }
 
@@ -1062,10 +1062,73 @@ void DebugKeys(int button, int state)
                 anim = 0;
                 break;
 
+            case SDLK_1:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 1;
+                }
+                break;
+
+            case SDLK_2:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 2;
+                }
+                break;
+
+            case SDLK_3:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 3;
+                }
+                break;
+
+            case SDLK_4:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 4;
+                }
+                break;
+
+            case SDLK_5:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 5;
+                }
+                break;
+
+            case SDLK_6:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 6;
+                }
+                break;
+
+            case SDLK_7:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 7;
+                }
+                break;
+
+            case SDLK_8:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 8;
+                }
+                break;
+
+            case SDLK_9:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 9;
+                }
+                break;
+
                 /*rumble*/
             case SDLK_f:
-                Audio_Send(105);
-                Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
+                //Audio_Send(105);
+                //Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
                 break;
 
                 /*full health*/
@@ -1170,7 +1233,7 @@ void DebugKeys(int button, int state)
                 }
                 break;
 
-            case SDLK_4:
+            case SDLK_e:
                 if(!con_base.show)
                 {
                     for(uint32_t i=0;i<engine_world.room_count;i++)

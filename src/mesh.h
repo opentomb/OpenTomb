@@ -180,7 +180,7 @@ typedef struct static_mesh_s
  */
 typedef struct ss_bone_tag_s
 {
-    base_mesh_p         mesh;                                                   // base mesh - pointer to the first mesh in array
+    base_mesh_p         mesh_base;                                              // base mesh - pointer to the first mesh in array
     base_mesh_p         mesh_skin;                                              // base skinned mesh for ТР4+
     base_mesh_p         mesh_slot;
     btScalar            offset[3];                                              // model position offset
@@ -252,8 +252,8 @@ typedef struct bone_frame_s
  */
 typedef struct mesh_tree_tag_s
 {
-    base_mesh_p                 mesh;                                           // base mesh - pointer to the first mesh in array
-    base_mesh_p                 mesh2;                                          // base skinned mesh for ТР4+
+    base_mesh_p                 mesh_base;                                      // base mesh - pointer to the first mesh in array
+    base_mesh_p                 mesh_skin;                                      // base skinned mesh for ТР4+
     btScalar                    offset[3];                                      // model position offset
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
     uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)

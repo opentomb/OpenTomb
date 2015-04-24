@@ -172,6 +172,7 @@ typedef struct character_command_s
     int8_t      crouch;
     int8_t      shift;
     int8_t      action;
+    int8_t      ready_weapon;
     int8_t      sprint;
 
     int8_t      flags;
@@ -220,6 +221,9 @@ typedef struct character_s
     struct inventory_node_s     *inventory;
     struct character_param_s     parameters;
     struct character_stats_s     statistics;
+    
+    int                          current_weapon;
+    int                          weapon_current_state;
     
     int                        (*state_func)(struct entity_s *ent);
     int16_t                      max_move_iterations;

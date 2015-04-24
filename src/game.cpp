@@ -410,6 +410,7 @@ void Game_ApplyControls(struct entity_s *ent)
     {
         // Apply controls to Lara
         ent->character->cmd.action = control_states.state_action;
+        ent->character->cmd.ready_weapon = control_states.do_draw_weapon;
         ent->character->cmd.jump = control_states.do_jump;
         ent->character->cmd.shift = control_states.state_walk;
 

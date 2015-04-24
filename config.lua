@@ -77,6 +77,7 @@ dofile("scripts/config/control_constants.lua");
 
 bind(act.jump, KEY_SPACE, JOY_3);
 bind(act.action, KEY_LCTRL, JOY_1);
+bind(act.drawweapon, KEY_F);
 bind(act.roll, KEY_X, JOY_2);
 bind(act.sprint, KEY_CAPSLOCK, JOY_TRIGGERRIGHT);
 bind(act.crouch, KEY_V, JOY_TRIGGERLEFT);

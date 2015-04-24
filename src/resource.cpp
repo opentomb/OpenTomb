@@ -3302,14 +3302,14 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
 
     model->mesh_tree = (mesh_tree_tag_p)malloc(model->mesh_count * sizeof(mesh_tree_tag_t));
     tree_tag = model->mesh_tree;
-    tree_tag->mesh2 = NULL;
+    tree_tag->mesh_skin = NULL;
 
     uint32_t *mesh_index = tr->mesh_indices + tr_moveable->starting_mesh;
 
     for(uint16_t k=0;k<model->mesh_count;k++,tree_tag++)
     {
-        tree_tag->mesh = world->meshes + (mesh_index[k]);
-        tree_tag->mesh2 = NULL;
+        tree_tag->mesh_base = world->meshes + (mesh_index[k]);
+        tree_tag->mesh_skin = NULL;
         tree_tag->flag = 0x00;
         tree_tag->replace_anim = 0x00;
         tree_tag->replace_mesh = 0x00;
@@ -3929,8 +3929,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
         {
             entity->bf.bone_tags[j].flag = entity->bf.model->mesh_tree[j].flag;
-            entity->bf.bone_tags[j].mesh = entity->bf.model->mesh_tree[j].mesh;
-            entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh2;
+            entity->bf.bone_tags[j].mesh_base = entity->bf.model->mesh_tree[j].mesh_base;
+            entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh_skin;
             entity->bf.bone_tags[j].mesh_slot = NULL;
 
             vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.model->mesh_tree[j].offset);
@@ -4002,8 +4002,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 
             for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
             {
-                entity->bf.bone_tags[j].mesh = entity->bf.model->mesh_tree[j].mesh;
-                entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh2;
+                entity->bf.bone_tags[j].mesh_base = entity->bf.model->mesh_tree[j].mesh_base;
+                entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh_skin;
                 entity->bf.bone_tags[j].mesh_slot = NULL;
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);

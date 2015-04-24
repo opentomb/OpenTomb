@@ -47,6 +47,9 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ent->dir_flag = ENT_STAY;
     Mat4_E_macro(ret->collision_transform);
 
+    ret->weapon_current_state = 0x00;
+    ret->current_weapon = 0;
+
     ret->resp.vertical_collide = 0x00;
     ret->resp.horizontal_collide = 0x00;
     ret->resp.kill = 0x00;
@@ -386,9 +389,9 @@ void Character_CreateCollisionObject(struct entity_s *ent)
     for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
     {
         btVector3 box;
-        box.m_floats[0] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[0] - ent->bf.model->mesh_tree[i].mesh->bb_min[0]);
-        box.m_floats[1] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[1] - ent->bf.model->mesh_tree[i].mesh->bb_min[1]);
-        box.m_floats[2] = 0.40 * (ent->bf.model->mesh_tree[i].mesh->bb_max[2] - ent->bf.model->mesh_tree[i].mesh->bb_min[2]);
+        box.m_floats[0] = 0.40 * (ent->bf.model->mesh_tree[i].mesh_base->bb_max[0] - ent->bf.model->mesh_tree[i].mesh_base->bb_min[0]);
+        box.m_floats[1] = 0.40 * (ent->bf.model->mesh_tree[i].mesh_base->bb_max[1] - ent->bf.model->mesh_tree[i].mesh_base->bb_min[1]);
+        box.m_floats[2] = 0.40 * (ent->bf.model->mesh_tree[i].mesh_base->bb_max[2] - ent->bf.model->mesh_tree[i].mesh_base->bb_min[2]);
         ent->character->shapes[i] = new btBoxShape(box);
     }
 #endif
@@ -1187,7 +1190,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             numPenetrationLoops = 0;
             ltr = ent->bf.bone_tags[m].full_transform;
             Mat4_Mat4_mul_macro(tr, ent->transform, ltr);
-            v = ent->bf.model->mesh_tree[m].mesh->centre;
+            v = ent->bf.model->mesh_tree[m].mesh_base->centre;
             ent->character->ghostObject->setCollisionShape(ent->character->shapes[m]);
 
             ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(tr);
@@ -2696,16 +2699,16 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
     return 1;
 }
 
-///@TODO: update override flag filling script (TR_III+)
 // overrided == 0x00: no overriding;
-// overrided == 0x01: overriding weapons in the hands;
-// overrided == 0x02: overriding slots for weapons;
-// overrided == 0x03: draw weapon and original meshes;
+// overrided == 0x01: overriding mesh in armed state;
+// overrided == 0x02: add mesh to slot in armed state;
+// overrided == 0x03: overriding mesh in disarmed state;
+// overrided == 0x04: add mesh to slot in disarmed state;
 int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, weapon_model);
 
-    if((sm != NULL) && (ent->bf.bone_tag_count == sm->mesh_count))
+    if((sm != NULL) && (ent->bf.bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
     {
         skeletal_model_p bm = ent->bf.model;
         if(ent->bf.next == NULL)
@@ -2719,7 +2722,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 
         for(int i=0;i<bm->mesh_count;i++)
         {
-            ent->bf.bone_tags[i].mesh = bm->mesh_tree[i].mesh;
+            ent->bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
             ent->bf.bone_tags[i].mesh_slot = NULL;
         }
 
@@ -2729,7 +2732,11 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
-                    ent->bf.bone_tags[i].mesh = sm->mesh_tree[i].mesh;
+                    ent->bf.bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                }
+                else if(sm->mesh_tree[i].replace_mesh == 0x02)
+                {
+                    ent->bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh_base;
                 }
             }
         }
@@ -2737,13 +2744,13 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         {
             for(int i=0;i<bm->mesh_count;i++)
             {
-                if(sm->mesh_tree[i].replace_mesh == 0x02)
+                if(sm->mesh_tree[i].replace_mesh == 0x03)
                 {
-                    ent->bf.bone_tags[i].mesh = sm->mesh_tree[i].mesh;
+                    ent->bf.bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
                 }
-                else if(sm->mesh_tree[i].replace_mesh == 0x03)
+                else if(sm->mesh_tree[i].replace_mesh == 0x04)
                 {
-                    ent->bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh;
+                    ent->bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh_base;
                 }
             }
             ent->bf.next->model = NULL;
@@ -2757,7 +2764,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         skeletal_model_p bm = ent->bf.model;
         for(int i=0;i<bm->mesh_count;i++)
         {
-            ent->bf.bone_tags[i].mesh = bm->mesh_tree[i].mesh;
+            ent->bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
             ent->bf.bone_tags[i].mesh_slot = NULL;
         }
         if(ent->bf.next != NULL)

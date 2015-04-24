@@ -370,7 +370,7 @@ void SkeletonModel_FillTransparancy(skeletal_model_p model)
     model->transparancy_flags = MESH_FULL_OPAQUE;
     for(uint16_t i=0;i<model->mesh_count;i++)
     {
-        if(model->mesh_tree[i].mesh->transparency_polygons != NULL)
+        if(model->mesh_tree[i].mesh_base->transparency_polygons != NULL)
         {
             model->transparancy_flags = MESH_HAS_TRANSPERENCY;
             return;
@@ -385,7 +385,8 @@ mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
 
     for(int i=0;i<tags_count;i++)
     {
-        ret[i].mesh = src[i].mesh;
+        ret[i].mesh_base = src[i].mesh_base;
+        ret[i].mesh_skin = src[i].mesh_skin;
         ret[i].flag = src[i].flag;
         vec3_copy(ret[i].offset, src[i].offset);
         ret[i].replace_anim = src[i].replace_anim;
@@ -396,21 +397,17 @@ mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
 
 void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
-    //Sys_DebugLog(LOG_FILENAME, "tree_1:");
     for(int i=0;i<tags_count;i++)
     {
-        //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->id);
-        dst[i].mesh = src[i].mesh;
+        dst[i].mesh_base = src[i].mesh_base;
     }
 }
 
 void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
-    //Sys_DebugLog(LOG_FILENAME, "tree_2:");
     for(int i=0;i<tags_count;i++)
     {
-        //Sys_DebugLog(LOG_FILENAME, "id = %d\n", src[i].mesh->id);
-        dst[i].mesh2 = src[i].mesh;
+        dst[i].mesh_skin = src[i].mesh_base;
     }
 }
 
@@ -433,25 +430,25 @@ void FillSkinnedMeshMap(skeletal_model_p model)
     int8_t *ch;
     btScalar tv[3];
     vertex_p v, rv;
-    base_mesh_p mesh, mesh2;
+    base_mesh_p mesh_base, mesh_skin;
     mesh_tree_tag_p tree_tag, prev_tree_tag;
 
     tree_tag = model->mesh_tree;
     for(uint16_t i=0;i<model->mesh_count;i++,tree_tag++)
     {
-        mesh = tree_tag->mesh;
-        mesh2 = tree_tag->mesh2;
+        mesh_base = tree_tag->mesh_base;
+        mesh_skin = tree_tag->mesh_skin;
 
-        if(!mesh2)
+        if(!mesh_skin)
         {
             return;
         }
 
-        ch = mesh2->skin_map = (int8_t*)malloc(mesh2->vertex_count * sizeof(int8_t));
-        v = mesh2->vertices;
-        for(uint32_t k=0;k<mesh2->vertex_count;k++,v++,ch++)
+        ch = mesh_skin->skin_map = (int8_t*)malloc(mesh_skin->vertex_count * sizeof(int8_t));
+        v = mesh_skin->vertices;
+        for(uint32_t k=0;k<mesh_skin->vertex_count;k++,v++,ch++)
         {
-            rv = FindVertexInMesh(mesh, v->position);
+            rv = FindVertexInMesh(mesh_base, v->position);
             if(rv != NULL)
             {
                 *ch = 1;
@@ -465,7 +462,7 @@ void FillSkinnedMeshMap(skeletal_model_p model)
                 prev_tree_tag = model->mesh_tree;
                 for(uint16_t l=0;l<model->mesh_count;l++,prev_tree_tag++)
                 {
-                    rv = FindVertexInMesh(prev_tree_tag->mesh, tv);
+                    rv = FindVertexInMesh(prev_tree_tag->mesh_base, tv);
                     if(rv != NULL)
                     {
                         *ch = 2;

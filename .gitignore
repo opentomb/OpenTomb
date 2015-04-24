@@ -1,22 +1,19 @@
 *.a
 *.d
+*.o
 *.htm
 *.html
-*.o
 *.orig
 *.txt
 .DS_Store
-.hgignore.orig
-build
 CMakeLists.txt.user
-config.lua.orig
 obj/
+bin/
+build/
 opentomb-code.cbp
 opentomb-code.cscope_file_list
 opentomb-code.depend
 opentomb-code.layout
 OpenTomb\.xcodeproj/project\.xcworkspace
 OpenTomb\.xcodeproj/xcuserdata
-scripts\config\control_constants.lua.orig
-src\main_SDL.cpp.orig
 syntax: glob
