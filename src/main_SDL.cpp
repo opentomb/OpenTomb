@@ -6,7 +6,9 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
+#if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
+#endif
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
@@ -438,6 +440,7 @@ void Engine_InitSDLVideo()
     Con_AddLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
 }
 
+#if !defined(__MACOSX__)
 void Engine_InitSDLImage()
 {
     int flags = IMG_INIT_JPG | IMG_INIT_PNG;
@@ -448,6 +451,7 @@ void Engine_InitSDLImage()
         Sys_DebugLog(LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
     }
 }
+#endif
 
 void Engine_InitAL()
 {
@@ -497,7 +501,10 @@ int main(int argc, char **argv)
     // Init generic SDL interfaces.
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
+	
+#if !defined(__MACOSX__)
     Engine_InitSDLImage();
+#endif
 
     // Additional OpenGL initialization.
     Engine_InitGL();

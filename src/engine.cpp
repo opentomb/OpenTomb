@@ -1,7 +1,9 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
+#if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
+#endif
 #include <SDL2/SDL_opengl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2889,7 +2891,9 @@ void Engine_Shutdown(int val)
     frame_vertex_buffer_size = 0;
     frame_vertex_buffer_size_left = 0;
 
+#if !defined(__MACOSX__)
     IMG_Quit();
+#endif
     SDL_Quit();
 
     exit(val);
