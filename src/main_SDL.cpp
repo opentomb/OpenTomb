@@ -1155,10 +1155,13 @@ void DebugKeys(int button, int state)
                 break;
 
             case SDLK_i:
-                anim++;
-                if(anim > engine_world.skeletal_models[model].animation_count-1)
+                if (engine_world.skeletal_model_count > 0)
                 {
-                    anim = 0;
+                    anim++;
+                    if(anim > engine_world.skeletal_models[model].animation_count-1)
+                    {
+                        anim = 0;
+                    }
                 }
                 break;
 
