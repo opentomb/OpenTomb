@@ -785,7 +785,6 @@ void Engine_Frame(btScalar time)
 void ShowDebugInfo()
 {
     entity_p ent;
-    btScalar tr[16];
     btTransform trans;
     GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 

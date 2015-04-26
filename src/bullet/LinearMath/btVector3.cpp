@@ -391,6 +391,8 @@ long _maxdot_large( const float *vv, const float *vec, unsigned long count, floa
                 y = _mm_shuffle_ps(xy, xy, 0x55);
             }
                 break;
+            default:
+                assert(false); // Silence clang warning
         }
         x = x+y;
         x = x+z;
@@ -779,6 +781,8 @@ long _mindot_large( const float *vv, const float *vec, unsigned long count, floa
                 y = _mm_shuffle_ps(xy, xy, 0x55);
             }
                 break;
+            default:
+                assert(false); // Silence clang warning
         }
         x = x+y;
         x = x+z;

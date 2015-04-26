@@ -3229,7 +3229,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
 {
     tr_animation_t *tr_animation;
 
-    if((anim < 0) || (anim >= tr->animations_count))
+    if(anim >= tr->animations_count)
     {
         return -1;
     }
@@ -3486,7 +3486,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             bone_frame->command = 0x00;
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
-            if(frame_offset < 0 || frame_offset >= tr->frame_data_size)
+            if(frame_offset >= tr->frame_data_size)
             {
                 //Con_Printf("Bad frame offset");
                 for(uint16_t k=0;k<bone_frame->bone_tag_count;k++)
