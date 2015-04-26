@@ -330,6 +330,7 @@
 		52B8342B1AED5BF7003B8288 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B8342A1AED5BF7003B8288 /* libz.dylib */; };
 		52B8342D1AED5C23003B8288 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834251AED5B96003B8288 /* SDL2.framework */; };
 		52B8342E1AED5C23003B8288 /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834251AED5B96003B8288 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		52B834311AED7BCC003B8288 /* libreadline.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834301AED7BCC003B8288 /* libreadline.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1399,6 +1400,7 @@
 		52B834271AED5BDE003B8288 /* FindConfigFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FindConfigFile.h; sourceTree = "<group>"; };
 		52B834281AED5BDE003B8288 /* FindConfigFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FindConfigFile.m; sourceTree = "<group>"; };
 		52B8342A1AED5BF7003B8288 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		52B834301AED7BCC003B8288 /* libreadline.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libreadline.dylib; path = usr/lib/libreadline.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1408,6 +1410,7 @@
 			files = (
 				52B8342D1AED5C23003B8288 /* SDL2.framework in Frameworks */,
 				52B8342B1AED5BF7003B8288 /* libz.dylib in Frameworks */,
+				52B834311AED7BCC003B8288 /* libreadline.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3043,6 +3046,7 @@
 		52B8342C1AED5BFE003B8288 /* System */ = {
 			isa = PBXGroup;
 			children = (
+				52B834301AED7BCC003B8288 /* libreadline.dylib */,
 				52B8342A1AED5BF7003B8288 /* libz.dylib */,
 			);
 			name = System;
@@ -3468,6 +3472,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					"LUA_USE_MACOSX=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
@@ -3513,6 +3518,7 @@
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = "LUA_USE_MACOSX=1";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
