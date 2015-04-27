@@ -77,7 +77,7 @@ void	btCompoundShape::addChildShape(const btTransform& localTransform,btCollisio
 	if (m_dynamicAabbTree)
 	{
 		const btDbvtVolume	bounds=btDbvtVolume::FromMM(localAabbMin,localAabbMax);
-		int index = m_children.size();
+		size_t index = m_children.size();
 		child.m_node = m_dynamicAabbTree->insert(bounds,(void*)index);
 	}
 
@@ -301,7 +301,7 @@ void btCompoundShape::createAabbTreeFromChildren()
         m_dynamicAabbTree = new(mem) btDbvt();
         btAssert(mem==m_dynamicAabbTree);
 
-        for ( int index = 0; index < m_children.size(); index++ )
+        for ( size_t index = 0; index < m_children.size(); index++ )
         {
             btCompoundShapeChild &child = m_children[index];
 

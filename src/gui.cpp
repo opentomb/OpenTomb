@@ -1,6 +1,10 @@
 
 #include <stdint.h>
+#ifdef __APPLE_CC__
+#include <ImageIO/ImageIO.h>
+#else
 #include <SDL2/SDL_image.h>
+#endif
 
 #include "gl_util.h"
 #include "gl_font.h"
@@ -1695,6 +1699,74 @@ void gui_Fader::SetAspect()
 
 bool gui_Fader::SetTexture(const char *texture_path)
 {
+#ifdef __APPLE_CC__
+    // Load the texture file using ImageIO
+    CGDataProviderRef provider = CGDataProviderCreateWithFilename(texture_path);
+    CFDictionaryRef empty = CFDictionaryCreate(kCFAllocatorDefault, nullptr, nullptr, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CGImageSourceRef source = CGImageSourceCreateWithDataProvider(provider, empty);
+    CGDataProviderRelease(provider);
+    CFRelease(empty);
+
+    // Check whether loading succeeded
+    CGImageSourceStatus status = CGImageSourceGetStatus(source);
+    if (status != kCGImageStatusComplete)
+    {
+        CFRelease(source);
+        Con_Printf("Warning: image %s could not be loaded, status is %d", texture_path, status);
+        return false;
+    }
+
+    // Get the image
+    CGImageRef image = CGImageSourceCreateImageAtIndex(source, 0, nullptr);
+    CFRelease(source);
+    size_t width = CGImageGetWidth(image);
+    size_t height = CGImageGetHeight(image);
+
+    // Prepare the data to write to
+    uint8_t *data = new uint8_t[width * height * 4];
+
+    // Write image to bytes. This is done by drawing it into an off-screen image context using our data as the backing store
+    CGColorSpaceRef deviceRgb = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(data, width, height, 8, width*4, deviceRgb, kCGImageAlphaPremultipliedFirst);
+    CGColorSpaceRelease(deviceRgb);
+    assert(context);
+
+    CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
+
+    CGContextRelease(context);
+    CGImageRelease(image);
+
+    // Drop previously assigned texture, if it exists.
+    DropTexture();
+
+    // Have OpenGL generate a texture object handle for us
+    glGenTextures(1, &mTexture);
+
+    // Bind the texture object
+    glBindTexture(GL_TEXTURE_2D, mTexture);
+
+    // Set the texture's stretching properties
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Load texture. The weird format works out to ARGB8 in the end
+    // (on little-endian systems), which is what we specified above and what
+    // OpenGL prefers internally.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLuint) width, (GLuint) height, 0,
+                 GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
+
+    // Cleanup
+    delete [] data;
+
+    // Setup the additional required information
+    mTextureWidth  = width;
+    mTextureHeight = height;
+
+    SetAspect();
+
+    Con_Printf("Loaded fader picture: %s", texture_path);
+    return true;
+#else
     SDL_Surface *surface = IMG_Load(texture_path);
     GLenum       texture_format;
     GLint        color_depth;
@@ -1774,6 +1846,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
         mTexture = 0;
         return false;
     }
+#endif
 }
 
 bool gui_Fader::DropTexture()

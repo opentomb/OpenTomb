@@ -24,14 +24,8 @@
 #ifndef GL_UTIL_H
 #define GL_UTIL_H
 
-#if defined(__MACOSX__)
-#include <OpenGL/gl.h>          /* Header File For The OpenGL Library */
-#elif defined(__MACOS__)
-#include <gl.h>                 /* Header File For The OpenGL Library */
-#else
 #include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */  
-#endif
+#include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */
 
 #define SAFE_GET_PROC(func, type, name) func = (type)SDL_GL_GetProcAddress(name)
 
