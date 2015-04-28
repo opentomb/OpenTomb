@@ -2644,6 +2644,70 @@ void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
     }
 }
 
+static void tr_copyNormals(const polygon_p polygon, base_mesh_p mesh, const uint16_t *mesh_vertex_indices)
+{
+    for (int i = 0; i < polygon->vertex_count; i++)
+    {
+        vec3_copy(polygon->vertices[i].normal, mesh->vertices[mesh_vertex_indices[i]].normal);
+    }
+}
+
+void tr_accumulateNormals(tr4_mesh_t *tr_mesh, base_mesh_p mesh, int numCorners, const uint16_t *vertex_indices, polygon_p p)
+{
+    Polygon_Resize(p, numCorners);
+    
+    for (int i = 0; i < numCorners; i++)
+    {
+        TR_vertex_to_arr(p->vertices[i].position, &tr_mesh->vertices[vertex_indices[i]]);
+    }
+    Polygon_FindNormale(p);
+    
+    for (int i = 0; i < numCorners; i++)
+    {
+        vec3_add(mesh->vertices[vertex_indices[i]].normal, mesh->vertices[vertex_indices[i]].normal, p->plane);
+    }
+}
+
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, const uint16_t *vertex_indices, unsigned color, polygon_p p)
+{
+    for (int i = 0; i < p->vertex_count; i++)
+    {
+        p->vertices[i].color[0] = tr->palette.colour[color].r / 255.0f;
+        p->vertices[i].color[1] = tr->palette.colour[color].g / 255.0f;
+        p->vertices[i].color[2] = tr->palette.colour[color].b / 255.0f;
+        if(tr_mesh->num_lights == tr_mesh->num_vertices)
+        {
+            p->vertices[i].color[0] = p->vertices[i].color[0] * 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
+            p->vertices[i].color[1] = p->vertices[i].color[1] * 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
+            p->vertices[i].color[2] = p->vertices[i].color[2] * 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
+        }
+        p->vertices[i].color[3] = 1.0f;
+        
+        p->vertices[i].tex_coord[0] = i & 2 ? 1.0 : 0.0;
+        p->vertices[i].tex_coord[1] = i >= 2 ? 1.0 : 0.0;
+    }
+    mesh->uses_vertex_colors = 1;
+}
+
+void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t *vertex_indices, polygon_p p)
+{
+    for (int i = 0; i < p->vertex_count; i++)
+    {
+        if(tr_mesh->num_lights == tr_mesh->num_vertices)
+        {
+            p->vertices[i].color[0] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
+            p->vertices[i].color[1] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
+            p->vertices[i].color[2] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
+            p->vertices[i].color[3] = 1.0f;
+            
+            mesh->uses_vertex_colors = 1;
+        }
+        else
+        {
+            vec4_set_one(p->vertices[i].color);
+        }
+    }
+}
 
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr)
 {
@@ -2653,7 +2717,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     tr4_face3_t *face3;
     tr4_object_texture_t *tex;
     polygon_p p;
-    btScalar *t, n;
+    btScalar n;
     vertex_p vertex;
     uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
@@ -2708,8 +2772,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         face3 = &tr_mesh->textured_triangles[i];
         tex = &tr->object_textures[face3->texture & tex_mask];
 
-        Polygon_Resize(p, 3);
-
         p->double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
         SetAnimTexture(p, face3->texture & tex_mask, world);
@@ -2723,39 +2785,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
             p->transparency = tex->transparency_flags;
         }
 
-        TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[0]]);
-        TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face3->vertices[1]]);
-        TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face3->vertices[2]]);
-        Polygon_FindNormale(p);
-        t = mesh->vertices[face3->vertices[0]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face3->vertices[1]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face3->vertices[2]].normal; vec3_add(t, t, p->plane);
-
-        if(tr_mesh->num_lights == tr_mesh->num_vertices)
-        {
-            p->vertices[0].color[0] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].color[1] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].color[2] = 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].color[3] = 1.0f;
-
-            p->vertices[1].color[0] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].color[1] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].color[2] = 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].color[3] = 1.0f;
-
-            p->vertices[2].color[0] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].color[1] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].color[2] = 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].color[3] = 1.0f;
-
-            mesh->uses_vertex_colors = 1;
-        }
-        else
-        {
-            vec4_set_one(p->vertices[0].color);
-            vec4_set_one(p->vertices[1].color);
-            vec4_set_one(p->vertices[2].color);
-        }
+        tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
+        tr_setupTexturedFace(tr_mesh, mesh, face3->vertices, p);
 
         world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
     }
@@ -2767,71 +2798,12 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     {
         face3 = &tr_mesh->coloured_triangles[i];
         col = face3->texture & 0xff;
-        Polygon_Resize(p, 3);
         p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
         p->transparency = 0;
         p->anim_id = 0;
-
-        TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face3->vertices[0]]);
-        TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face3->vertices[1]]);
-        TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face3->vertices[2]]);
-        Polygon_FindNormale(p);
-        t = mesh->vertices[face3->vertices[0]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face3->vertices[1]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face3->vertices[2]].normal; vec3_add(t, t, p->plane);
-
-        if(tr_mesh->num_lights == tr_mesh->num_vertices)
-        {
-            p->vertices[0].color[0] = (float)(tr->palette.colour[col].r / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].color[1] = (float)(tr->palette.colour[col].g / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].color[2] = (float)(tr->palette.colour[col].b / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[0]] / (8192.0f));
-            p->vertices[0].color[3] = (float)1.0;
-
-            p->vertices[1].color[0] = (float)(tr->palette.colour[col].r / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].color[1] = (float)(tr->palette.colour[col].g / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].color[2] = (float)(tr->palette.colour[col].b / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[1]] / (8192.0f));
-            p->vertices[1].color[3] = (float)1.0;
-
-            p->vertices[2].color[0] = (float)(tr->palette.colour[col].r / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].color[1] = (float)(tr->palette.colour[col].g / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].color[2] = (float)(tr->palette.colour[col].b / 255.0)
-                * 1.0f - (tr_mesh->lights[face3->vertices[2]] / (8192.0f));
-            p->vertices[2].color[3] = (float)1.0;
-        }
-        else
-        {
-            p->vertices[0].color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[0].color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[0].color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[0].color[3] = (float)1.0;
-
-            p->vertices[1].color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[1].color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[1].color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[1].color[3] = (float)1.0;
-
-            p->vertices[2].color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[2].color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[2].color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[2].color[3] = (float)1.0;
-        }
-
-        p->vertices[0].tex_coord[0] = 0.0;
-        p->vertices[0].tex_coord[1] = 0.0;
-        p->vertices[1].tex_coord[0] = 1.0;
-        p->vertices[1].tex_coord[1] = 0.0;
-        p->vertices[2].tex_coord[0] = 1.0;
-        p->vertices[2].tex_coord[1] = 1.0;
-
-        mesh->uses_vertex_colors = 1;
+        
+        tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
+        tr_setupColoredFace(tr_mesh, tr, mesh, face3->vertices, col, p);
     }
 
     /*
@@ -2841,7 +2813,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     {
         face4 = &tr_mesh->textured_rectangles[i];
         tex = &tr->object_textures[face4->texture & tex_mask];
-        Polygon_Resize(p, 4);
 
         p->double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
 
@@ -2855,48 +2826,9 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         {
             p->transparency = tex->transparency_flags;
         }
-
-        TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face4->vertices[0]]);
-        TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face4->vertices[1]]);
-        TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face4->vertices[2]]);
-        TR_vertex_to_arr(p->vertices[3].position, &tr_mesh->vertices[face4->vertices[3]]);
-        Polygon_FindNormale(p);
-        t = mesh->vertices[face4->vertices[0]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[1]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[2]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[3]].normal; vec3_add(t, t, p->plane);
-
-        if(tr_mesh->num_lights == tr_mesh->num_vertices)
-        {
-            p->vertices[0].color[0] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].color[1] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].color[2] = 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].color[3] = 1.0f;
-
-            p->vertices[1].color[0] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].color[1] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].color[2] = 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].color[3] = 1.0f;
-
-            p->vertices[2].color[0] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].color[1] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].color[2] = 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].color[3] = 1.0f;
-
-            p->vertices[3].color[0] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].color[1] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].color[2] = 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].color[3] = 1.0f;
-
-            mesh->uses_vertex_colors = 1;
-        }
-        else
-        {
-            vec4_set_one(p->vertices[0].color);
-            vec4_set_one(p->vertices[1].color);
-            vec4_set_one(p->vertices[2].color);
-            vec4_set_one(p->vertices[3].color);
-        }
+        
+        tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
+        tr_setupTexturedFace(tr_mesh, mesh, face4->vertices, p);
 
         world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
     }
@@ -2912,84 +2844,9 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
         p->transparency = 0;
         p->anim_id = 0;
-
-        TR_vertex_to_arr(p->vertices[0].position, &tr_mesh->vertices[face4->vertices[0]]);
-        TR_vertex_to_arr(p->vertices[1].position, &tr_mesh->vertices[face4->vertices[1]]);
-        TR_vertex_to_arr(p->vertices[2].position, &tr_mesh->vertices[face4->vertices[2]]);
-        TR_vertex_to_arr(p->vertices[3].position, &tr_mesh->vertices[face4->vertices[3]]);
-        Polygon_FindNormale(p);
-        t = mesh->vertices[face4->vertices[0]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[1]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[2]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[3]].normal; vec3_add(t, t, p->plane);
-
-        if(tr_mesh->num_lights == tr_mesh->num_vertices)
-        {
-            p->vertices[0].color[0] = (float)(tr->palette.colour[col].r / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].color[1] = (float)(tr->palette.colour[col].g / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].color[2] = (float)(tr->palette.colour[col].b / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[0]] / (8192.0f));
-            p->vertices[0].color[3] = (float)1.0;
-
-            p->vertices[1].color[0] = (float)(tr->palette.colour[col].r / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].color[1] = (float)(tr->palette.colour[col].g / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].color[2] = (float)(tr->palette.colour[col].b / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[1]] / (8192.0f));
-            p->vertices[1].color[3] = (float)1.0;
-
-            p->vertices[2].color[0] = (float)(tr->palette.colour[col].r / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].color[1] = (float)(tr->palette.colour[col].g / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].color[2] = (float)(tr->palette.colour[col].b / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[2]] / (8192.0f));
-            p->vertices[2].color[3] = (float)1.0;
-
-            p->vertices[3].color[0] = (float)(tr->palette.colour[col].r / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].color[1] = (float)(tr->palette.colour[col].g / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].color[2] = (float)(tr->palette.colour[col].b / 255.0)
-                * 1.0f - (tr_mesh->lights[face4->vertices[3]] / (8192.0f));
-            p->vertices[3].color[3] = (float)1.0;
-        }
-        else
-        {
-            p->vertices[0].color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[0].color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[0].color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[0].color[3] = (float)1.0;
-
-            p->vertices[1].color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[1].color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[1].color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[1].color[3] = (float)1.0;
-
-            p->vertices[2].color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[2].color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[2].color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[2].color[3] = (float)1.0;
-
-            p->vertices[3].color[0] = (float)tr->palette.colour[col].r / 255.0;
-            p->vertices[3].color[1] = (float)tr->palette.colour[col].g / 255.0;
-            p->vertices[3].color[2] = (float)tr->palette.colour[col].b / 255.0;
-            p->vertices[3].color[3] = (float)1.0;
-        }
-
-        p->vertices[0].tex_coord[0] = 0.0;
-        p->vertices[0].tex_coord[1] = 0.0;
-        p->vertices[1].tex_coord[0] = 1.0;
-        p->vertices[1].tex_coord[1] = 0.0;
-        p->vertices[2].tex_coord[0] = 1.0;
-        p->vertices[2].tex_coord[1] = 1.0;
-        p->vertices[3].tex_coord[0] = 0.0;
-        p->vertices[3].tex_coord[1] = 1.0;
-
-        mesh->uses_vertex_colors = 1;
+        
+        tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
+        tr_setupColoredFace(tr_mesh, tr, mesh, face4->vertices, col, p);
     }
 
     /*
@@ -3007,18 +2864,12 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      */
     for(int16_t i=0;i<tr_mesh->num_textured_triangles;i++,p++)
     {
-        face3 = &tr_mesh->textured_triangles[i];
-        vec3_copy(p->vertices[0].normal, mesh->vertices[face3->vertices[0]].normal);
-        vec3_copy(p->vertices[1].normal, mesh->vertices[face3->vertices[1]].normal);
-        vec3_copy(p->vertices[2].normal, mesh->vertices[face3->vertices[2]].normal);
+        tr_copyNormals(p, mesh, tr_mesh->textured_triangles[i].vertices);
     }
 
     for(int16_t i=0;i<tr_mesh->num_coloured_triangles;i++,p++)
     {
-        face3 = &tr_mesh->coloured_triangles[i];
-        vec3_copy(p->vertices[0].normal, mesh->vertices[face3->vertices[0]].normal);
-        vec3_copy(p->vertices[1].normal, mesh->vertices[face3->vertices[1]].normal);
-        vec3_copy(p->vertices[2].normal, mesh->vertices[face3->vertices[2]].normal);
+        tr_copyNormals(p, mesh, tr_mesh->coloured_triangles[i].vertices);
     }
 
     /*
@@ -3026,20 +2877,12 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      */
     for(int16_t i=0;i<tr_mesh->num_textured_rectangles;i++,p++)
     {
-        face4 = &tr_mesh->textured_rectangles[i];
-        vec3_copy(p->vertices[0].normal, mesh->vertices[face4->vertices[0]].normal);
-        vec3_copy(p->vertices[1].normal, mesh->vertices[face4->vertices[1]].normal);
-        vec3_copy(p->vertices[2].normal, mesh->vertices[face4->vertices[2]].normal);
-        vec3_copy(p->vertices[3].normal, mesh->vertices[face4->vertices[3]].normal);
+        tr_copyNormals(p, mesh, tr_mesh->textured_rectangles[i].vertices);
     }
 
     for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++,p++)
     {
-        face4 = &tr_mesh->coloured_rectangles[i];
-        vec3_copy(p->vertices[0].normal, mesh->vertices[face4->vertices[0]].normal);
-        vec3_copy(p->vertices[1].normal, mesh->vertices[face4->vertices[1]].normal);
-        vec3_copy(p->vertices[2].normal, mesh->vertices[face4->vertices[2]].normal);
-        vec3_copy(p->vertices[3].normal, mesh->vertices[face4->vertices[3]].normal);
+        tr_copyNormals(p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }
 
     BaseMesh_FindBB(mesh);
@@ -3053,6 +2896,23 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     SortPolygonsInMesh(mesh);
 }
 
+void tr_setupRoomVertices(const tr5_room_t *tr_room, base_mesh_p mesh, int numCorners, const uint16_t *vertices, polygon_p p)
+{
+    Polygon_Resize(p, numCorners);
+    
+    for (int i = 0; i < numCorners; i++)
+    {
+        TR_vertex_to_arr(p->vertices[i].position, &tr_room->vertices[vertices[i]].vertex);
+    }
+    Polygon_FindNormale(p);
+    
+    for (int i = 0; i < numCorners; i++)
+    {
+        vec3_add(mesh->vertices[vertices[i]].normal, mesh->vertices[vertices[i]].normal, p->plane);
+        vec3_copy(p->vertices[i].normal, p->plane);
+        TR_color_to_arr(p->vertices[i].color, &tr_room->vertices[vertices[i]].colour);
+    }
+}
 
 void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr)
 {
@@ -3062,7 +2922,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     tr4_object_texture_t *tex;
     polygon_p p;
     base_mesh_p mesh;
-    btScalar *t, n;
+    btScalar n;
     vertex_p vertex;
     uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
@@ -3109,23 +2969,9 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         face3 = &tr_room->triangles[i];
         tex = &tr->object_textures[face3->texture & tex_mask];
         SetAnimTexture(p, face3->texture & tex_mask, world);
-        Polygon_Resize(p, 3);
         p->transparency = tex->transparency_flags;
 
-        TR_vertex_to_arr(p->vertices[0].position, &tr_room->vertices[face3->vertices[0]].vertex);
-        TR_vertex_to_arr(p->vertices[1].position, &tr_room->vertices[face3->vertices[1]].vertex);
-        TR_vertex_to_arr(p->vertices[2].position, &tr_room->vertices[face3->vertices[2]].vertex);
-        Polygon_FindNormale(p);
-        t = mesh->vertices[face3->vertices[0]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face3->vertices[1]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face3->vertices[2]].normal; vec3_add(t, t, p->plane);
-        vec3_copy(p->vertices[0].normal, p->plane);
-        vec3_copy(p->vertices[1].normal, p->plane);
-        vec3_copy(p->vertices[2].normal, p->plane);
-
-        TR_color_to_arr(p->vertices[0].color, &tr_room->vertices[face3->vertices[0]].colour);
-        TR_color_to_arr(p->vertices[1].color, &tr_room->vertices[face3->vertices[1]].colour);
-        TR_color_to_arr(p->vertices[2].color, &tr_room->vertices[face3->vertices[2]].colour);
+        tr_setupRoomVertices(tr_room, mesh, 3, face3->vertices, p);
         
         world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
     }
@@ -3138,27 +2984,9 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         face4 = &tr_room->rectangles[i];
         tex = &tr->object_textures[face4->texture & tex_mask];
         SetAnimTexture(p, face4->texture & tex_mask, world);
-        Polygon_Resize(p, 4);
         p->transparency = tex->transparency_flags;
-
-        TR_vertex_to_arr(p->vertices[0].position, &tr_room->vertices[face4->vertices[0]].vertex);
-        TR_vertex_to_arr(p->vertices[1].position, &tr_room->vertices[face4->vertices[1]].vertex);
-        TR_vertex_to_arr(p->vertices[2].position, &tr_room->vertices[face4->vertices[2]].vertex);
-        TR_vertex_to_arr(p->vertices[3].position, &tr_room->vertices[face4->vertices[3]].vertex);
-        Polygon_FindNormale(p);
-        t = mesh->vertices[face4->vertices[0]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[1]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[2]].normal; vec3_add(t, t, p->plane);
-        t = mesh->vertices[face4->vertices[3]].normal; vec3_add(t, t, p->plane);
-        vec3_copy(p->vertices[0].normal, p->plane);
-        vec3_copy(p->vertices[1].normal, p->plane);
-        vec3_copy(p->vertices[2].normal, p->plane);
-        vec3_copy(p->vertices[3].normal, p->plane);
-
-        TR_color_to_arr(p->vertices[0].color, &tr_room->vertices[face4->vertices[0]].colour);
-        TR_color_to_arr(p->vertices[1].color, &tr_room->vertices[face4->vertices[1]].colour);
-        TR_color_to_arr(p->vertices[2].color, &tr_room->vertices[face4->vertices[2]].colour);
-        TR_color_to_arr(p->vertices[3].color, &tr_room->vertices[face4->vertices[3]].colour);
+        
+        tr_setupRoomVertices(tr_room, mesh, 4, face4->vertices, p);
         
         world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
     }
@@ -3179,10 +3007,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     p = mesh->polygons;
     for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
     {
-        face3 = &tr_room->triangles[i];
-        vec3_copy(p->vertices[0].normal, mesh->vertices[face3->vertices[0]].normal);
-        vec3_copy(p->vertices[1].normal, mesh->vertices[face3->vertices[1]].normal);
-        vec3_copy(p->vertices[2].normal, mesh->vertices[face3->vertices[2]].normal);
+        tr_copyNormals(p, mesh, tr_room->triangles[i].vertices);
     }
 
     /*
@@ -3190,11 +3015,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
      */
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        face4 = &tr_room->rectangles[i];
-        vec3_copy(p->vertices[0].normal, mesh->vertices[face4->vertices[0]].normal);
-        vec3_copy(p->vertices[1].normal, mesh->vertices[face4->vertices[1]].normal);
-        vec3_copy(p->vertices[2].normal, mesh->vertices[face4->vertices[2]].normal);
-        vec3_copy(p->vertices[3].normal, mesh->vertices[face4->vertices[3]].normal);
+        tr_copyNormals(p, mesh, tr_room->rectangles[i].vertices);
     }
 
     BaseMesh_FindBB(mesh);
