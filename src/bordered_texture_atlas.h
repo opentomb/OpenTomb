@@ -78,12 +78,6 @@ class bordered_texture_atlas
     // How much border to add.
     int border_width;
     
-    // Store whether the data has been laid out. Adding more object textures after that is illegal.
-    bool data_has_been_laid_out = false;
-    
-    // Whether non-power-of-two textures are supported.
-    //int supports_npot;
-    
     // Result pages
     // Note: No capacity here, this is handled internally by the layout method. Also, all result pages have the same width, which will always be less than or equal to the height.
     unsigned long number_result_pages = 0;
@@ -92,24 +86,20 @@ class bordered_texture_atlas
     
     // Original data
     unsigned long number_original_pages = 0;
-    unsigned long capacity_original_pages = 0;
-    void **original_pages = nullptr;
+    const tr4_textile32_t *original_pages;
     
     // Object textures in the file.
     unsigned long number_file_object_textures = 0;
-    unsigned long capacity_file_object_textures = 0;
-    struct file_object_texture *file_object_textures = nullptr;
+    file_object_texture *file_object_textures = nullptr;
     
     // Sprite texture in the file.
     // Note: No data is saved for them, they get mapped directly to canonical textures.
     unsigned long number_sprite_textures = 0;
-    unsigned long capacity_sprite_textures = 0;
     unsigned long *canonical_textures_for_sprite_textures = nullptr;
     
     // Canonical object textures
     unsigned long number_canonical_object_textures = 0;
-    unsigned long capacity_canonical_object_textures = 0;
-    struct canonical_object_texture *canonical_object_textures = nullptr;
+    canonical_object_texture *canonical_object_textures = nullptr;
     
     /*! Lays out the texture data and switches the atlas to laid out mode. */
     void layOutTextures();
@@ -117,13 +107,24 @@ class bordered_texture_atlas
     /*! For sorting: Compares two different textures and sorts them by size. */
     static int compareCanonicalTextureSizes(const void *parameter1, const void *parameter2);
     
+    /*! Adds an object texture to the list. */
+    void addObjectTexture(const tr4_object_texture_t &texture);
+    
+    /*! Adds a sprite texture to the list. */
+    void addSpriteTexture(const tr_sprite_texture_t &texture);
+    
 public:
     /*!
-     * Create a new Bordered texture atlas with the specified border width. This
-     * width cannot be changed later.
+     * Create a new Bordered texture atlas with the specified border width and textures. This lays out all the data for the textures, but does not upload anything to OpenGL yet.
      * @param border The border width around each texture.
      */
-    bordered_texture_atlas(int border);
+    bordered_texture_atlas(int border,
+                           size_t page_count,
+                           const tr4_textile32_t *pages,
+                           size_t object_texture_count,
+                           const tr4_object_texture_t *object_textures,
+                           size_t sprite_texture_count,
+                           const tr_sprite_texture_t *sprite_textures);
     
     /*!
      * Destroy all contents of a bordered texture atlas. Using the atlas afterwards
@@ -131,30 +132,6 @@ public:
      * texture objects will not be destroyed.
      */
     ~bordered_texture_atlas();
-    
-    /*!
-     * Add a 32-bit 256x256 texture page. The atlas will use it to get the texture
-     * data later. It does not copy the data, so this pointer must remain valid at
-     * least until @see BorderedTextureAtlas_CreateTextures gets called.
-     * @param trpage The data. Must have a size of 256x256x4 = 256 kB, and be stored in RGBA format.
-     */
-    void addPage(void *trpage);
-    
-    /*!
-     * Add the contents of a Tomb Raider object texture. An object texture is how
-     * Tomb Raider stores its texture coordinates. As simplification, this method
-     * assumes/requires that this region is always an axis aligned rectangle, which
-     * is true for all known levels. Only textures that got added through this
-     * method will appear in the final result. They must be added in the original
-     * order for @see BorderedTextureAtlas_GetCoordinates to work as expected.
-     * @param texture The object texture.
-     */
-    void addObjectTexture(const tr4_object_texture_t &texture);
-    
-    /*!
-     * Same as above, but for sprite textures.
-     */
-    void addSpriteTexture(const tr_sprite_texture_t &texture);
     
     /*!
      * Returns the texture coordinates of the specified texture. This must only be
@@ -171,20 +148,20 @@ public:
                         bool reverse,
                         polygon_p poly,
                         signed shift = 0,
-                        bool split = false);
+                        bool split = false) const;
     
     /*!
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
      */
     void getSpriteCoordinates(unsigned long sprite_texture,
                               uint32_t &outPage,
-                              GLfloat *coordinates);
+                              GLfloat *coordinates) const;
     
     /*!
      * Returns the number of texture atlas pages that have been created. Triggers a
      * layout if none has happened so far.
      */
-    unsigned long getNumAtlasPages();
+    unsigned long getNumAtlasPages() const;
     
     /*!
      * Returns height of specified file object texture.
@@ -199,7 +176,7 @@ public:
      * @param textureNames The names of the textures.
      * @param additionalTextureNames How many texture names to create in addition to the needed ones.
      */
-    void createTextures(GLuint *textureNames, GLuint additionalTextureNames);
+    void createTextures(GLuint *textureNames, GLuint additionalTextureNames) const;
 
 };
 

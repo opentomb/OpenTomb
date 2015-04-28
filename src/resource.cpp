@@ -2355,22 +2355,13 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     int border_size = renderer.settings.texture_border;
     border_size = (border_size < 0)?(0):(border_size);
     border_size = (border_size > 128)?(128):(border_size);
-    world->tex_atlas = new bordered_texture_atlas(border_size);                // here is border size
-
-    for(uint32_t i = 0; i < tr->textile32_count; i++)
-    {
-        world->tex_atlas->addPage(tr->textile32[i].pixels);
-    }
-
-    for (uint32_t i = 0; i < tr->sprite_textures_count; i++)
-    {
-        world->tex_atlas->addSpriteTexture(tr->sprite_textures[i]);
-    }
-
-    for (uint32_t i = 0; i < tr->object_textures_count; i++)
-    {
-        world->tex_atlas->addObjectTexture(tr->object_textures[i]);
-    }
+    world->tex_atlas = new bordered_texture_atlas(border_size,
+                                                  tr->textile32_count,
+                                                  tr->textile32,
+                                                  tr->object_textures_count,
+                                                  tr->object_textures,
+                                                  tr->sprite_textures_count,
+                                                  tr->sprite_textures);
 
     world->tex_count = (uint32_t) world->tex_atlas->getNumAtlasPages() + 1;
     world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));

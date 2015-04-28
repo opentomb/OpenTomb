@@ -162,49 +162,53 @@ void bordered_texture_atlas::layOutTextures()
     for (unsigned long i = 0; i < number_result_pages; i++)
         BSPTree2D_Destroy(result_pages[i]);
     free(result_pages);
-
-    data_has_been_laid_out = true;
 }
 
 // Leave everything at 0, except border width. Calls to realloc will fill it up.
-bordered_texture_atlas::bordered_texture_atlas(int border)
+bordered_texture_atlas::bordered_texture_atlas(int border,
+                                               size_t page_count,
+                                               const tr4_textile32_t *pages,
+                                               size_t object_texture_count,
+                                               const tr4_object_texture_t *object_textures,
+                                               size_t sprite_texture_count,
+                                               const tr_sprite_texture_t *sprite_textures)
+: border_width(border),
+number_original_pages(page_count),
+original_pages(pages)
 {
-    border_width = border;
-
     GLint max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
     result_page_width = max_texture_edge_length;
-    //supports_npot = 0;//IsGLExtensionSupported("GL_ARB_texture_non_power_of_two");
+    
+    size_t maxNumberCanonicalTextures = object_texture_count + sprite_texture_count;
+    canonical_object_textures = new canonical_object_texture[maxNumberCanonicalTextures];
+    
+    file_object_textures = new file_object_texture[object_texture_count];
+    for (size_t i = 0; i < object_texture_count; i++)
+    {
+        addObjectTexture(object_textures[i]);
+    }
+    
+    canonical_textures_for_sprite_textures = new unsigned long[sprite_texture_count];
+    for (size_t i = 0; i < sprite_texture_count; i++)
+    {
+        addSpriteTexture(sprite_textures[i]);
+    }
+    
+    layOutTextures();
 }
 
 bordered_texture_atlas::~bordered_texture_atlas()
 {
-    free(original_pages);
-    free(file_object_textures);
-    free(canonical_object_textures);
+    delete [] file_object_textures;
+    delete [] canonical_object_textures;
     free(result_page_height);
-}
-
-void bordered_texture_atlas::addPage(void *trpage)
-{
-    assert(!data_has_been_laid_out);
-
-    if (capacity_original_pages < number_original_pages + 1)
-    {
-        capacity_original_pages += ARRAY_CAPACITY_INCREASE_STEP;
-        original_pages = (void **) realloc(original_pages, sizeof(original_pages[0]) * capacity_original_pages);
-    }
-
-    original_pages[number_original_pages] = trpage;
-    number_original_pages += 1;
 }
 
 void bordered_texture_atlas::addObjectTexture(const tr4_object_texture_t &texture)
 {
-    assert(!data_has_been_laid_out);
-
     // Determine the canonical texture for this texture.
     // Use only first three vertices to find min, max, because for triangles the last will be 0,0 with no other marker that this is a triangle. As long as all textures are axis-aligned rectangles, this will always return the right result anyway.
     uint8_t max[2] = { 0, 0 }, min[2] = { 255, 255 };
@@ -244,12 +248,6 @@ void bordered_texture_atlas::addObjectTexture(const tr4_object_texture_t &textur
     // Create it if not.
     if (canonical_index < 0)
     {
-        if (capacity_canonical_object_textures < number_canonical_object_textures + 1)
-        {
-            capacity_canonical_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
-            canonical_object_textures = (canonical_object_texture *) realloc(canonical_object_textures, sizeof(canonical_object_textures[0]) * capacity_canonical_object_textures);
-        }
-
         canonical_index = number_canonical_object_textures;
         number_canonical_object_textures += 1;
 
@@ -262,12 +260,6 @@ void bordered_texture_atlas::addObjectTexture(const tr4_object_texture_t &textur
     }
 
     // Create file object texture.
-    if (capacity_file_object_textures < number_file_object_textures + 1)
-    {
-        capacity_file_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
-        file_object_textures = (file_object_texture *) realloc(file_object_textures, sizeof(file_object_textures[0]) * capacity_file_object_textures);
-    }
-
     file_object_texture &file_object_texture = file_object_textures[number_file_object_textures];
     number_file_object_textures += 1;
 
@@ -293,8 +285,6 @@ void bordered_texture_atlas::addObjectTexture(const tr4_object_texture_t &textur
 
 void bordered_texture_atlas::addSpriteTexture(const tr_sprite_texture_t &texture)
 {
-    assert(!data_has_been_laid_out);
-
     // Determine the canonical texture for this texture.
     unsigned x = texture.x0;
     unsigned y = texture.y0;
@@ -323,12 +313,6 @@ void bordered_texture_atlas::addSpriteTexture(const tr_sprite_texture_t &texture
     // Create it if not.
     if (canonical_index < 0)
     {
-        if (capacity_canonical_object_textures < number_canonical_object_textures + 1)
-        {
-            capacity_canonical_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
-            canonical_object_textures = (canonical_object_texture *) realloc(canonical_object_textures, sizeof(canonical_object_textures[0]) * capacity_canonical_object_textures);
-        }
-
         canonical_index = number_canonical_object_textures;
         number_canonical_object_textures += 1;
 
@@ -341,12 +325,6 @@ void bordered_texture_atlas::addSpriteTexture(const tr_sprite_texture_t &texture
     }
 
     // Create sprite texture assignmen.
-    if (capacity_sprite_textures < number_sprite_textures + 1)
-    {
-        capacity_sprite_textures += ARRAY_CAPACITY_INCREASE_STEP;
-        canonical_textures_for_sprite_textures = (unsigned long *) realloc(canonical_textures_for_sprite_textures, sizeof(canonical_textures_for_sprite_textures[0]) * capacity_sprite_textures);
-    }
-
     canonical_textures_for_sprite_textures[number_sprite_textures] = canonical_index;
     number_sprite_textures += 1;
 }
@@ -366,12 +344,9 @@ void bordered_texture_atlas::getCoordinates(unsigned long texture,
                                          bool reverse,
                                          polygon_p poly,
                                          signed shift,
-                                         bool split)
+                                         bool split)  const
 {
     assert(poly->vertex_count <= 4);
-
-    if (!data_has_been_laid_out)
-        layOutTextures();
 
     assert(texture < number_file_object_textures);
     const file_object_texture &file_object_texture = file_object_textures[texture];
@@ -422,11 +397,8 @@ void bordered_texture_atlas::getCoordinates(unsigned long texture,
     }
 }
 
-void bordered_texture_atlas::getSpriteCoordinates(unsigned long sprite_texture, uint32_t &outPage, GLfloat *coordinates)
+void bordered_texture_atlas::getSpriteCoordinates(unsigned long sprite_texture, uint32_t &outPage, GLfloat *coordinates) const
 {
-    if (!data_has_been_laid_out)
-        layOutTextures();
-
     assert(sprite_texture < number_sprite_textures);
 
     unsigned long canonical_index = canonical_textures_for_sprite_textures[sprite_texture];
@@ -458,19 +430,13 @@ void bordered_texture_atlas::getSpriteCoordinates(unsigned long sprite_texture, 
     }
 }
 
-unsigned long bordered_texture_atlas::getNumAtlasPages()
+unsigned long bordered_texture_atlas::getNumAtlasPages() const
 {
-    if (!data_has_been_laid_out)
-        layOutTextures();
-
     return number_result_pages;
 }
 
-void bordered_texture_atlas::createTextures(GLuint *textureNames, GLuint additionalTextureNames)
+void bordered_texture_atlas::createTextures(GLuint *textureNames, GLuint additionalTextureNames) const
 {
-    if (!data_has_been_laid_out)
-        layOutTextures();
-
     GLubyte *data = (GLubyte *) malloc(4 * result_page_width * result_page_width);
 
     glGenTextures((GLsizei) number_result_pages + additionalTextureNames, textureNames);
@@ -483,7 +449,7 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames, GLuint additio
             if (canonical.new_page != page)
                 continue;
 
-            const char *original = (char *) original_pages[canonical.original_page];
+            const char *original = (char *) original_pages[canonical.original_page].pixels;
 
             // Add top border
             for (int border = 0; border < border_width; border++)
