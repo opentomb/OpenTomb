@@ -2336,7 +2336,7 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
         s->top = tr_st->top_side;
         s->bottom = tr_st->bottom_side;
 
-        BorderedTextureAtlas_GetSpriteCoordinates(world->tex_atlas, i, &s->texture, s->tex_coord);
+        world->tex_atlas->getSpriteCoordinates(i, s->texture, s->tex_coord);
         s->flag = 0x00;
         s->id = 0;
     }
@@ -2355,29 +2355,29 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     int border_size = renderer.settings.texture_border;
     border_size = (border_size < 0)?(0):(border_size);
     border_size = (border_size > 128)?(128):(border_size);
-    world->tex_atlas = BorderedTextureAtlas_Create(border_size);                // here is border size
+    world->tex_atlas = new bordered_texture_atlas(border_size);                // here is border size
 
     for(uint32_t i = 0; i < tr->textile32_count; i++)
     {
-        BorderedTextureAtlas_AddPage(world->tex_atlas, tr->textile32[i].pixels);
+        world->tex_atlas->addPage(tr->textile32[i].pixels);
     }
 
     for (uint32_t i = 0; i < tr->sprite_textures_count; i++)
     {
-        BorderedTextureAtlas_AddSpriteTexture(world->tex_atlas, tr->sprite_textures + i);
+        world->tex_atlas->addSpriteTexture(tr->sprite_textures[i]);
     }
 
     for (uint32_t i = 0; i < tr->object_textures_count; i++)
     {
-        BorderedTextureAtlas_AddObjectTexture(world->tex_atlas, tr->object_textures + i);
+        world->tex_atlas->addObjectTexture(tr->object_textures[i]);
     }
 
-    world->tex_count = (uint32_t) BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
+    world->tex_count = (uint32_t) world->tex_atlas->getNumAtlasPages() + 1;
     world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelZoom(1, 1);
-    BorderedTextureAtlas_CreateTextures(world->tex_atlas, world->textures, 1);
+    world->tex_atlas->createTextures(world->textures, 1);
 
     // white texture data for coloured polygons and debug lines.
     GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -2500,7 +2500,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             // This way, we get a reference value which is used to identify
             // if scrolling is completed or not.
             seq->frames_count = 8;
-            seq->uvrotate_max   = (BorderedTextureAtlas_GetTextureHeight(world->tex_atlas, seq->frame_list[0]) / 2);
+            seq->uvrotate_max   = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
             seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
             seq->frames = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
 
@@ -2513,10 +2513,10 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
                 seq->anim_type        = TR_ANIMTEXTURE_BACKWARD;
             }
 
-            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &p0, 0.0, true);
+            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
             for(uint16_t j=0;j<seq->frames_count;j++)
             {
-                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &p, (GLfloat)j * seq->uvrotate_speed, true);
+                engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, (GLfloat)j * seq->uvrotate_speed, true);
                 seq->frames[j].tex_ind = p.tex_index;
 
                 GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
@@ -2543,10 +2543,10 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         else
         {
             seq->frames = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
-            BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, &p0);
+            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], 0, &p0);
             for(uint16_t j=0;j<seq->frames_count;j++)
             {
-                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[j], 0, &p);
+                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], 0, &p);
                 seq->frames[j].tex_ind = p.tex_index;
 
                 GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
@@ -2615,14 +2615,8 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
         if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
         {
             anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
-            if(seq->uvrotate)                                                   // set tex coordinates to the first frame for correct texture transform in renderer
-            {
-                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, p, 0.0, true);
-            }
-            else
-            {
-                BorderedTextureAtlas_GetCoordinates(engine_world.tex_atlas, seq->frame_list[0], 0, p);
-            }
+            // set tex coordinates to the first frame for correct texture transform in renderer
+            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, p, 0, seq->uvrotate);
         }
 
         if(p->transparency >= 2)
@@ -2697,7 +2691,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     mesh->animated_polygons = NULL;
     mesh->skin_map = NULL;
     mesh->animated_polygons = NULL;
-    mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
+    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
     mesh->elements = NULL;
     mesh->element_count_per_texture = NULL;
     mesh->vbo_index_array = 0;
@@ -2772,7 +2766,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
             vec4_set_one(p->vertices[2].color);
         }
 
-        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & tex_mask, 0, p);
+        world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
     }
 
     /*
@@ -2783,7 +2777,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         face3 = &tr_mesh->coloured_triangles[i];
         col = face3->texture & 0xff;
         Polygon_Resize(p, 3);
-        p->tex_index = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas);
+        p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
         p->transparency = 0;
         p->anim_id = 0;
 
@@ -2913,8 +2907,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
             vec4_set_one(p->vertices[3].color);
         }
 
-
-        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & tex_mask, 0, p);
+        world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
     }
 
     /*
@@ -2925,7 +2918,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         face4 = &tr_mesh->coloured_rectangles[i];
         col = face4->texture & 0xff;
         Polygon_Resize(p, 4);
-        p->tex_index = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas);
+        p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
         p->transparency = 0;
         p->anim_id = 0;
 
@@ -3092,7 +3085,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
 
     mesh = room->mesh = (base_mesh_p)malloc(sizeof(base_mesh_t));
     mesh->id = room_index;
-    mesh->num_texture_pages = (uint32_t)BorderedTextureAtlas_GetNumAtlasPages(world->tex_atlas) + 1;
+    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
     mesh->elements = NULL;
     mesh->element_count_per_texture = NULL;
     mesh->centre[0] = 0.0;
@@ -3142,8 +3135,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         TR_color_to_arr(p->vertices[0].color, &tr_room->vertices[face3->vertices[0]].colour);
         TR_color_to_arr(p->vertices[1].color, &tr_room->vertices[face3->vertices[1]].colour);
         TR_color_to_arr(p->vertices[2].color, &tr_room->vertices[face3->vertices[2]].colour);
-
-        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face3->texture & tex_mask, 0, p);
+        
+        world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
     }
 
     /*
@@ -3175,8 +3168,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         TR_color_to_arr(p->vertices[1].color, &tr_room->vertices[face4->vertices[1]].colour);
         TR_color_to_arr(p->vertices[2].color, &tr_room->vertices[face4->vertices[2]].colour);
         TR_color_to_arr(p->vertices[3].color, &tr_room->vertices[face4->vertices[3]].colour);
-
-        BorderedTextureAtlas_GetCoordinates(world->tex_atlas, face4->texture & tex_mask, 0, p);
+        
+        world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
     }
 
     /*

@@ -47,120 +47,36 @@ static __inline GLuint NextPowerOf2(GLuint in)
      return in + 1;
 }
 
-/*!
- * @abstract Identifies a corner.
- * @discussion This is used for mapping a corner in a file object texture to the corresponding corner in the canonical object texture.
- */
-enum corner_location_e
-{
-    TOP_LEFT,
-    TOP_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_RIGHT
-};
-
-/*!
- * An internal representation of a file texture. Note that this only stores a reference to the canonical texture and how the corners of the canonical texture map to this.
- */
-struct file_object_texture_s
-{
-    unsigned long canonical_texture_index;
-    enum corner_location_e corner_locations[4];
-};
-
-/*!
- * The canonical texture. In TR, a lot of textures can refer to the same rectangle of pixels, only in different winding orders. It is not practical to treat these as different textures, so they are all mapped to one canonical object texture. This structure consists of two parts: Describing the original location, and describing the new final location. The latter is only valid after the data in the texture atlas has been laid out.
- */
-struct canonical_object_texture_s
-{
-    // The unadjusted size
-    uint8_t width;
-    uint8_t height;
-
-    // Original origin
-    uint16_t original_page;
-    uint8_t original_x;
-    uint8_t original_y;
-
-    // New origin
-    unsigned long new_page;
-    unsigned new_x_with_border; // Where the adjusted data starts. The start of the actual data is this plus the atlas's border size.
-    unsigned new_y_with_border; // See above.
-};
-
-/*!
- * @abstract The main structure for the texture atlas.
- * @discussion The fields are explained below. One important pattern: For all variable-length fields, there is a number and a capacity. Capacity means how long the array actually is. It gets increased in ARRAY_CAPACITY_INCREASE_STEP steps, to avoid calling realloc way too often, just to be a bit more clean about things.
- */
-struct bordered_texture_atlas_s
-{
-    // How much border to add.
-    int border_width;
-
-    // Store whether the data has been laid out. Adding more object textures after that is illegal.
-    int data_has_been_laid_out;
-
-    // Whether non-power-of-two textures are supported.
-    //int supports_npot;
-
-    // Result pages
-    // Note: No capacity here, this is handled internally by the layout method. Also, all result pages have the same width, which will always be less than or equal to the height.
-    unsigned long number_result_pages;
-    unsigned result_page_width;
-    unsigned *result_page_height;
-
-    // Original data
-    unsigned long number_original_pages;
-    unsigned long capacity_original_pages;
-    void **original_pages;
-
-    // Object textures in the file.
-    unsigned long number_file_object_textures;
-    unsigned long capacity_file_object_textures;
-    struct file_object_texture_s *file_object_textures;
-
-    // Sprite texture in the file.
-    // Note: No data is saved for them, they get mapped directly to canonical textures.
-    unsigned long number_sprite_textures;
-    unsigned long capacity_sprite_textures;
-    unsigned long *canonical_textures_for_sprite_textures;
-
-    // Canonical object textures
-    unsigned long number_canonical_object_textures;
-    unsigned long capacity_canonical_object_textures;
-    struct canonical_object_texture_s *canonical_object_textures;
-};
-
 #define ARRAY_CAPACITY_INCREASE_STEP 32
 
 /*!
  * The bordered texture atlas used by the borderedTextureAtlas_CompareCanonicalTextureSizes function. Sadly, qsort does not allow passing this context through as a parameter, and the nonstandard extensions qsort_r/qsort_s which do are not supported on MinGW, so this has to be done as a global variable.
  */
-static bordered_texture_atlas_p compare_context = 0;
+static bordered_texture_atlas *compare_context = 0;
 
 /*!
  * Compare function for qsort. It interprets the the parameters as pointers to indices into the canonical object textures of the atlas currently stored in compare_context. It returns -1, 0 or 1 if the first texture is logically ordered before, the same or after the second texture.
  *
  * A texture comes before another texture if it is higher. If both have the same height, the wider texture comes first. If both have the same height and width, they are ordered the same.
  */
-static int borderedTextureAtlas_CompareCanonicalTextureSizes(const void *parameter1, const void *parameter2)
+int bordered_texture_atlas::compareCanonicalTextureSizes(const void *parameter1, const void *parameter2)
 {
     unsigned long index1 = *((const unsigned long *) parameter1);
     unsigned long index2 = *((const unsigned long *) parameter2);
 
-    const canonical_object_texture_s *texture1 = compare_context->canonical_object_textures + index1;
-    const canonical_object_texture_s *texture2 = compare_context->canonical_object_textures + index2;
+    const canonical_object_texture &texture1 = compare_context->canonical_object_textures[index1];
+    const canonical_object_texture &texture2 = compare_context->canonical_object_textures[index2];
 
     // First order by height. qsort brings "lower" values to the front, so treat greater height as lower.
-    if (texture1->height > texture2->height)
+    if (texture1.height > texture2.height)
         return -1;
-    else if (texture1->height < texture2->height)
+    else if (texture1.height < texture2.height)
         return 1;
 
     // Then order by width
-    if (texture1->width > texture2->width)
+    if (texture1.width > texture2.width)
         return -1;
-    else if (texture1->width < texture2->width)
+    else if (texture1.width < texture2.width)
         return 1;
 
     // If they have the same height and width then their order does not matter.
@@ -171,42 +87,42 @@ static int borderedTextureAtlas_CompareCanonicalTextureSizes(const void *paramet
  * Lays out the texture data and switches the atlas to laid out mode. This makes
  * use of a bsp_tree_2d to handle all the really annoying stuff.
  */
-static void borderedTextureAtlas_LayOutTextures(bordered_texture_atlas_p atlas)
+void bordered_texture_atlas::layOutTextures()
 {
     // First step: Sort the canonical textures by size.
-    unsigned long *sorted_indices = (unsigned long *) malloc(sizeof(unsigned long) * atlas->number_canonical_object_textures);
-    for (unsigned long i = 0; i < atlas->number_canonical_object_textures; i++)
+    unsigned long *sorted_indices = (unsigned long *) malloc(sizeof(unsigned long) * number_canonical_object_textures);
+    for (unsigned long i = 0; i < number_canonical_object_textures; i++)
         sorted_indices[i] = i;
 
-    compare_context = atlas;
-    qsort(sorted_indices, atlas->number_canonical_object_textures, sizeof(sorted_indices[0]), borderedTextureAtlas_CompareCanonicalTextureSizes);
+    compare_context = this;
+    qsort(sorted_indices, number_canonical_object_textures, sizeof(sorted_indices[0]), compareCanonicalTextureSizes);
     compare_context = NULL;
 
     // Find positions for the canonical textures
-    atlas->number_result_pages = 0;
-    atlas->result_page_height = NULL;
+    number_result_pages = 0;
+    result_page_height = NULL;
     bsp_tree_2d_p *result_pages = NULL;
 
-    for (unsigned long texture = 0; texture < atlas->number_canonical_object_textures; texture++)
+    for (unsigned long texture = 0; texture < number_canonical_object_textures; texture++)
     {
-        struct canonical_object_texture_s *canonical = &(atlas->canonical_object_textures[sorted_indices[texture]]);
+        struct canonical_object_texture &canonical = canonical_object_textures[sorted_indices[texture]];
 
         // Try to find space in an existing page.
         int found_place = 0;
-        for (unsigned long page = 0; page < atlas->number_result_pages; page++)
+        for (unsigned long page = 0; page < number_result_pages; page++)
         {
             found_place = BSPTree2D_FindSpaceFor(result_pages[page],
-                                                 canonical->width + 2*atlas->border_width,
-                                                 canonical->height + 2*atlas->border_width,
-                                                 &(canonical->new_x_with_border),
-                                                 &(canonical->new_y_with_border));
+                                                 canonical.width + 2*border_width,
+                                                 canonical.height + 2*border_width,
+                                                 &(canonical.new_x_with_border),
+                                                 &(canonical.new_y_with_border));
             if (found_place)
             {
-                canonical->new_page = page;
+                canonical.new_page = page;
 
-                unsigned highest_y = canonical->new_y_with_border + canonical->height + atlas->border_width * 2;
-                if (highest_y + 1 > atlas->result_page_height[page])
-                    atlas->result_page_height[page] = highest_y;
+                unsigned highest_y = canonical.new_y_with_border + canonical.height + border_width * 2;
+                if (highest_y + 1 > result_page_height[page])
+                    result_page_height[page] = highest_y;
 
                 break;
             }
@@ -215,110 +131,105 @@ static void borderedTextureAtlas_LayOutTextures(bordered_texture_atlas_p atlas)
         // No existing page has enough remaining space so open new one.
         if (!found_place)
         {
-            atlas->number_result_pages += 1;
-            result_pages = (bsp_tree_2d_p *) realloc(result_pages, sizeof(bsp_tree_2d_p) * atlas->number_result_pages);
-            result_pages[atlas->number_result_pages - 1] = BSPTree2D_Create(atlas->result_page_width, atlas->result_page_width);
-            atlas->result_page_height = (unsigned *) realloc(atlas->result_page_height, sizeof(unsigned) * atlas->number_result_pages);
+            number_result_pages += 1;
+            result_pages = (bsp_tree_2d_p *) realloc(result_pages, sizeof(bsp_tree_2d_p) * number_result_pages);
+            result_pages[number_result_pages - 1] = BSPTree2D_Create(result_page_width, result_page_width);
+            result_page_height = (unsigned *) realloc(result_page_height, sizeof(unsigned) * number_result_pages);
 
-            BSPTree2D_FindSpaceFor(result_pages[atlas->number_result_pages - 1],
-                                   canonical->width + 2*atlas->border_width,
-                                   canonical->height + 2*atlas->border_width,
-                                   &(canonical->new_x_with_border),
-                                   &(canonical->new_y_with_border));
-            canonical->new_page = atlas->number_result_pages - 1;
+            BSPTree2D_FindSpaceFor(result_pages[number_result_pages - 1],
+                                   canonical.width + 2*border_width,
+                                   canonical.height + 2*border_width,
+                                   &(canonical.new_x_with_border),
+                                   &(canonical.new_y_with_border));
+            canonical.new_page = number_result_pages - 1;
 
-            unsigned highest_y = canonical->new_y_with_border + canonical->height + atlas->border_width * 2;
-            atlas->result_page_height[atlas->number_result_pages - 1] = highest_y;
+            unsigned highest_y = canonical.new_y_with_border + canonical.height + border_width * 2;
+            result_page_height[number_result_pages - 1] = highest_y;
         }
     }
 
     // Fix up heights if necessary
-    //if (!atlas->supports_npot)
+    //if (!supports_npot)
     {
-        for (unsigned page = 0; page < atlas->number_result_pages; page++)
+        for (unsigned page = 0; page < number_result_pages; page++)
         {
-            atlas->result_page_height[page] = NextPowerOf2(atlas->result_page_height[page]);
+            result_page_height[page] = NextPowerOf2(result_page_height[page]);
         }
     }
 
     // Cleanup
     free(sorted_indices);
-    for (unsigned long i = 0; i < atlas->number_result_pages; i++)
+    for (unsigned long i = 0; i < number_result_pages; i++)
         BSPTree2D_Destroy(result_pages[i]);
     free(result_pages);
 
-    atlas->data_has_been_laid_out = 1;
+    data_has_been_laid_out = true;
 }
 
 // Leave everything at 0, except border width. Calls to realloc will fill it up.
-bordered_texture_atlas_p BorderedTextureAtlas_Create(int border)
+bordered_texture_atlas::bordered_texture_atlas(int border)
 {
-    bordered_texture_atlas_p atlas = (bordered_texture_atlas_p) calloc(1, sizeof(struct bordered_texture_atlas_s));
-
-    atlas->border_width = border;
+    border_width = border;
 
     GLint max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
     if (max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
-    atlas->result_page_width = max_texture_edge_length;
-    //atlas->supports_npot = 0;//IsGLExtensionSupported("GL_ARB_texture_non_power_of_two");
-
-    return atlas;
+    result_page_width = max_texture_edge_length;
+    //supports_npot = 0;//IsGLExtensionSupported("GL_ARB_texture_non_power_of_two");
 }
 
-void BorderedTextureAtlas_Destroy(bordered_texture_atlas_p atlas)
+bordered_texture_atlas::~bordered_texture_atlas()
 {
-    free(atlas->original_pages);
-    free(atlas->file_object_textures);
-    free(atlas->canonical_object_textures);
-    free(atlas->result_page_height);
-    free(atlas);
+    free(original_pages);
+    free(file_object_textures);
+    free(canonical_object_textures);
+    free(result_page_height);
 }
 
-void BorderedTextureAtlas_AddPage(bordered_texture_atlas_p atlas, void *trpage)
+void bordered_texture_atlas::addPage(void *trpage)
 {
-    assert(!atlas->data_has_been_laid_out);
+    assert(!data_has_been_laid_out);
 
-    if (atlas->capacity_original_pages < atlas->number_original_pages + 1)
+    if (capacity_original_pages < number_original_pages + 1)
     {
-        atlas->capacity_original_pages += ARRAY_CAPACITY_INCREASE_STEP;
-        atlas->original_pages = (void **) realloc(atlas->original_pages, sizeof(atlas->original_pages[0]) * atlas->capacity_original_pages);
+        capacity_original_pages += ARRAY_CAPACITY_INCREASE_STEP;
+        original_pages = (void **) realloc(original_pages, sizeof(original_pages[0]) * capacity_original_pages);
     }
 
-    atlas->original_pages[atlas->number_original_pages] = trpage;
-    atlas->number_original_pages += 1;
+    original_pages[number_original_pages] = trpage;
+    number_original_pages += 1;
 }
 
-void BorderedTextureAtlas_AddObjectTexture(bordered_texture_atlas_p atlas, const tr4_object_texture_t *texture)
+void bordered_texture_atlas::addObjectTexture(const tr4_object_texture_t &texture)
 {
-    assert(!atlas->data_has_been_laid_out);
+    assert(!data_has_been_laid_out);
 
     // Determine the canonical texture for this texture.
     // Use only first three vertices to find min, max, because for triangles the last will be 0,0 with no other marker that this is a triangle. As long as all textures are axis-aligned rectangles, this will always return the right result anyway.
     uint8_t max[2] = { 0, 0 }, min[2] = { 255, 255 };
     for (int i = 0; i < 3; i++)
     {
-        if (texture->vertices[i].xpixel > max[0])
-            max[0] = texture->vertices[i].xpixel;
-        if (texture->vertices[i].ypixel > max[1])
-            max[1] = texture->vertices[i].ypixel;
-        if (texture->vertices[i].xpixel < min[0])
-            min[0] = texture->vertices[i].xpixel;
-        if (texture->vertices[i].ypixel < min[1])
-            min[1] = texture->vertices[i].ypixel;
+        if (texture.vertices[i].xpixel > max[0])
+            max[0] = texture.vertices[i].xpixel;
+        if (texture.vertices[i].ypixel > max[1])
+            max[1] = texture.vertices[i].ypixel;
+        if (texture.vertices[i].xpixel < min[0])
+            min[0] = texture.vertices[i].xpixel;
+        if (texture.vertices[i].ypixel < min[1])
+            min[1] = texture.vertices[i].ypixel;
     }
     uint8_t width = max[0] - min[0];
     uint8_t height = max[1] - min[1];
 
     // See whether it already exists
     long canonical_index = -1;
-    struct canonical_object_texture_s *canonical = NULL;
-    for (unsigned long i = 0; i < atlas->number_canonical_object_textures; i++)
+    canonical_object_texture *canonical = nullptr;
+    for (unsigned long i = 0; i < number_canonical_object_textures; i++)
     {
-        struct canonical_object_texture_s *canonical_candidate = &(atlas->canonical_object_textures[i]);
+        canonical_object_texture *canonical_candidate = &(canonical_object_textures[i]);
 
-        if (canonical_candidate->original_page == (texture->tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4)
+        if (canonical_candidate->original_page == (texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4)
             && canonical_candidate->original_x == min[0]
             && canonical_candidate->original_y == min[1]
             && canonical_candidate->width == width
@@ -333,72 +244,71 @@ void BorderedTextureAtlas_AddObjectTexture(bordered_texture_atlas_p atlas, const
     // Create it if not.
     if (canonical_index < 0)
     {
-        if (atlas->capacity_canonical_object_textures < atlas->number_canonical_object_textures + 1)
+        if (capacity_canonical_object_textures < number_canonical_object_textures + 1)
         {
-            atlas->capacity_canonical_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
-            atlas->canonical_object_textures = (struct canonical_object_texture_s *) realloc(atlas->canonical_object_textures, sizeof(atlas->canonical_object_textures[0]) * atlas->capacity_canonical_object_textures);
+            capacity_canonical_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
+            canonical_object_textures = (canonical_object_texture *) realloc(canonical_object_textures, sizeof(canonical_object_textures[0]) * capacity_canonical_object_textures);
         }
 
-        canonical_index = atlas->number_canonical_object_textures;
-        atlas->number_canonical_object_textures += 1;
+        canonical_index = number_canonical_object_textures;
+        number_canonical_object_textures += 1;
 
-        canonical = atlas->canonical_object_textures + canonical_index;
+        canonical = canonical_object_textures + canonical_index;
         canonical->width = width;
         canonical->height = height;
-        canonical->original_page = texture->tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4;
+        canonical->original_page = texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4;
         canonical->original_x = min[0];
         canonical->original_y = min[1];
     }
 
     // Create file object texture.
-    if (atlas->capacity_file_object_textures < atlas->number_file_object_textures + 1)
+    if (capacity_file_object_textures < number_file_object_textures + 1)
     {
-        atlas->capacity_file_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
-        atlas->file_object_textures = (struct file_object_texture_s *) realloc(atlas->file_object_textures, sizeof(atlas->file_object_textures[0]) * atlas->capacity_file_object_textures);
+        capacity_file_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
+        file_object_textures = (file_object_texture *) realloc(file_object_textures, sizeof(file_object_textures[0]) * capacity_file_object_textures);
     }
 
-    struct file_object_texture_s *file_object_texture = (struct file_object_texture_s *) atlas->file_object_textures + atlas->number_file_object_textures;
-    atlas->number_file_object_textures += 1;
+    file_object_texture &file_object_texture = file_object_textures[number_file_object_textures];
+    number_file_object_textures += 1;
 
-    file_object_texture->canonical_texture_index = canonical_index;
+    file_object_texture.canonical_texture_index = canonical_index;
     for (int i = 0; i < 4; i++)
     {
-        if (texture->vertices[i].xpixel == min[0])
+        if (texture.vertices[i].xpixel == min[0])
         {
-            if (texture->vertices[i].ypixel == min[1])
-                file_object_texture->corner_locations[i] = TOP_LEFT;
+            if (texture.vertices[i].ypixel == min[1])
+                file_object_texture.corner_locations[i] = TOP_LEFT;
             else
-                file_object_texture->corner_locations[i] = BOTTOM_LEFT;
+                file_object_texture.corner_locations[i] = BOTTOM_LEFT;
         }
         else
         {
-            if (texture->vertices[i].ypixel == min[1])
-                file_object_texture->corner_locations[i] = TOP_RIGHT;
+            if (texture.vertices[i].ypixel == min[1])
+                file_object_texture.corner_locations[i] = TOP_RIGHT;
             else
-                file_object_texture->corner_locations[i] = BOTTOM_RIGHT;
+                file_object_texture.corner_locations[i] = BOTTOM_RIGHT;
         }
     }
 }
 
-void BorderedTextureAtlas_AddSpriteTexture(bordered_texture_atlas_p atlas,
-                                           const tr_sprite_texture_t *texture)
+void bordered_texture_atlas::addSpriteTexture(const tr_sprite_texture_t &texture)
 {
-    assert(!atlas->data_has_been_laid_out);
+    assert(!data_has_been_laid_out);
 
     // Determine the canonical texture for this texture.
-    unsigned x = texture->x0;
-    unsigned y = texture->y0;
-    unsigned width = texture->x1 - texture->x0;
-    unsigned height = texture->y1 - texture->y0;
+    unsigned x = texture.x0;
+    unsigned y = texture.y0;
+    unsigned width = texture.x1 - texture.x0;
+    unsigned height = texture.y1 - texture.y0;
 
     // See whether it already exists
     long canonical_index = -1;
-    struct canonical_object_texture_s *canonical = NULL;
-    for (unsigned long i = 0; i < atlas->number_canonical_object_textures; i++)
+    canonical_object_texture *canonical = NULL;
+    for (unsigned long i = 0; i < number_canonical_object_textures; i++)
     {
-        struct canonical_object_texture_s *canonical_candidate = &(atlas->canonical_object_textures[i]);
+        canonical_object_texture *canonical_candidate = &(canonical_object_textures[i]);
 
-        if (canonical_candidate->original_page == (texture->tile & TR_TEXTURE_INDEX_MASK_TR4)
+        if (canonical_candidate->original_page == (texture.tile & TR_TEXTURE_INDEX_MASK_TR4)
             && canonical_candidate->original_x == x
             && canonical_candidate->original_y == y
             && canonical_candidate->width == width
@@ -413,96 +323,93 @@ void BorderedTextureAtlas_AddSpriteTexture(bordered_texture_atlas_p atlas,
     // Create it if not.
     if (canonical_index < 0)
     {
-        if (atlas->capacity_canonical_object_textures < atlas->number_canonical_object_textures + 1)
+        if (capacity_canonical_object_textures < number_canonical_object_textures + 1)
         {
-            atlas->capacity_canonical_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
-            atlas->canonical_object_textures = (struct canonical_object_texture_s *) realloc(atlas->canonical_object_textures, sizeof(atlas->canonical_object_textures[0]) * atlas->capacity_canonical_object_textures);
+            capacity_canonical_object_textures += ARRAY_CAPACITY_INCREASE_STEP;
+            canonical_object_textures = (canonical_object_texture *) realloc(canonical_object_textures, sizeof(canonical_object_textures[0]) * capacity_canonical_object_textures);
         }
 
-        canonical_index = atlas->number_canonical_object_textures;
-        atlas->number_canonical_object_textures += 1;
+        canonical_index = number_canonical_object_textures;
+        number_canonical_object_textures += 1;
 
-        canonical = atlas->canonical_object_textures + canonical_index;
+        canonical = canonical_object_textures + canonical_index;
         canonical->width = width;
         canonical->height = height;
-        canonical->original_page = texture->tile & TR_TEXTURE_INDEX_MASK_TR4;
+        canonical->original_page = texture.tile & TR_TEXTURE_INDEX_MASK_TR4;
         canonical->original_x = x;
         canonical->original_y = y;
     }
 
     // Create sprite texture assignmen.
-    if (atlas->capacity_sprite_textures < atlas->number_sprite_textures + 1)
+    if (capacity_sprite_textures < number_sprite_textures + 1)
     {
-        atlas->capacity_sprite_textures += ARRAY_CAPACITY_INCREASE_STEP;
-        atlas->canonical_textures_for_sprite_textures = (unsigned long *) realloc(atlas->canonical_textures_for_sprite_textures, sizeof(atlas->canonical_textures_for_sprite_textures[0]) * atlas->capacity_sprite_textures);
+        capacity_sprite_textures += ARRAY_CAPACITY_INCREASE_STEP;
+        canonical_textures_for_sprite_textures = (unsigned long *) realloc(canonical_textures_for_sprite_textures, sizeof(canonical_textures_for_sprite_textures[0]) * capacity_sprite_textures);
     }
 
-    unsigned long *assignment = atlas->canonical_textures_for_sprite_textures + atlas->number_sprite_textures;
-    *assignment = canonical_index;
-    atlas->number_sprite_textures += 1;
+    canonical_textures_for_sprite_textures[number_sprite_textures] = canonical_index;
+    number_sprite_textures += 1;
 }
 
-unsigned long BorderedTextureAtlas_GetTextureHeight(bordered_texture_atlas_p atlas,
-                                                    unsigned long texture)
+unsigned long bordered_texture_atlas::getTextureHeight(unsigned long texture) const
 {
-    assert(texture < atlas->number_file_object_textures);
+    assert(texture < number_file_object_textures);
 
-    struct file_object_texture_s *file_object_texture = atlas->file_object_textures + texture;
-    struct canonical_object_texture_s *canonical = atlas->canonical_object_textures + file_object_texture->canonical_texture_index;
+    const file_object_texture &file_object_texture = file_object_textures[texture];
+    const canonical_object_texture &canonical = canonical_object_textures[file_object_texture.canonical_texture_index];
 
-    return canonical->height;
+    return canonical.height;
 }
 
 ///@FIXME - use polygon_p to replace vertex and numCoordinates (maybe texture in / out))
-void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
-                                         unsigned long texture,
-                                         int reverse,
+void bordered_texture_atlas::getCoordinates(unsigned long texture,
+                                         bool reverse,
                                          polygon_p poly,
                                          signed shift,
                                          bool split)
 {
     assert(poly->vertex_count <= 4);
 
-    if (!atlas->data_has_been_laid_out)
-        borderedTextureAtlas_LayOutTextures(atlas);
+    if (!data_has_been_laid_out)
+        layOutTextures();
 
-    assert(texture < atlas->number_file_object_textures);
-    struct file_object_texture_s *file_object_texture = atlas->file_object_textures + texture;
-    struct canonical_object_texture_s *canonical = atlas->canonical_object_textures + file_object_texture->canonical_texture_index;
+    assert(texture < number_file_object_textures);
+    const file_object_texture &file_object_texture = file_object_textures[texture];
+    const canonical_object_texture &canonical = canonical_object_textures[file_object_texture.canonical_texture_index];
 
-    poly->tex_index = canonical->new_page;
+    poly->tex_index = canonical.new_page;
     for (unsigned long i = 0; i < poly->vertex_count; i++)
     {
         unsigned x_coord;
         unsigned y_coord;
 
-        switch (file_object_texture->corner_locations[i])
+        switch (file_object_texture.corner_locations[i])
         {
             case TOP_LEFT:
-                x_coord = canonical->new_x_with_border + atlas->border_width;
-                y_coord = canonical->new_y_with_border + atlas->border_width - shift;
+                x_coord = canonical.new_x_with_border + border_width;
+                y_coord = canonical.new_y_with_border + border_width - shift;
 
                 if(split)
                 {
-                    y_coord += (canonical->height / 2);
+                    y_coord += (canonical.height / 2);
                 }
                 break;
             case TOP_RIGHT:
-                x_coord = canonical->new_x_with_border + atlas->border_width + canonical->width;
-                y_coord = canonical->new_y_with_border + atlas->border_width - shift;
+                x_coord = canonical.new_x_with_border + border_width + canonical.width;
+                y_coord = canonical.new_y_with_border + border_width - shift;
 
                 if(split)
                 {
-                    y_coord += (canonical->height / 2);
+                    y_coord += (canonical.height / 2);
                 }
                 break;
             case BOTTOM_LEFT:
-                x_coord = canonical->new_x_with_border + atlas->border_width;
-                y_coord = canonical->new_y_with_border + atlas->border_width + canonical->height - shift;
+                x_coord = canonical.new_x_with_border + border_width;
+                y_coord = canonical.new_y_with_border + border_width + canonical.height - shift;
                 break;
             case BOTTOM_RIGHT:
-                x_coord = canonical->new_x_with_border + atlas->border_width + canonical->width;
-                y_coord = canonical->new_y_with_border + atlas->border_width + canonical->height - shift;
+                x_coord = canonical.new_x_with_border + border_width + canonical.width;
+                y_coord = canonical.new_y_with_border + border_width + canonical.height - shift;
                 break;
             default:
                 assert(0);
@@ -510,143 +417,143 @@ void BorderedTextureAtlas_GetCoordinates(bordered_texture_atlas_p atlas,
 
         unsigned long index = reverse ? (poly->vertex_count - i-1) : i;
 
-        poly->vertices[index].tex_coord[0] = (GLfloat) x_coord / (GLfloat) atlas->result_page_width;
-        poly->vertices[index].tex_coord[1] = (GLfloat) y_coord / (GLfloat) atlas->result_page_height[canonical->new_page];
+        poly->vertices[index].tex_coord[0] = (GLfloat) x_coord / (GLfloat) result_page_width;
+        poly->vertices[index].tex_coord[1] = (GLfloat) y_coord / (GLfloat) result_page_height[canonical.new_page];
     }
 }
 
-void BorderedTextureAtlas_GetSpriteCoordinates(bordered_texture_atlas_p atlas, unsigned long sprite_texture, uint32_t *outPage, GLfloat *coordinates)
+void bordered_texture_atlas::getSpriteCoordinates(unsigned long sprite_texture, uint32_t &outPage, GLfloat *coordinates)
 {
-    if (!atlas->data_has_been_laid_out)
-        borderedTextureAtlas_LayOutTextures(atlas);
+    if (!data_has_been_laid_out)
+        layOutTextures();
 
-    assert(sprite_texture < atlas->number_sprite_textures);
+    assert(sprite_texture < number_sprite_textures);
 
-    unsigned long *canonical_index = atlas->canonical_textures_for_sprite_textures + sprite_texture;
-    struct canonical_object_texture_s *canonical = atlas->canonical_object_textures + *canonical_index;
+    unsigned long canonical_index = canonical_textures_for_sprite_textures[sprite_texture];
+    const canonical_object_texture &canonical = canonical_object_textures[canonical_index];
 
-    *outPage = canonical->new_page;
+    outPage = canonical.new_page;
 
     unsigned pixel_coordinates[8] = {
         // top right
-        canonical->new_x_with_border + atlas->border_width + canonical->width,
-        canonical->new_y_with_border + atlas->border_width + canonical->height,
+        canonical.new_x_with_border + border_width + canonical.width,
+        canonical.new_y_with_border + border_width + canonical.height,
 
         // top left
-        canonical->new_x_with_border + atlas->border_width,
-        canonical->new_y_with_border + atlas->border_width + canonical->height,
+        canonical.new_x_with_border + border_width,
+        canonical.new_y_with_border + border_width + canonical.height,
 
         // bottom left
-        canonical->new_x_with_border + atlas->border_width,
-        canonical->new_y_with_border + atlas->border_width,
+        canonical.new_x_with_border + border_width,
+        canonical.new_y_with_border + border_width,
 
         // bottom right
-        canonical->new_x_with_border + atlas->border_width + canonical->width,
-        canonical->new_y_with_border + atlas->border_width,
+        canonical.new_x_with_border + border_width + canonical.width,
+        canonical.new_y_with_border + border_width,
     };
 
     for (int i = 0; i < 4; i++) {
-        coordinates[i*2 + 0] = (GLfloat) pixel_coordinates[i*2 + 0] / (GLfloat) atlas->result_page_width;
-        coordinates[i*2 + 1] = (GLfloat) pixel_coordinates[i*2 + 1] / (GLfloat) atlas->result_page_height[canonical->new_page];
+        coordinates[i*2 + 0] = (GLfloat) pixel_coordinates[i*2 + 0] / (GLfloat) result_page_width;
+        coordinates[i*2 + 1] = (GLfloat) pixel_coordinates[i*2 + 1] / (GLfloat) result_page_height[canonical.new_page];
     }
 }
 
-unsigned long BorderedTextureAtlas_GetNumAtlasPages(bordered_texture_atlas_p atlas)
+unsigned long bordered_texture_atlas::getNumAtlasPages()
 {
-    if (!atlas->data_has_been_laid_out)
-        borderedTextureAtlas_LayOutTextures(atlas);
+    if (!data_has_been_laid_out)
+        layOutTextures();
 
-    return atlas->number_result_pages;
+    return number_result_pages;
 }
 
-void BorderedTextureAtlas_CreateTextures(bordered_texture_atlas_p atlas, GLuint *textureNames, GLuint additionalTextureNames)
+void bordered_texture_atlas::createTextures(GLuint *textureNames, GLuint additionalTextureNames)
 {
-    if (!atlas->data_has_been_laid_out)
-        borderedTextureAtlas_LayOutTextures(atlas);
+    if (!data_has_been_laid_out)
+        layOutTextures();
 
-    GLubyte *data = (GLubyte *) malloc(4 * atlas->result_page_width * atlas->result_page_width);
+    GLubyte *data = (GLubyte *) malloc(4 * result_page_width * result_page_width);
 
-    glGenTextures((GLsizei) atlas->number_result_pages + additionalTextureNames, textureNames);
+    glGenTextures((GLsizei) number_result_pages + additionalTextureNames, textureNames);
 
-    for (unsigned long page = 0; page < atlas->number_result_pages; page++)
+    for (unsigned long page = 0; page < number_result_pages; page++)
     {
-        for (unsigned long texture = 0; texture < atlas->number_canonical_object_textures; texture++)
+        for (unsigned long texture = 0; texture < number_canonical_object_textures; texture++)
         {
-            const struct canonical_object_texture_s *canonical = atlas->canonical_object_textures + texture;
-            if (canonical->new_page != page)
+            const canonical_object_texture &canonical = canonical_object_textures[texture];
+            if (canonical.new_page != page)
                 continue;
 
-            const char *original = (char *) atlas->original_pages[canonical->original_page];
+            const char *original = (char *) original_pages[canonical.original_page];
 
             // Add top border
-            for (int border = 0; border < atlas->border_width; border++)
+            for (int border = 0; border < border_width; border++)
             {
-                unsigned x = canonical->new_x_with_border;
-                unsigned y = canonical->new_y_with_border + border;
-                unsigned old_x = canonical->original_x;
-                unsigned old_y = canonical->original_y;
+                unsigned x = canonical.new_x_with_border;
+                unsigned y = canonical.new_y_with_border + border;
+                unsigned old_x = canonical.original_x;
+                unsigned old_y = canonical.original_y;
 
                 // expand top-left pixel
-                memset_pattern4(&data[(y*atlas->result_page_width + x) * 4],
+                memset_pattern4(&data[(y*result_page_width + x) * 4],
                        &(original[(old_y * 256 + old_x) * 4]),
-                       4 * atlas->border_width);
+                       4 * border_width);
                 // copy top line
-                memcpy(&data[(y*atlas->result_page_width + x + atlas->border_width) * 4],
+                memcpy(&data[(y*result_page_width + x + border_width) * 4],
                        &original[(old_y * 256 + old_x) * 4],
-                       canonical->width * 4);
+                       canonical.width * 4);
                 // expand top-right pixel
-                memset_pattern4(&data[(y*atlas->result_page_width + x + atlas->border_width + canonical->width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical->width) * 4]),
-                       4 * atlas->border_width);
+                memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
+                       4 * border_width);
             }
 
             // Copy main content
-            for (int line = 0; line < canonical->height; line++)
+            for (int line = 0; line < canonical.height; line++)
             {
-                unsigned x = canonical->new_x_with_border;
-                unsigned y = canonical->new_y_with_border + atlas->border_width + line;
-                unsigned old_x = canonical->original_x;
-                unsigned old_y = canonical->original_y + line;
+                unsigned x = canonical.new_x_with_border;
+                unsigned y = canonical.new_y_with_border + border_width + line;
+                unsigned old_x = canonical.original_x;
+                unsigned old_y = canonical.original_y + line;
 
                 // expand left pixel
-                memset_pattern4(&data[(y*atlas->result_page_width + x) * 4],
+                memset_pattern4(&data[(y*result_page_width + x) * 4],
                        &(original[(old_y * 256 + old_x) * 4]),
-                       4 * atlas->border_width);
+                       4 * border_width);
                 // copy line
-                memcpy(&data[(y*atlas->result_page_width + x + atlas->border_width) * 4],
+                memcpy(&data[(y*result_page_width + x + border_width) * 4],
                        &original[(old_y * 256 + old_x) * 4],
-                       canonical->width * 4);
+                       canonical.width * 4);
                 // expand right pixel
-                memset_pattern4(&data[(y*atlas->result_page_width + x + atlas->border_width + canonical->width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical->width) * 4]),
-                       4 * atlas->border_width);
+                memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
+                       4 * border_width);
             }
 
             // Add bottom border
-            for (int border = 0; border < atlas->border_width; border++)
+            for (int border = 0; border < border_width; border++)
             {
-                unsigned x = canonical->new_x_with_border;
-                unsigned y = canonical->new_y_with_border + canonical->height + atlas->border_width + border;
-                unsigned old_x = canonical->original_x;
-                unsigned old_y = canonical->original_y + canonical->height;
+                unsigned x = canonical.new_x_with_border;
+                unsigned y = canonical.new_y_with_border + canonical.height + border_width + border;
+                unsigned old_x = canonical.original_x;
+                unsigned old_y = canonical.original_y + canonical.height;
 
                 // expand bottom-left pixel
-                memset_pattern4(&data[(y*atlas->result_page_width + x) * 4],
+                memset_pattern4(&data[(y*result_page_width + x) * 4],
                        &(original[(old_y * 256 + old_x) * 4]),
-                       4 * atlas->border_width);
+                       4 * border_width);
                 // copy bottom line
-                memcpy(&data[(y*atlas->result_page_width + x + atlas->border_width) * 4],
+                memcpy(&data[(y*result_page_width + x + border_width) * 4],
                        &original[(old_y * 256 + old_x) * 4],
-                       canonical->width * 4);
+                       canonical.width * 4);
                 // expand bottom-right pixel
-                memset_pattern4(&data[(y*atlas->result_page_width + x + atlas->border_width + canonical->width) * 4],
-                       &(original[(old_y * 256 + old_x + canonical->width) * 4]),
-                       4 * atlas->border_width);
+                memset_pattern4(&data[(y*result_page_width + x + border_width + canonical.width) * 4],
+                       &(original[(old_y * 256 + old_x + canonical.width) * 4]),
+                       4 * border_width);
             }
         }
 
         glBindTexture(GL_TEXTURE_2D, textureNames[page]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)atlas->result_page_width, (GLsizei) atlas->result_page_height[page], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLsizei)result_page_width, (GLsizei) result_page_height[page], 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         if(glGenerateMipmap != NULL)
         {
             glGenerateMipmap(GL_TEXTURE_2D);
@@ -654,8 +561,8 @@ void BorderedTextureAtlas_CreateTextures(bordered_texture_atlas_p atlas, GLuint 
         else
         {
             int mip_level = 1;
-            int w = atlas->result_page_width / 2;
-            int h = atlas->result_page_height[page] / 2;
+            int w = result_page_width / 2;
+            int h = result_page_height[page] / 2;
             GLubyte *mip_data = (GLubyte *) malloc(4 * w * h);
 
             w = (w==0)?1:w;                                                     ///@PARANOID: tex atlas size can't been less or equal 2 x 2
@@ -672,7 +579,7 @@ void BorderedTextureAtlas_CreateTextures(bordered_texture_atlas_p atlas, GLuint 
             }
 
             //char tgan[128];
-            //WriteTGAfile("mip_00.tga", data, atlas->result_page_width, atlas->result_page_height[page], 0);
+            //WriteTGAfile("mip_00.tga", data, result_page_width, result_page_height[page], 0);
             //sprintf(tgan, "mip_%0.2d.tga", mip_level);
             //WriteTGAfile(tgan, mip_data, w, h, 0);
             glTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, (GLsizei)w, (GLsizei)h, 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data);
