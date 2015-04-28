@@ -90,7 +90,7 @@ int bordered_texture_atlas::compareCanonicalTextureSizes(const void *parameter1,
 void bordered_texture_atlas::layOutTextures()
 {
     // First step: Sort the canonical textures by size.
-    unsigned long *sorted_indices = (unsigned long *) malloc(sizeof(unsigned long) * number_canonical_object_textures);
+    unsigned long *sorted_indices = new unsigned long[number_canonical_object_textures];
     for (unsigned long i = 0; i < number_canonical_object_textures; i++)
         sorted_indices[i] = i;
 
@@ -108,7 +108,7 @@ void bordered_texture_atlas::layOutTextures()
         struct canonical_object_texture &canonical = canonical_object_textures[sorted_indices[texture]];
 
         // Try to find space in an existing page.
-        int found_place = 0;
+        bool found_place = 0;
         for (unsigned long page = 0; page < number_result_pages; page++)
         {
             found_place = BSPTree2D_FindSpaceFor(result_pages[page],
@@ -149,22 +149,18 @@ void bordered_texture_atlas::layOutTextures()
     }
 
     // Fix up heights if necessary
-    //if (!supports_npot)
+    for (unsigned page = 0; page < number_result_pages; page++)
     {
-        for (unsigned page = 0; page < number_result_pages; page++)
-        {
-            result_page_height[page] = NextPowerOf2(result_page_height[page]);
-        }
+        result_page_height[page] = NextPowerOf2(result_page_height[page]);
     }
 
     // Cleanup
-    free(sorted_indices);
+    delete [] sorted_indices;
     for (unsigned long i = 0; i < number_result_pages; i++)
         BSPTree2D_Destroy(result_pages[i]);
     free(result_pages);
 }
 
-// Leave everything at 0, except border width. Calls to realloc will fill it up.
 bordered_texture_atlas::bordered_texture_atlas(int border,
                                                size_t page_count,
                                                const tr4_textile32_t *pages,
@@ -203,6 +199,7 @@ original_pages(pages)
 bordered_texture_atlas::~bordered_texture_atlas()
 {
     delete [] file_object_textures;
+    delete [] canonical_textures_for_sprite_textures;
     delete [] canonical_object_textures;
     free(result_page_height);
 }
