@@ -572,7 +572,7 @@ void World_Empty(world_p world)
 
     if(world->tex_atlas)
     {
-        BorderedTextureAtlas_Destroy(world->tex_atlas);
+        delete world->tex_atlas;
         world->tex_atlas = NULL;
     }
 

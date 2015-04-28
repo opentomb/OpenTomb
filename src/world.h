@@ -255,7 +255,7 @@ typedef struct world_s
     uint32_t                    room_flipmap;           // Flipped room activity bit field.
     uint32_t                    room_flipstate;         // Flipped room actual state bit field.
 
-    bordered_texture_atlas_p    tex_atlas;
+    bordered_texture_atlas     *tex_atlas;
     uint32_t                    tex_count;              // Number of textures
     GLuint                     *textures;               // OpenGL textures indexes
 
