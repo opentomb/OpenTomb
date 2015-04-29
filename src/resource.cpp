@@ -1476,36 +1476,38 @@ int lua_SetSectorFlags(lua_State * lua)
 
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
-    char buf[256], map[LEVEL_NAME_MAX_LEN];
+    char buf[256], map[LEVEL_NAME_MAX_LEN], level_path_base[256];
 
     world->version = tr->game_version;
 
-    buf[0] = 0;
-    strcat(buf, "scripts/level/");
+    level_path_base[0] = 0;
+    strcat(level_path_base, "scripts/level/");
     if(tr->game_version < TR_II)
     {
-        strcat(buf, "tr1/");
+        strcat(level_path_base, "tr1/");
     }
     else if(tr->game_version < TR_III)
     {
-        strcat(buf, "tr2/");
+        strcat(level_path_base, "tr2/");
     }
     else if(tr->game_version < TR_IV)
     {
-        strcat(buf, "tr3/");
+        strcat(level_path_base, "tr3/");
     }
     else if(tr->game_version < TR_V)
     {
-        strcat(buf, "tr4/");
+        strcat(level_path_base, "tr4/");
     }
     else
     {
-        strcat(buf, "tr5/");
+        strcat(level_path_base, "tr5/");
     }
 
     Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
 
-    strcat(buf, map);
+    strcat(level_path_base, map);
+    
+    memcpy(buf, level_path_base, sizeof(buf));
     strcat(buf, ".lua");
 
     level_script = luaL_newstate();
@@ -1686,35 +1688,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    buf[0] = 0;
-
     // Process level script loading.
     ///@FIXME: Re-assign script paths via script itself!
 
-    strcat(buf, "scripts/level/");
-    if(tr->game_version < TR_II)
-    {
-        strcat(buf, "tr1/");
-    }
-    else if(tr->game_version < TR_III)
-    {
-        strcat(buf, "tr2/");
-    }
-    else if(tr->game_version < TR_IV)
-    {
-        strcat(buf, "tr3/");
-    }
-    else if(tr->game_version < TR_V)
-    {
-        strcat(buf, "tr4/");
-    }
-    else
-    {
-        strcat(buf, "tr5/");
-    }
-
-    Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
-    strcat(buf, map);
+    memcpy(buf, level_path_base, sizeof(buf));
     strcat(buf, "_autoexec.lua");
 
     luaL_dofile(engine_lua, "scripts/autoexec.lua");                            // do standart autoexec
@@ -2597,6 +2574,13 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
     return false;   // No such TexInfo found in animation textures lists.
 }
 
+static void addPolygonCopyToList(const polygon_p polygon, polygon_s *&list)
+{
+    polygon_p np = (polygon_p)calloc(1, sizeof(polygon_t));
+    Polygon_Copy(np, polygon);
+    np->next = list;
+    list = np;
+}
 
 void SortPolygonsInMesh(struct base_mesh_s *mesh)
 {
@@ -2612,21 +2596,11 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
 
         if(p->transparency >= 2)
         {
-            polygon_p np = (polygon_p)malloc(sizeof(polygon_t));
-            np->vertices = NULL;
-            np->vertex_count = 0;
-            Polygon_Copy(np, p);
-            np->next = mesh->transparency_polygons;
-            mesh->transparency_polygons = np;
+            addPolygonCopyToList(p, mesh->transparency_polygons);
         }
         else if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
         {
-            polygon_p np = (polygon_p)malloc(sizeof(polygon_t));
-            np->vertices = NULL;
-            np->vertex_count = 0;
-            Polygon_Copy(np, p);
-            np->next = mesh->animated_polygons;
-            mesh->animated_polygons = np;
+            addPolygonCopyToList(p, mesh->animated_polygons);
         }
     }
 }
@@ -2637,7 +2611,7 @@ void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
     base_mesh_p base_mesh;
 
     world->meshes_count = tr->meshes_count;
-    base_mesh = world->meshes = (base_mesh_p)malloc(world->meshes_count * sizeof(base_mesh_t));
+    base_mesh = world->meshes = (base_mesh_p)calloc(world->meshes_count, sizeof(base_mesh_t));
     for(uint32_t i=0;i<world->meshes_count;i++,base_mesh++)
     {
         TR_GenMesh(world, i, base_mesh, tr);
@@ -2742,16 +2716,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     mesh->centre[1] =-tr_mesh->centre.z;
     mesh->centre[2] = tr_mesh->centre.y;
     mesh->R = tr_mesh->collision_size;
-    mesh->transparency_polygons = NULL;
-    mesh->animated_polygons = NULL;
-    mesh->skin_map = NULL;
-    mesh->animated_polygons = NULL;
     mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
-    mesh->elements = NULL;
-    mesh->element_count_per_texture = NULL;
-    mesh->vbo_index_array = 0;
-    mesh->vbo_vertex_array = 0;
-    mesh->uses_vertex_colors = 0;
 
     mesh->vertex_count = tr_mesh->num_vertices;
     vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));
@@ -2852,11 +2817,10 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     /*
      * let us normalise normales %)
      */
-    vertex = mesh->vertices;
     p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->vertex_count;i++,vertex++)
+    for(uint32_t i=0;i<mesh->vertex_count;i++)
     {
-        vec3_norm(vertex->normal, n);
+        vec3_norm(mesh->vertices[i].normal, n);
     }
 
     /*
@@ -2896,7 +2860,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     SortPolygonsInMesh(mesh);
 }
 
-void tr_setupRoomVertices(const tr5_room_t *tr_room, base_mesh_p mesh, int numCorners, const uint16_t *vertices, polygon_p p)
+void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_room_t *tr_room, base_mesh_p mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, polygon_p p)
 {
     Polygon_Resize(p, numCorners);
     
@@ -2912,14 +2876,18 @@ void tr_setupRoomVertices(const tr5_room_t *tr_room, base_mesh_p mesh, int numCo
         vec3_copy(p->vertices[i].normal, p->plane);
         TR_color_to_arr(p->vertices[i].color, &tr_room->vertices[vertices[i]].colour);
     }
+    
+    tr4_object_texture_t *tex = &tr->object_textures[masked_texture];
+    SetAnimTexture(p, masked_texture, world);
+    p->transparency = tex->transparency_flags;
+    
+    world->tex_atlas->getCoordinates(masked_texture, 0, p);
+
 }
 
 void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr)
 {
     tr5_room_t *tr_room;
-    tr4_face4_t *face4;
-    tr4_face3_t *face3;
-    tr4_object_texture_t *tex;
     polygon_p p;
     base_mesh_p mesh;
     btScalar n;
@@ -2934,20 +2902,9 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         return;
     }
 
-    mesh = room->mesh = (base_mesh_p)malloc(sizeof(base_mesh_t));
+    mesh = room->mesh = (base_mesh_p)calloc(1, sizeof(base_mesh_t));
     mesh->id = room_index;
     mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
-    mesh->elements = NULL;
-    mesh->element_count_per_texture = NULL;
-    mesh->centre[0] = 0.0;
-    mesh->centre[1] = 0.0;
-    mesh->centre[2] = 0.0;
-    mesh->R = 0.0;
-    mesh->skin_map = NULL;
-    mesh->transparency_polygons = NULL;
-    mesh->animated_polygons = NULL;
-    mesh->vbo_index_array = 0;
-    mesh->vbo_vertex_array = 0;
     mesh->uses_vertex_colors = 1; // This is implicitly true on room meshes
 
     mesh->vertex_count = tr_room->num_vertices;
@@ -2966,14 +2923,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
      */
     for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
     {
-        face3 = &tr_room->triangles[i];
-        tex = &tr->object_textures[face3->texture & tex_mask];
-        SetAnimTexture(p, face3->texture & tex_mask, world);
-        p->transparency = tex->transparency_flags;
-
-        tr_setupRoomVertices(tr_room, mesh, 3, face3->vertices, p);
-        
-        world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
+        tr_setupRoomVertices(world, tr, tr_room, mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, p);
     }
 
     /*
@@ -2981,24 +2931,15 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
      */
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        face4 = &tr_room->rectangles[i];
-        tex = &tr->object_textures[face4->texture & tex_mask];
-        SetAnimTexture(p, face4->texture & tex_mask, world);
-        p->transparency = tex->transparency_flags;
-        
-        tr_setupRoomVertices(tr_room, mesh, 4, face4->vertices, p);
-        
-        world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
+        tr_setupRoomVertices(world, tr, tr_room, mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, p);
     }
 
     /*
      * let us normalise normales %)
      */
-
-    vertex = mesh->vertices;
-    for(uint32_t i=0;i<mesh->vertex_count;i++,vertex++)
+    for(uint32_t i=0;i<mesh->vertex_count;i++)
     {
-        vec3_norm(vertex->normal, n);
+        vec3_norm(mesh->vertices[i].normal, n);
     }
 
     /*
@@ -3579,10 +3520,6 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bo
         bone_frame->pos[0] = (short int)frame[6];
         bone_frame->pos[1] = (short int)frame[8];
         bone_frame->pos[2] =-(short int)frame[7];
-
-        bone_frame->centre[0] = (bone_frame->bb_min[0] + bone_frame->bb_max[0]) / 2.0;
-        bone_frame->centre[1] = (bone_frame->bb_min[1] + bone_frame->bb_max[1]) / 2.0;
-        bone_frame->centre[2] = (bone_frame->bb_min[2] + bone_frame->bb_max[2]) / 2.0;
     }
     else
     {
@@ -3597,11 +3534,11 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bo
         bone_frame->pos[0] = 0.0;
         bone_frame->pos[1] = 0.0;
         bone_frame->pos[2] = 0.0;
-
-        bone_frame->centre[0] = 0.0;
-        bone_frame->centre[1] = 0.0;
-        bone_frame->centre[2] = 0.0;
     }
+    
+    bone_frame->centre[0] = (bone_frame->bb_min[0] + bone_frame->bb_max[0]) / 2.0;
+    bone_frame->centre[1] = (bone_frame->bb_min[1] + bone_frame->bb_max[1]) / 2.0;
+    bone_frame->centre[2] = (bone_frame->bb_min[2] + bone_frame->bb_max[2]) / 2.0;
 }
 
 void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
