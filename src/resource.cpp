@@ -1738,7 +1738,7 @@ void TR_GenRBTrees(struct world_s *world)
 void TR_GenRooms(struct world_s *world, class VT_Level *tr)
 {
     world->room_count = tr->rooms_count;
-    room_p r = world->rooms = (room_p)realloc(world->rooms, world->room_count * sizeof(room_t));
+    room_p r = world->rooms = (room_p)calloc(world->room_count, sizeof(room_t));
     for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         TR_GenRoom(i, r, world, tr);
@@ -1762,17 +1762,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
     room->id = room_index;
     room->active = 1;
-    room->portal_count = 0;
-    room->portals = NULL;
-    room->frustum = NULL;
-    room->is_in_r_list = 0;
-    room->hide = 0;
-    room->max_path = 0;
-    room->active_frustums = 0;
-    room->containers = NULL;
-    room->near_room_list_size = 0;
-    room->sprites_count = 0;
-    room->sprites = NULL;
     room->flags = tr->rooms[room_index].flags;
     room->reverb_info = tr->rooms[room_index].reverb_info;
     room->water_scheme = tr->rooms[room_index].water_scheme;
@@ -1785,9 +1774,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
-    room->self = (engine_container_p)malloc(sizeof(engine_container_t));
+    room->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
     room->self->room = room;
-    room->self->next = NULL;
     room->self->object = room;
     room->self->object_type = OBJECT_ROOM_BASE;
 
@@ -1801,7 +1789,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->static_mesh = NULL;
     if(room->static_mesh_count)
     {
-        room->static_mesh = (static_mesh_p)malloc(room->static_mesh_count * sizeof(static_mesh_t));
+        room->static_mesh = (static_mesh_p)calloc(room->static_mesh_count, sizeof(static_mesh_t));
     }
 
     r_static = room->static_mesh;
@@ -1813,9 +1801,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             room->static_mesh_count--;
             continue;
         }
-        r_static->self = (engine_container_p)malloc(sizeof(engine_container_t));
+        r_static->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
         r_static->self->room = room;
-        r_static->self->next = NULL;
         r_static->self->object = room->static_mesh + i;
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->object_id = tr_room->static_meshes[i].object_id;
@@ -1882,7 +1869,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->sprites_count = tr_room->num_sprites;
     if(room->sprites_count != 0)
     {
-        room->sprites = (room_sprite_p)malloc(room->sprites_count * sizeof(room_sprite_t));
+        room->sprites = (room_sprite_p)calloc(room->sprites_count, sizeof(room_sprite_t));
         for(uint32_t i=0;i<room->sprites_count;i++)
         {
             if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites_count))
@@ -1890,10 +1877,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
                 room->sprites[i].sprite = world->sprites + tr_room->sprites[i].texture;
                 TR_vertex_to_arr(room->sprites[i].pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
                 vec3_add(room->sprites[i].pos, room->sprites[i].pos, room->transform+12);
-            }
-            else
-            {
-                room->sprites[i].sprite = NULL;
             }
         }
     }
@@ -2302,7 +2285,7 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
     }
 
     world->sprites_count = tr->sprite_textures_count;
-    s = world->sprites = (sprite_p)malloc(world->sprites_count * sizeof(sprite_t));
+    s = world->sprites = (sprite_p)calloc(world->sprites_count, sizeof(sprite_t));
 
     for(uint32_t i=0;i<world->sprites_count;i++,s++)
     {
@@ -2314,8 +2297,6 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
         s->bottom = tr_st->bottom_side;
 
         world->tex_atlas->getSpriteCoordinates(i, s->texture, s->tex_coord);
-        s->flag = 0x00;
-        s->id = 0;
     }
 
     for(uint32_t i=0;i<tr->sprite_sequences_count;i++)
@@ -2421,8 +2402,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
 
     world->anim_sequences_count = num_sequences;
-    world->anim_sequences = (anim_seq_p)malloc(num_sequences * sizeof(anim_seq_t));
-    memset(world->anim_sequences, 0, sizeof(anim_seq_t) * num_sequences);       // Reset all structure.
+    world->anim_sequences = (anim_seq_p)calloc(num_sequences, sizeof(anim_seq_t));
 
     anim_seq_p seq = world->anim_sequences;
     for(uint16_t i = 0; i < num_sequences; i++,seq++)
@@ -3046,24 +3026,17 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         model->collision_map[i] = i;
     }
 
-    model->mesh_tree = (mesh_tree_tag_p)malloc(model->mesh_count * sizeof(mesh_tree_tag_t));
+    model->mesh_tree = (mesh_tree_tag_p)calloc(model->mesh_count, sizeof(mesh_tree_tag_t));
     tree_tag = model->mesh_tree;
-    tree_tag->mesh_skin = NULL;
 
     uint32_t *mesh_index = tr->mesh_indices + tr_moveable->starting_mesh;
 
     for(uint16_t k=0;k<model->mesh_count;k++,tree_tag++)
     {
         tree_tag->mesh_base = world->meshes + (mesh_index[k]);
-        tree_tag->mesh_skin = NULL;
-        tree_tag->flag = 0x00;
-        tree_tag->replace_anim = 0x00;
-        tree_tag->replace_mesh = 0x00;
-        vec3_set_zero(tree_tag->offset);
         if(k == 0)
         {
             tree_tag->flag = 0x02;
-            vec3_set_zero(tree_tag->offset);
         }
         else
         {
@@ -3137,7 +3110,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
      * - in the next follows rotation's data. one word - one rotation, if rotation is one-axis (one angle).
      *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
      */
-    model->animations = (animation_frame_p)malloc(model->animation_count * sizeof(animation_frame_t));
+    model->animations = (animation_frame_p)calloc(model->animation_count, sizeof(animation_frame_t));
     anim = model->animations;
     for(uint16_t i=0;i<model->animation_count;i++,anim++)
     {
@@ -3152,8 +3125,6 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
 
         //Sys_DebugLog(LOG_FILENAME, "frame_step = %d", frame_step);
         anim->id = i;
-        anim->next_anim = NULL;
-        anim->next_frame = 0;
         anim->original_frame_rate = tr_animation->frame_rate;
         anim->accel_hi = tr_animation->accel_hi;
         anim->accel_hi2 = tr_animation->accel_hi2;
@@ -3215,7 +3186,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
              */
             anim->frames_count = 1;
         }
-        anim->frames = (bone_frame_p)malloc(anim->frames_count * sizeof(bone_frame_t));
+        anim->frames = (bone_frame_p)calloc(anim->frames_count, sizeof(bone_frame_t));
 
         /*
          * let us begin to load animations
@@ -3227,9 +3198,6 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
             vec3_set_zero(bone_frame->pos);
             vec3_set_zero(bone_frame->move);
-            bone_frame->v_Horizontal = 0.0;
-            bone_frame->v_Vertical = 0.0;
-            bone_frame->command = 0x00;
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset >= tr->frame_data_size)
@@ -3547,15 +3515,13 @@ void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
     tr_moveable_t *tr_moveable;
 
     world->skeletal_model_count = tr->moveables_count;
-    smodel = world->skeletal_models = (skeletal_model_p)malloc(world->skeletal_model_count * sizeof(skeletal_model_t));
+    smodel = world->skeletal_models = (skeletal_model_p)calloc(world->skeletal_model_count, sizeof(skeletal_model_t));
 
     for(uint32_t i=0;i<world->skeletal_model_count;i++,smodel++)
     {
         tr_moveable = &tr->moveables[i];
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
-        smodel->hide = 0x00;
-        smodel->transparancy_flags = 0x00;
         TR_GenSkeletalModel(world, i, smodel, tr);
         SkeletonModel_FillTransparancy(smodel);
     }
@@ -3667,16 +3633,14 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         }
 
         entity->bf.bone_tag_count = entity->bf.model->mesh_count;
-        entity->bf.bone_tags = (ss_bone_tag_p)malloc(entity->bf.bone_tag_count * sizeof(ss_bone_tag_t));
+        entity->bf.bone_tags = (ss_bone_tag_p)calloc(entity->bf.bone_tag_count, sizeof(ss_bone_tag_t));
         for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
         {
             entity->bf.bone_tags[j].flag = entity->bf.model->mesh_tree[j].flag;
             entity->bf.bone_tags[j].mesh_base = entity->bf.model->mesh_tree[j].mesh_base;
             entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh_skin;
-            entity->bf.bone_tags[j].mesh_slot = NULL;
 
             vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.model->mesh_tree[j].offset);
-            vec4_set_zero(entity->bf.bone_tags[j].qrotate);
             Mat4_E_macro(entity->bf.bone_tags[j].transform);
             Mat4_E_macro(entity->bf.bone_tags[j].full_transform);
         }
