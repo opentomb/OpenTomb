@@ -484,18 +484,6 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     }
     else
     {
-        btScalar temp[16], transform[16];
-        glGetFloatv (GL_MODELVIEW_MATRIX, temp);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glMultMatrixbt(ent->transform);
-        glMultMatrixbt(ent->bf.bone_tags->full_transform);
-        glGetFloatv (GL_MODELVIEW_MATRIX, transform);
-
-        glLoadIdentity();
-        glMultMatrixbt(temp);
-
         // bone_tags->mesh->centre[0] ent->bf.pos[0]*0.5 (ent->bf.bone_tags+ent->bf.bone_tag_count)->full_transform[12]  - 32.0 *  ent->transform[4 + 1]
         Mat4_vec3_mul(cam_pos.m_floats, ent->transform, ent->bf.bone_tags->full_transform+12);
         cam_pos.m_floats[2] += dz;
