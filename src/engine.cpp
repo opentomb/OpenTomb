@@ -3544,7 +3544,12 @@ int Engine_ExecCmd(char *ch)
             if(engine_lua)
             {
                 Con_AddLine(pch);
-                luaL_dostring(engine_lua, pch);
+                int code = luaL_dostring(engine_lua, pch);
+                if (code != LUA_OK)
+                {
+                    const char* error = lua_tostring(engine_lua, 1);
+                    Con_AddLine(error, FONTSTYLE_CONSOLE_WARNING);
+                }
             }
             else
             {
