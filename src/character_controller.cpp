@@ -1336,38 +1336,6 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
 }
 
 
-void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
-{
-    btScalar t, vz;
-
-    t = ent->current_speed * ent->character->speed_mult;
-    vz = (zeroVz)?(0.0):(ent->speed.m_floats[2]);
-
-    if(ent->dir_flag & ENT_MOVE_FORWARD)
-    {
-        vec3_mul_scalar(ent->speed.m_floats, ent->transform+4, t);
-    }
-    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
-    {
-        vec3_mul_scalar(ent->speed.m_floats, ent->transform+4,-t);
-    }
-    else if(ent->dir_flag & ENT_MOVE_LEFT)
-    {
-        vec3_mul_scalar(ent->speed.m_floats, ent->transform+0,-t);
-    }
-    else if(ent->dir_flag & ENT_MOVE_RIGHT)
-    {
-        vec3_mul_scalar(ent->speed.m_floats, ent->transform+0, t);
-    }
-    else
-    {
-        vec3_set_zero(ent->speed.m_floats);
-    }
-
-    ent->speed.m_floats[2] = vz;
-}
-
-
 void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal)
 {
     btScalar t;

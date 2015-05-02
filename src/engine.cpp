@@ -1384,6 +1384,41 @@ int lua_GetEntityVector(lua_State * lua)
     return 3;
 }
 
+int lua_GetEntityDistance(lua_State * lua)
+{
+    if(lua_gettop(lua) < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        return 0;
+    }
+    
+    int id = lua_tointeger(lua, 1);
+    entity_p e1 = World_GetEntityByID(&engine_world, id);
+    if(e1 == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+    id = lua_tointeger(lua, 2);
+    entity_p e2 = World_GetEntityByID(&engine_world, id);
+    if(e2 == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    btVector3 ent1_pos; ent1_pos.m_floats[0] = e1->transform[12+0];
+                        ent1_pos.m_floats[1] = e1->transform[12+1];
+                        ent1_pos.m_floats[2] = e1->transform[12+2];
+                        
+    btVector3 ent2_pos; ent2_pos.m_floats[0] = e2->transform[12+0];
+                        ent2_pos.m_floats[1] = e2->transform[12+1];
+                        ent2_pos.m_floats[2] = e2->transform[12+2];
+     
+    lua_pushnumber(lua, btDistance(ent1_pos, ent2_pos));
+    return 1;
+}
+
 
 int lua_GetEntityDirDot(lua_State * lua)
 {
@@ -1567,26 +1602,67 @@ int lua_MoveEntityToSink(lua_State * lua)
     
     btVector3 ent_pos;  ent_pos.m_floats[0] = ent->transform[12+0];
                         ent_pos.m_floats[1] = ent->transform[12+1];
-                        ent_pos.m_floats[2] = ent->transform[12+2] - 256.0; // Prevents digging into the floor.
+                        ent_pos.m_floats[2] = ent->transform[12+2];
                         
     btVector3 sink_pos; sink_pos.m_floats[0] = sink->x;
                         sink_pos.m_floats[1] = sink->y;
-                        sink_pos.m_floats[2] = sink->z;
+                        
+                    if(engine_world.version < TR_II)
+                    {
+                        sink_pos.m_floats[2] = ent_pos.m_floats[2];
+                    }
+                    else
+                    {
+                        sink_pos.m_floats[2] = sink->z + 256.0; // Prevents digging into the floor.
+                    }
      
     btScalar dist = btDistance(ent_pos, sink_pos);
     if(dist == 0.0) dist = 1.0; // Prevents division by zero.
     
-    btVector3 speed = ((ent_pos - sink_pos) / dist) * (sink->room_or_strength / 1024.0);
+    btVector3 speed = (((sink_pos - ent_pos) / dist) * ((btScalar)(sink->room_or_strength))) / 512.0;
     
-    ent->transform[12+0] -= speed.m_floats[0];
-    ent->transform[12+1] -= speed.m_floats[1];
-    ent->transform[12+2] -= speed.m_floats[2] * 64.0;   // Vertical force is stronger.
+    ent->transform[12+0] += speed.m_floats[0];
+    ent->transform[12+1] += speed.m_floats[1];
+    ent->transform[12+2] += speed.m_floats[2] * 32.0;
 
     Entity_UpdateRigidBody(ent, 1);
 
     return 0;
 }
 
+int lua_MoveEntityToEntity(lua_State * lua)
+{
+    if(lua_gettop(lua) < 3)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_to_move_id, entity_id, speed]");
+        return 0;
+    }
+
+    entity_p ent1 = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    entity_p ent2 = World_GetEntityByID(&engine_world, lua_tointeger(lua, 2));
+    btScalar speed_mult = lua_tonumber(lua, 3);
+    
+    btVector3 ent1_pos; ent1_pos.m_floats[0] = ent1->transform[12+0];
+                        ent1_pos.m_floats[1] = ent1->transform[12+1];
+                        ent1_pos.m_floats[2] = ent1->transform[12+2];
+                        
+    btVector3 ent2_pos; ent2_pos.m_floats[0] = ent2->transform[12+0];
+                        ent2_pos.m_floats[1] = ent2->transform[12+1];
+                        ent2_pos.m_floats[2] = ent2->transform[12+2];
+     
+    btScalar dist = btDistance(ent1_pos, ent2_pos);
+    if(dist == 0.0) dist = 1.0; // Prevents division by zero.
+    
+    btVector3 speed = ((ent2_pos - ent1_pos) / dist) * speed_mult; // FIXME!
+    
+    ent1->transform[12+0] += speed.m_floats[0];
+    ent1->transform[12+1] += speed.m_floats[1];
+    ent1->transform[12+2] += speed.m_floats[2];
+    if(ent1->character) Character_UpdatePlatformPreStep(ent1);
+    Entity_UpdateRigidBody(ent1, 1);
+
+    return 0;
+}
 
 int lua_GetEntitySpeed(lua_State * lua)
 {
@@ -2832,11 +2908,13 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
+    lua_register(lua, "getEntityDistance", lua_GetEntityDistance);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
     lua_register(lua, "moveEntityToSink", lua_MoveEntityToSink);
+    lua_register(lua, "moveEntityToEntity", lua_MoveEntityToEntity);
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);

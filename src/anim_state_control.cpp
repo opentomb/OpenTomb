@@ -591,7 +591,7 @@ int State_Control_Lara(struct entity_s *ent)
                 Controls_JoyRumble(200.0, 200);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_SMASH_JUMP, 0);
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                Character_UpdateCurrentSpeed(ent, 1);
+                Entity_UpdateCurrentSpeed(ent, 1);
             }
             else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
             {
@@ -622,7 +622,7 @@ int State_Control_Lara(struct entity_s *ent)
                 Controls_JoyRumble(200.0, 200);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_SMASH_JUMP, 0);
                 ent->dir_flag = ENT_MOVE_RIGHT;
-                Character_UpdateCurrentSpeed(ent, 1);
+                Entity_UpdateCurrentSpeed(ent, 1);
             }
             else
             {
@@ -649,7 +649,7 @@ int State_Control_Lara(struct entity_s *ent)
                 Controls_JoyRumble(200.0, 200);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_SMASH_JUMP, 0);
                 ent->dir_flag = ENT_MOVE_LEFT;
-                Character_UpdateCurrentSpeed(ent, 1);
+                Entity_UpdateCurrentSpeed(ent, 1);
             }
             else
             {
@@ -833,7 +833,7 @@ int State_Control_Lara(struct entity_s *ent)
                         Entity_SetAnimation(ent, TR_ANIMATION_LARA_STAY_SOLID, 0);
                     }
                 }
-                Character_UpdateCurrentSpeed(ent, 0);
+                Entity_UpdateCurrentSpeed(ent, 0);
             }
             else if(cmd->move[0] == 1)                                          // If we continue running...
             {
@@ -913,7 +913,7 @@ int State_Control_Lara(struct entity_s *ent)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_WALL_SMASH_RIGHT, 0);
                 }
-                Character_UpdateCurrentSpeed(ent, 0);
+                Entity_UpdateCurrentSpeed(ent, 0);
             }
             else if(cmd->sprint == 0)
             {
@@ -1040,7 +1040,7 @@ int State_Control_Lara(struct entity_s *ent)
             if(ent->character->height_info.quicksand)
             {
                 ent->current_speed = 8.0;
-                Character_UpdateCurrentSpeed(ent);
+                Entity_UpdateCurrentSpeed(ent);
             }
 
             if(cmd->move[0] == 1)
@@ -1120,7 +1120,7 @@ int State_Control_Lara(struct entity_s *ent)
             if(ent->character->height_info.quicksand)
             {
                 ent->current_speed = 4.0;
-                Character_UpdateCurrentSpeed(ent);
+                Entity_UpdateCurrentSpeed(ent);
             }
 
             if(ent->move_type == MOVE_FREE_FALLING)
@@ -2169,7 +2169,7 @@ int State_Control_Lara(struct entity_s *ent)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_SMASH_JUMP, 0);
                 ent->dir_flag = ENT_MOVE_BACKWARD;
-                Character_UpdateCurrentSpeed(ent, 1);
+                Entity_UpdateCurrentSpeed(ent, 1);
             }
             else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
             {

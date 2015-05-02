@@ -103,7 +103,7 @@ function keyhole_func(id)    -- Key and puzzle holes.
         
         if(getEntityActivity(object_id) == 0) then
             setEntityPos(activator_id, getEntityPos(object_id));
-            moveEntityLocal(activator_id, 0.0, 256.0, 0.0);
+            moveEntityLocal(activator_id, 0.0, 384.0, 0.0);
             switch_activate(object_id, activator_id);
         
         end
@@ -130,7 +130,7 @@ function switch_func(id)     -- Ordinary switches.
         end
         
         setEntityPos(activator_id, getEntityPos(object_id));    -- Move activator right next to object.
-        moveEntityLocal(activator_id, 0.0, 256.0, 0.0);         -- Shift activator back to proper distance.
+        moveEntityLocal(activator_id, 0.0, 384.0, 0.0);         -- Shift activator back to proper distance.
         switch_activate(object_id, activator_id);               -- Make switching routines.
     end;
     
@@ -190,6 +190,8 @@ function pickup_func(id, item_id)    -- VALID
 
     local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags
     setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_PICKABLE), nil);
+    setEntityActivationOffset(id, 0.0, 0.0, 0.0, 512.0);
+    
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end
@@ -198,7 +200,7 @@ function pickup_func(id, item_id)    -- VALID
         if((item_id == nil) or (object_id == nil)) then
             return;
         end
-
+        
         local need_set_pos = true;
         local curr_anim = getEntityAnim(activator_id);
 
@@ -222,20 +224,22 @@ function pickup_func(id, item_id)    -- VALID
 
         print("You're trying to pick up object " .. object_id);
 
-        local px, py, pz = getEntityPos(object_id);
-        if(curr_anim == 108) then
-            pz = pz + 128.0                     -- Shift offset for swim pickup.
-        end;
-
-        if(need_set_pos) then
-            setEntityPos(activator_id, px, py, pz);
-        end;
 
         addTask(
         function()
+            if(getEntityMoveType(activator_id) == 6) then
+                if(getEntityDistance(object_id, activator_id) > 128.0) then
+                    moveEntityToEntity(activator_id, object_id, 25.0);
+                end;
+            else
+                if(getEntityDistance(object_id, activator_id) > 32.0) then
+                    moveEntityToEntity(activator_id, object_id, 50.0);
+                end;;
+            end;
+            
             local a, f, c = getEntityAnim(activator_id);
             local ver = getLevelVersion();
-
+            
             -- Standing pickup anim makes action on frame 40 in TR1-3, in TR4-5
             -- it was generalized with all rest animations by frame 16.
 

@@ -437,6 +437,36 @@ void Entity_UpdateRotation(entity_p entity)
 }
 
 
+void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
+{
+    btScalar t  = entity->current_speed * entity->character->speed_mult;
+    btScalar vz = (zeroVz)?(0.0):(entity->speed.m_floats[2]);
+
+    if(entity->dir_flag & ENT_MOVE_FORWARD)
+    {
+        vec3_mul_scalar(entity->speed.m_floats, entity->transform+4, t);
+    }
+    else if(entity->dir_flag & ENT_MOVE_BACKWARD)
+    {
+        vec3_mul_scalar(entity->speed.m_floats, entity->transform+4,-t);
+    }
+    else if(entity->dir_flag & ENT_MOVE_LEFT)
+    {
+        vec3_mul_scalar(entity->speed.m_floats, entity->transform+0,-t);
+    }
+    else if(entity->dir_flag & ENT_MOVE_RIGHT)
+    {
+        vec3_mul_scalar(entity->speed.m_floats, entity->transform+0, t);
+    }
+    else
+    {
+        vec3_set_zero(entity->speed.m_floats);
+    }
+
+    entity->speed.m_floats[2] = vz;
+}
+
+
 void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, model_id);
@@ -1621,8 +1651,6 @@ void Entity_CheckActivators(struct entity_s *ent)
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {
                 entity_p e = (entity_p)cont->object;
-                btScalar r = e->activation_offset[3];
-                r *= r;
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
@@ -1633,9 +1661,13 @@ void Entity_CheckActivators(struct entity_s *ent)
                 }
                 else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
+                    btScalar r = e->activation_offset[3];
+                    r *= r;
                     btScalar *v = e->transform + 12;
-                    if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                                      (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
+                    if((e != ent) &&
+                       ((v[0] - ppos[0]) * (v[0] - ppos[0]) +
+                        (v[1] - ppos[1]) * (v[1] - ppos[1]) +
+                        (v[2] - ppos[2]) * (v[2] - ppos[2]) < r))
                     {
                         lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
                     }
