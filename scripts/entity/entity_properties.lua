@@ -71,13 +71,13 @@ tr1_entity_tbl[34] = {coll = 0x01};                      -- Torso Boss
 -- ANIMATINGS --
 
 tr1_entity_tbl[35] = {coll = 0x02, func = "fallblock"};  -- Falling floor
-tr1_entity_tbl[36] = {coll = 0x01};                      -- Swinging blade (Vilcabamba, etc.)
+tr1_entity_tbl[36] = {coll = 0x01, func = "swingblade"}; -- Swinging blade (Vilcabamba, etc.)
 tr1_entity_tbl[37] = {coll = 0x02, func = "oldspike"};   -- Spikes
 tr1_entity_tbl[38] = {coll = 0x01};                      -- Boulder
 tr1_entity_tbl[39] = {coll = 0x01};                      -- Dart
 tr1_entity_tbl[40] = {coll = 0x01};                      -- Dartgun
 tr1_entity_tbl[41] = {coll = 0x01};                      -- Lifting door
-tr1_entity_tbl[42] = {coll = 0x01};                      -- Slamming sawtooth doors
+tr1_entity_tbl[42] = {coll = 0x01, func = "slamdoor"};   -- Slamming sawtooth doors
 tr1_entity_tbl[43] = {coll = 0x01};                      -- Sword of Damocles
 tr1_entity_tbl[44] = {coll = 0x01};                      -- Thor's hammer (handle)
 tr1_entity_tbl[45] = {coll = 0x01};                      -- Thor's hammer (block)
@@ -88,7 +88,7 @@ tr1_entity_tbl[49] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[50] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[51] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[52] = {coll = 0x01};                      -- Moving block
-tr1_entity_tbl[53] = {coll = 0x02};                      -- Falling ceiling
+tr1_entity_tbl[53] = {coll = 0x02, func = "fallceiling"};                      -- Falling ceiling
 tr1_entity_tbl[54] = {coll = 0x01};                      -- Sword of Damocles (unused?)
 tr1_entity_tbl[55] = {coll = 0x02, func = "switch"};     -- Wall switch (lever)
 tr1_entity_tbl[56] = {coll = 0x02, func = "switch"};     -- Underwater switch (lever)
@@ -104,8 +104,8 @@ tr1_entity_tbl[62] = {coll = 0x01, func = "door"};       -- Door
 tr1_entity_tbl[63] = {coll = 0x01, func = "door"};       -- Door
 tr1_entity_tbl[64] = {coll = 0x01, func = "door"};       -- Door
 
-tr1_entity_tbl[65] = {coll = 0x01, func = "door"};                      -- Floor trapdoor
-tr1_entity_tbl[66] = {coll = 0x01, func = "door"};                      -- Floor trapdoor
+tr1_entity_tbl[65] = {coll = 0x01, func = "door"};       -- Floor trapdoor
+tr1_entity_tbl[66] = {coll = 0x01, func = "door"};       -- Floor trapdoor
 
 -- COLLISION OBJECTS --
 
@@ -119,9 +119,9 @@ tr1_entity_tbl[71] = {coll = 0x00};                      -- Menu: Passport
 tr1_entity_tbl[72] = {coll = 0x00};                      -- Menu: Compass
 tr1_entity_tbl[73] = {coll = 0x00};                      -- Menu: Lara's Home photo
 
-tr1_entity_tbl[74] = {coll = 0x02, func = "anim"};                      -- Animating 1
-tr1_entity_tbl[75] = {coll = 0x02, func = "anim"};                      -- Animating 2
-tr1_entity_tbl[76] = {coll = 0x02, func = "anim"};                      -- Animating 3
+tr1_entity_tbl[74] = {coll = 0x02, func = "anim"};       -- Animating 1
+tr1_entity_tbl[75] = {coll = 0x02, func = "anim"};       -- Animating 2
+tr1_entity_tbl[76] = {coll = 0x02, func = "anim"};       -- Animating 3
 
 tr1_entity_tbl[81] = {coll = 0x00};                      -- Menu: Passport (closed)
 
@@ -287,7 +287,7 @@ tr2_entity_tbl[77] = {coll = 0x02};                     -- Power saw
 tr2_entity_tbl[78] = {coll = 0x02};                     -- Overhead pulley hook
 tr2_entity_tbl[79] = {coll = 0x02};                     -- Sandbag / Ceiling fragments
 tr2_entity_tbl[80] = {coll = 0x02};                     -- Rolling spindle
-tr2_entity_tbl[81] = {coll = 0x02};                     -- Wall-mounted knife blade
+tr2_entity_tbl[81] = {coll = 0x02, func = "wallblade"};                     -- Wall-mounted knife blade
 tr2_entity_tbl[82] = {coll = 0x02};                     -- Statue with knife blade
 tr2_entity_tbl[83] = {coll = 0x02};                     -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = 0x02};                     -- Detachable icicles
@@ -380,7 +380,7 @@ tr2_entity_tbl[211] = {coll = 0x00};               -- Dragon explosion effect (e
 tr2_entity_tbl[212] = {coll = 0x00};               -- Alarm
 tr2_entity_tbl[213] = {coll = 0x00, hide = 0x01};  -- Placeholder
 tr2_entity_tbl[214] = {coll = 0x02};               -- Tyrannosaur
-tr2_entity_tbl[215] = {coll = 0x00, hide = 0x01};  -- Singing birds
+tr2_entity_tbl[215] = {coll = 0x00, hide = 0x01, func = "venicebird"};  -- Singing birds
 tr2_entity_tbl[216] = {coll = 0x00, hide = 0x01};  -- Placeholder
 tr2_entity_tbl[217] = {coll = 0x00, hide = 0x01};  -- Placeholder
 tr2_entity_tbl[218] = {coll = 0x02};               -- Dragon bones (front)
@@ -510,7 +510,7 @@ tr3_entity_tbl[106] = {coll = 0x01};                -- Overhead pulley hook
 tr3_entity_tbl[107] = {coll = 0x01};                -- Falling fragments
 tr3_entity_tbl[108] = {coll = 0x01};                -- Rolling spindle
 tr3_entity_tbl[110] = {coll = 0x01};                -- Subway train
-tr3_entity_tbl[111] = {coll = 0x01};                -- Wall-mounted knife blade / Knife disk
+tr3_entity_tbl[111] = {coll = 0x01, func = "wallblade"};                -- Wall-mounted knife blade / Knife disk
 tr3_entity_tbl[113] = {coll = 0x01};                -- Detachable stalactites
 tr3_entity_tbl[114] = {coll = 0x01};                -- Spiky movable wall
 tr3_entity_tbl[116] = {coll = 0x01};                -- Spiky movable vertical wall / Tunnel borer

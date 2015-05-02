@@ -1971,6 +1971,26 @@ int lua_GetEntityFlags(lua_State * lua)
     return 3;
 }
 
+int lua_SetEntityTypeFlag(lua_State *lua)
+{
+    if(lua_gettop(lua) < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, type_flags]");
+        return 0;
+    }
+    
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+    
+    ent->type_flags ^= (uint16_t)lua_tointeger(lua, 2);
+    return 0;
+}
 
 int lua_SetEntityFlags(lua_State * lua)
 {
@@ -2427,9 +2447,12 @@ int lua_PlayStream(lua_State *lua)
 
 int lua_PlaySound(lua_State *lua)
 {
-    if(lua_gettop(lua) != 1)
+    int top = lua_gettop(lua);
+    int ent_id = -1;
+    
+    if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id]");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
         return 0;
     }
 
@@ -2439,8 +2462,25 @@ int lua_PlaySound(lua_State *lua)
         Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
         return 0;
     }
+    
+    if(top >= 2)
+    {
+        ent_id = lua_tointeger(lua, 2);
+        if(World_GetEntityByID(&engine_world, ent_id) == NULL) ent_id = -1;
+    }
+    
+    int result;
+    
+    if(ent_id >= 0)
+    {
+        result = Audio_Send(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
+    }
+    else
+    {
+        result = Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL);
+    }
 
-    switch(Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL))
+    switch(result)
     {
         case TR_AUDIO_SEND_NOCHANNEL:
             Con_Warning(SYSWARN_AS_NOCHANNEL);
@@ -2906,15 +2946,17 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     
     lua_register(lua, "newSector", lua_NewSector);
     
+    
+    lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
+    lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
+    lua_register(lua, "moveEntityToSink", lua_MoveEntityToSink);
+    lua_register(lua, "moveEntityToEntity", lua_MoveEntityToEntity);
+    
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
     lua_register(lua, "getEntityDistance", lua_GetEntityDistance);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
-    lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
-    lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
-    lua_register(lua, "moveEntityToSink", lua_MoveEntityToSink);
-    lua_register(lua, "moveEntityToEntity", lua_MoveEntityToEntity);
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
@@ -2931,6 +2973,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityTimer", lua_SetEntityTimer);
     lua_register(lua, "getEntityFlags", lua_GetEntityFlags);
     lua_register(lua, "setEntityFlags", lua_SetEntityFlags);
+    lua_register(lua, "setEntityTypeFlag", lua_SetEntityTypeFlag);
     lua_register(lua, "getEntityActivationMask", lua_GetEntityActivationMask);
     lua_register(lua, "setEntityActivationMask", lua_SetEntityActivationMask);
     lua_register(lua, "getEntityState", lua_GetEntityState);
