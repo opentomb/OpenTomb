@@ -3622,8 +3622,7 @@ int Engine_ExecCmd(char *ch)
             if(engine_lua)
             {
                 Con_AddLine(pch);
-                int code = luaL_dostring(engine_lua, pch);
-                if (code != LUA_OK)
+                if (luaL_dostring(engine_lua, pch) != LUA_OK)
                 {
                     Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
                     lua_pop(engine_lua, 1);
