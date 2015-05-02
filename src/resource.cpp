@@ -2328,19 +2328,22 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         // X_MIN
         if((p->norm[0] > 0.999) && (((int)p->centre[0])%2))
         {
-            Portal_Move(p, (btScalar [3]) {1.0, 0.0, 0.0});
+            btScalar pos[3] = {1.0, 0.0, 0.0};
+            Portal_Move(p, pos);
         }
 
         // Y_MIN
         if((p->norm[1] > 0.999) && (((int)p->centre[1])%2))
         {
-            Portal_Move(p, (btScalar [3]) {0.0, 1.0, 0.0});
+            btScalar pos[3] = {0.0, 1.0, 0.0};
+            Portal_Move(p, pos);
         }
 
         // Z_MAX
         if((p->norm[2] <-0.999) && (((int)p->centre[2])%2))
         {
-            Portal_Move(p, (btScalar [3]) {0.0, 0.0, -1.0});
+            btScalar pos[3] = {0.0, 0.0, -1.0};
+            Portal_Move(p, pos);
         }
     }
 
