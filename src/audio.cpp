@@ -23,6 +23,7 @@ extern "C" {
 #include "character_controller.h"
 #include "system.h"
 #include "render.h"
+#include "string.h"
 #include <math.h>
 
 ALfloat                     listener_position[3];
@@ -437,7 +438,7 @@ bool StreamTrack::Load_Ogg(const char *path)
 
     vorbis_Info = ov_info(&vorbis_Stream, -1);
 
-    Con_Printf("Ogg stream opened (%s): channels = %d, sample rate = %d, bitrate = %.1f", path,
+    Con_Notify(SYSNOTE_OGG_OPENED, path,
                vorbis_Info->channels, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
 
     if(vorbis_Info->channels == 1)
@@ -1903,16 +1904,15 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 
     file = SDL_RWFromFile(fname, "rb");
 
-    Con_Printf("Reading file: \"%s\"", fname);
     if(!file)
     {
-        Con_AddLine("Error: can not open file!", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning(SYSWARN_CANT_OPEN_FILE);
         return -1;
     }
 
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
-        Con_AddLine("Error: bad file format!", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning(SYSWARN_BAD_FILE_FORMAT);
         return -2;
     }
 

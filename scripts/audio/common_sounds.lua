@@ -104,7 +104,7 @@ tr5_global_sounds[GLOBALID_MENUSELECT]  = 111;
 tr5_global_sounds[GLOBALID_MENUTEST]    = 8;
 
 
-function GetGlobalSound(ver, id)
+function getGlobalSound(ver, id)
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         return tr1_global_sounds[id];
     elseif(ver < 5) then                -- TR_II, TR_II_DEMO

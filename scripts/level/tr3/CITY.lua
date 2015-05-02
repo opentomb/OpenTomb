@@ -1,18 +1,10 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER 3, CITY.TR2
 
--- ColType values reference: 
-
-COLL_NONE = 0x00;  -- Object has no collisions
-COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
-COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
-
 print("Level script loaded (CITY.lua)");
-urn
+
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
-
-static_tbl = {};
 
 static_tbl[10] = {coll = COLL_BBOX};            -- Floor lamp
 static_tbl[11] = {coll = COLL_BBOX};            -- Lamp upper part
@@ -34,13 +26,3 @@ static_tbl[36] = {coll = COLL_BBOX};            -- Tinnos statue
 static_tbl[37] = {coll = COLL_BBOX};            -- Tinnos idol
 static_tbl[38] = {coll = COLL_BBOX};            -- Fire pedestal
 static_tbl[39] = {coll = COLL_BBOX};            -- Thin pillar
-
---------------------------------------------------------------------------------
-
-function trGetStaticMeshFlags(ver, id)
-    if(static_tbl[id] == nil) then
-        return nil, nil;
-    else
-        return static_tbl[id].coll, static_tbl[id].hide;
-    end;
-end;

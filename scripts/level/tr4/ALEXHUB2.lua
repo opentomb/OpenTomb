@@ -3,17 +3,8 @@
 
 print("Level script loaded (ALEXHUB.lua)");
 
---------------------------------------------------------------------------------
--- ColType values reference: 
-
-COLL_NONE = 0x00;  -- Object has no collisions
-COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
-COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
-
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
-
-static_tbl = {};
 
 static_tbl[22] = {coll = COLL_MESH};                 -- Stone arc
 static_tbl[23] = {coll = COLL_BBOX};                 -- Dummy mummy
@@ -43,13 +34,3 @@ static_tbl[48] = {coll = COLL_MESH};                 -- Stairs 2
 static_tbl[50] = {coll = COLL_BBOX};                 -- Egyptian adventure barricade
 static_tbl[51] = {coll = COLL_BBOX};                 -- Lock
 static_tbl[52] = {coll = COLL_MESH};                 -- Target
-
---------------------------------------------------------------------------------
-
-function trGetStaticMeshFlags(ver, id)
-    if(static_tbl[id] == nil) then
-        return nil, nil;
-    else
-        return static_tbl[id].coll, static_tbl[id].hide;
-    end;
-end;

@@ -57,7 +57,7 @@ dofile(gameflow_paths[GAME_5].script);
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- Get game's title screen.
 ---------------------------------------------------------------------------------------------------------------------------------------
-function GetTitleScreen(game_version)
+function getTitleScreen(game_version)
     if(game_version <= GAME_MAX) then
         return gameflow_paths[game_version].title;
     else
@@ -68,7 +68,7 @@ end;
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- This function is a general function to get next level number. Used for both GetNextLevel and GetLoadingScreen functions.
 ---------------------------------------------------------------------------------------------------------------------------------------
-function NextLevelNum(currentgame, currentlevel, operand)
+function getNextLevelNum(currentgame, currentlevel, operand)
     local nextlevel;
 
     if(operand == 0) then    -- If zero we just get the next level (TR1/2/3/5)
@@ -90,8 +90,8 @@ end;
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- Get next level.
 ---------------------------------------------------------------------------------------------------------------------------------------
-function GetNextLevel(currentgame, currentlevel, operand)
-    local level_number = NextLevelNum(currentgame, currentlevel, operand);
+function getNextLevel(currentgame, currentlevel, operand)
+    local level_number = getNextLevelNum(currentgame, currentlevel, operand);
     if(gameflow_paths[currentgame].level[level_number] ~= nil) then
         return gameflow_paths[currentgame].level[level_number].filepath, gameflow_paths[currentgame].level[level_number].name, level_number;
     else
@@ -101,8 +101,8 @@ end;
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- Get next level's loading screen.
 ---------------------------------------------------------------------------------------------------------------------------------------
-function GetLoadingScreen(currentgame, currentlevel, operand)
-    local level_number = NextLevelNum(currentgame, currentlevel, operand);
+function getLoadingScreen(currentgame, currentlevel, operand)
+    local level_number = getNextLevelNum(currentgame, currentlevel, operand);
     if(gameflow_paths[currentgame].level[level_number] ~= nil) then
         return gameflow_paths[currentgame].level[level_number].picpath;
     else

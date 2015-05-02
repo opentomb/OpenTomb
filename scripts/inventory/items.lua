@@ -284,27 +284,4 @@ elseif(ver == TR_V) then
 
 end
 
--- test TR_ITEMS
-
-addItem(player, ITEM_COMPASS, 1);
-addItem(player, ITEM_PASSPORT, 1);
-addItem(player, ITEM_CONTROLS, 1);
-addItem(player, ITEM_AUDIO, 1);
-addItem(player, ITEM_PISTOL, 1);
-addItem(player, ITEM_SMALL_MEDIPACK, 3);
-addItem(player, ITEM_LARGE_MEDIPACK, 1);
-
-addItem(player, ITEM_MAGNUM, 1);
-addItem(player, ITEM_MAGNUM_AMMO, 1);
-addItem(player, ITEM_UZI, 1);
-addItem(player, ITEM_UZI_AMMO, 1);
-addItem(player, ITEM_SHOTGUN, 1);
-addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1);
-addItem(player, ITEM_GRENADEGUN, 1);
-addItem(player, ITEM_GRENADEGUN_AMMO, 1);
-addItem(player, ITEM_HARPOONGUN, 1);
-addItem(player, ITEM_HARPOONGUN_AMMO, 1);
-addItem(player, ITEM_M16, 1);
-addItem(player, ITEM_M16_AMMO, 1);
-
 print("items script loaded");

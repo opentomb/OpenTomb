@@ -35,7 +35,7 @@ void Gameflow_Do()
         case TR_GAMEFLOW_OP_LEVELCOMPLETE:
             if(Gui_FadeCheck(FADER_LOADSCREEN) == GUI_FADER_STATUS_COMPLETE)    // Switch level only when fade is complete!
             {
-                lua_getglobal(engine_lua, "GetNextLevel");                      // mustbe loaded from gameflow script!!!
+                lua_getglobal(engine_lua, "getNextLevel");                      // mustbe loaded from gameflow script!!!
                 lua_pushnumber(engine_lua, gameflow_manager.CurrentGameID);     // Push the first argument
                 lua_pushnumber(engine_lua, gameflow_manager.CurrentLevelID);    // Push the first argument
                 lua_pushnumber(engine_lua, gameflow_manager.Operand);           // Push the second argument
@@ -47,7 +47,8 @@ void Gameflow_Do()
                     strncpy(gameflow_manager.CurrentLevelName, lua_tostring(engine_lua, -1), LEVEL_NAME_MAX_LEN); // Second value in stack is level name
                     lua_pop(engine_lua, 1); // Pop stack to get next value
                     strncpy(gameflow_manager.CurrentLevelPath, lua_tostring(engine_lua, -1), MAX_ENGINE_PATH); // Third value in stack is level path
-
+                    lua_pop(engine_lua, 1);
+                    
                     // Now, load the level! + if character exists then save inventory
                     /*if((engine_world.Character != NULL) && (engine_world.Character->character != NULL))
                     {

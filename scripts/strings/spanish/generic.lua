@@ -1,14 +1,12 @@
 -- OPENTOMB GENERIC STRINGS - SPANISH LANGUAGE
 -- by Lwmte, Jan 2015
 -- Spanish Translation by: SuiKaze Raider.
--- Translation Version: 1.0.0.0 (January 11th, 2015)
+-- Translation Version: v1.0.1.0 (April 26th, 2015)
 
 --------------------------------------------------------------------------------
 -- This set of strings is used globally in all engine versions for various
 -- menu entries, notify pop-ups, inventory entries etc.
 --------------------------------------------------------------------------------
-
-strings = {};
 
 -- Game menu entries
 
@@ -37,7 +35,7 @@ strings[017] = "Descartar";
 -- Interface headers
 
 strings[018] = "INVENTARIO";
-strings[019] = "ARTÍCULOS";
+strings[019] = "OBJETOS";
 strings[020] = "PAUSA";
 strings[021] = "OPCIONES";
 strings[022] = "ESTADÍSTICAS";
@@ -84,12 +82,14 @@ strings[047] = "En OpenTomb, Lara se desliza por las pendientes en su dirección
 strings[048] = "¿Sabías que al menos hubo diez programadores diferentes trabajando en OpenTomb?";      -- ;)
 strings[049] = "¿Sabías que Core Design nunca liberó el código fuente de ningún Tomb Raider?";     -- Whatever... :]
 
+strings[050] = "Pulsa la tecla INVENTARIO para omitir.";
+
 -- String masks
 
 strings[090] = "%s (%d)"            -- Inventory item header
-strings[091] = "%dx %s"             -- Ammo header
+strings[091] = "%s x%d"             -- Ammo header
 strings[092] = "%02d:%02d:%02d"     -- Timer
-strings[093] = "%d days, %02d:%02d" -- Time count
+strings[093] = "%d días, %02d:%02d" -- Time count
 
 -- Game names - to use with Select Game menu...
 

@@ -244,6 +244,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua);
 bool Engine_FileFound(const char *name, bool Write = false);
 int  Engine_GetLevelVersion(const char *name);
 void Engine_GetLevelName(char *name, const char *path);
+void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix = NULL);
 int  Engine_LoadMap(const char *name);
 
 int  Engine_ExecCmd(char *ch);

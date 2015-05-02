@@ -486,6 +486,36 @@ void Con_Printf(const char *fmt, ...)
     Con_AddLine(buf, FONTSTYLE_CONSOLE_NOTIFY);
 }
 
+void Con_Warning(int warn_string_index, ...)
+{
+    va_list argptr;
+    char buf[4096];
+    char fmt[256];
+    
+    lua_GetSysNotify(engine_lua, warn_string_index, 256, fmt);
+    
+    va_start(argptr, warn_string_index);
+    vsnprintf(buf, 4096, (const char*)fmt, argptr);
+    buf[4096-1] = 0;
+    va_end(argptr);
+    Con_AddLine(buf, FONTSTYLE_CONSOLE_WARNING);
+}
+
+void Con_Notify(int notify_string_index, ...)
+{
+    va_list argptr;
+    char buf[4096];
+    char fmt[256];
+    
+    lua_GetSysNotify(engine_lua, notify_string_index, 256, fmt);
+    
+    va_start(argptr, notify_string_index);
+    vsnprintf(buf, 4096, (const char*)fmt, argptr);
+    buf[4096-1] = 0;
+    va_end(argptr);
+    Con_AddLine(buf, FONTSTYLE_CONSOLE_NOTIFY);
+}
+
 void Con_Clean()
 {
     for(uint16_t i=0;i<con_base.line_count;i++)

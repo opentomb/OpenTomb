@@ -43,91 +43,106 @@ lua_State *ent_ID_override = NULL;
 lua_State *level_script = NULL;
 
 
-void Items_CheckEntities(RedBlackNode_p n);
-
-
-void TR_SetEntityModelFlags(struct entity_s *ent)
+void TR_SetEntityModelProperties(struct entity_s *ent)
 {
     if((objects_flags_conf != NULL) && (ent->bf.model != NULL))
     {
-        int top = lua_gettop(objects_flags_conf);                               // save LUA's stack position
-        lua_getglobal(objects_flags_conf, "trGetEntityFlags");                  // add to the up of stack LUA's function "getEntityParameters"
-        if(lua_isfunction(objects_flags_conf, -1))                                  // If function exists...
+        int top = lua_gettop(objects_flags_conf);
+        lua_getglobal(objects_flags_conf, "getEntityProperties");
+        if(lua_isfunction(objects_flags_conf, -1))
         {
-            lua_pushinteger(objects_flags_conf, engine_world.version);              // add to stack engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.model->id);                 // add to stack model id
-            lua_pcall(objects_flags_conf, 2, 3, 0);                                 // call function "getEntityParameters"
-            ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -3); // get collision flag
-            ent->bf.model->hide = lua_tointeger(objects_flags_conf, -2);            // get info about model visibility
-            ent->type_flags |= lua_tointeger(objects_flags_conf, -1);               // get traverse information
+            lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
+            lua_pushinteger(objects_flags_conf, ent->bf.model->id);                 // model id
+            lua_pcall(objects_flags_conf, 2, 4, 0);
+            ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
+            ent->bf.model->hide = lua_tointeger(objects_flags_conf, -3);            // get info about model visibility
+            ent->type_flags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
+            
+            if(!lua_isnil(objects_flags_conf, -1))
+            {
+                size_t string_length;
+                CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, &string_length), ent->id);
+            }
         }
-        lua_settop(objects_flags_conf, top);                                    // restore LUA stack position
+        lua_settop(objects_flags_conf, top);
     }
 
     if((level_script != NULL) && (ent->bf.model != NULL))
     {
-        int top = lua_gettop(level_script);                                     // save LUA's stack position
-        lua_getglobal(level_script, "trGetEntityFlags");                        // add to the up of stack LUA's function
-        if(lua_isfunction(level_script, -1))                                    // If function exists...
+        int top = lua_gettop(level_script);
+        lua_getglobal(level_script, "getEntityProperties");
+        if(lua_isfunction(level_script, -1))
         {
-            lua_pushinteger(level_script, engine_world.version);                // add to stack engine version
-            lua_pushinteger(level_script, ent->bf.model->id);                   // add to stack model id
-            lua_pcall(level_script, 2, 3, 0);                                   // call that function
-            if(!lua_isnil(level_script, -3))
+            lua_pushinteger(level_script, engine_world.version);                // engine version
+            lua_pushinteger(level_script, ent->bf.model->id);                   // model id
+            lua_pcall(level_script, 2, 4, 0);                                   // call that function
+            if(!lua_isnil(level_script, -4))
             {
                 ent->self->collide_flag = 0xff & lua_tointeger(level_script, -3);   // get collision flag
             }
-            if(!lua_isnil(level_script, -2))
+            if(!lua_isnil(level_script, -3))
             {
                 ent->bf.model->hide = lua_tointeger(level_script, -2);              // get info about model visibility
             }
-            if(!lua_isnil(level_script, -1))
+            if(!lua_isnil(level_script, -2))
             {
                 ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
                 ent->type_flags |= lua_tointeger(level_script, -1);                 // get traverse information
             }
+            if(!lua_isnil(level_script, -1))
+            {
+                size_t string_length;
+                CreateEntityFunc(engine_lua, lua_tolstring(level_script, -1, &string_length), ent->id);
+            }
         }
-        lua_settop(level_script, top);                                          // restore LUA stack position
+        lua_settop(level_script, top);
     }
 }
 
+bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
+{
+    if(lua)
+    {
+        const char* func_template = "%s_func";
+        char full_func_name[64];
+        
+        snprintf(full_func_name, 64, func_template, func_name);
+        lua_getglobal(lua, full_func_name);
+
+        if(lua_isfunction(lua, -1))
+        {
+            lua_pushinteger(lua, entity_id);
+            lua_pcall(lua, 1, 0, 0);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
 
 void TR_SetStaticMeshFlags(struct static_mesh_s *r_static)
 {
-    if(objects_flags_conf != NULL)
-    {
-        int top = lua_gettop(objects_flags_conf);                               // save LUA's stack position
-        lua_getglobal(objects_flags_conf, "trGetStaticMeshFlags");              // add to the up of stack LUA's function "getEntityParameters"
-        if(lua_isfunction(objects_flags_conf, -1))                              // If function exists...
-        {
-            lua_pushinteger(objects_flags_conf, engine_world.version);                      // add to stack engine version
-            lua_pushinteger(objects_flags_conf, r_static->object_id);                       // add to stack model id
-            lua_pcall(objects_flags_conf, 2, 2, 0);                                         // call function "getEntityParameters"
-            r_static->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -2);    // get collision flag
-            r_static->hide = lua_tointeger(objects_flags_conf, -1);                         // get info about model visibility
-        }
-        lua_settop(objects_flags_conf, top);                                    // restore LUA stack position
-    }
-
     if(level_script != NULL)
     {
-        int top = lua_gettop(level_script);                                     // save LUA's stack position
-        lua_getglobal(level_script, "trGetStaticMeshFlags");                    // add to the up of stack LUA's function
-        if(lua_isfunction(level_script, -1))                                    // If function exists...
+        int top = lua_gettop(level_script);
+        lua_getglobal(level_script, "getStaticMeshFlags");
+        if(lua_isfunction(level_script, -1))
         {
-            lua_pushinteger(level_script, engine_world.version);                      // add to stack engine version
-            lua_pushinteger(level_script, r_static->object_id);                       // add to stack model id
-            lua_pcall(level_script, 2, 2, 0);                                         // call function "getEntityParameters"
+            lua_pushinteger(level_script, engine_world.version);
+            lua_pushinteger(level_script, r_static->object_id);
+            lua_pcall(level_script, 1, 2, 0);
             if(!lua_isnil(level_script, -2))
             {
-                r_static->self->collide_flag = 0xff & lua_tointeger(level_script, -2);    // get collision flag
+                r_static->self->collide_flag = lua_tointeger(level_script, -2);
             }
             if(!lua_isnil(level_script, -1))
             {
-                r_static->hide = lua_tointeger(level_script, -1);                         // get info about model visibility
+                r_static->hide = lua_tointeger(level_script, -1);
             }
         }
-        lua_settop(level_script, top);                                          // restore LUA stack position
+        lua_settop(level_script, top);
     }
 }
 
@@ -616,22 +631,28 @@ uint32_t TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4
     return (v1 > v2)?(v1):(v2);
 }
 
-int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
+bool IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
 {
-    uint16_t function, function_value, sub_function, trigger_function, operands, cont_bit, end_bit;
+    // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
+    // entity #256 occurences in original games (primarily TR4-5).
+    
+    if(!World_GetEntityByID(&engine_world, entity_index)) return true;
+    
+    int32_t *curr_table_index = lookup_table;
+    
+    while(*curr_table_index != -1)
+    {
+        if(*curr_table_index == (int32_t)entity_index) return true;
+        curr_table_index++;
+    }
+    
+    *curr_table_index = (int32_t)entity_index;
+    return false;
+}
 
-    int       argn, ret = 0;
-    uint16_t *entry, *end_p;
-
-    char script[4096], buf[64];
-
-    // Trigger options.
-    uint8_t  trigger_mask;
-    uint8_t  only_once;
-    int8_t   timer_field;
-
-
-    if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size) || !engine_lua)
+int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
+{
+    if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size) || !engine_lua)
     {
         return 0;
     }
@@ -641,11 +662,13 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
     /*
      * PARSE FUNCTIONS
      */
-    end_p = world->floor_data + world->floor_data_size - 1;
-    entry = world->floor_data + sector->fd_index;
-    script[0] = 0;
-    argn = 0;
 
+    uint16_t *end_p = tr->floor_data + tr->floor_data_size - 1;
+    uint16_t *entry = tr->floor_data + sector->trig_index;
+    
+    int ret = 0;
+    uint16_t end_bit = 0;
+    
     do
     {
         // TR_I - TR_II
@@ -653,10 +676,11 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
         //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
         //TR_III+, but works with TR_I - TR_II
-        function       = ((*entry) & 0x001F);             // 0b00000000 00011111
-        function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
-        sub_function   = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
-        end_bit        = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
+        uint16_t function       = ((*entry) & 0x001F);             // 0b00000000 00011111
+        uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
+        uint16_t sub_function   = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
+        
+        end_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
 
         entry++;
 
@@ -745,199 +769,410 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
                 }
                 break;
 
-            case TR_FD_FUNC_TRIGGER:          // TRIGGER
-                timer_field      =   (*entry) &  0x00FF;
-                trigger_mask     =  ((*entry) &  0x3E00) >> 9;
-                only_once        =  ((*entry) &  0x0100) >> 8;
-
-                //Con_Printf("TRIGGER: timer - %d, once - %d, mask - %d%d%d%d%d", timer_field, only_once, trigger_mask[0], trigger_mask[1], trigger_mask[2], trigger_mask[3], trigger_mask[4]);
-                script[0] = 0;
-                argn = 0;
-                switch(sub_function)
+            case TR_FD_FUNC_TRIGGER:          // TRIGGERS
                 {
-                    case TR_FD_TRIGTYPE_TRIGGER:
-                        // Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_TRIGGER");
-                        break;
-                    case TR_FD_TRIGTYPE_PAD:
-                        // Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PAD");
-                        break;
-                    case TR_FD_TRIGTYPE_SWITCH:
-                        strcat(script, "create_switch_func(");
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SWITCH");
-                        break;
-                    case TR_FD_TRIGTYPE_KEY:
-                        strcat(script, "create_keyhole_func(");
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_KEY");
-                        break;
-                    case TR_FD_TRIGTYPE_PICKUP:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PICKUP");
-                        break;
-                    case TR_FD_TRIGTYPE_HEAVY:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVY");
-                        break;
-                    case TR_FD_TRIGTYPE_ANTIPAD:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTIPAD");
-                        break;
-                    case TR_FD_TRIGTYPE_COMBAT:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_COMBAT");
-                        break;
-                    case TR_FD_TRIGTYPE_DUMMY:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_DUMMY");
-                        break;
-                    case TR_FD_TRIGTYPE_ANTITRIGGER:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTITRIGGER");
-                        break;
-                    case TR_FD_TRIGTYPE_HEAVYSWITCH:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYSWITCH");
-                        break;
-                    case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYANTITRIGGER");
-                        break;
-                    case TR_FD_TRIGTYPE_MONKEY:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_MONKEY");
-                        break;
-                    case TR_FD_TRIGTYPE_SKELETON:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SKELETON");
-                        break;
-                    case TR_FD_TRIGTYPE_TIGHTROPE:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_TIGHTROPE");
-                        break;
-                    case TR_FD_TRIGTYPE_CRAWLDUCK:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CRAWLDUCK");
-                        break;
-                    case TR_FD_TRIGTYPE_CLIMB:
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CLIMB");
-                        break;
-                }
+                    char header[128];               header[0]            = 0;   // Header condition
+                    char once_condition[128];       once_condition[0]    = 0;   // One-shot condition
+                    char cont_events[2048];         cont_events[0]       = 0;   // Continous trigger events
+                    char single_events[2048];       single_events[0]     = 0;   // One-shot trigger events
+                    char item_events[2048];         item_events[0]       = 0;   // Item activation events
+                    char anti_events[2048];         anti_events[0]       = 0;   // Item deactivation events, if needed
+                    
+                    char script[4096];              script[0]            = 0;   // Final script compile
 
-                do
-                {
-                    entry++;
-                    cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-                    trigger_function = (((*entry) & 0x7C00)) >> 10;             // 0b01111100 00000000
-                    operands = (*entry) & 0x03FF;                               // 0b00000011 11111111
+                    char buf[512];                  buf[0]  = 0;    // Stream buffer
+                    char buf2[512];                 buf2[0] = 0;    // Conditional pre-buffer for SWITCH triggers
+                    
+                    int activator   = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
+                    int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
+                    int condition   = 0;                        // No condition by default.
+                    int mask_mode   = AMASK_OP_OR;              // Activation mask by default.
 
-                    switch(trigger_function)
+                    int8_t  timer_field  =  (*entry) & 0x00FF;          // Used as common parameter for some commands.
+                    uint8_t trigger_mask = ((*entry) & 0x3E00) >> 9;
+                    uint8_t only_once    = ((*entry) & 0x0100) >> 8;    // Lock out triggered items after activation.
+                    
+                    // Processed entities lookup array initialization.
+                    
+                    int32_t ent_lookup_table[64];
+                    memset(ent_lookup_table, 0xFF, sizeof(int32_t)*64);
+                    
+                    // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
+                    // some specific entity classes.
+                    
+                    int activator_type = ( (sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
+                                           (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
+                                           (sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH) )     ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
+                    
+                    // Table cell header.
+                    
+                    snprintf(buf, 256, "trigger_list[%d] = {activator_type = %d, func = function(entity_index) \n",
+                                         sector->trig_index, activator_type);
+                    
+                    strcat(script, buf);
+                    buf[0] = 0;     // Zero out buffer to prevent further trashing.
+                    
+                    switch(sub_function)
                     {
-                        case TR_FD_TRIGFUNC_OBJECT:                             // ACTIVATE / DEACTIVATE item
-                            if(argn == 0)
+                        case TR_FD_TRIGTYPE_TRIGGER:
+                        case TR_FD_TRIGTYPE_HEAVY:
+                            activator = TR_ACTIVATOR_NORMAL;
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_PAD:
+                        case TR_FD_TRIGTYPE_ANTIPAD:
+                            // Check move type for triggering entity.
+                            snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MOVE_ON_FLOOR);
+                            if(sub_function == TR_FD_TRIGTYPE_ANTIPAD) action_type = TR_ACTIONTYPE_ANTI;
+                            condition = 1;  // Set additional condition.
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_SWITCH:
+                            // Set activator and action type for now; conditions are linked with first item in operand chain.
+                            activator = TR_ACTIVATOR_SWITCH;
+                            action_type = TR_ACTIONTYPE_SWITCH;
+                            mask_mode = AMASK_OP_XOR;
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                            // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
+                            activator = TR_ACTIVATOR_SWITCH;
+                            mask_mode = AMASK_OP_XOR;
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_KEY:
+                            // Action type remains normal, as key acts one-way (no need in switch routines).
+                            activator = TR_ACTIVATOR_KEY;
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_PICKUP:
+                            // Action type remains normal, as pick-up acts one-way (no need in switch routines).
+                            activator = TR_ACTIVATOR_PICKUP;
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_COMBAT:
+                            // Check weapon status for triggering entity.
+                            snprintf(buf, 128, " if(getCharacterCombatMode(entity_index) > 0) then \n");
+                            condition = 1;  // Set additional condition.
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_DUMMY:
+                        case TR_FD_TRIGTYPE_SKELETON:   ///@FIXME: Find the meaning later!!!
+                            // These triggers are being parsed, but not added to trigger script!
+                            action_type = TR_ACTIONTYPE_BYPASS;
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_ANTITRIGGER:
+                        case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
+                            action_type = TR_ACTIONTYPE_ANTI;
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_MONKEY:
+                        case TR_FD_TRIGTYPE_CLIMB:
+                            // Check move type for triggering entity.
+                            snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
+                            condition = 1;  // Set additional condition.
+                            break;
+                            
+                        case TR_FD_TRIGTYPE_TIGHTROPE:
+                            // Check state range for triggering entity.
+                            snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
+                            condition = 1;  // Set additional condition.
+                            break;
+                        case TR_FD_TRIGTYPE_CRAWLDUCK:
+                            // Check state range for triggering entity.
+                            snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
+                            condition = 1;  // Set additional condition.
+                            break;
+                    }
+                    
+                    strcat(header, buf);    // Add condition to header.
+
+                    uint16_t cont_bit = 0;
+                    uint16_t argn = 0;
+
+                    // Now parse operand chain for trigger function!
+                    
+                    do
+                    {
+                        entry++;
+                        
+                        uint16_t trigger_function = (((*entry) & 0x7C00)) >> 10;    // 0b01111100 00000000
+                        uint16_t operands = (*entry) & 0x03FF;                      // 0b00000011 11111111
+                                 cont_bit = ((*entry) & 0x8000) >> 15;              // 0b10000000 00000000
+
+                        switch(trigger_function)
+                        {
+                            case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
+                                // If activator is specified, first item operand counts as activator index (except
+                                // heavy switch case, which is ordinary heavy trigger case with certain differences).
+                                if((argn == 0) && (activator))
+                                {
+                                    switch(activator)
+                                    {
+                                        case TR_ACTIVATOR_SWITCH:
+                                            if(action_type == TR_ACTIONTYPE_SWITCH)
+                                            {
+                                                // Switch action type case.
+                                                snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityActivationMask(%d); \n\n", operands, operands, operands);
+                                            }
+                                            else
+                                            {
+                                                // Ordinary type case (e.g. heavy switch).
+                                                snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityActivationMask(entity_index); \n\n");
+                                            }
+                                            strcat(script, buf);
+                                            
+                                            // Trigger activation mask is here filtered through activator's own mask.
+                                            snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger_mask);
+                                            strcat(script, buf);
+                                            if(action_type == TR_ACTIONTYPE_SWITCH)
+                                            {
+                                                // Switch action type case.
+                                                snprintf(buf, 256, " if((switch_state == 0) and (switch_sectorstatus == 1)) then \n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
+                                                if(only_once)
+                                                {
+                                                    // Just lock out activator, no anti-action needed.
+                                                    snprintf(buf2, 128, " setEntityActivityLock(%d, 1) \n", operands);
+                                                }
+                                                else
+                                                {
+                                                    // Create statement for antitriggering a switch.
+                                                    snprintf(buf2, 256, " elseif((switch_state == 1) and (switch_sectorstatus == 1)) then\n   setEntitySectorStatus(%d, 0); \n   setEntityTimer(%d, 0); \n", operands, operands, operands);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                // Ordinary type case (e.g. heavy switch).
+                                                snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", operands, mask_mode, only_once, timer_field);
+                                                strcat(item_events, buf);
+                                                snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, 1) \n");
+                                            }
+                                            break;
+                                            
+                                        case TR_ACTIVATOR_KEY:
+                                            snprintf(buf, 256, " if((getEntityActivityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            break;
+                                            
+                                        case TR_ACTIVATOR_PICKUP:
+                                            snprintf(buf, 256, " if((getEntityActivity(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            break;
+                                    }
+                                    
+                                    strcat(script, buf);
+                                }
+                                else
+                                {
+                                    // In many original Core Design levels, level designers left dublicated entity activation operands.
+                                    // This results in setting same activation mask twice, effectively blocking entity from activation.
+                                    // To prevent this, a lookup table was implemented to know if entity already had its activation
+                                    // command added.
+                                    if(!IsEntityProcessed(ent_lookup_table, operands))
+                                    {
+                                        // Other item operands are simply parsed as activation functions. Switch case is special, because
+                                        // function is fed with activation mask argument derived from activator mask filter (switch_mask),
+                                        // and also we need to process deactivation in a same way as activation, excluding resetting timer
+                                        // field. This is needed for two-way switch combinations (e.g. Palace Midas).
+                                        if(activator == TR_ACTIVATOR_SWITCH)
+                                        {
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", operands, mask_mode, only_once, timer_field);
+                                            strcat(item_events, buf);
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", operands, mask_mode, only_once);
+                                            strcat(anti_events, buf);
+                                        }
+                                        else
+                                        {
+                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", operands, trigger_mask, mask_mode, only_once, timer_field);
+                                            strcat(item_events, buf);
+                                            snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", operands);
+                                            strcat(anti_events, buf);
+                                        }
+                                    }
+                                }
+                                argn++;
+                                break;
+
+                            case TR_FD_TRIGFUNC_CAMERATARGET:
+                                {
+                                    uint8_t cam_index = (*entry) & 0x007F;
+                                    entry++;
+                                    uint8_t cam_timer = ((*entry) & 0x00FF);
+                                    uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
+                                    uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
+                                    cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
+                                    
+                                    snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
+                                    strcat(single_events, buf);
+                                }
+                                break;
+
+                            case TR_FD_TRIGFUNC_UWCURRENT:
+                                snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", operands);
+                                strcat(cont_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_FLIPMAP:
+                                // FLIPMAP trigger acts two-way for switch cases, so we add FLIPMAP off event to
+                                // anti-events array.
+                                if(activator == TR_ACTIVATOR_SWITCH)
+                                {
+                                    snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, 1); \n", operands, operands);
+                                    strcat(single_events, buf);
+                                }
+                                else
+                                {
+                                    snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, 1); \n", operands, trigger_mask, operands);
+                                    strcat(single_events, buf);
+                                }
+                                break;
+
+                            case TR_FD_TRIGFUNC_FLIPON:
+                                // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
+                                // the switch with FLIP_ON trigger, room will remain flipped.
+                                snprintf(buf, 128, "   setFlipState(%d, 1); \n", operands);
+                                strcat(single_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_FLIPOFF:
+                                // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
+                                // the switch with FLIP_OFF trigger, room will remain unflipped.
+                                snprintf(buf, 128, "   setFlipState(%d, 0); \n", operands);
+                                strcat(single_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_LOOKAT:
+                                snprintf(buf, 128, "   setCamTarget(%d, %d); \n", operands, timer_field);
+                                strcat(single_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_ENDLEVEL:
+                                snprintf(buf, 128, "   setLevel(%d); \n", operands);
+                                strcat(single_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_PLAYTRACK:
+                                snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
+                                strcat(single_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_FLIPEFFECT:
+                                snprintf(buf, 128, "   doEffect(%d, %d); \n", operands, timer_field);
+                                strcat(cont_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_SECRET:
+                                snprintf(buf, 128, "   findSecret(%d); \n", operands);
+                                strcat(single_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_BODYBAG:
+                                snprintf(buf, 128, "   setBodybag(%d); \n", operands);
+                                strcat(single_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_FLYBY:
+                                snprintf(buf, 128, "   playFlyby(%d); \n", operands);
+                                strcat(cont_events, buf);
+                                break;
+
+                            case TR_FD_TRIGFUNC_CUTSCENE:
+                                snprintf(buf, 128, "   playCutscene(%d); \n", operands);
+                                strcat(single_events, buf);
+                                break;
+
+                            default: // UNKNOWN!
+                                break;
+                        };
+                    }
+                    while(!cont_bit && entry < end_p);
+                    
+                    if(script[0])
+                    {
+                        strcat(script, header);
+                            
+                        if(activator == TR_ACTIVATOR_NORMAL)    // Ordinary trigger cases.
+                        {
+                            if(single_events[0])
                             {
-                                snprintf(buf, 64, "%d, {", operands);           // switch / keyhole
+                                if(condition) strcat(once_condition, " ");
+                                strcat(once_condition, " if(getEntitySectorStatus(entity_index) == 0) then \n");
+                                strcat(script, once_condition);
+                                strcat(script, single_events);
+                                strcat(script, "   setEntitySectorStatus(entity_index, 1); \n");
+                                
+                                if(condition)
+                                {
+                                    strcat(script, "  end;\n"); // First ENDIF is tabbed for extra condition.
+                                }
+                                else
+                                {
+                                    strcat(script, " end;\n");
+                                }
                             }
-                            else if(argn == 1)
+                            
+                            // Item commands kind depends on action type. If type is ANTI, then item
+                            // antitriggering is engaged. If type is normal, ordinary triggering happens
+                            // in cycle with other continous commands. It is needed to prevent timer dispatch
+                            // before activator leaves trigger sector.
+                            
+                            if(action_type == TR_ACTIONTYPE_ANTI)
                             {
-                                snprintf(buf, 64, "%d", operands);
+                                strcat(script, anti_events);
                             }
                             else
                             {
-                                snprintf(buf, 64, ", %d", operands);
+                                strcat(script, item_events);
                             }
-                            strcat(script, buf);
-                            argn++;
-                            break;
-
-                        case TR_FD_TRIGFUNC_CAMERATARGET:          // CAMERA SWITCH
+                            
+                            strcat(script, cont_events);
+                            if(condition) strcat(script, " end;\n"); // Additional ENDIF for extra condition.
+                        }
+                        else    // SWITCH, KEY and ITEM cases.
+                        {
+                            strcat(script, single_events);
+                            strcat(script, item_events);
+                            strcat(script, cont_events);
+                            if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                             {
-                                //uint8_t cam_index = (*entry) & 0x007F;
-                                entry++;
-                                //uint8_t cam_timer = ((*entry) & 0x00FF);
-                                //uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
-                                //uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
-                                cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-                                //Con_Printf("CAMERA: index = %d, timer = %d, once = %d, zoom = %d", cam_index, cam_timer, cam_once, cam_zoom);
+                                strcat(script, buf2);
+                                if(!only_once)
+                                {
+                                    strcat(script, single_events);
+                                    strcat(script, anti_events);    // Single/continous events are engaged along with
+                                    strcat(script, cont_events);    // antitriggered items, as described above.
+                                }
                             }
-                            break;
-
-                        case TR_FD_TRIGFUNC_UWCURRENT:          // UNDERWATER CURRENT
-                            //Con_Printf("UNDERWATER CURRENT! OP = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLIPMAP:          // SET ALTERNATE ROOM
-                            //Con_Printf("SET ALTERNATE ROOM! OP = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLIPON:          // ALTER ROOM FLAGS (paired with 0x05)
-                            //Con_Printf("ALTER ROOM FLAGS 0x04! OP = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLIPOFF:          // ALTER ROOM FLAGS (paired with 0x04)
-                            //Con_Printf("ALTER ROOM FLAGS 0x05! OP = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_LOOKAT:          // LOOK AT ITEM
-                            //Con_Printf("Look at %d item", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_ENDLEVEL:          // END LEVEL
-                            //Con_Printf("End of level! id = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
-                            //Con_Printf("Play audiotrack id = %d", operands);
-                            // operands - track number
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLIPEFFECT:          // Various in-game actions.
-                            //Con_Printf("Flipeffect id = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_SECRET:          // PLAYSOUND SECRET_FOUND
-                            //Con_Printf("Play SECRET[%d] FOUND", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_BODYBAG:          // UNKNOWN
-                            //Con_Printf("BODYBAG id = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLYBY:          // TR4-5: FLYBY CAMERA
-                            //Con_Printf("Flyby camera = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_CUTSCENE:          // USED IN TR4-5
-                            //Con_Printf("CUTSCENE id = %d", operands);
-                            break;
-
-                        case 0x0e:          // UNKNOWN
-                            //Con_Printf("TRIGGER: unknown 0x0e, OP = %d", operands);
-                            break;
-
-                        case 0x0f:          // UNKNOWN
-                            //Con_Printf("TRIGGER: unknown 0x0f, OP = %d", operands);
-                            break;
-                    };
-                }
-                while(!cont_bit && entry < end_p);
-
-                if(script[0])
-                {
-                    if((sub_function == TR_FD_TRIGTYPE_SWITCH) || (sub_function == TR_FD_TRIGTYPE_KEY))
-                    {
-                        snprintf(buf, 64, "}, nil, 0x%.2X);", trigger_mask);
-                        strcat(script, buf);
-                        //Con_Printf(script);
-                        luaL_dostring(engine_lua, script);
+                            strcat(script, " end;\n");
+                        }
+                        
+                        strcat(script, "return 1;\nend }\n");  // Finalize the entry.
                     }
-                    script[0] = 0;
+                    
+                    if(action_type != TR_ACTIONTYPE_BYPASS)
+                    {
+                        // Sys_DebugLog("triggers.lua", script);    // Debug!
+                        luaL_dostring(engine_lua, script);  // Execute compiled script.
+                    }
                 }
                 break;
 
-            case TR_FD_FUNC_DEATH:          // KILL LARA
+            case TR_FD_FUNC_DEATH:
                 sector->flags |= SECTOR_FLAG_DEATH;
                 break;
 
-            case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
+            case TR_FD_FUNC_CLIMB:
                 // First 4 sector flags are similar to subfunction layout.
                 sector->flags |= sub_function;
                 break;
 
-            case TR_FD_FUNC_MONKEY:         // Climbable ceiling
+            case TR_FD_FUNC_MONKEY:
                 sector->flags |= SECTOR_FLAG_CLIMB_CEILING;
                 break;
 
             case TR_FD_FUNC_MINECART_LEFT:
                 // Minecart left (TR3) and trigger triggerer mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(world->version < TR_IV)
+                if(tr->game_version < TR_IV)
                 {
                     sector->flags |= SECTOR_FLAG_MINECART_LEFT;
                 }
@@ -950,7 +1185,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
             case TR_FD_FUNC_MINECART_RIGHT:
                 // Minecart right (TR3) and beetle mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(world->version < TR_IV)
+                if(tr->game_version < TR_IV)
                 {
                     sector->flags |= SECTOR_FLAG_MINECART_RIGHT;
                 }
@@ -1096,11 +1331,11 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world)
     }
     while(!end_bit && entry < end_p);
 
-    if(sector->floor == 32512)
+    if(sector->floor == TR_METERING_WALLHEIGHT)
     {
         sector->floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
     }
-    if(sector->ceiling == 32512)
+    if(sector->ceiling == TR_METERING_WALLHEIGHT)
     {
         sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
     }
@@ -1304,7 +1539,7 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
                 {
                     room_sector_p dst = Room_GetSectorRaw(p->dest_room, sector->pos);
                     room_sector_p orig_dst = Room_GetSectorRaw(engine_world.rooms + sector->portal_to_room, sector->pos);
-                    if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != 32512) && (dst->ceiling != 32512) && ((uint32_t)sector->portal_to_room != p->dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
+                    if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p->dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
                         sector->portal_to_room = p->dest_room->id;
                         orig_dst = dst;
@@ -1476,37 +1711,12 @@ int lua_SetSectorFlags(lua_State * lua)
 
 void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
-    char buf[256], map[LEVEL_NAME_MAX_LEN];
-
     world->version = tr->game_version;
 
-    buf[0] = 0;
-    strcat(buf, "scripts/level/");
-    if(tr->game_version < TR_II)
-    {
-        strcat(buf, "tr1/");
-    }
-    else if(tr->game_version < TR_III)
-    {
-        strcat(buf, "tr2/");
-    }
-    else if(tr->game_version < TR_IV)
-    {
-        strcat(buf, "tr3/");
-    }
-    else if(tr->game_version < TR_V)
-    {
-        strcat(buf, "tr4/");
-    }
-    else
-    {
-        strcat(buf, "tr5/");
-    }
-
-    Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
-
-    strcat(buf, map);
-    strcat(buf, ".lua");
+    // Process configuration scripts.
+    
+    char temp_script_name[256];
+    Engine_GetLevelScriptName(tr->game_version, temp_script_name);
 
     level_script = luaL_newstate();
     if(level_script != NULL)
@@ -1516,9 +1726,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
-
-        int lua_err = luaL_loadfile(level_script, buf);
-        lua_pcall(level_script, 0, 0, 0);
+        
+        luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
+        int lua_err = luaL_dofile(level_script, temp_script_name);
+        
         if(lua_err)
         {
             Sys_DebugLog("lua_out.txt", "%s", lua_tostring(level_script, -1));
@@ -1532,7 +1743,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     if(objects_flags_conf != NULL)
     {
         luaL_openlibs(objects_flags_conf);
-        int lua_err = luaL_loadfile(objects_flags_conf, "scripts/entity/entity_flags.lua");
+        int lua_err = luaL_loadfile(objects_flags_conf, "scripts/entity/entity_properties.lua");
         lua_pcall(objects_flags_conf, 0, 0, 0);
         if(lua_err)
         {
@@ -1557,6 +1768,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             ent_ID_override = NULL;
         }
     }
+    
+    // Begin generating world.
 
     Gui_DrawLoadScreen(200);
 
@@ -1567,14 +1780,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     TR_GenTextures(world, tr);  // Generate OGL textures
 
     Gui_DrawLoadScreen(300);
-
-    /*
-     * copy sectors floordata
-     */
-    world->floor_data_size = tr->floor_data_size;
-    world->floor_data = tr->floor_data;
-    tr->floor_data = NULL;
-    tr->floor_data_size = 0;
 
     /*
      * Copy anim commands
@@ -1596,9 +1801,8 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     Gui_DrawLoadScreen(550);
 
-    /*
-     * generate boxes
-     */
+    // Generate boxes.
+    
     world->room_boxes = NULL;
     world->room_box_count = tr->boxes_count;
     if(world->room_box_count)
@@ -1614,8 +1818,27 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             world->room_boxes[i].y_max =-tr->boxes[i].zmin;
         }
     }
+    
+    // Generate cameras & sinks.
+    
+    world->cameras_sinks = NULL;
+    world->cameras_sinks_count = tr->cameras_count;
+    if(world->cameras_sinks_count)
+    {
+        world->cameras_sinks = (stat_camera_sink_p)malloc(world->cameras_sinks_count * sizeof(stat_camera_sink_t));
+        for(uint32_t i=0;i<world->cameras_sinks_count;i++)
+        {
+            world->cameras_sinks[i].x                   =  tr->cameras[i].x;
+            world->cameras_sinks[i].y                   =  tr->cameras[i].z;
+            world->cameras_sinks[i].z                   = -tr->cameras[i].y;
+            world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
+            world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
+        }
+    }
 
     TR_GenRooms(world, tr);     // Build all rooms
+    
+    TR_GenRoomFlipMap(world);
 
     Gui_DrawLoadScreen(650);
 
@@ -1686,39 +1909,12 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         }
     }
 
-    buf[0] = 0;
+    // Process level autoexec loading.
+    
+    Engine_GetLevelScriptName(tr->game_version, temp_script_name, "_autoexec");
 
-    // Process level script loading.
-    ///@FIXME: Re-assign script paths via script itself!
-
-    strcat(buf, "scripts/level/");
-    if(tr->game_version < TR_II)
-    {
-        strcat(buf, "tr1/");
-    }
-    else if(tr->game_version < TR_III)
-    {
-        strcat(buf, "tr2/");
-    }
-    else if(tr->game_version < TR_IV)
-    {
-        strcat(buf, "tr3/");
-    }
-    else if(tr->game_version < TR_V)
-    {
-        strcat(buf, "tr4/");
-    }
-    else
-    {
-        strcat(buf, "tr5/");
-    }
-
-    Engine_GetLevelName(map, gameflow_manager.CurrentLevelPath);
-    strcat(buf, map);
-    strcat(buf, "_autoexec.lua");
-
-    luaL_dofile(engine_lua, "scripts/autoexec.lua");                            // do standart autoexec
-    luaL_dofile(engine_lua, buf);                                               // do level specified autoexec
+    luaL_dofile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
+    luaL_dofile(engine_lua, temp_script_name);          // do level-specific autoexec
 
     if((world->items_tree != NULL) && (world->items_tree->root != NULL))
     {
@@ -1797,6 +1993,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->sprites_count = 0;
     room->sprites = NULL;
     room->flags = tr->rooms[room_index].flags;
+    room->light_mode = tr->rooms[room_index].light_mode;
     room->reverb_info = tr->rooms[room_index].reverb_info;
     room->water_scheme = tr->rooms[room_index].water_scheme;
     room->alternate_group = tr->rooms[room_index].alternate_group;
@@ -1880,7 +2077,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
         OBB_Transform(r_static->obb);
 
-        r_static->self->collide_flag = 0x0000;
+        r_static->self->collide_flag = 0x02;  // Still better than ghost collision.
         r_static->bt_body = NULL;
         r_static->hide = 0;
 
@@ -1954,6 +2151,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         sector->owner_room = room;
         sector->box_index  = tr_room->sector_list[i].box_index;
+        
+        sector->material = tr_room->sector_list[i].box_index & 0x0F;
 
         sector->flags = 0;  // Clear sector flags.
 
@@ -1962,9 +2161,9 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             sector->box_index = -1;
         }
 
-        sector->floor    = -TR_METERING_STEP * (int)tr_room->sector_list[i].floor;
-        sector->ceiling  = -TR_METERING_STEP * (int)tr_room->sector_list[i].ceiling;
-        sector->fd_index = tr_room->sector_list[i].fd_index;                    ///@FIXME: GET RID OF THIS NONSENSE SOME DAY!
+        sector->floor      = -TR_METERING_STEP * (int)tr_room->sector_list[i].floor;
+        sector->ceiling    = -TR_METERING_STEP * (int)tr_room->sector_list[i].ceiling;
+        sector->trig_index = tr_room->sector_list[i].fd_index;
 
         // BUILDING CEILING HEIGHTMAP.
 
@@ -1976,7 +2175,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         // Door penetration config means that we should either ignore sector collision
         // completely (classic door) or ignore one of the triangular sector parts (TR3+).
 
-        if(sector->ceiling == 32512)
+        if(sector->ceiling == TR_METERING_WALLHEIGHT)
         {
             room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
         }
@@ -2020,7 +2219,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         // Features same steps as for the ceiling.
 
-        if(sector->floor == 32512)
+        if(sector->floor == TR_METERING_WALLHEIGHT)
         {
             room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
         }
@@ -2297,7 +2496,7 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
         // Fill heightmap and translate floordata.
         for(uint32_t j=0;j<r->sectors_count;j++)
         {
-            TR_Sector_TranslateFloorData(r->sectors + j, world);
+            TR_Sector_TranslateFloorData(r->sectors + j, tr);
         }
 
         // Generate links to the near rooms.
@@ -2308,6 +2507,19 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
     }
 }
 
+
+void TR_GenRoomFlipMap(struct world_s *world)
+{
+    // Flipmap count is hardcoded, as no original levels contain such info.
+    
+    world->flip_count = FLIPMAP_MAX_NUMBER;
+    
+    world->flip_map   = (uint8_t*)malloc(world->flip_count * sizeof(uint8_t));
+    world->flip_state = (uint8_t*)malloc(world->flip_count * sizeof(uint8_t));
+    
+    memset(world->flip_map,   0, world->flip_count);
+    memset(world->flip_state, 0, world->flip_count);
+}
 
 /**
  * sprites loading, works correct in TR1 - TR5
@@ -3452,8 +3664,8 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
                 tr_state_change_t *tr_sch;
                 tr_sch = &tr->state_changes[j+tr_animation->state_change_offset];
                 sch_p->id = tr_sch->state_id;
-                sch_p->anim_dispath = NULL;
-                sch_p->anim_dispath_count = 0;
+                sch_p->anim_dispatch = NULL;
+                sch_p->anim_dispatch_count = 0;
                 for(uint16_t l=0;l<tr_sch->num_anim_dispatches;l++)
                 {
                     tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch+l];
@@ -3461,10 +3673,10 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
                     uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
                     if((next_anim_ind >= 0) &&(next_anim_ind < model->animation_count))
                     {
-                        sch_p->anim_dispath_count++;
-                        sch_p->anim_dispath = (anim_dispath_p)realloc(sch_p->anim_dispath, sch_p->anim_dispath_count * sizeof(anim_dispath_t));
+                        sch_p->anim_dispatch_count++;
+                        sch_p->anim_dispatch = (anim_dispatch_p)realloc(sch_p->anim_dispatch, sch_p->anim_dispatch_count * sizeof(anim_dispatch_t));
 
-                        anim_dispath_p adsp = sch_p->anim_dispath + sch_p->anim_dispath_count - 1;
+                        anim_dispatch_p adsp = sch_p->anim_dispatch + sch_p->anim_dispatch_count - 1;
                         uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames_count;
                         uint16_t next_frame = tr_adisp->next_frame - tr->animations[next_anim].frame_start;
 
@@ -3656,6 +3868,9 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->activation_mask  = (tr_item->flags & 0x3E00) >> 9;              ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
         entity->OCB              =  tr_item->ocb;
 
+        entity->locked = 0;
+        entity->timer  = 0.0;
+        
         entity->self->collide_flag = 0x00;
         entity->anim_flags = 0x0000;
         entity->move_type = 0x0000;
@@ -3672,7 +3887,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             if(entity->bf.model == NULL)
             {
                 top = lua_gettop(ent_ID_override);                                         // save LUA stack
-                lua_getglobal(ent_ID_override, "GetOverridedID");                          // add to the up of stack LUA's function
+                lua_getglobal(ent_ID_override, "getOverridedID");                          // add to the up of stack LUA's function
                 lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
                 lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
                 lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
@@ -3681,12 +3896,13 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             }
 
             top = lua_gettop(ent_ID_override);                                         // save LUA stack
-            lua_getglobal(ent_ID_override, "GetOverridedAnim");                        // add to the up of stack LUA's function
+            lua_getglobal(ent_ID_override, "getOverridedAnim");                        // add to the up of stack LUA's function
             lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
             lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
             lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
 
             int replace_anim_id = lua_tointeger(ent_ID_override, -1);
+            lua_settop(ent_ID_override, top);                                          // restore LUA stack
 
             if(replace_anim_id > 0)
             {
@@ -3696,8 +3912,6 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 SWAPT(entity->bf.model->animations, replace_anim_model->animations, ta);
                 SWAPT(entity->bf.model->animation_count, replace_anim_model->animation_count, tc);
             }
-
-            lua_settop(ent_ID_override, top);
         }
 
         if(entity->bf.model == NULL)
@@ -3820,15 +4034,17 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         }
 
         Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
-        TR_SetEntityModelFlags(entity);
         BT_GenEntityRigidBody(entity);
+        
+        Entity_RebuildBV(entity);
+        Room_AddEntity(entity->self->room, entity);
+        World_AddEntity(world, entity);
+        
+        TR_SetEntityModelProperties(entity);
         if(entity->self->collide_flag == 0x00)
         {
             Entity_DisableCollision(entity);
         }
-        Entity_RebuildBV(entity);
-        Room_AddEntity(entity->self->room, entity);
-        World_AddEntity(world, entity);
     }
 }
 
@@ -3848,7 +4064,7 @@ void Items_CheckEntities(RedBlackNode_p n)
                 if(ent->bf.model->id == item->world_model_id)
                 {
                     char buf[256] = {0};
-                    snprintf(buf, 256, "create_pickup_func(%d, %d);", ent->id, item->id);
+                    snprintf(buf, 256, "pickup_func(%d, %d);", ent->id, item->id);
                     luaL_dostring(engine_lua, buf);
                     Entity_DisableCollision(ent);
                 }

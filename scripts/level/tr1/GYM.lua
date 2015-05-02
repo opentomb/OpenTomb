@@ -1,18 +1,10 @@
--- OPENTOMB PER-LEVEL STATIC MESH COLLISION SCRIPT
+-- OPENTOMB STATIC MESH COLLISION SCRIPT
 -- FOR TOMB RAIDER 1, GYM
-
 
 print("Level script loaded (GYM.lua)");
 
--- ColType values reference:
---   0x0000  - Object has no collisions
---   0x0001  - Object uses real mesh data for collision.
---   0x0002  - Object uses bounding box for collision.
-
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
-
-static_tbl = {};
 
 static_tbl[00] = {coll = 0x0001};             -- Flower pot 1
 static_tbl[01] = {coll = 0x0001};             -- Flower pot 2
@@ -34,13 +26,3 @@ static_tbl[32] = {coll = 0x0001};             -- Fence tilt 2
 static_tbl[33] = {coll = 0x0002};             -- Stick
 static_tbl[34] = {coll = 0x0001};             -- Chandelier
 static_tbl[35] = {coll = 0x0002};             -- Armor
-
---------------------------------------------------------------------------------
-
-function trGetStaticMeshFlags(ver, id)
-    if(static_tbl[id] == nil) then
-        return nil, nil;
-    else
-        return static_tbl[id].coll, static_tbl[id].hide;
-    end;
-end;

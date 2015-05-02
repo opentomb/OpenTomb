@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+// Generic strings enumeration
+
 #define STR_GEN_NEWGAME             0
 #define STR_GEN_SELECTGAME          1
 #define STR_GEN_SELECTLEVEL         2
@@ -74,6 +76,57 @@
 #define STR_GEN_GAMENAME_TR5        500
 #define STR_GEN_GAMENAME_CUSTOM     600
 
+
+// Generic system warnings enumeration
+
+#define SYSWARN_ENTER_ENTITY_ID          0
+#define SYSWARN_WRONG_ARGS               1
+#define SYSWARN_WRONG_ARGS_COUNT         2
+#define SYSWARN_NO_ENTITY                3
+#define SYSWARN_WRONG_OPTION_INDEX       4
+#define SYSWARN_NO_CHARACTER             5
+#define SYSWARN_WRONG_ROOM               6
+#define SYSWARN_MODELID_OVERFLOW         7
+#define SYSWARN_WRONG_ACTION_NUMBER      8
+#define SYSWARN_CANT_CREATE_FONT         9
+#define SYSWARN_CANT_CREATE_STYLE        10
+#define SYSWARN_CANT_REMOVE_FONT         11
+#define SYSWARN_CANT_REMOVE_STYLE        12
+#define SYSWARN_NO_SKELETAL_MODEL        13
+#define SYSWARN_WRONG_ANIM_NUMBER        14
+#define SYSWARN_WRONG_DISPATCH_NUMBER    15
+#define SYSWARN_WRONG_FRAME_NUMBER       16
+#define SYSWARN_WRONG_STREAM_ID          17
+#define SYSWARN_WRONG_SOUND_ID           18
+#define SYSWARN_AS_NOCHANNEL             19
+#define SYSWARN_AS_NOSAMPLE              20
+#define SYSWARN_AS_IGNORED               21
+#define SYSWARN_AK_NOTPLAYED             22
+#define SYSWARN_NOT_ACTIVE_FLIPMAP       23
+#define SYSWARN_FILE_NOT_FOUND           24
+#define SYSWARN_NOT_TRUECOLOR_IMG        25
+#define SYSWARN_IMG_NOT_LOADED_SDL       26
+#define SYSWARN_BAD_FRAME_OFFSET         27
+#define SYSWARN_CANT_OPEN_FILE           28
+#define SYSWARN_BAD_FILE_FORMAT          29
+#define SYSWARN_INVALID_LINECOUNT        30
+#define SYSWARN_WRONG_FLIPMAP_INDEX      31
+
+#define SYSNOTE_OGG_OPENED               1000
+#define SYSNOTE_READING_FILE             1001
+#define SYSNOTE_GIVING_ITEM              1002
+#define SYSNOTE_CHANGING_LEVEL           1003
+#define SYSNOTE_CHANGING_GAME            1004
+#define SYSNOTE_ENGINE_VERSION           1005
+#define SYSNOTE_NUM_ROOMS                1006
+#define SYSNOTE_NUM_TEXTURES             1007
+#define SYSNOTE_CONSOLE_SPACING          1008
+#define SYSNOTE_CONSOLE_LINECOUNT        1009
+#define SYSNOTE_TRIGGER_INFO             1010
+#define SYSNOTE_ACTIVATE_OBJECT          1011
+#define SYSNOTE_LOADED_FADER             1012
+#define SYSNOTE_TRIGGERS_CLEANED         1013
+#define SYSNOTE_ENTFUNCS_CLEANED         1014
 
 // String conversion preload size is used when decoding UTF-8 string
 // to UTF-32 string. To avoid reallocating memory zone each parsed

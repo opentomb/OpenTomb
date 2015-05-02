@@ -17,14 +17,7 @@
 #include "polygon.h"
 #include "resource.h"
 #include "console.h"
-
-
-#define CHARACTER_BOX_HALF_SIZE (128.0)
-#define CHARACTER_BASE_RADIUS   (128.0)
-#define CHARACTER_BASE_HEIGHT   (512.0)
-
-#define NUM_PENETRATION_ITERATIONS      (6)
-#define PENETRATION_PART_KOEF           (0.20)
+#include "string.h"
 
 void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h)
 {
@@ -234,7 +227,7 @@ void Character_Clean(struct entity_s *ent)
 
 int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
-    //Con_Printf("Giving item %i x%i to entity %x", item_id, count, ent);
+    //Con_Notify(SYSNOTE_GIVING_ITEM, item_id, count, ent);
     if(ent->character == NULL)
     {
         return 0;
@@ -272,7 +265,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     {
         ent->character->inventory = i;
     }
-
+    
     return count;
 }
 
@@ -329,7 +322,7 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
         pi = i;
         i = i->next;
     }
-
+    
     return -count;
 }
 
@@ -1154,7 +1147,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
                 if(dist < 0.0)
                 {
-                    t = pt.m_normalWorldOnB * dist * directionSign * PENETRATION_PART_KOEF;
+                    t = pt.m_normalWorldOnB * dist * directionSign * PENETRATION_PART_COEF;
                     vec3_add(correction, correction, t.m_floats)
                     ret++;
                 }
@@ -1555,9 +1548,9 @@ int Character_MoveOnFloor(struct entity_s *ent)
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
         {
             entity_p e = (entity_p)cont->object;
-            if(e->callback_flags & ENTITY_CALLBACK_ON_STAND)
+            if(e->callback_flags & ENTITY_CALLBACK_STAND)
             {
-                lua_ActivateEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ON_STAND);
+                lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_STAND);
             }
         }
     }

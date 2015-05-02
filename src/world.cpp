@@ -254,6 +254,17 @@ int Room_IsInNearRoomsList(room_p r0, room_p r1)
 }
 
 
+int Room_HasSector(room_p room, int x, int y)
+{
+    if(x < room->sectors_x && y < room->sectors_y )
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+
 room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs)
 {
     if((rs != NULL) && (rs->portal_to_room >= 0))
@@ -395,8 +406,9 @@ void World_Prepare(world_p world)
     world->sprites_count = 0;
     world->room_count = 0;
     world->rooms = 0;
-    world->room_flipmap = 0;
-    world->room_flipstate = 0;
+    world->flip_map = NULL;
+    world->flip_state = NULL;
+    world->flip_count = 0;
     world->textures = NULL;
     world->type = 0;
     world->entity_tree = NULL;
@@ -418,10 +430,10 @@ void World_Prepare(world_p world)
 
     world->tex_count = 0;
     world->textures = 0;
-    world->floor_data = NULL;
-    world->floor_data_size = 0;
     world->room_boxes = NULL;
     world->room_box_count = 0;
+    world->cameras_sinks = NULL;
+    world->cameras_sinks_count = 0;
     world->skeletal_models = NULL;
     world->skeletal_model_count = 0;
     world->sky_box = NULL;
@@ -501,12 +513,25 @@ void World_Empty(world_p world)
     }
     free(world->rooms);
     world->rooms = NULL;
+    
+    free(world->flip_map);
+    free(world->flip_state);
+    world->flip_map = NULL;
+    world->flip_state = NULL;
+    world->flip_count = 0;
 
     if(world->room_box_count)
     {
         free(world->room_boxes);
         world->room_boxes = NULL;
         world->room_box_count = 0;
+    }
+    
+    if(world->cameras_sinks_count)
+    {
+        free(world->cameras_sinks);
+        world->cameras_sinks = NULL;
+        world->cameras_sinks_count = 0;
     }
 
     /*sprite empty*/
@@ -550,16 +575,6 @@ void World_Empty(world_p world)
         free(world->meshes);
         world->meshes = NULL;
         world->meshes_count = 0;
-    }
-
-    /*
-     * FD clear
-     */
-    if(world->floor_data_size)
-    {
-        free(world->floor_data);
-        world->floor_data = NULL;
-        world->floor_data_size = 0;
     }
 
     if(world->tex_count)
@@ -696,6 +711,8 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             ent->state_flags      = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
             ent->activation_mask  = 0x00;
             ent->OCB              = 0x00;
+            ent->locked           = 0;
+            ent->timer            = 0.0;
 
             ent->self->collide_flag = 0x00;
             ent->anim_flags = 0x0000;
@@ -1107,7 +1124,6 @@ void Room_SwapToBase(room_p room)
         Room_Disable(room);                             //Disable current room
         Room_Disable(room->base_room);                  //Paranoid
         Room_SwapPortals(room, room->base_room);        //Update portals to match this room
-        Room_SwapItems(room, room->base_room);          //Update items to match this room
         Room_Enable(room->base_room);                   //Enable original room
     }
     else if((room->alternate_room != NULL) && (room->active == 0))              //If room is inactive base room
@@ -1129,7 +1145,6 @@ void Room_SwapToAlternate(room_p room)
         Room_Disable(room);                             //Paranoid
         Room_Disable(room->base_room);                  //Disable base room
         Room_SwapPortals(room->base_room, room);        //Update portals to match this room
-        Room_SwapItems(room->base_room, room);          //Update items to match this room
         Room_Enable(room);                              //Enable alternate room
     }
     else if((room->alternate_room != NULL) && (room->active == 1))              //If room is active base room

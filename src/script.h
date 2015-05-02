@@ -19,6 +19,8 @@ char *parse_token(char *data, char *token);
 float SC_ParseFloat(char **ch);
 int   SC_ParseInt(char **ch);
 
+void lua_Clean(lua_State *lua);
+
 int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc);
 int lua_ParseRender(lua_State *lua, struct render_settings_s *rs);
 int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as);
@@ -33,14 +35,16 @@ int  lua_GetSecretTrackNumber(lua_State *lua);
 int  lua_GetNumTracks(lua_State *lua);
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *track_path, int *load_method, int *stream_type);
 bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path);
-const char* lua_GetString(lua_State *lua, int string_index, size_t *string_length = NULL);
+bool lua_GetString(lua_State *lua, int string_index, size_t string_size, char *buffer);
+bool lua_GetSysNotify(lua_State *lua, int string_index, size_t string_size, char *buffer);
 
 btScalar lua_GetScalarField(lua_State *lua, const char *key);
 int lua_SetScalarField(lua_State *lua, const char *key, btScalar val);
 const char *lua_GetStrField(lua_State *lua, const char *key);
 int lua_SetStrField(lua_State *lua, const char *key, const char *val);
 
-int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator, int id_callback);
-int lua_DoTasks(lua_State *lua, btScalar time);
+void lua_LoopEntity(lua_State *lua, int object_id);
+int  lua_ExecEntity(lua_State *lua, int id_object, int id_activator, int id_callback);
+int  lua_DoTasks(lua_State *lua, btScalar time);
 
 #endif

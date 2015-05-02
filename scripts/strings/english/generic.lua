@@ -6,8 +6,6 @@
 -- menu entries, notify pop-ups, inventory entries etc.
 --------------------------------------------------------------------------------
 
-strings = {};
-
 -- Game menu entries
 
 strings[000] = "New Game";

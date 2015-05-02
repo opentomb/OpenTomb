@@ -206,8 +206,30 @@ void Gui_InitFaders()
                     Fader[i].SetBlendingMode(BM_MULTIPLY);
                     Fader[i].SetSpeed(10,800);
                 }
+                
+            case FADER_BLACK:
+                {
+                    Fader[i].SetAlpha(255);
+                    Fader[i].SetColor(0, 0, 0);
+                    Fader[i].SetBlendingMode(BM_OPAQUE);
+                    Fader[i].SetSpeed(500);
+                    Fader[i].SetScaleMode(GUI_FADER_SCALE_ZOOM);
+                }
+                break;
         }
     }
+}
+
+void Gui_SetupFader(int fader_index, 
+                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
+                    uint16_t fadein_speed, uint16_t fadeout_speed)
+{
+    if(fader_index >= FADER_LASTINDEX) return;
+    
+    Fader[fader_index].SetAlpha(alpha);
+    Fader[fader_index].SetColor(R,G,B);
+    Fader[fader_index].SetBlendingMode(blending_mode);
+    Fader[fader_index].SetSpeed(fadein_speed,fadeout_speed);
 }
 
 void Gui_InitNotifier()
@@ -919,7 +941,7 @@ void gui_InventoryManager::setTitle(int items_type)
             break;
     }
 
-    strncpy(mLabel_Title_text, lua_GetString(engine_lua, string_index), GUI_LINE_DEFAULTSIZE);
+    lua_GetString(engine_lua, string_index, GUI_LINE_DEFAULTSIZE, mLabel_Title_text);
 }
 
 int gui_InventoryManager::setItemsType(int type)
@@ -1195,6 +1217,7 @@ void gui_InventoryManager::frame(float time)
                 mRingTime = 0.0;
                 mLabel_Title.show = 0;
                 mRingRadius = mBaseRingRadius;
+                mCurrentItemsType = 1;
             }
             break;
     }
@@ -1229,13 +1252,14 @@ void gui_InventoryManager::render()
                         {
                             if(bi->name[0])
                             {
+                                strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
+                                
                                 if(i->count > 1)
                                 {
-                                    snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER), bi->name, i->count);
-                                }
-                                else
-                                {
-                                    strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
+                                    char counter[32];
+                                    lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
+                                    snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i->count);
+                                    
                                 }
                             }
                             glRotatef(90.0 + mItemAngle - ang, 0.0, 0.0, 1.0);
@@ -1460,7 +1484,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDisable(GL_CULL_FACE);
 
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    
+
     GLfloat texCoords[8];
     if(texture)
     {
@@ -1792,7 +1816,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
         }
         else
         {
-            Con_Printf("Warning: image %s is not truecolor - not supported!", texture_path);
+            Con_Warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
             SDL_FreeSurface(surface);
             return false;
         }
@@ -1816,7 +1840,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     }
     else
     {
-        Con_Printf("SDL could not load %s: %s", texture_path, SDL_GetError());
+        Con_Warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
         return false;
     }
 
@@ -1832,7 +1856,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
         SetAspect();
 
-        Con_Printf("Loaded fader picture: %s", texture_path);
+        Con_Notify(SYSNOTE_LOADED_FADER, texture_path);
         SDL_FreeSurface(surface);
         return true;
     }

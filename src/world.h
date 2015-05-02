@@ -6,6 +6,7 @@
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 #include "audio.h"
+#include "camera.h"
 #include "bordered_texture_atlas.h"
 #include "bullet/LinearMath/btScalar.h"
 #include "bullet/LinearMath/btVector3.h"
@@ -45,9 +46,9 @@
 #define TR_FD_TRIGTYPE_ANTIPAD          0x06    // If Lara is in sector, stop (land case).
 #define TR_FD_TRIGTYPE_COMBAT           0x07    // If Lara is in combat state, run (any case).
 #define TR_FD_TRIGTYPE_DUMMY            0x08    // If Lara is in sector, run (air case).
-#define TR_FD_TRIGTYPE_ANTITRIGGER      0x09    // If Lara is in sector, stop (any case).
-#define TR_FD_TRIGTYPE_HEAVYSWITCH      0x0A    // If item is activated by item, run.
-#define TR_FD_TRIGTYPE_HEAVYANTITRIGGER 0x0B    // If item is activated by item, stop.
+#define TR_FD_TRIGTYPE_ANTITRIGGER      0x09    // TR2-5 only: If Lara is in sector, stop (any case).
+#define TR_FD_TRIGTYPE_HEAVYSWITCH      0x0A    // TR3-5 only: If item is activated by item, run.
+#define TR_FD_TRIGTYPE_HEAVYANTITRIGGER 0x0B    // TR3-5 only: If item is activated by item, stop.
 #define TR_FD_TRIGTYPE_MONKEY           0x0C    // TR3-5 only: If Lara is monkey-swinging, run.
 #define TR_FD_TRIGTYPE_SKELETON         0x0D    // TR5 only: Activated by skeleton only?
 #define TR_FD_TRIGTYPE_TIGHTROPE        0x0E    // TR5 only: If Lara is on tightrope, run.
@@ -71,6 +72,31 @@
 #define TR_FD_TRIGFUNC_FLYBY            0x0C
 #define TR_FD_TRIGFUNC_CUTSCENE         0x0D
 
+// Action type specifies a kind of action which trigger performs. Mostly
+// it's only related to item activation, as any other trigger operations
+// are not affected by action type in original engines.
+
+#define TR_ACTIONTYPE_NORMAL  0
+#define TR_ACTIONTYPE_ANTI    1
+#define TR_ACTIONTYPE_SWITCH  2
+#define TR_ACTIONTYPE_BYPASS -1 // Used for "dummy" triggers from originals.
+
+// Activator specifies a kind of triggering event (NOT to be confused
+// with activator type mentioned below) to occur, like ordinary trigger,
+// triggering by inserting a key, turning a switch or picking up item.
+
+#define TR_ACTIVATOR_NORMAL 0
+#define TR_ACTIVATOR_SWITCH 1
+#define TR_ACTIVATOR_KEY    2
+#define TR_ACTIVATOR_PICKUP 3
+
+// Activator type is used to identify activator kind for specific
+// trigger types (so-called HEAVY triggers). HEAVY means that trigger
+// is activated by some other item, rather than Lara herself.
+
+#define TR_ACTIVATORTYPE_LARA 0
+#define TR_ACTIVATORTYPE_MISC 1
+
 // Various room flags specify various room options. Mostly, they
 // specify environment type and some additional actions which should
 // be performed in such rooms.
@@ -88,6 +114,9 @@
 #define TR_ROOM_FLAG_DAMAGE         0x0800  ///@FIXME: Is it really damage (D)?
 #define TR_ROOM_FLAG_POISON         0x1000  ///@FIXME: Is it really poison (P)?
 
+//Room light mode flags (TR2 ONLY)
+
+#define TR_ROOM_LIGHTMODE_FLICKER   0x1
 
 // Sector flags specify various unique sector properties.
 // Derived from native TR floordata functions.
@@ -102,6 +131,37 @@
 #define SECTOR_FLAG_TRIGGERER_MARK  0x00000080
 #define SECTOR_FLAG_BEETLE_MARK     0x00000100
 #define SECTOR_FLAG_DEATH           0x00000200
+
+// Sector material specifies audio response from character footsteps, as well as
+// footstep texture option, plus possible vehicle physics difference in the future.
+
+#define SECTOR_MATERIAL_MUD         0   // Classic one, TR1-2.
+#define SECTOR_MATERIAL_SNOW        1
+#define SECTOR_MATERIAL_SAND        2
+#define SECTOR_MATERIAL_GRAVEL      3
+#define SECTOR_MATERIAL_ICE         4
+#define SECTOR_MATERIAL_WATER       5
+#define SECTOR_MATERIAL_STONE       6
+#define SECTOR_MATERIAL_WOOD        7
+#define SECTOR_MATERIAL_METAL       8
+#define SECTOR_MATERIAL_MARBLE      9
+#define SECTOR_MATERIAL_GRASS       10
+#define SECTOR_MATERIAL_CONCRETE    11
+#define SECTOR_MATERIAL_OLDWOOD     12
+#define SECTOR_MATERIAL_OLDMETAL    13
+
+// Maximum number of flipmaps specifies how many flipmap indices to store. Usually,
+// TR1-3 doesn't contain flipmaps above 10, while in TR4-5 number of flipmaps could
+// be as much as 14-16. To make sure flipmap array will be suitable for all game
+// versions, it is set to 32.
+
+#define FLIPMAP_MAX_NUMBER          32
+
+// Activation mask operation can be either XOR (for switch triggers) or OR (for any
+// other types of triggers).
+
+#define AMASK_OP_OR  0
+#define AMASK_OP_XOR 1
 
 class btCollisionShape;
 class btRigidBody;
@@ -142,17 +202,18 @@ typedef struct room_box_s
 
 typedef struct room_sector_s
 {
-    uint32_t                    fd_index;                                       // offset to the floor data
+    uint32_t                    trig_index; // Trigger function index.
     int32_t                     box_index;
     
-    uint32_t                    flags;
+    uint32_t                    flags;      // Climbability, death etc.
+    uint32_t                    material;   // Footstep sound and footsteps.
 
     int32_t                     floor;
     int32_t                     ceiling;
 
     struct room_sector_s        *sector_below;
     struct room_sector_s        *sector_above;
-    struct room_s               *owner_room;                                    // room htat contain this sector
+    struct room_s               *owner_room;    // Room that contain this sector
 
     int16_t                     index_x;
     int16_t                     index_y;
@@ -192,6 +253,7 @@ typedef struct room_s
 {
     uint32_t                    id;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
+    int16_t                     light_mode;                                     // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
     uint8_t                     reverb_info;                                    // room reverb type
     uint8_t                     water_scheme;
     uint8_t                     alternate_group;
@@ -252,8 +314,9 @@ typedef struct world_s
     uint32_t                    room_box_count;
     struct room_box_s          *room_boxes;
     
-    uint32_t                    room_flipmap;           // Flipped room activity bit field.
-    uint32_t                    room_flipstate;         // Flipped room actual state bit field.
+    uint32_t                    flip_count;             // Number of flips
+    uint8_t                    *flip_map;               // Flipped room activity array.
+    uint8_t                    *flip_state;             // Flipped room state array.
 
     bordered_texture_atlas     *tex_atlas;
     uint32_t                    tex_count;              // Number of textures
@@ -278,9 +341,9 @@ typedef struct world_s
     struct RedBlackHeader_s    *items_tree;             // tree of world items
 
     uint32_t                    type;
-
-    uint32_t                    floor_data_size;
-    uint16_t                   *floor_data;
+    
+    uint32_t                    cameras_sinks_count;    // Amount of cameras and sinks.
+    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks. 
 
     uint32_t                    anim_commands_count;
     int16_t                    *anim_commands;
@@ -344,6 +407,7 @@ void Room_BuildNearRoomsList(room_p room);
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);
 int Room_IsInNearRoomsList(room_p room, room_p r);
+int Room_HasSector(room_p room, int x, int y);//If this room contains a sector
 room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs);
 room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs);
 room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs);

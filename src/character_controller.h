@@ -14,6 +14,14 @@
 #include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
 #include "engine.h"
 
+
+#define CHARACTER_BOX_HALF_SIZE (128.0)
+#define CHARACTER_BASE_RADIUS   (128.0)
+#define CHARACTER_BASE_HEIGHT   (512.0)
+
+#define NUM_PENETRATION_ITERATIONS      (6)
+#define PENETRATION_PART_COEF           (0.20)
+
 /*
  * default legs offsets
  */
@@ -314,7 +322,7 @@ int   Character_SetParam(struct entity_s *ent, int parameter, float value);
 int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
 int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
 
-int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed);
+int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed);
 
 bool IsCharacter(struct entity_s *ent);
 

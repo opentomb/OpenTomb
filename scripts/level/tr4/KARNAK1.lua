@@ -5,13 +5,6 @@ print("Level script loaded (KARNAK1.lua)");
 
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
--- ColType values reference: 
-COLL_NONE = 0x00;  -- Object has no collisions
-COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
-COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
---------------------------------------------------------------------------------
-
-static_tbl = {};
 
 -- PLANT statics (as listed in OBJECTS.H from TRLE)
 
@@ -47,14 +40,3 @@ static_tbl[39] = {coll = COLL_BBOX};            -- Grated gate (closed)
 -- Note: all SHATTER statics can be destroyed by SHATTER event (either on hit or something else)
 
 static_tbl[50] = {coll = COLL_MESH};            -- Vase 2
-
---------------------------------------------------------------------------------
-
-function trGetStaticMeshFlags(ver, id)
-    if(static_tbl[id] == nil) then
-        return nil, nil;
-    else
-        return static_tbl[id].coll, static_tbl[id].hide;
-    end;
-end;
-
