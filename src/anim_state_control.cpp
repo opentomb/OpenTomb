@@ -1296,14 +1296,7 @@ int State_Control_Lara(struct entity_s *ent)
             }
             else if(resp->slide == 0)
             {
-                if((cmd->move[0] == 1) && (engine_world.version >= TR_III))
-                {
-                     ent->bf.next_state = TR_STATE_LARA_RUN_FORWARD;
-                }
-                else
-                {
-                     ent->bf.next_state = TR_STATE_LARA_STOP;                   // stop
-                }
+                ent->bf.next_state = TR_STATE_LARA_STOP;                   // stop
             }
             else if(resp->slide != 0 && cmd->jump == 1)
             {
