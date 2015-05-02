@@ -130,7 +130,7 @@ void SkeletalModelTestDraw()
     static btScalar time = 0.0;
     skeletal_model_p smodel;
     animation_frame_p af;
-    anim_dispath_p adsp;
+    anim_dispatch_p adsp;
     sprite_p bsprite;
     bone_tag_p btag;
     GLfloat tr[16];
@@ -189,9 +189,9 @@ void SkeletalModelTestDraw()
     y = screen_info.h - 24;
     for(i=0;i<af->state_change_count;i++)
     {
-        for(j=0;j<af->state_change[i].anim_dispath_count;j++)
+        for(j=0;j<af->state_change[i].anim_dispatch_count;j++)
         {
-            adsp = af->state_change[i].anim_dispath + j;
+            adsp = af->state_change[i].anim_dispatch + j;
             Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
                           i, j, af->state_change[i].id, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
             y -= 24;
@@ -1154,7 +1154,7 @@ void DebugKeys(int button, int state)
                 break;
 
             case SDLK_i:
-                if (engine_world.skeletal_model_count > 0)
+                if(engine_world.skeletal_model_count > 0)
                 {
                     anim++;
                     if(anim > engine_world.skeletal_models[model].animation_count-1)

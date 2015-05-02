@@ -214,9 +214,9 @@ void SkeletalModel_Clear(skeletal_model_p model)
                 {
                     for(uint16_t j=0;j<anim->state_change_count;j++)
                     {
-                        anim->state_change[j].anim_dispath_count = 0;
-                        free(anim->state_change[j].anim_dispath);
-                        anim->state_change[j].anim_dispath = NULL;
+                        anim->state_change[j].anim_dispatch_count = 0;
+                        free(anim->state_change[j].anim_dispatch);
+                        anim->state_change[j].anim_dispatch = NULL;
                         anim->state_change[j].id = 0;
                     }
                     anim->state_change_count = 0;

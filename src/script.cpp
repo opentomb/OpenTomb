@@ -17,6 +17,7 @@
 #include "vmath.h"
 #include "render.h"
 #include "audio.h"
+#include "string.h"
 
 extern "C" {
 #include "lua/lua.h"
@@ -176,7 +177,7 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
     if(lua)
     {
         top = lua_gettop(lua);                                                  // save LUA stack
-        lua_getglobal(lua, "GetGlobalSound");                                   // add to the up of stack LUA's function
+        lua_getglobal(lua, "getGlobalSound");                                   // add to the up of stack LUA's function
 
         if(lua_isfunction(lua, -1))                                             // If function exists...
         {
@@ -200,7 +201,7 @@ int lua_GetSecretTrackNumber(lua_State *lua)
     if(lua)
     {
         top = lua_gettop(lua);                                                  // save LUA stack
-        lua_getglobal(lua, "GetSecretTrackNumber");                             // add to the up of stack LUA's function
+        lua_getglobal(lua, "getSecretTrackNumber");                             // add to the up of stack LUA's function
 
         if(lua_isfunction(lua, -1))                                             // If function exists...
         {
@@ -223,7 +224,7 @@ int lua_GetNumTracks(lua_State *lua)
     if(lua)
     {
         top = lua_gettop(lua);
-        lua_getglobal(lua, "GetNumTracks");
+        lua_getglobal(lua, "getNumTracks");
 
         if(lua_isfunction(lua, -1))
         {
@@ -248,7 +249,7 @@ bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_soun
     {
         int top = lua_gettop(lua);
 
-        lua_getglobal(lua, "GetOverridedSamplesInfo");
+        lua_getglobal(lua, "getOverridedSamplesInfo");
 
         if(lua_isfunction(lua, -1))
         {
@@ -287,7 +288,7 @@ bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_numb
     if(lua)
     {
         int top = lua_gettop(lua);
-        lua_getglobal(lua, "GetOverridedSample");
+        lua_getglobal(lua, "getOverridedSample");
 
         if(lua_isfunction(lua, -1))
         {
@@ -322,7 +323,7 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
     {
         top = lua_gettop(lua);                                                  // save LUA stack
 
-        lua_getglobal(lua, "GetTrackInfo");                                     // add to the up of stack LUA's function
+        lua_getglobal(lua, "getTrackInfo");                                     // add to the up of stack LUA's function
 
         if(lua_isfunction(lua, -1))                                             // If function exists...
         {
@@ -359,8 +360,10 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 }
 
 
-const char* lua_GetString(lua_State *lua, int string_index, size_t *string_length)
+bool lua_GetString(lua_State *lua, int string_index, size_t string_size, char *buffer)
 {
+    bool result = false;
+    
     if(lua)
     {
         int top = lua_gettop(lua);
@@ -369,17 +372,47 @@ const char* lua_GetString(lua_State *lua, int string_index, size_t *string_lengt
 
         if(lua_isfunction(lua, -1))
         {
+            size_t *string_length = NULL;
+            
             lua_pushinteger(lua, string_index);
             lua_pcall(lua, 1, 1, 0);
-            const char* result = lua_tolstring(lua, -1, string_length);
-            lua_settop(lua, top);
-            return result;
+            
+            const char* lua_str = lua_tolstring(lua, -1, string_length);
+            strncpy(buffer, lua_str, string_size);
+            result = true;
         }
+        
         lua_settop(lua, top);
     }
 
-    string_length = 0;
-    return NULL;
+    return result;
+}
+
+bool lua_GetSysNotify(lua_State *lua, int string_index, size_t string_size, char *buffer)
+{
+    bool result = false;
+    
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+        lua_getglobal(lua, "getSysNotify");
+
+        if(lua_isfunction(lua, -1))
+        {
+            size_t *string_length = NULL;
+            
+            lua_pushinteger(lua, string_index);
+            lua_pcall(lua, 1, 1, 0);
+            
+            const char* lua_str = lua_tolstring(lua, -1, string_length);
+            strncpy(buffer, lua_str, string_size);
+            result = true;
+        }
+        
+        lua_settop(lua, top);
+    }
+    
+    return result;
 }
 
 
@@ -394,7 +427,7 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
     {
         top = lua_gettop(lua);                                                  // save LUA stack
 
-        lua_getglobal(lua, "GetLoadingScreen");                                 // add to the up of stack LUA's function
+        lua_getglobal(lua, "getLoadingScreen");                                 // add to the up of stack LUA's function
 
         if(lua_isfunction(lua, -1))                                             // If function exists...
         {
@@ -480,16 +513,16 @@ int lua_DoTasks(lua_State *lua, btScalar time)
     return 0;
 }
 
-int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator, int id_callback)
+int lua_ExecEntity(lua_State *lua, int id_object, int id_activator, int id_callback)
 {
     int top;
 
     top = lua_gettop(lua);
-    lua_getglobal(lua, "activateEntity");
+    lua_getglobal(lua, "execEntity");
     if (!lua_isfunction(lua, -1))
     {
         lua_settop(lua, top);
-        //Sys_Warn("Broken \"activateEntity\" script function");
+        //Sys_Warn("Broken \"execEntity\" script function");
         return -1;
     }
 
@@ -501,6 +534,21 @@ int lua_ActivateEntity(lua_State *lua, int id_object, int id_activator, int id_c
     return 1;
 }
 
+void lua_LoopEntity(lua_State *lua, int object_id)
+{
+    entity_p ent = World_GetEntityByID(&engine_world, object_id);
+    if((lua) && (ent->state_flags & ENTITY_STATE_ENABLED) && (ent->state_flags & ENTITY_STATE_ACTIVE))
+    {
+        int top = lua_gettop(lua);
+        lua_getglobal(lua, "loopEntity");
+        if(lua_isfunction(lua, -1))
+        {
+            lua_pushinteger(lua, object_id);
+            lua_pcall(lua, 1, 0, 0);
+        }
+        lua_settop(lua, top);
+    }
+}
 
 /*
  * Game structures parse
@@ -676,4 +724,23 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
     lua_settop(lua, top);
 
     return 1;
+}
+
+void lua_Clean(lua_State *lua)
+{
+    lua_getglobal(lua, "tlist_Clear");
+    if(lua_isfunction(lua, -1))
+    {
+        lua_pcall(lua, 0, 1, 0);
+        int result = lua_tointeger(lua, -1);
+        lua_pop(lua, 1);
+    }
+    
+    lua_getglobal(lua, "entfuncs_Clear");
+    if(lua_isfunction(lua, -1))
+    {
+        lua_pcall(lua, 0, 1, 0);
+        int result = lua_tointeger(lua, -1);
+        lua_pop(lua, 1);
+    }
 }

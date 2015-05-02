@@ -48,9 +48,7 @@ extern "C" {
 #include "gameflow.h"
 #include "redblack.h"
 #include "gl_font.h"
-//#include "string.h"
-
-#define INIT_FRAME_VERTEX_BUF_SIZE              (1024 * 1024)
+#include "string.h"
 
 extern SDL_Window             *sdl_window;
 extern SDL_GLContext           sdl_gl_context;
@@ -188,6 +186,7 @@ void Engine_InitDefaultGlobals()
     Audio_InitGlobals();
 }
 
+// First stage of initialization.
 
 void Engine_Init_Pre()
 {
@@ -197,8 +196,8 @@ void Engine_Init_Pre()
     Con_Init();
     Engine_LuaInit();
 
-    frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUF_SIZE);
-    frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUF_SIZE;
+    frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUFFER_SIZE);
+    frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUFFER_SIZE;
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
 
     Com_Init();
@@ -208,6 +207,8 @@ void Engine_Init_Pre()
 
     Engine_BTInit();
 }
+
+// Second stage of initialization.
 
 void Engine_Init_Post()
 {
@@ -219,6 +220,8 @@ void Engine_Init_Post()
 
     Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
 }
+
+// Bullet Physics initialization.
 
 void Engine_BTInit()
 {
@@ -249,6 +252,13 @@ void Engine_BTInit()
 /*
  * debug functions
  */
+ 
+ int lua_CheckStack(lua_State *lua)
+ {
+     Con_Printf("Current Lua stack index: %d", lua_gettop(lua));
+     return 0;
+ }
+ 
  int lua_print(lua_State * lua)
  {
      int top = lua_gettop(lua);
@@ -292,9 +302,8 @@ void Engine_BTInit()
 int lua_DumpRoom(lua_State * lua)
 {
     room_p r = NULL;
-    int top = lua_gettop(lua);
 
-    if(top == 0)
+    if(lua_gettop(lua) == 0)
     {
         r = engine_camera.current_room;
     }
@@ -303,7 +312,7 @@ int lua_DumpRoom(lua_State * lua)
         uint32_t id = lua_tointeger(lua, 1);
         if(id >= engine_world.room_count)
         {
-            Con_Printf("wrong room id = %d", id);
+            Con_Warning(SYSWARN_WRONG_ROOM, id);
             return 0;
         }
         r = engine_world.rooms + id;
@@ -326,23 +335,20 @@ int lua_DumpRoom(lua_State * lua)
 
 int lua_SetRoomEnabled(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_AddLine("Wrong arguments count. Must be (id, value)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id], [value]");
         return 0;
     }
 
     uint32_t id = lua_tointeger(lua, 1);
     if(id >= engine_world.room_count)
     {
-        Con_Printf("wrong room id = %d", id);
+        Con_Warning(SYSWARN_WRONG_ROOM, id);
         return 0;
     }
 
-    int val = lua_tointeger(lua, 2);
-    if(val == 0)
+    if(lua_tointeger(lua, 2) == 0)
     {
         Room_Disable(engine_world.rooms + id);
     }
@@ -360,18 +366,16 @@ int lua_SetRoomEnabled(lua_State * lua)
 
 int lua_SetModelCollisionMapSize(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (id, value)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id], [value]");
         return 0;
     }
 
     uint32_t id = lua_tointeger(lua, 1);
     if(id > engine_world.skeletal_model_count - 1)
     {
-        Con_Printf("there are not models with id = %d", id);
+        Con_Warning(SYSWARN_MODELID_OVERFLOW, id);
         return 0;
     }
 
@@ -387,18 +391,16 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
 
 int lua_SetModelCollisionMap(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 3)
+    if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (id, map_index, value)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "(id, map_index, value)");
         return 0;
     }
 
     uint32_t id = lua_tointeger(lua, 1);
     if(id > engine_world.skeletal_model_count - 1)
     {
-        Con_Printf("there are not models with id = %d", id);
+        Con_Warning(SYSWARN_MODELID_OVERFLOW, id);
         return 0;
     }
 
@@ -415,39 +417,29 @@ int lua_SetModelCollisionMap(lua_State * lua)
 
 int lua_EnableEntity(lua_State * lua)
 {
-    int top = lua_gettop(lua);                                                  // get # of arguments
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_AddLine("You must enter entity ID!", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
     entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-    if(ent != NULL)
-    {
-        Entity_Enable(ent);
-    }
-
+    if(ent != NULL) Entity_Enable(ent);
+    
     return 0;
 }
 
 
 int lua_DisableEntity(lua_State * lua)
 {
-    int top = lua_gettop(lua);                                                  // get # of arguments
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_AddLine("You must to enter entity ID", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
     entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-    if(ent != NULL)
-    {
-        Entity_Disable(ent);
-    }
+    if(ent != NULL) Entity_Disable(ent);
 
     return 0;
 }
@@ -455,11 +447,9 @@ int lua_DisableEntity(lua_State * lua)
 
 int lua_SetEntityCollision(lua_State * lua)
 {
-    int top = lua_gettop(lua);                                                  // get # of arguments
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_AddLine("You must to enter entity ID", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
@@ -480,6 +470,79 @@ int lua_SetEntityCollision(lua_State * lua)
 }
 
 
+int lua_GetEntitySectorFlags(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    
+    if((ent != NULL) && (ent->current_sector))
+    {
+        lua_pushinteger(lua, ent->current_sector->flags);
+        return 1;
+    }
+    return 0;
+}
+
+int lua_GetEntitySectorMaterial(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    
+    if((ent != NULL) && (ent->current_sector))
+    {
+        lua_pushinteger(lua, ent->current_sector->material);
+        return 1;
+    }
+    return 0;
+}
+
+int lua_GetEntitySectorStatus(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    
+    if(ent != NULL)
+    {
+        lua_pushinteger(lua, ent->sector_status);
+        return 1;
+    }
+    return 0;
+}
+
+int lua_SetEntitySectorStatus(lua_State *lua)
+{
+    if(lua_gettop(lua) < 2) return 0;   // No arguments specified - return.
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    
+    if(ent != NULL)
+    {
+        ent->sector_status = lua_tointeger(lua, 2);
+    }
+    return 0;
+}
+
+
+int lua_NewSector(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No argument specified - return.
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    
+    if(ent != NULL)
+    {
+        if(ent->current_sector == ent->last_sector)
+        {
+            lua_pushinteger(lua, 1);
+        }
+        else
+        {
+            lua_pushinteger(lua, 0);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+
 int lua_GetGravity(lua_State * lua)
 {
     btVector3 g = bt_engine_dynamicsWorld->getGravity();
@@ -493,10 +556,9 @@ int lua_GetGravity(lua_State * lua)
 
 int lua_SetGravity(lua_State * lua)                                             // function to be exported to Lua
 {
-    int top = lua_gettop(lua);                                                  // get # of arguments
     btVector3 g;
 
-    switch(top)
+    switch(lua_gettop(lua))
     {
         case 0:                                                                 // get value
             g = bt_engine_dynamicsWorld->getGravity();
@@ -520,21 +582,19 @@ int lua_SetGravity(lua_State * lua)                                             
             break;
 
         default:
-            Con_Printf("wrong arguments number, must be 0 or 1 or 3");
+            Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "0, 1 or 3");
             break;
     };
 
-    return 0;                                                                   // we returned two vaues
+    return 0;
 }
 
 
-int lua_DropEntity(lua_State * lua)                                             // function to be exported to Lua
+int lua_DropEntity(lua_State * lua)
 {
-    int top = lua_gettop(lua);                                                  // get # of arguments
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_AddLine("Wrong arguments number, must be (entity_id, time)", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [time]");
         return 0;
     }
 
@@ -542,7 +602,7 @@ int lua_DropEntity(lua_State * lua)                                             
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -577,22 +637,11 @@ int lua_DropEntity(lua_State * lua)                                             
 
 int lua_GetModelID(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 1)
-    {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
-        return 0;
-    }
-
-    int id = lua_tointeger(lua, 1);
-    entity_p ent = World_GetEntityByID(&engine_world, id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", id);
-        return 0;
-    }
-
+    if(lua_gettop(lua) < 1) return 0;   // No argument - return.
+    
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;
+    
     if(ent->bf.model)
     {
         lua_pushinteger(lua, ent->bf.model->id);
@@ -604,21 +653,10 @@ int lua_GetModelID(lua_State * lua)
 
 int lua_GetActivationOffset(lua_State * lua)
 {
-    int top = lua_gettop(lua);
+    if(lua_gettop(lua) < 1) return 0;   // No argument - return.
 
-    if(top < 1)
-    {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
-        return 0;
-    }
-
-    int id = lua_tointeger(lua, 1);
-    entity_p ent = World_GetEntityByID(&engine_world, id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", id);
-        return 0;
-    }
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;
 
     lua_pushnumber(lua, ent->activation_offset[0]);
     lua_pushnumber(lua, ent->activation_offset[1]);
@@ -643,7 +681,7 @@ int lua_SetActivationOffset(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -663,11 +701,9 @@ int lua_SetActivationOffset(lua_State * lua)
 
 int lua_GetCharacterParam(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, param)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param]");
         return 0;
     }
 
@@ -677,12 +713,12 @@ int lua_GetCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        Con_Printf("Wrong option index.");
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
     if(!IsCharacter(ent))
     {
-        Con_Printf("No entity or no character for entity #%d", id);
+        Con_Warning(SYSWARN_NO_CHARACTER, id);
         return 0;
     }
     else
@@ -699,7 +735,7 @@ int lua_SetCharacterParam(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, param, value, (max_value))");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value], (max_value)");
         return 0;
     }
 
@@ -709,12 +745,12 @@ int lua_SetCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        Con_Printf("Wrong option index.");
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
     if(!IsCharacter(ent))
     {
-        Con_Printf("No entity or no character for entity #%d", id);
+        Con_Warning(SYSWARN_NO_CHARACTER, id);
         return 0;
     }
     else if(top == 3)
@@ -730,13 +766,27 @@ int lua_SetCharacterParam(lua_State * lua)
     return 0;
 }
 
+int lua_GetCharacterCombatMode(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1) return 0;
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    
+    if(!IsCharacter(ent))
+    {
+        return 0;
+    }
+    else
+    {
+        lua_pushnumber(lua, ent->character->weapon_current_state);
+        return 1;
+    }
+}
+
 int lua_ChangeCharacterParam(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 3)
+    if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, param, value)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value]");
         return 0;
     }
 
@@ -747,12 +797,12 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_LASTINDEX)
     {
-        Con_Printf("Wrong option index.");
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
     if(!IsCharacter(ent))
     {
-        Con_Printf("No entity or no character for entity #%d", id);
+        Con_Warning(SYSWARN_NO_CHARACTER, id);
         return 0;
     }
     Character_ChangeParam(ent, parameter, value);
@@ -760,13 +810,38 @@ int lua_ChangeCharacterParam(lua_State * lua)
     return 0;
 }
 
+
+int lua_GetSecretStatus(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No parameter specified - return
+    
+    int secret_number = lua_tointeger(lua, 1);
+    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
+
+    lua_pushinteger(lua, (int)gameflow_manager.SecretsTriggerMap[secret_number]);
+    return 1;
+}
+
+int lua_SetSecretStatus(lua_State *lua)
+{
+    if(lua_gettop(lua) < 2) return 0;   // No parameter specified - return
+    
+    int secret_number = lua_tointeger(lua, 1);
+    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
+
+    gameflow_manager.SecretsTriggerMap[secret_number] = lua_tointeger(lua, 2);
+    return 0;
+}
+
+
 int lua_GetActionState(lua_State *lua)
 {
     int top = lua_gettop(lua);
     int act = lua_tointeger(lua, 1);
+    
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Printf("wrong action number");
+        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
         return 0;
     }
     else if(top == 1)
@@ -775,7 +850,7 @@ int lua_GetActionState(lua_State *lua)
         return 1;
     }
 
-    Con_Printf("wrong arguments number, must be 1");
+    Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
     return 0;
 }
 
@@ -787,7 +862,7 @@ int lua_GetActionChange(lua_State *lua)
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Printf("wrong action number");
+        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
         return 0;
     }
     else if(top == 1)
@@ -796,7 +871,7 @@ int lua_GetActionChange(lua_State *lua)
         return 1;
     }
 
-    Con_Printf("wrong arguments number, must be 1");
+    Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
     return 0;
 }
 
@@ -812,58 +887,53 @@ int lua_BindKey(lua_State *lua)
 {
     int top = lua_gettop(lua);
     int act = lua_tointeger(lua, 1);
+    
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Printf("wrong action number");
-        return 0;
+        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
     }
 
     else if(top == 2)
     {
         control_mapper.action_map[act].primary = lua_tointeger(lua, 2);
-        return 0;
     }
     else if(top == 3)
     {
         control_mapper.action_map[act].primary   = lua_tointeger(lua, 2);
         control_mapper.action_map[act].secondary = lua_tointeger(lua, 3);
-        return 0;
     }
-
-    Con_Printf("wrong arguments number, must be 2 or 3");
+    else
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "2 or 3");
+    }
+    
     return 0;
 }
 
 int lua_AddFont(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top != 3)
+    if(lua_gettop(lua) != 3)
     {
-        Con_Printf("Wrong arguments. Must be [font index], [font path], [font size].");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[font index], [font path], [font size]");
         return 0;
     }
 
-    if(FontManager->AddFont((font_Type)lua_tointeger(lua, 1),
+    if(!FontManager->AddFont((font_Type)lua_tointeger(lua, 1),
                             (uint32_t) lua_tointeger(lua, 3),
                                        lua_tostring(lua, 2)))
     {
-        return 1;
+        Con_Warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
+        
     }
-    else
-    {
-        Con_Printf("Error: can't create font. Possibly max. fonts? (%d / %d)", FontManager->GetFontCount(), GUI_MAX_FONTS);
-        return 0;
-    }
+    
+    return 0;
 }
 
 int lua_AddFontStyle(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top != 14)
+    if(lua_gettop(lua) != 14)
     {
-        Con_Printf("Wrong arguments. Must be [index], [R], [G], [B], [A], [fading], [shadow], [rect], [hide].");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[index, R, G, B, A, shadow, fade, rect, border, bR, bG, bB, bA, hide]");
         return 0;
     }
 
@@ -883,71 +953,59 @@ int lua_AddFontStyle(lua_State *lua)
     bool        hide        = lua_toboolean(lua, 14);
 
 
-    if(FontManager->AddFontStyle(style_index,
-                                 color_R, color_G, color_B, color_A,
-                                 shadowed, fading,
-                                 rect, rect_border, rect_R, rect_G, rect_B, rect_A,
-                                 hide))
+    if(!FontManager->AddFontStyle(style_index,
+                                  color_R, color_G, color_B, color_A,
+                                  shadowed, fading,
+                                  rect, rect_border, rect_R, rect_G, rect_B, rect_A,
+                                  hide))
     {
-        return 1;
+        
+        Con_Warning(SYSWARN_CANT_CREATE_STYLE, FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
     }
-    else
-    {
-        Con_Printf("Error: can't create font. Possibly max. styles? (%d / %d)", FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
-        return 0;
-    }
+
+    return 0;
 }
 
 int lua_DeleteFont(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top != 1)
+    if(lua_gettop(lua) != 1)
     {
-        Con_Printf("Wrong arguments. Must be [font index].");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[font index]");
         return 0;
     }
 
-    if(FontManager->RemoveFont((font_Type)lua_tointeger(lua, 1)))
+    if(!FontManager->RemoveFont((font_Type)lua_tointeger(lua, 1)))
     {
-        return 1;
+        Con_Warning(SYSWARN_CANT_REMOVE_FONT);
     }
-    else
-    {
-        Con_Printf("Error: font with given ID doesn't exist or couldn't be removed!");
-        return 0;
-    }
+    
+    return 0;
 }
 
 int lua_DeleteFontStyle(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top != 1)
+    if(lua_gettop(lua) != 1)
     {
-        Con_Printf("Wrong arguments. Must be [style index].");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[style index]");
         return 0;
     }
 
-    if(FontManager->RemoveFontStyle((font_Style)lua_tointeger(lua, 1)))
+    if(!FontManager->RemoveFontStyle((font_Style)lua_tointeger(lua, 1)))
     {
-        return 1;
+        Con_Warning(SYSWARN_CANT_REMOVE_STYLE);
     }
-    else
-    {
-        Con_Printf("Error: style with given ID doesn't exist or couldn't be removed!");
-        return 0;
-    }
+    
+    return 0;
 }
 
 int lua_AddItem(lua_State * lua)
 {
-    int top, entity_id, item_id, count;
+    int top, count;
     top = lua_gettop(lua);
 
     if(top < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, item_id, (items_count))");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
         return 0;
     }
 
@@ -960,13 +1018,13 @@ int lua_AddItem(lua_State * lua)
         count = -1;
     }
 
-    entity_id = lua_tointeger(lua, 1);
-    item_id = lua_tointeger(lua, 2);
+    int entity_id = lua_tointeger(lua, 1);
+    int item_id = lua_tointeger(lua, 2);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", entity_id);
+        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 
@@ -977,11 +1035,9 @@ int lua_AddItem(lua_State * lua)
 
 int lua_RemoveItem(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 3)
+    if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, item_id, items_count)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
         return 0;
     }
 
@@ -992,7 +1048,7 @@ int lua_RemoveItem(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", entity_id);
+        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 
@@ -1003,11 +1059,9 @@ int lua_RemoveItem(lua_State * lua)
 
 int lua_RemoveAllItems(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -1015,7 +1069,7 @@ int lua_RemoveAllItems(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", entity_id);
+        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
     Character_RemoveAllItems(ent);
@@ -1026,11 +1080,9 @@ int lua_RemoveAllItems(lua_State * lua)
 
 int lua_GetItemsCount(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, item_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id]");
         return 0;
     }
     int entity_id = lua_tointeger(lua, 1);
@@ -1039,7 +1091,7 @@ int lua_GetItemsCount(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", entity_id);
+        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 
@@ -1050,11 +1102,9 @@ int lua_GetItemsCount(lua_State * lua)
 
 int lua_CreateBaseItem(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 5)
+    if(lua_gettop(lua) < 5)
     {
-        Con_Printf("Wrong arguments count. Must be (item_id, model_id, world_model_id, type, count, (name))");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[item_id], [model_id], [world_model_id], [type], [count], (name))");
         return 0;
     }
 
@@ -1072,34 +1122,31 @@ int lua_CreateBaseItem(lua_State * lua)
 
 int lua_DeleteBaseItem(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (item_idt)");
-        return 0;
+        Con_Warning(SYSWARN_WRONG_ARGS, "[item_id]");
     }
-
-    World_DeleteItem(&engine_world, lua_tointeger(lua, 1));
+    else
+    {
+        World_DeleteItem(&engine_world, lua_tointeger(lua, 1));
+    }
     return 0;
 }
 
 
 int lua_PrintItems(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
     int entity_id = lua_tointeger(lua, 1);
-    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    entity_p  ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", entity_id);
+        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 
@@ -1121,7 +1168,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if(top < 6)
     {
-        Con_Printf("Wrong arguments count. Must be (model_id, anim_num, state_id, dispath_num, start_frame, end_frame (, next_anim, next_frame)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [state_id], [dispatch_num], [start_frame], [end_frame], (next_anim), (next_frame)");
         return 0;
     }
 
@@ -1130,19 +1177,19 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if(model == NULL)
     {
-        Con_Printf("can not find skeletal model with id = %d", id);
+        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     int anim = lua_tointeger(lua, 2);
     int state = lua_tointeger(lua, 3);
-    int dispath = lua_tointeger(lua, 4);
+    int dispatch = lua_tointeger(lua, 4);
     int frame_low = lua_tointeger(lua, 5);
     int frame_high = lua_tointeger(lua, 6);
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Printf("wrong anim number");
+        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1151,19 +1198,19 @@ int lua_SetStateChangeRange(lua_State * lua)
     {
         if(af->state_change[i].id == (uint32_t)state)
         {
-            if((dispath >= 0) && (dispath < af->state_change[i].anim_dispath_count))
+            if((dispatch >= 0) && (dispatch < af->state_change[i].anim_dispatch_count))
             {
-                af->state_change[i].anim_dispath[dispath].frame_low = frame_low;
-                af->state_change[i].anim_dispath[dispath].frame_high = frame_high;
+                af->state_change[i].anim_dispatch[dispatch].frame_low = frame_low;
+                af->state_change[i].anim_dispatch[dispatch].frame_high = frame_high;
                 if(top >= 8)
                 {
-                    af->state_change[i].anim_dispath[dispath].next_anim = lua_tointeger(lua, 7);
-                    af->state_change[i].anim_dispath[dispath].next_frame = lua_tointeger(lua, 8);
+                    af->state_change[i].anim_dispatch[dispatch].next_anim = lua_tointeger(lua, 7);
+                    af->state_change[i].anim_dispatch[dispatch].next_frame = lua_tointeger(lua, 8);
                 }
             }
             else
             {
-                Con_Printf("wrong dispath number");
+                Con_Warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
             }
             break;
         }
@@ -1175,11 +1222,9 @@ int lua_SetStateChangeRange(lua_State * lua)
 
 int lua_GetAnimCommandTransform(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 3)
+    if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (model_id, anim_num, frame_num");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [frame_num]");
         return 0;
     }
 
@@ -1189,13 +1234,13 @@ int lua_GetAnimCommandTransform(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
-        Con_Printf("can not find skeletal model with id = %d", id);
+        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Printf("wrong anim number");
+        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1206,7 +1251,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
-        Con_Printf("wrong frame number");
+        Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return 0;
     }
 
@@ -1225,7 +1270,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if(top < 4)
     {
-        Con_Printf("Wrong arguments count. Must be (model_id, anim_num, frame_num, flag, (option: dx, dy, dz))");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id] [anim_num], [frame_num], [flag], (dx, dy, dz)");
         return 0;
     }
 
@@ -1235,13 +1280,13 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
-        Con_Printf("can not find skeletal model with id = %d", id);
+        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Printf("wrong anim number");
+        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1252,7 +1297,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
-        Con_Printf("wrong frame number");
+        Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return 0;
     }
 
@@ -1270,12 +1315,10 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
 int lua_SpawnEntity(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 5)
+    if(lua_gettop(lua) < 5)
     {
         ///uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3])
-        Con_Printf("Wrong arguments count. Must be (model_id1, room_id, x, y, z, (ax, ay, az))");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id1], [room_id], [x], [y], [z], (ax, ay, az))");
         return 0;
     }
 
@@ -1314,24 +1357,24 @@ int lua_SpawnEntity(lua_State * lua)
  */
 int lua_GetEntityVector(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (id1, id2)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
         return 0;
     }
+    
     int id = lua_tointeger(lua, 1);
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1344,10 +1387,9 @@ int lua_GetEntityVector(lua_State * lua)
 
 int lua_GetEntityDirDot(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (id1, id2)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
         return 0;
     }
 
@@ -1355,14 +1397,14 @@ int lua_GetEntityDirDot(lua_State * lua)
     entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     entity_p e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1373,11 +1415,9 @@ int lua_GetEntityDirDot(lua_State * lua)
 
 int lua_GetEntityPosition(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top != 1)
+    if(lua_gettop(lua) != 1)
     {
-        Con_Printf("Wrong arguments count. Must be (id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -1385,7 +1425,7 @@ int lua_GetEntityPosition(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1447,7 +1487,7 @@ int lua_SetEntityPosition(lua_State * lua)
             return 0;
 
         default:
-            Con_Printf("Wrong arguments count. Must be (id, x, y, z) or (id, x, y, z, fi_x, fi_y, fi_z)");
+            Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z] or [id, x, y, z, fi_x, fi_y, fi_z]");
             return 0;
     }
 
@@ -1476,7 +1516,7 @@ int lua_MoveEntityGlobal(lua_State * lua)
             return 0;
 
         default:
-            Con_Printf("Wrong arguments count. Must be (id, x, y, z)");
+            Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z]");
             return 0;
     }
 
@@ -1486,28 +1526,24 @@ int lua_MoveEntityGlobal(lua_State * lua)
 
 int lua_MoveEntityLocal(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    btScalar dx, dy, dz;
-    top = lua_gettop(lua);
-
-    if(top < 4)
+    if(lua_gettop(lua) < 4)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, dx, dy, dz)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
-    dx = lua_tonumber(lua, 2);
-    dy = lua_tonumber(lua, 3);
-    dz = lua_tonumber(lua, 4);
+    btScalar dx = lua_tonumber(lua, 2);
+    btScalar dy = lua_tonumber(lua, 3);
+    btScalar dz = lua_tonumber(lua, 4);
 
     ent->transform[12+0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
     ent->transform[12+1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
@@ -1518,23 +1554,54 @@ int lua_MoveEntityLocal(lua_State * lua)
     return 0;
 }
 
+int lua_MoveEntityToSink(lua_State * lua)
+{
+    if(lua_gettop(lua) < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, sink_id]");
+        return 0;
+    }
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    stat_camera_sink_p sink = &engine_world.cameras_sinks[lua_tointeger(lua, 2)];
+    
+    btVector3 ent_pos;  ent_pos.m_floats[0] = ent->transform[12+0];
+                        ent_pos.m_floats[1] = ent->transform[12+1];
+                        ent_pos.m_floats[2] = ent->transform[12+2] - 256.0; // Prevents digging into the floor.
+                        
+    btVector3 sink_pos; sink_pos.m_floats[0] = sink->x;
+                        sink_pos.m_floats[1] = sink->y;
+                        sink_pos.m_floats[2] = sink->z;
+     
+    btScalar dist = btDistance(ent_pos, sink_pos);
+    if(dist == 0.0) dist = 1.0; // Prevents division by zero.
+    
+    btVector3 speed = ((ent_pos - sink_pos) / dist) * (sink->room_or_strength / 1024.0);
+    
+    ent->transform[12+0] -= speed.m_floats[0];
+    ent->transform[12+1] -= speed.m_floats[1];
+    ent->transform[12+2] -= speed.m_floats[2] * 64.0;   // Vertical force is stronger.
+
+    Entity_UpdateRigidBody(ent, 1);
+
+    return 0;
+}
+
 
 int lua_GetEntitySpeed(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-    id = lua_tointeger(lua, 1);
-    if(top != 1)
+    if(lua_gettop(lua) != 1)
     {
-        Con_Printf("Wrong arguments count. Must be (id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
-    ent = World_GetEntityByID(&engine_world, id);
+    
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
 
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1547,29 +1614,26 @@ int lua_GetEntitySpeed(lua_State * lua)
 
 int lua_SetEntitySpeed(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-    id = lua_tointeger(lua, 1);
-
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
-    switch(top)
+    switch(lua_gettop(lua))
     {
         case 4:
             ent->speed[0] = lua_tonumber(lua, 2);
             ent->speed[1] = lua_tonumber(lua, 3);
             ent->speed[2] = lua_tonumber(lua, 4);
-            return 0;
+            break;
 
         default:
-            Con_Printf("Wrong arguments count. Must be (id, Vx, Vy, Vz)");
-            return 0;
+            Con_Warning(SYSWARN_WRONG_ARGS, "[id, Vx, Vy, Vz]");
+            break;
     }
 
     return 0;
@@ -1578,64 +1642,57 @@ int lua_SetEntitySpeed(lua_State * lua)
 
 int lua_SetEntityAnim(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, anim_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
     Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
-
+    
     return 0;
 }
 
 
 int lua_GetEntityAnim(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
     lua_pushinteger(lua, ent->bf.current_animation);
     lua_pushinteger(lua, ent->bf.current_frame);
     lua_pushinteger(lua, ent->bf.model->animations[ent->bf.current_animation].frames_count);
-
+    
     return 3;
 }
 
 
 int lua_CanTriggerEntity(lua_State * lua)
 {
-    int id, top;
-    entity_p e1, e2;
+    int id;
+    int top = lua_gettop(lua);
     btScalar pos[3], offset[3], r;
-    top = lua_gettop(lua);
 
     if(top < 2)
     {
@@ -1644,14 +1701,15 @@ int lua_CanTriggerEntity(lua_State * lua)
     }
 
     id = lua_tointeger(lua, 1);
-    e1 = World_GetEntityByID(&engine_world, id);
+    entity_p e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL || !e1->character || !e1->character->cmd.action)
     {
         lua_pushinteger(lua, 0);
         return 1;
     }
+    
     id = lua_tointeger(lua, 2);
-    e2 = World_GetEntityByID(&engine_world, id);
+    entity_p e2 = World_GetEntityByID(&engine_world, id);
     if((e2 == NULL) || (e1 == e2))
     {
         lua_pushinteger(lua, 0);
@@ -1687,21 +1745,18 @@ int lua_CanTriggerEntity(lua_State * lua)
 
 int lua_SetEntityVisibility(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1720,21 +1775,18 @@ int lua_SetEntityVisibility(lua_State * lua)
 
 int lua_GetEntityActivity(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1746,21 +1798,18 @@ int lua_GetEntityActivity(lua_State * lua)
 
 int lua_SetEntityActivity(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1777,49 +1826,65 @@ int lua_SetEntityActivity(lua_State * lua)
 }
 
 
+int lua_SetEntityActivityLock(lua_State * lua)
+{
+    if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;
+    
+    ent->locked = lua_tointeger(lua, 2);
+    return 0;
+}
+
+int lua_GetEntityActivityLock(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;
+
+    lua_pushinteger(lua, ent->locked);
+    return 1;
+}
+
 int lua_GetEntityOCB(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 1)
-    {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", id);
-        return 0;
-    }
+    if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
+    
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;   // No entity found - return.
 
     lua_pushinteger(lua, ent->OCB);
-
     return 1;
 }
 
 
+int lua_SetEntityOCB(lua_State * lua)
+{
+    if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;   // No entity found - return.
+
+    ent->OCB = lua_tointeger(lua, 2);
+    return 0;
+}
+
 int lua_GetEntityFlags(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1833,21 +1898,18 @@ int lua_GetEntityFlags(lua_State * lua)
 
 int lua_SetEntityFlags(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 3)
+    if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, state_flags, type_flags, (callback_flags))");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1870,23 +1932,10 @@ int lua_SetEntityFlags(lua_State * lua)
 
 int lua_GetEntityActivationMask(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
+    if(lua_gettop(lua) < 1) return 0;   // No arguments provided - return.
 
-    if(top < 1)
-    {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", id);
-        return 0;
-    }
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;   // No entity found - return.
 
     lua_pushinteger(lua, ent->activation_mask);
 
@@ -1896,46 +1945,53 @@ int lua_GetEntityActivationMask(lua_State * lua)
 
 int lua_SetEntityActivationMask(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
+    if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
 
-    if(top < 2)
-    {
-        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
-    if(ent == NULL)
-    {
-        Con_Printf("can not find entity with id = %d", id);
-        return 0;
-    }
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;   // No entity found - return.
 
     ent->activation_mask = lua_tointeger(lua, 2);
 
     return 0;
 }
 
+
+int lua_GetEntityTimer(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No arguments provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;   // No entity found - return.
+
+    lua_pushnumber(lua, ent->timer);
+    return 1;
+}
+
+int lua_SetEntityTimer(lua_State * lua)
+{
+    if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;   // No entity found - return.
+
+    ent->timer = lua_tonumber(lua, 2);
+    return 0;
+}
+
 int lua_GetEntityMoveType(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1944,23 +2000,36 @@ int lua_GetEntityMoveType(lua_State * lua)
     return 1;
 }
 
-int lua_GetEntityState(lua_State * lua)
+int lua_SetEntityMoveType(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, move_type]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    
+    if(ent == NULL) return 0;
+    ent->move_type = lua_tointeger(lua, 2);
+
+    return 0;
+}
+
+int lua_GetEntityState(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1971,21 +2040,18 @@ int lua_GetEntityState(lua_State * lua)
 
 int lua_SetEntityState(lua_State * lua)
 {
-    int id, top;
-    entity_p ent;
-    top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (entity_id, value)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
-    id = lua_tointeger(lua, 1);
-    ent = World_GetEntityByID(&engine_world, id);
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2000,11 +2066,9 @@ int lua_SetEntityState(lua_State * lua)
 
 int lua_SetEntityRoomMove(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 4)
+    if(lua_gettop(lua) < 4)
     {
-        Con_Printf("Wrong arguments count. Must be (id, room_id, move_type, dir_flag)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id, room_id, move_type, dir_flag]");
         return 0;
     }
 
@@ -2012,7 +2076,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2050,16 +2114,14 @@ int lua_SetEntityRoomMove(lua_State * lua)
 
 int lua_SetEntityMeshswap(lua_State * lua)
 {
-    int id_src, id_dest, top = lua_gettop(lua);
-
-    if(top < 2)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (id_dest, id_src)");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id_dest, id_src]");
         return 0;
     }
 
-    id_dest = lua_tointeger(lua, 1);
-    id_src = lua_tointeger(lua, 2);
+    int id_dest = lua_tointeger(lua, 1);
+    int id_src = lua_tointeger(lua, 2);
 
     entity_p         ent_dest;
     skeletal_model_p model_src;
@@ -2080,9 +2142,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
 
 int lua_SetModelMeshReplaceFlag(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 3)
+    if(lua_gettop(lua) < 3)
     {
         Con_Printf("Wrong arguments count. Must be (id_model, bone_num, flag)");
         return 0;
@@ -2112,9 +2172,7 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
 
 int lua_SetModelAnimReplaceFlag(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 3)
+    if(lua_gettop(lua) < 3)
     {
         Con_Printf("Wrong arguments count. Must be (id_model, bone_num, flag)");
         return 0;
@@ -2144,9 +2202,7 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
 
 int lua_CopyMeshFromModelToModel(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 4)
+    if(lua_gettop(lua) < 4)
     {
         Con_Printf("Wrong arguments count. Must be (id_model1, id_model2, bone_num1, bone_num2)");
         return 0;
@@ -2183,11 +2239,9 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     return 0;
 }
 
-int lua_Character_SetWeaponModel(lua_State *lua)
+int lua_SetCharacterWeaponModel(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 3)
+    if(lua_gettop(lua) < 3)
     {
         Con_Printf("Wrong arguments count. Must be (id_entity, id_weapon_model, armed_state)");
         return 0;
@@ -2213,17 +2267,49 @@ int lua_Character_SetWeaponModel(lua_State *lua)
 
 int lua_CamShake(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-    if(top != 2)
-    {
-        Con_Printf("Wrong arguments count. Must be (power), (time).");
-        return 0;
-    }
+    if(lua_gettop(lua) != 2) return 0;
 
     float power = lua_tonumber(lua, 1);
     float time  = lua_tonumber(lua, 2);
     Cam_Shake(renderer.cam, power, time);
 
+    return 0;
+}
+
+int lua_FlashSetup(lua_State *lua)
+{
+    if(lua_gettop(lua) != 6) return 0;
+
+    Gui_SetupFader(FADER_EFFECT,
+                   (uint8_t)(lua_tointeger(lua, 1)),
+                   (uint8_t)(lua_tointeger(lua, 2)), (uint8_t)(lua_tointeger(lua, 3)), (uint8_t)(lua_tointeger(lua, 4)),
+                   BM_MULTIPLY,
+                   (uint16_t)(lua_tointeger(lua, 5)), (uint16_t)(lua_tointeger(lua, 6)));
+    return 0;
+}
+
+int lua_FlashStart(lua_State *lua)
+{
+    Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
+    return 0;
+}
+    
+int lua_FadeOut(lua_State *lua)
+{
+    Gui_FadeStart(FADER_BLACK, GUI_FADER_DIR_OUT);
+    return 0;
+}
+
+int lua_FadeIn(lua_State *lua)
+{
+    Gui_FadeStart(FADER_BLACK, GUI_FADER_DIR_IN);
+    return 0;
+}
+
+int lua_FadeCheck(lua_State *lua)
+{
+    
+    lua_pushinteger(lua, Gui_FadeCheck(FADER_BLACK));
     return 1;
 }
 
@@ -2233,56 +2319,63 @@ int lua_CamShake(lua_State *lua)
 
 int lua_PlayStream(lua_State *lua)
 {
-    int id, top;
-
-    top = lua_gettop(lua);
-    if(top != 1)
+    int top = lua_gettop(lua);
+    
+    if(top < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (id).");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id] or [id, mask].");
         return 0;
     }
 
-    id  = lua_tointeger(lua, 1);
+    int id = lua_tointeger(lua, 1);
+    uint8_t mask = 0;
+    if(top >= 2) mask = lua_tointeger(lua, 2);
+    
     if(id < 0)
     {
-        Con_Printf("Wrong stream ID. Must be more or equal to 0.");
+        Con_Warning(SYSWARN_WRONG_STREAM_ID);
         return 0;
     }
+    
+    if(mask)
+    {
+        Audio_StreamPlay(id, mask);
+    }
+    else
+    {
+        Audio_StreamPlay(id);
+    }
 
-    Audio_StreamPlay(id);
-
-    return 1;
+    return 0;
 }
 
 int lua_PlaySound(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top != 1)
+    if(lua_gettop(lua) != 1)
     {
-        Con_Printf("Wrong arguments count. Must be (id).");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id]");
         return 0;
     }
 
     uint32_t id  = lua_tointeger(lua, 1);
     if(id >= engine_world.audio_map_count)
     {
-        Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
+        Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
         return 0;
     }
 
     switch(Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL))
     {
         case TR_AUDIO_SEND_NOCHANNEL:
-            Con_Printf("Audio_Send error: no free channel.", id);
+            Con_Warning(SYSWARN_AS_NOCHANNEL);
             break;
 
         case TR_AUDIO_SEND_NOSAMPLE:
-            Con_Printf("Audio_Send error: no such sample.", id);
+            Con_Warning(SYSWARN_AS_NOSAMPLE);
             break;
 
         case TR_AUDIO_SEND_IGNORED:
-            Con_Printf("Audio_Send: sample skipped - please retry!", id);
+            Con_Warning(SYSWARN_AS_IGNORED);
             break;
     }
 
@@ -2292,23 +2385,22 @@ int lua_PlaySound(lua_State *lua)
 
 int lua_StopSound(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-    if(top != 1)
+    if(lua_gettop(lua) != 1)
     {
-        Con_Printf("Wrong arguments count. Must be (id).");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id]");
         return 0;
     }
 
     uint32_t id  = lua_tointeger(lua, 1);
     if(id >= engine_world.audio_map_count)
     {
-        Con_Printf("Wrong sound ID. Must be in interval 0..%d.", engine_world.audio_map_count);
+        Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
         return 0;
     }
 
     if(Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL) == 0)
     {
-        Con_Printf("Audio_Kill: sample %d isn't playing.", id);
+        Con_Warning(SYSWARN_AK_NOTPLAYED, id);
     }
 
     return 0;
@@ -2322,17 +2414,14 @@ int lua_GetLevel(lua_State *lua)
 
 int lua_SetLevel(lua_State *lua)
 {
-    int id, top;
-
-    top = lua_gettop(lua);
-    if(top != 1)
+    if(lua_gettop(lua) != 1)
     {
-        Con_Printf("Wrong arguments count. Must be (id).");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[level_id]");
         return 0;
     }
 
-    id  = lua_tointeger(lua, 1);
-    Con_Printf("Changing gameflow_manager.CurrentLevelID to %d", id);
+    int id  = lua_tointeger(lua, 1);
+    Con_Notify(SYSNOTE_CHANGING_LEVEL, id);
 
     Game_LevelTransition(id);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
@@ -2342,11 +2431,9 @@ int lua_SetLevel(lua_State *lua)
 
 int lua_SetGame(lua_State *lua)
 {
-    int   top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_Printf("Wrong arguments count. Must be (gameversion, (level_id)).");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[gameversion], (level_id)");
         return 0;
     }
 
@@ -2356,17 +2443,17 @@ int lua_SetGame(lua_State *lua)
         gameflow_manager.CurrentLevelID = lua_tointeger(lua, 2);
     }
 
-    lua_getglobal(lua, "GetTitleScreen");
-    if(lua_isfunction(lua, -1))                                        // If function exists...
+    lua_getglobal(lua, "getTitleScreen");
+    if(lua_isfunction(lua, -1))
     {
-        lua_pushnumber(lua, gameflow_manager.CurrentGameID);           // add to stack first argument
-        lua_pcall(lua, 1, 1, 0);                                       // call that function
+        lua_pushnumber(lua, gameflow_manager.CurrentGameID);
+        lua_pcall(lua, 1, 1, 0);
         Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
+        lua_pop(lua, 1);
         Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     }
-    lua_settop(lua, top);   // restore LUA stack
 
-    Con_Printf("Changing gameflow_manager.CurrentGameID to %d", gameflow_manager.CurrentGameID);
+    Con_Notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
     Game_LevelTransition(gameflow_manager.CurrentLevelID);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow_manager.CurrentLevelID);
 
@@ -2375,11 +2462,9 @@ int lua_SetGame(lua_State *lua)
 
 int lua_LoadMap(lua_State *lua)
 {
-    int top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_AddLine("wrong arguments number, must be (map_name, (game_id, map_id))", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning(SYSWARN_WRONG_ARGS, "[map_name], (game_id, map_id)");
         return 0;
     }
 
@@ -2412,22 +2497,25 @@ int lua_LoadMap(lua_State *lua)
  * Flipped (alternate) room functions
  */
 
-int lua_SetFlipRoom(lua_State *lua)
+int lua_SetFlipState(lua_State *lua)
 {
-    uint32_t group, state;
-
-    int top = lua_gettop(lua);
-    if(top != 2)
+    if(lua_gettop(lua) != 2)
     {
-        Con_Printf("Wrong arguments count. Must be (flipmap_index, room_state).");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_state]");
         return 0;
     }
 
-    group = (uint32_t)lua_tointeger(lua, 1);
-    state = (uint32_t)lua_tointeger(lua, 2);
-    state = (state > 1)?(1):(state);                // State is always boolean.
+    uint32_t group = (uint32_t)lua_tointeger(lua, 1);
+    uint32_t state = (uint32_t)lua_tointeger(lua, 2);
+             state = (state > 1)?(1):(state);       // State is always boolean.
+             
+    if(group >= engine_world.flip_count)
+    {
+        Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        return 0;
+    }
 
-    if(engine_world.room_flipmap & (1 << group))    // Check flipmap state.
+    if(engine_world.flip_map[group] == 0x1F)         // Check flipmap state.
     {
         room_p current_room = engine_world.rooms;
 
@@ -2447,15 +2535,8 @@ int lua_SetFlipRoom(lua_State *lua)
                     }
                 }
             }
-
-            if(state)
-            {
-                engine_world.room_flipstate |= (1 << group);    // Mark group state as alternate.
-            }
-            else
-            {
-                engine_world.room_flipstate ^= (1 << group);    // Mark group state as base.
-            }
+            
+            engine_world.flip_state[group] = state;
         }
         else
         {
@@ -2471,107 +2552,86 @@ int lua_SetFlipRoom(lua_State *lua)
                 }
             }
 
-            engine_world.room_flipstate = state;    // In TR1-3, state is always global.
+            engine_world.flip_state[0] = state;    // In TR1-3, state is always global.
         }
-    }
-    else
-    {
-        Con_Printf("Flipmap bit %d state is FALSE - no rooms were swapped!", group);
     }
 
     return 0;
 }
 
-int lua_SetFlipFlag(lua_State *lua)
+int lua_SetFlipMap(lua_State *lua)
 {
-    uint32_t group, state;
-
-    int top = lua_gettop(lua);
-    if(top != 2)
+    if(lua_gettop(lua) != 3)
     {
-        Con_Printf("Wrong arguments count. Must be (flipmap_index, flipmap_state).");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_mask, flip_operation]");
         return 0;
     }
 
-    group = (uint32_t)lua_tointeger(lua, 1);
-    state = (uint32_t)lua_tointeger(lua, 2);
-    state = (state > 1)?(1):(state);                // State is always boolean.
-
-    if(state)
+    uint32_t group = (uint32_t)lua_tointeger(lua, 1);
+    uint8_t  mask  = (uint8_t)lua_tointeger(lua, 2);
+    uint8_t  op    = (uint8_t)lua_tointeger(lua, 3);
+             op    = (mask > AMASK_OP_XOR)?(AMASK_OP_XOR):(AMASK_OP_OR);
+             
+    if(group >= engine_world.flip_count)
     {
-        engine_world.room_flipmap |= (1 << group);  // Mark group state as alternate.
+        Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        return 0;
+    }
+
+    if(op == AMASK_OP_XOR)
+    {
+        engine_world.flip_map[group] ^= mask;
     }
     else
     {
-        engine_world.room_flipmap ^= (1 << group);  // Mark group state as base.
+        engine_world.flip_map[group] |= mask;
     }
-
+    
     return 0;
 }
 
-int lua_GetFlipmap(lua_State *lua)
+int lua_GetFlipMap(lua_State *lua)
 {
-    lua_pushinteger(lua, engine_world.room_flipmap);
-    return 0;
-}
-
-int lua_SetFlipmap(lua_State *lua)
-{
-    int top = lua_gettop(lua);
-    if(top == 1)
+    if(lua_gettop(lua) == 1)
     {
-        uint32_t flipmap = (uint32_t)lua_tointeger(lua, 1);
-        engine_world.room_flipmap = flipmap;
+        uint32_t group = (uint32_t)lua_tointeger(lua, 1);
+        
+        if(group >= engine_world.flip_count)
+        {
+            Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+            return 0;
+        }
+        
+        lua_pushinteger(lua, engine_world.flip_map[group]);
+        return 1;
     }
-    return 0;
-}
-
-int lua_GetFlipstate(lua_State *lua)
-{
-    lua_pushinteger(lua, engine_world.room_flipstate);
-    return 0;
-}
-
-int lua_SetFlipstate(lua_State *lua)
-{
-    int top = lua_gettop(lua);
-    if(top == 1)
+    else
     {
-        uint32_t flipstate = (uint32_t)lua_tointeger(lua, 1);
-        engine_world.room_flipstate = flipstate;
-        room_p current_room = engine_world.rooms;
-
-        if(engine_world.version > TR_III)
-        {
-            for(int i=0;i<engine_world.room_count;i++,current_room++)
-            {
-                if(flipstate & (1 << current_room->alternate_group))
-                {
-                    Room_SwapToAlternate(current_room);
-                }
-                else
-                {
-                    Room_SwapToBase(current_room);
-                }
-            }
-        }
-        else
-        {
-            for(int i=0;i<engine_world.room_count;i++,current_room++)
-            {
-                if(flipstate)
-                {
-                    Room_SwapToAlternate(current_room);
-                }
-                else
-                {
-                    Room_SwapToBase(current_room);
-                }
-            }
-        }
+        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
+        return 0;
     }
+}
 
-    return 0;
+int lua_GetFlipState(lua_State *lua)
+{
+    if(lua_gettop(lua) == 1)
+    {
+        uint32_t group = (uint32_t)lua_tointeger(lua, 1);
+        
+        if(group >= engine_world.flip_count)
+        {
+            Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+            return 0;
+        }
+        
+        lua_pushinteger(lua, engine_world.flip_state[group]);
+        return 1;
+    }
+    else
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
+        return 0;
+    }
 }
 
 /*
@@ -2580,18 +2640,15 @@ int lua_SetFlipstate(lua_State *lua)
 
 int lua_genUVRotateAnimation(lua_State *lua)
 {
-    int id, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 1)
+    if(lua_gettop(lua) < 1)
     {
-        Con_AddLine("wrong arguments number, must be (model_id)", FONTSTYLE_CONSOLE_WARNING);
+        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id]", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
-    id = lua_tointeger(lua, 1);
-
+    
+    int id = lua_tointeger(lua, 1);
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
+    
     if(model != NULL)
     {
         polygon_p p=model->mesh_tree->mesh_base->transparency_polygons;
@@ -2671,6 +2728,9 @@ bool Engine_LuaInit()
 
         luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
+        luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
+        luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
+        luaL_dofile(engine_lua, "scripts/entity/entity_functions.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
@@ -2698,13 +2758,17 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     /*
      * register globals
      */
-    luaL_dostring(lua, CVAR_LUA_TABLE_NAME" = {};");
+    char cvar_init[64]; cvar_init[0] = 0;
+    strcat(cvar_init, CVAR_LUA_TABLE_NAME); strcat(cvar_init, " = {};");
+    luaL_dostring(lua, cvar_init);
 
     /*
      * register functions
      */
 
     Game_RegisterLuaFunctions(lua);
+
+    lua_register(lua, "checkStack", lua_CheckStack);
 
     lua_register(lua, "print", lua_print);
     lua_register(lua, "dumpModel", lua_DumpModel);
@@ -2720,6 +2784,13 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "playStream", lua_PlayStream);
 
     lua_register(lua, "camShake", lua_CamShake);
+    
+    lua_register(lua, "fadeOut", lua_FadeOut);
+    lua_register(lua, "fadeIn", lua_FadeIn);
+    lua_register(lua, "fadeCheck", lua_FadeCheck);
+    
+    lua_register(lua, "flashSetup", lua_FlashSetup);
+    lua_register(lua, "flashStart", lua_FlashStart);
 
     lua_register(lua, "setlevel", lua_SetLevel);
     lua_register(lua, "setLevel", lua_SetLevel);
@@ -2732,12 +2803,10 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
 
-    lua_register(lua, "setFlipFlag", lua_SetFlipFlag);
-    lua_register(lua, "setFlipRoom", lua_SetFlipRoom);
-    lua_register(lua, "setFlipmap", lua_SetFlipmap);
-    lua_register(lua, "getFlipmap", lua_GetFlipmap);
-    lua_register(lua, "setFlipstate", lua_SetFlipstate);
-    lua_register(lua, "getFlipstate", lua_GetFlipstate);
+    lua_register(lua, "setFlipMap", lua_SetFlipMap);
+    lua_register(lua, "getFlipMap", lua_GetFlipMap);
+    lua_register(lua, "setFlipState", lua_SetFlipState);
+    lua_register(lua, "getFlipState", lua_GetFlipState);
 
     lua_register(lua, "setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
@@ -2753,26 +2822,35 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
     lua_register(lua, "printItems", lua_PrintItems);
 
+    lua_register(lua, "getModelID", lua_GetModelID);
+    lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
+    lua_register(lua, "enableEntity", lua_EnableEntity);
+    lua_register(lua, "disableEntity", lua_DisableEntity);
+    
+    lua_register(lua, "newSector", lua_NewSector);
+    
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
+    lua_register(lua, "moveEntityToSink", lua_MoveEntityToSink);
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
-    lua_register(lua, "enableEntity", lua_EnableEntity);
-    lua_register(lua, "disableEntity", lua_DisableEntity);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
-    lua_register(lua, "getModelID", lua_GetModelID);
-    lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
+    lua_register(lua, "getEntityActivityLock", lua_GetEntityActivityLock);
+    lua_register(lua, "setEntityActivityLock", lua_SetEntityActivityLock);
     lua_register(lua, "getEntityOCB", lua_GetEntityOCB);
+    lua_register(lua, "setEntityOCB", lua_SetEntityOCB);
+    lua_register(lua, "getEntityTimer", lua_GetEntityTimer);
+    lua_register(lua, "setEntityTimer", lua_SetEntityTimer);
     lua_register(lua, "getEntityFlags", lua_GetEntityFlags);
     lua_register(lua, "setEntityFlags", lua_SetEntityFlags);
     lua_register(lua, "getEntityActivationMask", lua_GetEntityActivationMask);
@@ -2781,18 +2859,27 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityState", lua_SetEntityState);
     lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
     lua_register(lua, "getEntityMoveType", lua_GetEntityMoveType);
+    lua_register(lua, "setEntityMoveType", lua_SetEntityMoveType);
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
     lua_register(lua, "setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
     lua_register(lua, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
     lua_register(lua, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
-    lua_register(lua, "setWeaponModel", lua_Character_SetWeaponModel);
 
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
+    lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
+    lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
+    lua_register(lua, "getEntitySectorStatus", lua_GetEntitySectorStatus);
+    lua_register(lua, "setEntitySectorStatus", lua_SetEntitySectorStatus);
 
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
+    lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
+    lua_register(lua, "getCharacterCombatMode", lua_GetCharacterCombatMode);
+    
+    lua_register(lua, "getSecretStatus", lua_GetSecretStatus);
+    lua_register(lua, "setSecretStatus", lua_SetSecretStatus);
 
     lua_register(lua, "getActionState", lua_GetActionState);
     lua_register(lua, "getActionChange", lua_GetActionChange);
@@ -2800,9 +2887,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "genUVRotateAnimation", lua_genUVRotateAnimation);
 
     lua_register(lua, "getGravity", lua_GetGravity);
-    lua_register(lua, "setGravity", lua_SetGravity);                            // get and set gravity function
+    lua_register(lua, "setGravity", lua_SetGravity);
     lua_register(lua, "dropEntity", lua_DropEntity);
-    lua_register(lua, "bind", lua_BindKey);                                     // get and set key bindings
+    lua_register(lua, "bind", lua_BindKey);
 
     lua_register(lua, "addFont", lua_AddFont);
     lua_register(lua, "deleteFont", lua_DeleteFont);
@@ -2871,7 +2958,7 @@ void Engine_Shutdown(int val)
         SDL_HapticClose(sdl_haptic);
     }
 
-    if(al_context)                                                              // T4Larson <t4larson@gmail.com>: fixed
+    if(al_context)  // T4Larson <t4larson@gmail.com>: fixed
     {
         alcMakeContextCurrent(NULL);
         alcDestroyContext(al_context);
@@ -3141,6 +3228,40 @@ void Engine_GetLevelName(char *name, const char *path)
     name[i-start] = 0;
 }
 
+void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix)
+{
+    char level_name[LEVEL_NAME_MAX_LEN];
+    Engine_GetLevelName(level_name, gameflow_manager.CurrentLevelPath);
+    
+    name[0] = 0;
+    
+    strcat(name, "scripts/level/");
+    
+    if(game_version < TR_II)
+    {
+        strcat(name, "tr1/");
+    }
+    else if(game_version < TR_III)
+    {
+        strcat(name, "tr2/");
+    }
+    else if(game_version < TR_IV)
+    {
+        strcat(name, "tr3/");
+    }
+    else if(game_version < TR_V)
+    {
+        strcat(name, "tr4/");
+    }
+    else
+    {
+        strcat(name, "tr5/");
+    }
+    
+    strcat(name, level_name);
+    if(postfix) strcat(name, postfix);
+    strcat(name, ".lua");
+}
 
 int Engine_LoadMap(const char *name)
 {
@@ -3153,7 +3274,7 @@ int Engine_LoadMap(const char *name)
 
     if(!Engine_FileFound(name))
     {
-        Con_Printf("File not found - \"%s\"", name);
+        Con_Warning(SYSWARN_FILE_NOT_FOUND, name);
         return 0;
     }
 
@@ -3179,6 +3300,8 @@ int Engine_LoadMap(const char *name)
 
     World_Empty(&engine_world);
     World_Prepare(&engine_world);
+    
+    lua_Clean(engine_lua);
 
     Gui_DrawLoadScreen(150);
 
@@ -3189,9 +3312,9 @@ int Engine_LoadMap(const char *name)
     engine_world.type = 0;
 
     Engine_GetLevelName(buf, name);
-    Con_Printf("Tomb engine version = %d, map = \"%s\"", trv, buf);
-    Con_Printf("Rooms = %d", tr_level.rooms_count);
-    Con_Printf("Num textures = %d", tr_level.textile32_count);
+    Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
+    Con_Notify(SYSNOTE_NUM_ROOMS, tr_level.rooms_count);
+    Con_Notify(SYSNOTE_NUM_TEXTURES, tr_level.textile32_count);
 
     Game_Prepare();
 
@@ -3275,7 +3398,7 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                Con_Printf("spacing = %f", con_base.spacing);
+                Con_Notify(SYSNOTE_CONSOLE_SPACING, con_base.spacing);
                 return 1;
             }
             Con_SetLineInterval(atof(token));
@@ -3286,8 +3409,7 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                snprintf(buf, con_base.line_size + 32, "showing_lines = %d", con_base.showing_lines);
-                Con_AddLine(buf, FONTSTYLE_CONSOLE_INFO);
+                Con_Notify(SYSNOTE_CONSOLE_LINECOUNT, con_base.showing_lines);
                 return 1;
             }
             else
@@ -3300,7 +3422,7 @@ int Engine_ExecCmd(char *ch)
                 }
                 else
                 {
-                    Con_AddLine("Invalid showing_lines values\0", FONTSTYLE_CONSOLE_WARNING);
+                    Con_Warning(SYSWARN_INVALID_LINECOUNT);
                 }
             }
             return 1;
@@ -3308,6 +3430,11 @@ int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "r_wireframe"))
         {
             renderer.style ^= R_DRAW_WIRE;
+            return 1;
+        }
+        else if(!strcmp(token, "r_points"))
+        {
+            renderer.style ^= R_DRAW_POINTS;
             return 1;
         }
         else if(!strcmp(token, "r_coll"))
@@ -3370,7 +3497,7 @@ int Engine_ExecCmd(char *ch)
                 if(sect)
                 {
                     Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
-                               (int)(sect->ceiling == 32512 || sect->floor == 32512), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
+                               (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
                     for(uint32_t i=0;i<sect->owner_room->static_mesh_count;i++)
                     {
                         Con_Printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i].object_id);

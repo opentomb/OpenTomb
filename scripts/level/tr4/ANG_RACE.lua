@@ -1,18 +1,10 @@
 -- OPENTOMB PER-LEVEL STATIC MESH COLLISION SCRIPT
 -- FOR TOMB RAIDER 4, ANG_RACE
 
--- ColType values reference: 
-
-COLL_NONE = 0x00;  -- Object has no collisions
-COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
-COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
-
 print("Level script loaded (ANG_RACE.lua)");
 
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
-
-static_tbl = {};
 
 -- PLANT statics (as listed in OBJECTS.H from TRLE)
 
@@ -50,13 +42,3 @@ static_tbl[42] = {coll = COLL_BBOX};            -- Pillar 2
 static_tbl[43] = {coll = COLL_BBOX};            -- Stone lion
 static_tbl[46] = {coll = COLL_BBOX};            -- Ornate arch with pillars
 static_tbl[47] = {coll = COLL_BBOX, hide = 1};  -- Block panel: dummy static!
-
---------------------------------------------------------------------------------
-
-function trGetStaticMeshFlags(ver, id)
-    if(static_tbl[id] == nil) then
-        return nil, nil;
-    else
-        return static_tbl[id].coll, static_tbl[id].hide;
-    end;
-end;

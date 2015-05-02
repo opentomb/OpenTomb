@@ -72,6 +72,8 @@ void Con_AddLog(const char *text);
 void Con_AddLine(const char *text, font_Style style = FONTSTYLE_CONSOLE_INFO);
 void Con_AddText(const char *text, font_Style style = FONTSTYLE_CONSOLE_INFO);
 void Con_Printf(const char *fmt, ...);
+void Con_Warning(int warn_string_index, ...);
+void Con_Notify(int notify_string_index, ...);
 
 void Con_Clean();
 

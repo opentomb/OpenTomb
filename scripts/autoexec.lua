@@ -42,7 +42,7 @@ function setDefaultModelAnimReplaceFlag(m_id)
 end
 
 function test(w, a)
-    setWeaponModel(player, w, a);
+    setCharacterWeaponModel(player, w, a);
 end
 
 if (getLevelVersion() < TR_II) then
@@ -258,6 +258,7 @@ setAnimCommandTransform(0, 212, 10, 0x00);   -- back jump roll animation smooth 
 setAnimCommandTransform(0, 212, 9, 0x03);
 
 -- generate UV rotation texture animations for waterfalls in TR4+ versions
+
 if (getLevelVersion() == TR_IV) then
     for i=423, 426, 1 do
         genUVRotateAnimation(i);
@@ -268,3 +269,13 @@ elseif (getLevelVersion() == TR_V) then
     end;
 end
 
+
+-- test TR_ITEMS
+
+addItem(player, ITEM_COMPASS, 1);
+addItem(player, ITEM_PASSPORT, 1);
+addItem(player, ITEM_CONTROLS, 1);
+addItem(player, ITEM_AUDIO, 1);
+addItem(player, ITEM_PISTOL, 1);
+addItem(player, ITEM_SMALL_MEDIPACK, 3);
+addItem(player, ITEM_LARGE_MEDIPACK, 1);

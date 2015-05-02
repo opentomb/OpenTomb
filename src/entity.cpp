@@ -15,6 +15,7 @@
 #include "character_controller.h"
 #include "obb.h"
 #include "gameflow.h"
+#include "string.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
@@ -30,6 +31,10 @@ entity_p Entity_Create()
     ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
     ret->type_flags = ENTITY_TYPE_DECORATION;
     ret->callback_flags = 0x00000000;               // no callbacks by default
+    
+    ret->OCB = 0;
+    ret->sector_status = 0;
+    ret->locked = 0;
 
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
     ret->self->next = NULL;
@@ -307,13 +312,12 @@ void Entity_UpdateRoomPos(entity_p ent)
         }
 
         ent->self->room = new_room;
+        ent->last_sector = ent->current_sector;
+        
         if(ent->current_sector != new_sector)
         {
+            ent->sector_status = 0; // Reset sector status.
             ent->current_sector = new_sector;
-            if(new_sector && (ent->state_flags & ENTITY_STATE_ENABLED) && (ent->state_flags & ENTITY_STATE_ACTIVE) && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-            {
-                Entity_ParseFloorData(ent, &engine_world);
-            }
         }
     }
 }
@@ -766,70 +770,70 @@ void Entity_DoAnimCommands(entity_p entity, int changing)
                                 // fortunately have no differences in footstep sounds order.
                                 // Also note that some footstep types mutually share same sound IDs
                                 // across different TR versions.
-                                switch(entity->current_sector->box_index & 0x0F)
+                                switch(entity->current_sector->material)
                                 {
-                                    case 0:                                     // Mud
+                                    case SECTOR_MATERIAL_MUD:
                                         Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 1:                                     // Snow - TR3 & TR5 only
+                                    case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
                                         if(engine_world.version != TR_IV)
                                         {
                                             Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         }
                                         break;
 
-                                    case 2:                                     // Sand - same as grass
+                                    case SECTOR_MATERIAL_SAND:  // Same as grass
                                         Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 3:                                     // Gravel
+                                    case SECTOR_MATERIAL_GRAVEL:
                                         Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 4:                                     // Ice - TR3 & TR5 only
+                                    case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
                                         if(engine_world.version != TR_IV)
                                         {
                                             Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         }
                                         break;
 
-                                    case 5:                                     // Water
+                                    case SECTOR_MATERIAL_WATER: // BYPASS!
                                         // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 6:                                     // Stone - DEFAULT SOUND, BYPASS!
+                                    case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
                                         Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 7:                                     // Wood
+                                    case SECTOR_MATERIAL_WOOD:
                                         Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 8:                                     // Metal
+                                    case SECTOR_MATERIAL_METAL:
                                         Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 9:                                     // Marble - TR4 only
+                                    case SECTOR_MATERIAL_MARBLE:    // TR4 only
                                         if(engine_world.version == TR_IV)
                                         {
                                             Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         }
                                         break;
 
-                                    case 10:                                    // Grass - same as sand
+                                    case SECTOR_MATERIAL_GRASS:     // Same as sand
                                         Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 11:                                    // Concrete - DEFAULT SOUND, BYPASS!
+                                    case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
                                         Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 12:                                    // Old wood - same as wood
+                                    case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
                                         Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
 
-                                    case 13:                                    // Old metal - same as metal
+                                    case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
                                         Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                         break;
                                 }
@@ -905,315 +909,24 @@ void Entity_ProcessSector(struct entity_s *ent)
             }
         }
     }
-}
-
-
-int Entity_ParseFloorData(struct entity_s *ent, struct world_s *world)
-{
-    uint16_t function, sub_function, b3, FD_function, operands = 0x0000;
-    //uint16_t slope_t13, slope_t12, slope_t11, slope_t10, slope_func;
-    //int16_t slope_t01, slope_t00;
-    int ret = 0;
-    uint16_t *entry, *end_p, end_bit, cont_bit;
-    room_sector_p sector = ent->current_sector;
-    char skip = 0;
-
-    // Trigger options.
-    uint8_t  trigger_mask;
-    uint8_t  only_once;
-    int8_t   timer_field;
-
-    if(!sector || (sector->fd_index <= 0) || (sector->fd_index >= world->floor_data_size))
+    
+    // Look up trigger function table and run trigger if it exists.
+    
+    lua_getglobal(engine_lua, "tlist_RunTrigger");
+    if(lua_isfunction(engine_lua, -1))
     {
-        return 0;
+        lua_pushnumber(engine_lua, ent->current_sector->trig_index);
+        lua_pushnumber(engine_lua, ((ent->bf.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC));
+        lua_pushnumber(engine_lua, ent->id);
+        lua_pcall(engine_lua, 3, 1, 0);
+        int result = lua_tointeger(engine_lua, -1);
+        lua_pop(engine_lua, 1);
     }
-
-    /*
-     * PARSE FUNCTIONS
-     */
-    end_p = world->floor_data + world->floor_data_size - 1;
-    entry = world->floor_data + sector->fd_index;
-
-    do
-    {
-        end_bit = ((*entry) & 0x8000) >> 15;            // 0b10000000 00000000
-
-        // TR_I - TR_II
-        //function = (*entry) & 0x00FF;                   // 0b00000000 11111111
-        //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
-
-        //TR_III+, but works with TR_I - TR_II
-        function = (*entry) & 0x001F;                   // 0b00000000 00011111
-        sub_function = ((*entry) & 0x3FF0) >> 8;        // 0b01111111 11100000
-        b3 = ((*entry) & 0x00E0) >> 5;                  // 0b00000000 11100000  TR_III+
-
-        entry++;
-
-        switch(function)
-        {
-            case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
-                if(sub_function == 0x00)
-                {
-                    entry++;
-                }
-                break;
-
-            case TR_FD_FUNC_FLOORSLANT:          // FLOOR SLANT
-                if(sub_function == 0x00)
-                {
-                    entry++;
-                }
-                break;
-
-            case TR_FD_FUNC_CEILINGSLANT:          // CEILING SLANT
-                if(sub_function == 0x00)
-                {
-                    entry++;
-                }
-                break;
-
-            case TR_FD_FUNC_TRIGGER:          // TRIGGER
-                timer_field      =   (*entry) &  0x00FF;
-                trigger_mask     =  ((*entry) &  0x3E00) >> 9;
-                only_once        =  ((*entry) &  0x0100) >> 8;
-
-                Con_Printf("TRIGGER: timer - %d, mask - %02X", timer_field, trigger_mask);
-
-                skip = 0;
-                switch(sub_function)
-                {
-                    case TR_FD_TRIGTYPE_TRIGGER:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_TRIGGER");
-                        break;
-                    case TR_FD_TRIGTYPE_PAD:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PAD");
-                        break;
-                    case TR_FD_TRIGTYPE_SWITCH:
-                        skip = 1;
-                        // Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SWITCH");
-                        break;
-                    case TR_FD_TRIGTYPE_KEY:
-                        skip = 1;
-                        //Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_KEY");
-                        break;
-                    case TR_FD_TRIGTYPE_PICKUP:
-                        skip = 1;
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_PICKUP");
-                        break;
-                    case TR_FD_TRIGTYPE_HEAVY:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVY");
-                        break;
-                    case TR_FD_TRIGTYPE_ANTIPAD:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTIPAD");
-                        break;
-                    case TR_FD_TRIGTYPE_COMBAT:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_COMBAT");
-                        break;
-                    case TR_FD_TRIGTYPE_DUMMY:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_DUMMY");
-                        break;
-                    case TR_FD_TRIGTYPE_ANTITRIGGER:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_ANTITRIGGER");
-                        break;
-                    case TR_FD_TRIGTYPE_HEAVYSWITCH:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYSWITCH");
-                        break;
-                    case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_HEAVYANTITRIGGER");
-                        break;
-                    case TR_FD_TRIGTYPE_MONKEY:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_MONKEY");
-                        break;
-                    case TR_FD_TRIGTYPE_SKELETON:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_SKELETON");
-                        break;
-                    case TR_FD_TRIGTYPE_TIGHTROPE:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_TIGHTROPE");
-                        break;
-                    case TR_FD_TRIGTYPE_CRAWLDUCK:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CRAWLDUCK");
-                        break;
-                    case TR_FD_TRIGTYPE_CLIMB:
-                        Con_Printf("TRIGGER TYPE: TR_FD_TRIGTYPE_CLIMB");
-                        break;
-                }
-
-                do
-                {
-                    entry++;
-                    cont_bit = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-                    FD_function = (((*entry) & 0x7C00)) >> 10;                  // 0b01111100 00000000
-                    operands = (*entry) & 0x03FF;                               // 0b00000011 11111111
-
-                    switch(FD_function)
-                    {
-                        case TR_FD_TRIGFUNC_OBJECT:                             // ACTIVATE / DEACTIVATE item
-                            if(skip == 0)
-                            {
-                                entity_p e = World_GetEntityByID(&engine_world, operands);
-                                if((e != NULL) && ((e->activation_mask ^ trigger_mask) == 0x1F))
-                                {
-                                    Con_Printf("Activate object %d by %d", operands, ent->id);
-                                    e->activation_mask ^= trigger_mask;         // ask Lwmte about it
-                                    e->state_flags |= ENTITY_STATE_ACTIVE;
-                                }
-                            }
-                            break;
-
-                        case TR_FD_TRIGFUNC_CAMERATARGET:                       // CAMERA SWITCH
-                            {
-                                uint8_t cam_index = (*entry) & 0x007F;
-                                entry++;
-                                uint8_t cam_timer = ((*entry) & 0x00FF);
-                                uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
-                                uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
-                                        cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-
-                                Con_Printf("CAMERA: index = %d, timer = %d, once = %d, zoom = %d", cam_index, cam_timer, cam_once, cam_zoom);
-                            }
-                            break;
-
-                        case TR_FD_TRIGFUNC_UWCURRENT:          // UNDERWATER CURRENT
-                            Con_Printf("UNDERWATER CURRENT! OP = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLIPMAP:          // SET ALTERNATE ROOM
-                            Con_Printf("SET ALTERNATE ROOM! OP = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLIPON:          // ALTER ROOM FLAGS (paired with 0x05)
-                            Con_Printf("ALTER ROOM FLAGS 0x04! OP = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLIPOFF:          // ALTER ROOM FLAGS (paired with 0x04)
-                            Con_Printf("ALTER ROOM FLAGS 0x05! OP = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_LOOKAT:          // LOOK AT ITEM
-                            Con_Printf("Look at %d item", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_ENDLEVEL:          // END LEVEL
-                            Con_Printf("End of level! id = %d", operands);
-                            //If operands 0 we load next level, if not we load the level ID which matches operand!
-                            Game_LevelTransition(operands);
-                            Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_PLAYTRACK:          // PLAY CD TRACK
-                            Con_Printf("Play audiotrack id = %d", operands);
-                            // We need to use only_once flag as extra trigger mask,
-                            // as it's the way it works in original.
-                            Audio_StreamPlay(operands, (trigger_mask << 1) + only_once);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLIPEFFECT:          // Various in-game actions.
-                            Con_Printf("Flipeffect id = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_SECRET:          // PLAYSOUND SECRET_FOUND
-
-                            if(!gameflow_manager.SecretsTriggerMap[operands])
-                            {
-                                Audio_StreamPlay(lua_GetSecretTrackNumber(engine_lua));
-                                gameflow_manager.SecretsTriggerMap[operands] ^= 0x01; //Set our flag to on
-                                Con_Printf("Play SECRET[%d] FOUND", operands);
-                            }
-                            else
-                            {
-                                Con_Printf("SECRET[%d] Has already been found!", operands);
-                            }
-
-                            break;
-
-                        case TR_FD_TRIGFUNC_BODYBAG:          // UNKNOWN
-                            Con_Printf("BODYBAG id = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_FLYBY:          // TR4-5: FLYBY CAMERA
-                            Con_Printf("Flyby camera = %d", operands);
-                            break;
-
-                        case TR_FD_TRIGFUNC_CUTSCENE:          // USED IN TR4-5
-                            Con_Printf("CUTSCENE id = %d", operands);
-                            break;
-
-                        case 0x0e:          // UNKNOWN
-                            Con_Printf("TRIGGER: unknown 0x0e, OP = %d", operands);
-                            break;
-
-                        case 0x0f:          // UNKNOWN
-                            Con_Printf("TRIGGER: unknown 0x0f, OP = %d", operands);
-                            break;
-
-                        default:
-                            Con_Printf("UNKNOWN MEANING: %X", *entry);
-                    };
-                }
-                while((cont_bit == 0x00) && (entry < end_p));
-                break;
-
-            case TR_FD_FUNC_DEATH:          // KILL LARA
-                Con_Printf("KILL! sub = %d, b3 = %d", sub_function, b3);
-                break;
-
-            case TR_FD_FUNC_CLIMB:          // CLIMBABLE WALLS
-                Con_Printf("Climbable walls! sub = %d, b3 = %d", sub_function, b3);
-                break;
-
-            case TR_FD_FUNC_FLOORTRIANGLE_NW:                       // TR3 SLANT
-            case TR_FD_FUNC_FLOORTRIANGLE_NE:                       // TR3 SLANT
-            case TR_FD_FUNC_CEILINGTRIANGLE_NW:                     // TR3 SLANT
-            case TR_FD_FUNC_CEILINGTRIANGLE_NE:                     // TR3 SLANT
-            case TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW:             // TR3 SLANT
-            case TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_NE:             // TR3 SLANT
-            case TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_SE:             // TR3 SLANT
-            case TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW:             // TR3 SLANT
-            case TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW:           // TR3 SLANT
-            case TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_NE:           // TR3 SLANT
-            case TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW:           // TR3 SLANT
-            case TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_SE:           // TR3 SLANT
-                cont_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
-                //slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
-                //slope_t00 = ((*entry) & 0x03E0) >> 5;       // 0b00000011 11100000
-                //slope_func = ((*entry) & 0x001F);           // 0b00000000 00011111
-                entry++;
-                //slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
-                //slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
-                //slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
-                //slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
-                break;
-
-            case TR_FD_FUNC_MONKEY:          // Climbable ceiling
-                Con_Printf("Climbable ceiling! sub = %d, b3 = %d", sub_function, b3);
-                break;
-
-            case TR_FD_FUNC_MINECART_LEFT:
-                Con_Printf("Trigger Triggerer (TR4) / MINECART LEFT (TR3), OP = %d", operands);
-                break;
-
-            case TR_FD_FUNC_MINECART_RIGHT:
-                Con_Printf("Clockwork Beetle mark (TR4) / MINECART RIGHT (TR3), OP = %d", operands);
-                break;
-
-            default:
-                Con_Printf("UNKNOWN function id = %d, sub = %d, b3 = %d", function, sub_function, b3);
-                break;
-        };
-        ret++;
-    }
-    while(!end_bit && entry < end_p);
-
-    return ret;
 }
 
 
 void Entity_SetAnimation(entity_p entity, int animation, int frame)
 {
-    animation_frame_p anim;
-    long int t;
-    btScalar dt;
-
     if(!entity || !entity->bf.model || (animation >= entity->bf.model->animation_count))
     {
         return;
@@ -1227,7 +940,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     }
 
     entity->bf.lerp = 0.0;
-    anim = &entity->bf.model->animations[animation];
+    animation_frame_p anim = &entity->bf.model->animations[animation];
     frame %= anim->frames_count;
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->bf.period = 1.0 / 30.0;
@@ -1241,8 +954,8 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     entity->bf.next_frame = frame;
 
     entity->bf.frame_time = (btScalar)frame * entity->bf.period;
-    t = (entity->bf.frame_time) / entity->bf.period;
-    dt = entity->bf.frame_time - (btScalar)t * entity->bf.period;
+    long int t = (entity->bf.frame_time) / entity->bf.period;
+    btScalar dt = entity->bf.frame_time - (btScalar)t * entity->bf.period;
     entity->bf.frame_time = (btScalar)frame * entity->bf.period + dt;
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
@@ -1257,9 +970,9 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
         state_change_p ret = anim->state_change;
         for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
         {
-            for(uint16_t j=0;j<ret->anim_dispath_count;j++)
+            for(uint16_t j=0;j<ret->anim_dispatch_count;j++)
             {
-                if(ret->anim_dispath[j].next_anim == state_change_anim)
+                if(ret->anim_dispatch[j].next_anim == state_change_anim)
                 {
                     return ret;
                 }
@@ -1290,13 +1003,13 @@ int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
 {
     animation_frame_p anim = entity->bf.model->animations + entity->bf.current_animation;
     state_change_p stc = anim->state_change;
-    anim_dispath_p disp;
+    
     for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
     {
         if(stc->id == id)
         {
-            disp = stc->anim_dispath;
-            for(uint16_t j=0;j<stc->anim_dispath_count;j++,disp++)
+            anim_dispatch_p disp = stc->anim_dispatch;
+            for(uint16_t j=0;j<stc->anim_dispatch_count;j++,disp++)
             {
                 if((disp->frame_high >= disp->frame_low) && (entity->bf.current_frame >= disp->frame_low) && (entity->bf.current_frame <= disp->frame_high))// ||
                    //(disp->frame_high <  disp->frame_low) && ((entity->bf.current_frame >= disp->frame_low) || (entity->bf.current_frame <= disp->frame_high)))
@@ -1356,8 +1069,8 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
      */
     if(stc != NULL)
     {
-        anim_dispath_p disp = stc->anim_dispath;
-        for(uint16_t i=0;i<stc->anim_dispath_count;i++,disp++)
+        anim_dispatch_p disp = stc->anim_dispatch;
+        for(uint16_t i=0;i<stc->anim_dispatch_count;i++,disp++)
         {
             if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
             {
@@ -1910,12 +1623,12 @@ void Entity_CheckActivators(struct entity_s *ent)
                 entity_p e = (entity_p)cont->object;
                 btScalar r = e->activation_offset[3];
                 r *= r;
-                if((e->type_flags & ENTITY_TYPE_TRIGGER) && (e->state_flags & ENTITY_STATE_ENABLED))
+                if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
                     if((e != ent) && (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
                     {
-                        lua_ActivateEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
+                        lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
                     }
                 }
                 else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
@@ -1924,7 +1637,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                     if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                                       (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
                     {
-                        lua_ActivateEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
+                        lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
                     }
                 }
             }

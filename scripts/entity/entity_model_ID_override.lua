@@ -107,7 +107,7 @@ tr4_id_override = {};
 --------------------------------------------------------------------------------
 tr5_id_override = {};
 
-function GetOverridedAnim(ver, id)
+function getOverridedAnim(ver, id)
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         if(tr1_anim_override[id] == nil) then
             return -1;
@@ -143,7 +143,7 @@ function GetOverridedAnim(ver, id)
     end;
 end;
 
-function GetOverridedID(ver, id)
+function getOverridedID(ver, id)
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         if(tr1_id_override[id] == nil) then
             return -1;

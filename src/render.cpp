@@ -31,6 +31,8 @@ extern render_DebugDrawer debugDrawer;
  */
 GLhandleARB color_mult_vsh, color_mult_program;
 GLint       color_mult_tint_pos;
+GLhandleARB room_vsh, room_program;
+GLint       room_tint_pos, room_current_tick, room_flags, room_light_mode;
 
 /*GLhandleARB main_vsh, main_fsh, main_program;
 GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
@@ -79,15 +81,28 @@ void Render_DoShaders()
     main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "transformMat");                //uniform   mat4
     glUseProgramObjectARB(0);*/
 
+    //Color mult prog
     color_mult_program = glCreateProgramObjectARB();
     color_mult_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
     loadShaderFromFile(color_mult_vsh, "shaders/color_mult.vsh");
     glAttachObjectARB(color_mult_program, color_mult_vsh);
     glLinkProgramARB(color_mult_program);
     printInfoLog(color_mult_program);
+    color_mult_tint_pos = glGetUniformLocationARB(color_mult_program, "tintMult");
 
-    glUseProgramObjectARB(color_mult_program);
-    color_mult_tint_pos = glGetUniformLocationARB(color_mult_program, "tintMult");                              //uniform   vec4;
+    //Room prog
+    room_program = glCreateProgramObjectARB();
+    room_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+    loadShaderFromFile(room_vsh, "shaders/room.vsh");
+    glAttachObjectARB(room_program, room_vsh);
+    glLinkProgramARB(room_program);
+    printInfoLog(room_program);
+    room_tint_pos = glGetUniformLocationARB(room_program, "tintMult");
+    room_current_tick = glGetUniformLocationARB(room_program, "iCurrentTick");
+    room_flags = glGetUniformLocationARB(room_program, "iRoomFlags");
+    room_light_mode = glGetUniformLocationARB(room_program, "iRoomLightMode");
+
+    //Set current shader program to 0 (off)
     glUseProgramObjectARB(0);
 }
 
@@ -124,8 +139,19 @@ void Render_Empty(render_p render)
         glDeleteObjectARB(color_mult_program);
         glDeleteObjectARB(color_mult_vsh);
     }
+
+    if((room_program != 0) && (room_vsh != 0))
+    {
+        glDetachObjectARB(room_program, room_vsh);
+        glDeleteObjectARB(room_program);
+        glDeleteObjectARB(room_vsh);
+    }
+
     color_mult_program = 0;
     color_mult_vsh = 0;
+
+    room_program = 0;
+    room_vsh = 0;
 }
 
 
@@ -711,15 +737,19 @@ void Render_StaticMesh(struct static_mesh_s *static_mesh, struct room_s *room)
 
     vec4_copy(tint, static_mesh->tint);
 
+    //If this static mesh is in a water room
     if(room->flags & TR_ROOM_FLAG_WATER)
     {
         Render_CalculateWaterTint(tint, 0);
+        glUseProgramObjectARB(color_mult_program);
+        glUniform4fvARB(color_mult_tint_pos, 1, tint);
+        Render_Mesh(mesh, NULL, NULL);
+        glUseProgramObjectARB(0);
     }
-
-    glUseProgramObjectARB(color_mult_program);
-    glUniform4fvARB(color_mult_tint_pos, 1, tint);
-    Render_Mesh(mesh, NULL, NULL);
-    glUseProgramObjectARB(0);
+    else
+    {
+        Render_Mesh(mesh, NULL, NULL);
+    }
 }
 
 /**
@@ -735,19 +765,15 @@ void Render_Room(struct room_s *room, struct render_s *render)
         glPushMatrix();
         glMultMatrixbt(room->transform);
 
-        if(room->flags & TR_ROOM_FLAG_WATER)
-        {
-            GLfloat tint[4];
-            Render_CalculateWaterTint(tint, 1);
-            glUseProgramObjectARB(color_mult_program);
-            glUniform4fvARB(color_mult_tint_pos, 1, tint);
-            Render_Mesh(room->mesh, NULL, NULL);
-            glUseProgramObjectARB(0);
-        }
-        else
-        {
-            Render_Mesh(room->mesh, NULL, NULL);
-        }
+        GLfloat tint[4];
+        Render_CalculateWaterTint(tint, 1);
+        glUseProgramObjectARB(room_program);
+        glUniform4fvARB(room_tint_pos, 1, tint);
+        glUniform1iARB(room_current_tick, SDL_GetTicks());
+        glUniform1iARB(room_flags, room->flags);
+        glUniform1iARB(room_light_mode, room->light_mode);
+        Render_Mesh(room->mesh, NULL, NULL);
+        glUseProgramObjectARB(0);
 
         glPopMatrix();
     }
@@ -777,14 +803,20 @@ void Render_Room(struct room_s *room, struct render_s *render)
             tint[1] = room->static_mesh[i].tint[1];
             tint[2] = room->static_mesh[i].tint[2];
             tint[3] = 1.0f;
+
+            //If this mesh is in a water room
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
                 Render_CalculateWaterTint(tint, 0);
+                glUseProgramObjectARB(color_mult_program);
+                glUniform4fvARB(color_mult_tint_pos, 1, tint);
+                Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
+                glUseProgramObjectARB(0);
             }
-            glUseProgramObjectARB(color_mult_program);
-            glUniform4fvARB(color_mult_tint_pos, 1, tint);
-            Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
-            glUseProgramObjectARB(0);
+            else
+            {
+                Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
+            }
         }
         glPopMatrix();
         room->static_mesh[i].was_rendered = 1;
@@ -941,6 +973,12 @@ void Render_DrawList()
     {
         glPolygonMode(GL_FRONT, GL_LINE);
     }
+    else if(renderer.style & R_DRAW_POINTS)
+    {
+        glEnable(GL_POINT_SMOOTH);
+        glPointSize(4);
+        glPolygonMode(GL_FRONT, GL_POINT);
+    }
     else
     {
         glPolygonMode(GL_FRONT, GL_FILL);
@@ -969,15 +1007,6 @@ void Render_DrawList()
     }
 
     glDisable(GL_CULL_FACE);
-    if(renderer.style & R_DRAW_WIRE)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
-    else
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-
     glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
@@ -1056,6 +1085,8 @@ void Render_DrawList()
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
+    //Reset polygon draw mode
+    glPolygonMode(GL_FRONT, GL_FILL);
 }
 
 void Render_DrawList_DebugLines()

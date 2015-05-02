@@ -1,7 +1,7 @@
 -- OPENTOMB INVENTORY GLOBAL ITEM NAMES - SPANISH
 -- by Lwmte, Sep 2014
 -- Spanish Translation by: SuiKaze Raider.
--- Translation Version: 1.0.0.0 (February 7th, 2015)
+-- Translation Version: v1.0.1.0 (April 26th, 2015)
 
 --------------------------------------------------------------------------------
 -- In this file, we list all the global item names used across all games.
@@ -30,7 +30,7 @@ ITEM_NAME_REVOLVER = "Revólver"
 ITEM_NAME_UZIS = "Uzis"
 ITEM_NAME_M16 = "M16"
 ITEM_NAME_MP5 = "MP5"
-ITEM_NAME_HK = "Rifle HK"
+ITEM_NAME_HK = "Rifle H&K"
 ITEM_NAME_GRENADEGUN = "Lanzagranadas"
 ITEM_NAME_ROCKETGUN = "Lanzacohetes"
 ITEM_NAME_HARPOONGUN = "Fusil Submarino"
@@ -60,7 +60,7 @@ ITEM_NAME_REVOLVER_AMMO = "Munición de Revólver"
 ITEM_NAME_UZI_AMMO = "Munición de Uzi"
 ITEM_NAME_M16_AMMO = "Munición de M16"
 ITEM_NAME_MP5_AMMO = "Munición de MP5"
-ITEM_NAME_HK_AMMO = "Munición de Rifle HK"
+ITEM_NAME_HK_AMMO = "Munición de Rifle H&K"
 ITEM_NAME_GRENADEGUN_AMMO = "Munición de Lanzagranadas"
 ITEM_NAME_GRENADEGUN_NORMAL_AMMO = "Munición Normal de Lanzagranadas"
 ITEM_NAME_GRENADEGUN_SUPER_AMMO = "Munición Súper de Lanzagranadas"

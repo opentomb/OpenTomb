@@ -1,18 +1,10 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER 3, CRASH.TR2
 
--- ColType values reference: 
-
-COLL_NONE = 0x00;  -- Object has no collisions
-COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
-COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
-
 print("Level script loaded (CRASH.lua)");
 
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
-
-static_tbl = {};
 
 static_tbl[00] = {coll = COLL_BBOX};            -- Tree 1
 static_tbl[01] = {coll = COLL_NONE};            -- Tree 2
@@ -40,13 +32,3 @@ static_tbl[41] = {coll = COLL_MESH};            -- Control panel 3
 static_tbl[42] = {coll = COLL_MESH};            -- Control panel 4
 static_tbl[48] = {coll = COLL_MESH};            -- Bed
 static_tbl[49] = {coll = COLL_NONE};            -- Rope
-
---------------------------------------------------------------------------------
-
-function trGetStaticMeshFlags(ver, id)
-    if(static_tbl[id] == nil) then
-        return nil, nil;
-    else
-        return static_tbl[id].coll, static_tbl[id].hide;
-    end;
-end;

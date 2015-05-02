@@ -263,19 +263,19 @@ typedef struct mesh_tree_tag_s
 /*
  * animation switching control structure
  */
-typedef struct anim_dispath_s
+typedef struct anim_dispatch_s
 {
     uint16_t    next_anim;                                                      // "switch to" animation
     uint16_t    next_frame;                                                     // "switch to" frame
     uint16_t    frame_low;                                                      // low border of state change condition
     uint16_t    frame_high;                                                     // high border of state change condition
-}anim_dispath_t, *anim_dispath_p;
+}anim_dispatch_t, *anim_dispatch_p;
 
 typedef struct state_change_s
 {
     uint32_t                    id;
-    uint16_t                    anim_dispath_count;
-    struct anim_dispath_s      *anim_dispath;
+    uint16_t                    anim_dispatch_count;
+    struct anim_dispatch_s     *anim_dispatch;
 }state_change_t, *state_change_p;
 
 /*

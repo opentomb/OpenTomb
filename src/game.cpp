@@ -281,9 +281,12 @@ int Game_Save(const char* name)
     fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
 
     // Save flipmap and flipped room states.
-
-    fprintf(f, "setFlipmap(%d);\n",   engine_world.room_flipmap);
-    fprintf(f, "setFlipstate(%d);\n", engine_world.room_flipstate);
+    
+    for(int i=0; i < engine_world.flip_count; i++)
+    {
+        fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_map[i]);
+        fprintf(f, "setFlipState(%d, %d);\n", i, engine_world.flip_state[i]);
+    }
 
     Save_Entity(&f, engine_world.Character);    // Save Lara.
 
@@ -593,6 +596,22 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     }
 }
 
+void Game_LoopEntities(struct RedBlackNode_s *x)
+{
+    entity_p entity = (entity_p)x->data;
+    
+    lua_LoopEntity(engine_lua, entity->id);
+    
+    if(x->left != NULL)
+    {
+        Game_LoopEntities(x->left);
+    }
+    if(x->right != NULL)
+    {
+        Game_LoopEntities(x->right);
+    }
+}
+
 void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
@@ -690,6 +709,9 @@ void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time  = 0.0;
                     game_logic_time += time;
+                    
+    bool is_entitytree = ((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL));
+    bool is_character  = (engine_world.Character != NULL);
 
     // GUI should be updated at all times!
 
@@ -735,33 +757,29 @@ void Game_Frame(btScalar time)
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
         Audio_Update();
-        if(engine_world.Character)
-        {
-            Character_UpdateParams(engine_world.Character);
-        }
+        
+        if(is_character)  Character_UpdateParams(engine_world.Character);
+        if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
     }
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
 
-    if(engine_world.Character != NULL)
+    if(is_character)
     {
         Game_ApplyControls(engine_world.Character);
+        
+        if(!control_states.noclip && !control_states.free_look)
+        {
+            Character_ApplyCommands(engine_world.Character);
+            Entity_Frame(engine_world.Character, engine_frame_time);
+            Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0); // 128.0 400.0
+        }
     }
-
-    if((engine_world.Character != NULL) && !control_states.noclip && !control_states.free_look)
-    {
-        Character_ApplyCommands(engine_world.Character);
-        Entity_Frame(engine_world.Character, engine_frame_time);
-        Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0); // 128.0 400.0
-    }
-
+    
     Game_UpdateCharacters();
 
-    if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
-    {
-        Game_UpdateAllEntities(engine_world.entity_tree->root);
-    }
+    if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
 
     Controls_RefreshStates();
     Render_UpdateAnimTextures();

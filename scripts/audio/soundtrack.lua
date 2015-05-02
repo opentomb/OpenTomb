@@ -710,7 +710,7 @@ tr5_track_tbl[134] = {file = "xa17_Andy9.ogg", mode = ONCE};
 tr5_track_tbl[135] = {file = "xa17_Andy11.ogg", mode = ONCE};
 
 
-function GetTrackInfo(ver, id)
+function getTrackInfo(ver, id)
     local tbl = {};
     local path, method;
     
@@ -749,7 +749,7 @@ function GetTrackInfo(ver, id)
     end;
 end;
 
-function GetSecretTrackNumber(ver)
+function getSecretTrackNumber(ver)
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         return SECRET_TR1;
     elseif(ver < 5) then                -- TR_II, TR_II_DEMO
@@ -765,7 +765,7 @@ function GetSecretTrackNumber(ver)
     end;
 end;
 
-function GetNumTracks(ver)
+function getNumTracks(ver)
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         return tr1_num_soundtracks;
     elseif(ver < 5) then                -- TR_II, TR_II_DEMO

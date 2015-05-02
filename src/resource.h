@@ -2,6 +2,8 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
+#include "redblack.h"
+
 // Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way
 // (derived from actual room mesh).
@@ -15,13 +17,18 @@
 #define TR_METERING_STEP        (256.0)
 #define TR_METERING_SECTORSIZE  (1024.0)
 
+// Wall height is a magical constant which specifies that sector with such
+// height contains impassable wall.
+
+#define TR_METERING_WALLHEIGHT  (32512)
+
 // Penetration configuration specifies collision type for floor and ceiling
 // sectors (squares).
 
 #define TR_PENETRATION_CONFIG_SOLID             0   // Ordinary sector.
 #define TR_PENETRATION_CONFIG_DOOR_VERTICAL_A   1   // TR3-5 triangulated door.
 #define TR_PENETRATION_CONFIG_DOOR_VERTICAL_B   2   // TR3-5 triangulated door.
-#define TR_PENETRATION_CONFIG_WALL              3   // Wall (0x81 == 32512)
+#define TR_PENETRATION_CONFIG_WALL              3   // Wall (0x81 == TR_METERING_WALLHEIGHT)
 #define TR_PENETRATION_CONFIG_GHOST             4   // No collision.
 
 // There are two types of diagonal splits - we call them north-east (NE) and
@@ -69,6 +76,11 @@ struct room_sector_s;
 struct sector_tween_s;
 struct bordered_texture_atlas_s;
 
+// Functions setting parameters from configuration scripts.
+
+void TR_SetEntityModelProperties(struct entity_s *ent);
+void TR_SetStaticMeshFlags(struct static_mesh_s *r_static);
+
 // Functions generating native OpenTomb structs from legacy TR structs.
 
 void TR_GenWorld(struct world_s *world, class VT_Level *tr);
@@ -86,6 +98,7 @@ void TR_GenRooms(struct world_s *world, class VT_Level *tr);
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr);
 void TR_GenRoomCollision(struct world_s *world);
 void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
+void TR_GenRoomFlipMap(struct world_s *world);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
@@ -104,7 +117,7 @@ struct   skeletal_model_s* TR_GetSkybox(struct world_s *world, uint32_t engine_v
 // Main function which is used to translate legacy TR floor data
 // to native OpenTomb structs.
 
-int      TR_Sector_TranslateFloorData(room_sector_p sector, struct world_s *world);
+int      TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr);
 
 // All functions related to generating heightmap from sector floor data.
 
@@ -119,5 +132,18 @@ int      TR_Sector_IsWall(room_sector_p ws, room_sector_p ns);
 
 void SortPolygonsInMesh(struct base_mesh_s *mesh);
 bool Polygon_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world);
+
+// Create entity function from script, if exists.
+
+bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
+
+// Assign pickup functions to previously created base items.
+
+void Items_CheckEntities(RedBlackNode_p n);
+
+// Check if entity index was already processed (needed to remove dublicated activation calls).
+// If entity is not processed, add its index into lookup table.
+
+bool IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
 
 #endif

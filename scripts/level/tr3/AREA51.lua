@@ -1,18 +1,10 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER 3, AREA51.TR2
 
--- ColType values reference: 
-
-COLL_NONE = 0x00;  -- Object has no collisions
-COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
-COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
-
 print("Level script loaded (AREA51.lua)");
 
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
-
-static_tbl = {};
 
 static_tbl[00] = {coll = COLL_MESH};            -- Rocket holder top
 static_tbl[01] = {coll = COLL_BBOX};            -- Rocket holder bottom
@@ -45,13 +37,3 @@ static_tbl[42] = {coll = COLL_NONE};            -- MP5 sign
 static_tbl[43] = {coll = COLL_NONE};            -- Keypad
 static_tbl[48] = {coll = COLL_MESH};            -- Pilot chair
 static_tbl[49] = {coll = COLL_NONE};            -- Metallic panel
-
---------------------------------------------------------------------------------
-
-function trGetStaticMeshFlags(ver, id)
-    if(static_tbl[id] == nil) then
-        return nil, nil;
-    else
-        return static_tbl[id].coll, static_tbl[id].hide;
-    end;
-end;

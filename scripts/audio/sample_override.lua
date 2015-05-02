@@ -187,7 +187,7 @@ tr_sound_info[0] = { num_samples       = 195,
                      sample_table      = tr1_sound };
 
 
-function GetOverridedSample(ver, level_id, sound_id)
+function getOverridedSample(ver, level_id, sound_id)
     if((tr_sound_info[ver] ~= nil) and (tr_sound_info[ver].sample_table[sound_id] ~= nil)) then
         return tr_sound_info[ver].sample_table[sound_id].sample, tr_sound_info[ver].sample_table[sound_id].count;
     else
@@ -195,7 +195,7 @@ function GetOverridedSample(ver, level_id, sound_id)
     end
 end;
 
-function GetOverridedSamplesInfo(ver)
+function getOverridedSamplesInfo(ver)
     if(tr_sound_info[ver] ~= nil) then
         return tr_sound_info[ver].num_samples, tr_sound_info[ver].num_sounds, tr_sound_info[ver].sample_name_mask;
     else

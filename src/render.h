@@ -23,8 +23,10 @@
 #define R_DRAW_DUMMY_STATICS    0x00000800      // Draw empty static meshes
 #define R_DRAW_COLL             0x00001000      // Draw Bullet physics world
 #define R_DRAW_SKYBOX           0x00002000      // Draw skybox
+#define R_DRAW_POINTS           0x00004000      // Points rendering
 
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (4096 * 1024)
+#define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
 
 #ifdef BT_USE_DOUBLE_PRECISION
     #define glMultMatrixbt glMultMatrixd

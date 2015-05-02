@@ -246,7 +246,8 @@ enum Faders
     FADER_EFFECT,       // Effect fader (flashes, etc.)
     FADER_SUN,          // Sun fader (engages on looking at the sun)
     FADER_VIGNETTE,     // Just for fun - death fader.
-    FADER_LOADSCREEN,   // Classic black fader for level transition
+    FADER_LOADSCREEN,   // Loading screen
+    FADER_BLACK,        // Classic black fader
     FADER_LASTINDEX
 };
 
@@ -503,6 +504,10 @@ void Gui_InitFaders();
 void Gui_InitNotifier();
 void Gui_InitTempLines();
 
+void Gui_SetupFader(int fader_index, 
+                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
+                    uint16_t fadein_speed, uint16_t fadeout_speed);
+
 void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);
 void Gui_MoveLine(gui_text_line_p line);
@@ -663,9 +668,9 @@ public:
     };
 
     gui_text_line_s             mLabel_Title;
-    char                        mLabel_Title_text[128];
+    char                        mLabel_Title_text[GUI_LINE_DEFAULTSIZE];
     gui_text_line_s             mLabel_ItemName;
-    char                        mLabel_ItemName_text[128];
+    char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
 
     gui_InventoryManager();
    ~gui_InventoryManager();
