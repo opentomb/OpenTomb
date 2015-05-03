@@ -250,7 +250,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
     local m_id = getModelID(object_id);
     
     if(m_id == nil or m_id < 0) then
-        return;
+        return 0;
     end
     local on  = {};
     local off = {};
@@ -262,7 +262,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             key      = tr1_key[m_id];
             meshswap = tr1_puzzlehole_meshswap[m_id];
         else
-            return;
+            return 0;
         end
     elseif(getLevelVersion() < TR_III) then
         if(tr2_switches[m_id] ~= nil) then
@@ -271,7 +271,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             key      = tr2_key[m_id];
             meshswap = tr2_puzzlehole_meshswap[m_id];
         else
-            return;
+            return 0;
         end
     elseif(getLevelVersion() < TR_IV) then
         if(tr3_switches[m_id] ~= nil) then
@@ -280,7 +280,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             key      = tr3_key[m_id];
             meshswap = tr3_puzzlehole_meshswap[m_id];
         else
-            return;
+            return 0;
         end
     elseif(getLevelVersion() < TR_V) then
         if(tr4_switches[m_id] ~= nil) then
@@ -289,7 +289,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             key      = tr4_key[m_id];
             meshswap = tr4_puzzlehole_meshswap[m_id];
         else
-            return;
+            return 0;
         end
     else
         if(tr5_switches[m_id] == nil) then
@@ -318,7 +318,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
                     off = {ready_anim =  1, trig_anim = 3, actor_anim = ocb + 1};
                 end
             else
-                return;
+                return 0;
             end
         else
             on       = tr5_switches[m_id].on;
@@ -334,9 +334,9 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         if(key ~= nil) then
             if(getItemsCount(player, key) <= 0) then
                 if(getActionChange(act.action) == 0) then
-                    playsound(SOUND_NO);
+                    playSound(SOUND_NO);
                 end;
-                return;
+                return 0;
             else
                 removeItem(player, key, 1);
             end;
@@ -360,7 +360,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
                 else
                     setEntitySectorStatus(object_id, 1);        -- only for switches - turn on
                 end
-                return nil;
+                return false;
             end
             return true;
         end);
@@ -376,9 +376,11 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             if(f >= c - 1) then   -- check the end of animation
                 setEntitySectorStatus(object_id, 1);  -- only for switches - turn off
-                return nil;
+                return false;
             end
             return true;
         end);
     end
+    
+    return 1;
 end

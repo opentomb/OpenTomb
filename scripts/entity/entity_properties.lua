@@ -246,7 +246,7 @@ tr2_entity_tbl[34] = {coll = 0x02};                -- Flamethrower-wielding goon
 tr2_entity_tbl[36] = {coll = 0x02};                -- Spider
 tr2_entity_tbl[37] = {coll = 0x02};                -- Giant spider
 tr2_entity_tbl[38] = {coll = 0x02};                -- Crow
-tr2_entity_tbl[39] = {coll = 0x02};                -- Tiger / Leopard
+tr2_entity_tbl[39] = {coll = 0x02, func = "baddie"};                -- Tiger / Leopard
 tr2_entity_tbl[40] = {coll = 0x02};                -- Marco Bartoli
 tr2_entity_tbl[41] = {coll = 0x02};                -- Spear-wielding Xian Guard
 tr2_entity_tbl[42] = {coll = 0x02};                -- Spear-wielding Xian Guard statue
@@ -377,7 +377,7 @@ tr2_entity_tbl[208] = {coll = 0x00};               -- Pickup 6
 tr2_entity_tbl[209] = {coll = 0x00};               -- Dragon explosion effect (expanding netted bubble)
 tr2_entity_tbl[210] = {coll = 0x00};               -- Dragon explosion effect (expanding netted bubble)
 tr2_entity_tbl[211] = {coll = 0x00};               -- Dragon explosion effect (expanding solid bubble)
-tr2_entity_tbl[212] = {coll = 0x00};               -- Alarm
+tr2_entity_tbl[212] = {coll = 0x00, func = "alarm_TR2"};               -- Alarm
 tr2_entity_tbl[213] = {coll = 0x00, hide = 0x01};  -- Placeholder
 tr2_entity_tbl[214] = {coll = 0x02};               -- Tyrannosaur
 tr2_entity_tbl[215] = {coll = 0x00, hide = 0x01, func = "venicebird"};  -- Singing birds
@@ -404,9 +404,9 @@ tr2_entity_tbl[251] = {coll = 0x00, hide = 0x01};  -- Sparks
 tr2_entity_tbl[253] = {coll = 0x00, hide = 0x01};  -- Fire
 tr2_entity_tbl[254] = {coll = 0x00};               -- Skybox
 tr2_entity_tbl[256] = {coll = 0x01};               -- Monk
-tr2_entity_tbl[257] = {coll = 0x00, hide = 0x01}   -- Door bell
+tr2_entity_tbl[257] = {coll = 0x00, hide = 0x01, func = "doorbell"}   -- Door bell
 tr2_entity_tbl[258] = {coll = 0x00, hide = 0x01}   -- Alarm bell
-tr2_entity_tbl[259] = {coll = 0x01};               -- Helicopter
+tr2_entity_tbl[259] = {coll = 0x01, func = "heli_TR2"};               -- Helicopter
 tr2_entity_tbl[260] = {coll = 0x02};               -- The butler
 tr2_entity_tbl[262] = {coll = 0x00, hide = 0x01};  -- Lara cutscene placement?
 tr2_entity_tbl[263] = {coll = 0x00};               -- Shotgun animation (Home Sweet Home)

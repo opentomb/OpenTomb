@@ -103,9 +103,8 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
 {
     if(lua)
     {
-        const char* func_template = "%s_func";
-        char buf[64];
-
+        const char* func_template = "%s_init";
+        char buf[64] = {0};
         snprintf(buf, 64, func_template, func_name);
         lua_getglobal(lua, buf);
 
@@ -3985,8 +3984,10 @@ void Items_CheckEntities(RedBlackNode_p n)
                 entity_p ent = (entity_p)cont->object;
                 if(ent->bf.animations.model->id == item->world_model_id)
                 {
-                    char buf[256] = {0};
-                    snprintf(buf, 256, "pickup_func(%d, %d);", ent->id, item->id);
+                    char buf[64] = {0};
+                    snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id, ent->id);
+                    luaL_dostring(engine_lua, buf);
+                    snprintf(buf, 32, "pickup_init(%d, %d);", ent->id, item->id);
                     luaL_dostring(engine_lua, buf);
                     Entity_DisableCollision(ent);
                 }
