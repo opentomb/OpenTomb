@@ -3794,8 +3794,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->timer  = 0.0;
 
         entity->self->collide_flag = 0x00;
-        entity->anim_flags = 0x0000;
         entity->move_type = 0x0000;
+        entity->bf.animations.anim_flags = 0x0000;
         entity->bf.animations.current_animation = 0;
         entity->bf.animations.current_frame = 0;
         entity->bf.animations.frame_time = 0.0;

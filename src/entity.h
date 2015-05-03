@@ -67,7 +67,6 @@ typedef struct entity_s
     uint16_t                            state_flags;
 
     uint8_t                             dir_flag;           // (move direction)
-    uint16_t                            anim_flags;         ///@TODO: move to ss_animation_s // additional animation control param
     uint16_t                            move_type;          // on floor / free fall / swim ....
     
     uint8_t                             was_rendered;       // render once per frame trigger
@@ -83,7 +82,6 @@ typedef struct entity_s
 
     struct obb_s                       *obb;                // oriented bounding box
 
-    void                              (*onFrame)(struct entity_s *ent, int state);  ///@TODO: move to ss_animation_s
     struct room_sector_s               *current_sector;
     struct room_sector_s               *last_sector;
 

@@ -28,6 +28,7 @@ struct room_s;
 struct engine_container_s;
 struct obb_s;
 struct vertex_s;
+struct entity_s;
 
 /*
  * base mesh, uses everywhere
@@ -203,9 +204,13 @@ typedef struct ss_animation_s
     int16_t                     current_frame;                                  //
     int16_t                     next_frame;                                     //
 
+    uint16_t                    anim_flags;                                     // additional animation control param
+    
     btScalar                    period;                                         // one frame change period
     btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
+    
+    void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
     
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;

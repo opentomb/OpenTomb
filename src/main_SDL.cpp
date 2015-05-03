@@ -1197,7 +1197,7 @@ void DebugKeys(int button, int state)
                         Entity_SetAnimation(engine_world.Character, 108, 0);
                         engine_world.Character->move_type = MOVE_UNDER_WATER;
                     }
-                    engine_world.Character->anim_flags = ANIM_NORMAL_CONTROL;
+                    engine_world.Character->bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
                 }
                 break;
 

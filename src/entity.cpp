@@ -48,8 +48,8 @@ entity_p Entity_Create()
     ret->character = NULL;
     ret->smooth_anim = 1;
     ret->current_sector = NULL;
-    ret->onFrame = NULL;
     ret->bf.animations.model = NULL;
+    ret->bf.animations.onFrame = NULL;
     ret->bf.animations.frame_time = 0.0;
     ret->bf.animations.next_state = 0;
     ret->bf.animations.lerp = 0.0;
@@ -468,6 +468,7 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
         ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
 
         ss_anim->model = sm;
+        ss_anim->onFrame = NULL;
         ss_anim->next = ent->bf.animations.next;
         ent->bf.animations.next = ss_anim;
 
@@ -1137,6 +1138,7 @@ void Entity_DoAnimMove(entity_p entity)
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
+///@TODO: rewrite as a cycle through all bf.animations list
 int Entity_Frame(entity_p entity, btScalar time)
 {
     int16_t frame, anim, ret = 0x00;
@@ -1156,7 +1158,7 @@ int Entity_Frame(entity_p entity, btScalar time)
 
     entity->bf.animations.lerp = 0.0;
     stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-    Entity_GetNextFrame(&entity->bf, time, stc, &frame, &anim, entity->anim_flags);
+    Entity_GetNextFrame(&entity->bf, time, stc, &frame, &anim, ss_anim->anim_flags);
     if(anim != ss_anim->current_animation)
     {
         ss_anim->last_animation = ss_anim->current_animation;
@@ -1187,7 +1189,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     dt = entity->bf.animations.frame_time - (btScalar)t * entity->bf.animations.period;
     entity->bf.animations.frame_time = (btScalar)frame * entity->bf.animations.period + dt;
     entity->bf.animations.lerp = (entity->smooth_anim)?(dt / entity->bf.animations.period):(0.0);
-    Entity_GetNextFrame(&entity->bf, entity->bf.animations.period, stc, &entity->bf.animations.next_frame, &entity->bf.animations.next_animation, entity->anim_flags);
+    Entity_GetNextFrame(&entity->bf, entity->bf.animations.period, stc, &entity->bf.animations.next_frame, &entity->bf.animations.next_animation, ss_anim->anim_flags);
 
     /* There are stick code for multianimation (weapon mode) testing
      * Model replacing will be upgraded too, I have to add override
@@ -1593,9 +1595,9 @@ int Entity_Frame(entity_p entity, btScalar time)
     }
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-    if(entity->onFrame != NULL)
+    if(entity->bf.animations.onFrame != NULL)
     {
-        entity->onFrame(entity, ret);
+        entity->bf.animations.onFrame(entity, &entity->bf.animations, ret);
     }
 
     return ret;

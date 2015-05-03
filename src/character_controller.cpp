@@ -2495,7 +2495,7 @@ void Character_ApplyCommands(struct entity_s *ent)
 
     if(ent->character->state_func)
     {
-        ent->character->state_func(ent);
+        ent->character->state_func(ent, &ent->bf.animations);
     }
 
     switch(ent->move_type)

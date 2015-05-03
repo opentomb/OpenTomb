@@ -233,7 +233,7 @@ typedef struct character_s
     int                          current_weapon;
     int                          weapon_current_state;
     
-    int                        (*state_func)(struct entity_s *ent);
+    int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     int16_t                      max_move_iterations;
     int16_t                      no_fix;
     int8_t                       cam_follow_center;

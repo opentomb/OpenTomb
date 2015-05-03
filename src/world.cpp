@@ -715,8 +715,8 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             ent->timer            = 0.0;
 
             ent->self->collide_flag = 0x00;
-            ent->anim_flags = 0x0000;
             ent->move_type = 0x0000;
+            ent->bf.animations.anim_flags = 0x0000;
             ent->bf.animations.current_animation = 0;
             ent->bf.animations.current_frame = 0;
             ent->bf.animations.frame_time = 0.0;
@@ -1236,6 +1236,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
+    bf->animations.anim_flags = 0x0000;
     bf->animations.frame_time = 0.0;
     bf->animations.period = 1.0 / 30.0;
     bf->animations.next_state = 0;
@@ -1246,6 +1247,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     bf->animations.next_frame = 0;
 
     bf->animations.next = NULL;
+    bf->animations.onFrame = NULL;
     bf->animations.model = model;
     bf->bone_tag_count = model->mesh_count;
     bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
