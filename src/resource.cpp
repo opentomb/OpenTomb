@@ -104,13 +104,15 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     if(lua)
     {
         const char* func_template = "%s_func";
-        char full_func_name[64];
+        char buf[64];
         
-        snprintf(full_func_name, 64, func_template, func_name);
-        lua_getglobal(lua, full_func_name);
+        snprintf(buf, 64, func_template, func_name);
+        lua_getglobal(lua, buf);
 
         if(lua_isfunction(lua, -1))
         {
+            snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", entity_id, entity_id);
+            luaL_dostring(lua, buf);
             lua_pushinteger(lua, entity_id);
             lua_pcall(lua, 1, 0, 0);
             return true;

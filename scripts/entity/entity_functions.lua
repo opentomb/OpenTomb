@@ -46,10 +46,6 @@ function door_func(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
-
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(object_id == nil) then return end;
         door_activate(object_id);
@@ -66,10 +62,6 @@ end
 function keyhole_func(id)    -- Key and puzzle holes.
 
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
 
     -- onActivate function
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -92,10 +84,6 @@ function switch_func(id)     -- Ordinary switches.
     
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
-
     -- onActivate function
     entity_funcs[id].onActivate = function(object_id, activator_id)
         -- canTriggerEntity(activator_id, object_id, max_dist, offset_x, offset_y, offset_z)
@@ -121,10 +109,6 @@ function anim_func(id)      -- Ordinary animatings.
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
-    
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
         setEntityState(object_id, 1);
@@ -143,10 +127,6 @@ end
 function venicebird_func(id)    -- Venice singing birds (TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};              -- Create function.
-    end
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
       setEntityActivity(object_id, 1);
@@ -171,10 +151,6 @@ function swingblade_func(id)        -- Swinging blades (TR1)
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     setEntityActivity(id, 1);
     
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
-    
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityState(object_id, 2);
     end    
@@ -195,10 +171,6 @@ function slamdoor_func(id)      -- Slamming doors (TR1-TR2)
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     setEntityActivity(id, 1);
     
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
-    
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityState(object_id, 1);
     end    
@@ -218,10 +190,6 @@ function wallblade_func(id)     -- Wall blade (TR1-TR3)
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     setEntityActivity(id, 0);
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -250,10 +218,6 @@ function pickup_func(id, item_id)    -- Pick-ups
 
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
-    end
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((item_id == nil) or (object_id == nil)) then
@@ -327,9 +291,6 @@ function fallblock_func(id)  -- Falling block (TR1-3)
     local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags
     setEntityFlags(id, nil, nil, bit32.bor(f3, ENTITY_CALLBACK_STAND));
     setEntitySpeed(id, 0.0, 0.0, 0.0);
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
-    end
 
     entity_funcs[id].onStand = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
@@ -365,10 +326,6 @@ end
 function fallceiling_func(id)  -- Falling ceiling (TR1-3)
 
     setEntitySpeed(id, 0.0, 0.0, 0.0);
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
-    end
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
@@ -403,10 +360,6 @@ function pushdoor_func(id)   -- Pushdoors (TR4)
 
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivity(id, 0);
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
-    end
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
@@ -432,10 +385,6 @@ function oldspike_func(id)  -- Teeth spikes (INVALID)
     local f1, f2, f3 = getEntityFlags(id);
     setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_DECORATION), bit32.bor(f3, ENTITY_CALLBACK_COLLISION));
     
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
-    end
-
     entity_funcs[id].onCollision = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
             return;
