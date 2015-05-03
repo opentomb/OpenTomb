@@ -501,7 +501,7 @@ int main(int argc, char **argv)
     // Init generic SDL interfaces.
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
-	
+
 #if !defined(__MACOSX__)
     Engine_InitSDLImage();
 #endif
@@ -832,7 +832,7 @@ void ShowDebugInfo()
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         */
 
-        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.last_animation, ent->bf.current_animation, ent->bf.next_animation, ent->bf.last_state, ent->bf.next_state);
+        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.animations.last_animation, ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.last_state, ent->bf.animations.next_state);
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
@@ -841,7 +841,7 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.model->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
@@ -1197,7 +1197,7 @@ void DebugKeys(int button, int state)
                         Entity_SetAnimation(engine_world.Character, 108, 0);
                         engine_world.Character->move_type = MOVE_UNDER_WATER;
                     }
-                    engine_world.Character->anim_flags = ANIM_NORMAL_CONTROL;
+                    engine_world.Character->bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
                 }
                 break;
 

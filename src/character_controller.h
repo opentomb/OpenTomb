@@ -233,7 +233,7 @@ typedef struct character_s
     int                          current_weapon;
     int                          weapon_current_state;
     
-    int                        (*state_func)(struct entity_s *ent);
+    int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     int16_t                      max_move_iterations;
     int16_t                      no_fix;
     int8_t                       cam_follow_center;
@@ -292,7 +292,6 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
 void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar step_up_check);
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
 
-void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
 void Character_UpdatePlatformPostStep(struct entity_s *ent);

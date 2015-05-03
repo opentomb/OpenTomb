@@ -127,12 +127,6 @@ function setCamTarget(entity_index, timer)
     print("CAMERA TARGET: index = " .. entity_index .. ", timer = " .. timer);
 end
 
--- Flips a flipmap, according to activation mask.
-
-function doFlipmap(flipmap_index, trigger_mask)
-    
-end
-
 
 -- Does specified flipeffect.
 

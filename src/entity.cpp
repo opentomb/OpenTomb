@@ -31,7 +31,7 @@ entity_p Entity_Create()
     ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
     ret->type_flags = ENTITY_TYPE_DECORATION;
     ret->callback_flags = 0x00000000;               // no callbacks by default
-    
+
     ret->OCB = 0;
     ret->sector_status = 0;
     ret->locked = 0;
@@ -48,16 +48,16 @@ entity_p Entity_Create()
     ret->character = NULL;
     ret->smooth_anim = 1;
     ret->current_sector = NULL;
-    ret->onFrame = NULL;
-    ret->bf.model = NULL;
-    ret->bf.frame_time = 0.0;
-    ret->bf.next_state = 0;
-    ret->bf.lerp = 0.0;
-    ret->bf.current_animation = 0;
-    ret->bf.current_frame = 0;
-    ret->bf.next_animation = 0;
-    ret->bf.next_frame = 0;
-    ret->bf.next = NULL;
+    ret->bf.animations.model = NULL;
+    ret->bf.animations.onFrame = NULL;
+    ret->bf.animations.frame_time = 0.0;
+    ret->bf.animations.next_state = 0;
+    ret->bf.animations.lerp = 0.0;
+    ret->bf.animations.current_animation = 0;
+    ret->bf.animations.current_frame = 0;
+    ret->bf.animations.next_animation = 0;
+    ret->bf.animations.next_frame = 0;
+    ret->bf.animations.next = NULL;
     ret->bf.bone_tag_count = 0;
     ret->bf.bone_tags = 0;
     vec3_set_zero(ret->bf.bb_max);
@@ -91,9 +91,9 @@ void Entity_Clear(entity_p entity)
             entity->obb = NULL;
         }
 
-        if(entity->bf.model && entity->bt_body)
+        if(entity->bf.animations.model && entity->bt_body)
         {
-            for(int i=0;i<entity->bf.model->mesh_count;i++)
+            for(int i=0;i<entity->bf.bone_tag_count;i++)
             {
                 btRigidBody *body = entity->bt_body[i];
                 if(body)
@@ -138,22 +138,14 @@ void Entity_Clear(entity_p entity)
             entity->bf.bone_tag_count = 0;
         }
 
-        for(ss_bone_frame_p bf=entity->bf.next;bf!=NULL;)
+        for(ss_animation_p ss_anim=entity->bf.animations.next;ss_anim!=NULL;)
         {
-            ss_bone_frame_p bf_next = bf->next;
-            bf->next = NULL;
-
-            if(bf->bone_tag_count)
-            {
-                free(bf->bone_tags);
-                bf->bone_tags = NULL;
-                bf->bone_tag_count = 0;
-            }
-
-            free(bf);
-            bf = bf_next;
+            ss_animation_p ss_anim_next = ss_anim->next;
+            ss_anim->next = NULL;
+            free(ss_anim);
+            ss_anim = ss_anim_next;
         }
-        entity->bf.next = NULL;
+        entity->bf.animations.next = NULL;
     }
 }
 
@@ -247,17 +239,17 @@ void BT_GenEntityRigidBody(entity_p ent)
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
-    if(ent->bf.model == NULL)
+    if(ent->bf.animations.model == NULL)
     {
         return;
     }
 
-    ent->bt_body = (btRigidBody**)malloc(ent->bf.model->mesh_count * sizeof(btRigidBody*));
+    ent->bt_body = (btRigidBody**)malloc(ent->bf.bone_tag_count * sizeof(btRigidBody*));
 
-    for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
+    for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         ent->bt_body[i] = NULL;
-        cshape = BT_CSfromMesh(ent->bf.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag);
+        cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag);
         if(cshape)
         {
             Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -313,7 +305,7 @@ void Entity_UpdateRoomPos(entity_p ent)
 
         ent->self->room = new_room;
         ent->last_sector = ent->current_sector;
-        
+
         if(ent->current_sector != new_sector)
         {
             ent->sector_status = 0; // Reset sector status.
@@ -328,7 +320,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
     btScalar tr[16];
     btTransform bt_tr;
 
-    if((ent->bf.model == NULL) || (ent->bt_body == NULL) || ((force == 0) && (ent->bf.model->animation_count == 1) && (ent->bf.model->animations->frames_count == 1)))
+    if((ent->bf.animations.model == NULL) || (ent->bt_body == NULL) || ((force == 0) && (ent->bf.animations.model->animation_count == 1) && (ent->bf.animations.model->animations->frames_count == 1)))
     {
         return;
     }
@@ -337,7 +329,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
 
     if(ent->self->collide_flag != 0x00)
     {
-        for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             if(ent->bt_body[i])
             {
@@ -437,46 +429,57 @@ void Entity_UpdateRotation(entity_p entity)
 }
 
 
+void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
+{
+    btScalar t  = entity->current_speed * entity->character->speed_mult;
+    btScalar vz = (zeroVz)?(0.0):(entity->speed.m_floats[2]);
+
+    if(entity->dir_flag & ENT_MOVE_FORWARD)
+    {
+        vec3_mul_scalar(entity->speed.m_floats, entity->transform+4, t);
+    }
+    else if(entity->dir_flag & ENT_MOVE_BACKWARD)
+    {
+        vec3_mul_scalar(entity->speed.m_floats, entity->transform+4,-t);
+    }
+    else if(entity->dir_flag & ENT_MOVE_LEFT)
+    {
+        vec3_mul_scalar(entity->speed.m_floats, entity->transform+0,-t);
+    }
+    else if(entity->dir_flag & ENT_MOVE_RIGHT)
+    {
+        vec3_mul_scalar(entity->speed.m_floats, entity->transform+0, t);
+    }
+    else
+    {
+        vec3_set_zero(entity->speed.m_floats);
+    }
+
+    entity->speed.m_floats[2] = vz;
+}
+
+
 void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, model_id);
 
-    if((sm != NULL) && (sm->mesh_count == ent->bf.model->mesh_count))
+    if((sm != NULL) && (sm->mesh_count == ent->bf.bone_tag_count))
     {
-        ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
+        ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
 
-        bf->model = sm;
-        bf->next = ent->bf.next;
-        ent->bf.next = bf;
+        ss_anim->model = sm;
+        ss_anim->onFrame = NULL;
+        ss_anim->next = ent->bf.animations.next;
+        ent->bf.animations.next = ss_anim;
 
-        bf->frame_time = 0.0;
-        bf->next_state = 0;
-        bf->lerp = 0.0;
-        bf->current_animation = 0;
-        bf->current_frame = 0;
-        bf->next_animation = 0;
-        bf->next_frame = 0;
-        bf->period = 1.0 / 30.0;;
-
-        vec3_set_zero(bf->bb_max);
-        vec3_set_zero(bf->bb_min);
-        vec3_set_zero(bf->centre);
-        vec3_set_zero(bf->pos);
-
-        bf->bone_tag_count = sm->mesh_count;
-        bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
-        for(uint16_t i=0;i<bf->bone_tag_count;i++)
-        {
-            bf->bone_tags[i].flag = sm->mesh_tree[i].flag;
-            bf->bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
-            bf->bone_tags[i].mesh_skin = sm->mesh_tree[i].mesh_skin;
-            bf->bone_tags[i].mesh_slot = NULL;
-
-            vec3_copy(bf->bone_tags[i].offset, sm->mesh_tree[i].offset);
-            vec4_set_zero(bf->bone_tags[i].qrotate);
-            Mat4_E_macro(bf->bone_tags[i].transform);
-            Mat4_E_macro(bf->bone_tags[i].full_transform);
-        }
+        ss_anim->frame_time = 0.0;
+        ss_anim->next_state = 0;
+        ss_anim->lerp = 0.0;
+        ss_anim->current_animation = 0;
+        ss_anim->current_frame = 0;
+        ss_anim->next_animation = 0;
+        ss_anim->next_frame = 0;
+        ss_anim->period = 1.0 / 30.0;;
     }
 }
 
@@ -487,17 +490,17 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
     ss_bone_tag_p btag = bf->bone_tags;
     bone_tag_p src_btag, next_btag;
     btScalar *stack, *sp, t;
-    skeletal_model_p model = bf->model;
+    skeletal_model_p model = bf->animations.model;
     bone_frame_p curr_bf, next_bf;
 
-    next_bf = model->animations[bf->next_animation].frames + bf->next_frame;
-    curr_bf = model->animations[bf->current_animation].frames + bf->current_frame;
+    next_bf = model->animations[bf->animations.next_animation].frames + bf->animations.next_frame;
+    curr_bf = model->animations[bf->animations.current_animation].frames + bf->animations.current_frame;
 
-    t = 1.0 - bf->lerp;
+    t = 1.0 - bf->animations.lerp;
     if(etr && (curr_bf->command & ANIM_CMD_MOVE))
     {
         Mat4_vec3_rot_macro(tr, etr, curr_bf->move);
-        vec3_mul_scalar(cmd_tr, tr, bf->lerp);
+        vec3_mul_scalar(cmd_tr, tr, bf->animations.lerp);
     }
     else
     {
@@ -505,20 +508,20 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
         vec3_set_zero(cmd_tr);
     }
 
-    vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->lerp, t);
+    vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->animations.lerp, t);
     vec3_add(bf->bb_max, bf->bb_max, cmd_tr);
-    vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->lerp, t);
+    vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->animations.lerp, t);
     vec3_add(bf->bb_min, bf->bb_min, cmd_tr);
-    vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->lerp, t);
+    vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->animations.lerp, t);
     vec3_add(bf->centre, bf->centre, cmd_tr);
 
-    vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->lerp, t);
+    vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->animations.lerp, t);
     vec3_add(bf->pos, bf->pos, cmd_tr);
     next_btag = next_bf->bone_tags;
     src_btag = curr_bf->bone_tags;
     for(uint16_t k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
     {
-        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->lerp, t);
+        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->animations.lerp, t);
         vec3_copy(btag->transform+12, btag->offset);
         btag->transform[15] = 1.0;
         if(k == 0)
@@ -541,22 +544,22 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
                 vec4_copy(tq, next_btag->qrotate);
                 vec3_add(btag->transform+12, btag->transform+12, bf->pos);
             }
-            vec4_slerp(btag->qrotate, src_btag->qrotate, tq, bf->lerp);
+            vec4_slerp(btag->qrotate, src_btag->qrotate, tq, bf->animations.lerp);
         }
         else
         {
             bone_tag_p ov_src_btag = src_btag;
             bone_tag_p ov_next_btag = next_btag;
-            btScalar ov_lerp = bf->lerp;
-            for(ss_bone_frame_p ov_bf=bf->next;ov_bf!=NULL;ov_bf = ov_bf->next)
+            btScalar ov_lerp = bf->animations.lerp;
+            for(ss_animation_p ov_anim=bf->animations.next;ov_anim!=NULL;ov_anim = ov_anim->next)
             {
-                if((ov_bf->model != NULL) && (ov_bf->model->mesh_tree[k].replace_anim != 0))
+                if((ov_anim->model != NULL) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
                 {
-                    bone_frame_p ov_curr_bf = ov_bf->model->animations[ov_bf->current_animation].frames + ov_bf->current_frame;
-                    bone_frame_p ov_next_bf = ov_bf->model->animations[ov_bf->next_animation].frames + ov_bf->next_frame;
+                    bone_frame_p ov_curr_bf = ov_anim->model->animations[ov_anim->current_animation].frames + ov_anim->current_frame;
+                    bone_frame_p ov_next_bf = ov_anim->model->animations[ov_anim->next_animation].frames + ov_anim->next_frame;
                     ov_src_btag = ov_curr_bf->bone_tags + k;
                     ov_next_btag = ov_next_bf->bone_tags + k;
-                    ov_lerp = ov_bf->lerp;
+                    ov_lerp = ov_anim->lerp;
                     break;
                 }
             }
@@ -651,214 +654,216 @@ btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2)
     return vec3_dist(v1, v2);
 }
 
-void Entity_DoAnimCommands(entity_p entity, int changing)
+void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing)
 {
-    if((engine_world.anim_commands_count == 0) ||
-       (entity->bf.model->animations[entity->bf.current_animation].num_anim_commands > 255))
+    if((engine_world.anim_commands_count == 0) || (ss_anim->model == NULL))
     {
-        return;  // If no anim commands or current anim has more than 255 (according to TRosettaStone).
+        return;  // If no anim commands
     }
 
-    animation_frame_p af  = entity->bf.model->animations + entity->bf.current_animation;
-    uint32_t count        = af->num_anim_commands;
-    int16_t *pointer      = engine_world.anim_commands + af->anim_command;
-    int8_t   random_value = 0;
-
-    for(uint32_t i = 0; i < count; i++, pointer++)
+    animation_frame_p af  = ss_anim->model->animations + ss_anim->current_animation;
+    if(af->num_anim_commands <= 255)
     {
-        switch(*pointer)
+        uint32_t count        = af->num_anim_commands;
+        int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+        int8_t   random_value = 0;
+
+        for(uint32_t i = 0; i < count; i++, pointer++)
         {
-            case TR_ANIMCOMMAND_SETPOSITION:
-                // This command executes ONLY at the end of animation.
-                pointer += 3; // Parse through 3 operands.
-                break;
+            switch(*pointer)
+            {
+                case TR_ANIMCOMMAND_SETPOSITION:
+                    // This command executes ONLY at the end of animation.
+                    pointer += 3; // Parse through 3 operands.
+                    break;
 
-            case TR_ANIMCOMMAND_JUMPDISTANCE:
-                // This command executes ONLY at the end of animation.
-                pointer += 2; // Parse through 2 operands.
-                break;
+                case TR_ANIMCOMMAND_JUMPDISTANCE:
+                    // This command executes ONLY at the end of animation.
+                    pointer += 2; // Parse through 2 operands.
+                    break;
 
-            case TR_ANIMCOMMAND_EMPTYHANDS:
-                ///@FIXME: Behaviour is yet to be discovered.
-                break;
+                case TR_ANIMCOMMAND_EMPTYHANDS:
+                    ///@FIXME: Behaviour is yet to be discovered.
+                    break;
 
-            case TR_ANIMCOMMAND_KILL:
-                // This command executes ONLY at the end of animation.
-                if(entity->bf.current_frame == af->frames_count - 1)
-                {
-                    if(entity->character)
+                case TR_ANIMCOMMAND_KILL:
+                    // This command executes ONLY at the end of animation.
+                    if(ss_anim->current_frame == af->frames_count - 1)
                     {
-                        entity->character->resp.kill = 1;
-                    }
-                }
-
-                break;
-
-            case TR_ANIMCOMMAND_PLAYSOUND:
-                int16_t sound_index;
-
-                if(entity->bf.current_frame == *++pointer)
-                {
-                    sound_index = *++pointer & 0x3FFF;
-
-                    // Quick workaround for TR3 quicksand.
-                    if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
-                       (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
-                    {
-                        sound_index = 18;
+                        if(entity->character)
+                        {
+                            entity->character->resp.kill = 1;
+                        }
                     }
 
-                    if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
+                    break;
+
+                case TR_ANIMCOMMAND_PLAYSOUND:
+                    int16_t sound_index;
+
+                    if(ss_anim->current_frame == *++pointer)
                     {
-                        if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
+                        sound_index = *++pointer & 0x3FFF;
+
+                        // Quick workaround for TR3 quicksand.
+                        if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
+                           (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
+                        {
+                            sound_index = 18;
+                        }
+
+                        if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
+                        {
+                            if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
+                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                        }
+                        else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
+                        {
+                            if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
+                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                        }
+                        else
+                        {
                             Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                    }
-                    else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
-                    {
-                        if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                        }
+
                     }
                     else
                     {
-                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                        pointer++;
                     }
+                    break;
 
-                }
-                else
-                {
-                    pointer++;
-                }
-                break;
-
-            case TR_ANIMCOMMAND_PLAYEFFECT:
-                // Effects (flipeffects) are various non-typical actions which vary
-                // across different TR game engine versions. There are common ones,
-                // however, and currently only these are supported.
-                if(entity->bf.current_frame == *++pointer)
-                {
-                    switch(*++pointer & 0x3FFF)
+                case TR_ANIMCOMMAND_PLAYEFFECT:
+                    // Effects (flipeffects) are various non-typical actions which vary
+                    // across different TR game engine versions. There are common ones,
+                    // however, and currently only these are supported.
+                    if(ss_anim->current_frame == *++pointer)
                     {
-                        case TR_EFFECT_SHAKESCREEN:
-                            if(engine_world.Character)
-                            {
-                                btScalar dist = Entity_FindDistance(engine_world.Character, entity);
-                                dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
-                                if(dist > 0)
-                                    Cam_Shake(renderer.cam, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
-                            }
-                            break;
-
-                        case TR_EFFECT_CHANGEDIRECTION:
-                            break;
-
-                        case TR_EFFECT_HIDEOBJECT:
-                            entity->state_flags &= ~ENTITY_STATE_VISIBLE;
-                            break;
-
-                        case TR_EFFECT_SHOWOBJECT:
-                            entity->state_flags |= ENTITY_STATE_VISIBLE;
-                            break;
-
-                        case TR_EFFECT_PLAYSTEPSOUND:
-                            // Please note that we bypass land/water mask, as TR3-5 tends to ignore
-                            // this flag and play step sound in any case on land, ignoring it
-                            // completely in water rooms.
-                            if(!Entity_GetSubstanceState(entity))
-                            {
-                                // TR3-5 footstep map.
-                                // We define it here as a magic numbers array, because TR3-5 versions
-                                // fortunately have no differences in footstep sounds order.
-                                // Also note that some footstep types mutually share same sound IDs
-                                // across different TR versions.
-                                switch(entity->current_sector->material)
+                        switch(*++pointer & 0x3FFF)
+                        {
+                            case TR_EFFECT_SHAKESCREEN:
+                                if(engine_world.Character)
                                 {
-                                    case SECTOR_MATERIAL_MUD:
-                                        Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
-                                        if(engine_world.version != TR_IV)
-                                        {
-                                            Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        }
-                                        break;
-
-                                    case SECTOR_MATERIAL_SAND:  // Same as grass
-                                        Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_GRAVEL:
-                                        Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
-                                        if(engine_world.version != TR_IV)
-                                        {
-                                            Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        }
-                                        break;
-
-                                    case SECTOR_MATERIAL_WATER: // BYPASS!
-                                        // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
-                                        Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_WOOD:
-                                        Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_METAL:
-                                        Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_MARBLE:    // TR4 only
-                                        if(engine_world.version == TR_IV)
-                                        {
-                                            Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        }
-                                        break;
-
-                                    case SECTOR_MATERIAL_GRASS:     // Same as sand
-                                        Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
-                                        Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
-                                        Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
-
-                                    case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
-                                        Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                        break;
+                                    btScalar dist = Entity_FindDistance(engine_world.Character, entity);
+                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
+                                    if(dist > 0)
+                                        Cam_Shake(renderer.cam, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
                                 }
-                            }
-                            break;
+                                break;
 
-                        case TR_EFFECT_BUBBLE:
-                            ///@FIXME: Spawn bubble particle here, when particle system is developed.
-                            random_value = rand() % 100;
-                            if(random_value > 60)
-                            {
-                                Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                            }
-                            break;
+                            case TR_EFFECT_CHANGEDIRECTION:
+                                break;
 
-                        default:
-                            ///@FIXME: TODO ALL OTHER EFFECTS!
-                            break;
+                            case TR_EFFECT_HIDEOBJECT:
+                                entity->state_flags &= ~ENTITY_STATE_VISIBLE;
+                                break;
+
+                            case TR_EFFECT_SHOWOBJECT:
+                                entity->state_flags |= ENTITY_STATE_VISIBLE;
+                                break;
+
+                            case TR_EFFECT_PLAYSTEPSOUND:
+                                // Please note that we bypass land/water mask, as TR3-5 tends to ignore
+                                // this flag and play step sound in any case on land, ignoring it
+                                // completely in water rooms.
+                                if(!Entity_GetSubstanceState(entity))
+                                {
+                                    // TR3-5 footstep map.
+                                    // We define it here as a magic numbers array, because TR3-5 versions
+                                    // fortunately have no differences in footstep sounds order.
+                                    // Also note that some footstep types mutually share same sound IDs
+                                    // across different TR versions.
+                                    switch(entity->current_sector->material)
+                                    {
+                                        case SECTOR_MATERIAL_MUD:
+                                            Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
+                                            if(engine_world.version != TR_IV)
+                                            {
+                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            }
+                                            break;
+
+                                        case SECTOR_MATERIAL_SAND:  // Same as grass
+                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_GRAVEL:
+                                            Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
+                                            if(engine_world.version != TR_IV)
+                                            {
+                                                Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            }
+                                            break;
+
+                                        case SECTOR_MATERIAL_WATER: // BYPASS!
+                                            // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
+                                            Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_WOOD:
+                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_METAL:
+                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_MARBLE:    // TR4 only
+                                            if(engine_world.version == TR_IV)
+                                            {
+                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            }
+                                            break;
+
+                                        case SECTOR_MATERIAL_GRASS:     // Same as sand
+                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
+                                            Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
+                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+
+                                        case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
+                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            break;
+                                    }
+                                }
+                                break;
+
+                            case TR_EFFECT_BUBBLE:
+                                ///@FIXME: Spawn bubble particle here, when particle system is developed.
+                                random_value = rand() % 100;
+                                if(random_value > 60)
+                                {
+                                    Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                }
+                                break;
+
+                            default:
+                                ///@FIXME: TODO ALL OTHER EFFECTS!
+                                break;
+                        }
                     }
-                }
-                else
-                {
-                    pointer++;
-                }
-                break;
+                    else
+                    {
+                        pointer++;
+                    }
+                    break;
+            }
         }
     }
 }
@@ -909,25 +914,26 @@ void Entity_ProcessSector(struct entity_s *ent)
             }
         }
     }
-    
+
     // Look up trigger function table and run trigger if it exists.
-    
+
     lua_getglobal(engine_lua, "tlist_RunTrigger");
     if(lua_isfunction(engine_lua, -1))
     {
+        int top = lua_gettop(engine_lua);
         lua_pushnumber(engine_lua, ent->current_sector->trig_index);
-        lua_pushnumber(engine_lua, ((ent->bf.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC));
+        lua_pushnumber(engine_lua, ((ent->bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC));
         lua_pushnumber(engine_lua, ent->id);
         lua_pcall(engine_lua, 3, 1, 0);
-        int result = lua_tointeger(engine_lua, -1);
-        lua_pop(engine_lua, 1);
+        //int result = lua_tointeger(engine_lua, -1);
+        lua_settop(engine_lua, top);
     }
 }
 
 
 void Entity_SetAnimation(entity_p entity, int animation, int frame)
 {
-    if(!entity || !entity->bf.model || (animation >= entity->bf.model->animation_count))
+    if(!entity || !entity->bf.animations.model || (animation >= entity->bf.animations.model->animation_count))
     {
         return;
     }
@@ -939,24 +945,24 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
         entity->character->no_fix = 0x00;
     }
 
-    entity->bf.lerp = 0.0;
-    animation_frame_p anim = &entity->bf.model->animations[animation];
+    entity->bf.animations.lerp = 0.0;
+    animation_frame_p anim = &entity->bf.animations.model->animations[animation];
     frame %= anim->frames_count;
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
-    entity->bf.period = 1.0 / 30.0;
+    entity->bf.animations.period = 1.0 / 30.0;
 
-    entity->bf.last_state = anim->state_id;
-    entity->bf.next_state = anim->state_id;
+    entity->bf.animations.last_state = anim->state_id;
+    entity->bf.animations.next_state = anim->state_id;
     entity->current_speed = anim->speed;
-    entity->bf.current_animation = animation;
-    entity->bf.current_frame = frame;
-    entity->bf.next_animation = animation;
-    entity->bf.next_frame = frame;
+    entity->bf.animations.current_animation = animation;
+    entity->bf.animations.current_frame = frame;
+    entity->bf.animations.next_animation = animation;
+    entity->bf.animations.next_frame = frame;
 
-    entity->bf.frame_time = (btScalar)frame * entity->bf.period;
-    long int t = (entity->bf.frame_time) / entity->bf.period;
-    btScalar dt = entity->bf.frame_time - (btScalar)t * entity->bf.period;
-    entity->bf.frame_time = (btScalar)frame * entity->bf.period + dt;
+    entity->bf.animations.frame_time = (btScalar)frame * entity->bf.animations.period;
+    long int t = (entity->bf.animations.frame_time) / entity->bf.animations.period;
+    btScalar dt = entity->bf.animations.frame_time - (btScalar)t * entity->bf.animations.period;
+    entity->bf.animations.frame_time = (btScalar)frame * entity->bf.animations.period + dt;
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity, 0);
@@ -1001,9 +1007,9 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 
 int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
 {
-    animation_frame_p anim = entity->bf.model->animations + entity->bf.current_animation;
+    animation_frame_p anim = entity->bf.animations.model->animations + entity->bf.animations.current_animation;
     state_change_p stc = anim->state_change;
-    
+
     for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
     {
         if(stc->id == id)
@@ -1011,7 +1017,7 @@ int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
             anim_dispatch_p disp = stc->anim_dispatch;
             for(uint16_t j=0;j<stc->anim_dispatch_count;j++,disp++)
             {
-                if((disp->frame_high >= disp->frame_low) && (entity->bf.current_frame >= disp->frame_low) && (entity->bf.current_frame <= disp->frame_high))// ||
+                if((disp->frame_high >= disp->frame_low) && (entity->bf.animations.current_frame >= disp->frame_low) && (entity->bf.animations.current_frame <= disp->frame_high))// ||
                    //(disp->frame_high <  disp->frame_low) && ((entity->bf.current_frame >= disp->frame_low) || (entity->bf.current_frame <= disp->frame_high)))
                 {
                     return (int)j;
@@ -1028,11 +1034,11 @@ int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
  */
 void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
 {
-    animation_frame_p curr_anim = bf->model->animations + bf->current_animation;
+    animation_frame_p curr_anim = bf->animations.model->animations + bf->animations.current_animation;
 
-    *frame = (bf->frame_time + time) / bf->period;
+    *frame = (bf->animations.frame_time + time) / bf->animations.period;
     *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
-    *anim  = bf->current_animation;
+    *anim  = bf->animations.current_animation;
 
     /*
      * Flag has a highest priority
@@ -1042,7 +1048,7 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
         if(*frame >= curr_anim->frames_count - 1)
         {
             *frame = curr_anim->frames_count - 1;
-            *anim  = bf->current_animation;                                     // paranoid dublicate
+            *anim  = bf->animations.current_animation;                          // paranoid dublicate
         }
         return;
     }
@@ -1060,7 +1066,7 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
         }
 
         *frame %= curr_anim->frames_count;
-        *anim   = bf->current_animation;                                      // paranoid dublicate
+        *anim   = bf->animations.current_animation;                             // paranoid dublicate
         return;
     }
 
@@ -1086,9 +1092,9 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
 
 void Entity_DoAnimMove(entity_p entity)
 {
-    if(entity->bf.model != NULL)
+    if(entity->bf.animations.model != NULL)
     {
-        bone_frame_p curr_bf = entity->bf.model->animations[entity->bf.current_animation].frames + entity->bf.current_frame;
+        bone_frame_p curr_bf = entity->bf.animations.model->animations[entity->bf.animations.current_animation].frames + entity->bf.animations.current_frame;
 
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
@@ -1132,6 +1138,7 @@ void Entity_DoAnimMove(entity_p entity)
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
+///@TODO: rewrite as a cycle through all bf.animations list
 int Entity_Frame(entity_p entity, btScalar time)
 {
     int16_t frame, anim, ret = 0x00;
@@ -1139,46 +1146,50 @@ int Entity_Frame(entity_p entity, btScalar time)
     btScalar dt;
     animation_frame_p af;
     state_change_p stc;
+    ss_animation_p ss_anim;
 
-    if((entity == NULL) || !(entity->state_flags & ENTITY_STATE_ACTIVE)  || !(entity->state_flags & ENTITY_STATE_ENABLED) || (entity->bf.model == NULL) || ((entity->bf.model->animation_count == 1) && (entity->bf.model->animations->frames_count == 1)))
+    if((entity == NULL) || !(entity->state_flags & ENTITY_STATE_ACTIVE)  || !(entity->state_flags & ENTITY_STATE_ENABLED) ||
+       (entity->bf.animations.model == NULL) || ((entity->bf.animations.model->animation_count == 1) && (entity->bf.animations.model->animations->frames_count == 1)))
     {
         return 0;
     }
 
-    entity->bf.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(entity->bf.model->animations + entity->bf.current_animation, entity->bf.next_state);
-    Entity_GetNextFrame(&entity->bf, time, stc, &frame, &anim, entity->anim_flags);
-    if(anim != entity->bf.current_animation)
+    ss_anim = &entity->bf.animations;
+
+    entity->bf.animations.lerp = 0.0;
+    stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+    Entity_GetNextFrame(&entity->bf, time, stc, &frame, &anim, ss_anim->anim_flags);
+    if(anim != ss_anim->current_animation)
     {
-        entity->bf.last_animation = entity->bf.current_animation;
+        ss_anim->last_animation = ss_anim->current_animation;
 
         ret = 0x02;
-        Entity_DoAnimCommands(entity, ret);
+        Entity_DoAnimCommands(entity, &entity->bf.animations, ret);
         Entity_DoAnimMove(entity);
         Entity_SetAnimation(entity, anim, frame);
-        stc = Anim_FindStateChangeByID(entity->bf.model->animations + entity->bf.current_animation, entity->bf.next_state);
+        stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
     }
-    else if(entity->bf.current_frame != frame)
+    else if(ss_anim->current_frame != frame)
     {
-        if(entity->bf.current_frame == 0)
+        if(ss_anim->current_frame == 0)
         {
-            entity->bf.last_animation = entity->bf.current_animation;
+            ss_anim->last_animation = ss_anim->current_animation;
         }
 
         ret = 0x01;
-        Entity_DoAnimCommands(entity, ret);
+        Entity_DoAnimCommands(entity, &entity->bf.animations, ret);
         Entity_DoAnimMove(entity);
-        entity->bf.current_frame = frame;
+        entity->bf.animations.current_frame = frame;
     }
 
-    af = entity->bf.model->animations + entity->bf.current_animation;
-    entity->bf.frame_time += time;
+    af = entity->bf.animations.model->animations + entity->bf.animations.current_animation;
+    entity->bf.animations.frame_time += time;
 
-    t = (entity->bf.frame_time) / entity->bf.period;
-    dt = entity->bf.frame_time - (btScalar)t * entity->bf.period;
-    entity->bf.frame_time = (btScalar)frame * entity->bf.period + dt;
-    entity->bf.lerp = (entity->smooth_anim)?(dt / entity->bf.period):(0.0);
-    Entity_GetNextFrame(&entity->bf, entity->bf.period, stc, &entity->bf.next_frame, &entity->bf.next_animation, entity->anim_flags);
+    t = (entity->bf.animations.frame_time) / entity->bf.animations.period;
+    dt = entity->bf.animations.frame_time - (btScalar)t * entity->bf.animations.period;
+    entity->bf.animations.frame_time = (btScalar)frame * entity->bf.animations.period + dt;
+    entity->bf.animations.lerp = (entity->smooth_anim)?(dt / entity->bf.animations.period):(0.0);
+    Entity_GetNextFrame(&entity->bf, entity->bf.animations.period, stc, &entity->bf.animations.next_frame, &entity->bf.animations.next_animation, ss_anim->anim_flags);
 
     /* There are stick code for multianimation (weapon mode) testing
      * Model replacing will be upgraded too, I have to add override
@@ -1204,64 +1215,64 @@ int Entity_Frame(entity_p entity, btScalar time)
             Character_SetWeaponModel(entity, entity->character->current_weapon, 1);
         }
 
-        for(ss_bone_frame_p bf=entity->bf.next;bf!=NULL;bf=bf->next)
+        for(ss_animation_p ss_anim=entity->bf.animations.next;ss_anim!=NULL;ss_anim=ss_anim->next)
         {
-            if((bf->model != NULL) && (bf->model->animation_count > 4))
+            if((ss_anim->model != NULL) && (ss_anim->model->animation_count > 4))
             {
                 switch(entity->character->weapon_current_state)
                 {
                     case WEAPON_STATE_HIDE:
                         if(entity->character->cmd.ready_weapon)   // ready weapon
                         {
-                            bf->current_animation = 1;
-                            bf->next_animation = 1;
-                            bf->current_frame = 0;
-                            bf->next_frame = 0;
-                            bf->frame_time = 0.0;
+                            ss_anim->current_animation = 1;
+                            ss_anim->next_animation = 1;
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->frame_time = 0.0;
                             entity->character->weapon_current_state = WEAPON_STATE_HIDE_TO_READY;
                         }
                         break;
 
                     case WEAPON_STATE_HIDE_TO_READY:
-                        bf->frame_time += time;
-                        bf->current_frame = (bf->frame_time) / bf->period;
-                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                        t = bf->model->animations[bf->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
-                        if(bf->current_frame < t - 1)
+                        if(ss_anim->current_frame < t - 1)
                         {
-                            bf->next_frame = (bf->current_frame + 1) % t;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
-                        else if(bf->current_frame < t)
+                        else if(ss_anim->current_frame < t)
                         {
-                            bf->next_frame = 0;
-                            bf->next_animation = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 0;
                         }
                         else
                         {
-                            bf->current_frame = 0;
-                            bf->current_animation = 0;
-                            bf->next_frame = 0;
-                            bf->next_animation = 0;
-                            bf->frame_time = 0.0;
+                            ss_anim->current_frame = 0;
+                            ss_anim->current_animation = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 0;
+                            ss_anim->frame_time = 0.0;
                             entity->character->weapon_current_state = WEAPON_STATE_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_IDLE:
-                        bf->current_frame = 0;
-                        bf->current_animation = 0;
-                        bf->next_frame = 0;
-                        bf->next_animation = 0;
-                        bf->frame_time = 0.0;
+                        ss_anim->current_frame = 0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                        ss_anim->frame_time = 0.0;
                         if(entity->character->cmd.ready_weapon)
                         {
-                            bf->current_animation = 3;
-                            bf->next_animation = 3;
-                            bf->current_frame = bf->next_frame = 0;
-                            bf->frame_time = 0.0;
+                            ss_anim->current_animation = 3;
+                            ss_anim->next_animation = 3;
+                            ss_anim->current_frame = ss_anim->next_frame = 0;
+                            ss_anim->frame_time = 0.0;
                             entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
                         }
                         else if(entity->character->cmd.action)
@@ -1276,54 +1287,54 @@ int Entity_Frame(entity_p entity, btScalar time)
 
                     case WEAPON_STATE_FIRE_TO_IDLE:
                         // Yes, same animation, reverse frames order;
-                        t = bf->model->animations[bf->current_animation].frames_count;
-                        bf->frame_time += time;
-                        bf->current_frame = (bf->frame_time) / bf->period;
-                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                        bf->current_frame = t - 1 - bf->current_frame;
-                        if(bf->current_frame > 0)
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                        if(ss_anim->current_frame > 0)
                         {
-                            bf->next_frame = bf->current_frame - 1;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame - 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
                         else
                         {
-                            bf->next_frame = bf->current_frame = 0;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
                             entity->character->weapon_current_state = WEAPON_STATE_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_IDLE_TO_FIRE:
-                        bf->frame_time += time;
-                        bf->current_frame = (bf->frame_time) / bf->period;
-                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                        t = bf->model->animations[bf->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
-                        if(bf->current_frame < t - 1)
+                        if(ss_anim->current_frame < t - 1)
                         {
-                            bf->next_frame = bf->current_frame + 1;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame + 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
-                        else if(bf->current_frame < t)
+                        else if(ss_anim->current_frame < t)
                         {
-                            bf->next_frame = 0;
-                            bf->next_animation = 2;
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 2;
                         }
                         else if(entity->character->cmd.action)
                         {
-                            bf->current_frame = 0;
-                            bf->next_frame = 1;
-                            bf->current_animation = 2;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 1;
+                            ss_anim->current_animation = 2;
+                            ss_anim->next_animation = ss_anim->current_animation;
                             entity->character->weapon_current_state = WEAPON_STATE_FIRE;
                         }
                         else
                         {
-                            bf->frame_time = 0.0;
-                            bf->current_frame = bf->model->animations[bf->current_animation].frames_count - 1;
+                            ss_anim->frame_time = 0.0;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
                             entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
@@ -1332,117 +1343,117 @@ int Entity_Frame(entity_p entity, btScalar time)
                         if(entity->character->cmd.action)
                         {
                             // inc time, loop;
-                            bf->frame_time += time;
-                            bf->current_frame = (bf->frame_time) / bf->period;
-                            dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                            bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                            t = bf->model->animations[bf->current_animation].frames_count;
+                            ss_anim->frame_time += time;
+                            ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                            dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                            ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                            t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
-                            if(bf->current_frame < t - 1)
+                            if(ss_anim->current_frame < t - 1)
                             {
-                                bf->next_frame = bf->current_frame + 1;
-                                bf->next_animation = bf->current_animation;
+                                ss_anim->next_frame = ss_anim->current_frame + 1;
+                                ss_anim->next_animation = ss_anim->current_animation;
                             }
-                            else if(bf->current_frame < t)
+                            else if(ss_anim->current_frame < t)
                             {
-                                bf->next_frame = 0;
-                                bf->next_animation = bf->current_animation;
+                                ss_anim->next_frame = 0;
+                                ss_anim->next_animation = ss_anim->current_animation;
                             }
                             else
                             {
-                                bf->frame_time = dt;
-                                bf->current_frame = 0;
-                                bf->next_frame = 1;
+                                ss_anim->frame_time = dt;
+                                ss_anim->current_frame = 0;
+                                ss_anim->next_frame = 1;
                             }
                         }
                         else
                         {
-                            bf->frame_time = 0.0;
-                            bf->current_animation = 0;
-                            bf->next_animation = bf->current_animation;
-                            bf->current_frame = bf->model->animations[bf->current_animation].frames_count - 1;
-                            bf->next_frame = (bf->current_frame > 0)?(bf->current_frame - 1):(0);
+                            ss_anim->frame_time = 0.0;
+                            ss_anim->current_animation = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
                             entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_IDLE_TO_HIDE:
-                        t = bf->model->animations[bf->current_animation].frames_count;
-                        bf->frame_time += time;
-                        bf->current_frame = (bf->frame_time) / bf->period;
-                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                        if(bf->current_frame < t - 1)
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        if(ss_anim->current_frame < t - 1)
                         {
-                            bf->next_frame = bf->current_frame + 1;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame + 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
                         else
                         {
-                            bf->next_frame = bf->current_frame = 0;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
                             entity->character->weapon_current_state = WEAPON_STATE_HIDE;
                             Character_SetWeaponModel(entity, entity->character->current_weapon, 0);
                         }
                         break;
                 };
             }
-            else if((bf->model != NULL) && (bf->model->animation_count == 4))
+            else if((ss_anim->model != NULL) && (ss_anim->model->animation_count == 4))
             {
                 switch(entity->character->weapon_current_state)
                 {
                     case WEAPON_STATE_HIDE:
                         if(entity->character->cmd.ready_weapon)   // ready weapon
                         {
-                            bf->current_animation = 2;
-                            bf->next_animation = 2;
-                            bf->current_frame = 0;
-                            bf->next_frame = 0;
-                            bf->frame_time = 0.0;
+                            ss_anim->current_animation = 2;
+                            ss_anim->next_animation = 2;
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->frame_time = 0.0;
                             entity->character->weapon_current_state = WEAPON_STATE_HIDE_TO_READY;
                         }
                         break;
 
                     case WEAPON_STATE_HIDE_TO_READY:
-                        bf->frame_time += time;
-                        bf->current_frame = (bf->frame_time) / bf->period;
-                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                        t = bf->model->animations[bf->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
-                        if(bf->current_frame < t - 1)
+                        if(ss_anim->current_frame < t - 1)
                         {
-                            bf->next_frame = (bf->current_frame + 1) % t;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
-                        else if(bf->current_frame < t)
+                        else if(ss_anim->current_frame < t)
                         {
-                            bf->next_frame = 0;
-                            bf->next_animation = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 0;
                         }
                         else
                         {
-                            bf->current_frame = 0;
-                            bf->current_animation = 0;
-                            bf->next_frame = 0;
-                            bf->next_animation = 0;
-                            bf->frame_time = 0.0;
+                            ss_anim->current_frame = 0;
+                            ss_anim->current_animation = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 0;
+                            ss_anim->frame_time = 0.0;
                             entity->character->weapon_current_state = WEAPON_STATE_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_IDLE:
-                        bf->current_frame = 0;
-                        bf->current_animation = 0;
-                        bf->next_frame = 0;
-                        bf->next_animation = 0;
-                        bf->frame_time = 0.0;
+                        ss_anim->current_frame = 0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                        ss_anim->frame_time = 0.0;
                         if(entity->character->cmd.ready_weapon)
                         {
-                            bf->current_animation = 2;
-                            bf->next_animation = 2;
-                            bf->current_frame = bf->next_frame = bf->model->animations[bf->current_animation].frames_count - 1;
-                            bf->frame_time = 0.0;
+                            ss_anim->current_animation = 2;
+                            ss_anim->next_animation = 2;
+                            ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->frame_time = 0.0;
                             entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
                         }
                         else if(entity->character->cmd.action)
@@ -1457,54 +1468,54 @@ int Entity_Frame(entity_p entity, btScalar time)
 
                     case WEAPON_STATE_FIRE_TO_IDLE:
                         // Yes, same animation, reverse frames order;
-                        t = bf->model->animations[bf->current_animation].frames_count;
-                        bf->frame_time += time;
-                        bf->current_frame = (bf->frame_time) / bf->period;
-                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                        bf->current_frame = t - 1 - bf->current_frame;
-                        if(bf->current_frame > 0)
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                        if(ss_anim->current_frame > 0)
                         {
-                            bf->next_frame = bf->current_frame - 1;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame - 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
                         else
                         {
-                            bf->next_frame = bf->current_frame = 0;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
                             entity->character->weapon_current_state = WEAPON_STATE_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_IDLE_TO_FIRE:
-                        bf->frame_time += time;
-                        bf->current_frame = (bf->frame_time) / bf->period;
-                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                        t = bf->model->animations[bf->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
-                        if(bf->current_frame < t - 1)
+                        if(ss_anim->current_frame < t - 1)
                         {
-                            bf->next_frame = bf->current_frame + 1;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame + 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
-                        else if(bf->current_frame < t)
+                        else if(ss_anim->current_frame < t)
                         {
-                            bf->next_frame = 0;
-                            bf->next_animation = 3;
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 3;
                         }
                         else if(entity->character->cmd.action)
                         {
-                            bf->current_frame = 0;
-                            bf->next_frame = 1;
-                            bf->current_animation = 3;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 1;
+                            ss_anim->current_animation = 3;
+                            ss_anim->next_animation = ss_anim->current_animation;
                             entity->character->weapon_current_state = WEAPON_STATE_FIRE;
                         }
                         else
                         {
-                            bf->frame_time = 0.0;
-                            bf->current_frame = bf->model->animations[bf->current_animation].frames_count - 1;
+                            ss_anim->frame_time = 0.0;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
                             entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
@@ -1513,63 +1524,65 @@ int Entity_Frame(entity_p entity, btScalar time)
                         if(entity->character->cmd.action)
                         {
                             // inc time, loop;
-                            bf->frame_time += time;
-                            bf->current_frame = (bf->frame_time) / bf->period;
-                            dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                            bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                            t = bf->model->animations[bf->current_animation].frames_count;
+                            ss_anim->frame_time += time;
+                            ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                            dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                            ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                            t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
-                            if(bf->current_frame < t - 1)
+                            if(ss_anim->current_frame < t - 1)
                             {
-                                bf->next_frame = bf->current_frame + 1;
-                                bf->next_animation = bf->current_animation;
+                                ss_anim->next_frame = ss_anim->current_frame + 1;
+                                ss_anim->next_animation = ss_anim->current_animation;
                             }
-                            else if(bf->current_frame < t)
+                            else if(ss_anim->current_frame < t)
                             {
-                                bf->next_frame = 0;
-                                bf->next_animation = bf->current_animation;
+                                ss_anim->next_frame = 0;
+                                ss_anim->next_animation = ss_anim->current_animation;
                             }
                             else
                             {
-                                bf->frame_time = dt;
-                                bf->current_frame = 0;
-                                bf->next_frame = 1;
+                                ss_anim->frame_time = dt;
+                                ss_anim->current_frame = 0;
+                                ss_anim->next_frame = 1;
                             }
                         }
                         else
                         {
-                            bf->frame_time = 0.0;
-                            bf->current_animation = 0;
-                            bf->next_animation = bf->current_animation;
-                            bf->current_frame = bf->model->animations[bf->current_animation].frames_count - 1;
-                            bf->next_frame = (bf->current_frame > 0)?(bf->current_frame - 1):(0);
+                            ss_anim->frame_time = 0.0;
+                            ss_anim->current_animation = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
                             entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_IDLE_TO_HIDE:
                         // Yes, same animation, reverse frames order;
-                        t = bf->model->animations[bf->current_animation].frames_count;
-                        bf->frame_time += time;
-                        bf->current_frame = (bf->frame_time) / bf->period;
-                        dt = bf->frame_time - (btScalar)bf->current_frame * bf->period;
-                        bf->lerp = (entity->smooth_anim)?(dt / bf->period):(0.0);
-                        bf->current_frame = t - 1 - bf->current_frame;
-                        if(bf->current_frame > 0)
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                        if(ss_anim->current_frame > 0)
                         {
-                            bf->next_frame = bf->current_frame - 1;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame - 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
                         else
                         {
-                            bf->next_frame = bf->current_frame = 0;
-                            bf->next_animation = bf->current_animation;
+                            ss_anim->next_frame = ss_anim->current_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
                             entity->character->weapon_current_state = WEAPON_STATE_HIDE;
                             Character_SetWeaponModel(entity, entity->character->current_weapon, 0);
                         }
                         break;
                 };
             }
+
+            Entity_DoAnimCommands(entity, ss_anim, 0);
         }
     }
 
@@ -1582,9 +1595,9 @@ int Entity_Frame(entity_p entity, btScalar time)
     }
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-    if(entity->onFrame != NULL)
+    if(entity->bf.animations.onFrame != NULL)
     {
-        entity->onFrame(entity, ret);
+        entity->bf.animations.onFrame(entity, &entity->bf.animations, ret);
     }
 
     return ret;
@@ -1595,7 +1608,7 @@ int Entity_Frame(entity_p entity, btScalar time)
  */
 void Entity_RebuildBV(entity_p ent)
 {
-    if((ent != NULL) && (ent->bf.model != NULL))
+    if((ent != NULL) && (ent->bf.animations.model != NULL))
     {
         /*
          * get current BB from animation

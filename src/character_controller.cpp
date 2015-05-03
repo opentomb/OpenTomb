@@ -200,7 +200,7 @@ void Character_Clean(struct entity_s *ent)
 #if CHARACTER_USE_COMPLEX_COLLISION
     if(actor->shapes)
     {
-        for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             delete ent->character->shapes[i];
         }
@@ -265,7 +265,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
     {
         ent->character->inventory = i;
     }
-    
+
     return count;
 }
 
@@ -322,7 +322,7 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
         pi = i;
         i = i->next;
     }
-    
+
     return -count;
 }
 
@@ -373,18 +373,18 @@ int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         
 void Character_CreateCollisionObject(struct entity_s *ent)
 {
 #if CHARACTER_USE_COMPLEX_COLLISION
-    if((ent->character == NULL) || (ent->bf.model == NULL) || (ent->bf.model->mesh_count == 0))
+    if((ent->character == NULL) || (ent->bf.animations.model == NULL) || (ent->bf.animations.model->mesh_count == 0))
     {
         return;
     }
 
-    ent->character->shapes = (btCollisionShape**)malloc(ent->bf.model->mesh_count * sizeof(btCollisionShape*));
-    for(uint16_t i=0;i<ent->bf.model->mesh_count;i++)
+    ent->character->shapes = (btCollisionShape**)malloc(ent->bf.bone_tag_count * sizeof(btCollisionShape*));
+    for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         btVector3 box;
-        box.m_floats[0] = 0.40 * (ent->bf.model->mesh_tree[i].mesh_base->bb_max[0] - ent->bf.model->mesh_tree[i].mesh_base->bb_min[0]);
-        box.m_floats[1] = 0.40 * (ent->bf.model->mesh_tree[i].mesh_base->bb_max[1] - ent->bf.model->mesh_tree[i].mesh_base->bb_min[1]);
-        box.m_floats[2] = 0.40 * (ent->bf.model->mesh_tree[i].mesh_base->bb_max[2] - ent->bf.model->mesh_tree[i].mesh_base->bb_min[2]);
+        box.m_floats[0] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[0] - ent->bf.bone_tags[i].mesh_base->bb_min[0]);
+        box.m_floats[1] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[1] - ent->bf.bone_tags[i].mesh_base->bb_min[1]);
+        box.m_floats[2] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[2] - ent->bf.bone_tags[i].mesh_base->bb_min[2]);
         ent->character->shapes[i] = new btBoxShape(box);
     }
 #endif
@@ -1177,13 +1177,13 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
         btScalar tr[16], *v, *ltr;
         btCollisionShape *shape = ent->character->ghostObject->getCollisionShape();
 
-        for(uint16_t i=0;i<ent->bf.model->collision_map_size;i++)
+        for(uint16_t i=0;i<ent->bf.animations.model->collision_map_size;i++)
         {
-            uint16_t m = ent->bf.model->collision_map[i];
+            uint16_t m = ent->bf.animations.model->collision_map[i];
             numPenetrationLoops = 0;
             ltr = ent->bf.bone_tags[m].full_transform;
             Mat4_Mat4_mul_macro(tr, ent->transform, ltr);
-            v = ent->bf.model->mesh_tree[m].mesh_base->centre;
+            v = ent->bf.animations.model->mesh_tree[m].mesh_base->centre;
             ent->character->ghostObject->setCollisionShape(ent->character->shapes[m]);
 
             ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(tr);
@@ -1333,38 +1333,6 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
             }
         }
     }
-}
-
-
-void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
-{
-    btScalar t, vz;
-
-    t = ent->current_speed * ent->character->speed_mult;
-    vz = (zeroVz)?(0.0):(ent->speed.m_floats[2]);
-
-    if(ent->dir_flag & ENT_MOVE_FORWARD)
-    {
-        vec3_mul_scalar(ent->speed.m_floats, ent->transform+4, t);
-    }
-    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
-    {
-        vec3_mul_scalar(ent->speed.m_floats, ent->transform+4,-t);
-    }
-    else if(ent->dir_flag & ENT_MOVE_LEFT)
-    {
-        vec3_mul_scalar(ent->speed.m_floats, ent->transform+0,-t);
-    }
-    else if(ent->dir_flag & ENT_MOVE_RIGHT)
-    {
-        vec3_mul_scalar(ent->speed.m_floats, ent->transform+0, t);
-    }
-    else
-    {
-        vec3_set_zero(ent->speed.m_floats);
-    }
-
-    ent->speed.m_floats[2] = vz;
 }
 
 
@@ -2527,7 +2495,7 @@ void Character_ApplyCommands(struct entity_s *ent)
 
     if(ent->character->state_func)
     {
-        ent->character->state_func(ent);
+        ent->character->state_func(ent, &ent->bf.animations);
     }
 
     switch(ent->move_type)
@@ -2595,8 +2563,8 @@ void Character_UpdateParams(struct entity_s *ent)
             }
 
 
-            if((ent->bf.last_state == TR_STATE_LARA_SPRINT) ||
-               (ent->bf.last_state == TR_STATE_LARA_SPRINT_ROLL))
+            if((ent->bf.animations.last_state == TR_STATE_LARA_SPRINT) ||
+               (ent->bf.animations.last_state == TR_STATE_LARA_SPRINT_ROLL))
             {
                 Character_ChangeParam(ent, PARAM_STAMINA, -0.5);
             }
@@ -2697,20 +2665,21 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
 // overrided == 0x02: add mesh to slot in armed state;
 // overrided == 0x03: overriding mesh in disarmed state;
 // overrided == 0x04: add mesh to slot in disarmed state;
+///@TODO: separate mesh replacing control and animation disabling / enabling
 int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, weapon_model);
 
     if((sm != NULL) && (ent->bf.bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
     {
-        skeletal_model_p bm = ent->bf.model;
-        if(ent->bf.next == NULL)
+        skeletal_model_p bm = ent->bf.animations.model;
+        if(ent->bf.animations.next == NULL)
         {
             Entity_AddOverrideAnim(ent, weapon_model);
         }
         else
         {
-            ent->bf.next->model = sm;
+            ent->bf.animations.next->model = sm;
         }
 
         for(int i=0;i<bm->mesh_count;i++)
@@ -2746,7 +2715,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
                     ent->bf.bone_tags[i].mesh_slot = sm->mesh_tree[i].mesh_base;
                 }
             }
-            ent->bf.next->model = NULL;
+            ent->bf.animations.next->model = NULL;
         }
 
         return 1;
@@ -2754,15 +2723,15 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
     else
     {
         // do unarmed default model
-        skeletal_model_p bm = ent->bf.model;
+        skeletal_model_p bm = ent->bf.animations.model;
         for(int i=0;i<bm->mesh_count;i++)
         {
             ent->bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
             ent->bf.bone_tags[i].mesh_slot = NULL;
         }
-        if(ent->bf.next != NULL)
+        if(ent->bf.animations.next != NULL)
         {
-            ent->bf.next->model = NULL;
+            ent->bf.animations.next->model = NULL;
         }
     }
 

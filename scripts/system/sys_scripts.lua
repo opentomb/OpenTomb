@@ -36,6 +36,10 @@ ENTITY_CALLBACK_COLLISION                 = 0x00000004;
 ENTITY_CALLBACK_STAND                     = 0x00000008;
 ENTITY_CALLBACK_HIT                       = 0x00000010;
 
+TICK_IDLE    = 0;
+TICK_STOPPED = 1;
+TICK_ACTIVE  = 2;
+
 
 -- Global frame time variable, in seconds
 
@@ -122,6 +126,21 @@ end
 function loopEntity(object_id)
     if((object_id == nil) or (entity_funcs[object_id].onLoop == nil)) then return end;
     entity_funcs[object_id].onLoop(object_id);
+end
+
+function tickEntity(object_id)
+    local timer = getEntityTimer(object_id);
+    if(timer > 0.0) then
+        timer = timer - frame_time;
+        if(timer < 0.0) then timer = 0.0 end;
+        setEntityTimer(object_id, timer);
+        if(timer == 0.0) then
+            return TICK_STOPPED;
+        end;
+    else
+        return TICK_IDLE;
+    end;
+    return TICK_ACTIVE;
 end
 
 print("system_scripts.lua loaded");

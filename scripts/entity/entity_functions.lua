@@ -38,59 +38,30 @@ function entfuncs_Clear()
     print("Entity function table cleaned");
 end;
 
-
--- Now, define function creation routines.
+--------------------------------------------------------------------------------
+-- ENTITY FUNCTIONS IMPLEMENTATION
+--------------------------------------------------------------------------------
 
 function door_func(id)   -- NORMAL doors only!
 
-    --print("Door function created (entity " .. id .. ")");
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     
-    local f1, f2, f3 = getEntityFlags(id);
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_DECORATION), nil);
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
-    
-    setEntityActivity(id, 0);   -- Door is static by default.
-
-    -- onActivate function
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil) then
-            return;
-        end
-        
-        door_activate(object_id, activator_id);
+        if(object_id == nil) then return end;
+        door_activate(object_id);
     end;
-    
-    -- onDeactivate function - EQUAL TO ACTIVATE FUNCTION???
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id)
-        local timer = getEntityTimer(object_id);
-        if(timer > 0.0) then
-            timer = timer - frame_time;
-            if(timer < 0.0) then timer = 0.0 end;
-            if(timer == 0.0) then
-                setEntityState(object_id, 0);
-            end;
-            setEntityTimer(object_id, timer);
-        end;
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
+    
+    door_activate(id);
 end
 
 function keyhole_func(id)    -- Key and puzzle holes.
 
-    --print("Keyhole function created (entity " .. id .. ")");
-
-    local f1, f2, f3 = getEntityFlags(id);
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_INTERACTIVE), nil);   -- make entity responding
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
-
-    setEntityActivity(id, 0);   -- Disable entity on start-up.
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
 
     -- onActivate function
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -103,24 +74,16 @@ function keyhole_func(id)    -- Key and puzzle holes.
         
         if(getEntityActivity(object_id) == 0) then
             setEntityPos(activator_id, getEntityPos(object_id));
-            moveEntityLocal(activator_id, 0.0, 256.0, 0.0);
+            moveEntityLocal(activator_id, 0.0, 384.0, 0.0);
             switch_activate(object_id, activator_id);
-        
         end
     end;
 end
 
 function switch_func(id)     -- Ordinary switches.
     
-    --print("Switch function created (entity " .. id .. ")");
-
-    local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_INTERACTIVE), nil);   -- make entity responding
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
-
     -- onActivate function
     entity_funcs[id].onActivate = function(object_id, activator_id)
         -- canTriggerEntity(activator_id, object_id, max_dist, offset_x, offset_y, offset_z)
@@ -130,36 +93,21 @@ function switch_func(id)     -- Ordinary switches.
         end
         
         setEntityPos(activator_id, getEntityPos(object_id));    -- Move activator right next to object.
-        moveEntityLocal(activator_id, 0.0, 256.0, 0.0);         -- Shift activator back to proper distance.
+        moveEntityLocal(activator_id, 0.0, 384.0, 0.0);         -- Shift activator back to proper distance.
         switch_activate(object_id, activator_id);               -- Make switching routines.
     end;
     
     entity_funcs[id].onLoop = function(object_id)
-        local timer = getEntityTimer(object_id);
-        if(timer > 0.0) then
-            timer = timer - frame_time;
-            if(timer < 0.0) then timer = 0.0 end;
-            if(timer == 0.0) then
-                setEntityState(object_id, 1);
-                setEntitySectorStatus(object_id, 1);
-            end;
-            setEntityTimer(object_id, timer);
+        if(tickEntity(object_id) == TICK_STOPPED) then
+            setEntityState(object_id, 1);
+            setEntitySectorStatus(object_id, 1);
         end;
     end;
 end
 
-function anim_func(id)
+function anim_func(id)      -- Ordinary animatings.
 
-    --print("Animating function created (entity " .. id .. ")");
-
-    local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_DECORATION), nil);   -- make entity static
-    setEntityActivity(id, 0);
-    
-    
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};  -- Create function.
-    end
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -172,33 +120,110 @@ function anim_func(id)
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        local timer = getEntityTimer(object_id);
-        if(timer > 0.0) then
-            timer = timer - frame_time;
-            if(timer < 0.0) then timer = 0.0 end;
-            if(timer == 0.0) then
-                setEntityState(object_id, 0);
-            end;
-            setEntityTimer(object_id, timer);
-        end;
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
 end
 
-function pickup_func(id, item_id)    -- VALID
+function venicebird_func(id)    -- Venice singing birds (TR2)
 
-    --print("Pickup function created (entity " .. id .. ")");
-
-    local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_PICKABLE), nil);
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+      setEntityActivity(object_id, 1);
     end
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+        if(getEntityActivity(object_id) == 1) then
+            if(math.random(100000) > 99500) then playSound(316, object_id) end;
+        end;
+    end
+    
+    activateEntity(id);
+end
+
+function swingblade_func(id)        -- Swinging blades (TR1)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityActivity(id, 1);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityState(object_id, 2);
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityState(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
+    end
+    
+    activateEntity(id);
+end
+
+function slamdoor_func(id)      -- Slamming doors (TR1-TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityActivity(id, 1);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityState(object_id, 1);
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityState(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
+    end
+    
+    activateEntity(id);
+end
+
+function wallblade_func(id)     -- Wall blade (TR1-TR3)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+        if(getEntityActivity(object_id) == 1) then
+            local anim_number = getEntityAnim(object_id)
+            if(anim_number == 2) then
+                setEntityAnim(object_id, 3)
+            elseif(anim_number == 1) then
+                setEntityAnim(object_id, 0)
+            end;
+        end;
+    end
+    
+    activateEntity(id);
+end
+
+function pickup_func(id, item_id)    -- Pick-ups
+
+    setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
+    setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((item_id == nil) or (object_id == nil)) then
             return;
         end
-
+        
         local need_set_pos = true;
         local curr_anim = getEntityAnim(activator_id);
 
@@ -222,24 +247,28 @@ function pickup_func(id, item_id)    -- VALID
 
         print("You're trying to pick up object " .. object_id);
 
-        local px, py, pz = getEntityPos(object_id);
-        if(curr_anim == 108) then
-            pz = pz + 128.0                     -- Shift offset for swim pickup.
-        end;
-
-        if(need_set_pos) then
-            setEntityPos(activator_id, px, py, pz);
-        end;
 
         addTask(
         function()
+        
+            -- Position corrector
+        
+            if(getEntityMoveType(activator_id) == 6) then
+                if(getEntityDistance(object_id, activator_id) > 128.0) then
+                    moveEntityToEntity(activator_id, object_id, 25.0);
+                end;
+            else
+                if(getEntityDistance(object_id, activator_id) > 32.0) then
+                    moveEntityToEntity(activator_id, object_id, 50.0);
+                end;;
+            end;
+            
             local a, f, c = getEntityAnim(activator_id);
-            local ver = getLevelVersion();
-
+            
             -- Standing pickup anim makes action on frame 40 in TR1-3, in TR4-5
             -- it was generalized with all rest animations by frame 16.
 
-            if((a == 135) and (ver < TR_IV)) then
+            if((a == 135) and (getLevelVersion() < TR_IV)) then
                 if(f < 40) then
                     return true;
                 end;
@@ -257,16 +286,11 @@ function pickup_func(id, item_id)    -- VALID
 end
 
 
-function fallblock_func(id)  -- VALID
-
-    --print("Falling block function created (entity " .. id .. ")");
+function fallblock_func(id)  -- Falling block (TR1-3)
 
     local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags
     setEntityFlags(id, nil, nil, bit32.bor(f3, ENTITY_CALLBACK_STAND));
     setEntitySpeed(id, 0.0, 0.0, 0.0);
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
-    end
 
     entity_funcs[id].onStand = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
@@ -299,16 +323,43 @@ function fallblock_func(id)  -- VALID
 end
 
 
-function pushdoor_func(id)   -- VALID
+function fallceiling_func(id)  -- Falling ceiling (TR1-3)
 
-    --print("Pushable door function created (entity " .. id .. ")");
+    setEntitySpeed(id, 0.0, 0.0, 0.0);
 
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if((object_id == nil) or (activator_id == nil)) then
+            return;
+        end
+
+        local anim = getEntityAnim(object_id);
+        if(anim == 0) then
+            setEntityAnim(object_id, 1);
+            local once = true;
+            addTask(
+            function()
+                local anim = getEntityAnim(object_id);
+                if(anim == 1) then
+                    return true;
+                end;
+                if(once) then
+                    setEntityCollision(object_id, 0);
+                    once = false;
+                end;
+                if(dropEntity(object_id, frame_time)) then
+                    setEntityAnim(object_id, 3);
+                    return false;
+                end;
+                return true;
+            end);
+        end;
+    end;
+end
+
+function pushdoor_func(id)   -- Pushdoors (TR4)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivity(id, 0);
-    local f1, f2, f3 = getEntityFlags(id);
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_TRIGGER), nil);
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
-    end
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
@@ -328,18 +379,12 @@ function pushdoor_func(id)   -- VALID
 end
 
 
-function oldspike_func(id)  -- INVALID
-
-   -- print("Old-skool teeth spikes function created (entity " .. id .. ")");
+function oldspike_func(id)  -- Teeth spikes (INVALID)
 
     setEntityActivity(id, 1);
     local f1, f2, f3 = getEntityFlags(id);
     setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_DECORATION), bit32.bor(f3, ENTITY_CALLBACK_COLLISION));
     
-    if(entity_funcs[id] == nil) then
-        entity_funcs[id] = {};
-    end
-
     entity_funcs[id].onCollision = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
             return;
