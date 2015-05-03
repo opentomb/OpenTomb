@@ -1570,14 +1570,14 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
                 break;
 
             case TR_II:
-            case TR_II_DEMO:
+            case TR_II_DEMO:                
                 switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
                 {
                     case 0x02:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
                         break;
                     case 0x01:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
                         break;
                     case 0x03:
                         engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
@@ -1603,11 +1603,20 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
 
     Audio_LoadOverridedSamples();
 
-    // Quick TR1 fix for underwater looped sound.
+    // Hardcoded version-specific fixes!
 
-    if(engine_world.version < TR_II)
+    switch(engine_world.version)
     {
-        engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
+        case TR_I:
+        case TR_I_DEMO:
+        case TR_I_UB:
+            // Fix for underwater looped sound.
+            engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
+            break;
+        case TR_II:
+            // Fix for helicopter sound range.
+            engine_world.audio_effects[(engine_world.audio_map[297])].range *= 10.0;
+            break;
     }
 
     // Reset last room type used for assigning reverb.

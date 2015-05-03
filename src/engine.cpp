@@ -2448,7 +2448,6 @@ int lua_PlayStream(lua_State *lua)
 int lua_PlaySound(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    int ent_id = -1;
     
     if(top < 1)
     {
@@ -2463,7 +2462,9 @@ int lua_PlaySound(lua_State *lua)
         return 0;
     }
     
-    if(top >= 2)
+    int ent_id = -1;
+    
+    if(top > 1)
     {
         ent_id = lua_tointeger(lua, 2);
         if(World_GetEntityByID(&engine_world, ent_id) == NULL) ent_id = -1;
@@ -2480,30 +2481,31 @@ int lua_PlaySound(lua_State *lua)
         result = Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL);
     }
 
-    switch(result)
+    if(result < 0)
     {
-        case TR_AUDIO_SEND_NOCHANNEL:
-            Con_Warning(SYSWARN_AS_NOCHANNEL);
-            break;
+        switch(result)
+        {
+            case TR_AUDIO_SEND_NOCHANNEL:
+                Con_Warning(SYSWARN_AS_NOCHANNEL);
+                break;
 
-        case TR_AUDIO_SEND_NOSAMPLE:
-            Con_Warning(SYSWARN_AS_NOSAMPLE);
-            break;
-
-        case TR_AUDIO_SEND_IGNORED:
-            Con_Warning(SYSWARN_AS_IGNORED);
-            break;
+            case TR_AUDIO_SEND_NOSAMPLE:
+                Con_Warning(SYSWARN_AS_NOSAMPLE);
+                break;
+        }
     }
-
+    
     return 0;
 }
 
 
 int lua_StopSound(lua_State *lua)
 {
-    if(lua_gettop(lua) != 1)
+    int top = lua_gettop(lua);
+    
+    if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id]");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
         return 0;
     }
 
@@ -2514,10 +2516,26 @@ int lua_StopSound(lua_State *lua)
         return 0;
     }
 
-    if(Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL) == 0)
+    int ent_id = -1;
+    
+    if(top > 1)
     {
-        Con_Warning(SYSWARN_AK_NOTPLAYED, id);
+        ent_id = lua_tointeger(lua, 2);
+        if(World_GetEntityByID(&engine_world, ent_id) == NULL) ent_id = -1;
     }
+    
+    int result;
+    
+    if(ent_id == -1)
+    {
+        result = Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL);
+    }
+    else
+    {
+        result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
+    }
+
+    if(result < 0) Con_Warning(SYSWARN_AK_NOTPLAYED, id);
 
     return 0;
 }

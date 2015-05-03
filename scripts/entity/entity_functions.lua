@@ -42,7 +42,7 @@ end;
 -- ENTITY FUNCTIONS IMPLEMENTATION
 --------------------------------------------------------------------------------
 
-function door_func(id)   -- NORMAL doors only!
+function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     
@@ -50,7 +50,7 @@ function door_func(id)   -- NORMAL doors only!
         if(object_id == nil) then return end;
         door_activate(object_id);
     end;
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
@@ -59,42 +59,36 @@ function door_func(id)   -- NORMAL doors only!
     door_activate(id);
 end
 
-function keyhole_func(id)    -- Key and puzzle holes.
+function keyhole_init(id)    -- Key and puzzle holes
 
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
-
-    -- onActivate function
+    setEntityActivity(id, 0);
+    
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        -- canTriggerEntity(activator_id, object_id, max_dist, offset_x, offset_y, offset_z)
-        -- MEANING: only continue if object can be triggered by activator on a certain distance and offset.
-        
         if(object_id == nil or getEntityActivity(object_id) >= 1 or canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0) ~= 1) then
             return;
         end
         
-        if(getEntityActivity(object_id) == 0) then
+        if((getEntityActivity(object_id) == 0) and (switch_activate(object_id, activator_id) == 1)) then
             setEntityPos(activator_id, getEntityPos(object_id));
-            moveEntityLocal(activator_id, 0.0, 384.0, 0.0);
-            switch_activate(object_id, activator_id);
+            moveEntityLocal(activator_id, 0.0, 360.0, 0.0);
         end
     end;
 end
 
-function switch_func(id)     -- Ordinary switches.
+function switch_init(id)     -- Ordinary switches
     
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     
-    -- onActivate function
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        -- canTriggerEntity(activator_id, object_id, max_dist, offset_x, offset_y, offset_z)
-        -- MEANING: only continue if object can be triggered by activator on a certain distance and offset.
         if(object_id == nil or canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0) ~= 1) then
             return;
         end
         
-        setEntityPos(activator_id, getEntityPos(object_id));    -- Move activator right next to object.
-        moveEntityLocal(activator_id, 0.0, 384.0, 0.0);         -- Shift activator back to proper distance.
-        switch_activate(object_id, activator_id);               -- Make switching routines.
+        if(switch_activate(object_id, activator_id) == 1) then
+            setEntityPos(activator_id, getEntityPos(object_id));    -- Move activator right next to object.
+            moveEntityLocal(activator_id, 0.0, 360.0, 0.0);         -- Shift activator back to proper distance.
+        end;
     end;
     
     entity_funcs[id].onLoop = function(object_id)
@@ -105,7 +99,7 @@ function switch_func(id)     -- Ordinary switches.
     end;
 end
 
-function anim_func(id)      -- Ordinary animatings.
+function anim_init(id)      -- Ordinary animatings
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     
@@ -124,12 +118,12 @@ function anim_func(id)      -- Ordinary animatings.
     end
 end
 
-function venicebird_func(id)    -- Venice singing birds (TR2)
+function venicebird_init(id)    -- Venice singing birds (TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-      setEntityActivity(object_id, 1);
+        setEntityActivity(object_id, 1);
     end
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
@@ -138,7 +132,7 @@ function venicebird_func(id)    -- Venice singing birds (TR2)
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
-        if(getEntityActivity(object_id) == 1) then
+        if(getEntityDistance(player, object_id) < 8192.0) then
             if(math.random(100000) > 99500) then playSound(316, object_id) end;
         end;
     end
@@ -146,7 +140,85 @@ function venicebird_func(id)    -- Venice singing birds (TR2)
     activateEntity(id);
 end
 
-function swingblade_func(id)        -- Swinging blades (TR1)
+function doorbell_init(id)    -- Lara's Home doorbell (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityDistance(player, object_id) < 4096.0) then
+            playSound(334, object_id);
+            setEntityActivity(object_id, 0);
+        end;
+    end
+end
+
+function alarm_TR2_init(id)    -- Offshore Rig alarm (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 0) then setEntityActivity(object_id, 1) end;
+    end
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 1) then
+            setEntityActivity(object_id, 0);
+            stopSound(332, object_id);
+        end;
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        playSound(332, object_id);
+        if(tickEntity(object_id) == TICK_STOPPED) then
+            setEntityActivity(object_id, 0)
+            stopSound(332, object_id);
+        end;
+    end
+end
+
+function heli_TR2_init(id)    -- Helicopter (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    
+    entity_funcs[id].distance_passed = 0;
+    setEntityActivity(id, 0);
+    setEntityVisibility(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 0) then
+            setEntityActivity(object_id, 1);
+            setEntityVisibility(id, 1);
+            playSound(297, object_id);
+        end;
+    end
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + 40.0;
+        moveEntityLocal(object_id, 0.0, 40.0, 0.0);
+        if(entity_funcs[object_id].distance_passed > 30720) then
+            stopSound(297, object_id);
+            disableEntity(object_id);
+        end;
+    end
+    
+    activateEntity(id);
+end
+
+function swingblade_init(id)        -- Swinging blades (TR1)
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     setEntityActivity(id, 1);
@@ -166,7 +238,7 @@ function swingblade_func(id)        -- Swinging blades (TR1)
     activateEntity(id);
 end
 
-function slamdoor_func(id)      -- Slamming doors (TR1-TR2)
+function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     setEntityActivity(id, 1);
@@ -186,7 +258,7 @@ function slamdoor_func(id)      -- Slamming doors (TR1-TR2)
     activateEntity(id);
 end
 
-function wallblade_func(id)     -- Wall blade (TR1-TR3)
+function wallblade_init(id)     -- Wall blade (TR1-TR3)
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
     setEntityActivity(id, 0);
@@ -201,23 +273,22 @@ function wallblade_func(id)     -- Wall blade (TR1-TR3)
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
-        if(getEntityActivity(object_id) == 1) then
-            local anim_number = getEntityAnim(object_id)
-            if(anim_number == 2) then
-                setEntityAnim(object_id, 3)
-            elseif(anim_number == 1) then
-                setEntityAnim(object_id, 0)
-            end;
+        local anim_number = getEntityAnim(object_id)
+        if(anim_number == 2) then
+            setEntityAnim(object_id, 3)
+        elseif(anim_number == 1) then
+            setEntityAnim(object_id, 0)
         end;
     end
     
     activateEntity(id);
 end
 
-function pickup_func(id, item_id)    -- Pick-ups
+function pickup_init(id, item_id)    -- Pick-ups
 
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
+    setEntityActivity(id, 0);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((item_id == nil) or (object_id == nil)) then
@@ -227,26 +298,23 @@ function pickup_func(id, item_id)    -- Pick-ups
         local need_set_pos = true;
         local curr_anim = getEntityAnim(activator_id);
 
-        if(curr_anim == 103) then               -- Stay idle
+        if(curr_anim == 103) then                 -- Stay idle
             local dx, dy, dz = getEntityVector(object_id, activator_id);
             if(dz < -256.0) then
                 need_set_pos = false;
-                setEntityAnim(activator_id, 425);   -- Stay pickup, test version
+                setEntityAnim(activator_id, 425); -- Standing pickup, test version
             else
-                setEntityAnim(activator_id, 135);   -- Stay pickup
+                setEntityAnim(activator_id, 135); -- Stay pickup
             end;
-        elseif(curr_anim == 222) then           -- Crouch idle
-            setEntityAnim(activator_id, 291);   -- Crouch pickup
-        elseif(curr_anim == 263) then           -- Crawl idle
-            setEntityAnim(activator_id, 292);   -- Crawl pickup
-        elseif(curr_anim == 108) then           -- Swim idle
-            setEntityAnim(activator_id, 130);   -- Swim pickup
+        elseif(curr_anim == 222) then             -- Crouch idle
+            setEntityAnim(activator_id, 291);     -- Crouch pickup
+        elseif(curr_anim == 263) then             -- Crawl idle
+            setEntityAnim(activator_id, 292);     -- Crawl pickup
+        elseif(curr_anim == 108) then             -- Swim idle
+            setEntityAnim(activator_id, 130);     -- Swim pickup
         else
             return;     -- Disable picking up, if Lara isn't idle.
         end;
-
-        print("You're trying to pick up object " .. object_id);
-
 
         addTask(
         function()
@@ -260,7 +328,7 @@ function pickup_func(id, item_id)    -- Pick-ups
             else
                 if(getEntityDistance(object_id, activator_id) > 32.0) then
                     moveEntityToEntity(activator_id, object_id, 50.0);
-                end;;
+                end;
             end;
             
             local a, f, c = getEntityAnim(activator_id);
@@ -283,10 +351,10 @@ function pickup_func(id, item_id)    -- Pick-ups
             return false;   -- Item successfully picked up, kill the task.
         end);
     end;
+    
 end
 
-
-function fallblock_func(id)  -- Falling block (TR1-3)
+function fallblock_init(id)  -- Falling block (TR1-3)
 
     local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags
     setEntityFlags(id, nil, nil, bit32.bor(f3, ENTITY_CALLBACK_STAND));
@@ -322,8 +390,7 @@ function fallblock_func(id)  -- Falling block (TR1-3)
     end;
 end
 
-
-function fallceiling_func(id)  -- Falling ceiling (TR1-3)
+function fallceiling_init(id)  -- Falling ceiling (TR1-3) (INVALID)
 
     setEntitySpeed(id, 0.0, 0.0, 0.0);
 
@@ -356,7 +423,7 @@ function fallceiling_func(id)  -- Falling ceiling (TR1-3)
     end;
 end
 
-function pushdoor_func(id)   -- Pushdoors (TR4)
+function pushdoor_init(id)   -- Pushdoors (TR4)
 
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivity(id, 0);
@@ -379,7 +446,7 @@ function pushdoor_func(id)   -- Pushdoors (TR4)
 end
 
 
-function oldspike_func(id)  -- Teeth spikes (INVALID)
+function oldspike_init(id)  -- Teeth spikes (INVALID)
 
     setEntityActivity(id, 1);
     local f1, f2, f3 = getEntityFlags(id);
@@ -398,4 +465,15 @@ function oldspike_func(id)  -- Teeth spikes (INVALID)
         
         end;
     end;
+end
+
+function baddie_init(id)    -- INVALID!
+
+    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
+    disableEntity(id);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 0) then enableEntity(object_id) end;
+    end;
+    
 end

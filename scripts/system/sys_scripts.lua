@@ -28,6 +28,7 @@ ENTITY_TYPE_TRIGGER_ACTIVATOR             = 0x0002;
 ENTITY_TYPE_PICKABLE                      = 0x0004;
 ENTITY_TYPE_TRAVERSE                      = 0x0008;
 ENTITY_TYPE_TRAVERSE_FLOOR                = 0x0010;
+ENTITY_TYPE_ACTOR                         = 0x0020
 
 ENTITY_CALLBACK_NONE                      = 0x00000000;
 ENTITY_CALLBACK_ACTIVATE                  = 0x00000001;
