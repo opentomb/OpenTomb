@@ -45,19 +45,19 @@ lua_State *level_script = NULL;
 
 void TR_SetEntityModelProperties(struct entity_s *ent)
 {
-    if((objects_flags_conf != NULL) && (ent->bf.model != NULL))
+    if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
     {
         int top = lua_gettop(objects_flags_conf);
         lua_getglobal(objects_flags_conf, "getEntityProperties");
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.model->id);                 // model id
+            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // model id
             lua_pcall(objects_flags_conf, 2, 4, 0);
             ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
-            ent->bf.model->hide = lua_tointeger(objects_flags_conf, -3);            // get info about model visibility
+            ent->bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3); // get info about model visibility
             ent->type_flags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
-            
+
             if(!lua_isnil(objects_flags_conf, -1))
             {
                 size_t string_length;
@@ -67,14 +67,14 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
         lua_settop(objects_flags_conf, top);
     }
 
-    if((level_script != NULL) && (ent->bf.model != NULL))
+    if((level_script != NULL) && (ent->bf.animations.model != NULL))
     {
         int top = lua_gettop(level_script);
         lua_getglobal(level_script, "getEntityProperties");
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->bf.model->id);                   // model id
+            lua_pushinteger(level_script, ent->bf.animations.model->id);        // model id
             lua_pcall(level_script, 2, 4, 0);                                   // call that function
             if(!lua_isnil(level_script, -4))
             {
@@ -82,7 +82,7 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
             }
             if(!lua_isnil(level_script, -3))
             {
-                ent->bf.model->hide = lua_tointeger(level_script, -2);              // get info about model visibility
+                ent->bf.animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
             }
             if(!lua_isnil(level_script, -2))
             {
@@ -105,7 +105,7 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     {
         const char* func_template = "%s_func";
         char buf[64];
-        
+
         snprintf(buf, 64, func_template, func_name);
         lua_getglobal(lua, buf);
 
@@ -638,17 +638,17 @@ bool IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
 {
     // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
     // entity #256 occurences in original games (primarily TR4-5).
-    
+
     if(!World_GetEntityByID(&engine_world, entity_index)) return true;
-    
+
     int32_t *curr_table_index = lookup_table;
-    
+
     while(*curr_table_index != -1)
     {
         if(*curr_table_index == (int32_t)entity_index) return true;
         curr_table_index++;
     }
-    
+
     *curr_table_index = (int32_t)entity_index;
     return false;
 }
@@ -668,10 +668,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
     uint16_t *end_p = tr->floor_data + tr->floor_data_size - 1;
     uint16_t *entry = tr->floor_data + sector->trig_index;
-    
+
     int ret = 0;
     uint16_t end_bit = 0;
-    
+
     do
     {
         // TR_I - TR_II
@@ -682,7 +682,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
         uint16_t function       = ((*entry) & 0x001F);             // 0b00000000 00011111
         uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR_III+
         uint16_t sub_function   = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
-        
+
         end_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
 
         entry++;
@@ -780,12 +780,12 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     char single_events[2048];       single_events[0]     = 0;   // One-shot trigger events
                     char item_events[2048];         item_events[0]       = 0;   // Item activation events
                     char anti_events[2048];         anti_events[0]       = 0;   // Item deactivation events, if needed
-                    
+
                     char script[4096];              script[0]            = 0;   // Final script compile
 
                     char buf[512];                  buf[0]  = 0;    // Stream buffer
                     char buf2[512];                 buf2[0] = 0;    // Conditional pre-buffer for SWITCH triggers
-                    
+
                     int activator   = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
                     int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
                     int condition   = 0;                        // No condition by default.
@@ -794,34 +794,34 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     int8_t  timer_field  =  (*entry) & 0x00FF;          // Used as common parameter for some commands.
                     uint8_t trigger_mask = ((*entry) & 0x3E00) >> 9;
                     uint8_t only_once    = ((*entry) & 0x0100) >> 8;    // Lock out triggered items after activation.
-                    
+
                     // Processed entities lookup array initialization.
-                    
+
                     int32_t ent_lookup_table[64];
                     memset(ent_lookup_table, 0xFF, sizeof(int32_t)*64);
-                    
+
                     // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
                     // some specific entity classes.
-                    
+
                     int activator_type = ( (sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
                                            (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
                                            (sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH) )     ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
-                    
+
                     // Table cell header.
-                    
+
                     snprintf(buf, 256, "trigger_list[%d] = {activator_type = %d, func = function(entity_index) \n",
                                          sector->trig_index, activator_type);
-                    
+
                     strcat(script, buf);
                     buf[0] = 0;     // Zero out buffer to prevent further trashing.
-                    
+
                     switch(sub_function)
                     {
                         case TR_FD_TRIGTYPE_TRIGGER:
                         case TR_FD_TRIGTYPE_HEAVY:
                             activator = TR_ACTIVATOR_NORMAL;
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_PAD:
                         case TR_FD_TRIGTYPE_ANTIPAD:
                             // Check move type for triggering entity.
@@ -829,54 +829,54 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                             if(sub_function == TR_FD_TRIGTYPE_ANTIPAD) action_type = TR_ACTIONTYPE_ANTI;
                             condition = 1;  // Set additional condition.
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_SWITCH:
                             // Set activator and action type for now; conditions are linked with first item in operand chain.
                             activator = TR_ACTIVATOR_SWITCH;
                             action_type = TR_ACTIONTYPE_SWITCH;
                             mask_mode = AMASK_OP_XOR;
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_HEAVYSWITCH:
                             // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
                             activator = TR_ACTIVATOR_SWITCH;
                             mask_mode = AMASK_OP_XOR;
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_KEY:
                             // Action type remains normal, as key acts one-way (no need in switch routines).
                             activator = TR_ACTIVATOR_KEY;
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_PICKUP:
                             // Action type remains normal, as pick-up acts one-way (no need in switch routines).
                             activator = TR_ACTIVATOR_PICKUP;
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_COMBAT:
                             // Check weapon status for triggering entity.
                             snprintf(buf, 128, " if(getCharacterCombatMode(entity_index) > 0) then \n");
                             condition = 1;  // Set additional condition.
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_DUMMY:
                         case TR_FD_TRIGTYPE_SKELETON:   ///@FIXME: Find the meaning later!!!
                             // These triggers are being parsed, but not added to trigger script!
                             action_type = TR_ACTIONTYPE_BYPASS;
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_ANTITRIGGER:
                         case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
                             action_type = TR_ACTIONTYPE_ANTI;
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_MONKEY:
                         case TR_FD_TRIGTYPE_CLIMB:
                             // Check move type for triggering entity.
                             snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
                             condition = 1;  // Set additional condition.
                             break;
-                            
+
                         case TR_FD_TRIGTYPE_TIGHTROPE:
                             // Check state range for triggering entity.
                             snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
@@ -888,18 +888,18 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                             condition = 1;  // Set additional condition.
                             break;
                     }
-                    
+
                     strcat(header, buf);    // Add condition to header.
 
                     uint16_t cont_bit = 0;
                     uint16_t argn = 0;
 
                     // Now parse operand chain for trigger function!
-                    
+
                     do
                     {
                         entry++;
-                        
+
                         uint16_t trigger_function = (((*entry) & 0x7C00)) >> 10;    // 0b01111100 00000000
                         uint16_t operands = (*entry) & 0x03FF;                      // 0b00000011 11111111
                                  cont_bit = ((*entry) & 0x8000) >> 15;              // 0b10000000 00000000
@@ -925,7 +925,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                                 snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityActivationMask(entity_index); \n\n");
                                             }
                                             strcat(script, buf);
-                                            
+
                                             // Trigger activation mask is here filtered through activator's own mask.
                                             snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger_mask);
                                             strcat(script, buf);
@@ -952,16 +952,16 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                                 snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, 1) \n");
                                             }
                                             break;
-                                            
+
                                         case TR_ACTIVATOR_KEY:
                                             snprintf(buf, 256, " if((getEntityActivityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
                                             break;
-                                            
+
                                         case TR_ACTIVATOR_PICKUP:
                                             snprintf(buf, 256, " if((getEntityActivity(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
                                             break;
                                     }
-                                    
+
                                     strcat(script, buf);
                                 }
                                 else
@@ -1003,7 +1003,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                     uint8_t cam_once  = ((*entry) & 0x0100) >> 8;
                                     uint8_t cam_zoom  = ((*entry) & 0x1000) >> 12;
                                     cont_bit  = ((*entry) & 0x8000) >> 15;                       // 0b10000000 00000000
-                                    
+
                                     snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
                                     strcat(single_events, buf);
                                 }
@@ -1088,11 +1088,11 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                         };
                     }
                     while(!cont_bit && entry < end_p);
-                    
+
                     if(script[0])
                     {
                         strcat(script, header);
-                            
+
                         if(activator == TR_ACTIVATOR_NORMAL)    // Ordinary trigger cases.
                         {
                             if(single_events[0])
@@ -1102,7 +1102,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                 strcat(script, once_condition);
                                 strcat(script, single_events);
                                 strcat(script, "   setEntitySectorStatus(entity_index, 1); \n");
-                                
+
                                 if(condition)
                                 {
                                     strcat(script, "  end;\n"); // First ENDIF is tabbed for extra condition.
@@ -1112,12 +1112,12 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                     strcat(script, " end;\n");
                                 }
                             }
-                            
+
                             // Item commands kind depends on action type. If type is ANTI, then item
                             // antitriggering is engaged. If type is normal, ordinary triggering happens
                             // in cycle with other continous commands. It is needed to prevent timer dispatch
                             // before activator leaves trigger sector.
-                            
+
                             if(action_type == TR_ACTIONTYPE_ANTI)
                             {
                                 strcat(script, anti_events);
@@ -1126,7 +1126,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                             {
                                 strcat(script, item_events);
                             }
-                            
+
                             strcat(script, cont_events);
                             if(condition) strcat(script, " end;\n"); // Additional ENDIF for extra condition.
                         }
@@ -1147,10 +1147,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                             }
                             strcat(script, " end;\n");
                         }
-                        
+
                         strcat(script, "return 1;\nend }\n");  // Finalize the entry.
                     }
-                    
+
                     if(action_type != TR_ACTIONTYPE_BYPASS)
                     {
                         // Sys_DebugLog("triggers.lua", script);    // Debug!
@@ -1717,7 +1717,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->version = tr->game_version;
 
     // Process configuration scripts.
-    
+
     char temp_script_name[256];
     Engine_GetLevelScriptName(tr->game_version, temp_script_name);
 
@@ -1729,10 +1729,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
-        
+
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
         int lua_err = luaL_dofile(level_script, temp_script_name);
-        
+
         if(lua_err)
         {
             Sys_DebugLog("lua_out.txt", "%s", lua_tostring(level_script, -1));
@@ -1771,7 +1771,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             ent_ID_override = NULL;
         }
     }
-    
+
     // Begin generating world.
 
     Gui_DrawLoadScreen(200);
@@ -1805,7 +1805,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     Gui_DrawLoadScreen(550);
 
     // Generate boxes.
-    
+
     world->room_boxes = NULL;
     world->room_box_count = tr->boxes_count;
     if(world->room_box_count)
@@ -1821,9 +1821,9 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             world->room_boxes[i].y_max =-tr->boxes[i].zmin;
         }
     }
-    
+
     // Generate cameras & sinks.
-    
+
     world->cameras_sinks = NULL;
     world->cameras_sinks_count = tr->cameras_count;
     if(world->cameras_sinks_count)
@@ -1840,7 +1840,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
     TR_GenRooms(world, tr);     // Build all rooms
-    
+
     TR_GenRoomFlipMap(world);
 
     Gui_DrawLoadScreen(650);
@@ -1913,7 +1913,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     }
 
     // Process level autoexec loading.
-    
+
     Engine_GetLevelScriptName(tr->game_version, temp_script_name, "_autoexec");
 
     luaL_dofile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
@@ -2136,7 +2136,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         sector->owner_room = room;
         sector->box_index  = tr_room->sector_list[i].box_index;
-        
+
         sector->material = tr_room->sector_list[i].box_index & 0x0F;
 
         sector->flags = 0;  // Clear sector flags.
@@ -2490,12 +2490,12 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 void TR_GenRoomFlipMap(struct world_s *world)
 {
     // Flipmap count is hardcoded, as no original levels contain such info.
-    
+
     world->flip_count = FLIPMAP_MAX_NUMBER;
-    
+
     world->flip_map   = (uint8_t*)malloc(world->flip_count * sizeof(uint8_t));
     world->flip_state = (uint8_t*)malloc(world->flip_count * sizeof(uint8_t));
-    
+
     memset(world->flip_map,   0, world->flip_count);
     memset(world->flip_state, 0, world->flip_count);
 }
@@ -2840,13 +2840,13 @@ static void tr_copyNormals(const polygon_p polygon, base_mesh_p mesh, const uint
 void tr_accumulateNormals(tr4_mesh_t *tr_mesh, base_mesh_p mesh, int numCorners, const uint16_t *vertex_indices, polygon_p p)
 {
     Polygon_Resize(p, numCorners);
-    
+
     for (int i = 0; i < numCorners; i++)
     {
         TR_vertex_to_arr(p->vertices[i].position, &tr_mesh->vertices[vertex_indices[i]]);
     }
     Polygon_FindNormale(p);
-    
+
     for (int i = 0; i < numCorners; i++)
     {
         vec3_add(mesh->vertices[vertex_indices[i]].normal, mesh->vertices[vertex_indices[i]].normal, p->plane);
@@ -2867,7 +2867,7 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, co
             p->vertices[i].color[2] = p->vertices[i].color[2] * 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
         }
         p->vertices[i].color[3] = 1.0f;
-        
+
         p->vertices[i].tex_coord[0] = i & 2 ? 1.0 : 0.0;
         p->vertices[i].tex_coord[1] = i >= 2 ? 1.0 : 0.0;
     }
@@ -2884,7 +2884,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t 
             p->vertices[i].color[1] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
             p->vertices[i].color[2] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
             p->vertices[i].color[3] = 1.0f;
-            
+
             mesh->uses_vertex_colors = 1;
         }
         else
@@ -2977,7 +2977,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
         p->transparency = 0;
         p->anim_id = 0;
-        
+
         tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
         tr_setupColoredFace(tr_mesh, tr, mesh, face3->vertices, col, p);
     }
@@ -3002,7 +3002,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         {
             p->transparency = tex->transparency_flags;
         }
-        
+
         tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
         tr_setupTexturedFace(tr_mesh, mesh, face4->vertices, p);
 
@@ -3020,7 +3020,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
         p->transparency = 0;
         p->anim_id = 0;
-        
+
         tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
         tr_setupColoredFace(tr_mesh, tr, mesh, face4->vertices, col, p);
     }
@@ -3074,24 +3074,24 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
 void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_room_t *tr_room, base_mesh_p mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, polygon_p p)
 {
     Polygon_Resize(p, numCorners);
-    
+
     for (int i = 0; i < numCorners; i++)
     {
         TR_vertex_to_arr(p->vertices[i].position, &tr_room->vertices[vertices[i]].vertex);
     }
     Polygon_FindNormale(p);
-    
+
     for (int i = 0; i < numCorners; i++)
     {
         vec3_add(mesh->vertices[vertices[i]].normal, mesh->vertices[vertices[i]].normal, p->plane);
         vec3_copy(p->vertices[i].normal, p->plane);
         TR_color_to_arr(p->vertices[i].color, &tr_room->vertices[vertices[i]].colour);
     }
-    
+
     tr4_object_texture_t *tex = &tr->object_textures[masked_texture];
     SetAnimTexture(p, masked_texture, world);
     p->transparency = tex->transparency_flags;
-    
+
     world->tex_atlas->getCoordinates(masked_texture, 0, p);
 
 }
@@ -3734,7 +3734,7 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bo
         bone_frame->pos[1] = 0.0;
         bone_frame->pos[2] = 0.0;
     }
-    
+
     bone_frame->centre[0] = (bone_frame->bb_min[0] + bone_frame->bb_max[0]) / 2.0;
     bone_frame->centre[1] = (bone_frame->bb_min[1] + bone_frame->bb_max[1]) / 2.0;
     bone_frame->centre[2] = (bone_frame->bb_min[2] + bone_frame->bb_max[2]) / 2.0;
@@ -3792,28 +3792,28 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 
         entity->locked = 0;
         entity->timer  = 0.0;
-        
+
         entity->self->collide_flag = 0x00;
         entity->anim_flags = 0x0000;
         entity->move_type = 0x0000;
-        entity->bf.current_animation = 0;
-        entity->bf.current_frame = 0;
-        entity->bf.frame_time = 0.0;
+        entity->bf.animations.current_animation = 0;
+        entity->bf.animations.current_frame = 0;
+        entity->bf.animations.frame_time = 0.0;
         entity->inertia = 0.0;
         entity->move_type = 0;
 
-        entity->bf.model = World_GetModelByID(world, tr_item->object_id);
+        entity->bf.animations.model = World_GetModelByID(world, tr_item->object_id);
 
         if(ent_ID_override != NULL)
         {
-            if(entity->bf.model == NULL)
+            if(entity->bf.animations.model == NULL)
             {
                 top = lua_gettop(ent_ID_override);                                         // save LUA stack
                 lua_getglobal(ent_ID_override, "getOverridedID");                          // add to the up of stack LUA's function
                 lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
                 lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
                 lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
-                entity->bf.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
+                entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
                 lua_settop(ent_ID_override, top);                                          // restore LUA stack
             }
 
@@ -3831,12 +3831,12 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
                 animation_frame_p ta;
                 uint16_t tc;
-                SWAPT(entity->bf.model->animations, replace_anim_model->animations, ta);
-                SWAPT(entity->bf.model->animation_count, replace_anim_model->animation_count, tc);
+                SWAPT(entity->bf.animations.model->animations, replace_anim_model->animations, ta);
+                SWAPT(entity->bf.animations.model->animation_count, replace_anim_model->animation_count, tc);
             }
         }
 
-        if(entity->bf.model == NULL)
+        if(entity->bf.animations.model == NULL)
         {
             // SPRITE LOADING
             sprite_p sp = World_GetSpriteByID(tr_item->object_id, world);
@@ -3865,15 +3865,17 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             continue;
         }
 
-        entity->bf.bone_tag_count = entity->bf.model->mesh_count;
-        entity->bf.bone_tags = (ss_bone_tag_p)calloc(entity->bf.bone_tag_count, sizeof(ss_bone_tag_t));
+        entity->bf.bone_tag_count = entity->bf.animations.model->mesh_count;
+        entity->bf.bone_tags = (ss_bone_tag_p)malloc(entity->bf.bone_tag_count * sizeof(ss_bone_tag_t));
         for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
         {
-            entity->bf.bone_tags[j].flag = entity->bf.model->mesh_tree[j].flag;
-            entity->bf.bone_tags[j].mesh_base = entity->bf.model->mesh_tree[j].mesh_base;
-            entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh_skin;
+            entity->bf.bone_tags[j].flag = entity->bf.animations.model->mesh_tree[j].flag;
+            entity->bf.bone_tags[j].mesh_base = entity->bf.animations.model->mesh_tree[j].mesh_base;
+            entity->bf.bone_tags[j].mesh_skin = entity->bf.animations.model->mesh_tree[j].mesh_skin;
+            entity->bf.bone_tags[j].mesh_slot = NULL;
 
-            vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.model->mesh_tree[j].offset);
+            vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.animations.model->mesh_tree[j].offset);
+            vec4_set_zero(entity->bf.bone_tags[j].qrotate);
             Mat4_E_macro(entity->bf.bone_tags[j].transform);
             Mat4_E_macro(entity->bf.bone_tags[j].full_transform);
         }
@@ -3885,9 +3887,9 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->move_type = MOVE_ON_FLOOR;
             world->Character = entity;
             entity->self->collide_flag = ENTITY_ACTOR_COLLISION;
-            entity->bf.model->hide = 0;
+            entity->bf.animations.model->hide = 0;
             entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            LM = (skeletal_model_p)entity->bf.model;
+            LM = (skeletal_model_p)entity->bf.animations.model;
 
             top = lua_gettop(engine_lua);
             lua_pushinteger(engine_lua, entity->id);
@@ -3941,8 +3943,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 
             for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
             {
-                entity->bf.bone_tags[j].mesh_base = entity->bf.model->mesh_tree[j].mesh_base;
-                entity->bf.bone_tags[j].mesh_skin = entity->bf.model->mesh_tree[j].mesh_skin;
+                entity->bf.bone_tags[j].mesh_base = entity->bf.animations.model->mesh_tree[j].mesh_base;
+                entity->bf.bone_tags[j].mesh_skin = entity->bf.animations.model->mesh_tree[j].mesh_skin;
                 entity->bf.bone_tags[j].mesh_slot = NULL;
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
@@ -3955,11 +3957,11 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 
         Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
         BT_GenEntityRigidBody(entity);
-        
+
         Entity_RebuildBV(entity);
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
-        
+
         TR_SetEntityModelProperties(entity);
         if(entity->self->collide_flag == 0x00)
         {
@@ -3981,7 +3983,7 @@ void Items_CheckEntities(RedBlackNode_p n)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if(ent->bf.model->id == item->world_model_id)
+                if(ent->bf.animations.model->id == item->world_model_id)
                 {
                     char buf[256] = {0};
                     snprintf(buf, 256, "pickup_func(%d, %d);", ent->id, item->id);

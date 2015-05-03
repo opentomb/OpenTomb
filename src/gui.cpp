@@ -206,7 +206,7 @@ void Gui_InitFaders()
                     Fader[i].SetBlendingMode(BM_MULTIPLY);
                     Fader[i].SetSpeed(10,800);
                 }
-                
+
             case FADER_BLACK:
                 {
                     Fader[i].SetAlpha(255);
@@ -220,12 +220,12 @@ void Gui_InitFaders()
     }
 }
 
-void Gui_SetupFader(int fader_index, 
+void Gui_SetupFader(int fader_index,
                     uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
                     uint16_t fadein_speed, uint16_t fadeout_speed)
 {
     if(fader_index >= FADER_LASTINDEX) return;
-    
+
     Fader[fader_index].SetAlpha(alpha);
     Fader[fader_index].SetColor(R,G,B);
     Fader[fader_index].SetBlendingMode(blending_mode);
@@ -548,12 +548,12 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
     btScalar dt;
     state_change_p stc;
 
-    bf->lerp = 0.0;
-    stc = Anim_FindStateChangeByID(bf->model->animations + bf->current_animation, bf->next_state);
+    bf->animations.lerp = 0.0;
+    stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
     Entity_GetNextFrame(bf, time, stc, &frame, &anim, 0x00);
-    if(anim != bf->current_animation)
+    if(anim != bf->animations.current_animation)
     {
-        bf->last_animation = bf->current_animation;
+        bf->animations.last_animation = bf->animations.current_animation;
         /*frame %= bf->model->animations[anim].frames_count;
         frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames_count - 1 + frame);
 
@@ -563,24 +563,24 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
         bf->current_frame = frame;
         bf->next_animation = anim;
         bf->next_frame = frame;*/
-        stc = Anim_FindStateChangeByID(bf->model->animations + bf->current_animation, bf->next_state);
+        stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
     }
-    else if(bf->current_frame != frame)
+    else if(bf->animations.current_frame != frame)
     {
-        if(bf->current_frame == 0)
+        if(bf->animations.current_frame == 0)
         {
-            bf->last_animation = bf->current_animation;
+            bf->animations.last_animation = bf->animations.current_animation;
         }
-        bf->current_frame = frame;
+        bf->animations.current_frame = frame;
     }
 
-    bf->frame_time += time;
+    bf->animations.frame_time += time;
 
-    t = (bf->frame_time) / bf->period;
-    dt = bf->frame_time - (btScalar)t * bf->period;
-    bf->frame_time = (btScalar)frame * bf->period + dt;
-    bf->lerp = dt / bf->period;
-    Entity_GetNextFrame(bf, bf->period, stc, &bf->next_frame, &bf->next_animation, 0x00);
+    t = (bf->animations.frame_time) / bf->animations.period;
+    dt = bf->animations.frame_time - (btScalar)t * bf->animations.period;
+    bf->animations.frame_time = (btScalar)frame * bf->animations.period + dt;
+    bf->animations.lerp = dt / bf->animations.period;
+    Entity_GetNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
     Entity_UpdateCurrentBoneFrame(bf, NULL);
 }
 
@@ -1253,13 +1253,13 @@ void gui_InventoryManager::render()
                             if(bi->name[0])
                             {
                                 strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
-                                
+
                                 if(i->count > 1)
                                 {
                                     char counter[32];
                                     lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
                                     snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i->count);
-                                    
+
                                 }
                             }
                             glRotatef(90.0 + mItemAngle - ang, 0.0, 0.0, 1.0);
@@ -2667,13 +2667,13 @@ void gui_ItemNotifier::Draw()
         base_item_p item = World_GetBaseItemByID(&engine_world, mItem);
         if(item)
         {
-            int anim = item->bf->current_animation;
-            int frame = item->bf->current_frame;
-            btScalar time = item->bf->frame_time;
+            int anim = item->bf->animations.current_animation;
+            int frame = item->bf->animations.current_frame;
+            btScalar time = item->bf->animations.frame_time;
 
-            item->bf->current_animation = 0;
-            item->bf->current_frame = 0;
-            item->bf->frame_time = 0.0;
+            item->bf->animations.current_animation = 0;
+            item->bf->animations.current_frame = 0;
+            item->bf->animations.frame_time = 0.0;
 
             Item_Frame(item->bf, 0.0);
             glPushMatrix();
@@ -2683,9 +2683,9 @@ void gui_ItemNotifier::Draw()
                 Gui_RenderItem(item->bf, mSize);
             glPopMatrix();
 
-            item->bf->current_animation = anim;
-            item->bf->current_frame = frame;
-            item->bf->frame_time = time;
+            item->bf->animations.current_animation = anim;
+            item->bf->animations.current_frame = frame;
+            item->bf->animations.frame_time = time;
         }
     }
 }

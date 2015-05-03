@@ -513,7 +513,7 @@ void World_Empty(world_p world)
     }
     free(world->rooms);
     world->rooms = NULL;
-    
+
     free(world->flip_map);
     free(world->flip_state);
     world->flip_map = NULL;
@@ -526,7 +526,7 @@ void World_Empty(world_p world)
         world->room_boxes = NULL;
         world->room_box_count = 0;
     }
-    
+
     if(world->cameras_sinks_count)
     {
         free(world->cameras_sinks);
@@ -717,23 +717,23 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             ent->self->collide_flag = 0x00;
             ent->anim_flags = 0x0000;
             ent->move_type = 0x0000;
-            ent->bf.current_animation = 0;
-            ent->bf.current_frame = 0;
-            ent->bf.frame_time = 0.0;
+            ent->bf.animations.current_animation = 0;
+            ent->bf.animations.current_frame = 0;
+            ent->bf.animations.frame_time = 0.0;
             ent->inertia = 0.0;
             ent->move_type = 0;
 
-            ent->bf.model = model;
+            ent->bf.animations.model = model;
             ent->bf.bone_tag_count = model->mesh_count;
             ent->bf.bone_tags = (ss_bone_tag_p)malloc(model->mesh_count * sizeof(ss_bone_tag_t));
             for(uint16_t j=0;j<model->mesh_count;j++)
             {
-                ent->bf.bone_tags[j].flag = ent->bf.model->mesh_tree[j].flag;
-                ent->bf.bone_tags[j].mesh_base = ent->bf.model->mesh_tree[j].mesh_base;
-                ent->bf.bone_tags[j].mesh_skin = ent->bf.model->mesh_tree[j].mesh_skin;
+                ent->bf.bone_tags[j].flag = model->mesh_tree[j].flag;
+                ent->bf.bone_tags[j].mesh_base = model->mesh_tree[j].mesh_base;
+                ent->bf.bone_tags[j].mesh_skin = model->mesh_tree[j].mesh_skin;
                 ent->bf.bone_tags[j].mesh_slot = NULL;
 
-                vec3_copy(ent->bf.bone_tags[j].offset, ent->bf.model->mesh_tree[j].offset);
+                vec3_copy(ent->bf.bone_tags[j].offset, model->mesh_tree[j].offset);
                 vec4_set_zero(ent->bf.bone_tags[j].qrotate);
                 Mat4_E_macro(ent->bf.bone_tags[j].transform);
                 Mat4_E_macro(ent->bf.bone_tags[j].full_transform);
@@ -1236,27 +1236,27 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
-    bf->frame_time = 0.0;
-    bf->period = 1.0 / 30.0;
-    bf->next_state = 0;
-    bf->lerp = 0.0;
-    bf->current_animation = 0;
-    bf->current_frame = 0;
-    bf->next_animation = 0;
-    bf->next_frame = 0;
+    bf->animations.frame_time = 0.0;
+    bf->animations.period = 1.0 / 30.0;
+    bf->animations.next_state = 0;
+    bf->animations.lerp = 0.0;
+    bf->animations.current_animation = 0;
+    bf->animations.current_frame = 0;
+    bf->animations.next_animation = 0;
+    bf->animations.next_frame = 0;
 
-    bf->next = NULL;
-    bf->model = model;
+    bf->animations.next = NULL;
+    bf->animations.model = model;
     bf->bone_tag_count = model->mesh_count;
     bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
     for(uint16_t j=0;j<bf->bone_tag_count;j++)
     {
-        bf->bone_tags[j].flag = bf->model->mesh_tree[j].flag;
-        bf->bone_tags[j].mesh_base = bf->model->mesh_tree[j].mesh_base;
-        bf->bone_tags[j].mesh_skin = bf->model->mesh_tree[j].mesh_skin;
+        bf->bone_tags[j].flag = bf->animations.model->mesh_tree[j].flag;
+        bf->bone_tags[j].mesh_base = bf->animations.model->mesh_tree[j].mesh_base;
+        bf->bone_tags[j].mesh_skin = bf->animations.model->mesh_tree[j].mesh_skin;
         bf->bone_tags[j].mesh_slot = NULL;
 
-        vec3_copy(bf->bone_tags[j].offset, bf->model->mesh_tree[j].offset);
+        vec3_copy(bf->bone_tags[j].offset, bf->animations.model->mesh_tree[j].offset);
         vec4_set_zero(bf->bone_tags[j].qrotate);
         Mat4_E_macro(bf->bone_tags[j].transform);
         Mat4_E_macro(bf->bone_tags[j].full_transform);

@@ -618,7 +618,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
 
 void Render_Entity(struct entity_s *entity)
 {
-    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -720,7 +720,7 @@ void Render_Entity(struct entity_s *entity)
         }
     }
 
-    if(entity->bf.model && entity->bf.model->animations)
+    if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
         glPushMatrix();
         // base frame offset
@@ -1046,15 +1046,15 @@ void Render_DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if((ent->bf.model->transparancy_flags == MESH_HAS_TRANSPERENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
+                if((ent->bf.animations.model->transparancy_flags == MESH_HAS_TRANSPERENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
                 {
                     btScalar tr[16];
-                    for(uint16_t j=0;j<ent->bf.model->mesh_count;j++)
+                    for(uint16_t j=0;j<ent->bf.bone_tag_count;j++)
                     {
-                        if(ent->bf.model->mesh_tree[j].mesh_base->transparency_polygons != NULL)
+                        if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
                             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf.model->mesh_tree[j].mesh_base->transparency_polygons, tr);
+                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr);
                         }
                     }
                 }
@@ -1062,16 +1062,16 @@ void Render_DrawList()
         }
     }
 
-    if((engine_world.Character != NULL) && (engine_world.Character->bf.model->transparancy_flags == MESH_HAS_TRANSPERENCY))
+    if((engine_world.Character != NULL) && (engine_world.Character->bf.animations.model->transparancy_flags == MESH_HAS_TRANSPERENCY))
     {
         btScalar tr[16];
         entity_p ent = engine_world.Character;
-        for(uint16_t j=0;j<ent->bf.model->mesh_count;j++)
+        for(uint16_t j=0;j<ent->bf.bone_tag_count;j++)
         {
-            if(ent->bf.model->mesh_tree[j].mesh_base->transparency_polygons != NULL)
+            if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf.model->mesh_tree[j].mesh_base->transparency_polygons, tr);
+                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr);
             }
         }
     }
@@ -1675,7 +1675,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
 void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
 {
     if(entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
-       !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+       !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -1692,7 +1692,7 @@ void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
         debugDrawer.drawAxis(1000.0, entity->transform);
     }
 
-    if(entity->bf.model && entity->bf.model->animations)
+    if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
         debugDrawer.drawSkeletalModelDebugLines(&entity->bf, entity->transform);
     }

@@ -191,10 +191,10 @@ void Save_Entity(FILE **f, entity_p ent)
         return;
     }
 
-    if(ent->type_flags & ENTITY_TYPE_SPAWNED)
+        if(ent->type_flags & ENTITY_TYPE_SPAWNED)
     {
         uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
-        fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf.model->id, room_id,
+        fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf.animations.model->id, room_id,
                 ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
                 ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
     }
@@ -205,8 +205,8 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.current_animation, ent->bf.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.next_state, ent->bf.last_state);
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.animations.current_animation, ent->bf.animations.current_frame);
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.animations.next_state, ent->bf.animations.last_state);
     fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->id, ent->self->collide_flag);
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
@@ -281,7 +281,7 @@ int Game_Save(const char* name)
     fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
 
     // Save flipmap and flipped room states.
-    
+
     for(int i=0; i < engine_world.flip_count; i++)
     {
         fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_map[i]);
@@ -599,9 +599,9 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
 void Game_LoopEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
-    
+
     lua_LoopEntity(engine_lua, entity->id);
-    
+
     if(x->left != NULL)
     {
         Game_LoopEntities(x->left);
@@ -709,7 +709,7 @@ void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time  = 0.0;
                     game_logic_time += time;
-                    
+
     bool is_entitytree = ((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL));
     bool is_character  = (engine_world.Character != NULL);
 
@@ -757,7 +757,7 @@ void Game_Frame(btScalar time)
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
         Audio_Update();
-        
+
         if(is_character)  Character_UpdateParams(engine_world.Character);
         if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
     }
@@ -768,7 +768,7 @@ void Game_Frame(btScalar time)
     if(is_character)
     {
         Game_ApplyControls(engine_world.Character);
-        
+
         if(!control_states.noclip && !control_states.free_look)
         {
             Character_ApplyCommands(engine_world.Character);
@@ -776,7 +776,7 @@ void Game_Frame(btScalar time)
             Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0); // 128.0 400.0
         }
     }
-    
+
     Game_UpdateCharacters();
 
     if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
