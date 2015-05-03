@@ -15,6 +15,7 @@ struct room_s;
 struct room_sector_s;
 struct obb_s;
 struct character_s;
+struct ss_animation_s;
 struct ss_bone_frame_s;
 
 #define ENTITY_STATE_ENABLED                        (0x0001)    // Entity is enabled.
@@ -66,7 +67,6 @@ typedef struct entity_s
     uint16_t                            state_flags;
 
     uint8_t                             dir_flag;           // (move direction)
-    uint16_t                            anim_flags;         // additional animation control param
     uint16_t                            move_type;          // on floor / free fall / swim ....
     
     uint8_t                             was_rendered;       // render once per frame trigger
@@ -82,7 +82,6 @@ typedef struct entity_s
 
     struct obb_s                       *obb;                // oriented bounding box
 
-    void                              (*onFrame)(struct entity_s *ent, int state);
     struct room_sector_s               *current_sector;
     struct room_sector_s               *last_sector;
 
@@ -117,15 +116,14 @@ int  Entity_Frame(entity_p entity, btScalar time);  // process frame + trying to
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateRotation(entity_p entity);
-void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz = 0);
-
+void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz);
 void Entity_AddOverrideAnim(struct entity_s *ent, int model_id);
 void Entity_CheckActivators(struct entity_s *ent);
 
 int  Entity_GetSubstanceState(entity_p entity);
 
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
-void Entity_DoAnimCommands(entity_p entity, int changing);
+void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing);
 void Entity_ProcessSector(struct entity_s *ent);
 void Entity_SetAnimation(entity_p entity, int animation, int frame);
 void Entity_MoveForward(struct entity_s *ent, btScalar dist);

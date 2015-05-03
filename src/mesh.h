@@ -28,6 +28,7 @@ struct room_s;
 struct engine_container_s;
 struct obb_s;
 struct vertex_s;
+struct entity_s;
 
 /*
  * base mesh, uses everywhere
@@ -192,6 +193,29 @@ typedef struct ss_bone_tag_s
     uint16_t            flag;                                                   // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
 }ss_bone_tag_t, *ss_bone_tag_p;
 
+
+typedef struct ss_animation_s
+{
+    int16_t                     last_state;
+    int16_t                     next_state;
+    int16_t                     last_animation;
+    int16_t                     current_animation;                              //
+    int16_t                     next_animation;                                 //
+    int16_t                     current_frame;                                  //
+    int16_t                     next_frame;                                     //
+
+    uint16_t                    anim_flags;                                     // additional animation control param
+    
+    btScalar                    period;                                         // one frame change period
+    btScalar                    frame_time;                                     // current time
+    btScalar                    lerp;
+    
+    void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
+    
+    struct skeletal_model_s    *model;                                          // pointer to the base model
+    struct ss_animation_s      *next;
+}ss_animation_t, *ss_animation_p;
+
 /*
  * base frame of animated skeletal model
  */
@@ -204,21 +228,7 @@ typedef struct ss_bone_frame_s
     btScalar                    bb_max[3];                                      // bounding box max coordinates
     btScalar                    centre[3];                                      // bounding box centre
 
-    //int8_t                      need_update;
-    int16_t                     last_state;
-    int16_t                     next_state;
-    int16_t                     last_animation;
-    int16_t                     current_animation;                              //
-    int16_t                     next_animation;                                 //
-    int16_t                     current_frame;                                  //
-    int16_t                     next_frame;                                     //
-
-    btScalar                    period;                                         // one frame change period
-    btScalar                    frame_time;                                     // current time
-    btScalar                    lerp;
-
-    struct skeletal_model_s    *model;                                          // pointer to the base model
-    struct ss_bone_frame_s     *next;                                           // pointer to the multianimation mutators
+    struct ss_animation_s       animations;                                     // animations list
 }ss_bone_frame_t, *ss_bone_frame_p;
 
 /*
