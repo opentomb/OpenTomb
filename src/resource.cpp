@@ -1504,9 +1504,6 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
         if(rp >= 0 && rp < world->room_count && rp != 255)
         {
             sector->sector_below = Room_GetSectorRaw(world->rooms + rp, sector->pos);
-            
-            // Copy climbability flags from below
-            sector->flags |= sector->sector_below->flags & (SECTOR_FLAG_CLIMB_WEST | SECTOR_FLAG_CLIMB_EAST | SECTOR_FLAG_CLIMB_NORTH | SECTOR_FLAG_CLIMB_SOUTH);
         }
         rp = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;

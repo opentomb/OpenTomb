@@ -872,10 +872,14 @@ void Entity_ProcessSector(struct entity_s *ent)
 {
     if(ent->character)
     {
-        ent->character->height_info.walls_climb_dir = ent->current_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
+        ent->character->height_info.walls_climb_dir = 0;
+        for (struct room_sector_s *sector = ent->current_sector; sector; sector = sector->sector_below)
+        {
+            ent->character->height_info.walls_climb_dir |= sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
                                                                                     SECTOR_FLAG_CLIMB_EAST  |
                                                                                     SECTOR_FLAG_CLIMB_NORTH |
                                                                                     SECTOR_FLAG_CLIMB_SOUTH );
+        }
 
         ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
         ent->character->height_info.ceiling_climb   = 0x00;
