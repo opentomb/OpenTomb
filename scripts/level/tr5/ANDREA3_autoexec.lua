@@ -1,1 +1,1 @@
-playstream(118)
+playStream(118)

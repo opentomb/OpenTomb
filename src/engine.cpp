@@ -2909,12 +2909,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "dumpRoom", lua_DumpRoom);
     lua_register(lua, "setRoomEnabled", lua_SetRoomEnabled);
 
-    lua_register(lua, "playsound", lua_PlaySound);
     lua_register(lua, "playSound", lua_PlaySound);
-    lua_register(lua, "stopsound", lua_StopSound);
     lua_register(lua, "stopSound", lua_StopSound);
 
-    lua_register(lua, "playstream", lua_PlayStream);
     lua_register(lua, "playStream", lua_PlayStream);
 
     lua_register(lua, "camShake", lua_CamShake);

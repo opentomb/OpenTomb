@@ -1,1 +1,1 @@
-playstream(26)
+playStream(26)

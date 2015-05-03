@@ -1,2 +1,2 @@
-playstream(107)
+playStream(107)
 
