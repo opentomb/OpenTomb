@@ -69,6 +69,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
     ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * ry)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * ry);
     ret->wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;
+    ret->swim_depth = DEFAULT_CHARACTER_SWIM_DEPTH;
 
     for(int i=0;i<PARAM_LASTINDEX;i++)
     {

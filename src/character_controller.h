@@ -61,6 +61,8 @@
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_CLIMB_R               (32.0)
 #define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
+// If less than this much of Lara is looking out of the water, she goes from wading to swimming.
+#define DEFAULT_CHARACTER_SWIM_DEPTH            (100.0) ///@FIXME: Guess
 
 // Speed limits
 
@@ -251,6 +253,7 @@ typedef struct character_s
     btScalar                     ry;                     // base character radius Y
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
+    btScalar                     swim_depth;             // depth offset for starting to swim
 #if CHARACTER_USE_COMPLEX_COLLISION
     uint8_t                      complex_collision;      // use complex collision flag
     btCollisionShape           **shapes;
