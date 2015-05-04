@@ -241,6 +241,10 @@ bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);
 
+// Simple override to register both upper- and lowercase versions of function name.
+
+void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*));
+
 bool Engine_FileFound(const char *name, bool Write = false);
 int  Engine_GetLevelVersion(const char *name);
 void Engine_GetLevelName(char *name, const char *path);

@@ -870,42 +870,41 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
 
 void Entity_ProcessSector(struct entity_s *ent)
 {
-    if(ent->character)
+    // Calculate both above and below sectors for further usage.
+    // Sector below is generally needed for getting proper trigger index,
+    // as many triggers tend to be called from the lowest room in a row
+    // (e.g. first trapdoor in The Great Wall, etc.)
+    // Sector above primarily needed for paranoid cases of monkeyswing.
+    
+    room_sector_p abs_upper_sector = ent->current_sector;
+    room_sector_p abs_lower_sector = ent->current_sector;
+    
+    for(room_sector_p rs=ent->current_sector;rs!=NULL;rs=rs->sector_above)
     {
-        ent->character->height_info.walls_climb_dir = 0;
-        for (struct room_sector_s *sector = ent->current_sector; sector; sector = sector->sector_below)
-        {
-            ent->character->height_info.walls_climb_dir |= sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
-                                                                                    SECTOR_FLAG_CLIMB_EAST  |
-                                                                                    SECTOR_FLAG_CLIMB_NORTH |
-                                                                                    SECTOR_FLAG_CLIMB_SOUTH );
-        }
+        abs_upper_sector = rs;
+    }
+    for(room_sector_p rs=ent->current_sector;rs!=NULL;rs=rs->sector_below)
+    {
+        abs_lower_sector = rs;
+    }
+        
+    if(ent->character)
+    {        
+        ent->character->height_info.walls_climb_dir  = 0;
+        ent->character->height_info.walls_climb_dir |= abs_lower_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
+                                                                                  SECTOR_FLAG_CLIMB_EAST  |
+                                                                                  SECTOR_FLAG_CLIMB_NORTH |
+                                                                                  SECTOR_FLAG_CLIMB_SOUTH );
 
         ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
         ent->character->height_info.ceiling_climb   = 0x00;
 
-        for(room_sector_p rs=ent->current_sector;rs!=NULL;rs=rs->sector_above)
+        if((abs_upper_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (abs_lower_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
         {
-            if(rs->flags & SECTOR_FLAG_CLIMB_CEILING)
-            {
-                ent->character->height_info.ceiling_climb = 0x01;
-                break;
-            }
+            ent->character->height_info.ceiling_climb = 0x01;
         }
 
-        if(ent->character->height_info.ceiling_climb == 0x00)
-        {
-            for(room_sector_p rs = ent->current_sector->sector_below;rs!=NULL;rs=rs->sector_below)
-            {
-                if(rs->flags & SECTOR_FLAG_CLIMB_CEILING)
-                {
-                    ent->character->height_info.ceiling_climb = 0x01;
-                    break;
-                }
-            }
-        }
-
-        if(ent->current_sector->flags & SECTOR_FLAG_DEATH)
+        if(abs_lower_sector->flags & SECTOR_FLAG_DEATH)
         {
             if((ent->move_type == MOVE_ON_FLOOR)    ||
                (ent->move_type == MOVE_UNDER_WATER) ||
@@ -925,11 +924,10 @@ void Entity_ProcessSector(struct entity_s *ent)
     if(lua_isfunction(engine_lua, -1))
     {
         int top = lua_gettop(engine_lua);
-        lua_pushnumber(engine_lua, ent->current_sector->trig_index);
+        lua_pushnumber(engine_lua, abs_lower_sector->trig_index);
         lua_pushnumber(engine_lua, ((ent->bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC));
         lua_pushnumber(engine_lua, ent->id);
         lua_pcall(engine_lua, 3, 1, 0);
-        //int result = lua_tointeger(engine_lua, -1);
         lua_settop(engine_lua, top);
     }
 }
@@ -1129,15 +1127,6 @@ void Entity_DoAnimMove(entity_p entity)
         }
     }
 }
-
-
-#define WEAPON_STATE_HIDE               (0x00)
-#define WEAPON_STATE_HIDE_TO_READY      (0x01)
-#define WEAPON_STATE_IDLE               (0x02)
-#define WEAPON_STATE_IDLE_TO_FIRE       (0x03)
-#define WEAPON_STATE_FIRE               (0x04)
-#define WEAPON_STATE_FIRE_TO_IDLE       (0x05)
-#define WEAPON_STATE_IDLE_TO_HIDE       (0x06)
 
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
