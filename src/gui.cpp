@@ -1347,6 +1347,9 @@ void Gui_DrawBars()
 {
     if(engine_world.Character && engine_world.Character->character)
     {
+        if(engine_world.Character->character->weapon_current_state > WEAPON_STATE_HIDE_TO_READY)
+            Bar[BAR_HEALTH].Forced = true;
+        
         Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));
         Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
         Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
@@ -1531,6 +1534,19 @@ bool Gui_FadeStart(int fader, int fade_direction)
     if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_FADING))
     {
         Fader[fader].Engage(fade_direction);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Gui_FadeStop(int fader)
+{
+    if((fader < FADER_LASTINDEX) && (Fader[fader].IsFading() != GUI_FADER_STATUS_IDLE))
+    {
+        Fader[fader].Cut();
         return true;
     }
     else
@@ -2131,10 +2147,11 @@ int gui_Fader::IsFading()
 gui_ProgressBar::gui_ProgressBar()
 {
     // Set up some defaults.
-    Visible =      false;
-    Alternate =    false;
-    Invert =       false;
-    Vertical =     false;
+    Visible   = false;
+    Alternate = false;
+    Invert    = false;
+    Vertical  = false;
+    Forced    = false;
 
     // Initialize parameters.
     // By default, bar is initialized with TR5-like health bar properties.
@@ -2354,6 +2371,19 @@ void gui_ProgressBar::Show(float value)
 
     if(mAutoShow)   // Check autoshow visibility conditions.
     {
+        // 0. If bar drawing was forced, then show a bar without additional
+        //    autoshow delay set. This condition has to be overwritten by
+        //    any other conditions, that's why it is set first.
+        if(Forced)
+        {
+            Visible = true;
+            Forced  = false;
+        }
+        else
+        {
+            Visible = false;
+        }
+        
         // 1. If bar value gone less than warning value, we show it
         //    in any case, bypassing all other conditions.
         if(value <= mWarnValue)

@@ -195,6 +195,7 @@ void Engine_Init_Pre()
     Gui_InitFontManager();
     Con_Init();
     Engine_LuaInit();
+    Gameflow_Init();
 
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUFFER_SIZE);
     frame_vertex_buffer_size = INIT_FRAME_VERTEX_BUFFER_SIZE;
@@ -2886,6 +2887,20 @@ void Engine_LuaClearTasks()
     lua_settop(engine_lua, top);
 }
 
+void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*))
+{
+    char uc[64] = {0}; char lc[64] = {0};
+    for(int i=0; i < strlen(func_name); i++)
+    {
+        lc[i]=tolower(func_name[i]);
+        uc[i]=toupper(func_name[i]);
+    }
+    
+    lua_register(lua, func_name, func);
+    lua_register(lua, lc, func);
+    lua_register(lua, uc, func);
+}
+
 
 void Engine_LuaRegisterFuncs(lua_State *lua)
 {
@@ -2896,26 +2911,26 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     strcat(cvar_init, CVAR_LUA_TABLE_NAME); strcat(cvar_init, " = {};");
     luaL_dostring(lua, cvar_init);
 
-    /*
-     * register functions
-     */
-
     Game_RegisterLuaFunctions(lua);
+    
+    // Register script functions
 
-    lua_register(lua, "checkStack", lua_CheckStack);
+    lua_registerc(lua, "print", lua_print);
+    lua_registerc(lua, "checkStack", lua_CheckStack);
+    lua_registerc(lua, "dumpModel", lua_DumpModel);
+    lua_registerc(lua, "dumpRoom", lua_DumpRoom);
+    lua_registerc(lua, "setRoomEnabled", lua_SetRoomEnabled);
 
-    lua_register(lua, "print", lua_print);
-    lua_register(lua, "dumpModel", lua_DumpModel);
-    lua_register(lua, "dumpRoom", lua_DumpRoom);
-    lua_register(lua, "setRoomEnabled", lua_SetRoomEnabled);
+    lua_registerc(lua, "playSound", lua_PlaySound);
+    lua_registerc(lua, "stopSound", lua_StopSound);
 
-    lua_register(lua, "playsound", lua_PlaySound);
-    lua_register(lua, "playSound", lua_PlaySound);
-    lua_register(lua, "stopsound", lua_StopSound);
-    lua_register(lua, "stopSound", lua_StopSound);
+    lua_registerc(lua, "playStream", lua_PlayStream);
+    
+    lua_registerc(lua, "setLevel", lua_SetLevel);
+    lua_registerc(lua, "getLevel", lua_GetLevel);
 
-    lua_register(lua, "playstream", lua_PlayStream);
-    lua_register(lua, "playStream", lua_PlayStream);
+    lua_registerc(lua, "setGame", lua_SetGame);
+    lua_registerc(lua, "loadMap", lua_LoadMap);
 
     lua_register(lua, "camShake", lua_CamShake);
 
@@ -2925,17 +2940,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "flashSetup", lua_FlashSetup);
     lua_register(lua, "flashStart", lua_FlashStart);
-
-    lua_register(lua, "setlevel", lua_SetLevel);
-    lua_register(lua, "setLevel", lua_SetLevel);
-    lua_register(lua, "getlevel", lua_GetLevel);
-    lua_register(lua, "getLevel", lua_GetLevel);
-
+    
     lua_register(lua, "getLevelVersion", lua_GetLevelVersion);
-
-    lua_register(lua, "setgame", lua_SetGame);
-    lua_register(lua, "setGame", lua_SetGame);
-    lua_register(lua, "loadMap", lua_LoadMap);
 
     lua_register(lua, "setFlipMap", lua_SetFlipMap);
     lua_register(lua, "getFlipMap", lua_GetFlipMap);
@@ -2963,7 +2969,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "disableEntity", lua_DisableEntity);
 
     lua_register(lua, "newSector", lua_NewSector);
-
 
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);

@@ -382,6 +382,7 @@ public:
     void SetExtrude(bool enabled, uint8_t depth);
     void SetAutoshow(bool enabled, int delay, bool fade, int fadeDelay);
 
+    bool          Forced;               // Forced flag is set when bar is strictly drawn.
     bool          Visible;              // Is it visible or not.
     bool          Alternate;            // Alternate state, in which bar changes color to AltColor.
 
@@ -757,20 +758,17 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLuint texture = 0);
 
 /**
- *  Initiate fade or check if fade is active.
- *  When Gui_Fade function is called without second argument, it will act like
- *  state check, and when second argument is present, it will immediately engage
- *  corresponding fader.
+ *  Fader functions.
  */
 bool Gui_FadeStart(int fader, int fade_direction);
+bool Gui_FadeStop(int fader);
 bool Gui_FadeAssignPic(int fader, const char* pic_name);
 int  Gui_FadeCheck(int fader);
 
 /**
- * Draw item notifier.
+ * Initialize item notifier.
  */
 void Gui_StartNotifier(int item);
-void Gui_DrawNotifier();
 
 /**
  * General GUI drawing routines.
@@ -780,11 +778,11 @@ void Gui_DrawFaders();
 void Gui_DrawBars();
 void Gui_DrawLoadScreen(int value);
 void Gui_DrawInventory();
+void Gui_DrawNotifier();
 
 /**
  * General GUI update routines.
  */
-
 void Gui_Update();
 void Gui_Resize();  // Called every resize event.
 

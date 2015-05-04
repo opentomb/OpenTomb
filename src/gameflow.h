@@ -3,21 +3,28 @@
 #include <stdint.h>
 #include "engine.h"
 
+#define TR_GAMEFLOW_MAX_ACTIONS 32
 #define TR_GAMEFLOW_MAX_SECRETS 256
+
+#define TR_GAMEFLOW_NOENTRY     -1
+
+typedef struct gameflow_action_s
+{
+    int8_t      opcode;
+    uint8_t     operand;
+} gameflow_action_t, *gameflow_action_p;
 
 typedef struct gameflow_manager_s
 {
-    char        CurrentLevelName[LEVEL_NAME_MAX_LEN];
-    char        CurrentLevelPath[MAX_ENGINE_PATH];
-    uint8_t     CurrentGameID;
-    uint8_t     CurrentLevelID;
+    char                CurrentLevelName[LEVEL_NAME_MAX_LEN];
+    char                CurrentLevelPath[MAX_ENGINE_PATH];
+    uint8_t             CurrentGameID;
+    uint8_t             CurrentLevelID;
 
-    uint8_t     Opcode;
-    uint8_t     Operand;
+    bool                NextAction;
+    gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS];
 
-    bool        NextAction;
-
-    char        SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
+    char                SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
     
 } gameflow_manager_t, *gameflow_manager_p;
 
@@ -42,7 +49,7 @@ enum TR_GAMEFLOW_OP
     TR_GAMEFLOW_OP_CUTANGLE,        // Cutscene start angle? Possibly rotation flags? Unknown!
     TR_GAMEFLOW_OP_NOFLOOR,         // Makes Lara infinitely fall at the bottom of the level
     TR_GAMEFLOW_OP_ADDTOINVENTORY,  // Add an item to inventory
-    TR_GAMEFLOW_OP_LARASTARTANIM,   // Change Lara's start anim or the state? (Used on levels where Lara starts in water
+    TR_GAMEFLOW_OP_LARASTARTANIM,   // Change Lara's start anim or the state? (Used on levels where Lara starts in water)
     TR_GAMEFLOW_OP_NUMSECRETS,      // Change the number of secrets?
     TR_GAMEFLOW_OP_KILLTOCOMPLETE,  // Kill to complete, used on levels like IcePalace, Nightmare in Vegas so killing the boss ends the level!
     TR_GAMEFLOW_OP_REMOVEAMMO,      // Remove Ammo
@@ -51,5 +58,6 @@ enum TR_GAMEFLOW_OP
 
 extern gameflow_manager_s gameflow_manager;
 
+void Gameflow_Init();
 void Gameflow_Do();
-void Gameflow_Send(int opcode, int operand = -1);
+bool Gameflow_Send(int opcode, int operand = -1);
