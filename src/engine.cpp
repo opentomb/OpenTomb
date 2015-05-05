@@ -2417,11 +2417,11 @@ int lua_FlashSetup(lua_State *lua)
 {
     if(lua_gettop(lua) != 6) return 0;
 
-    Gui_SetupFader(FADER_EFFECT,
-                   (uint8_t)(lua_tointeger(lua, 1)),
-                   (uint8_t)(lua_tointeger(lua, 2)), (uint8_t)(lua_tointeger(lua, 3)), (uint8_t)(lua_tointeger(lua, 4)),
-                   BM_MULTIPLY,
-                   (uint16_t)(lua_tointeger(lua, 5)), (uint16_t)(lua_tointeger(lua, 6)));
+    Gui_FadeSetup(FADER_EFFECT,
+                  (uint8_t)(lua_tointeger(lua, 1)),
+                  (uint8_t)(lua_tointeger(lua, 2)), (uint8_t)(lua_tointeger(lua, 3)), (uint8_t)(lua_tointeger(lua, 4)),
+                  BM_MULTIPLY,
+                  (uint16_t)(lua_tointeger(lua, 5)), (uint16_t)(lua_tointeger(lua, 6)));
     return 0;
 }
 
@@ -3505,7 +3505,10 @@ int Engine_LoadMap(const char *name)
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
-    Fader[FADER_LOADSCREEN].Cut();                      ///@FIXME: if I load custom levels with "loadMap("data/newlevel.tr4");" in autoexec.lua, load screen fader does not stop!
+    
+    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
+    Gui_NotifierStop();
+    
     return 1;
 }
 
