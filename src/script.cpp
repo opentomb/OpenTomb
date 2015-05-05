@@ -30,7 +30,7 @@ extern "C" {
  */
 char *parse_token(char *data, char *token)
 {
-    //FIXME: Проверять token на переполнение
+    ///@FIXME: token may be overflowed
     int c;
     int len;
 

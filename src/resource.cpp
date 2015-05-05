@@ -105,6 +105,7 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     {
         const char* func_template = "%s_init";
         char buf[64] = {0};
+        int top = lua_gettop(lua);
         snprintf(buf, 64, func_template, func_name);
         lua_getglobal(lua, buf);
 
@@ -114,10 +115,12 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
             luaL_dostring(lua, buf);
             lua_pushinteger(lua, entity_id);
             lua_pcall(lua, 1, 0, 0);
+            lua_settop(lua, top);
             return true;
         }
         else
         {
+            lua_settop(lua, top);
             return false;
         }
     }

@@ -872,10 +872,10 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
 room_sector_s* Entity_GetLowestSector(room_sector_s* sector)
 {
     room_sector_p lowest_sector = sector;
-    
+
     for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_below)
     { lowest_sector = rs; }
-    
+
     return lowest_sector;
 }
 
@@ -883,10 +883,10 @@ room_sector_s* Entity_GetLowestSector(room_sector_s* sector)
 room_sector_s* Entity_GetHighestSector(room_sector_s* sector)
 {
     room_sector_p highest_sector = sector;
-    
+
     for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_above)
     { highest_sector = rs; }
-    
+
     return highest_sector;
 }
 
@@ -898,12 +898,12 @@ void Entity_ProcessSector(struct entity_s *ent)
     // as many triggers tend to be called from the lowest room in a row
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
-    
+
     room_sector_p highest_sector = Entity_GetHighestSector(ent->current_sector);
     room_sector_p lowest_sector  = Entity_GetLowestSector(ent->current_sector);
-        
+
     if(ent->character)
-    {        
+    {
         ent->character->height_info.walls_climb_dir  = 0;
         ent->character->height_info.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
                                                                                SECTOR_FLAG_CLIMB_EAST  |
@@ -934,16 +934,16 @@ void Entity_ProcessSector(struct entity_s *ent)
 
     // Look up trigger function table and run trigger if it exists.
 
+    int top = lua_gettop(engine_lua);
     lua_getglobal(engine_lua, "tlist_RunTrigger");
     if(lua_isfunction(engine_lua, -1))
     {
-        int top = lua_gettop(engine_lua);
         lua_pushnumber(engine_lua, lowest_sector->trig_index);
         lua_pushnumber(engine_lua, ((ent->bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC));
         lua_pushnumber(engine_lua, ent->id);
         lua_pcall(engine_lua, 3, 1, 0);
-        lua_settop(engine_lua, top);
     }
+    lua_settop(engine_lua, top);
 }
 
 

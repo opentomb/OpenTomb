@@ -1592,7 +1592,7 @@ int lua_MoveEntityToSink(lua_State * lua)
 
     entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     uint32_t sink_index = lua_tointeger(lua, 2);
-    
+
     if(sink_index > engine_world.cameras_sinks_count) return 0;
     stat_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
 
@@ -2489,7 +2489,7 @@ int lua_PlayStream(lua_State *lua)
 int lua_PlaySound(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top < 1)
     {
         Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
@@ -2502,9 +2502,9 @@ int lua_PlaySound(lua_State *lua)
         Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
         return 0;
     }
-    
+
     int ent_id = -1;
-    
+
     if(top >= 2)
     {
         ent_id = lua_tointeger(lua, 2);
@@ -2535,7 +2535,7 @@ int lua_PlaySound(lua_State *lua)
                 break;
         }
     }
-    
+
     return 0;
 }
 
@@ -2543,7 +2543,7 @@ int lua_PlaySound(lua_State *lua)
 int lua_StopSound(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top < 1)
     {
         Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
@@ -2558,15 +2558,15 @@ int lua_StopSound(lua_State *lua)
     }
 
     int ent_id = -1;
-    
+
     if(top > 1)
     {
         ent_id = lua_tointeger(lua, 2);
         if(World_GetEntityByID(&engine_world, ent_id) == NULL) ent_id = -1;
     }
-    
+
     int result;
-    
+
     if(ent_id == -1)
     {
         result = Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL);
@@ -2606,7 +2606,8 @@ int lua_SetLevel(lua_State *lua)
 
 int lua_SetGame(lua_State *lua)
 {
-    if(lua_gettop(lua) < 1)
+    int top = lua_gettop(lua);
+    if(top < 1)
     {
         Con_Warning(SYSWARN_WRONG_ARGS, "[gameversion], (level_id)");
         return 0;
@@ -2627,6 +2628,7 @@ int lua_SetGame(lua_State *lua)
         lua_pop(lua, 1);
         Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     }
+    lua_settop(lua, top);
 
     Con_Notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
     Game_LevelTransition(gameflow_manager.CurrentLevelID);
@@ -2935,7 +2937,7 @@ void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*)
         lc[i]=tolower(func_name[i]);
         uc[i]=toupper(func_name[i]);
     }
-    
+
     lua_register(lua, func_name, func);
     lua_register(lua, lc, func);
     lua_register(lua, uc, func);
@@ -2952,7 +2954,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     luaL_dostring(lua, cvar_init);
 
     Game_RegisterLuaFunctions(lua);
-    
+
     // Register script functions
 
     lua_registerc(lua, "print", lua_print);
@@ -2965,7 +2967,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_registerc(lua, "stopSound", lua_StopSound);
 
     lua_registerc(lua, "playStream", lua_PlayStream);
-    
+
     lua_registerc(lua, "setLevel", lua_SetLevel);
     lua_registerc(lua, "getLevel", lua_GetLevel);
 
@@ -2980,7 +2982,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "flashSetup", lua_FlashSetup);
     lua_register(lua, "flashStart", lua_FlashStart);
-    
+
     lua_register(lua, "getLevelVersion", lua_GetLevelVersion);
 
     lua_register(lua, "setFlipMap", lua_SetFlipMap);
@@ -3505,10 +3507,10 @@ int Engine_LoadMap(const char *name)
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
-    
+
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
     Gui_NotifierStop();
-    
+
     return 1;
 }
 
