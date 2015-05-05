@@ -7,8 +7,6 @@
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- 1 - Define global constants
 ---------------------------------------------------------------------------------------------------------------------------------------
-gameflow_lara_home_index   =  99; -- used to load Lara's Home.
-
 GAME_1      = 0;
 GAME_1_1    = 1;
 GAME_1_5    = 2;
@@ -78,7 +76,7 @@ function getNextLevelNum(currentgame, currentlevel, operand)
     end;
 
     if(gameflow_paths[currentgame] ~= nil) then
-        if((nextlevel == gameflow_lara_home_index) and (gameflow_paths[currentgame].level[0] ~= nil)) then      -- Load Lara's Home level, if exist.
+        if((nextlevel == 99) and (gameflow_paths[currentgame].level[0] ~= nil)) then      -- Load Lara's Home level (99), if exist.
             nextlevel = 0;
         elseif(nextlevel > gameflow_paths[currentgame].numlevels) then -- No Lara's Home, load first level instead.
             nextlevel = 1;
@@ -135,5 +133,7 @@ function setgamef(game_id, level_id)
         setgame(GAME_5, level_id);
     end;
 end;
+
+SETGAMEF = setgamef;
 
 print("Gameflow path script loaded");

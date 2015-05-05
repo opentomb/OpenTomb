@@ -1408,15 +1408,7 @@ int lua_GetEntityDistance(lua_State * lua)
         return 0;
     }
 
-    btVector3 ent1_pos; ent1_pos.m_floats[0] = e1->transform[12+0];
-                        ent1_pos.m_floats[1] = e1->transform[12+1];
-                        ent1_pos.m_floats[2] = e1->transform[12+2];
-
-    btVector3 ent2_pos; ent2_pos.m_floats[0] = e2->transform[12+0];
-                        ent2_pos.m_floats[1] = e2->transform[12+1];
-                        ent2_pos.m_floats[2] = e2->transform[12+2];
-
-    lua_pushnumber(lua, btDistance(ent1_pos, ent2_pos));
+    lua_pushnumber(lua, Entity_FindDistance(e1, e2));
     return 1;
 }
 
@@ -1599,7 +1591,10 @@ int lua_MoveEntityToSink(lua_State * lua)
     }
 
     entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
-    stat_camera_sink_p sink = &engine_world.cameras_sinks[lua_tointeger(lua, 2)];
+    uint32_t sink_index = lua_tointeger(lua, 2);
+    
+    if(sink_index > engine_world.cameras_sinks_count) return 0;
+    stat_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
 
     btVector3 ent_pos;  ent_pos.m_floats[0] = ent->transform[12+0];
                         ent_pos.m_floats[1] = ent->transform[12+1];
@@ -1820,6 +1815,28 @@ int lua_CanTriggerEntity(lua_State * lua)
 }
 
 
+int lua_GetEntityVisibility(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_VISIBLE) != 0);
+
+    return 1;
+}
+
 int lua_SetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
@@ -1847,6 +1864,29 @@ int lua_SetEntityVisibility(lua_State * lua)
     }
 
     return 0;
+}
+
+
+int lua_GetEntityEnability(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_ENABLED) != 0);
+
+    return 1;
 }
 
 
@@ -2985,9 +3025,11 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
+    lua_register(lua, "getEntityVisibility", lua_GetEntityVisibility);
     lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
+    lua_register(lua, "getEntityEnability", lua_GetEntityEnability);
     lua_register(lua, "getEntityActivityLock", lua_GetEntityActivityLock);
     lua_register(lua, "setEntityActivityLock", lua_SetEntityActivityLock);
     lua_register(lua, "getEntityOCB", lua_GetEntityOCB);

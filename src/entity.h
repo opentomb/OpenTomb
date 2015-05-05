@@ -142,4 +142,7 @@ void Entity_MoveVertical(struct entity_s *ent, btScalar dist);
 
 btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2);
 
+room_sector_s* Entity_GetLowestSector(room_sector_s* sector);
+room_sector_s* Entity_GetHighestSector(room_sector_s* sector);
+
 #endif

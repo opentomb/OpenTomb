@@ -56,7 +56,7 @@ function door_init(id)   -- NORMAL doors only!
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
     
-    door_activate(id);
+    prepareEntity(id);
 end
 
 function keyhole_init(id)    -- Key and puzzle holes
@@ -137,7 +137,7 @@ function venicebird_init(id)    -- Venice singing birds (TR2)
         end;
     end
     
-    activateEntity(id);
+    prepareEntity(id);
 end
 
 function doorbell_init(id)    -- Lara's Home doorbell (TR2)
@@ -186,6 +186,31 @@ function alarm_TR2_init(id)    -- Offshore Rig alarm (TR2)
     end
 end
 
+function alarmbell_init(id)    -- Home Sweet Home alarm (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 0) then setEntityActivity(object_id, 1) end;
+    end
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 1) then
+            setEntityActivity(object_id, 0);
+            stopSound(335, object_id);
+        end;
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        playSound(335, object_id);
+        if(tickEntity(object_id) == TICK_STOPPED) then
+            setEntityActivity(object_id, 0)
+            stopSound(335, object_id);
+        end;
+    end
+end
+
 function heli_TR2_init(id)    -- Helicopter (TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
@@ -215,7 +240,7 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
         end;
     end
     
-    activateEntity(id);
+    prepareEntity(id);
 end
 
 function swingblade_init(id)        -- Swinging blades (TR1)
@@ -235,7 +260,7 @@ function swingblade_init(id)        -- Swinging blades (TR1)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
     
-    activateEntity(id);
+    prepareEntity(id);
 end
 
 function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
@@ -255,13 +280,12 @@ function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
     
-    activateEntity(id);
+    prepareEntity(id);
 end
 
 function wallblade_init(id)     -- Wall blade (TR1-TR3)
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
-    setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -273,15 +297,15 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
-        local anim_number = getEntityAnim(object_id)
+        local anim_number = getEntityAnim(object_id);
         if(anim_number == 2) then
-            setEntityAnim(object_id, 3)
+            setEntityAnim(object_id, 3);
         elseif(anim_number == 1) then
-            setEntityAnim(object_id, 0)
+            setEntityAnim(object_id, 0);
         end;
     end
     
-    activateEntity(id);
+    prepareEntity(id);
 end
 
 function pickup_init(id, item_id)    -- Pick-ups
@@ -351,7 +375,6 @@ function pickup_init(id, item_id)    -- Pick-ups
             return false;   -- Item successfully picked up, kill the task.
         end);
     end;
-    
 end
 
 function fallblock_init(id)  -- Falling block (TR1-3)
@@ -390,10 +413,10 @@ function fallblock_init(id)  -- Falling block (TR1-3)
     end;
 end
 
-function fallceiling_init(id)  -- Falling ceiling (TR1-3) (INVALID)
+function fallceiling_init(id)  -- Falling ceiling (TR1-3)
 
     setEntitySpeed(id, 0.0, 0.0, 0.0);
-
+    
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
             return;
@@ -402,25 +425,18 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3) (INVALID)
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
             setEntityAnim(object_id, 1);
-            local once = true;
             addTask(
             function()
-                local anim = getEntityAnim(object_id);
-                if(anim == 1) then
-                    return true;
-                end;
-                if(once) then
-                    setEntityCollision(object_id, 0);
-                    once = false;
-                end;
                 if(dropEntity(object_id, frame_time)) then
-                    setEntityAnim(object_id, 3);
+                    setEntityAnim(object_id, 2);
+                    setEntityCollision(object_id, 0);
                     return false;
                 end;
                 return true;
             end);
         end;
     end;
+    
 end
 
 function pushdoor_init(id)   -- Pushdoors (TR4)
@@ -445,6 +461,9 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
     end;
 end
 
+function midastouch_init(id)    -- Midas gold touch
+
+end
 
 function oldspike_init(id)  -- Teeth spikes (INVALID)
 

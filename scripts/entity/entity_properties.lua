@@ -272,7 +272,7 @@ tr2_entity_tbl[60] = {coll = 0x01};                     -- Boulder
 tr2_entity_tbl[61] = {coll = 0x02};                     -- Disk (like dart)
 tr2_entity_tbl[62] = {coll = 0x00};                     -- Wall-mounted disk shooter (like dartgun)
 tr2_entity_tbl[63] = {coll = 0x01};                     -- Drawbridge
-tr2_entity_tbl[64] = {coll = 0x02};                     -- Slamming door
+tr2_entity_tbl[64] = {coll = 0x02, func = "slamdoor"};                     -- Slamming door
 tr2_entity_tbl[65] = {coll = 0x01};                     -- Elevator
 tr2_entity_tbl[66] = {coll = 0x02};                     -- Minisub
 tr2_entity_tbl[67] = {coll = 0x02, trav = 0x18};        -- Movable cubical block (pushable)
@@ -285,7 +285,7 @@ tr2_entity_tbl[73] = {coll = 0x02};                     -- Breakable window (mus
 tr2_entity_tbl[76] = {coll = 0x01};                     -- Airplane propeller
 tr2_entity_tbl[77] = {coll = 0x02};                     -- Power saw
 tr2_entity_tbl[78] = {coll = 0x02};                     -- Overhead pulley hook
-tr2_entity_tbl[79] = {coll = 0x02};                     -- Sandbag / Ceiling fragments
+tr2_entity_tbl[79] = {coll = 0x02, func = "fallceiling"};                     -- Sandbag / Ceiling fragments
 tr2_entity_tbl[80] = {coll = 0x02};                     -- Rolling spindle
 tr2_entity_tbl[81] = {coll = 0x02, func = "wallblade"};                     -- Wall-mounted knife blade
 tr2_entity_tbl[82] = {coll = 0x02};                     -- Statue with knife blade
@@ -405,7 +405,7 @@ tr2_entity_tbl[253] = {coll = 0x00, hide = 0x01};  -- Fire
 tr2_entity_tbl[254] = {coll = 0x00};               -- Skybox
 tr2_entity_tbl[256] = {coll = 0x01};               -- Monk
 tr2_entity_tbl[257] = {coll = 0x00, hide = 0x01, func = "doorbell"}   -- Door bell
-tr2_entity_tbl[258] = {coll = 0x00, hide = 0x01}   -- Alarm bell
+tr2_entity_tbl[258] = {coll = 0x00, hide = 0x01, func = "alarmbell"}   -- Alarm bell
 tr2_entity_tbl[259] = {coll = 0x01, func = "heli_TR2"};               -- Helicopter
 tr2_entity_tbl[260] = {coll = 0x02};               -- The butler
 tr2_entity_tbl[262] = {coll = 0x00, hide = 0x01};  -- Lara cutscene placement?
@@ -500,14 +500,14 @@ tr3_entity_tbl[87] = {coll = 0x01, func = "oldspike"};                 -- Spikes
 tr3_entity_tbl[88] = {coll = 0x01};                 -- Boulder / Barrel
 tr3_entity_tbl[89] = {coll = 0x01};                 -- Giant boulder (Temple of Puna)
 tr3_entity_tbl[90] = {coll = 0x01};                 -- Disk (like dart)
-tr3_entity_tbl[91] = {coll = 0x01};                 -- Dart shooter
-tr3_entity_tbl[94] = {coll = 0x01};                 -- Spiked impaled skeleton / Slamming door
+tr3_entity_tbl[91] = {coll = 0x01, hide = 0x01};                 -- Dart shooter
+tr3_entity_tbl[94] = {coll = 0x01, func = "slamdoor"};                 -- Spiked impaled skeleton / Slamming door
 tr3_entity_tbl[97] = {coll = 0x01, trav = 0x18};    -- Movable cubical block (pushable)
 tr3_entity_tbl[98] = {coll = 0x01, trav = 0x18};    -- Movable cubical block (pushable)
 tr3_entity_tbl[101] = {coll = 0x01};                -- Destroyable boarded-up window
 tr3_entity_tbl[102] = {coll = 0x01};                -- Destroyable boarded-up window / wall
 tr3_entity_tbl[106] = {coll = 0x01};                -- Overhead pulley hook
-tr3_entity_tbl[107] = {coll = 0x01};                -- Falling fragments
+tr3_entity_tbl[107] = {coll = 0x01, func = "fallceiling"};                -- Falling fragments
 tr3_entity_tbl[108] = {coll = 0x01};                -- Rolling spindle
 tr3_entity_tbl[110] = {coll = 0x01};                -- Subway train
 tr3_entity_tbl[111] = {coll = 0x01, func = "wallblade"};                -- Wall-mounted knife blade / Knife disk
