@@ -505,10 +505,6 @@ void Gui_InitFaders();
 void Gui_InitNotifier();
 void Gui_InitTempLines();
 
-void Gui_SetupFader(int fader_index, 
-                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
-                    uint16_t fadein_speed, uint16_t fadeout_speed);
-
 void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);
 void Gui_MoveLine(gui_text_line_p line);
@@ -764,11 +760,15 @@ bool Gui_FadeStart(int fader, int fade_direction);
 bool Gui_FadeStop(int fader);
 bool Gui_FadeAssignPic(int fader, const char* pic_name);
 int  Gui_FadeCheck(int fader);
+void Gui_FadeSetup(int fader, 
+                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
+                   uint16_t fadein_speed, uint16_t fadeout_speed);
 
 /**
- * Initialize item notifier.
+ * Item notifier functions.
  */
-void Gui_StartNotifier(int item);
+void Gui_NotifierStart(int item);
+void Gui_NotifierStop();
 
 /**
  * General GUI drawing routines.

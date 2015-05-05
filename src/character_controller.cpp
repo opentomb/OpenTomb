@@ -233,7 +233,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
         return 0;
     }
 
-    Gui_StartNotifier(item_id);
+    Gui_NotifierStart(item_id);
 
     base_item_p item = World_GetBaseItemByID(&engine_world, item_id);
     if(item == NULL) return 0;

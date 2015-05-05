@@ -65,6 +65,7 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, objec
     else
         object_mask = bit32.bor(object_mask, trigger_mask);    -- Other cases
     end;
+
     setEntityActivationMask(object_id, object_mask);
     
     -- Full entity mask (11111) is always a reason to activate an entity.
@@ -171,3 +172,10 @@ function playCutscene(cutscene_index)
     if(getLevelVersion() < TR_IV) then return 0 end;
     print("CUTSCENE: index = " .. cutscene_index);
 end
+
+
+-- Special template which is called for specific entity types at level start-up.
+
+function prepareEntity(object_id)
+    activateEntity(object_id, 0, 0, 0, 0, 0);
+end;
