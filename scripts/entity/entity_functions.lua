@@ -377,6 +377,20 @@ function pickup_init(id, item_id)    -- Pick-ups
     end;
 end
 
+function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityActivity(id, 1);
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityDistance(player, object_id) < 512.0) then
+            playSound(SOUND_MEDIPACK);
+            changeCharacterParam(player, PARAM_HEALTH, 200);
+            disableEntity(object_id);
+        end;
+    end
+end
+
 function fallblock_init(id)  -- Falling block (TR1-3)
 
     local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags

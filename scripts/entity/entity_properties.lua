@@ -568,7 +568,7 @@ tr3_entity_tbl[176] = {coll = 0x00};           -- Small medipack (pick-up)
 tr3_entity_tbl[177] = {coll = 0x00};           -- Large medipack (pick-up)
 tr3_entity_tbl[178] = {coll = 0x00};           -- Flares (pick-up)
 tr3_entity_tbl[179] = {coll = 0x00};           -- Flare (pick-up)
-tr3_entity_tbl[180] = {coll = 0x00};           -- Savegame crystal (pick-up)
+tr3_entity_tbl[180] = {coll = 0x00, func = "crystal_TR3"};           -- Savegame crystal (pick-up)
 
 -- MENU ITEMS --
 
