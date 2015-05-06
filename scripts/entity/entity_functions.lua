@@ -44,17 +44,15 @@ end;
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityActivity(object_id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(object_id == nil) then return end;
-        setEntityActivity(object_id, 1);
-        
-        -- Open door, if mask is full.
-        local state = 0;
-        if(getEntityActivationMask(object_id) == 0x1F) then state = 1 end;
         
         if(getEntityActivityLock(object_id) ~= 1) then
-            setEntityState(object_id, state);
+            local current_state = getEntityState(object_id);
+            if(current_state == 0) then current_state = 1 else current_state = 0 end;
+            setEntityState(object_id, current_state);
         end
     end;
     

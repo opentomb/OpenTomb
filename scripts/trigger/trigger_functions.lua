@@ -60,24 +60,24 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, objec
     -- Apply trigger mask to entity mask.
 
     local object_mask = getEntityActivationMask(object_id);
+    local result_mask = object_mask;
+    
     if(trigger_op == 1) then
-        object_mask = bit32.bxor(object_mask, trigger_mask);   -- Switch cases
+        result_mask = bit32.bxor(object_mask, trigger_mask);   -- Switch cases
     else
-        object_mask = bit32.bor(object_mask, trigger_mask);    -- Other cases
+        result_mask = bit32.bor(object_mask, trigger_mask);    -- Other cases
     end;
-
-    setEntityActivationMask(object_id, object_mask);           -- Set mask. 
-    setEntityTimer(object_id, object_timer);                   -- Engage timer.
     
     -- Full entity mask (11111) is always a reason to activate an entity.
     -- If mask is not full, entity won't activate - no exclusions.
     
-    if(object_mask == 0x1F) then
+    if((((object_mask ~= trigger_mask) and (trigger_op ~= 1)) or (trigger_op == 1)) and (result_mask == 0x1F)) then
         execEntity(object_id, activator_id, ENTITY_CALLBACK_ACTIVATE);
         setEntityActivityLock(object_id, bit32.bor(current_lock, object_lock));
-    else
-        execEntity(object_id, activator_id, ENTITY_CALLBACK_DEACTIVATE);
     end;
+
+    setEntityActivationMask(object_id, result_mask);           -- Set mask. 
+    setEntityTimer(object_id, object_timer);                   -- Engage timer.
 end;
 
 
@@ -177,4 +177,8 @@ end
 
 function prepareEntity(object_id)
     activateEntity(object_id, 0, 0, 0, 0, 0);
+    local object_mask = getEntityActivationMask(object_id);
+    if(object_mask == 0x1F) then
+        setEntityActivationMask(object_id, 0)   -- Reset activation mask.
+    end;
 end;
