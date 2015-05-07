@@ -1760,7 +1760,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     else if(cmd->move[1] ==-1)
                     {
                         ent->dir_flag = ENT_MOVE_LEFT;
-                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_LEFT, 0); // edge climb right
+                        Entity_SetAnimation(ent, TR_ANIMATION_LARA_CLIMB_LEFT, 0); // edge climb left
                     }
                     else if(climb->wall_hit == 0x00)
                     {
