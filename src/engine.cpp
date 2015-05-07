@@ -2889,6 +2889,18 @@ int lua_genUVRotateAnimation(lua_State *lua)
     return 0;
 }
 
+// Called when something goes absolutely horribly wrong in Lua, and tries
+// to produce some debug output. Lua calls abort afterwards, so sending
+// the output to the internal console is not an option.
+static int engine_LuaPanic(lua_State *lua) {
+    if (lua_gettop(lua) < 1) {
+        fprintf(stderr, "Fatal lua error (no details provided).\n");
+    } else {
+        fprintf(stderr, "Fatal lua error: %s\n", lua_tostring(lua, 1));
+    }
+    fflush(stderr);
+    return 0;
+}
 
 bool Engine_LuaInit()
 {
@@ -2898,7 +2910,7 @@ bool Engine_LuaInit()
     {
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
-
+        lua_atpanic(engine_lua, engine_LuaPanic);
 
         // Load and run global engine scripts, except font script, which
         // should be called AFTER OpenGL/SDL are initialized.
