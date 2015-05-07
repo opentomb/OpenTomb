@@ -84,18 +84,22 @@ end;
 -- Tries to deactivate entity. Doesn't work with certain kinds of entities (like enemies).
 
 function deactivateEntity(object_id, activator_id)
+
+    -- Get current entity activity lock.
+    
+    local current_lock = getEntityActivityLock(object_id);
+    if(current_lock ~= 0) then return end;   -- No action if object is locked.
+    
+    -- Execute entity deactivation function.
+    if((getEntityActivity(object_id) == 1) and (getEntityActivationMask(object_id) ~= 0x00)) then
+        execEntity(object_id, activator_id, ENTITY_CALLBACK_DEACTIVATE);
+    end;
     
     -- Activation mask and timer are forced to zero when entity is deactivated.
     -- Activity lock is ignored, since it can't be raised by antitriggers.
     
     setEntityActivationMask(object_id, 0x00);
     setEntityTimer(object_id, 0.0);
-    
-    -- Execute entity deactivation function.
-    if(getEntityActivity(object_id) == 1) then
-        execEntity(object_id, activator_id, ENTITY_CALLBACK_DEACTIVATE);
-    end;
-    
 end
 
 
