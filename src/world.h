@@ -400,8 +400,8 @@ void Room_Disable(room_p room);
 void Room_SwapToAlternate(room_p room);
 void Room_SwapToBase(room_p room);
 room_p Room_CheckFlip(room_p r);
-void Room_SwapPortals(room_p room, room_p dest_room);//Swap room portals of input room to destination room
-void Room_SwapItems(room_p room, room_p dest_room);//Swap room items of input room to destination room
+void Room_SwapPortals(room_p room, room_p dest_room); //Swap room portals of input room to destination room
+void Room_SwapItems(room_p room, room_p dest_room);   //Swap room items of input room to destination room
 void Room_BuildNearRoomsList(room_p room);
 
 int Room_IsJoined(room_p r1, room_p r2);

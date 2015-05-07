@@ -40,8 +40,6 @@ bool lua_GetSysNotify(lua_State *lua, int string_index, size_t string_size, char
 
 btScalar lua_GetScalarField(lua_State *lua, const char *key);
 int lua_SetScalarField(lua_State *lua, const char *key, btScalar val);
-const char *lua_GetStrField(lua_State *lua, const char *key);
-int lua_SetStrField(lua_State *lua, const char *key, const char *val);
 
 void lua_LoopEntity(lua_State *lua, int object_id);
 int  lua_ExecEntity(lua_State *lua, int id_object, int id_activator, int id_callback);

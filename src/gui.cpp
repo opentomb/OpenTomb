@@ -220,18 +220,6 @@ void Gui_InitFaders()
     }
 }
 
-void Gui_SetupFader(int fader_index,
-                    uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
-                    uint16_t fadein_speed, uint16_t fadeout_speed)
-{
-    if(fader_index >= FADER_LASTINDEX) return;
-
-    Fader[fader_index].SetAlpha(alpha);
-    Fader[fader_index].SetColor(R,G,B);
-    Fader[fader_index].SetBlendingMode(blending_mode);
-    Fader[fader_index].SetSpeed(fadein_speed,fadeout_speed);
-}
-
 void Gui_InitNotifier()
 {
     Notifier.SetPos(850.0, 850.0);
@@ -1411,9 +1399,14 @@ void Gui_DrawInventory()
     Gui_SwitchGLMode(1);
 }
 
-void Gui_StartNotifier(int item)
+void Gui_NotifierStart(int item)
 {
     Notifier.Start(item, GUI_NOTIFIER_SHOWTIME);
+}
+
+void Gui_NotifierStop()
+{
+    Notifier.Reset();
 }
 
 void Gui_DrawNotifier()
@@ -1612,6 +1605,18 @@ bool Gui_FadeAssignPic(int fader, const char* pic_name)
     }
 
     return false;
+}
+
+void Gui_FadeSetup(int fader,
+                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint32_t blending_mode,
+                   uint16_t fadein_speed, uint16_t fadeout_speed)
+{
+    if(fader >= FADER_LASTINDEX) return;
+
+    Fader[fader].SetAlpha(alpha);
+    Fader[fader].SetColor(R,G,B);
+    Fader[fader].SetBlendingMode(blending_mode);
+    Fader[fader].SetSpeed(fadein_speed,fadeout_speed);
 }
 
 int Gui_FadeCheck(int fader)

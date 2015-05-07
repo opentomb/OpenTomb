@@ -105,6 +105,7 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     {
         const char* func_template = "%s_init";
         char buf[64] = {0};
+        int top = lua_gettop(lua);
         snprintf(buf, 64, func_template, func_name);
         lua_getglobal(lua, buf);
 
@@ -114,10 +115,12 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
             luaL_dostring(lua, buf);
             lua_pushinteger(lua, entity_id);
             lua_pcall(lua, 1, 0, 0);
+            lua_settop(lua, top);
             return true;
         }
         else
         {
+            lua_settop(lua, top);
             return false;
         }
     }
@@ -957,7 +960,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                             break;
 
                                         case TR_ACTIVATOR_PICKUP:
-                                            snprintf(buf, 256, " if((getEntityActivity(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityEnability(%d) == 0) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
                                             break;
                                     }
 
@@ -1936,9 +1939,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             Room_Disable(r);
         }
     }
-
-    // Set loadscreen fader to fade-in state.
-    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
 }
 
 

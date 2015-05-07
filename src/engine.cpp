@@ -1408,15 +1408,7 @@ int lua_GetEntityDistance(lua_State * lua)
         return 0;
     }
 
-    btVector3 ent1_pos; ent1_pos.m_floats[0] = e1->transform[12+0];
-                        ent1_pos.m_floats[1] = e1->transform[12+1];
-                        ent1_pos.m_floats[2] = e1->transform[12+2];
-
-    btVector3 ent2_pos; ent2_pos.m_floats[0] = e2->transform[12+0];
-                        ent2_pos.m_floats[1] = e2->transform[12+1];
-                        ent2_pos.m_floats[2] = e2->transform[12+2];
-
-    lua_pushnumber(lua, btDistance(ent1_pos, ent2_pos));
+    lua_pushnumber(lua, Entity_FindDistance(e1, e2));
     return 1;
 }
 
@@ -1599,7 +1591,10 @@ int lua_MoveEntityToSink(lua_State * lua)
     }
 
     entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
-    stat_camera_sink_p sink = &engine_world.cameras_sinks[lua_tointeger(lua, 2)];
+    uint32_t sink_index = lua_tointeger(lua, 2);
+
+    if(sink_index > engine_world.cameras_sinks_count) return 0;
+    stat_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
 
     btVector3 ent_pos;  ent_pos.m_floats[0] = ent->transform[12+0];
                         ent_pos.m_floats[1] = ent->transform[12+1];
@@ -1820,6 +1815,28 @@ int lua_CanTriggerEntity(lua_State * lua)
 }
 
 
+int lua_GetEntityVisibility(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_VISIBLE) != 0);
+
+    return 1;
+}
+
 int lua_SetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
@@ -1847,6 +1864,29 @@ int lua_SetEntityVisibility(lua_State * lua)
     }
 
     return 0;
+}
+
+
+int lua_GetEntityEnability(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_ENABLED) != 0);
+
+    return 1;
 }
 
 
@@ -2377,11 +2417,11 @@ int lua_FlashSetup(lua_State *lua)
 {
     if(lua_gettop(lua) != 6) return 0;
 
-    Gui_SetupFader(FADER_EFFECT,
-                   (uint8_t)(lua_tointeger(lua, 1)),
-                   (uint8_t)(lua_tointeger(lua, 2)), (uint8_t)(lua_tointeger(lua, 3)), (uint8_t)(lua_tointeger(lua, 4)),
-                   BM_MULTIPLY,
-                   (uint16_t)(lua_tointeger(lua, 5)), (uint16_t)(lua_tointeger(lua, 6)));
+    Gui_FadeSetup(FADER_EFFECT,
+                  (uint8_t)(lua_tointeger(lua, 1)),
+                  (uint8_t)(lua_tointeger(lua, 2)), (uint8_t)(lua_tointeger(lua, 3)), (uint8_t)(lua_tointeger(lua, 4)),
+                  BM_MULTIPLY,
+                  (uint16_t)(lua_tointeger(lua, 5)), (uint16_t)(lua_tointeger(lua, 6)));
     return 0;
 }
 
@@ -2449,7 +2489,7 @@ int lua_PlayStream(lua_State *lua)
 int lua_PlaySound(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top < 1)
     {
         Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
@@ -2462,9 +2502,9 @@ int lua_PlaySound(lua_State *lua)
         Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
         return 0;
     }
-    
+
     int ent_id = -1;
-    
+
     if(top >= 2)
     {
         ent_id = lua_tointeger(lua, 2);
@@ -2495,7 +2535,7 @@ int lua_PlaySound(lua_State *lua)
                 break;
         }
     }
-    
+
     return 0;
 }
 
@@ -2503,7 +2543,7 @@ int lua_PlaySound(lua_State *lua)
 int lua_StopSound(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top < 1)
     {
         Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
@@ -2518,15 +2558,15 @@ int lua_StopSound(lua_State *lua)
     }
 
     int ent_id = -1;
-    
+
     if(top > 1)
     {
         ent_id = lua_tointeger(lua, 2);
         if(World_GetEntityByID(&engine_world, ent_id) == NULL) ent_id = -1;
     }
-    
+
     int result;
-    
+
     if(ent_id == -1)
     {
         result = Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL);
@@ -2566,7 +2606,8 @@ int lua_SetLevel(lua_State *lua)
 
 int lua_SetGame(lua_State *lua)
 {
-    if(lua_gettop(lua) < 1)
+    int top = lua_gettop(lua);
+    if(top < 1)
     {
         Con_Warning(SYSWARN_WRONG_ARGS, "[gameversion], (level_id)");
         return 0;
@@ -2587,6 +2628,7 @@ int lua_SetGame(lua_State *lua)
         lua_pop(lua, 1);
         Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
     }
+    lua_settop(lua, top);
 
     Con_Notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
     Game_LevelTransition(gameflow_manager.CurrentLevelID);
@@ -2895,7 +2937,7 @@ void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*)
         lc[i]=tolower(func_name[i]);
         uc[i]=toupper(func_name[i]);
     }
-    
+
     lua_register(lua, func_name, func);
     lua_register(lua, lc, func);
     lua_register(lua, uc, func);
@@ -2912,7 +2954,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     luaL_dostring(lua, cvar_init);
 
     Game_RegisterLuaFunctions(lua);
-    
+
     // Register script functions
 
     lua_registerc(lua, "print", lua_print);
@@ -2925,7 +2967,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_registerc(lua, "stopSound", lua_StopSound);
 
     lua_registerc(lua, "playStream", lua_PlayStream);
-    
+
     lua_registerc(lua, "setLevel", lua_SetLevel);
     lua_registerc(lua, "getLevel", lua_GetLevel);
 
@@ -2940,7 +2982,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "flashSetup", lua_FlashSetup);
     lua_register(lua, "flashStart", lua_FlashStart);
-    
+
     lua_register(lua, "getLevelVersion", lua_GetLevelVersion);
 
     lua_register(lua, "setFlipMap", lua_SetFlipMap);
@@ -2985,9 +3027,11 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
+    lua_register(lua, "getEntityVisibility", lua_GetEntityVisibility);
     lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
+    lua_register(lua, "getEntityEnability", lua_GetEntityEnability);
     lua_register(lua, "getEntityActivityLock", lua_GetEntityActivityLock);
     lua_register(lua, "setEntityActivityLock", lua_SetEntityActivityLock);
     lua_register(lua, "getEntityOCB", lua_GetEntityOCB);
@@ -3463,7 +3507,10 @@ int Engine_LoadMap(const char *name)
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
-    Fader[FADER_LOADSCREEN].Cut();                      ///@FIXME: if I load custom levels with "loadMap("data/newlevel.tr4");" in autoexec.lua, load screen fader does not stop!
+
+    Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
+    Gui_NotifierStop();
+
     return 1;
 }
 
