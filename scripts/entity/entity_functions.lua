@@ -267,6 +267,38 @@ function swingblade_init(id)        -- Swinging blades (TR1)
     prepareEntity(id);
 end
 
+function tallblock_init(id)    -- Tall moving block (TR1)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    
+    entity_funcs[id].distance_passed = 0;
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 0) then
+            setEntityActivity(object_id, 1);
+            playSound(64, object_id);
+        end;
+    end
+    
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        local move_speed = 32.0;
+        if(getEntityEvent(object_id) == 0) then move_speed = 0 - move_speed end;
+        
+        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + move_speed;
+        moveEntityLocal(object_id, 0.0, move_speed, 0.0);
+        if(math.abs(entity_funcs[object_id].distance_passed) >= 2048.0) then
+            stopSound(64, object_id);
+            setEntityActivity(object_id, 0);
+            entity_funcs[object_id].distance_passed = 0;
+        end;
+    end
+    
+    prepareEntity(id);
+end
+
 function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);

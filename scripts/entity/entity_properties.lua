@@ -87,7 +87,7 @@ tr1_entity_tbl[48] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[49] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[50] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[51] = {coll = 0x02, trav = 0x18};         -- Pushable block
-tr1_entity_tbl[52] = {coll = 0x01};                      -- Moving block
+tr1_entity_tbl[52] = {coll = 0x01, func = "tallblock"};                      -- Moving block
 tr1_entity_tbl[53] = {coll = 0x02, func = "fallceiling"};                      -- Falling ceiling
 tr1_entity_tbl[54] = {coll = 0x01};                      -- Sword of Damocles (unused?)
 tr1_entity_tbl[55] = {coll = 0x02, func = "switch"};     -- Wall switch (lever)
