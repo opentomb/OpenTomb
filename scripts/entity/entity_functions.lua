@@ -48,9 +48,7 @@ function door_init(id)   -- NORMAL doors only!
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(object_id == nil) then return end;
-        local current_state = getEntityState(object_id);
-        if(current_state == 0) then current_state = 1 else current_state = 0 end;
-        setEntityState(object_id, current_state);
+        swapEntityState(object_id, 0, 1);
     end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
