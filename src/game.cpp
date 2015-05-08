@@ -191,7 +191,7 @@ void Save_Entity(FILE **f, entity_p ent)
         return;
     }
 
-        if(ent->type_flags & ENTITY_TYPE_SPAWNED)
+    if(ent->type_flags & ENTITY_TYPE_SPAWNED)
     {
         uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf.animations.model->id, room_id,
@@ -204,10 +204,12 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
+    
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.animations.current_animation, ent->bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.animations.next_state, ent->bf.animations.last_state);
     fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->id, ent->self->collide_flag);
+    
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
         fprintf(*f, "\nenableEntity(%d);", ent->id);
@@ -216,8 +218,10 @@ void Save_Entity(FILE **f, entity_p ent)
     {
         fprintf(*f, "\ndisableEntity(%d);", ent->id);
     }
+    
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
-    fprintf(*f, "\nsetEntityActivationMask(%d, 0x%.4X);", ent->id, ent->activation_mask);
+    
+    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
     //setEntityMeshswap()
 
     if(ent->self->room != NULL)

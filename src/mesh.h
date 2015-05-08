@@ -2,8 +2,8 @@
 #ifndef MESH_H
 #define MESH_H
 
-#define MESH_FULL_OPAQUE 0x00                                                   // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
-#define MESH_HAS_TRANSPERENCY 0x01                                              // Fully transparancy or has transparancy and opaque polygon / object
+#define MESH_FULL_OPAQUE 0x00       // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
+#define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
 
 #define ANIM_CMD_MOVE               0x01
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
@@ -149,7 +149,7 @@ typedef struct anim_seq_s
 typedef struct static_mesh_s
 {
     uint32_t                    object_id;                                      //
-    uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparancy, 3 - full rendered
+    uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
     uint8_t                     was_rendered_lines;
     uint8_t                     hide;                                           // disable static mesh rendering
     btScalar                    pos[3];                                         // model position
@@ -323,7 +323,7 @@ typedef struct animation_frame_s
 typedef struct skeletal_model_s
 {
     uint32_t                    id;                                             // ID
-    uint8_t                     transparancy_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
+    uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
     uint8_t                     hide;                                           // do not render
     btScalar                    bbox_min[3];                                    // bbox info
     btScalar                    bbox_max[3];
@@ -344,7 +344,7 @@ void BaseMesh_FindBB(base_mesh_p mesh);
 void Mesh_GenVBO(struct base_mesh_s *mesh);
 
 void SkeletalModel_Clear(skeletal_model_p model);
-void SkeletonModel_FillTransparancy(skeletal_model_p model);
+void SkeletonModel_FillTransparency(skeletal_model_p model);
 void SkeletalModel_InterpolateFrames(skeletal_model_p models);
 void FillSkinnedMeshMap(skeletal_model_p model);
 

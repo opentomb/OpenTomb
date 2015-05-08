@@ -48,21 +48,17 @@ function door_init(id)   -- NORMAL doors only!
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(object_id == nil) then return end;
-        
-        if(getEntityActivityLock(object_id) ~= 1) then
-            local current_state = getEntityState(object_id);
-            if(current_state == 0) then current_state = 1 else current_state = 0 end;
-            setEntityState(object_id, current_state);
-        end
+        local current_state = getEntityState(object_id);
+        if(current_state == 0) then current_state = 1 else current_state = 0 end;
+        setEntityState(object_id, current_state);
     end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            local current_state = getEntityState(object_id);
-            if(current_state == 0) then current_state = 1 else current_state = 0 end;
-            setEntityState(object_id, current_state);
+            swapEntityState(object_id, 0, 1);
+            setEntityEvent(object_id, 0);
         end;
     end
     

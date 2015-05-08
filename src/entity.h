@@ -37,12 +37,12 @@ struct ss_bone_frame_s;
 #define ENTITY_CALLBACK_STAND                       (0x00000008)
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
 
-#define ENTITY_GHOST_COLLISION                    0     // no one collisions
-#define ENTITY_DYNAMIC_COLLISION                  1     // hallo full physics interaction
-#define ENTITY_CINEMATIC_COLLISION                2     // doors and other moveable statics
-#define ENTITY_STATIC_COLLISION                   3     // static object - never moved
-#define ENTITY_ACTOR_COLLISION                    4     // actor, enemies, NPC, animals
-#define ENTITY_VEHICLE_COLLISION                  5     // car, moto, bike
+#define ENTITY_COLLISION_GHOST                    0     // no one collisions
+#define ENTITY_COLLISION_DYNAMIC                  1     // hallo full physics interaction
+#define ENTITY_COLLISION_KINEMATIC                2     // doors and other moveable statics
+#define ENTITY_COLLISION_STATIC                   3     // static object - never moved
+#define ENTITY_COLLISION_ACTOR                    4     // actor, enemies, NPC, animals
+#define ENTITY_COLLISION_VEHICLE                  5     // car, moto, bike
 
 #define ENTITY_SUBSTANCE_NONE                     0
 #define ENTITY_SUBSTANCE_WATER_SHALLOW            1
@@ -51,6 +51,10 @@ struct ss_bone_frame_s;
 #define ENTITY_SUBSTANCE_QUICKSAND_SHALLOW        4
 #define ENTITY_SUBSTANCE_QUICKSAND_CONSUMED       5
 
+#define ENTITY_TLAYOUT_MASK     0x1F    // Activation mask
+#define ENTITY_TLAYOUT_EVENT    0x20    // Last trigger event
+#define ENTITY_TLAYOUT_LOCK     0x40    // Activity lock
+#define ENTITY_TLAYOUT_SSTATUS  0x80    // Sector status
 
 #define WEAPON_STATE_HIDE                       (0x00)
 #define WEAPON_STATE_HIDE_TO_READY              (0x01)
@@ -66,9 +70,8 @@ typedef struct entity_s
 {
     uint32_t                            id;                 // Unique entity ID
     int32_t                             OCB;                // Object code bit (since TR4)
-    uint16_t                            activation_mask;    // 0x1F means ACTIVATE
+    uint8_t                             trigger_layout;     // Mask + once + event + sector status flags
     float                               timer;              // Set by "timer" trigger field
-    uint8_t                             locked;             // Set by "only once" trigger flag
 
     uint32_t                            callback_flags;     // information about scripts callbacks
     uint16_t                            type_flags;
@@ -92,8 +95,6 @@ typedef struct entity_s
 
     struct room_sector_s               *current_sector;
     struct room_sector_s               *last_sector;
-
-    uint8_t                             sector_status;  // Set when trigger sector was already activated once.
 
     struct engine_container_s          *self;
 

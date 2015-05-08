@@ -33,8 +33,8 @@ entity_p Entity_Create()
     ret->callback_flags = 0x00000000;               // no callbacks by default
 
     ret->OCB = 0;
-    ret->sector_status = 0;
-    ret->locked = 0;
+    ret->trigger_layout = 0x00;
+    ret->timer = 0.0;
 
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
     ret->self->next = NULL;
@@ -308,7 +308,7 @@ void Entity_UpdateRoomPos(entity_p ent)
 
         if(ent->current_sector != new_sector)
         {
-            ent->sector_status = 0; // Reset sector status.
+            ent->trigger_layout &= (uint8_t)(~ENTITY_TLAYOUT_SSTATUS); // Reset sector status.
             ent->current_sector = new_sector;
         }
     }

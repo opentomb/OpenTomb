@@ -919,12 +919,12 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                             if(action_type == TR_ACTIONTYPE_SWITCH)
                                             {
                                                 // Switch action type case.
-                                                snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityActivationMask(%d); \n\n", operands, operands, operands);
+                                                snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", operands, operands, operands);
                                             }
                                             else
                                             {
                                                 // Ordinary type case (e.g. heavy switch).
-                                                snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityActivationMask(entity_index); \n\n");
+                                                snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityMask(entity_index); \n\n");
                                             }
                                             strcat(script, buf);
 
@@ -938,7 +938,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                                 if(only_once)
                                                 {
                                                     // Just lock out activator, no anti-action needed.
-                                                    snprintf(buf2, 128, " setEntityActivityLock(%d, 1) \n", operands);
+                                                    snprintf(buf2, 128, " setEntityLock(%d, 1) \n", operands);
                                                 }
                                                 else
                                                 {
@@ -956,7 +956,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                             break;
 
                                         case TR_ACTIVATOR_KEY:
-                                            snprintf(buf, 256, " if((getEntityActivityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
+                                            snprintf(buf, 256, " if((getEntityLock(%d) == 1) and (getEntitySectorStatus(%d) == 0)) then \n   setEntitySectorStatus(%d, 1); \n", operands, operands, operands);
                                             break;
 
                                         case TR_ACTIVATOR_PICKUP:
@@ -3753,7 +3753,7 @@ void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
         TR_GenSkeletalModel(world, i, smodel, tr);
-        SkeletonModel_FillTransparancy(smodel);
+        SkeletonModel_FillTransparency(smodel);
     }
 }
 
@@ -3786,12 +3786,10 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->self->room = NULL;
         }
 
-        entity->activation_mask  = (tr_item->flags & 0x3E00) >> 9;              ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
-        entity->OCB              =  tr_item->ocb;
-
-        entity->locked = 0;
-        entity->timer  = 0.0;
-
+        entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
+        entity->OCB             =  tr_item->ocb;
+        entity->timer           = 0.0;
+        
         entity->self->collide_flag = 0x00;
         entity->move_type = 0x0000;
         entity->bf.animations.anim_flags = 0x0000;
@@ -3885,7 +3883,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 
             entity->move_type = MOVE_ON_FLOOR;
             world->Character = entity;
-            entity->self->collide_flag = ENTITY_ACTOR_COLLISION;
+            entity->self->collide_flag = ENTITY_COLLISION_ACTOR;
             entity->bf.animations.model->hide = 0;
             entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             LM = (skeletal_model_p)entity->bf.animations.model;
