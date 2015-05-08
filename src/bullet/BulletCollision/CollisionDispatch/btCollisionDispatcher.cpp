@@ -189,7 +189,7 @@ bool	btCollisionDispatcher::needsCollision(const btCollisionObject* body0,const 
 
 	if ((!body0->isActive()) && (!body1->isActive()))
 		needsCollision = false;
-	else if (!body0->checkCollideWith(body1))
+	else if ((!body0->checkCollideWith(body1)) || (!body1->checkCollideWith(body0)))
 		needsCollision = false;
 	
 	return needsCollision ;
@@ -258,8 +258,8 @@ void btCollisionDispatcher::defaultNearCallback(btBroadphasePair& collisionPair,
 
 		if (dispatcher.needsCollision(colObj0,colObj1))
 		{
-			btCollisionObjectWrapper obj0Wrap(0,colObj0->getCollisionShape(),colObj0,colObj0->getWorldTransform());
-			btCollisionObjectWrapper obj1Wrap(0,colObj1->getCollisionShape(),colObj1,colObj1->getWorldTransform());
+			btCollisionObjectWrapper obj0Wrap(0,colObj0->getCollisionShape(),colObj0,colObj0->getWorldTransform(),-1,-1);
+			btCollisionObjectWrapper obj1Wrap(0,colObj1->getCollisionShape(),colObj1,colObj1->getWorldTransform(),-1,-1);
 
 
 			//dispatcher will keep algorithms persistent in the collision pair

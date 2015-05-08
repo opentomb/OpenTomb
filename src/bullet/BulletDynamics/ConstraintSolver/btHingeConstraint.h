@@ -28,8 +28,8 @@ subject to the following restrictions:
 class btRigidBody;
 
 #ifdef BT_USE_DOUBLE_PRECISION
-#define btHingeConstraintData	btHingeConstraintDoubleData
-#define btHingeConstraintDataName	"btHingeConstraintDoubleData"
+#define btHingeConstraintData	btHingeConstraintDoubleData2 //rename to 2 for backwards compatibility, so we can still load the 'btHingeConstraintDoubleData' version
+#define btHingeConstraintDataName	"btHingeConstraintDoubleData2" 
 #else
 #define btHingeConstraintData	btHingeConstraintFloatData
 #define btHingeConstraintDataName	"btHingeConstraintFloatData"
@@ -41,7 +41,8 @@ enum btHingeFlags
 {
 	BT_HINGE_FLAGS_CFM_STOP = 1,
 	BT_HINGE_FLAGS_ERP_STOP = 2,
-	BT_HINGE_FLAGS_CFM_NORM = 4
+	BT_HINGE_FLAGS_CFM_NORM = 4,
+	BT_HINGE_FLAGS_ERP_NORM = 8
 };
 
 
@@ -94,6 +95,7 @@ public:
 
 	int			m_flags;
 	btScalar	m_normalCFM;
+	btScalar	m_normalERP;
 	btScalar	m_stopCFM;
 	btScalar	m_stopERP;
 
@@ -217,6 +219,14 @@ public:
 
 	}
 
+    bool hasLimit() const {
+#ifdef  _BT_USE_CENTER_LIMIT_
+        return m_limit.getHalfRange() > 0;
+#else
+        return m_lowerLimit <= m_upperLimit;
+#endif
+    }
+
 	btScalar	getLowerLimit() const
 	{
 #ifdef	_BT_USE_CENTER_LIMIT_
@@ -236,6 +246,7 @@ public:
 	}
 
 
+	///The getHingeAngle gives the hinge angle in range [-PI,PI]
 	btScalar getHingeAngle();
 
 	btScalar getHingeAngle(const btTransform& transA,const btTransform& transB);
@@ -302,7 +313,10 @@ public:
 
 };
 
-///do not change those serialization structures, it requires an updated sBulletDNAstr/sBulletDNAstr64
+
+//only for backward compatibility
+#ifdef BT_BACKWARDS_COMPATIBLE_SERIALIZATION
+///this structure is not used, except for loading pre-2.82 .bullet files
 struct	btHingeConstraintDoubleData
 {
 	btTypedConstraintData	m_typeConstraintData;
@@ -321,7 +335,46 @@ struct	btHingeConstraintDoubleData
 	float	m_relaxationFactor;
 
 };
-///do not change those serialization structures, it requires an updated sBulletDNAstr/sBulletDNAstr64
+#endif //BT_BACKWARDS_COMPATIBLE_SERIALIZATION
+
+///The getAccumulatedHingeAngle returns the accumulated hinge angle, taking rotation across the -PI/PI boundary into account
+ATTRIBUTE_ALIGNED16(class) btHingeAccumulatedAngleConstraint : public btHingeConstraint
+{
+protected:
+	btScalar	m_accumulatedAngle;
+public:
+
+	BT_DECLARE_ALIGNED_ALLOCATOR();
+	
+	btHingeAccumulatedAngleConstraint(btRigidBody& rbA,btRigidBody& rbB, const btVector3& pivotInA,const btVector3& pivotInB, const btVector3& axisInA,const btVector3& axisInB, bool useReferenceFrameA = false)
+	:btHingeConstraint(rbA,rbB,pivotInA,pivotInB, axisInA,axisInB, useReferenceFrameA )
+	{
+		m_accumulatedAngle=getHingeAngle();
+	}
+
+	btHingeAccumulatedAngleConstraint(btRigidBody& rbA,const btVector3& pivotInA,const btVector3& axisInA, bool useReferenceFrameA = false)
+	:btHingeConstraint(rbA,pivotInA,axisInA, useReferenceFrameA)
+	{
+		m_accumulatedAngle=getHingeAngle();
+	}
+	
+	btHingeAccumulatedAngleConstraint(btRigidBody& rbA,btRigidBody& rbB, const btTransform& rbAFrame, const btTransform& rbBFrame, bool useReferenceFrameA = false)
+	:btHingeConstraint(rbA,rbB, rbAFrame, rbBFrame, useReferenceFrameA )
+	{
+		m_accumulatedAngle=getHingeAngle();
+	}
+
+	btHingeAccumulatedAngleConstraint(btRigidBody& rbA,const btTransform& rbAFrame, bool useReferenceFrameA = false)
+	:btHingeConstraint(rbA,rbAFrame, useReferenceFrameA )
+	{
+		m_accumulatedAngle=getHingeAngle();
+	}
+	btScalar getAccumulatedHingeAngle();
+	void	setAccumulatedHingeAngle(btScalar accAngle);
+	virtual void getInfo1 (btConstraintInfo1* info);
+
+};
+
 struct	btHingeConstraintFloatData
 {
 	btTypedConstraintData	m_typeConstraintData;
@@ -341,6 +394,30 @@ struct	btHingeConstraintFloatData
 	float	m_relaxationFactor;
 
 };
+
+
+
+///do not change those serialization structures, it requires an updated sBulletDNAstr/sBulletDNAstr64
+struct	btHingeConstraintDoubleData2
+{
+	btTypedConstraintDoubleData	m_typeConstraintData;
+	btTransformDoubleData m_rbAFrame; // constraint axii. Assumes z is hinge axis.
+	btTransformDoubleData m_rbBFrame;
+	int			m_useReferenceFrameA;
+	int			m_angularOnly;
+	int			m_enableAngularMotor;
+	double		m_motorTargetVelocity;
+	double		m_maxMotorImpulse;
+
+	double		m_lowerLimit;
+	double		m_upperLimit;
+	double		m_limitSoftness;
+	double		m_biasFactor;
+	double		m_relaxationFactor;
+	char	m_padding1[4];
+
+};
+
 
 
 

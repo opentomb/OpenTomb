@@ -235,7 +235,9 @@ typedef struct character_s
     
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     int16_t                      max_move_iterations;
-    int16_t                      no_fix;
+    uint8_t                      ghost_orientation;      // 0Z, 0Y, 0X
+    uint8_t                      ghost_base_tr;          // entity->tr, entity->bf.bone[0].tr
+    int8_t                       no_fix;                     
     int8_t                       cam_follow_center;
 
     btScalar                     speed_mult;

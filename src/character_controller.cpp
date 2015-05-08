@@ -58,6 +58,9 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     vec3_set_zero(ret->cmd.rot);
     vec3_set_zero(tmp.m_floats);
 
+    ret->no_fix = 0x00;
+    ret->ghost_orientation = 0x00;
+    ret->ghost_base_tr = 0x00;
     ret->cam_follow_center = 0x00;
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->max_move_iterations = DEFAULT_MAX_MOVE_ITERATIONS;
