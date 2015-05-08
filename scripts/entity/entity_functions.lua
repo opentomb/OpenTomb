@@ -43,7 +43,7 @@ end;
 
 function door_init(id)   -- NORMAL doors only!
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(object_id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -105,7 +105,7 @@ end
 
 function anim_init(id)      -- Ordinary animatings
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -124,7 +124,7 @@ end
 
 function venicebird_init(id)    -- Venice singing birds (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -146,7 +146,7 @@ end
 
 function doorbell_init(id)    -- Lara's Home doorbell (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -167,7 +167,7 @@ end
 
 function alarm_TR2_init(id)    -- Offshore Rig alarm (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -192,7 +192,7 @@ end
 
 function alarmbell_init(id)    -- Home Sweet Home alarm (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -217,7 +217,7 @@ end
 
 function heli_TR2_init(id)    -- Helicopter (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].distance_passed = 0;
     setEntityActivity(id, 0);
@@ -249,7 +249,7 @@ end
 
 function swingblade_init(id)        -- Swinging blades (TR1)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -269,7 +269,7 @@ end
 
 function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -289,7 +289,7 @@ end
 
 function wallblade_init(id)     -- Wall blade (TR1-TR3)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -383,7 +383,7 @@ end
 
 function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onLoop = function(object_id)
@@ -487,7 +487,7 @@ function oldspike_init(id)  -- Teeth spikes (INVALID)
 
     setEntityActivity(id, 1);
     local f1, f2, f3 = getEntityFlags(id);
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_DECORATION), bit32.bor(f3, ENTITY_CALLBACK_COLLISION));
+    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_GENERIC), bit32.bor(f3, ENTITY_CALLBACK_COLLISION));
     
     entity_funcs[id].onCollision = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then

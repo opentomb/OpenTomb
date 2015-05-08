@@ -22,12 +22,14 @@ struct ss_bone_frame_s;
 #define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
 #define ENTITY_STATE_VISIBLE                        (0x0004)    // Entity is visible.
 
-#define ENTITY_TYPE_DECORATION                      (0x0000)    // Just an animating.
+#define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.
 #define ENTITY_TYPE_INTERACTIVE                     (0x0001)    // Can respond to other entity's commands.
 #define ENTITY_TYPE_TRIGGER_ACTIVATOR               (0x0002)    // Can activate triggers.
 #define ENTITY_TYPE_PICKABLE                        (0x0004)    // Can be picked up.
 #define ENTITY_TYPE_TRAVERSE                        (0x0008)    // Can be pushed/pulled.
 #define ENTITY_TYPE_TRAVERSE_FLOOR                  (0x0010)    // Can be walked upon.
+#define ENTITY_TYPE_ACTOR                           (0x0020)    // Is actor.
+
 #define ENTITY_TYPE_SPAWNED                         (0x8000)    // Was spawned.
 
 #define ENTITY_CALLBACK_NONE                        (0x00000000)

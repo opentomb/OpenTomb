@@ -22,13 +22,13 @@ ENTITY_STATE_ENABLED                      = 0x0001;     -- Entity is enabled
 ENTITY_STATE_ACTIVE                       = 0x0002;     -- Entity is animated - RENAME IT TO ENTITY_STATE_ANIMATING
 ENTITY_STATE_VISIBLE                      = 0x0004;     -- Entity is visible
 
-ENTITY_TYPE_DECORATION                    = 0x0000;
+ENTITY_TYPE_GENERIC                       = 0x0000;
 ENTITY_TYPE_INTERACTIVE                   = 0x0001;
 ENTITY_TYPE_TRIGGER_ACTIVATOR             = 0x0002;
 ENTITY_TYPE_PICKABLE                      = 0x0004;
 ENTITY_TYPE_TRAVERSE                      = 0x0008;
 ENTITY_TYPE_TRAVERSE_FLOOR                = 0x0010;
-ENTITY_TYPE_ACTOR                         = 0x0020
+ENTITY_TYPE_ACTOR                         = 0x0020;
 
 ENTITY_CALLBACK_NONE                      = 0x00000000;
 ENTITY_CALLBACK_ACTIVATE                  = 0x00000001;
