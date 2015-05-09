@@ -2285,6 +2285,28 @@ int lua_GetEntityState(lua_State * lua)
     return 1;
 }
 
+int lua_GetEntityModel(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushinteger(lua, ent->bf.animations.model->id);
+
+    return 1;
+}
+
 int lua_SetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
@@ -3150,6 +3172,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
+    lua_register(lua, "getEntityModel", lua_GetEntityModel);
     lua_register(lua, "getEntityVisibility", lua_GetEntityVisibility);
     lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);

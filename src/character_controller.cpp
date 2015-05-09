@@ -1555,13 +1555,13 @@ int Character_MoveOnFloor(struct entity_s *ent)
             {
                 ent->character->resp.slide = CHARACTER_SLIDE_FRONT;
                 ent->angles[0] = ang + 180.0;
-                // front forward sly down
+                // front forward slide down
             }
             else
             {
                 ent->character->resp.slide = CHARACTER_SLIDE_BACK;
                 ent->angles[0] = ang;
-                // back forward sly down
+                // back forward slide down
             }
             Entity_UpdateRotation(ent);
             ent->character->resp.vertical_collide |= 0x01;

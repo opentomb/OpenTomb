@@ -247,6 +247,31 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     prepareEntity(id);
 end
 
+function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, 0);
+    setEntityVisibility(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+        setEntityVisibility(object_id, 1);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityLock(object_id) == 1) then
+            if(getEntityState(object_id) ~= 2) then
+                setEntityState(object_id, 2);
+            else
+                local anim, frame, count = getEntityAnim(object_id);
+                if(frame == count-1) then disableEntity(object_id) end;
+            end
+        end;
+    end
+    
+    prepareEntity(id);
+end
+
 function swingblade_init(id)        -- Swinging blades (TR1)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -517,12 +542,47 @@ function midastouch_init(id)    -- Midas gold touch
     
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityDistance(player, object_id) < 1024.0) then
+            local lara_anim, frame, count = getEntityAnim(player);
             local lara_sector = getEntitySectorIndex(player);
             local hand_sector = getEntitySectorIndex(object_id);
+            if(getEntityModel(player) == 5) then
+                if(frame == 8) then
+                    copyMeshFromModelToModel(0, 5, 6, 6);
+                elseif(frame == 15) then
+                    copyMeshFromModelToModel(0, 5, 5, 5);
+                elseif(frame == 19) then
+                    copyMeshFromModelToModel(0, 5, 4, 4);
+                elseif(frame == 24) then
+                    copyMeshFromModelToModel(0, 5, 3, 3);
+                elseif(frame == 29) then
+                    copyMeshFromModelToModel(0, 5, 2, 2);
+                elseif(frame == 34) then
+                    copyMeshFromModelToModel(0, 5, 1, 1);
+                elseif(frame == 40) then
+                    copyMeshFromModelToModel(0, 5, 0, 0);
+                elseif(frame == 41) then
+                    copyMeshFromModelToModel(0, 5, 13, 13);
+                elseif(frame == 45) then
+                    copyMeshFromModelToModel(0, 5, 12, 12);
+                elseif(frame == 47) then
+                    copyMeshFromModelToModel(0, 5, 11, 11);
+                elseif(frame == 50) then
+                    copyMeshFromModelToModel(0, 5, 10, 3);
+                elseif(frame == 54) then
+                    copyMeshFromModelToModel(0, 5, 9, 9);
+                elseif(frame == 60) then
+                    copyMeshFromModelToModel(0, 5, 8, 8);
+                elseif(frame == 70) then
+                    copyMeshFromModelToModel(0, 5, 7, 7);
+                elseif(frame == 100) then
+                    copyMeshFromModelToModel(0, 5, 14, 14);
+                    setEntityActivity(object_id, 0);
+                end;
+                return;
+            end;
             if((lara_sector == hand_sector) and (getEntityMoveType(player) == ENTITY_MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
                 setEntityAnim(player, 1, 0, 5);
-                setEntityActivity(object_id, 0);
             end;
         end;
     end

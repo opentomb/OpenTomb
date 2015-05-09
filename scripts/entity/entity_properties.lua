@@ -390,7 +390,7 @@ tr2_entity_tbl[223] = {coll = 0x00};               -- Menu background
 tr2_entity_tbl[225] = {coll = 0x00};               -- Gong-hammering animation
 tr2_entity_tbl[226] = {coll = 0x00};               -- Gong (Ice Palace)
 tr2_entity_tbl[227] = {coll = 0x00};               -- Detonator box
-tr2_entity_tbl[228] = {coll = 0x00};               -- Helicopter (Diving Area)
+tr2_entity_tbl[228] = {coll = 0x00, func = "heli_rig_TR2"};               -- Helicopter (Diving Area)
 tr2_entity_tbl[235] = {coll = 0x00};               -- Flare burning?
 tr2_entity_tbl[240] = {coll = 0x00};               -- Gunflare
 tr2_entity_tbl[241] = {coll = 0x00};               -- Gunflare (M16)
