@@ -519,7 +519,7 @@ function midastouch_init(id)    -- Midas gold touch
         if(getEntityDistance(player, object_id) < 1024.0) then
             local lara_sector = getEntitySectorIndex(player);
             local hand_sector = getEntitySectorIndex(object_id);
-            if((lara_sector == hand_sector) and (getEntityMoveType(player) == ENTITY_MOVE_ON_FLOOR)) then
+            if((lara_sector == hand_sector) and (getEntityMoveType(player) == ENTITY_MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
                 setEntityAnim(player, 1, 0, 5);
                 setEntityActivity(object_id, 0);
