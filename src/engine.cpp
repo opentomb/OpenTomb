@@ -484,6 +484,19 @@ int lua_GetEntitySectorFlags(lua_State *lua)
     return 0;
 }
 
+int lua_GetEntitySectorIndex(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+
+    if((ent != NULL) && (ent->current_sector))
+    {
+        lua_pushinteger(lua, ent->current_sector->trig_index);
+        return 1;
+    }
+    return 0;
+}
+
 int lua_GetEntitySectorMaterial(lua_State *lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
@@ -1688,9 +1701,11 @@ int lua_SetEntitySpeed(lua_State * lua)
 
 int lua_SetEntityAnim(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    int top = lua_gettop(lua);
+    
+    if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id]");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id, (frame_number, another_model)]");
         return 0;
     }
 
@@ -1703,7 +1718,19 @@ int lua_SetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+    switch(top)
+    {
+        case 2:
+        default:
+            Entity_SetAnimation(ent, lua_tointeger(lua, 2));
+            break;
+        case 3:
+            Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+            break;
+        case 4:
+            Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3), lua_tointeger(lua, 4));
+            break;
+    }
 
     return 0;
 }
@@ -3158,10 +3185,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     
     lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
+    lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
-    lua_register(lua, "getEntitySectorStatus", lua_GetEntitySectorStatus);
-    lua_register(lua, "setEntitySectorStatus", lua_SetEntitySectorStatus);
 
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);

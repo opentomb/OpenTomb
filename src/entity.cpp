@@ -948,7 +948,7 @@ void Entity_ProcessSector(struct entity_s *ent)
 }
 
 
-void Entity_SetAnimation(entity_p entity, int animation, int frame)
+void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_model)
 {
     if(!entity || !entity->bf.animations.model || (animation >= entity->bf.animations.model->animation_count))
     {
@@ -962,8 +962,16 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
         entity->character->no_fix = 0x00;
     }
 
-    entity->bf.animations.lerp = 0.0;
+    if(another_model >= 0)
+    {
+        skeletal_model_p model = World_GetModelByID(&engine_world, another_model);
+        if((!model) || (animation >= model->animation_count)) return;
+        entity->bf.animations.model = model;
+    }
+    
     animation_frame_p anim = &entity->bf.animations.model->animations[animation];
+
+    entity->bf.animations.lerp = 0.0;
     frame %= anim->frames_count;
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->bf.animations.period = 1.0 / 30.0;

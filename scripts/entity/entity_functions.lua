@@ -381,7 +381,7 @@ function pickup_init(id, item_id)    -- Pick-ups
         
             -- Position corrector
         
-            if(getEntityMoveType(activator_id) == 6) then
+            if(getEntityMoveType(activator_id) == ENTITY_MOVE_UNDER_WATER) then
                 if(getEntityDistance(object_id, activator_id) > 128.0) then
                     moveEntityToEntity(activator_id, object_id, 25.0);
                 end;
@@ -513,6 +513,21 @@ end
 
 function midastouch_init(id)    -- Midas gold touch
 
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityDistance(player, object_id) < 1024.0) then
+            local lara_sector = getEntitySectorIndex(player);
+            local hand_sector = getEntitySectorIndex(object_id);
+            if((lara_sector == hand_sector) and (getEntityMoveType(player) == ENTITY_MOVE_ON_FLOOR)) then
+                setCharacterParam(player, PARAM_HEALTH, 0);
+                setEntityAnim(player, 1, 0, 5);
+                setEntityActivity(object_id, 0);
+            end;
+        end;
+    end
+    
+    prepareEntity(id);
 end
 
 function oldspike_init(id)  -- Teeth spikes (INVALID)

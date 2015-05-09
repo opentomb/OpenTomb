@@ -166,7 +166,7 @@ tr1_entity_tbl[124] = {coll = 0x02};                     -- Slot 3 full
 tr1_entity_tbl[125] = {coll = 0x02};                     -- Slot 4 full
 
 tr1_entity_tbl[127] = {coll = 0x02};                     -- Puzzle item 1
-tr1_entity_tbl[128] = {coll = 0x00, hide = 0x01};        -- Midas gold touch
+tr1_entity_tbl[128] = {coll = 0x00, hide = 0x01, func = "midastouch"};        -- Midas gold touch
 
 tr1_entity_tbl[133] = {coll = 0x00};                     -- Key 1
 tr1_entity_tbl[134] = {coll = 0x00};                     -- Key 2

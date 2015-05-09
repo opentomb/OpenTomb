@@ -136,7 +136,7 @@ int  Entity_GetSubstanceState(entity_p entity);
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing);
 void Entity_ProcessSector(struct entity_s *ent);
-void Entity_SetAnimation(entity_p entity, int animation, int frame);
+void Entity_SetAnimation(entity_p entity, int animation, int frame = 0, int another_model = -1);
 void Entity_MoveForward(struct entity_s *ent, btScalar dist);
 void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);
 void Entity_MoveVertical(struct entity_s *ent, btScalar dist);
