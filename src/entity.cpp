@@ -808,7 +808,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                             break;
 
                                         case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
-                                            Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                             break;
 
                                         case SECTOR_MATERIAL_WOOD:

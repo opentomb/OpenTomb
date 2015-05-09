@@ -2134,16 +2134,21 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         sector->pos[2] = 0.5 * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
-        sector->box_index  = tr_room->sector_list[i].box_index;
-
-        sector->material = tr_room->sector_list[i].box_index & 0x0F;
-
-        sector->flags = 0;  // Clear sector flags.
-
-        if(sector->box_index == 0xFFFF)
+        
+        if(tr->game_version < TR_III)
         {
-            sector->box_index = -1;
+            sector->box_index = tr_room->sector_list[i].box_index;
+            sector->material  = SECTOR_MATERIAL_STONE;
         }
+        else
+        {
+            sector->box_index = (tr_room->sector_list[i].box_index & 0xFFF0) >> 4;
+            sector->material  =  tr_room->sector_list[i].box_index & 0x000F;
+        }
+        
+        if(sector->box_index == 0xFFFF) sector->box_index = -1;
+        
+        sector->flags = 0;  // Clear sector flags.
 
         sector->floor      = -TR_METERING_STEP * (int)tr_room->sector_list[i].floor;
         sector->ceiling    = -TR_METERING_STEP * (int)tr_room->sector_list[i].ceiling;
