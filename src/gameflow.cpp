@@ -78,6 +78,8 @@ void Gameflow_Do()
                     else
                     {
                         Gui_FadeStop(FADER_LOADSCREEN);
+                        Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
+                        lua_pop(engine_lua, 1);
                         Con_AddLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
                     }
                     lua_settop(engine_lua, top);
