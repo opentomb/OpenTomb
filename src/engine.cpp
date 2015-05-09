@@ -2253,7 +2253,7 @@ int lua_GetEntityState(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->bf.animations.next_state);
+    lua_pushinteger(lua, ent->bf.animations.last_state);
 
     return 1;
 }

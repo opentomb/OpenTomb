@@ -51,7 +51,7 @@ tr1_entity_tbl[15] = {coll = 0x02};                      -- Gorilla
 tr1_entity_tbl[16] = {coll = 0x02};                      -- Rat (land)
 tr1_entity_tbl[17] = {coll = 0x02};                      -- Rat (water)
 tr1_entity_tbl[18] = {coll = 0x01};                      -- T-Rex
-tr1_entity_tbl[19] = {coll = 0x02};                      -- Raptor
+tr1_entity_tbl[19] = {coll = 0x02, func = "baddie"};                      -- Raptor
 tr1_entity_tbl[20] = {coll = 0x01};                      -- Winged mutant
 tr1_entity_tbl[21] = {coll = 0x00, hide = 0x01};         -- (RESPAWN POINT?)
 tr1_entity_tbl[22] = {coll = 0x00, hide = 0x01};         -- (AI TARGET?)

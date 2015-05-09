@@ -51,6 +51,7 @@ entity_p Entity_Create()
     ret->bf.animations.model = NULL;
     ret->bf.animations.onFrame = NULL;
     ret->bf.animations.frame_time = 0.0;
+    ret->bf.animations.last_state = 0;
     ret->bf.animations.next_state = 0;
     ret->bf.animations.lerp = 0.0;
     ret->bf.animations.current_animation = 0;
