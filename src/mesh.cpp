@@ -365,14 +365,14 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
 }
 
 
-void SkeletonModel_FillTransparancy(skeletal_model_p model)
+void SkeletonModel_FillTransparency(skeletal_model_p model)
 {
-    model->transparancy_flags = MESH_FULL_OPAQUE;
+    model->transparency_flags = MESH_FULL_OPAQUE;
     for(uint16_t i=0;i<model->mesh_count;i++)
     {
         if(model->mesh_tree[i].mesh_base->transparency_polygons != NULL)
         {
-            model->transparancy_flags = MESH_HAS_TRANSPERENCY;
+            model->transparency_flags = MESH_HAS_TRANSPARENCY;
             return;
         }
     }

@@ -707,12 +707,11 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
                 ent->self->room = NULL;
             }
 
-            ent->type_flags       = ENTITY_TYPE_SPAWNED;
-            ent->state_flags      = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
-            ent->activation_mask  = 0x00;
-            ent->OCB              = 0x00;
-            ent->locked           = 0;
-            ent->timer            = 0.0;
+            ent->type_flags     = ENTITY_TYPE_SPAWNED;
+            ent->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
+            ent->trigger_layout = 0x00;
+            ent->OCB            = 0x00;
+            ent->timer          = 0.0;
 
             ent->self->collide_flag = 0x00;
             ent->move_type = 0x0000;

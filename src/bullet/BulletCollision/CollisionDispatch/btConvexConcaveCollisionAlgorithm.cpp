@@ -76,26 +76,31 @@ void	btConvexTriangleCallback::clearCache()
 }
 
 
-
-void btConvexTriangleCallback::processTriangle(btVector3* triangle,int partId, int triangleIndex)
+void btConvexTriangleCallback::processTriangle(btVector3* triangle,int
+partId, int triangleIndex)
 {
- 
-	//just for debugging purposes
-	//printf("triangle %d",m_triangleCount++);
+
+	if (!TestTriangleAgainstAabb2(triangle, m_aabbMin, m_aabbMax))
+	{
+		return;
+	}
+
+        //just for debugging purposes
+        //printf("triangle %d",m_triangleCount++);
 
 
-	//aabb filter is already applied!	
 
 	btCollisionAlgorithmConstructionInfo ci;
 	ci.m_dispatcher1 = m_dispatcher;
 
-	//const btCollisionObject* ob = static_cast<btCollisionObject*>(m_triBodyWrap->getCollisionObject());
 
 
 #if 0	
+	
 	///debug drawing of the overlapping triangles
 	if (m_dispatchInfoPtr && m_dispatchInfoPtr->m_debugDraw && (m_dispatchInfoPtr->m_debugDraw->getDebugMode() &btIDebugDraw::DBG_DrawWireframe ))
 	{
+		const btCollisionObject* ob = const_cast<btCollisionObject*>(m_triBodyWrap->getCollisionObject());
 		btVector3 color(1,1,0);
 		btTransform& tr = ob->getWorldTransform();
 		m_dispatchInfoPtr->m_debugDraw->drawLine(tr(triangle[0]),tr(triangle[1]),color);
@@ -110,7 +115,7 @@ void btConvexTriangleCallback::processTriangle(btVector3* triangle,int partId, i
 		tm.setMargin(m_collisionMarginTriangle);
 		
 		
-		btCollisionObjectWrapper triObWrap(m_triBodyWrap,&tm,m_triBodyWrap->getCollisionObject(),m_triBodyWrap->getWorldTransform());//correct transform?
+		btCollisionObjectWrapper triObWrap(m_triBodyWrap,&tm,m_triBodyWrap->getCollisionObject(),m_triBodyWrap->getWorldTransform(),partId,triangleIndex);//correct transform?
 		btCollisionAlgorithm* colAlgo = ci.m_dispatcher1->findAlgorithm(m_convexBodyWrap,&triObWrap,m_manifoldPtr);
 
 		const btCollisionObjectWrapper* tmpWrap = 0;

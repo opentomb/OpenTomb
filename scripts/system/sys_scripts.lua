@@ -22,13 +22,13 @@ ENTITY_STATE_ENABLED                      = 0x0001;     -- Entity is enabled
 ENTITY_STATE_ACTIVE                       = 0x0002;     -- Entity is animated - RENAME IT TO ENTITY_STATE_ANIMATING
 ENTITY_STATE_VISIBLE                      = 0x0004;     -- Entity is visible
 
-ENTITY_TYPE_DECORATION                    = 0x0000;
+ENTITY_TYPE_GENERIC                       = 0x0000;
 ENTITY_TYPE_INTERACTIVE                   = 0x0001;
 ENTITY_TYPE_TRIGGER_ACTIVATOR             = 0x0002;
 ENTITY_TYPE_PICKABLE                      = 0x0004;
 ENTITY_TYPE_TRAVERSE                      = 0x0008;
 ENTITY_TYPE_TRAVERSE_FLOOR                = 0x0010;
-ENTITY_TYPE_ACTOR                         = 0x0020
+ENTITY_TYPE_ACTOR                         = 0x0020;
 
 ENTITY_CALLBACK_NONE                      = 0x00000000;
 ENTITY_CALLBACK_ACTIVATE                  = 0x00000001;
@@ -36,6 +36,19 @@ ENTITY_CALLBACK_DEACTIVATE                = 0x00000002;
 ENTITY_CALLBACK_COLLISION                 = 0x00000004;
 ENTITY_CALLBACK_STAND                     = 0x00000008;
 ENTITY_CALLBACK_HIT                       = 0x00000010;
+
+ENTITY_MOVE_STATIC_POS    = 0;
+ENTITY_MOVE_CINEMATIC     = 1;
+ENTITY_MOVE_ON_FLOOR      = 2;
+ENTITY_MOVE_WADE          = 3;
+ENTITY_MOVE_QUICKSAND     = 4;
+ENTITY_MOVE_ON_WATER      = 5;
+ENTITY_MOVE_UNDER_WATER   = 6;
+ENTITY_MOVE_FREE_FALLING  = 7;
+ENTITY_MOVE_CLIMBING      = 8;
+ENTITY_MOVE_MONKEYSWING   = 9;
+ENTITY_MOVE_WALLS_CLIMB   = 10;
+ENTITY_MOVE_DOZY          = 11;
 
 TICK_IDLE    = 0;
 TICK_STOPPED = 1;

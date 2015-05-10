@@ -51,7 +51,7 @@ tr1_entity_tbl[15] = {coll = 0x02};                      -- Gorilla
 tr1_entity_tbl[16] = {coll = 0x02};                      -- Rat (land)
 tr1_entity_tbl[17] = {coll = 0x02};                      -- Rat (water)
 tr1_entity_tbl[18] = {coll = 0x01};                      -- T-Rex
-tr1_entity_tbl[19] = {coll = 0x02};                      -- Raptor
+tr1_entity_tbl[19] = {coll = 0x02, func = "baddie"};                      -- Raptor
 tr1_entity_tbl[20] = {coll = 0x01};                      -- Winged mutant
 tr1_entity_tbl[21] = {coll = 0x00, hide = 0x01};         -- (RESPAWN POINT?)
 tr1_entity_tbl[22] = {coll = 0x00, hide = 0x01};         -- (AI TARGET?)
@@ -87,7 +87,7 @@ tr1_entity_tbl[48] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[49] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[50] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[51] = {coll = 0x02, trav = 0x18};         -- Pushable block
-tr1_entity_tbl[52] = {coll = 0x01};                      -- Moving block
+tr1_entity_tbl[52] = {coll = 0x01, func = "tallblock"};                      -- Moving block
 tr1_entity_tbl[53] = {coll = 0x02, func = "fallceiling"};                      -- Falling ceiling
 tr1_entity_tbl[54] = {coll = 0x01};                      -- Sword of Damocles (unused?)
 tr1_entity_tbl[55] = {coll = 0x02, func = "switch"};     -- Wall switch (lever)
@@ -166,7 +166,7 @@ tr1_entity_tbl[124] = {coll = 0x02};                     -- Slot 3 full
 tr1_entity_tbl[125] = {coll = 0x02};                     -- Slot 4 full
 
 tr1_entity_tbl[127] = {coll = 0x02};                     -- Puzzle item 1
-tr1_entity_tbl[128] = {coll = 0x00, hide = 0x01};        -- Midas gold touch
+tr1_entity_tbl[128] = {coll = 0x00, hide = 0x01, func = "midastouch"};        -- Midas gold touch
 
 tr1_entity_tbl[133] = {coll = 0x00};                     -- Key 1
 tr1_entity_tbl[134] = {coll = 0x00};                     -- Key 2
@@ -390,7 +390,7 @@ tr2_entity_tbl[223] = {coll = 0x00};               -- Menu background
 tr2_entity_tbl[225] = {coll = 0x00};               -- Gong-hammering animation
 tr2_entity_tbl[226] = {coll = 0x00};               -- Gong (Ice Palace)
 tr2_entity_tbl[227] = {coll = 0x00};               -- Detonator box
-tr2_entity_tbl[228] = {coll = 0x00};               -- Helicopter (Diving Area)
+tr2_entity_tbl[228] = {coll = 0x00, func = "heli_rig_TR2"};               -- Helicopter (Diving Area)
 tr2_entity_tbl[235] = {coll = 0x00};               -- Flare burning?
 tr2_entity_tbl[240] = {coll = 0x00};               -- Gunflare
 tr2_entity_tbl[241] = {coll = 0x00};               -- Gunflare (M16)

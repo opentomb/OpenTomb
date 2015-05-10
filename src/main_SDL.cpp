@@ -865,6 +865,7 @@ void ShowDebugInfo()
         }
     }
     Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+    Gui_OutTextXY(30.0, 180.0, "sector = %d", engine_world.Character->current_sector->trig_index);
 #endif
 }
 
@@ -1189,12 +1190,14 @@ void DebugKeys(int button, int state)
 
                     if(engine_world.Character->move_type == MOVE_UNDER_WATER)
                     {
-                        Entity_SetAnimation(engine_world.Character, 103, 0);
+                        Entity_SetAnimation(engine_world.Character, 103, 0, 0);
+                        Character_SetParam(engine_world.Character, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
                         engine_world.Character->move_type = MOVE_ON_FLOOR;
                     }
                     else
                     {
-                        Entity_SetAnimation(engine_world.Character, 108, 0);
+                        Entity_SetAnimation(engine_world.Character, 108, 0, 0);
+                        Character_SetParam(engine_world.Character, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
                         engine_world.Character->move_type = MOVE_UNDER_WATER;
                     }
                     engine_world.Character->bf.animations.anim_flags = ANIM_NORMAL_CONTROL;

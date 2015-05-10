@@ -50,34 +50,40 @@ end;
 
 -- Tries to activate entity.
 
-function activateEntity(object_id, activator_id, trigger_mask, trigger_op, object_lock, object_timer)
+function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigger_lock, trigger_timer)
 
-    -- Get current entity activity lock.
+    -- Get current trigger layout.
     
-    local current_lock = getEntityActivityLock(object_id);
-    if(current_lock ~= 0) then return end;   -- No action if object is locked.
+    local mask, event, lock = getEntityTriggerLayout(object_id);
+    
+    -- Ignore activation, if activity lock is set.
+    
+    if(lock == 1) then return end;   -- No action if object is locked.
+    lock = trigger_lock;             -- Update object lock.
     
     -- Apply trigger mask to entity mask.
 
-    local object_mask = getEntityActivationMask(object_id);
-    local result_mask = object_mask;
-    
     if(trigger_op == 1) then
-        result_mask = bit32.bxor(object_mask, trigger_mask);   -- Switch cases
+        mask = bit32.bxor(mask, trigger_mask);   -- Switch cases
     else
-        result_mask = bit32.bor(object_mask, trigger_mask);    -- Other cases
+        mask = bit32.bor(mask, trigger_mask);    -- Other cases
     end;
     
     -- Full entity mask (11111) is always a reason to activate an entity.
     -- If mask is not full, entity won't activate - no exclusions.
     
-    if((((object_mask ~= trigger_mask) and (trigger_op ~= 1)) or (trigger_op == 1)) and (result_mask == 0x1F)) then
+    if((mask == 0x1F) and (event == 0)) then
         execEntity(object_id, activator_id, ENTITY_CALLBACK_ACTIVATE);
-        setEntityActivityLock(object_id, bit32.bor(current_lock, object_lock));
+        event = 1;
+    elseif((mask ~= 0x1F) and (event == 1)) then
+        execEntity(object_id, activator_id, ENTITY_CALLBACK_DEACTIVATE);
+        event = 0;
     end;
-
-    setEntityActivationMask(object_id, result_mask);           -- Set mask. 
-    setEntityTimer(object_id, object_timer);                   -- Engage timer.
+    
+    -- Update trigger layout.
+    
+    setEntityTriggerLayout(object_id, mask, event, lock);
+    setEntityTimer(object_id, trigger_timer);                   -- Engage timer.
 end;
 
 
@@ -85,21 +91,24 @@ end;
 
 function deactivateEntity(object_id, activator_id)
 
-    -- Get current entity activity lock.
+    -- Get current trigger layout.
     
-    local current_lock = getEntityActivityLock(object_id);
-    if(current_lock ~= 0) then return end;   -- No action if object is locked.
+    local mask, event, lock = getEntityTriggerLayout(object_id);
     
-    -- Execute entity deactivation function.
-    if((getEntityActivity(object_id) == 1) and (getEntityActivationMask(object_id) ~= 0x00)) then
+    -- Ignore activation, if activity lock is set.
+    
+    if(lock == 1) then return end;
+    
+    -- Execute entity deactivation function, only if activation was previously set.
+    if(event == 1) then
         execEntity(object_id, activator_id, ENTITY_CALLBACK_DEACTIVATE);
-    end;
-    
-    -- Activation mask and timer are forced to zero when entity is deactivated.
-    -- Activity lock is ignored, since it can't be raised by antitriggers.
-    
-    setEntityActivationMask(object_id, 0x00);
-    setEntityTimer(object_id, 0.0);
+        
+        -- Activation mask and timer are forced to zero when entity is deactivated.
+        -- Activity lock is ignored, since it can't be raised by antitriggers.
+
+        setEntityTriggerLayout(object_id, 0x00, 0, lock);
+        setEntityTimer(object_id, 0.0);
+    end;    
 end
 
 
@@ -175,14 +184,3 @@ function playCutscene(cutscene_index)
     if(getLevelVersion() < TR_IV) then return 0 end;
     print("CUTSCENE: index = " .. cutscene_index);
 end
-
-
--- Special template which is called for specific entity types at level start-up.
-
-function prepareEntity(object_id)
-    activateEntity(object_id, 0, 0, 0, 0, 0);
-    local object_mask = getEntityActivationMask(object_id);
-    if(object_mask == 0x1F) then
-        setEntityActivationMask(object_id, 0)   -- Reset activation mask.
-    end;
-end;

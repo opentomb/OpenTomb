@@ -191,7 +191,7 @@ void Save_Entity(FILE **f, entity_p ent)
         return;
     }
 
-        if(ent->type_flags & ENTITY_TYPE_SPAWNED)
+    if(ent->type_flags & ENTITY_TYPE_SPAWNED)
     {
         uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf.animations.model->id, room_id,
@@ -204,10 +204,12 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
+    
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.animations.current_animation, ent->bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.animations.next_state, ent->bf.animations.last_state);
     fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->id, ent->self->collide_flag);
+    
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
         fprintf(*f, "\nenableEntity(%d);", ent->id);
@@ -216,8 +218,10 @@ void Save_Entity(FILE **f, entity_p ent)
     {
         fprintf(*f, "\ndisableEntity(%d);", ent->id);
     }
+    
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
-    fprintf(*f, "\nsetEntityActivationMask(%d, 0x%.4X);", ent->id, ent->activation_mask);
+    
+    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
     //setEntityMeshswap()
 
     if(ent->self->room != NULL)
@@ -304,11 +308,6 @@ void Game_ApplyControls(struct entity_s *ent)
     int8_t move_logic[3];
     int8_t look_logic[3];
 
-    if(ent == NULL)                                                             ///@PARANOID
-    {
-        control_states.free_look = 1;
-    }
-
     /*
      * MOVE KB LOGIC
      */
@@ -383,7 +382,8 @@ void Game_ApplyControls(struct entity_s *ent)
         control_states.look_axis_x = 0.0;
         control_states.look_axis_y = 0.0;
     }
-    if(control_states.free_look != 0)
+    
+    if((control_states.free_look != 0) || !IsCharacter(ent))
     {
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(renderer.cam, cam_angles);
@@ -721,8 +721,8 @@ void Game_Frame(btScalar time)
 
     if(!con_base.show && control_states.gui_inventory && main_inventory_manager)
     {
-        if((main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED) &&
-           (engine_world.Character != NULL) && (engine_world.Character->character != NULL))
+        if((is_character) &&
+           (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
         {
             main_inventory_manager->setInventory(&engine_world.Character->character->inventory);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
@@ -764,11 +764,11 @@ void Game_Frame(btScalar time)
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
+    
+    Game_ApplyControls(engine_world.Character);
 
     if(is_character)
     {
-        Game_ApplyControls(engine_world.Character);
-
         if(!control_states.noclip && !control_states.free_look)
         {
             Character_ApplyCommands(engine_world.Character);
@@ -787,27 +787,39 @@ void Game_Frame(btScalar time)
 
 void Game_Prepare()
 {
-    // Set character values to default.
+    if(IsCharacter(engine_world.Character))
+    {
+        // Set character values to default.
 
-    Character_SetParamMaximum(engine_world.Character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-    Character_SetParam       (engine_world.Character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-    Character_SetParamMaximum(engine_world.Character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-    Character_SetParam       (engine_world.Character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-    Character_SetParamMaximum(engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-    Character_SetParam       (engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-    Character_SetParamMaximum(engine_world.Character, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
-    Character_SetParam       (engine_world.Character, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
+        Character_SetParamMaximum(engine_world.Character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+        Character_SetParam       (engine_world.Character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+        Character_SetParamMaximum(engine_world.Character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        Character_SetParam       (engine_world.Character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        Character_SetParamMaximum(engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        Character_SetParam       (engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        Character_SetParamMaximum(engine_world.Character, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
+        Character_SetParam       (engine_world.Character, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
 
-    // Set character statistics to default.
+        // Set character statistics to default.
 
-    engine_world.Character->character->statistics.distance       = 0.0;
-    engine_world.Character->character->statistics.ammo_used      = 0;
-    engine_world.Character->character->statistics.hits           = 0;
-    engine_world.Character->character->statistics.kills          = 0;
-    engine_world.Character->character->statistics.medipacks_used = 0;
-    engine_world.Character->character->statistics.saves_used     = 0;
-    engine_world.Character->character->statistics.secrets_game   = 0;
-    engine_world.Character->character->statistics.secrets_level  = 0;
+        engine_world.Character->character->statistics.distance       = 0.0;
+        engine_world.Character->character->statistics.ammo_used      = 0;
+        engine_world.Character->character->statistics.hits           = 0;
+        engine_world.Character->character->statistics.kills          = 0;
+        engine_world.Character->character->statistics.medipacks_used = 0;
+        engine_world.Character->character->statistics.saves_used     = 0;
+        engine_world.Character->character->statistics.secrets_game   = 0;
+        engine_world.Character->character->statistics.secrets_level  = 0;
+    }
+    else if(engine_world.room_count > 0)
+    {
+        // If there is no character present, move default camera position to
+        // the first room (useful for TR1-3 cutscene levels).
+        
+        engine_camera.pos[0] = engine_world.rooms[0].bb_max[0];
+        engine_camera.pos[1] = engine_world.rooms[0].bb_max[1];
+        engine_camera.pos[2] = engine_world.rooms[0].bb_max[2];
+    }
 
     // Set gameflow parameters to default.
     // Reset secret trigger map.

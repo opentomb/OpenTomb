@@ -43,26 +43,20 @@ end;
 
 function door_init(id)   -- NORMAL doors only!
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(object_id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(object_id == nil) then return end;
-        
-        if(getEntityActivityLock(object_id) ~= 1) then
-            local current_state = getEntityState(object_id);
-            if(current_state == 0) then current_state = 1 else current_state = 0 end;
-            setEntityState(object_id, current_state);
-        end
+        swapEntityState(object_id, 0, 1);
     end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            local current_state = getEntityState(object_id);
-            if(current_state == 0) then current_state = 1 else current_state = 0 end;
-            setEntityState(object_id, current_state);
+            swapEntityState(object_id, 0, 1);
+            setEntityEvent(object_id, 0);
         end;
     end
     
@@ -111,7 +105,7 @@ end
 
 function anim_init(id)      -- Ordinary animatings
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -130,7 +124,7 @@ end
 
 function venicebird_init(id)    -- Venice singing birds (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -152,7 +146,7 @@ end
 
 function doorbell_init(id)    -- Lara's Home doorbell (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -173,7 +167,7 @@ end
 
 function alarm_TR2_init(id)    -- Offshore Rig alarm (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -198,7 +192,7 @@ end
 
 function alarmbell_init(id)    -- Home Sweet Home alarm (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -223,7 +217,7 @@ end
 
 function heli_TR2_init(id)    -- Helicopter (TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].distance_passed = 0;
     setEntityActivity(id, 0);
@@ -253,9 +247,34 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     prepareEntity(id);
 end
 
+function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, 0);
+    setEntityVisibility(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+        setEntityVisibility(object_id, 1);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityLock(object_id) == 1) then
+            if(getEntityState(object_id) ~= 2) then
+                setEntityState(object_id, 2);
+            else
+                local anim, frame, count = getEntityAnim(object_id);
+                if(frame == count-1) then disableEntity(object_id) end;
+            end
+        end;
+    end
+    
+    prepareEntity(id);
+end
+
 function swingblade_init(id)        -- Swinging blades (TR1)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -273,9 +292,41 @@ function swingblade_init(id)        -- Swinging blades (TR1)
     prepareEntity(id);
 end
 
+function tallblock_init(id)    -- Tall moving block (TR1)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    
+    entity_funcs[id].distance_passed = 0;
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id) == 0) then
+            setEntityActivity(object_id, 1);
+            playSound(64, object_id);
+        end;
+    end
+    
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        local move_speed = 32.0;
+        if(getEntityEvent(object_id) == 0) then move_speed = 0 - move_speed end;
+        
+        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + move_speed;
+        moveEntityLocal(object_id, 0.0, move_speed, 0.0);
+        if(math.abs(entity_funcs[object_id].distance_passed) >= 2048.0) then
+            stopSound(64, object_id);
+            setEntityActivity(object_id, 0);
+            entity_funcs[object_id].distance_passed = 0;
+        end;
+    end
+    
+    prepareEntity(id);
+end
+
 function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -295,7 +346,7 @@ end
 
 function wallblade_init(id)     -- Wall blade (TR1-TR3)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -355,7 +406,7 @@ function pickup_init(id, item_id)    -- Pick-ups
         
             -- Position corrector
         
-            if(getEntityMoveType(activator_id) == 6) then
+            if(getEntityMoveType(activator_id) == ENTITY_MOVE_UNDER_WATER) then
                 if(getEntityDistance(object_id, activator_id) > 128.0) then
                     moveEntityToEntity(activator_id, object_id, 25.0);
                 end;
@@ -389,7 +440,7 @@ end
 
 function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
 
-    setEntityTypeFlag(id, ENTITY_TYPE_DECORATION);
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onLoop = function(object_id)
@@ -487,13 +538,63 @@ end
 
 function midastouch_init(id)    -- Midas gold touch
 
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityDistance(player, object_id) < 1024.0) then
+            local lara_anim, frame, count = getEntityAnim(player);
+            local lara_sector = getEntitySectorIndex(player);
+            local hand_sector = getEntitySectorIndex(object_id);
+            if(getEntityModel(player) == 5) then
+                if(frame == 8) then
+                    copyMeshFromModelToModel(0, 5, 6, 6);
+                elseif(frame == 15) then
+                    copyMeshFromModelToModel(0, 5, 5, 5);
+                elseif(frame == 19) then
+                    copyMeshFromModelToModel(0, 5, 4, 4);
+                elseif(frame == 24) then
+                    copyMeshFromModelToModel(0, 5, 3, 3);
+                elseif(frame == 29) then
+                    copyMeshFromModelToModel(0, 5, 2, 2);
+                elseif(frame == 34) then
+                    copyMeshFromModelToModel(0, 5, 1, 1);
+                elseif(frame == 40) then
+                    copyMeshFromModelToModel(0, 5, 0, 0);
+                elseif(frame == 41) then
+                    copyMeshFromModelToModel(0, 5, 13, 13);
+                elseif(frame == 45) then
+                    copyMeshFromModelToModel(0, 5, 12, 12);
+                elseif(frame == 47) then
+                    copyMeshFromModelToModel(0, 5, 11, 11);
+                elseif(frame == 50) then
+                    copyMeshFromModelToModel(0, 5, 10, 3);
+                elseif(frame == 54) then
+                    copyMeshFromModelToModel(0, 5, 9, 9);
+                elseif(frame == 60) then
+                    copyMeshFromModelToModel(0, 5, 8, 8);
+                elseif(frame == 70) then
+                    copyMeshFromModelToModel(0, 5, 7, 7);
+                elseif(frame == 100) then
+                    copyMeshFromModelToModel(0, 5, 14, 14);
+                    setEntityActivity(object_id, 0);
+                end;
+                return;
+            end;
+            if((lara_sector == hand_sector) and (getEntityMoveType(player) == ENTITY_MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
+                setCharacterParam(player, PARAM_HEALTH, 0);
+                setEntityAnim(player, 1, 0, 5);
+            end;
+        end;
+    end
+    
+    prepareEntity(id);
 end
 
 function oldspike_init(id)  -- Teeth spikes (INVALID)
 
     setEntityActivity(id, 1);
     local f1, f2, f3 = getEntityFlags(id);
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_DECORATION), bit32.bor(f3, ENTITY_CALLBACK_COLLISION));
+    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_GENERIC), bit32.bor(f3, ENTITY_CALLBACK_COLLISION));
     
     entity_funcs[id].onCollision = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then

@@ -29,12 +29,12 @@ entity_p Entity_Create()
     ret->move_type = MOVE_ON_FLOOR;
     Mat4_E(ret->transform);
     ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
-    ret->type_flags = ENTITY_TYPE_DECORATION;
+    ret->type_flags = ENTITY_TYPE_GENERIC;
     ret->callback_flags = 0x00000000;               // no callbacks by default
 
     ret->OCB = 0;
-    ret->sector_status = 0;
-    ret->locked = 0;
+    ret->trigger_layout = 0x00;
+    ret->timer = 0.0;
 
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
     ret->self->next = NULL;
@@ -51,6 +51,7 @@ entity_p Entity_Create()
     ret->bf.animations.model = NULL;
     ret->bf.animations.onFrame = NULL;
     ret->bf.animations.frame_time = 0.0;
+    ret->bf.animations.last_state = 0;
     ret->bf.animations.next_state = 0;
     ret->bf.animations.lerp = 0.0;
     ret->bf.animations.current_animation = 0;
@@ -308,7 +309,7 @@ void Entity_UpdateRoomPos(entity_p ent)
 
         if(ent->current_sector != new_sector)
         {
-            ent->sector_status = 0; // Reset sector status.
+            ent->trigger_layout &= (uint8_t)(~ENTITY_TLAYOUT_SSTATUS); // Reset sector status.
             ent->current_sector = new_sector;
         }
     }
@@ -807,7 +808,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                             break;
 
                                         case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
-                                            Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                            // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                             break;
 
                                         case SECTOR_MATERIAL_WOOD:
@@ -947,7 +948,7 @@ void Entity_ProcessSector(struct entity_s *ent)
 }
 
 
-void Entity_SetAnimation(entity_p entity, int animation, int frame)
+void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_model)
 {
     if(!entity || !entity->bf.animations.model || (animation >= entity->bf.animations.model->animation_count))
     {
@@ -961,8 +962,16 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
         entity->character->no_fix = 0x00;
     }
 
-    entity->bf.animations.lerp = 0.0;
+    if(another_model >= 0)
+    {
+        skeletal_model_p model = World_GetModelByID(&engine_world, another_model);
+        if((!model) || (animation >= model->animation_count)) return;
+        entity->bf.animations.model = model;
+    }
+    
     animation_frame_p anim = &entity->bf.animations.model->animations[animation];
+
+    entity->bf.animations.lerp = 0.0;
     frame %= anim->frames_count;
     frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
     entity->bf.animations.period = 1.0 / 30.0;

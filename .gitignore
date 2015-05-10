@@ -11,12 +11,15 @@
 *.dll
 .DS_Store
 CMakeLists.txt.user
+.dep.inc
+Makefile
 obj/
 bin/
 build/
 nbproject/
 dist/
 data/
+save/
 opentomb-code.cbp
 opentomb-code.cscope_file_list
 opentomb-code.depend

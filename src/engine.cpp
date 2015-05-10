@@ -484,6 +484,19 @@ int lua_GetEntitySectorFlags(lua_State *lua)
     return 0;
 }
 
+int lua_GetEntitySectorIndex(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+
+    if((ent != NULL) && (ent->current_sector))
+    {
+        lua_pushinteger(lua, ent->current_sector->trig_index);
+        return 1;
+    }
+    return 0;
+}
+
 int lua_GetEntitySectorMaterial(lua_State *lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
@@ -496,32 +509,6 @@ int lua_GetEntitySectorMaterial(lua_State *lua)
     }
     return 0;
 }
-
-int lua_GetEntitySectorStatus(lua_State *lua)
-{
-    if(lua_gettop(lua) < 1) return 0;
-    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-
-    if(ent != NULL)
-    {
-        lua_pushinteger(lua, ent->sector_status);
-        return 1;
-    }
-    return 0;
-}
-
-int lua_SetEntitySectorStatus(lua_State *lua)
-{
-    if(lua_gettop(lua) < 2) return 0;   // No arguments specified - return.
-    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-
-    if(ent != NULL)
-    {
-        ent->sector_status = lua_tointeger(lua, 2);
-    }
-    return 0;
-}
-
 
 int lua_NewSector(lua_State *lua)
 {
@@ -1714,9 +1701,11 @@ int lua_SetEntitySpeed(lua_State * lua)
 
 int lua_SetEntityAnim(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    int top = lua_gettop(lua);
+    
+    if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id]");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id, (frame_number, another_model)]");
         return 0;
     }
 
@@ -1729,7 +1718,19 @@ int lua_SetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+    switch(top)
+    {
+        case 2:
+        default:
+            Entity_SetAnimation(ent, lua_tointeger(lua, 2));
+            break;
+        case 3:
+            Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+            break;
+        case 4:
+            Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3), lua_tointeger(lua, 4));
+            break;
+    }
 
     return 0;
 }
@@ -1943,26 +1944,162 @@ int lua_SetEntityActivity(lua_State * lua)
 }
 
 
-int lua_SetEntityActivityLock(lua_State * lua)
+int lua_GetEntityTriggerLayout(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;
+    
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;   // No entity found - return.
+
+    lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_MASK));          // mask
+    lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5);    // event
+    lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6);     // lock
+
+    return 3;
+}
+
+int lua_SetEntityTriggerLayout(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, layout] or [entity_id, mask, event, once] / %d");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+    
+    if(top == 2)
+    {
+        ent->trigger_layout = (uint8_t)lua_tointeger(lua, 2);
+    }
+    else if(top == 4)
+    {
+        uint8_t trigger_layout = ent->trigger_layout;
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);          // mask  - 00011111
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= ((uint8_t)lua_tointeger(lua, 3)) << 5;   // event - 00100000
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)lua_tointeger(lua, 4)) << 6;   // lock  - 01000000
+        ent->trigger_layout = trigger_layout;
+    }
+    
+    return 0;
+}
+
+int lua_SetEntityLock(lua_State * lua)
 {
     if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
 
     entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
-    if(ent == NULL) return 0;
-
-    ent->locked = lua_tointeger(lua, 2);
+    if(ent != NULL)
+    {
+        uint8_t trigger_layout = ent->trigger_layout;
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 6;   // lock  - 01000000
+        ent->trigger_layout = trigger_layout;
+    }
     return 0;
 }
 
-int lua_GetEntityActivityLock(lua_State * lua)
+int lua_GetEntityLock(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
 
     entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
-    if(ent == NULL) return 0;
+    if(ent != NULL)
+    {
+        lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6));      // lock
+        return 1;
+    }
+    return 0;
+}
 
-    lua_pushinteger(lua, ent->locked);
-    return 1;
+int lua_SetEntityEvent(lua_State * lua)
+{
+    if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent != NULL)
+    {
+        uint8_t trigger_layout = ent->trigger_layout;
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 5;   // event - 00100000
+        ent->trigger_layout = trigger_layout;
+    }
+    return 0;
+}
+
+int lua_GetEntityEvent(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent != NULL)
+    {
+        lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5));    // event
+        return 1;
+    }
+    return 0;
+}
+
+int lua_GetEntityMask(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent != NULL)
+    {
+        lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_MASK));          // mask
+        return 1;
+    }
+    return 0;
+}
+
+int lua_SetEntityMask(lua_State * lua)
+{
+    if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+    if(ent != NULL)
+    {
+        uint8_t trigger_layout = ent->trigger_layout;
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);   // mask  - 00011111
+        ent->trigger_layout = trigger_layout;
+    }
+    return 0;
+}
+
+int lua_GetEntitySectorStatus(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;
+    
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    if(ent != NULL)
+    {
+        lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7));
+        return 1;
+    }
+    return 0;
+}
+
+int lua_SetEntitySectorStatus(lua_State *lua)
+{
+    if(lua_gettop(lua) < 2) return 0;   // No arguments specified - return.
+    
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    if(ent != NULL)
+    {
+        uint8_t trigger_layout = ent->trigger_layout;
+        trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_SSTATUS);
+        trigger_layout ^=  ((uint8_t)lua_tointeger(lua, 2)) << 7;   // sector_status  - 10000000
+        ent->trigger_layout = trigger_layout;
+    }
+    return 0;
 }
 
 int lua_GetEntityOCB(lua_State * lua)
@@ -2066,33 +2203,6 @@ int lua_SetEntityFlags(lua_State * lua)
     return 0;
 }
 
-
-int lua_GetEntityActivationMask(lua_State * lua)
-{
-    if(lua_gettop(lua) < 1) return 0;   // No arguments provided - return.
-
-    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
-    if(ent == NULL) return 0;   // No entity found - return.
-
-    lua_pushinteger(lua, ent->activation_mask);
-
-    return 1;
-}
-
-
-int lua_SetEntityActivationMask(lua_State * lua)
-{
-    if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
-
-    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
-    if(ent == NULL) return 0;   // No entity found - return.
-
-    ent->activation_mask = lua_tointeger(lua, 2);
-
-    return 0;
-}
-
-
 int lua_GetEntityTimer(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No arguments provided - return.
@@ -2170,7 +2280,29 @@ int lua_GetEntityState(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->bf.animations.next_state);
+    lua_pushinteger(lua, ent->bf.animations.last_state);
+
+    return 1;
+}
+
+int lua_GetEntityModel(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushinteger(lua, ent->bf.animations.model->id);
 
     return 1;
 }
@@ -2921,6 +3053,7 @@ bool Engine_LuaInit()
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
         luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
         luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
+        luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");
         luaL_dofile(engine_lua, "scripts/entity/entity_functions.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
@@ -3041,13 +3174,12 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
+    lua_register(lua, "getEntityModel", lua_GetEntityModel);
     lua_register(lua, "getEntityVisibility", lua_GetEntityVisibility);
     lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);
     lua_register(lua, "getEntityActivity", lua_GetEntityActivity);
     lua_register(lua, "setEntityActivity", lua_SetEntityActivity);
     lua_register(lua, "getEntityEnability", lua_GetEntityEnability);
-    lua_register(lua, "getEntityActivityLock", lua_GetEntityActivityLock);
-    lua_register(lua, "setEntityActivityLock", lua_SetEntityActivityLock);
     lua_register(lua, "getEntityOCB", lua_GetEntityOCB);
     lua_register(lua, "setEntityOCB", lua_SetEntityOCB);
     lua_register(lua, "getEntityTimer", lua_GetEntityTimer);
@@ -3055,8 +3187,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntityFlags", lua_GetEntityFlags);
     lua_register(lua, "setEntityFlags", lua_SetEntityFlags);
     lua_register(lua, "setEntityTypeFlag", lua_SetEntityTypeFlag);
-    lua_register(lua, "getEntityActivationMask", lua_GetEntityActivationMask);
-    lua_register(lua, "setEntityActivationMask", lua_SetEntityActivationMask);
     lua_register(lua, "getEntityState", lua_GetEntityState);
     lua_register(lua, "setEntityState", lua_SetEntityState);
     lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
@@ -3067,12 +3197,22 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
     lua_register(lua, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
 
-    lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
-    lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
-    lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
-    lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
+    lua_register(lua, "getEntityTriggerLayout", lua_GetEntityTriggerLayout);
+    lua_register(lua, "setEntityTriggerLayout", lua_SetEntityTriggerLayout);
+    lua_register(lua, "getEntityMask", lua_GetEntityMask);
+    lua_register(lua, "setEntityMask", lua_SetEntityMask);
+    lua_register(lua, "getEntityEvent", lua_GetEntityEvent);
+    lua_register(lua, "setEntityEvent", lua_SetEntityEvent);
+    lua_register(lua, "getEntityLock", lua_GetEntityLock);
+    lua_register(lua, "setEntityLock", lua_SetEntityLock);
     lua_register(lua, "getEntitySectorStatus", lua_GetEntitySectorStatus);
     lua_register(lua, "setEntitySectorStatus", lua_SetEntitySectorStatus);
+    
+    lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
+    lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
+    lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
+    lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
+    lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
 
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);

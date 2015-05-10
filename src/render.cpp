@@ -297,7 +297,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
 
 
 /**
- * draw transparancy polygons
+ * draw transparency polygons
  */
 void Render_PolygonTransparency(struct polygon_s *p)
 {
@@ -1037,7 +1037,7 @@ void Render_DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if((ent->bf.animations.model->transparancy_flags == MESH_HAS_TRANSPERENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
+                if((ent->bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
                 {
                     btScalar tr[16];
                     for(uint16_t j=0;j<ent->bf.bone_tag_count;j++)
@@ -1053,7 +1053,7 @@ void Render_DrawList()
         }
     }
 
-    if((engine_world.Character != NULL) && (engine_world.Character->bf.animations.model->transparancy_flags == MESH_HAS_TRANSPERENCY))
+    if((engine_world.Character != NULL) && (engine_world.Character->bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
         btScalar tr[16];
         entity_p ent = engine_world.Character;

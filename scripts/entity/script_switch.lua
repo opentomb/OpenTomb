@@ -356,7 +356,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
                     if(meshswap ~= nil) then
                         setEntityMeshswap(object_id, meshswap); -- only for puzzleholes - do a meshswap
                     end
-                    setEntityActivityLock(object_id, 1);        -- lock filled hole
+                    setEntityLock(object_id, 1);        -- lock filled hole
                 else
                     setEntitySectorStatus(object_id, 1);        -- only for switches - turn on
                 end
@@ -364,7 +364,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             return true;
         end);
-    elseif(off.ready_anim == t and getEntityActivityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
+    elseif(off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
         setEntityAnim(object_id, off.trig_anim, 0);
         setEntityAnim(actor_id, off.actor_anim, 0);
         --setEntityActivity(object_id, 1);
