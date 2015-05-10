@@ -534,32 +534,35 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         cam_pos += cb->m_hitNormalWorld * 2.0;
     }
 
-    cameraFrom.setOrigin(cam_pos);
-    cam_pos.m_floats[0] += dx * cam->right_dir[0];
-    cam_pos.m_floats[1] += dx * cam->right_dir[1];
-    cam_pos.m_floats[2] += dx * cam->right_dir[2];
-    cameraTo.setOrigin(cam_pos);
-    cb->m_closestHitFraction = 1.0;
-    cb->m_hitCollisionObject = NULL;
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
-    if(cb->hasHit())
+    if (dx != 0.0)
     {
-        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
-        cam_pos += cb->m_hitNormalWorld * 2.0;
-    }
+        cameraFrom.setOrigin(cam_pos);
+        cam_pos.m_floats[0] += dx * cam->right_dir[0];
+        cam_pos.m_floats[1] += dx * cam->right_dir[1];
+        cam_pos.m_floats[2] += dx * cam->right_dir[2];
+        cameraTo.setOrigin(cam_pos);
+        cb->m_closestHitFraction = 1.0;
+        cb->m_hitCollisionObject = NULL;
+        bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+        if(cb->hasHit())
+        {
+            cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
+            cam_pos += cb->m_hitNormalWorld * 2.0;
+        }
 
-    cameraSphere.setLocalScaling(btVector3(0.8, 0.8, 0.8));
-    cameraFrom.setOrigin(cam_pos);
-    cam_pos.m_floats[0] += sin(alpha) * control_states.cam_distance;
-    cam_pos.m_floats[1] -= cos(alpha) * control_states.cam_distance;
-    cameraTo.setOrigin(cam_pos);
-    cb->m_closestHitFraction = 1.0;
-    cb->m_hitCollisionObject = NULL;
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
-    if(cb->hasHit())
-    {
-        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
-        cam_pos += cb->m_hitNormalWorld * 2.0;
+        cameraSphere.setLocalScaling(btVector3(0.8, 0.8, 0.8));
+        cameraFrom.setOrigin(cam_pos);
+        cam_pos.m_floats[0] += sin(alpha) * control_states.cam_distance;
+        cam_pos.m_floats[1] -= cos(alpha) * control_states.cam_distance;
+        cameraTo.setOrigin(cam_pos);
+        cb->m_closestHitFraction = 1.0;
+        cb->m_hitCollisionObject = NULL;
+        bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+        if(cb->hasHit())
+        {
+            cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
+            cam_pos += cb->m_hitNormalWorld * 2.0;
+        }
     }
 
 //    alpha = cam_pos.distance2(old_pos);
@@ -773,7 +776,7 @@ void Game_Frame(btScalar time)
         {
             Character_ApplyCommands(engine_world.Character);
             Entity_Frame(engine_world.Character, engine_frame_time);
-            Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0); // 128.0 400.0
+            Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
         }
     }
 
