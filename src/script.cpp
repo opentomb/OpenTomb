@@ -163,14 +163,9 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
         {
             lua_pushinteger(lua, engine_world.version);                         // add to stack first argument
             lua_pushinteger(lua, global_sound_id);                              // call that function
-            if (lua_pcall(lua, 2, 1, 0) == LUA_OK)
+            if (lua_CallAndLog(lua, 2, 1, 0))
             {
                 sound_id = lua_tointeger(lua, -1);                              // get returned value 1
-            }
-            else
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
             }
         }
         lua_settop(lua, top);
@@ -192,14 +187,9 @@ int lua_GetSecretTrackNumber(lua_State *lua)
         {
             lua_pushinteger(lua, engine_world.version);                         // add to stack first argument
             track_number = lua_tointeger(lua, -1);                              // call that function
-            if (lua_pcall(lua, 2, 1, 0) == LUA_OK)
+            if (lua_CallAndLog(lua, 2, 1, 0))
             {
                 track_number = lua_tointeger(lua, -1);                          // get returned value 1
-            }
-            else
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
             }
         }
         lua_settop(lua, top);                                                   // restore LUA stack
@@ -220,14 +210,9 @@ int lua_GetNumTracks(lua_State *lua)
         if(lua_isfunction(lua, -1))
         {
             lua_pushinteger(lua, engine_world.version);
-            if (lua_pcall(lua, 1, 1, 0) == LUA_OK)
+            if (lua_CallAndLog(lua, 1, 1, 0))
             {
                 num_tracks = lua_tointeger(lua, -1);
-            }
-            else
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
             }
         }
         lua_settop(lua, top);
@@ -252,7 +237,7 @@ bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_soun
             size_t string_length = 0;
 
             lua_pushinteger(lua, engine_world.version);
-            if (lua_pcall(lua, 1, 3, 0) == LUA_OK)
+            if (lua_CallAndLog(lua, 1, 3, 0))
             {
                 real_path   = lua_tolstring(lua, -1, &string_length);
                *num_sounds  = (int)lua_tointeger(lua, -2);
@@ -264,11 +249,6 @@ bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_soun
                 {
                     result = true;
                 }
-            }
-            else
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
             }
         }
         lua_settop(lua, top);
@@ -296,18 +276,13 @@ bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_numb
             lua_pushinteger(lua, engine_world.version);
             lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
             lua_pushinteger(lua, sound_id);
-            if (lua_pcall(lua, 3, 2, 0) == LUA_OK)
+            if (lua_CallAndLog(lua, 3, 2, 0))
             {
                 *first_sample_number = (int)lua_tointeger(lua, -2);
                 *samples_count       = (int)lua_tointeger(lua, -1);
                 
                 if((*first_sample_number != -1) && (*samples_count != -1))
                     result = true;
-            }
-            else
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
             }
         }
         lua_settop(lua, top);
@@ -332,7 +307,7 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
             lua_pushinteger(lua, engine_world.version);                         // add to stack first argument
             lua_pushinteger(lua, track_index);                                  // add to stack second argument
 
-            if (lua_pcall(lua, 2, 3, 0) == LUA_OK)                                            // call that function
+            if (lua_CallAndLog(lua, 2, 3, 0))                                            // call that function
             {
 
                 real_path   = lua_tolstring(lua, -3, &string_length);               // get returned value 1
@@ -348,11 +323,6 @@ bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *lo
 
                 if(*stream_type != -1)
                     return true;                                                    // Entry extracted, success!
-            }
-            else
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
             }
         }
         lua_settop(lua, top);                                                   // restore LUA stack
@@ -381,16 +351,11 @@ bool lua_GetString(lua_State *lua, int string_index, size_t string_size, char *b
             size_t *string_length = NULL;
 
             lua_pushinteger(lua, string_index);
-            if (lua_pcall(lua, 1, 1, 0) == LUA_OK)
+            if (lua_CallAndLog(lua, 1, 1, 0))
             {
                 const char* lua_str = lua_tolstring(lua, -1, string_length);
                 strncpy(buffer, lua_str, string_size);
                 result = true;
-            }
-            else
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
             }
         }
         lua_settop(lua, top);
@@ -413,7 +378,7 @@ bool lua_GetSysNotify(lua_State *lua, int string_index, size_t string_size, char
             size_t *string_length = NULL;
 
             lua_pushinteger(lua, string_index);
-            if (lua_pcall(lua, 1, 1, 0) == LUA_OK)
+            if (lua_CallAndLog(lua, 1, 1, 0))
             {
                 const char* lua_str = lua_tolstring(lua, -1, string_length);
                 strncpy(buffer, lua_str, string_size);
@@ -445,7 +410,7 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
             lua_pushinteger(lua, gameflow_manager.CurrentLevelID);              // add to stack second argument
             lua_pushinteger(lua, level_index);                                  // add to stack third argument
 
-            if (lua_pcall(lua, 3, 1, 0) == LUA_OK)                                            // call that function
+            if (lua_CallAndLog(lua, 3, 1, 0))                                            // call that function
             {
                 real_path = lua_tolstring(lua, -1, &string_length);                 // get returned value 1
 
@@ -502,11 +467,7 @@ int lua_DoTasks(lua_State *lua, btScalar time)
     lua_pushnumber(lua, time);
     lua_setglobal(lua, "frame_time");
     lua_getglobal(lua, "doTasks");
-    if (lua_pcall(lua, 0, 0, 0) != LUA_OK)
-    {
-        Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-        lua_pop(engine_lua, 1);
-    }
+    lua_CallAndLog(lua, 0, 0, 0);
 
     lua_settop(lua, top);
     return 0;
@@ -527,11 +488,7 @@ int lua_ExecEntity(lua_State *lua, int id_object, int id_activator, int id_callb
     lua_pushinteger(lua, id_object);
     lua_pushinteger(lua, id_activator);
     lua_pushinteger(lua, id_callback);
-    if (lua_pcall(lua, 3, 0, 0) != LUA_OK)
-    {
-        Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-        lua_pop(engine_lua, 1);
-    }
+    lua_CallAndLog(lua, 3, 0, 0);
 
     lua_settop(lua, top);
     return 1;
@@ -547,11 +504,7 @@ void lua_LoopEntity(lua_State *lua, int object_id)
         if(lua_isfunction(lua, -1))
         {
             lua_pushinteger(lua, object_id);
-            if (lua_pcall(lua, 1, 0, 0) != LUA_OK)
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
-            }
+            lua_CallAndLog(lua, 1, 0, 0);
         }
         lua_settop(lua, top);
     }
@@ -740,11 +693,7 @@ void lua_Clean(lua_State *lua)
         lua_getglobal(lua, "tlist_Clear");
         if(lua_isfunction(lua, -1))
         {
-            if (lua_pcall(lua, 0, 1, 0) != LUA_OK)
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
-            }
+            lua_CallAndLog(lua, 0, 1, 0);
             //int result = lua_tointeger(lua, -1);
             //lua_pop(lua, 1);
         }
@@ -752,14 +701,32 @@ void lua_Clean(lua_State *lua)
         lua_getglobal(lua, "entfuncs_Clear");
         if(lua_isfunction(lua, -1))
         {
-            if (lua_pcall(lua, 0, 1, 0) != LUA_OK)
-            {
-                Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                lua_pop(engine_lua, 1);
-            }
+            lua_CallAndLog(lua, 0, 1, 0);
             //int result = lua_tointeger(lua, -1);
             //lua_pop(lua, 1);
         }
         lua_settop(lua, top);
     }
+}
+
+bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline)
+{
+    if (lua_pcall(lua, nargs, nresults, errfunc) != LUA_OK)
+    {
+        char errormessage[4096];
+        if (lua_gettop(lua) > 0 && lua_isstring(lua, -1))
+        {
+            const char *luaErrorDescription = lua_tostring(lua, -1);
+            snprintf(errormessage, sizeof(errormessage), "Lua error: %s (called from %s:%d)", luaErrorDescription, cfile, cline);
+            lua_pop(engine_lua, 1);
+        }
+        else
+        {
+            snprintf(errormessage, sizeof(errormessage), "Lua error without message (called from %s:%d)", cfile, cline);
+        }
+        //fprintf(stderr, "%s\n", errormessage);
+        Con_AddLine(errormessage, FONTSTYLE_CONSOLE_WARNING);
+        return false;
+    }
+    return true;
 }

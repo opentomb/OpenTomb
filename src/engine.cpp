@@ -2623,10 +2623,12 @@ int lua_SetGame(lua_State *lua)
     if(lua_isfunction(lua, -1))
     {
         lua_pushnumber(lua, gameflow_manager.CurrentGameID);
-        lua_pcall(lua, 1, 1, 0);
-        Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
-        lua_pop(lua, 1);
-        Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+        if (lua_CallAndLog(lua, 1, 1, 0))
+        {
+            Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
+            lua_pop(lua, 1);
+            Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+        }
     }
     lua_settop(lua, top);
 
@@ -2937,7 +2939,7 @@ void Engine_LuaClearTasks()
 {
     int top = lua_gettop(engine_lua);
     lua_getglobal(engine_lua, "clearTasks");
-    lua_pcall(engine_lua, 0, 0, 0);
+    lua_CallAndLog(engine_lua, 0, 0, 0);
     lua_settop(engine_lua, top);
 }
 

@@ -56,7 +56,7 @@ void Gameflow_Do()
                     lua_pushnumber(engine_lua, gameflow_manager.CurrentLevelID);     // Push the 2nd argument
                     lua_pushnumber(engine_lua, gameflow_manager.Actions[i].operand); // Push the 3rd argument
 
-                    if (lua_pcall(engine_lua, 3, 3, 0) == 0)
+                    if (lua_CallAndLog(engine_lua, 3, 3, 0))
                     {
                         gameflow_manager.CurrentLevelID = lua_tonumber(engine_lua, -1);   // First value in stack is level id
                         strncpy(gameflow_manager.CurrentLevelName, lua_tostring(engine_lua, -2), LEVEL_NAME_MAX_LEN); // Second value in stack is level name
@@ -78,8 +78,6 @@ void Gameflow_Do()
                     else
                     {
                         Gui_FadeStop(FADER_LOADSCREEN);
-                        Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-                        lua_pop(engine_lua, 1);
                         Con_AddLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
                     }
                     lua_settop(engine_lua, top);

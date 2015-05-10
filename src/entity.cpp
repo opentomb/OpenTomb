@@ -941,11 +941,7 @@ void Entity_ProcessSector(struct entity_s *ent)
         lua_pushnumber(engine_lua, lowest_sector->trig_index);
         lua_pushnumber(engine_lua, ((ent->bf.animations.model->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC));
         lua_pushnumber(engine_lua, ent->id);
-        if (lua_pcall(engine_lua, 3, 1, 0) != LUA_OK)
-        {
-            Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
-            lua_pop(engine_lua, 1);
-        }
+        lua_CallAndLog(engine_lua, 3, 1, 0);
     }
     lua_settop(engine_lua, top);
 }
