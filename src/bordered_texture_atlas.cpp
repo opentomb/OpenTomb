@@ -169,8 +169,17 @@ bordered_texture_atlas::bordered_texture_atlas(int border,
                                                size_t sprite_texture_count,
                                                const tr_sprite_texture_t *sprite_textures)
 : border_width(border),
+number_result_pages(0),
+result_page_width(0),
+result_page_height(nullptr),
 number_original_pages(page_count),
-original_pages(pages)
+original_pages(pages),
+number_file_object_textures(0),
+file_object_textures(nullptr),
+number_sprite_textures(0),
+canonical_textures_for_sprite_textures(nullptr),
+number_canonical_object_textures(0),
+canonical_object_textures(nullptr)
 {
     GLint max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
