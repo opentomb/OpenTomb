@@ -2664,7 +2664,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     for(uint16_t i = 0; i < num_sequences; i++,seq++)
     {
         seq->frames_count = *(pointer++) + 1;
-        seq->frame_list   =  (uint32_t*)malloc(seq->frames_count * sizeof(uint32_t));
+        seq->frame_list   =  (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
 
         // Fill up new sequence with frame list.
         seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
@@ -2706,7 +2706,8 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             seq->frames_count = 8;
             seq->uvrotate_max   = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
             seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
-            seq->frames = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
+            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
+            seq->frame_list = (uint32_t *) calloc(seq->frames_count, sizeof(uint32_t));
 
             if(uvrotate_script > 0)
             {
@@ -2746,7 +2747,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         }
         else
         {
-            seq->frames = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
+            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], 0, &p0);
             for(uint16_t j=0;j<seq->frames_count;j++)
             {
@@ -3316,7 +3317,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         model->animation_count = 1;
         model->animations = (animation_frame_p)malloc(sizeof(animation_frame_t));
         model->animations->frames_count = 1;
-        model->animations->frames = (bone_frame_p)malloc(model->animations->frames_count * sizeof(bone_frame_t));
+        model->animations->frames = (bone_frame_p)calloc(model->animations->frames_count , sizeof(bone_frame_t));
         bone_frame = model->animations->frames;
 
         model->animations->id = 0;
