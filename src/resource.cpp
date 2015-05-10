@@ -48,6 +48,7 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
     {
         int top = lua_gettop(objects_flags_conf);
+        assert(top >= 0);
         lua_getglobal(objects_flags_conf, "getEntityProperties");
         if(lua_isfunction(objects_flags_conf, -1))
         {
@@ -61,8 +62,7 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
 
                 if(!lua_isnil(objects_flags_conf, -1))
                 {
-                    size_t string_length;
-                    CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, &string_length), ent->id);
+                    CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id);
                 }
             }
         }
@@ -72,12 +72,13 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     if((level_script != NULL) && (ent->bf.animations.model != NULL))
     {
         int top = lua_gettop(level_script);
+        assert(top >= 0);
         lua_getglobal(level_script, "getEntityProperties");
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
             lua_pushinteger(level_script, ent->bf.animations.model->id);        // model id
-            if (lua_CallAndLog(level_script, 2, 4, 0) == LUA_OK)                     // call that function
+            if (lua_CallAndLog(level_script, 2, 4, 0))                     // call that function
             {
                 if(!lua_isnil(level_script, -4))
                 {
@@ -110,15 +111,19 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
         const char* func_template = "%s_init";
         char buf[64] = {0};
         int top = lua_gettop(lua);
+        assert(top >= 0);
         snprintf(buf, 64, func_template, func_name);
         lua_getglobal(lua, buf);
 
         if(lua_isfunction(lua, -1))
         {
             snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", entity_id, entity_id);
-            luaL_dostring(lua, buf);
-            lua_pushinteger(lua, entity_id);
-            lua_CallAndLog(lua, 1, 0, 0);
+            luaL_loadstring(lua, buf);
+            if (lua_CallAndLog(lua, 0, LUA_MULTRET, 0))
+            {
+                lua_pushinteger(lua, entity_id);
+                lua_CallAndLog(lua, 1, 0, 0);
+            }
             lua_settop(lua, top);
             return true;
         }
@@ -3839,8 +3844,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                         // call that function
                 {
                     entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
-                    lua_settop(ent_ID_override, top);                                      // restore LUA stack
                 }
+                lua_settop(ent_ID_override, top);                                      // restore LUA stack
             }
 
             top = lua_gettop(ent_ID_override);                                         // save LUA stack
@@ -3850,8 +3855,6 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                         // call that function
             {
                 int replace_anim_id = lua_tointeger(ent_ID_override, -1);
-                lua_settop(ent_ID_override, top);                                      // restore LUA stack
-
                 if(replace_anim_id > 0)
                 {
                     skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
@@ -3861,6 +3864,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                     SWAPT(entity->bf.animations.model->animation_count, replace_anim_model->animation_count, tc);
                 }
             }
+            lua_settop(ent_ID_override, top);                                      // restore LUA stack
+
         }
 
         if(entity->bf.animations.model == NULL)
