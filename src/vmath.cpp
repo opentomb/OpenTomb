@@ -408,7 +408,7 @@ void Mat4_inv(btScalar mat[16])
  * OpenGL matrices multiplication. serult = src1 x src2.
  * Works only with OpenGL transformation matrices!
  */
-void Mat4_Mat4_mul(btScalar result[16], btScalar src1[16], btScalar src2[16])
+void Mat4_Mat4_mul(btScalar result[16], const btScalar src1[16], const btScalar src2[16])
 {
     btScalar t_res[16];
 

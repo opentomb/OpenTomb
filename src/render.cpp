@@ -211,23 +211,23 @@ void Render_Sprite(struct sprite_s *sprite, GLfloat x, GLfloat y, GLfloat z)
 }
 
 
-void Render_SkyBox()
+void Render_SkyBox(const btScalar matrix[16])
 {
-    GLfloat tr[16];
+    btScalar tr[16];
     btScalar *p;
 
     if((renderer.style & R_DRAW_SKYBOX) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
     {
         glDepthMask(GL_FALSE);
-        glPushMatrix();
         tr[15] = 1.0;
         p = renderer.world->sky_box->animations->frames->bone_tags->offset;
         vec3_add(tr+12, renderer.cam->pos, p);
         p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
-        glMultMatrixf(tr);
+        btScalar full[16];
+        Mat4_Mat4_mul(full, matrix, tr);
+        glLoadMatrixbt(full);
         Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base, NULL, NULL);
-        glPopMatrix();
         glDepthMask(GL_TRUE);
     }
 }
@@ -594,14 +594,15 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
+void Render_SkeletalModel(struct ss_bone_frame_s *bframe, const btScalar matrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
     for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
     {
-        glPushMatrix();
-        glMultMatrixbt(btag->full_transform);
+        btScalar transform[16];
+        Mat4_Mat4_mul(transform, matrix, btag->full_transform);
+        glLoadMatrixbt(transform);
         Render_Mesh(btag->mesh_base, NULL, NULL);
         if(btag->mesh_slot)
         {
@@ -611,12 +612,11 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe)
         {
             Render_SkinMesh(btag->mesh_skin, btag->transform);
         }
-        glPopMatrix();
     }
 }
 
 
-void Render_Entity(struct entity_s *entity)
+void Render_Entity(struct entity_s *entity, const btScalar matrix[16])
 {
     if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
@@ -722,11 +722,10 @@ void Render_Entity(struct entity_s *entity)
 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
-        glPushMatrix();
         // base frame offset
-        glMultMatrixbt(entity->transform);
-        Render_SkeletalModel(&entity->bf);
-        glPopMatrix();
+        btScalar transform[16];
+        Mat4_Mat4_mul(transform, matrix, entity->transform);
+        Render_SkeletalModel(&entity->bf, transform);
     }
 }
 
@@ -755,16 +754,17 @@ void Render_StaticMesh(struct static_mesh_s *static_mesh, struct room_s *room)
 /**
  * drawing world models.
  */
-void Render_Room(struct room_s *room, struct render_s *render)
+void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16])
 {
     engine_container_p cont;
     entity_p ent;
 
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
     {
-        glPushMatrix();
-        glMultMatrixbt(room->transform);
-
+        btScalar transform[16];
+        Mat4_Mat4_mul(transform, matrix, room->transform);
+        glLoadMatrixbt(transform);
+        
         GLfloat tint[4];
         Render_CalculateWaterTint(tint, 1);
         glUseProgramObjectARB(room_program);
@@ -774,8 +774,6 @@ void Render_Room(struct room_s *room, struct render_s *render)
         glUniform1iARB(room_light_mode, room->light_mode);
         Render_Mesh(room->mesh, NULL, NULL);
         glUseProgramObjectARB(0);
-
-        glPopMatrix();
     }
 
     for(uint32_t i=0; i<room->static_mesh_count; i++)
@@ -790,8 +788,9 @@ void Render_Room(struct room_s *room, struct render_s *render)
             continue;
         }
 
-        glPushMatrix();
-        glMultMatrixbt(room->static_mesh[i].transform);
+        btScalar transform[16];
+        Mat4_Mat4_mul(transform, matrix, room->static_mesh[i].transform);
+        glLoadMatrixbt(transform);
         if(room->static_mesh[i].mesh->uses_vertex_colors > 0)
         {
             Render_StaticMesh(&room->static_mesh[i], room);
@@ -818,7 +817,6 @@ void Render_Room(struct room_s *room, struct render_s *render)
                 Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
             }
         }
-        glPopMatrix();
         room->static_mesh[i].was_rendered = 1;
     }
 
@@ -833,7 +831,7 @@ void Render_Room(struct room_s *room, struct render_s *render)
             {
                 if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                 {
-                    Render_Entity(ent);
+                    Render_Entity(ent, matrix);
                 }
                 ent->was_rendered = 1;
             }
@@ -982,12 +980,12 @@ void Render_DrawList()
     glEnable(GL_ALPHA_TEST);
 
     glDisable(GL_LIGHTING);
-    Render_SkyBox();
+    Render_SkyBox(renderer.cam->gl_view_mat);
 
     glEnable(GL_LIGHTING);
     if(renderer.world->Character)
     {
-        Render_Entity(renderer.world->Character);
+        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat);
     }
     glDisable(GL_LIGHTING);
 
@@ -996,7 +994,7 @@ void Render_DrawList()
      */
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room(renderer.r_list[i].room, &renderer);
+        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat);
     }
 
     glDisable(GL_CULL_FACE);

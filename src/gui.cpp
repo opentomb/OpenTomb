@@ -402,6 +402,7 @@ void Gui_Render()
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+    glLoadIdentity();
     Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_DrawFaders();
@@ -602,15 +603,12 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        glLoadMatrixbt(scaledMatrix);
-        Render_SkeletalModel(bf);
+        Render_SkeletalModel(bf, scaledMatrix);
     }
     else
     {
-        glLoadMatrixbt(matrix);
-        Render_SkeletalModel(bf);
+        Render_SkeletalModel(bf, matrix);
     }
-    glLoadIdentity();
 }
 
 #if 0
