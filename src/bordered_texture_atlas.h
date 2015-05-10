@@ -80,26 +80,26 @@ class bordered_texture_atlas
     
     // Result pages
     // Note: No capacity here, this is handled internally by the layout method. Also, all result pages have the same width, which will always be less than or equal to the height.
-    unsigned long number_result_pages = 0;
-    unsigned result_page_width = 0;
-    unsigned *result_page_height = nullptr;
+    unsigned long number_result_pages;
+    unsigned result_page_width;
+    unsigned *result_page_height;
     
     // Original data
-    unsigned long number_original_pages = 0;
+    unsigned long number_original_pages;
     const tr4_textile32_t *original_pages;
     
     // Object textures in the file.
-    unsigned long number_file_object_textures = 0;
-    file_object_texture *file_object_textures = nullptr;
+    unsigned long number_file_object_textures;
+    file_object_texture *file_object_textures;
     
     // Sprite texture in the file.
     // Note: No data is saved for them, they get mapped directly to canonical textures.
-    unsigned long number_sprite_textures = 0;
-    unsigned long *canonical_textures_for_sprite_textures = nullptr;
+    unsigned long number_sprite_textures;
+    unsigned long *canonical_textures_for_sprite_textures;
     
     // Canonical object textures
-    unsigned long number_canonical_object_textures = 0;
-    canonical_object_texture *canonical_object_textures = nullptr;
+    unsigned long number_canonical_object_textures;
+    canonical_object_texture *canonical_object_textures;
     
     /*! Lays out the texture data and switches the atlas to laid out mode. */
     void layOutTextures();
