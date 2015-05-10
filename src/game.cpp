@@ -204,12 +204,12 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
-    
+
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.animations.current_animation, ent->bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.animations.next_state, ent->bf.animations.last_state);
     fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->id, ent->self->collide_flag);
-    
+
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
         fprintf(*f, "\nenableEntity(%d);", ent->id);
@@ -218,9 +218,9 @@ void Save_Entity(FILE **f, entity_p ent)
     {
         fprintf(*f, "\ndisableEntity(%d);", ent->id);
     }
-    
+
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
-    
+
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
     //setEntityMeshswap()
 
@@ -470,15 +470,26 @@ void Game_ApplyControls(struct entity_s *ent)
 }
 
 
+bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform cameraFrom, btTransform cameraTo)
+{
+    btSphereShape cameraSphere(16.0);
+    cameraSphere.setLocalScaling(btVector3(0.8, 0.8, 0.8));
+    cb->m_closestHitFraction = 1.0;
+    cb->m_hitCollisionObject = NULL;
+    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+    return cb->hasHit();
+}
+
+
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz)
 {
-    btScalar alpha = cam_angles[0];
-    btSphereShape cameraSphere(16.0);
     btTransform cameraFrom, cameraTo;
-    btVector3 cam_pos, old_pos;
+    btVector3 cam_pos, cam_pos2;
     bt_engine_ClosestConvexResultCallback *cb;
 
-    vec3_copy(old_pos.m_floats, cam->pos);
+    //Reset to initial
+    cameraFrom.setIdentity();
+    cameraTo.setIdentity();
 
     if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
     {
@@ -487,33 +498,18 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     }
     else
     {
-        // bone_tags->mesh->centre[0] ent->bf.pos[0]*0.5 (ent->bf.bone_tags+ent->bf.bone_tag_count)->full_transform[12]  - 32.0 *  ent->transform[4 + 1]
         Mat4_vec3_mul(cam_pos.m_floats, ent->transform, ent->bf.bone_tags->full_transform+12);
         cam_pos.m_floats[2] += dz;
     }
 
-    float shake_value   = renderer.cam->shake_value;
-    float shake_time    = renderer.cam->shake_time;
-
-    if((shake_time > 0.0) && (shake_value > 0.0))
+    //Code to manage screen shaking effects
+    if((renderer.cam->shake_time > 0.0) && (renderer.cam->shake_value > 0.0))
     {
-        float shake_value_x = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
-        float shake_value_y = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
-        float shake_value_z = ((rand() % abs(shake_value)) - (shake_value / 2)) * shake_time;
-
-        cam_pos.m_floats[0] += shake_value_x;
-        cam_pos.m_floats[1] += shake_value_y;
-        cam_pos.m_floats[2] += shake_value_z;
-
-        renderer.cam->shake_time -= engine_frame_time;
-        renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time);
+        cam_pos.m_floats[0] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
+        cam_pos.m_floats[1] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
+        cam_pos.m_floats[2] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
+        renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time)-engine_frame_time;
     }
-
-    cameraFrom.setIdentity();
-    cameraFrom.setOrigin(cam_pos);
-    cam_pos.m_floats[2] += dz;
-    cameraTo.setIdentity();
-    cameraTo.setOrigin(cam_pos);
 
     if(ent->character)
     {
@@ -525,10 +521,10 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     }
 
-    cb->m_closestHitFraction = 1.0;
-    cb->m_hitCollisionObject = NULL;
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
-    if(cb->hasHit())
+    cameraFrom.setOrigin(cam_pos);
+    cam_pos.m_floats[2] += dz;
+    cameraTo.setOrigin(cam_pos);
+    if(Cam_HasHit(cb, cameraFrom, cameraTo))
     {
         cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
         cam_pos += cb->m_hitNormalWorld * 2.0;
@@ -539,62 +535,113 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     cam_pos.m_floats[1] += dx * cam->right_dir[1];
     cam_pos.m_floats[2] += dx * cam->right_dir[2];
     cameraTo.setOrigin(cam_pos);
-    cb->m_closestHitFraction = 1.0;
-    cb->m_hitCollisionObject = NULL;
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
-    if(cb->hasHit())
+    if(Cam_HasHit(cb, cameraFrom, cameraTo))
     {
         cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
         cam_pos += cb->m_hitNormalWorld * 2.0;
     }
 
-    cameraSphere.setLocalScaling(btVector3(0.8, 0.8, 0.8));
     cameraFrom.setOrigin(cam_pos);
-    cam_pos.m_floats[0] += sin(alpha) * control_states.cam_distance;
-    cam_pos.m_floats[1] -= cos(alpha) * control_states.cam_distance;
+    cam_pos.m_floats[0] += sinf(cam_angles[0]) * control_states.cam_distance;
+    cam_pos.m_floats[1] -= cosf(cam_angles[0]) * control_states.cam_distance;
     cameraTo.setOrigin(cam_pos);
-    cb->m_closestHitFraction = 1.0;
-    cb->m_hitCollisionObject = NULL;
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
-    if(cb->hasHit())
+    if(Cam_HasHit(cb, cameraFrom, cameraTo))
     {
         cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
         cam_pos += cb->m_hitNormalWorld * 2.0;
     }
 
-//    alpha = cam_pos.distance2(old_pos);
-//    if(alpha > 54.0 * 54.0 && alpha < 1024.0 * 1024.0)
-//    {
-//        cam_pos -= old_pos;
-//        cam_pos *= 54.0 * 60.0 * engine_frame_time / cam_pos.length();
-//        cam_pos += old_pos;
-//    }
-
+    ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(control_states.mouse_look == 0)//If mouse look is off
     {
-        cam_angles[0] = (ent->angles[0] * (M_PI/180.0)); //TEMPORARY We convert the current entity's angle to radians!
+        float currentAngle = cam_angles[0] * (M_PI/180); //Current is the current cam angle
+        float targetAngle =  ent->angles[0] * (M_PI/180); //Target is the target angle which is the entity's angle itself
+        float rotSpeed = 2.0; //Speed of rotation
+        bool bDynamicRot = false;//Testing - Constant collision checks will rot in an attempt to hopefully miss collision with walls but it looks ugly DO NOT USE
+
+        ///@FIXME
+        //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
+        if(ent->bf.animations.last_state == TR_STATE_LARA_REACH)
+        {
+            if(cam->target_dir == TR_CAM_TARG_BACK || bDynamicRot)
+            {
+                cam_pos2 = cam_pos;
+                cameraFrom.setOrigin(cam_pos2);
+                cam_pos2.m_floats[0] += sinf((ent->angles[0] - 90.0) * (M_PI/180.0)) * control_states.cam_distance;
+                cam_pos2.m_floats[1] -= cosf((ent->angles[0] - 90.0) * (M_PI/180.0)) * control_states.cam_distance;
+                cameraTo.setOrigin(cam_pos2);
+
+                //If collided we want to go right otherwise stay left
+                if(Cam_HasHit(cb, cameraFrom, cameraTo))
+                {
+                    cam_pos2 = cam_pos;
+                    cameraFrom.setOrigin(cam_pos2);
+                    cam_pos2.m_floats[0] += sinf((ent->angles[0] + 90.0) * (M_PI/180.0)) * control_states.cam_distance;
+                    cam_pos2.m_floats[1] -= cosf((ent->angles[0] + 90.0) * (M_PI/180.0)) * control_states.cam_distance;
+                    cameraTo.setOrigin(cam_pos2);
+
+                    //If collided we want to go to back else right
+                    if(Cam_HasHit(cb, cameraFrom, cameraTo) ? cam->target_dir = cam->target_dir = TR_CAM_TARG_BACK : cam->target_dir = TR_CAM_TARG_RIGHT);
+                }
+                else
+                {
+                    cam->target_dir = TR_CAM_TARG_LEFT;
+                }
+            }
+        }
+        else if(ent->bf.animations.last_state == TR_STATE_LARA_JUMP_BACK)
+        {
+            cam->target_dir = TR_CAM_TARG_FRONT;
+        }
+        else if(cam->target_dir != TR_CAM_TARG_BACK || bDynamicRot)
+        {
+            cam->target_dir = TR_CAM_TARG_BACK;//Reset to back
+        }
+
+        //If target mis-matches current we need to update the camera's angle to reach target!
+        if(currentAngle != targetAngle)
+        {
+            switch(cam->target_dir)
+            {
+            case TR_CAM_TARG_BACK:
+                targetAngle = (ent->angles[0]) * (M_PI/180.0);
+                break;
+            case TR_CAM_TARG_FRONT:
+                targetAngle = (ent->angles[0] - 180.0) * (M_PI/180.0);
+                break;
+            case TR_CAM_TARG_LEFT:
+                targetAngle = (ent->angles[0] - 75.0) * (M_PI/180.0);
+                break;
+            case TR_CAM_TARG_RIGHT:
+                targetAngle = (ent->angles[0] + 75.0) * (M_PI/180.0);
+                break;
+            default:
+                targetAngle = (ent->angles[0]) * (M_PI/180.0);//Same as TR_CAM_TARG_BACK (default pos)
+                break;
+            }
+            cam_angles[0] = fmodf(cam_angles[0] + atan2f(sinf(currentAngle-(cam_angles[0] - targetAngle)), cosf(currentAngle+(cam_angles[0] - targetAngle))) * (engine_frame_time * rotSpeed), M_PI*2); //Update camera's angle
+        }
     }
 
+    //Update cam pos
     vec3_copy(cam->pos, cam_pos.m_floats);
 
+    //Modify cam pos for quicksand rooms
     cam->pos[2] -= 128.0;
     cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
     cam->pos[2] += 128.0;
-
     if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
         cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
     }
 
     Cam_SetRotation(cam, cam_angles);
-
     cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
 
     if(!ent->character)
-    {
         delete[] cb;
-    }
 }
+
 
 void Game_LoopEntities(struct RedBlackNode_s *x)
 {
@@ -611,6 +658,7 @@ void Game_LoopEntities(struct RedBlackNode_s *x)
         Game_LoopEntities(x->right);
     }
 }
+
 
 void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
@@ -705,6 +753,7 @@ __inline btScalar Game_Tick(btScalar *game_logic_time)
     return *game_logic_time;
 }
 
+
 void Game_Frame(btScalar time)
 {
     static btScalar game_logic_time  = 0.0;
@@ -785,6 +834,7 @@ void Game_Frame(btScalar time)
     Render_UpdateAnimTextures();
 }
 
+
 void Game_Prepare()
 {
     if(IsCharacter(engine_world.Character))
@@ -826,6 +876,7 @@ void Game_Prepare()
 
     memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
 }
+
 
 void Game_LevelTransition(uint16_t level_index)
 {

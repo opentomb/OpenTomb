@@ -3,6 +3,9 @@
 #define GAME_H
 
 #include "bullet/LinearMath/btScalar.h"
+#include "bullet/btBulletCollisionCommon.h"
+#include "bullet/btBulletDynamicsCommon.h"
+
 #include <stdint.h>
 extern "C" {
 #include "lua/lua.h"
@@ -27,6 +30,8 @@ struct entity_s;
 struct room_sector_s;
 struct RedBlackNode_s;
 
+class bt_engine_ClosestConvexResultCallback;
+
 extern btScalar cam_angles[3];
 
 void Game_InitGlobals();
@@ -48,6 +53,7 @@ void Game_UpdateAI();
 void Game_UpdateCharacters();
 
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz);
+bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform cameraFrom, btTransform cameraTo);
 
 #endif
 
