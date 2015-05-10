@@ -580,7 +580,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
+void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *matrix)
 {
     if(size != 0.0)
     {
@@ -596,18 +596,21 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size)
         }
         size *= 0.8;
 
-        glPushMatrix();
+        btScalar scaledMatrix[16];
+        Mat4_Copy(scaledMatrix, matrix);
         if(size < 1.0)          // only reduce items size...
         {
-            glScalef(size, size, size);
+            Mat4_Scale(scaledMatrix, size, size, size);
         }
+        glLoadMatrixbt(scaledMatrix);
         Render_SkeletalModel(bf);
-        glPopMatrix();
     }
     else
     {
+        glLoadMatrixbt(matrix);
         Render_SkeletalModel(bf);
     }
+    glLoadIdentity();
 }
 
 #if 0
@@ -732,70 +735,66 @@ void gui_InventoryMenu::Render()
         }
         Item_Frame(item->bf, 0.0);
 
-        glLoadIdentity();
-        glPushMatrix();
-            glTranslatef(0.0, 50.0 - 800 * mShiftBig + mShiftSmall, -950.0);
-            glRotatef(10 + 80 * cos(1.57 * mMovementC), 1.0, 0.0, 0.0);
-            glPushMatrix();
-                glRotatef((i - mSelected + mMovementH) * mAngle - 90 + (180 * mMovementC * mov_dirC_sign), 0.0, 1.0, 0.0);
-                glPushMatrix();
-                    glTranslatef(-600 * mMovementC, 0.0, 0.0);
-                    glRotatef(-90.0, 1.0, 0.0, 0.0);
-                    glRotatef(90.0, 0.0, 0.0, 1.0);
-                    if(i == mSelected)
-                    {
-                        if(mMovementH==0 && (mMovementV==-2||mMovementV==0||mMovementV==2) && mMovementC==1)
-                            inv->angle -= engine_frame_time * 75.0;
-                        if(inv->angle < -180)
-                        {
-                            inv->angle_dir = 1;
-                            inv->angle += 360;
-                        }
-                        else if (inv->angle < 0)
-                        {
-                            inv->angle_dir = -1;
-                        }
+        btScalar matrix[16];
+        Mat4_E_macro(matrix);
+        Mat4_Translate(matrix, 0.0, 50.0 - 800 * mShiftBig + mShiftSmall, -950.0);
+        Mat4_RotateX(matrix, 10 + 80 * cos(1.57 * mMovementC));
+        Mat4_RotateY(matrix, (i - mSelected + mMovementH) * mAngle - 90 + (180 * mMovementC * mov_dirC_sign));
+        Mat4_Translate(matrix, -600 * mMovementC, 0.0, 0.0);
+        Mat4_RotateX(matrix, -90.0);
+        Mat4_RotateZ(matrix, 90.0);
+        if(i == mSelected)
+        {
+            if(mMovementH==0 && (mMovementV==-2||mMovementV==0||mMovementV==2) && mMovementC==1)
+                inv->angle -= engine_frame_time * 75.0;
+            if(inv->angle < -180)
+            {
+                inv->angle_dir = 1;
+                inv->angle += 360;
+            }
+            else if (inv->angle < 0)
+            {
+                inv->angle_dir = -1;
+            }
 
-                        if(item->name[0])
-                        {
-                            if(inv->linked_item->id == 0 && (engine_world.version == 3 || engine_world.version == 4))
-                            {
-                                //strcpy(mLabel_ItemName_text, "Statistics");
-                                strncpy(mLabel_ItemName_text, item->name, 128); // <-- Not so easy. Gotta either implement a separate item
-                                                                                // for each name or mess with the strings!
-                            }
-                            else
-                            {
-                                if(inv->linked_item->count > 1)
-                                {
-                                    snprintf(mLabel_ItemName_text, 128, "%s (%d)", item->name, inv->linked_item->count);
-                                }
-                                else
-                                {
-                                    strncpy(mLabel_ItemName_text, item->name, 128);
-                                }
-                            }
-                        }
+            if(item->name[0])
+            {
+                if(inv->linked_item->id == 0 && (engine_world.version == 3 || engine_world.version == 4))
+                {
+                    //strcpy(mLabel_ItemName_text, "Statistics");
+                    strncpy(mLabel_ItemName_text, item->name, 128); // <-- Not so easy. Gotta either implement a separate item
+                                                                    // for each name or mess with the strings!
+                }
+                else
+                {
+                    if(inv->linked_item->count > 1)
+                    {
+                        snprintf(mLabel_ItemName_text, 128, "%s (%d)", item->name, inv->linked_item->count);
                     }
                     else
                     {
-                        if((inv->angle_dir==-1 && inv->angle>0)||(inv->angle_dir==1 && inv->angle<0))
-                        {
-                            inv->angle = 0;
-                            inv->angle_dir = 0;
-                        }
-                        if(inv->angle!=0 && inv->angle_dir!=0)
-                        {
-                            inv->angle -= inv->angle_dir * engine_frame_time * 75.0;
-                        }
+                        strncpy(mLabel_ItemName_text, item->name, 128);
                     }
-                    glRotatef(inv->angle, 0.0, 0.0, 1.0);
-                    glTranslatef(-0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
-                    glScalef(0.7, 0.7, 0.7);
-                    Gui_RenderItem(item->bf, 0.0);
-                glPopMatrix();
-            glPopMatrix();
-        glPopMatrix();
+                }
+            }
+        }
+        else
+        {
+            if((inv->angle_dir==-1 && inv->angle>0)||(inv->angle_dir==1 && inv->angle<0))
+            {
+                inv->angle = 0;
+                inv->angle_dir = 0;
+            }
+            if(inv->angle!=0 && inv->angle_dir!=0)
+            {
+                inv->angle -= inv->angle_dir * engine_frame_time * 75.0;
+            }
+        }
+        Mat4_RotateZ(matrix, inv->angle);
+        Mat4_Translate(matrix, -0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
+        Mat4_Scale(matrix, 0.7, 0.7, 0.7);
+        glLoadMatrixbt(matrix);
+        Gui_RenderItem(item->bf, 0.0);
     }
 }
 #endif
@@ -1224,46 +1223,41 @@ void gui_InventoryManager::render()
                 continue;
             }
 
-            glLoadIdentity();
-            glPushMatrix();
-                glTranslatef(0.0, 0.0, - mBaseRingRadius * 2.0);
-                //glRotatef(25.0, 1.0, 0.0, 0.0);
-                glRotatef(25.0 + mRingVerticalAngle, 1.0, 0.0, 0.0);
-                glPushMatrix();
-                GLfloat ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
-                    glRotatef(ang, 0.0, 1.0, 0.0);
-                    glTranslatef(0.0, mVerticalOffset, mRingRadius);
-                    glPushMatrix();
-                        glRotatef(-90.0, 1.0, 0.0, 0.0);
-                        glRotatef(90.0, 0.0, 0.0, 1.0);
-                        if(num == mItemsOffset)
-                        {
-                            if(bi->name[0])
-                            {
-                                strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
+            btScalar matrix[16];
+            Mat4_E_macro(matrix);
+            Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0);
+            //Mat4_RotateX(matrix, 25.0);
+            Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
+            btScalar ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
+            Mat4_RotateY(matrix, ang);
+            Mat4_Translate(matrix, 0.0, mVerticalOffset, mRingRadius);
+            Mat4_RotateX(matrix, -90.0);
+            Mat4_RotateZ(matrix, 90.0);
+            if(num == mItemsOffset)
+            {
+                if(bi->name[0])
+                {
+                    strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
 
-                                if(i->count > 1)
-                                {
-                                    char counter[32];
-                                    lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
-                                    snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i->count);
+                    if(i->count > 1)
+                    {
+                        char counter[32];
+                        lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
+                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i->count);
 
-                                }
-                            }
-                            glRotatef(90.0 + mItemAngle - ang, 0.0, 0.0, 1.0);
-                            Item_Frame(bi->bf, 0.0);                            // here will be time != 0 for using items animation
-                        }
-                        else
-                        {
-                            glRotatef(90.0 - ang, 0.0, 0.0, 1.0);
-                            Item_Frame(bi->bf, 0.0);
-                        }
-                        glTranslatef(-0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
-                        glScalef(0.7, 0.7, 0.7);
-                        Gui_RenderItem(bi->bf, 0.0);
-                    glPopMatrix();
-                glPopMatrix();
-            glPopMatrix();
+                    }
+                }
+                Mat4_RotateZ(matrix, 90.0 + mItemAngle - ang);
+                Item_Frame(bi->bf, 0.0);                            // here will be time != 0 for using items animation
+            }
+            else
+            {
+                Mat4_RotateZ(matrix, 90.0 - ang);
+                Item_Frame(bi->bf, 0.0);
+            }
+            Mat4_Translate(matrix, -0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
+            Mat4_Scale(matrix, 0.7, 0.7, 0.7);
+            Gui_RenderItem(bi->bf, 0.0, matrix);
 
             num++;
         }
@@ -2711,12 +2705,12 @@ void gui_ItemNotifier::Draw()
             item->bf->animations.frame_time = 0.0;
 
             Item_Frame(item->bf, 0.0);
-            glPushMatrix();
-                glTranslatef(mCurrPosX, mPosY, -2048.0);
-                glRotatef(mCurrRotX + mRotX, 0.0, 1.0, 0.0);
-                glRotatef(mCurrRotY + mRotY, 1.0, 0.0, 0.0);
-                Gui_RenderItem(item->bf, mSize);
-            glPopMatrix();
+            btScalar matrix[16];
+            Mat4_E_macro(matrix);
+            Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
+            Mat4_RotateY(matrix, mCurrRotX + mRotX);
+            Mat4_RotateX(matrix, mCurrRotY + mRotY);
+            Gui_RenderItem(item->bf, mSize, matrix);
 
             item->bf->animations.current_animation = anim;
             item->bf->animations.current_frame = frame;

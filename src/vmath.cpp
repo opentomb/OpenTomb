@@ -258,7 +258,7 @@ void Mat4_E(btScalar mat[16])
     mat[15] = 1.0;
 }
 
-void Mat4_Copy(btScalar dst[16], btScalar src[16])
+void Mat4_Copy(btScalar dst[16], const btScalar src[16])
 {
     vec4_copy(dst,    src);
     vec4_copy(dst+4,  src+4);
@@ -266,11 +266,32 @@ void Mat4_Copy(btScalar dst[16], btScalar src[16])
     vec4_copy(dst+12, src+12);
 }
 
-void Mat4_Translate(btScalar mat[16], btScalar v[3])
+void Mat4_Translate(btScalar mat[16], const btScalar v[3])
 {
     mat[12] += mat[0] * v[0] + mat[4] * v[1] + mat[8]  * v[2];
     mat[13] += mat[1] * v[0] + mat[5] * v[1] + mat[9]  * v[2];
     mat[14] += mat[2] * v[0] + mat[6] * v[1] + mat[10] * v[2];
+}
+
+void Mat4_Translate(btScalar mat[16], btScalar x, btScalar y, btScalar z)
+{
+    btScalar offset[] = { x, y, z };
+    Mat4_Translate(mat, offset);
+}
+
+void Mat4_Scale(btScalar mat[16], btScalar x, btScalar y, btScalar z)
+{
+    mat[ 0] *= x;
+    mat[ 1] *= x;
+    mat[ 2] *= x;
+    
+    mat[ 4] *= y;
+    mat[ 5] *= y;
+    mat[ 6] *= y;
+    
+    mat[ 8] *= z;
+    mat[ 9] *= z;
+    mat[ 10] *= z;
 }
 
 void Mat4_RotateX(btScalar mat[16], btScalar ang)

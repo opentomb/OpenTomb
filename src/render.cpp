@@ -173,31 +173,31 @@ render_list_p Render_CreateRoomListArray(unsigned int count)
  * sprite draw
  * @FIXME: use pixel and pixel size for vertex position calculation disabling
  */
-void Render_Sprite(struct sprite_s *sprite)
+void Render_Sprite(struct sprite_s *sprite, GLfloat x, GLfloat y, GLfloat z)
 {
     GLfloat *v, buf[24], *up, *right;
 
     up = renderer.cam->up_dir;
     right = renderer.cam->right_dir;
     v = buf;
-    *v = sprite->right * right[0] + sprite->top * up[0];    v++;
-    *v = sprite->right * right[1] + sprite->top * up[1];    v++;
-    *v = sprite->right * right[2] + sprite->top * up[2];    v++;
+    *v = sprite->right * right[0] + sprite->top * up[0] + x;    v++;
+    *v = sprite->right * right[1] + sprite->top * up[1] + y;    v++;
+    *v = sprite->right * right[2] + sprite->top * up[2] + z;    v++;
     vec3_set_one(v);    v += 3;
 
-    *v = sprite->left * right[0] + sprite->top * up[0];     v++;
-    *v = sprite->left * right[1] + sprite->top * up[1];     v++;
-    *v = sprite->left * right[2] + sprite->top * up[2];     v++;
+    *v = sprite->left * right[0] + sprite->top * up[0] + x;     v++;
+    *v = sprite->left * right[1] + sprite->top * up[1] + y;     v++;
+    *v = sprite->left * right[2] + sprite->top * up[2] + z;     v++;
     vec3_set_one(v);    v += 3;
 
-    *v = sprite->left * right[0] + sprite->bottom * up[0];  v++;
-    *v = sprite->left * right[1] + sprite->bottom * up[1];  v++;
-    *v = sprite->left * right[2] + sprite->bottom * up[2];  v++;
+    *v = sprite->left * right[0] + sprite->bottom * up[0] + x;  v++;
+    *v = sprite->left * right[1] + sprite->bottom * up[1] + y;  v++;
+    *v = sprite->left * right[2] + sprite->bottom * up[2] + z;  v++;
     vec3_set_one(v);    v += 3;
 
-    *v = sprite->right * right[0] + sprite->bottom * up[0]; v++;
-    *v = sprite->right * right[1] + sprite->bottom * up[1]; v++;
-    *v = sprite->right * right[2] + sprite->bottom * up[2]; v++;
+    *v = sprite->right * right[0] + sprite->bottom * up[0] + x; v++;
+    *v = sprite->right * right[1] + sprite->bottom * up[1] + y; v++;
+    *v = sprite->right * right[2] + sprite->bottom * up[2] + z; v++;
     vec3_set_one(v);
 
     glBindTexture(GL_TEXTURE_2D, renderer.world->textures[sprite->texture]);
@@ -851,17 +851,10 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render)
         if(!room->sprites[i].was_rendered)
         {
             btScalar *v = room->sprites[i].pos;
-            glPushMatrix();
-#ifdef BT_USE_DOUBLE_PRECISION
-            glTranslated(v[0], v[1], v[2]);
-#else
-            glTranslatef(v[0], v[1], v[2]);
-#endif
             if(room->sprites[i].sprite)
             {
-                Render_Sprite(room->sprites[i].sprite);
+                Render_Sprite(room->sprites[i].sprite, v[0], v[1], v[2]);
             }
-            glPopMatrix();
         }
         room->sprites[i].was_rendered = 1;
     }

@@ -247,17 +247,17 @@ void SkeletalModelTestDraw()
     stack = 0;
     glPopMatrix();
 
-    glPushMatrix();
-    glTranslated(1024.0, 0.0, 0.0);
     glPushAttrib(GL_ENABLE_BIT);
     glEnable(GL_ALPHA_TEST);
     glDisable(GL_CULL_FACE);
-    Render_Sprite(bsprite);
+    Render_Sprite(bsprite, 1024.0, 0.0, 0.0);
     glPopAttrib();
-    glPopMatrix();
 
     glPushMatrix();
-    glTranslated(-1024.0, 0.0, 0.0);
+    btScalar matrix[16];
+    Mat4_E_macro(matrix);
+    Mat4_Translate(matrix, -1024.0, 0.0, 0.0);
+    glMultMatrixbt(matrix);
     Render_Mesh(engine_world.meshes + mesh, NULL, NULL);
     glPopMatrix();
 }
