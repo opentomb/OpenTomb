@@ -764,12 +764,12 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                 {
                     char header[128];               header[0]            = 0;   // Header condition
                     char once_condition[128];       once_condition[0]    = 0;   // One-shot condition
-                    char cont_events[2048];         cont_events[0]       = 0;   // Continous trigger events
-                    char single_events[2048];       single_events[0]     = 0;   // One-shot trigger events
-                    char item_events[2048];         item_events[0]       = 0;   // Item activation events
-                    char anti_events[2048];         anti_events[0]       = 0;   // Item deactivation events, if needed
+                    char cont_events[4096];         cont_events[0]       = 0;   // Continous trigger events
+                    char single_events[4096];       single_events[0]     = 0;   // One-shot trigger events
+                    char item_events[4096];         item_events[0]       = 0;   // Item activation events
+                    char anti_events[4096];         anti_events[0]       = 0;   // Item deactivation events, if needed
 
-                    char script[4096];              script[0]            = 0;   // Final script compile
+                    char script[8192];              script[0]            = 0;   // Final script compile
 
                     char buf[512];                  buf[0]  = 0;    // Stream buffer
                     char buf2[512];                 buf2[0] = 0;    // Conditional pre-buffer for SWITCH triggers
