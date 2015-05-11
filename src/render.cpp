@@ -842,8 +842,9 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar ma
 }
 
 
-void Render_Room_Sprites(struct room_s *room, struct render_s *render)
+void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar matrix[16])
 {
+    glLoadMatrixbt(matrix);
     for(unsigned int i=0; i<room->sprites_count; i++)
     {
         if(!room->sprites[i].was_rendered)
@@ -1001,7 +1002,7 @@ void Render_DrawList()
     glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room_Sprites(renderer.r_list[i].room, &renderer);
+        Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat);
     }
     glEnableClientState(GL_NORMAL_ARRAY);
 
