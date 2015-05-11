@@ -3177,6 +3177,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
     {
         tr_setupRoomVertices(world, tr, tr_room, mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, p);
+        p->double_side = tr_room->triangles[i].texture & 0x8000;
     }
 
     /*
@@ -3185,6 +3186,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
         tr_setupRoomVertices(world, tr, tr_room, mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, p);
+        p->double_side = tr_room->rectangles[i].texture & 0x8000;
     }
 
     /*

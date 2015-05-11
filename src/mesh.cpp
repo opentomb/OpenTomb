@@ -527,8 +527,14 @@ void Mesh_GenFaces(base_mesh_p mesh)
         {
             uint32_t texture = p->tex_index;
             uint32_t oldStart = mesh->element_count_per_texture[texture];
-
-            mesh->element_count_per_texture[texture] += (p->vertex_count - 2) * 3;
+            uint32_t elementCount = (p->vertex_count - 2) * 3;
+            uint32_t backwardsStart = oldStart + elementCount;
+            if (p->double_side)
+            {
+                elementCount *= 2;
+            }
+                
+            mesh->element_count_per_texture[texture] += elementCount;
             elements_for_texture[texture] = (uint32_t *)realloc(elements_for_texture[texture], mesh->element_count_per_texture[texture] * sizeof(uint32_t));
 
             // Render the polygon as a triangle fan. That is obviously correct for
@@ -543,6 +549,13 @@ void Mesh_GenFaces(base_mesh_p mesh)
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 0] = startElement;
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 1] = previousElement;
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 2] = thisElement;
+                
+                if (p->double_side)
+                {
+                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 0] = startElement;
+                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 1] = thisElement;
+                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 2] = previousElement;
+                }
 
                 previousElement = thisElement;
             }
