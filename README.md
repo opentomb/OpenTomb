@@ -96,21 +96,24 @@ incompatible across game versions. Because of this, you need to convert some gam
 by yourself or get them from somewhere on the Net. Anyway, here is the list of all needed
 assets and where to get them:
 
- a) Data folders from each game. Get them from your retail game CDs or Steam/GOG bundles.
-    Just take data folder from each game's folder, and put it into corresponding
-    /data/tr*/ folder.
- b) CD audio tracks. OpenTomb only supports OGG audiotracks for a moment, so you should
-    convert original soundtracks by yourself, or just download whole TR1-5 music package
-    here: http://trep.trlevel.de/opentomb/files/tr_soundtracks_for_opentomb.zip
-    PLEASE NOTE: script file bundled in this archive is outdated, so don't overwrite
-    existing soundtrack.lua file with one provided in archive.
- c) Loading screens for TR1-3 and TR5. For TR3, get them from pix directory of your
-    installed official game. Just put this pix directory into /data/tr3/ folder. As for
-    other games, it's a bit tricky to get loading screens, as there were no loading
-    screens for PC versions TR1-2, TR4 used level screenshots as loading screens, and TR5
-    used encrypted format to store all loading graphics. So, to ease your life, you can
-    simply download loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip
-    Just put it right into OpenTomb directory, and that should do the trick.
+ * Data folders from each game. Get them from your retail game CDs or Steam/GOG bundles.
+   Just take data folder from each game's folder, and put it into corresponding
+   /data/tr*/ folder.
+   
+ * CD audio tracks. OpenTomb only supports OGG audiotracks for a moment, so you should
+   convert original soundtracks by yourself, or just download whole TR1-5 music package
+   here: http://trep.trlevel.de/opentomb/files/tr_soundtracks_for_opentomb.zip
+
+   PLEASE NOTE: script file bundled in this archive is outdated, so don't overwrite
+   existing soundtrack.lua file with one provided in archive.
+   
+ * Loading screens for TR1-3 and TR5. For TR3, get them from pix directory of your
+   installed official game. Just put this pix directory into /data/tr3/ folder. As for
+   other games, it's a bit tricky to get loading screens, as there were no loading
+   screens for PC versions TR1-2, TR4 used level screenshots as loading screens, and TR5
+   used encrypted format to store all loading graphics. So, to ease your life, you can
+   simply download loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip
+   Just put it right into OpenTomb directory, and that should do the trick.
     
 7. Compiling
 ------------
