@@ -1728,7 +1728,7 @@ int Character_FreeFalling(struct entity_s *ent)
 
         if(!ent->character->height_info.water || (pos[2] + ent->character->Height < ent->character->height_info.transition_level))
         {
-            ent->move_type = MOVE_UNDER_WATER;
+            ent->move_type = MOVE_UNDERWATER;
             return 2;
         }
     }
@@ -2524,7 +2524,7 @@ void Character_ApplyCommands(struct entity_s *ent)
             Character_WallsClimbing(ent);
             break;
 
-        case MOVE_UNDER_WATER:
+        case MOVE_UNDERWATER:
             Character_MoveUnderWater(ent);
             break;
 
@@ -2582,7 +2582,7 @@ void Character_UpdateParams(struct entity_s *ent)
             Character_ChangeParam(ent, PARAM_AIR, 3.0);;
             break;
 
-        case MOVE_UNDER_WATER:
+        case MOVE_UNDERWATER:
             if(!Character_ChangeParam(ent, PARAM_AIR, -1.0))
             {
                 if(!Character_ChangeParam(ent, PARAM_HEALTH, -3.0))

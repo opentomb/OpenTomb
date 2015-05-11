@@ -1602,11 +1602,11 @@ int lua_MoveEntityToSink(lua_State * lua)
     btScalar dist = btDistance(ent_pos, sink_pos);
     if(dist == 0.0) dist = 1.0; // Prevents division by zero.
 
-    btVector3 speed = (((sink_pos - ent_pos) / dist) * ((btScalar)(sink->room_or_strength))) / 512.0;
+    btVector3 speed = ((sink_pos - ent_pos) / dist) * ((btScalar)(sink->room_or_strength) * 1.5);
 
     ent->transform[12+0] += speed.m_floats[0];
     ent->transform[12+1] += speed.m_floats[1];
-    ent->transform[12+2] += speed.m_floats[2] * 32.0;
+    ent->transform[12+2] += speed.m_floats[2] * 16.0;
 
     Entity_UpdateRigidBody(ent, 1);
 

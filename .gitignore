@@ -9,6 +9,8 @@
 *.ttf
 *.exe
 *.dll
+*.bak
+*.cbTemp
 .DS_Store
 CMakeLists.txt.user
 .dep.inc

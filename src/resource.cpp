@@ -1,4 +1,5 @@
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -144,9 +145,8 @@ void TR_SetStaticMeshFlags(struct static_mesh_s *r_static)
         lua_getglobal(level_script, "getStaticMeshFlags");
         if(lua_isfunction(level_script, -1))
         {
-            lua_pushinteger(level_script, engine_world.version);
             lua_pushinteger(level_script, r_static->object_id);
-            if (lua_CallAndLog(level_script, 2, 2, 0))
+            if(lua_CallAndLog(level_script, 1, 2, 0))
             {
                 if(!lua_isnil(level_script, -2))
                 {
@@ -2433,7 +2433,7 @@ void TR_GenRoomCollision(struct world_s *world)
     }
 
 #else
-
+    /*
     if(level_script != NULL)
     {
         int top = lua_gettop(level_script);
@@ -2441,6 +2441,7 @@ void TR_GenRoomCollision(struct world_s *world)
         lua_CallAndLog(level_script, 0, 0, 0);
         lua_settop(level_script, top);
     }
+    */
 
     for(uint32_t i=0;i<world->room_count;i++,r++)
     {

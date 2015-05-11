@@ -406,7 +406,7 @@ function pickup_init(id, item_id)    -- Pick-ups
         
             -- Position corrector
         
-            if(getEntityMoveType(activator_id) == ENTITY_MOVE_UNDER_WATER) then
+            if(getEntityMoveType(activator_id) == MOVE_UNDERWATER) then
                 if(getEntityDistance(object_id, activator_id) > 128.0) then
                     moveEntityToEntity(activator_id, object_id, 25.0);
                 end;
@@ -492,14 +492,19 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
 
     setEntitySpeed(id, 0.0, 0.0, 0.0);
     
+    local level_version = getLevelVersion();
+    if((level_version < TR_II) or (level_version >= TR_III)) then setEntityVisibility(id, 0) end;
+    
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
             return;
         end
+        
 
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
             setEntityAnim(object_id, 1);
+            setEntityVisibility(object_id, 1);
             addTask(
             function()
                 if(dropEntity(object_id, frame_time)) then
@@ -545,44 +550,11 @@ function midastouch_init(id)    -- Midas gold touch
             local lara_anim, frame, count = getEntityAnim(player);
             local lara_sector = getEntitySectorIndex(player);
             local hand_sector = getEntitySectorIndex(object_id);
-            if(getEntityModel(player) == 5) then
-                if(frame == 8) then
-                    copyMeshFromModelToModel(0, 5, 6, 6);
-                elseif(frame == 15) then
-                    copyMeshFromModelToModel(0, 5, 5, 5);
-                elseif(frame == 19) then
-                    copyMeshFromModelToModel(0, 5, 4, 4);
-                elseif(frame == 24) then
-                    copyMeshFromModelToModel(0, 5, 3, 3);
-                elseif(frame == 29) then
-                    copyMeshFromModelToModel(0, 5, 2, 2);
-                elseif(frame == 34) then
-                    copyMeshFromModelToModel(0, 5, 1, 1);
-                elseif(frame == 40) then
-                    copyMeshFromModelToModel(0, 5, 0, 0);
-                elseif(frame == 41) then
-                    copyMeshFromModelToModel(0, 5, 13, 13);
-                elseif(frame == 45) then
-                    copyMeshFromModelToModel(0, 5, 12, 12);
-                elseif(frame == 47) then
-                    copyMeshFromModelToModel(0, 5, 11, 11);
-                elseif(frame == 50) then
-                    copyMeshFromModelToModel(0, 5, 10, 3);
-                elseif(frame == 54) then
-                    copyMeshFromModelToModel(0, 5, 9, 9);
-                elseif(frame == 60) then
-                    copyMeshFromModelToModel(0, 5, 8, 8);
-                elseif(frame == 70) then
-                    copyMeshFromModelToModel(0, 5, 7, 7);
-                elseif(frame == 100) then
-                    copyMeshFromModelToModel(0, 5, 14, 14);
-                    setEntityActivity(object_id, 0);
-                end;
-                return;
-            end;
-            if((lara_sector == hand_sector) and (getEntityMoveType(player) == ENTITY_MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
+            
+            if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
                 setEntityAnim(player, 1, 0, 5);
+                disableEntity(object_id);
             end;
         end;
     end

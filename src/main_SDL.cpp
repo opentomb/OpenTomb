@@ -1188,7 +1188,7 @@ void DebugKeys(int button, int state)
                 {
                     engine_world.Character->character->resp.kill = 0;
 
-                    if(engine_world.Character->move_type == MOVE_UNDER_WATER)
+                    if(engine_world.Character->move_type == MOVE_UNDERWATER)
                     {
                         Entity_SetAnimation(engine_world.Character, 103, 0, 0);
                         Character_SetParam(engine_world.Character, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
@@ -1198,7 +1198,7 @@ void DebugKeys(int button, int state)
                     {
                         Entity_SetAnimation(engine_world.Character, 108, 0, 0);
                         Character_SetParam(engine_world.Character, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
-                        engine_world.Character->move_type = MOVE_UNDER_WATER;
+                        engine_world.Character->move_type = MOVE_UNDERWATER;
                     }
                     engine_world.Character->bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
                 }
