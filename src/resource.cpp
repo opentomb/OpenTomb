@@ -145,9 +145,8 @@ void TR_SetStaticMeshFlags(struct static_mesh_s *r_static)
         lua_getglobal(level_script, "getStaticMeshFlags");
         if(lua_isfunction(level_script, -1))
         {
-            lua_pushinteger(level_script, engine_world.version);
             lua_pushinteger(level_script, r_static->object_id);
-            if (lua_CallAndLog(level_script, 2, 2, 0))
+            if(lua_CallAndLog(level_script, 1, 2, 0))
             {
                 if(!lua_isnil(level_script, -2))
                 {
