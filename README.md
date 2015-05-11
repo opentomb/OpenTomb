@@ -1,3 +1,5 @@
+[![Build Status](https://drone.io/github.com/opentomb/OpenTomb/status.png)](http://sourceforge.net/projects/opentomb/files/NightlyBuilds/)
+
 OpenTomb — an open-source Tomb Raider 1-5 engine remake
 -------------------------------------------------------
 
