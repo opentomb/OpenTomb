@@ -776,6 +776,7 @@ void Engine_Frame(btScalar time)
     Game_ApplyControls(NULL);
 #else
     Game_Frame(time);
+    Gameflow_Do();
 #endif
 
     Engine_Display();

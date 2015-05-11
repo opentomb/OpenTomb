@@ -805,7 +805,6 @@ void Game_Frame(btScalar time)
         int32_t t = game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
         btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
         game_logic_time -= dt;
-        Gameflow_Do();
         bt_engine_dynamicsWorld->stepSimulation(dt, 8);
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
