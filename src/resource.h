@@ -79,7 +79,6 @@ struct bordered_texture_atlas_s;
 // Functions setting parameters from configuration scripts.
 
 void TR_SetEntityModelProperties(struct entity_s *ent);
-void TR_SetStaticMeshFlags(struct static_mesh_s *r_static);
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 

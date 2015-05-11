@@ -2,16 +2,16 @@
 #ifndef MESH_H
 #define MESH_H
 
-#define MESH_FULL_OPAQUE 0x00       // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
+#define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
 
 #define ANIM_CMD_MOVE               0x01
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
 
-#define COLLISION_NONE                            (0x00000000)
-#define COLLISION_TRIMESH                         (0x00000001)
-#define COLLISION_BOX                             (0x00000002)
+#define COLLISION_NONE              (0x00)
+#define COLLISION_TRIMESH           (0x01)
+#define COLLISION_BOX               (0x02)
 
 
 #include <SDL2/SDL_platform.h>

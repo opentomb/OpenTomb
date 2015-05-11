@@ -137,31 +137,6 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     return false;
 }
 
-void TR_SetStaticMeshFlags(struct static_mesh_s *r_static)
-{
-    if(level_script != NULL)
-    {
-        int top = lua_gettop(level_script);
-        lua_getglobal(level_script, "getStaticMeshFlags");
-        if(lua_isfunction(level_script, -1))
-        {
-            lua_pushinteger(level_script, r_static->object_id);
-            if(lua_CallAndLog(level_script, 1, 2, 0))
-            {
-                if(!lua_isnil(level_script, -2))
-                {
-                    r_static->self->collide_flag = lua_tointeger(level_script, -2);
-                }
-                if(!lua_isnil(level_script, -1))
-                {
-                    r_static->hide = lua_tointeger(level_script, -1);
-                }
-            }
-        }
-        lua_settop(level_script, top);
-    }
-}
-
 /*
  * BASIC SECTOR COLLISION LAYOUT
  *
@@ -1744,7 +1719,6 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
 
-        luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
         int lua_err = luaL_dofile(level_script, temp_script_name);
 
         if(lua_err)
@@ -2090,13 +2064,26 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->was_rendered = 0;
         OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
         OBB_Transform(r_static->obb);
-
-        r_static->self->collide_flag = 0x02;  // Still better than ghost collision.
+        
         r_static->bt_body = NULL;
         r_static->hide = 0;
+        
+        // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
+        // coordinates are equal (TR2-5).
+        
+        if((tr_static->flags == 3) ||
+           ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
+            (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])) )
+        {
+            r_static->self->collide_flag = COLLISION_NONE;
+        }
+        else
+        {
+            r_static->self->collide_flag = COLLISION_BOX;
+        }
+        
 
-        TR_SetStaticMeshFlags(r_static);
-        if(r_static->self->collide_flag != 0x00)
+        if(r_static->self->collide_flag != COLLISION_NONE)
         {
             cshape = BT_CSfromMesh(r_static->mesh, true, true, r_static->self->collide_flag);
             if(cshape)
@@ -2110,6 +2097,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         }
         r_static++;
     }
+    
     /*
      * sprites loading section
      */
