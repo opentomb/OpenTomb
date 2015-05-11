@@ -530,25 +530,28 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         cam_pos += cb->m_hitNormalWorld * 2.0;
     }
 
-    cameraFrom.setOrigin(cam_pos);
-    cam_pos.m_floats[0] += dx * cam->right_dir[0];
-    cam_pos.m_floats[1] += dx * cam->right_dir[1];
-    cam_pos.m_floats[2] += dx * cam->right_dir[2];
-    cameraTo.setOrigin(cam_pos);
-    if(Cam_HasHit(cb, cameraFrom, cameraTo))
+    if (dx != 0.0)
     {
-        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
-        cam_pos += cb->m_hitNormalWorld * 2.0;
-    }
+        cameraFrom.setOrigin(cam_pos);
+        cam_pos.m_floats[0] += dx * cam->right_dir[0];
+        cam_pos.m_floats[1] += dx * cam->right_dir[1];
+        cam_pos.m_floats[2] += dx * cam->right_dir[2];
+        cameraTo.setOrigin(cam_pos);
+        if(Cam_HasHit(cb, cameraFrom, cameraTo))
+        {
+            cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
+            cam_pos += cb->m_hitNormalWorld * 2.0;
+        }
 
-    cameraFrom.setOrigin(cam_pos);
-    cam_pos.m_floats[0] += sinf(cam_angles[0]) * control_states.cam_distance;
-    cam_pos.m_floats[1] -= cosf(cam_angles[0]) * control_states.cam_distance;
-    cameraTo.setOrigin(cam_pos);
-    if(Cam_HasHit(cb, cameraFrom, cameraTo))
-    {
-        cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
-        cam_pos += cb->m_hitNormalWorld * 2.0;
+        cameraFrom.setOrigin(cam_pos);
+        cam_pos.m_floats[0] += sinf(cam_angles[0]) * control_states.cam_distance;
+        cam_pos.m_floats[1] -= cosf(cam_angles[0]) * control_states.cam_distance;
+        cameraTo.setOrigin(cam_pos);
+        if(Cam_HasHit(cb, cameraFrom, cameraTo))
+        {
+            cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
+            cam_pos += cb->m_hitNormalWorld * 2.0;
+        }
     }
 
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
@@ -822,7 +825,7 @@ void Game_Frame(btScalar time)
         {
             Character_ApplyCommands(engine_world.Character);
             Entity_Frame(engine_world.Character, engine_frame_time);
-            Cam_FollowEntity(renderer.cam, engine_world.Character, 0.0, 128.0); // 128.0 400.0
+            Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
         }
     }
 

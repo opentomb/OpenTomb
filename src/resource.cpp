@@ -48,20 +48,22 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
     {
         int top = lua_gettop(objects_flags_conf);
+        assert(top >= 0);
         lua_getglobal(objects_flags_conf, "getEntityProperties");
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
             lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // model id
-            lua_pcall(objects_flags_conf, 2, 4, 0);
-            ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
-            ent->bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3); // get info about model visibility
-            ent->type_flags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
-
-            if(!lua_isnil(objects_flags_conf, -1))
+            if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
-                size_t string_length;
-                CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, &string_length), ent->id);
+                ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
+                ent->bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3); // get info about model visibility
+                ent->type_flags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
+
+                if(!lua_isnil(objects_flags_conf, -1))
+                {
+                    CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id);
+                }
             }
         }
         lua_settop(objects_flags_conf, top);
@@ -70,29 +72,32 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     if((level_script != NULL) && (ent->bf.animations.model != NULL))
     {
         int top = lua_gettop(level_script);
+        assert(top >= 0);
         lua_getglobal(level_script, "getEntityProperties");
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
             lua_pushinteger(level_script, ent->bf.animations.model->id);        // model id
-            lua_pcall(level_script, 2, 4, 0);                                   // call that function
-            if(!lua_isnil(level_script, -4))
+            if (lua_CallAndLog(level_script, 2, 4, 0))                     // call that function
             {
-                ent->self->collide_flag = 0xff & lua_tointeger(level_script, -3);   // get collision flag
-            }
-            if(!lua_isnil(level_script, -3))
-            {
-                ent->bf.animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
-            }
-            if(!lua_isnil(level_script, -2))
-            {
-                ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-                ent->type_flags |= lua_tointeger(level_script, -1);                 // get traverse information
-            }
-            if(!lua_isnil(level_script, -1))
-            {
-                size_t string_length;
-                CreateEntityFunc(engine_lua, lua_tolstring(level_script, -1, &string_length), ent->id);
+                if(!lua_isnil(level_script, -4))
+                {
+                    ent->self->collide_flag = 0xff & lua_tointeger(level_script, -3);   // get collision flag
+                }
+                if(!lua_isnil(level_script, -3))
+                {
+                    ent->bf.animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
+                }
+                if(!lua_isnil(level_script, -2))
+                {
+                    ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
+                    ent->type_flags |= lua_tointeger(level_script, -1);                 // get traverse information
+                }
+                if(!lua_isnil(level_script, -1))
+                {
+                    size_t string_length;
+                    CreateEntityFunc(engine_lua, lua_tolstring(level_script, -1, &string_length), ent->id);
+                }
             }
         }
         lua_settop(level_script, top);
@@ -106,15 +111,19 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
         const char* func_template = "%s_init";
         char buf[64] = {0};
         int top = lua_gettop(lua);
+        assert(top >= 0);
         snprintf(buf, 64, func_template, func_name);
         lua_getglobal(lua, buf);
 
         if(lua_isfunction(lua, -1))
         {
             snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", entity_id, entity_id);
-            luaL_dostring(lua, buf);
-            lua_pushinteger(lua, entity_id);
-            lua_pcall(lua, 1, 0, 0);
+            luaL_loadstring(lua, buf);
+            if (lua_CallAndLog(lua, 0, LUA_MULTRET, 0))
+            {
+                lua_pushinteger(lua, entity_id);
+                lua_CallAndLog(lua, 1, 0, 0);
+            }
             lua_settop(lua, top);
             return true;
         }
@@ -137,14 +146,16 @@ void TR_SetStaticMeshFlags(struct static_mesh_s *r_static)
         {
             lua_pushinteger(level_script, engine_world.version);
             lua_pushinteger(level_script, r_static->object_id);
-            lua_pcall(level_script, 1, 2, 0);
-            if(!lua_isnil(level_script, -2))
+            if (lua_CallAndLog(level_script, 2, 2, 0))
             {
-                r_static->self->collide_flag = lua_tointeger(level_script, -2);
-            }
-            if(!lua_isnil(level_script, -1))
-            {
-                r_static->hide = lua_tointeger(level_script, -1);
+                if(!lua_isnil(level_script, -2))
+                {
+                    r_static->self->collide_flag = lua_tointeger(level_script, -2);
+                }
+                if(!lua_isnil(level_script, -1))
+                {
+                    r_static->hide = lua_tointeger(level_script, -1);
+                }
             }
         }
         lua_settop(level_script, top);
@@ -1156,7 +1167,8 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     if(action_type != TR_ACTIONTYPE_BYPASS)
                     {
                         // Sys_DebugLog("triggers.lua", script);    // Debug!
-                        luaL_dostring(engine_lua, script);  // Execute compiled script.
+                        luaL_loadstring(engine_lua, script);
+                        lua_CallAndLog(engine_lua, 0, LUA_MULTRET, 0); // Execute compiled script.
                     }
                 }
                 break;
@@ -1749,7 +1761,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         luaL_openlibs(objects_flags_conf);
         int lua_err = luaL_loadfile(objects_flags_conf, "scripts/entity/entity_properties.lua");
-        lua_pcall(objects_flags_conf, 0, 0, 0);
+        if(lua_err)
+        {
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(objects_flags_conf, -1));
+            lua_pop(objects_flags_conf, 1);
+            lua_close(objects_flags_conf);
+            objects_flags_conf = NULL;
+        }
+        lua_err = lua_pcall(objects_flags_conf, 0, 0, 0);
         if(lua_err)
         {
             Sys_DebugLog("lua_out.txt", "%s", lua_tostring(objects_flags_conf, -1));
@@ -1764,7 +1783,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         luaL_openlibs(ent_ID_override);
         int lua_err = luaL_loadfile(ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
-        lua_pcall(ent_ID_override, 0, 0, 0);
+        if(lua_err)
+        {
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(objects_flags_conf, -1));
+            lua_pop(objects_flags_conf, 1);
+            lua_close(objects_flags_conf);
+            objects_flags_conf = NULL;
+        }
+        lua_err = lua_pcall(ent_ID_override, 0, 0, 0);
         if(lua_err)
         {
             Sys_DebugLog("lua_out.txt", "%s", lua_tostring(ent_ID_override, -1));
@@ -2412,7 +2438,7 @@ void TR_GenRoomCollision(struct world_s *world)
     {
         int top = lua_gettop(level_script);
         lua_getglobal(level_script, "doTuneSector");
-        lua_pcall(level_script, 0, 0, 0);
+        lua_CallAndLog(level_script, 0, 0, 0);
         lua_settop(level_script, top);
     }
 
@@ -2643,7 +2669,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     for(uint16_t i = 0; i < num_sequences; i++,seq++)
     {
         seq->frames_count = *(pointer++) + 1;
-        seq->frame_list   =  (uint32_t*)malloc(seq->frames_count * sizeof(uint32_t));
+        seq->frame_list   =  (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
 
         // Fill up new sequence with frame list.
         seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
@@ -2685,7 +2711,8 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             seq->frames_count = 8;
             seq->uvrotate_max   = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
             seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
-            seq->frames = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
+            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
+            seq->frame_list = (uint32_t *) calloc(seq->frames_count, sizeof(uint32_t));
 
             if(uvrotate_script > 0)
             {
@@ -2725,7 +2752,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         }
         else
         {
-            seq->frames = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
+            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], 0, &p0);
             for(uint16_t j=0;j<seq->frames_count;j++)
             {
@@ -3295,7 +3322,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         model->animation_count = 1;
         model->animations = (animation_frame_p)malloc(sizeof(animation_frame_t));
         model->animations->frames_count = 1;
-        model->animations->frames = (bone_frame_p)malloc(model->animations->frames_count * sizeof(bone_frame_t));
+        model->animations->frames = (bone_frame_p)calloc(model->animations->frames_count , sizeof(bone_frame_t));
         bone_frame = model->animations->frames;
 
         model->animations->id = 0;
@@ -3814,28 +3841,31 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 lua_getglobal(ent_ID_override, "getOverridedID");                          // add to the up of stack LUA's function
                 lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
                 lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
-                lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
-                entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
-                lua_settop(ent_ID_override, top);                                          // restore LUA stack
+                if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                         // call that function
+                {
+                    entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
+                }
+                lua_settop(ent_ID_override, top);                                      // restore LUA stack
             }
 
             top = lua_gettop(ent_ID_override);                                         // save LUA stack
             lua_getglobal(ent_ID_override, "getOverridedAnim");                        // add to the up of stack LUA's function
             lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
             lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
-            lua_pcall(ent_ID_override, 2, 1, 0);                                       // call that function
-
-            int replace_anim_id = lua_tointeger(ent_ID_override, -1);
-            lua_settop(ent_ID_override, top);                                          // restore LUA stack
-
-            if(replace_anim_id > 0)
+            if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                         // call that function
             {
-                skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
-                animation_frame_p ta;
-                uint16_t tc;
-                SWAPT(entity->bf.animations.model->animations, replace_anim_model->animations, ta);
-                SWAPT(entity->bf.animations.model->animation_count, replace_anim_model->animation_count, tc);
+                int replace_anim_id = lua_tointeger(ent_ID_override, -1);
+                if(replace_anim_id > 0)
+                {
+                    skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
+                    animation_frame_p ta;
+                    uint16_t tc;
+                    SWAPT(entity->bf.animations.model->animations, replace_anim_model->animations, ta);
+                    SWAPT(entity->bf.animations.model->animation_count, replace_anim_model->animation_count, tc);
+                }
             }
+            lua_settop(ent_ID_override, top);                                      // restore LUA stack
+
         }
 
         if(entity->bf.animations.model == NULL)

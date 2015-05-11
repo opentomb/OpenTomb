@@ -2755,10 +2755,12 @@ int lua_SetGame(lua_State *lua)
     if(lua_isfunction(lua, -1))
     {
         lua_pushnumber(lua, gameflow_manager.CurrentGameID);
-        lua_pcall(lua, 1, 1, 0);
-        Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
-        lua_pop(lua, 1);
-        Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+        if (lua_CallAndLog(lua, 1, 1, 0))
+        {
+            Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
+            lua_pop(lua, 1);
+            Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
+        }
     }
     lua_settop(lua, top);
 
@@ -2976,9 +2978,9 @@ int lua_genUVRotateAnimation(lua_State *lua)
             seq->frame_time        = 0.0;   // Reset frame time to initial state.
             seq->current_frame     = 0;     // Reset current frame to zero.
             seq->frames_count      = 8;
-            seq->frame_list        = (uint32_t*)malloc(sizeof(uint32_t));
+            seq->frame_list        = (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
             seq->frame_list[0]     = 0;
-            seq->frames            = (tex_frame_p)malloc(seq->frames_count * sizeof(tex_frame_t));
+            seq->frames            = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
 
             btScalar v_min, v_max;
             v_min = v_max = p->vertices->tex_coord[1];
@@ -3070,7 +3072,7 @@ void Engine_LuaClearTasks()
 {
     int top = lua_gettop(engine_lua);
     lua_getglobal(engine_lua, "clearTasks");
-    lua_pcall(engine_lua, 0, 0, 0);
+    lua_CallAndLog(engine_lua, 0, 0, 0);
     lua_settop(engine_lua, top);
 }
 

@@ -210,13 +210,15 @@ void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
 }
 
 void Mat4_E(btScalar mat[16]);
-void Mat4_Copy(btScalar dst[16], btScalar src[16]);
-void Mat4_Translate(btScalar mat[16], btScalar v[3]);
+void Mat4_Copy(btScalar dst[16], const btScalar src[16]);
+void Mat4_Translate(btScalar mat[16], const btScalar v[3]);
+void Mat4_Translate(btScalar mat[16], btScalar x, btScalar y, btScalar z);
+void Mat4_Scale(btScalar mat[16], btScalar x, btScalar y, btScalar z);
 void Mat4_RotateX(btScalar mat[16], btScalar ang);
 void Mat4_RotateY(btScalar mat[16], btScalar ang);
 void Mat4_RotateZ(btScalar mat[16], btScalar ang);
 void Mat4_T(btScalar mat[16]);
-void Mat4_Mat4_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]);
+void Mat4_Mat4_mul(btScalar result[16], const btScalar src1[16], const btScalar src2[16]);
 void Mat4_inv_Mat4_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]);
 void Mat4_Mat4_inv_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]);
 void Mat4_vec3_mul(btScalar v[3], btScalar mat[16], btScalar src[3]);
