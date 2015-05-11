@@ -2170,7 +2170,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         sector->pos[2] = 0.5 * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
-        
+
         if(tr->game_version < TR_III)
         {
             sector->box_index = tr_room->sector_list[i].box_index;
@@ -2181,9 +2181,9 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             sector->box_index = (tr_room->sector_list[i].box_index & 0xFFF0) >> 4;
             sector->material  =  tr_room->sector_list[i].box_index & 0x000F;
         }
-        
+
         if(sector->box_index == 0xFFFF) sector->box_index = -1;
-        
+
         sector->flags = 0;  // Clear sector flags.
 
         sector->floor      = -TR_METERING_STEP * (int)tr_room->sector_list[i].floor;
@@ -3834,7 +3834,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
         entity->OCB             =  tr_item->ocb;
         entity->timer           = 0.0;
-        
+
         entity->self->collide_flag = 0x00;
         entity->move_type = 0x0000;
         entity->bf.animations.anim_flags = 0x0000;
@@ -3994,7 +3994,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             BT_GenEntityRigidBody(entity);
-            Character_Create(entity, 128.0, 60.0, 780.0);
+            Character_Create(entity);
             entity->character->state_func = State_Control_Lara;
 
             continue;

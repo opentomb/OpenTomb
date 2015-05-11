@@ -217,7 +217,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     next_fc.ccb->m_hitCollisionObject = NULL;
 
     ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
-    ent->character->complex_collision = 0x00;
     Character_UpdateCurrentHeight(ent);
 
     int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height - LARA_HANG_VERTICAL_EPSILON));
@@ -3007,7 +3006,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_ANIMATION_LARA_FLY_FORWARD_TRY_TO_HANG:
             if(ent->dir_flag == ENT_MOVE_BACKWARD)
             {
-                ent->character->complex_collision = 0x01;
+                //ent->character->complex_collision = 0x01;
             }
             break;
     };

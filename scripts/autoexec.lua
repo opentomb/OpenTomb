@@ -222,7 +222,7 @@ elseif (getLevelVersion() <= TR_V) then
     setModelMeshReplaceFlag(7, 13, 0x01);
 end
 
-setModelCollisionMapSize(0, 11);            
+setModelCollisionMapSize(0, 7);            
 setModelCollisionMap(0, 0, 0);              -- butt
 setModelCollisionMap(0, 1, 7);              -- body
 setModelCollisionMap(0, 2, 14);             -- head
@@ -232,10 +232,10 @@ setModelCollisionMap(0, 4, 4);
 setModelCollisionMap(0, 5, 11);             -- pauldrons
 setModelCollisionMap(0, 6, 8);
 
-setModelCollisionMap(0, 7, 2);              -- boots
-setModelCollisionMap(0, 8, 5);
-setModelCollisionMap(0, 9, 12);             -- braces
-setModelCollisionMap(0, 10, 9);
+--setModelCollisionMap(0, 7, 2);              -- boots
+--setModelCollisionMap(0, 8, 5);
+--setModelCollisionMap(0, 9, 12);             -- braces
+--setModelCollisionMap(0, 10, 9);
 
 -- dir[anim = 147, frame = 0, frames = 16]
 setAnimCommandTransform(0, 147, 0, 0x00);   -- roll animation smooth fix 

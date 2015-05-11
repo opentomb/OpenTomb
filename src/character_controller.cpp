@@ -19,12 +19,9 @@
 #include "console.h"
 #include "string.h"
 
-void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h)
+void Character_Create(struct entity_s *ent)
 {
     character_p ret;
-    btTransform tr;
-    btVector3 tmp;
-    btScalar size[4];
 
     if(ent == NULL || ent->character != NULL)
     {
@@ -38,7 +35,6 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->ent = ent;
     ent->character = ret;
     ent->dir_flag = ENT_STAY;
-    Mat4_E_macro(ret->collision_transform);
 
     ret->weapon_current_state = 0x00;
     ret->current_weapon = 0;
@@ -56,11 +52,8 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->cmd.shift = 0x00;
     vec3_set_zero(ret->cmd.move);
     vec3_set_zero(ret->cmd.rot);
-    vec3_set_zero(tmp.m_floats);
 
     ret->no_fix = 0x00;
-    ret->ghost_orientation = 0x00;
-    ret->ghost_base_tr = 0x00;
     ret->cam_follow_center = 0x00;
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->max_move_iterations = DEFAULT_MAX_MOVE_ITERATIONS;
@@ -70,7 +63,7 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->fall_down_height = DEFAULT_FALL_DAWN_HEIGHT;
     ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
     ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
-    ret->climb_r = (DEFAULT_CHARACTER_CLIMB_R <= 0.8 * ry)?(DEFAULT_CHARACTER_CLIMB_R):(0.8 * ry);
+    ret->climb_r = DEFAULT_CHARACTER_CLIMB_R;
     ret->wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;
     ret->swim_depth = DEFAULT_CHARACTER_SWIM_DEPTH;
 
@@ -80,33 +73,8 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
         ret->parameters.maximum[i] = 0.0;
     }
 
-    ret->rx = rx;
-    ret->ry = ry;
-    ret->Height = h;
-
-#if CHARACTER_USE_COMPLEX_COLLISION
-    ret->shapes = NULL;
-    ret->complex_collision = 0x00;
-#endif
-    size[0] = CHARACTER_BASE_RADIUS;
-    size[1] = CHARACTER_BASE_RADIUS;
-    size[2] = 0.5 * CHARACTER_BASE_HEIGHT - CHARACTER_BASE_RADIUS;
-    size[3] = 0.5 * CHARACTER_BASE_HEIGHT;
-    ret->shapeZ = BV_CreateBTCapsuleZ(size, 8);
-    ret->shapeY = new btCapsuleShape(CHARACTER_BASE_RADIUS, CHARACTER_BASE_HEIGHT - 2.0 * CHARACTER_BASE_RADIUS);
-
     ret->sphere = new btSphereShape(CHARACTER_BASE_RADIUS);
     ret->climb_sensor = new btSphereShape(ent->character->climb_r);
-
-    ret->manifoldArray = new btManifoldArray();
-
-    tr.setFromOpenGLMatrix(ent->transform);
-    ret->ghostObject = new btPairCachingGhostObject();
-    ret->ghostObject->setWorldTransform(tr);
-    ret->ghostObject->setCollisionFlags(ret->ghostObject->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
-    ret->ghostObject->setUserPointer(ent->self);
-    ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
-    bt_engine_dynamicsWorld->addCollisionObject(ret->ghostObject, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::DefaultFilter);
 
     ret->ray_cb = new bt_engine_ClosestRayResultCallback(ent->self);
     ret->ray_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
@@ -127,11 +95,38 @@ void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
 
+    ret->manifoldArray = NULL;
     ret->traversed_object = NULL;
+    ent->character->shapes = NULL;
+    ent->character->ghostObjects = NULL;
 
-    Character_CreateCollisionObject(ent);
+    if(ent->bf.animations.model->mesh_count > 0)
+    {
+        btTransform tr;
+        btScalar gltr[16];
+
+        ret->manifoldArray = new btManifoldArray();
+        ent->character->shapes = (btCollisionShape**)malloc(ent->bf.bone_tag_count * sizeof(btCollisionShape*));
+        ent->character->ghostObjects = (btPairCachingGhostObject**)malloc(ent->bf.bone_tag_count * sizeof(btPairCachingGhostObject*));
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            btVector3 box;
+            box.m_floats[0] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[0] - ent->bf.bone_tags[i].mesh_base->bb_min[0]);
+            box.m_floats[1] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[1] - ent->bf.bone_tags[i].mesh_base->bb_min[1]);
+            box.m_floats[2] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[2] - ent->bf.bone_tags[i].mesh_base->bb_min[2]);
+            ent->character->shapes[i] = new btBoxShape(box);
+
+            ret->ghostObjects[i] = new btPairCachingGhostObject();
+            Mat4_Mat4_inv_mul(gltr, ent->transform, ent->bf.bone_tags[i].full_transform);
+            tr.setFromOpenGLMatrix(gltr);
+            ret->ghostObjects[i]->setWorldTransform(tr);
+            ret->ghostObjects[i]->setCollisionFlags(ret->ghostObjects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
+            ret->ghostObjects[i]->setUserPointer(ent->self);
+            ret->ghostObjects[i]->setCollisionShape(ent->character->shapes[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(ret->ghostObjects[i], btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::DefaultFilter);
+        }
+    }
 }
-
 
 void Character_Clean(struct entity_s *ent)
 {
@@ -153,24 +148,27 @@ void Character_Clean(struct entity_s *ent)
         free(rn);
     }
 
-    if(actor->ghostObject)
+    if(actor->ghostObjects)
     {
-        actor->ghostObject->setUserPointer(NULL);
-        bt_engine_dynamicsWorld->removeCollisionObject(actor->ghostObject);
-        delete actor->ghostObject;
-        actor->ghostObject = NULL;
+        for(int i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            actor->ghostObjects[i]->setUserPointer(NULL);
+            bt_engine_dynamicsWorld->removeCollisionObject(actor->ghostObjects[i]);
+            delete actor->ghostObjects[i];
+            actor->ghostObjects[i] = NULL;
+        }
+        free(actor->ghostObjects);
+        actor->ghostObjects = NULL;
     }
 
-    if(actor->shapeZ)
+    if(actor->shapes)
     {
-        delete actor->shapeZ;
-        actor->shapeZ = NULL;
-    }
-
-    if(actor->shapeY)
-    {
-        delete actor->shapeY;
-        actor->shapeY = NULL;
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            delete ent->character->shapes[i];
+        }
+        free(ent->character->shapes);
+        ent->character->shapes = NULL;
     }
 
     if(actor->climb_sensor)
@@ -201,17 +199,7 @@ void Character_Clean(struct entity_s *ent)
         delete actor->manifoldArray;
         actor->manifoldArray = NULL;
     }
-#if CHARACTER_USE_COMPLEX_COLLISION
-    if(actor->shapes)
-    {
-        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
-        {
-            delete ent->character->shapes[i];
-        }
-        free(ent->character->shapes);
-        ent->character->shapes = NULL;
-    }
-#endif
+
     actor->height_info.cb = NULL;
     actor->height_info.ccb = NULL;
     if(actor->height_info.sp)
@@ -373,85 +361,6 @@ int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         
 
     return 0;
 }
-
-void Character_CreateCollisionObject(struct entity_s *ent)
-{
-#if CHARACTER_USE_COMPLEX_COLLISION
-    if((ent->character == NULL) || (ent->bf.animations.model == NULL) || (ent->bf.animations.model->mesh_count == 0))
-    {
-        return;
-    }
-
-    ent->character->shapes = (btCollisionShape**)malloc(ent->bf.bone_tag_count * sizeof(btCollisionShape*));
-    for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
-    {
-        btVector3 box;
-        box.m_floats[0] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[0] - ent->bf.bone_tags[i].mesh_base->bb_min[0]);
-        box.m_floats[1] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[1] - ent->bf.bone_tags[i].mesh_base->bb_min[1]);
-        box.m_floats[2] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[2] - ent->bf.bone_tags[i].mesh_base->bb_min[2]);
-        ent->character->shapes[i] = new btBoxShape(box);
-    }
-#endif
-}
-
-
-void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor, int alt_tr)
-{
-    btVector3 tv;
-    btScalar t, *ctr = ent->character->collision_transform;
-
-    if(alt_tr != 0)
-    {
-        Mat4_Mat4_mul_macro(ctr, ent->transform, ent->bf.bone_tags->transform);
-    }
-    else
-    {
-        Mat4_Copy(ctr, ent->transform);
-    }
-    if(ent->move_type == MOVE_CLIMBING)                                         ///@FIXME: this time it is a little stick;
-    {
-        btScalar t1 = ent->character->ry - ent->bf.bb_max[1];
-        t = ent->character->ry + ent->bf.bb_min[1];
-        t = (t > t1)?(t):(t1);
-        t += 8.0;
-        vec3_sub_mul(ctr+12, ctr+12, ent->transform+4, t);
-    }
-
-    t = (ent->bf.bb_max[2] - ent->bf.bb_min[2]) / (ent->bf.bb_max[1] - ent->bf.bb_min[1]);
-    if((t < 1.0) && /*(ent->move_type != MOVE_ON_FLOOR) &&*/ (ent->move_type != MOVE_CLIMBING) && (alt_tr == 0))
-    {
-        //Y_CAPSULE
-        tv.m_floats[0] = ent->character->ry / CHARACTER_BASE_RADIUS;
-        tv.m_floats[1] = (ent->bf.bb_max[1] - ent->bf.bb_min[1]) / CHARACTER_BASE_HEIGHT;
-        tv.m_floats[2] = ent->character->ry / CHARACTER_BASE_RADIUS;
-        ent->character->shapeY->setLocalScaling(tv);
-        ent->character->ghostObject->setCollisionShape(ent->character->shapeY);
-        ctr[12+2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
-    }
-    else
-    {
-        //Z_CAPSULE
-        tv.m_floats[0] = ent->character->rx / CHARACTER_BASE_RADIUS;
-        tv.m_floats[1] = ent->character->ry / CHARACTER_BASE_RADIUS;
-        if(alt_tr != 0)
-        {
-            tv.m_floats[2] = (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
-            t = (ent->bf.bb_max[1] - ent->bf.bb_min[1]);
-            tv.m_floats[2] = (tv.m_floats[2] > t)?(tv.m_floats[2]):(t);
-            tv.m_floats[2] /= CHARACTER_BASE_HEIGHT;
-            ent->character->shapeZ->setLocalScaling(tv);
-            ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
-        }
-        else
-        {
-            tv.m_floats[2] = (ent->bf.bb_max[2] - ent->bf.bb_min[2] - z_factor) / CHARACTER_BASE_HEIGHT;
-            ent->character->shapeZ->setLocalScaling(tv);
-            ent->character->ghostObject->setCollisionShape(ent->character->shapeZ);
-            ctr[12+2] += 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2] - z_factor) + z_factor;
-        }
-    }
-}
-
 
 /**
  * Calculates next height info and information about next step
@@ -1167,7 +1076,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
 {
     int ret = 0, numPenetrationLoops = 0;
     btVector3 pos;
-    btScalar tmp[3], *ctr;
+    btScalar tmp[3];
 
     if(ent->character && ent->character->no_fix)
     {
@@ -1175,11 +1084,9 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
     }
 
     vec3_set_zero(reaction);
-#if CHARACTER_USE_COMPLEX_COLLISION
-    if((ent->character->shapes != NULL) && (ent->character->complex_collision != 0))              /* complex collision shape */
+    if(ent->character->shapes != NULL)              /* complex collision shape */
     {
         btScalar tr[16], *v, *ltr;
-        btCollisionShape *shape = ent->character->ghostObject->getCollisionShape();
 
         for(uint16_t i=0;i<ent->bf.animations.model->collision_map_size;i++)
         {
@@ -1188,42 +1095,21 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             ltr = ent->bf.bone_tags[m].full_transform;
             Mat4_Mat4_mul_macro(tr, ent->transform, ltr);
             v = ent->bf.animations.model->mesh_tree[m].mesh_base->centre;
-            ent->character->ghostObject->setCollisionShape(ent->character->shapes[m]);
 
-            ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(tr);
+            ent->character->ghostObjects[m]->getWorldTransform().setFromOpenGLMatrix(tr);
             Mat4_vec3_mul_macro(pos.m_floats, tr, v);
-            ent->character->ghostObject->getWorldTransform().setOrigin(pos);
-            while(Ghost_GetPenetrationFixVector(ent->character->ghostObject, ent->character->manifoldArray, tmp))
+            ent->character->ghostObjects[m]->getWorldTransform().setOrigin(pos);
+            while(Ghost_GetPenetrationFixVector(ent->character->ghostObjects[m], ent->character->manifoldArray, tmp))
             {
                 numPenetrationLoops++;
                 ret++;
                 vec3_add(pos, pos, tmp);
-                ent->character->ghostObject->getWorldTransform().setOrigin(pos);
+                ent->character->ghostObjects[m]->getWorldTransform().setOrigin(pos);
                 vec3_add(reaction, reaction, tmp);
                 if(numPenetrationLoops > NUM_PENETRATION_ITERATIONS)
                 {
                     break;
                 }
-            }
-        }
-        ent->character->ghostObject->setCollisionShape(shape);
-    }
-    else                                                                        /* simple collision shape */
-#endif
-    {
-        ctr = ent->character->collision_transform;
-        ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(ctr);
-
-        while(Ghost_GetPenetrationFixVector(ent->character->ghostObject, ent->character->manifoldArray, tmp))
-        {
-            numPenetrationLoops++;
-            ret++;
-            vec3_add(pos, pos, tmp);
-            ent->character->ghostObject->getWorldTransform().setOrigin(pos);
-            vec3_add(reaction, reaction, tmp);
-            if(numPenetrationLoops > NUM_PENETRATION_ITERATIONS)
-            {
-                break;
             }
         }
     }
@@ -1250,14 +1136,14 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar 
     int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction);
     if((numPenetrationLoops > 0) && (step_up_check != 0.0))
     {
-        ent->character->collision_transform[12 + 2] += step_up_check;
+        ent->transform[12 + 2] += step_up_check;
         if(Character_GetPenetrationFixVector(ent, pos.m_floats) == 0)
         {
             numPenetrationLoops = 0;
             vec3_set_zero(reaction);
             resp->step_up = 0x01;
         }
-        ent->character->collision_transform[12 + 2] -= step_up_check;
+        ent->transform[12 + 2] -= step_up_check;
     }
 
     vec3_add(pos.m_floats, ent->transform+12, reaction);
@@ -1312,16 +1198,12 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar 
  */
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
 {
-    btScalar t1, t2, reaction[3], *ctr;
+    btScalar t1, t2, reaction[3], *tr = ent->transform + 12;
     character_response_p resp = &ent->character->resp;
 
-    ctr = ent->character->collision_transform;
-    vec3_add(ctr+12, ctr+12, move);
-    ent->character->ghostObject->getWorldTransform().setFromOpenGLMatrix(ctr);
-    vec3_sub(ctr+12, ctr+12, move);
+    vec3_add(tr, tr, move);
     resp->horizontal_collide = 0x00;
-
-    if(Ghost_GetPenetrationFixVector(ent->character->ghostObject, ent->character->manifoldArray, reaction))
+    /*if(Ghost_GetPenetrationFixVector(ent->character->ghostObject, ent->character->manifoldArray, reaction))
     {
         t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
         t2 = move[0] * move[0] + move[1] * move[1];
@@ -1336,7 +1218,8 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
                 resp->horizontal_collide |= 0x01;
             }
         }
-    }
+    }*/
+    vec3_sub(tr, tr, move);
 }
 
 
@@ -1497,14 +1380,6 @@ int Character_MoveOnFloor(struct entity_s *ent)
         return 0;
     }
 
-    //ent->angles[1] = 0.0;
-    //ent->angles[2] = 0.0;
-
-    /*
-     * resize collision model
-     */
-    Character_UpdateCollisionObject(ent, 0.5 * ent->character->min_step_up_height, 0);
-
     /*
      * init height info structure
      */
@@ -1555,13 +1430,13 @@ int Character_MoveOnFloor(struct entity_s *ent)
             {
                 ent->character->resp.slide = CHARACTER_SLIDE_FRONT;
                 ent->angles[0] = ang + 180.0;
-                // front forward slide down
+                // front forward sly down
             }
             else
             {
                 ent->character->resp.slide = CHARACTER_SLIDE_BACK;
                 ent->angles[0] = ang;
-                // back forward slide down
+                // back forward sly down
             }
             Entity_UpdateRotation(ent);
             ent->character->resp.vertical_collide |= 0x01;
@@ -1683,11 +1558,6 @@ int Character_FreeFalling(struct entity_s *ent)
     {
         return 0;
     }
-
-    /*
-     * resize collision model
-     */
-    Character_UpdateCollisionObject(ent, 0.0, 1);
 
     /*
      * init height info structure
@@ -1813,12 +1683,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
 
-    /*
-     * resize collision model
-     */
-    Character_UpdateCollisionObject(ent, 0.0, 0);
     ent->speed.m_floats[2] = 0.0;
-
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -1895,11 +1760,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     climb_info_t *climb = &ent->character->climb;
     btVector3 spd, move;
     btScalar t, *pos = ent->transform + 12;
-    /*
-     * resize collision model
-     */
-    //vec3_copy(p0, pos);
-    Character_UpdateCollisionObject(ent, 0.0, 0);
+
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -1976,11 +1837,6 @@ int Character_Climbing(struct entity_s *ent)
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
     btScalar z = pos[2];
-
-    /*
-     * resize collision model
-     */
-    Character_UpdateCollisionObject(ent, 0.0, 0);
 
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
@@ -2059,10 +1915,6 @@ int Character_MoveUnderWater(struct entity_s *ent)
         ent->move_type = MOVE_FREE_FALLING;
         return 2;
     }
-    /*
-     * resize collision model
-     */
-    Character_UpdateCollisionObject(ent, 0.0, 1);
 
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
@@ -2129,11 +1981,6 @@ int Character_MoveOnWater(struct entity_s *ent)
 {
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
-
-    /*
-     * resize collision model
-     */
-    Character_UpdateCollisionObject(ent, 0.0, 0);
 
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;

@@ -141,6 +141,13 @@ void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
     (ret)[2] = (tr)[2] * (src)[0] + (tr)[6] * (src)[1] + (tr)[10] * (src)[2];\
 }
 
+#define Mat4_vec3_rot_inv_macro(ret, tr, src)\
+{ \
+    (ret)[0]  = (tr)[0] * (src)[0] + (tr)[1] * (src)[1] + (tr)[2]  * (src)[2];  /* (M^-1 * src).x*/\
+    (ret)[1]  = (tr)[4] * (src)[0] + (tr)[5] * (src)[1] + (tr)[6]  * (src)[2];  /* (M^-1 * src).y*/\
+    (ret)[2]  = (tr)[8] * (src)[0] + (tr)[9] * (src)[1] + (tr)[10] * (src)[2];  /* (M^-1 * src).z*/\
+}
+
 #define Mat4_Mat4_mul_macro(result, src1, src2)\
 {\
     (result)[0] = (src1)[0] * (src2)[0] + (src1)[4] * (src2)[1] + (src1)[8] * (src2)[2];\

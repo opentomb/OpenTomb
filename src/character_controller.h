@@ -237,8 +237,7 @@ typedef struct character_s
     
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     int16_t                      max_move_iterations;
-    uint8_t                      ghost_orientation;      // 0Z, 0Y, 0X
-    uint8_t                      ghost_base_tr;          // entity->tr, entity->bf.bone[0].tr
+    
     int8_t                       no_fix;                     
     int8_t                       cam_follow_center;
 
@@ -256,19 +255,13 @@ typedef struct character_s
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
     btScalar                     swim_depth;             // depth offset for starting to swim
-#if CHARACTER_USE_COMPLEX_COLLISION
-    uint8_t                      complex_collision;      // use complex collision flag
-    btCollisionShape           **shapes;
-#endif
-    btCollisionShape            *shapeZ;                 // running / jumping
-    btCapsuleShape              *shapeY;                 // swimming / crocodile
 
+    btCollisionShape           **shapes;
     btSphereShape               *sphere;                 // needs to height calculation
     btSphereShape               *climb_sensor;
-    btPairCachingGhostObject    *ghostObject;            // like Bullet character controller for penetration resolving.
+    btPairCachingGhostObject   **ghostObjects;           // like Bullet character controller for penetration resolving.
     btManifoldArray             *manifoldArray;          // keep track of the contact manifolds
 
-    btScalar                     collision_transform[16];
     struct height_info_s         height_info;
     struct climb_info_s          climb;
 
@@ -278,8 +271,7 @@ typedef struct character_s
     bt_engine_ClosestConvexResultCallback               *convex_cb;
 }character_t, *character_p;
 
-void Character_Create(struct entity_s *ent, btScalar rx, btScalar ry, btScalar h);
-void Character_CreateCollisionObject(struct entity_s *ent);
+void Character_Create(struct entity_s *ent);
 void Character_Clean(struct entity_s *ent);
 
 int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
@@ -300,7 +292,6 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
 void Character_UpdatePlatformPostStep(struct entity_s *ent);
-void Character_UpdateCollisionObject(struct entity_s *ent, btScalar z_factor, int alt_tr);
 
 void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);
