@@ -919,7 +919,7 @@ void Entity_ProcessSector(struct entity_s *ent)
         if(lowest_sector->flags & SECTOR_FLAG_DEATH)
         {
             if((ent->move_type == MOVE_ON_FLOOR)    ||
-               (ent->move_type == MOVE_UNDER_WATER) ||
+               (ent->move_type == MOVE_UNDERWATER) ||
                (ent->move_type == MOVE_WADE)        ||
                (ent->move_type == MOVE_ON_WATER)    ||
                (ent->move_type == MOVE_QUICKSAND))
@@ -1125,7 +1125,7 @@ void Entity_DoAnimMove(entity_p entity)
         if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
         {
             entity->angles[0] += 180.0;
-            if(entity->move_type == MOVE_UNDER_WATER)
+            if(entity->move_type == MOVE_UNDERWATER)
             {
                 entity->angles[1] = -entity->angles[1];                         // for underwater case
             }

@@ -35,12 +35,12 @@
  */
 
 #define MOVE_STATIC_POS         (0)
-#define MOVE_CINEMATIC          (1)
+#define MOVE_KINEMATIC          (1)
 #define MOVE_ON_FLOOR           (2)
 #define MOVE_WADE               (3)
 #define MOVE_QUICKSAND          (4)
 #define MOVE_ON_WATER           (5)
-#define MOVE_UNDER_WATER        (6)
+#define MOVE_UNDERWATER         (6)
 #define MOVE_FREE_FALLING       (7)
 #define MOVE_CLIMBING           (8)
 #define MOVE_MONKEYSWING        (9)
