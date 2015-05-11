@@ -1080,6 +1080,28 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     if(script[0])
                     {
                         strcat(script, header);
+                        
+                        // Heavy trigger and antitrigger item events are engaged ONLY
+                        // once, when triggering item is approaching sector. Hence, we
+                        // copy item events to single events and nullify original item
+                        // events sequence to prevent it to be merged into continous
+                        // events.
+                        
+                        if((sub_function == TR_FD_TRIGTYPE_HEAVY) ||
+                           (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER))
+                        {
+                            if(action_type == TR_ACTIONTYPE_ANTI)
+                            {
+                                strcat(single_events, anti_events);
+                            }
+                            else
+                            {
+                                strcat(single_events, item_events);
+                            }
+                            
+                            anti_events[0] = 0;
+                            item_events[0] = 0;
+                        }
 
                         if(activator == TR_ACTIVATOR_NORMAL)    // Ordinary trigger cases.
                         {
