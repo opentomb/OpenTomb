@@ -1009,6 +1009,7 @@ void Render_DrawList()
     /*
      * NOW render transparency polygons
      */
+    glLoadMatrixbt(renderer.cam->gl_view_mat);
     render_dBSP.reset();
     /*First generate BSP from base room mesh - it has good for start splitter polygons*/
     for(uint32_t i=0;i<renderer.r_list_active_count;i++)
