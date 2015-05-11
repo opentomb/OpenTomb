@@ -3,7 +3,7 @@
 OpenTomb — an open-source Tomb Raider 1-5 engine remake
 -------------------------------------------------------
 
- Table of contents
+### Table of contents ###
 
 1. What is this?
 2. Why it's developed?
@@ -52,17 +52,13 @@ structures and functions. You are not that limited with open-source engine.
 
 * OpenTomb has completely different collision approach. Engine uses special terrain
   generator to make every room's optimized collisional mesh from so-called "floordata",
-  which was a significant limiting factor in originals.
-
+  which was a significant limiting factor in originals.  
 * OpenTomb does not run at fixed 30 FPS speed, as any old engine did. Instead, variable FPS
-  rate is implemented, just like in any contemporary PC game.
-
-* OpenTomb uses common and flexible libraries, like OpenGL, OpenAL, SDL and Bullet Physics.
-
+  rate is implemented, just like in any contemporary PC game.  
+* OpenTomb uses common and flexible libraries, like OpenGL, OpenAL, SDL and Bullet Physics.  
 * Lua scripting is a key gameplay feature in OpenTomb, as all entity functionality is not
   hardcoded, as it was in classic engines, but moved into plain-text files, which can be
-  modified and extended any time.
-
+  modified and extended any time.  
 * Many abandoned and unused features from originals were enabled in OpenTomb. New animations,
   unused items, hidden PSX-specific structures inside level files, and so on! Also, original
   functionality is being drastically extended, while preserving original gameplay pipeline.
@@ -82,17 +78,16 @@ any commands which should be executed on engine start-up.
 
 Configuration file (config.lua) is divided into different sections: screen, audio, render,
 controls, console and system. In each of these sections, you can change numerous parameters,
-which names are usually intuitive to understand.
-
+which names are usually intuitive to understand.  
 Autoexec file (autoexec.lua) is a simple command file which is executed at engine start-up,
 just like you type them in the console. Basically, you shouldn't remove any existing commands
 from autoexec, as most likely engine won't start properly then, but you can modify these
-commands or add new ones — like changing start-up level by modifying setgamef(*,*) command.
+commands or add new ones — like changing start-up level by modifying setgamef() command.
 
 6. Installation and running
 ---------------------------
 
-You don't need to install OpenTomb, but ou need all classic TR game resources. Problem is,
+You don't need to install OpenTomb, but you need all classic TR game resources. Problem is,
 these resources (except level files themselves) are tend to be in some cryptic formats or
 incompatible across game versions. Because of this, you need to convert some game resources
 by yourself or get them from somewhere on the Net. Anyway, here is the list of all needed
@@ -104,8 +99,7 @@ assets and where to get them:
    
  * CD audio tracks. OpenTomb only supports OGG audiotracks for a moment, so you should
    convert original soundtracks by yourself, or just download whole TR1-5 music package
-   here: http://trep.trlevel.de/opentomb/files/tr_soundtracks_for_opentomb.zip
-
+   here: http://trep.trlevel.de/opentomb/files/tr_soundtracks_for_opentomb.zip  
    PLEASE NOTE: script file bundled in this archive is outdated, so don't overwrite
    existing soundtrack.lua file with one provided in archive.
    
@@ -114,7 +108,7 @@ assets and where to get them:
    other games, it's a bit tricky to get loading screens, as there were no loading
    screens for PC versions TR1-2, TR4 used level screenshots as loading screens, and TR5
    used encrypted format to store all loading graphics. So, to ease your life, you can
-   simply download loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip
+   simply download loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip  
    Just put it right into OpenTomb directory, and that should do the trick.
     
 7. Compiling
@@ -168,13 +162,13 @@ the source code must be open-source as well. Hence, all used libraries and bundl
 be open-source with GPL-compatible licenses. Here is the list of used libraries and resources and
 their licenses:
 
-* OpenGL - does not need licensing (http://opengl3.org/about/licensing/)
-* OpenAL Soft - LGPL
-* SDL / SDL Image - zlib
-* Bullet - zlib
-* Lua - MIT
+* OpenGL — does not need licensing (http://opengl3.org/about/licensing/)
+* OpenAL Soft — LGPL
+* SDL / SDL Image — zlib
+* Bullet — zlib
+* Lua — MIT
     
-* Droid Sans Mono, Roboto Condensed Regular and Roboto Regular fonts - Apache
+* Droid Sans Mono, Roboto Condensed Regular and Roboto Regular fonts — Apache
     
 9. Credits
 ----------

@@ -278,11 +278,6 @@ void Entity_UpdateRoomPos(entity_p ent)
     new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
     if(new_room)
     {
-        if(ent->current_sector)
-        {
-            Entity_ProcessSector(ent);
-        }
-
         new_sector = Room_GetSectorXYZ(new_room, pos);
         if(new_room != new_sector->owner_room)
         {
@@ -894,6 +889,8 @@ room_sector_s* Entity_GetHighestSector(room_sector_s* sector)
 
 void Entity_ProcessSector(struct entity_s *ent)
 {
+    if(!ent->current_sector) return;
+    
     // Calculate both above and below sectors for further usage.
     // Sector below is generally needed for getting proper trigger index,
     // as many triggers tend to be called from the lowest room in a row

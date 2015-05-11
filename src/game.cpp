@@ -650,6 +650,7 @@ void Game_LoopEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
 
+    Entity_ProcessSector(entity);
     lua_LoopEntity(engine_lua, entity->id);
 
     if(x->left != NULL)
@@ -810,7 +811,12 @@ void Game_Frame(btScalar time)
         Game_UpdateAI();
         Audio_Update();
 
-        if(is_character)  Character_UpdateParams(engine_world.Character);
+        if(is_character)
+        {
+            Entity_ProcessSector(engine_world.Character);
+            Character_UpdateParams(engine_world.Character);
+        }
+            
         if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
     }
 

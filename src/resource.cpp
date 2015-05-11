@@ -2434,7 +2434,7 @@ void TR_GenRoomCollision(struct world_s *world)
     }
 
 #else
-
+    /*
     if(level_script != NULL)
     {
         int top = lua_gettop(level_script);
@@ -2442,6 +2442,7 @@ void TR_GenRoomCollision(struct world_s *world)
         lua_CallAndLog(level_script, 0, 0, 0);
         lua_settop(level_script, top);
     }
+    */
 
     for(uint32_t i=0;i<world->room_count;i++,r++)
     {

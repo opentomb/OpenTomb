@@ -127,7 +127,7 @@ int  Entity_Frame(entity_p entity, btScalar time);  // process frame + trying to
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateRotation(entity_p entity);
-void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz);
+void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz = 0);
 void Entity_AddOverrideAnim(struct entity_s *ent, int model_id);
 void Entity_CheckActivators(struct entity_s *ent);
 
