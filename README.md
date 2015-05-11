@@ -166,8 +166,9 @@ their licenses:
 * OpenAL Soft — LGPL
 * SDL / SDL Image — zlib
 * Bullet — zlib
+* Freetype2 — GPL
 * Lua — MIT
-    
+
 * Droid Sans Mono, Roboto Condensed Regular and Roboto Regular fonts — Apache
     
 9. Credits
