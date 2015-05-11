@@ -1384,7 +1384,7 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     }
 
     // Generate new buffer array.
-    engine_world.audio_buffers_count = tr->samples_count;
+    engine_world.audio_buffers_count = tr->sample_indices_count;
     engine_world.audio_buffers = (ALuint*)malloc(engine_world.audio_buffers_count * sizeof(ALuint));
     memset(engine_world.audio_buffers, 0, sizeof(ALuint) * engine_world.audio_buffers_count);
     alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
@@ -1441,7 +1441,8 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
                 for(i = 0; i < engine_world.audio_buffers_count-1; i++)
                 {
                     pointer = tr->samples_data + tr->sample_indices[i];
-                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, (tr->sample_indices[(i+1)] - tr->sample_indices[i]));
+                    uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
+                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, size);
                 }
                 i = engine_world.audio_buffers_count-1;
                 Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, (tr->samples_count - tr->sample_indices[i]));
@@ -1611,7 +1612,10 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
         case TR_I_DEMO:
         case TR_I_UB:
             // Fix for underwater looped sound.
-            engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
+            if ((engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER]) >= 0)
+            {
+                engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
+            }
             break;
         case TR_II:
             // Fix for helicopter sound range.
