@@ -1384,7 +1384,7 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
     }
 
     // Generate new buffer array.
-    engine_world.audio_buffers_count = tr->sample_indices_count;
+    engine_world.audio_buffers_count = tr->samples_count;
     engine_world.audio_buffers = (ALuint*)malloc(engine_world.audio_buffers_count * sizeof(ALuint));
     memset(engine_world.audio_buffers, 0, sizeof(ALuint) * engine_world.audio_buffers_count);
     alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
