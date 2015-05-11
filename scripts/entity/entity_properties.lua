@@ -39,34 +39,34 @@ tr1_entity_tbl = {};
 -- ACTORS --
 
 tr1_entity_tbl[06] = {coll = 0x02};                      -- Doppelgagner
-tr1_entity_tbl[07] = {coll = 0x02};                      -- Wolf
-tr1_entity_tbl[08] = {coll = 0x02};                      -- Bear
-tr1_entity_tbl[09] = {coll = 0x02};                      -- Bat
-tr1_entity_tbl[10] = {coll = 0x02};                      -- Crocodile (land)
-tr1_entity_tbl[11] = {coll = 0x02};                      -- Crocodile (water)
-tr1_entity_tbl[12] = {coll = 0x02};                      -- Lion Male
-tr1_entity_tbl[13] = {coll = 0x02};                      -- Lion Female
-tr1_entity_tbl[14] = {coll = 0x02};                      -- Puma
-tr1_entity_tbl[15] = {coll = 0x02};                      -- Gorilla
-tr1_entity_tbl[16] = {coll = 0x02};                      -- Rat (land)
-tr1_entity_tbl[17] = {coll = 0x02};                      -- Rat (water)
-tr1_entity_tbl[18] = {coll = 0x01};                      -- T-Rex
+tr1_entity_tbl[07] = {coll = 0x02, func = "baddie"};                      -- Wolf
+tr1_entity_tbl[08] = {coll = 0x02, func = "baddie"};                      -- Bear
+tr1_entity_tbl[09] = {coll = 0x02, func = "baddie"};                      -- Bat
+tr1_entity_tbl[10] = {coll = 0x02, func = "baddie"};                      -- Crocodile (land)
+tr1_entity_tbl[11] = {coll = 0x02, func = "baddie"};                      -- Crocodile (water)
+tr1_entity_tbl[12] = {coll = 0x02, func = "baddie"};                      -- Lion Male
+tr1_entity_tbl[13] = {coll = 0x02, func = "baddie"};                      -- Lion Female
+tr1_entity_tbl[14] = {coll = 0x02, func = "baddie"};                      -- Puma
+tr1_entity_tbl[15] = {coll = 0x02, func = "baddie"};                      -- Gorilla
+tr1_entity_tbl[16] = {coll = 0x02, func = "baddie"};                      -- Rat (land)
+tr1_entity_tbl[17] = {coll = 0x02, func = "baddie"};                      -- Rat (water)
+tr1_entity_tbl[18] = {coll = 0x01, func = "baddie"};                      -- T-Rex
 tr1_entity_tbl[19] = {coll = 0x02, func = "baddie"};                      -- Raptor
-tr1_entity_tbl[20] = {coll = 0x01};                      -- Winged mutant
+tr1_entity_tbl[20] = {coll = 0x01, func = "baddie"};                      -- Winged mutant
 tr1_entity_tbl[21] = {coll = 0x00, hide = 0x01};         -- (RESPAWN POINT?)
 tr1_entity_tbl[22] = {coll = 0x00, hide = 0x01};         -- (AI TARGET?)
 tr1_entity_tbl[23] = {coll = 0x01};                      -- Centaur
 tr1_entity_tbl[24] = {coll = 0x02};                      -- Mummy
 tr1_entity_tbl[25] = {coll = 0x02};                      -- DinoWarrior (UNUSED!)
 tr1_entity_tbl[26] = {coll = 0x02};                      -- Fish
-tr1_entity_tbl[27] = {coll = 0x02};                      -- Larson
-tr1_entity_tbl[28] = {coll = 0x02};                      -- Pierre
+tr1_entity_tbl[27] = {coll = 0x02, func = "baddie"};                      -- Larson
+tr1_entity_tbl[28] = {coll = 0x02, func = "baddie"};                      -- Pierre
 tr1_entity_tbl[29] = {coll = 0x02};                      -- Skateboard
-tr1_entity_tbl[30] = {coll = 0x02};                      -- Skateboard Kid
-tr1_entity_tbl[31] = {coll = 0x02};                      -- Cowboy
-tr1_entity_tbl[32] = {coll = 0x02};                      -- Mr. T
-tr1_entity_tbl[33] = {coll = 0x02};                      -- Natla (winged)
-tr1_entity_tbl[34] = {coll = 0x01};                      -- Torso Boss
+tr1_entity_tbl[30] = {coll = 0x02, func = "baddie"};                      -- Skateboard Kid
+tr1_entity_tbl[31] = {coll = 0x02, func = "baddie"};                      -- Cowboy
+tr1_entity_tbl[32] = {coll = 0x02, func = "baddie"};                      -- Mr. T
+tr1_entity_tbl[33] = {coll = 0x02, func = "baddie"};                      -- Natla (winged)
+tr1_entity_tbl[34] = {coll = 0x01, func = "baddie"};                      -- Torso Boss
 
 -- ANIMATINGS --
 
@@ -223,44 +223,44 @@ tr2_entity_tbl[51] = {coll = 0x01};                -- Black snowmobile (with gun
 
 -- ACTORS --
 
-tr2_entity_tbl[15] = {coll = 0x02};                -- Doberman
-tr2_entity_tbl[16] = {coll = 0x02};                -- Masked goon (white mask, jacket)
-tr2_entity_tbl[17] = {coll = 0x02};                -- Masked goon (white mask, vest)
-tr2_entity_tbl[18] = {coll = 0x02};                -- Masked goon (black mask)
-tr2_entity_tbl[19] = {coll = 0x02};                -- Knifethrower
-tr2_entity_tbl[20] = {coll = 0x02};                -- Shotgun goon
-tr2_entity_tbl[21] = {coll = 0x02};                -- Rat
+tr2_entity_tbl[15] = {coll = 0x02, func = "baddie"};                -- Doberman
+tr2_entity_tbl[16] = {coll = 0x02, func = "baddie"};                -- Masked goon (white mask, jacket)
+tr2_entity_tbl[17] = {coll = 0x02, func = "baddie"};                -- Masked goon (white mask, vest)
+tr2_entity_tbl[18] = {coll = 0x02, func = "baddie"};                -- Masked goon (black mask)
+tr2_entity_tbl[19] = {coll = 0x02, func = "baddie"};                -- Knifethrower
+tr2_entity_tbl[20] = {coll = 0x02, func = "baddie"};                -- Shotgun goon
+tr2_entity_tbl[21] = {coll = 0x02, func = "baddie"};                -- Rat
 tr2_entity_tbl[22] = {coll = 0x02};                -- Dragon (front)
 tr2_entity_tbl[23] = {coll = 0x02};                -- Dragon (back)
 tr2_entity_tbl[24] = {coll = 0x02};                -- Gondola (Venetian boat)
-tr2_entity_tbl[25] = {coll = 0x02};                -- Shark
-tr2_entity_tbl[26] = {coll = 0x02};                -- Yellow moray eel
-tr2_entity_tbl[27] = {coll = 0x02};                -- Black moray eel
-tr2_entity_tbl[28] = {coll = 0x02};                -- Barracuda / Whiskered Fish
-tr2_entity_tbl[29] = {coll = 0x02};                -- Scuba diver
-tr2_entity_tbl[30] = {coll = 0x02};                -- Gun-wielding rig worker (khaki pants)
-tr2_entity_tbl[31] = {coll = 0x02};                -- Gun-wielding rig worker (blue jeans)
-tr2_entity_tbl[32] = {coll = 0x02};                -- Stick-wielding goon
-tr2_entity_tbl[33] = {coll = 0x02};                -- Stick-wielding goon (can't climb)
-tr2_entity_tbl[34] = {coll = 0x02};                -- Flamethrower-wielding goon
-tr2_entity_tbl[36] = {coll = 0x02};                -- Spider
-tr2_entity_tbl[37] = {coll = 0x02};                -- Giant spider
-tr2_entity_tbl[38] = {coll = 0x02};                -- Crow
+tr2_entity_tbl[25] = {coll = 0x02, func = "baddie"};                -- Shark
+tr2_entity_tbl[26] = {coll = 0x02, func = "baddie"};                -- Yellow moray eel
+tr2_entity_tbl[27] = {coll = 0x02, func = "baddie"};                -- Black moray eel
+tr2_entity_tbl[28] = {coll = 0x02, func = "baddie"};                -- Barracuda / Whiskered Fish
+tr2_entity_tbl[29] = {coll = 0x02, func = "baddie"};                -- Scuba diver
+tr2_entity_tbl[30] = {coll = 0x02, func = "baddie"};                -- Gun-wielding rig worker (khaki pants)
+tr2_entity_tbl[31] = {coll = 0x02, func = "baddie"};                -- Gun-wielding rig worker (blue jeans)
+tr2_entity_tbl[32] = {coll = 0x02, func = "baddie"};                -- Stick-wielding goon
+tr2_entity_tbl[33] = {coll = 0x02, func = "baddie"};                -- Stick-wielding goon (can't climb)
+tr2_entity_tbl[34] = {coll = 0x02, func = "baddie"};                -- Flamethrower-wielding goon
+tr2_entity_tbl[36] = {coll = 0x02, func = "baddie"};                -- Spider
+tr2_entity_tbl[37] = {coll = 0x02, func = "baddie"};                -- Giant spider
+tr2_entity_tbl[38] = {coll = 0x02, func = "baddie"};                -- Crow
 tr2_entity_tbl[39] = {coll = 0x02, func = "baddie"};                -- Tiger / Leopard
-tr2_entity_tbl[40] = {coll = 0x02};                -- Marco Bartoli
-tr2_entity_tbl[41] = {coll = 0x02};                -- Spear-wielding Xian Guard
+tr2_entity_tbl[40] = {coll = 0x02, func = "baddie"};                -- Marco Bartoli
+tr2_entity_tbl[41] = {coll = 0x02, func = "baddie"};                -- Spear-wielding Xian Guard
 tr2_entity_tbl[42] = {coll = 0x02};                -- Spear-wielding Xian Guard statue
-tr2_entity_tbl[43] = {coll = 0x02};                -- Sword-wielding Xian Guard
+tr2_entity_tbl[43] = {coll = 0x02, func = "baddie"};                -- Sword-wielding Xian Guard
 tr2_entity_tbl[44] = {coll = 0x02};                -- Sword-wielding Xian Guard statue
-tr2_entity_tbl[45] = {coll = 0x02};                -- Yeti
-tr2_entity_tbl[46] = {coll = 0x02};                -- Bird monster (guards Talion)
-tr2_entity_tbl[47] = {coll = 0x02};                -- Eagle
-tr2_entity_tbl[48] = {coll = 0x02};                -- Mercenary
-tr2_entity_tbl[49] = {coll = 0x02};                -- Mercenary (black ski mask, gray jacket)
-tr2_entity_tbl[50] = {coll = 0x02};                -- Mercenary (black ski mask, brown jacket)
-tr2_entity_tbl[52] = {coll = 0x02};                -- Mercenary snowmobile driver
-tr2_entity_tbl[53] = {coll = 0x02};                -- Monk with long stick
-tr2_entity_tbl[54] = {coll = 0x02};                -- Monk with knife-end stick
+tr2_entity_tbl[45] = {coll = 0x02, func = "baddie"};                -- Yeti
+tr2_entity_tbl[46] = {coll = 0x02, func = "baddie"};                -- Bird monster (guards Talion)
+tr2_entity_tbl[47] = {coll = 0x02, func = "baddie"};                -- Eagle
+tr2_entity_tbl[48] = {coll = 0x02, func = "baddie"};                -- Mercenary
+tr2_entity_tbl[49] = {coll = 0x02, func = "baddie"};                -- Mercenary (black ski mask, gray jacket)
+tr2_entity_tbl[50] = {coll = 0x02, func = "baddie"};                -- Mercenary (black ski mask, brown jacket)
+tr2_entity_tbl[52] = {coll = 0x02, func = "baddie"};                -- Mercenary snowmobile driver
+tr2_entity_tbl[53] = {coll = 0x02, func = "baddie"};                -- Monk with long stick
+tr2_entity_tbl[54] = {coll = 0x02, func = "baddie"};                -- Monk with knife-end stick
 
 -- TRAPS --
 
@@ -432,53 +432,53 @@ tr3_entity_tbl[18] = {coll = 0x01};               -- Big gun
 -- ACTORS --
 
 tr3_entity_tbl[19] = {coll = 0x02};               -- Hydro propeller (?)
-tr3_entity_tbl[20] = {coll = 0x02};               -- Tribesman with spiked axe
-tr3_entity_tbl[21] = {coll = 0x02};               -- Tribesman with poison-dart gun
-tr3_entity_tbl[22] = {coll = 0x02};               -- Dog
-tr3_entity_tbl[23] = {coll = 0x02};               -- Rat
+tr3_entity_tbl[20] = {coll = 0x02, func = "baddie"};               -- Tribesman with spiked axe
+tr3_entity_tbl[21] = {coll = 0x02, func = "baddie"};               -- Tribesman with poison-dart gun
+tr3_entity_tbl[22] = {coll = 0x02, func = "baddie"};               -- Dog
+tr3_entity_tbl[23] = {coll = 0x02, func = "baddie"};               -- Rat
 tr3_entity_tbl[24] = {coll = 0x00, hide = 0x01};     -- Kill All Triggers
-tr3_entity_tbl[25] = {coll = 0x02};               -- Killer whale
-tr3_entity_tbl[26] = {coll = 0x02};               -- Scuba diver
-tr3_entity_tbl[27] = {coll = 0x02};               -- Crow
-tr3_entity_tbl[28] = {coll = 0x02};               -- Tiger
-tr3_entity_tbl[29] = {coll = 0x02};               -- Vulture
-tr3_entity_tbl[30] = {coll = 0x01};               -- Assault-course target
-tr3_entity_tbl[31] = {coll = 0x02};               -- Crawler mutant in closet
-tr3_entity_tbl[32] = {coll = 0x02};               -- Crocodile (in water)
-tr3_entity_tbl[34] = {coll = 0x02};               -- Compsognathus
-tr3_entity_tbl[35] = {coll = 0x02};               -- Lizard thing
-tr3_entity_tbl[36] = {coll = 0x02};               -- Puna guy
-tr3_entity_tbl[37] = {coll = 0x02};               -- Mercenary
-tr3_entity_tbl[38] = {coll = 0x01};               -- Raptor hung by rope (fish bait)
-tr3_entity_tbl[39] = {coll = 0x02};               -- RX-Tech guy in red jacket
-tr3_entity_tbl[40] = {coll = 0x02};               -- RX-Tech guy with gun (dressed like flamethrower guy)
-tr3_entity_tbl[41] = {coll = 0x02};               -- Dog (Antarctica)
-tr3_entity_tbl[42] = {coll = 0x02};               -- Crawler mutant
-tr3_entity_tbl[44] = {coll = 0x02};               -- Tinnos wasp
-tr3_entity_tbl[45] = {coll = 0x02};               -- Tinnos monster
-tr3_entity_tbl[46] = {coll = 0x02};               -- Brute mutant (with claw)
-tr3_entity_tbl[47] = {coll = 0x02};               -- Tinnos wasp respawn point
-tr3_entity_tbl[48] = {coll = 0x02};               -- Raptor respawn point
-tr3_entity_tbl[49] = {coll = 0x02};               -- Willard spider
-tr3_entity_tbl[50] = {coll = 0x02};               -- RX-Tech flamethrower guy
-tr3_entity_tbl[51] = {coll = 0x02};               -- London goon
-tr3_entity_tbl[53] = {coll = 0x02};               -- 'Damned' stick-wielding goon
-tr3_entity_tbl[56] = {coll = 0x02};               -- London guard
-tr3_entity_tbl[57] = {coll = 0x02};               -- Sophia Lee
-tr3_entity_tbl[58] = {coll = 0x01};               -- Thames Wharf machine
-tr3_entity_tbl[60] = {coll = 0x02};               -- MP with stick
-tr3_entity_tbl[61] = {coll = 0x02};               -- MP with gun
-tr3_entity_tbl[62] = {coll = 0x02};               -- Prisoner
-tr3_entity_tbl[63] = {coll = 0x02};               -- MP with sighted gun and night sight
+tr3_entity_tbl[25] = {coll = 0x02, func = "baddie"};               -- Killer whale
+tr3_entity_tbl[26] = {coll = 0x02, func = "baddie"};               -- Scuba diver
+tr3_entity_tbl[27] = {coll = 0x02, func = "baddie"};               -- Crow
+tr3_entity_tbl[28] = {coll = 0x02, func = "baddie"};               -- Tiger
+tr3_entity_tbl[29] = {coll = 0x02, func = "baddie"};               -- Vulture
+tr3_entity_tbl[30] = {coll = 0x01, func = "baddie"};               -- Assault-course target
+tr3_entity_tbl[31] = {coll = 0x02, func = "baddie"};               -- Crawler mutant in closet
+tr3_entity_tbl[32] = {coll = 0x02, func = "baddie"};               -- Crocodile (in water)
+tr3_entity_tbl[34] = {coll = 0x02, func = "baddie"};               -- Compsognathus
+tr3_entity_tbl[35] = {coll = 0x02, func = "baddie"};               -- Lizard thing
+tr3_entity_tbl[36] = {coll = 0x02, func = "baddie"};               -- Puna guy
+tr3_entity_tbl[37] = {coll = 0x02, func = "baddie"};               -- Mercenary
+tr3_entity_tbl[38] = {coll = 0x01, func = "baddie"};               -- Raptor hung by rope (fish bait)
+tr3_entity_tbl[39] = {coll = 0x02, func = "baddie"};               -- RX-Tech guy in red jacket
+tr3_entity_tbl[40] = {coll = 0x02, func = "baddie"};               -- RX-Tech guy with gun (dressed like flamethrower guy)
+tr3_entity_tbl[41] = {coll = 0x02, func = "baddie"};               -- Dog (Antarctica)
+tr3_entity_tbl[42] = {coll = 0x02, func = "baddie"};               -- Crawler mutant
+tr3_entity_tbl[44] = {coll = 0x02, func = "baddie"};               -- Tinnos wasp
+tr3_entity_tbl[45] = {coll = 0x02, func = "baddie"};               -- Tinnos monster
+tr3_entity_tbl[46] = {coll = 0x02, func = "baddie"};               -- Brute mutant (with claw)
+tr3_entity_tbl[47] = {coll = 0x02, func = "baddie"};               -- Tinnos wasp respawn point
+tr3_entity_tbl[48] = {coll = 0x02, func = "baddie"};               -- Raptor respawn point
+tr3_entity_tbl[49] = {coll = 0x02, func = "baddie"};               -- Willard spider
+tr3_entity_tbl[50] = {coll = 0x02, func = "baddie"};               -- RX-Tech flamethrower guy
+tr3_entity_tbl[51] = {coll = 0x02, func = "baddie"};               -- London goon
+tr3_entity_tbl[53] = {coll = 0x02, func = "baddie"};               -- 'Damned' stick-wielding goon
+tr3_entity_tbl[56] = {coll = 0x02, func = "baddie"};               -- London guard
+tr3_entity_tbl[57] = {coll = 0x02, func = "baddie"};               -- Sophia Lee
+tr3_entity_tbl[58] = {coll = 0x01, func = "baddie"};               -- Thames Wharf machine
+tr3_entity_tbl[60] = {coll = 0x02, func = "baddie"};               -- MP with stick
+tr3_entity_tbl[61] = {coll = 0x02, func = "baddie"};               -- MP with gun
+tr3_entity_tbl[62] = {coll = 0x02, func = "baddie"};               -- Prisoner
+tr3_entity_tbl[63] = {coll = 0x02, func = "baddie"};               -- MP with sighted gun and night sight
 tr3_entity_tbl[64] = {coll = 0x02};               -- Gun turret
-tr3_entity_tbl[65] = {coll = 0x02};               -- Dam guard
+tr3_entity_tbl[65] = {coll = 0x02, func = "baddie"};               -- Dam guard
 tr3_entity_tbl[66] = {coll = 0x00, hide = 0x01};  -- Kind of tripwire
 tr3_entity_tbl[67] = {coll = 0x00, hide = 0x01};  -- Electrified wire
 tr3_entity_tbl[68] = {coll = 0x00, hide = 0x01};  -- Killer tripwire
-tr3_entity_tbl[69] = {coll = 0x02};               -- Cobra / Rattlesnake
+tr3_entity_tbl[69] = {coll = 0x02, func = "baddie"};               -- Cobra / Rattlesnake
 tr3_entity_tbl[70] = {coll = 0x01};               -- Temple statue
-tr3_entity_tbl[71] = {coll = 0x02};               -- Monkey
-tr3_entity_tbl[73] = {coll = 0x02};               -- Tony Firehands
+tr3_entity_tbl[71] = {coll = 0x02, func = "baddie"};               -- Monkey
+tr3_entity_tbl[73] = {coll = 0x02, func = "baddie"};               -- Tony Firehands
 
 -- AI OBJECTS --
 

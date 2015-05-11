@@ -138,7 +138,7 @@ function execEntity(object_id, activator_id, callback_id)
 end
 
 function loopEntity(object_id)
-    if((object_id == nil) or (entity_funcs[object_id].onLoop == nil)) then return end;
+    if((object_id == nil) or (entity_funcs[object_id] == nil) or (entity_funcs[object_id].onLoop == nil)) then return end;
     entity_funcs[object_id].onLoop(object_id);
 end
 

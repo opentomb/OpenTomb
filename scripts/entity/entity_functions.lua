@@ -492,14 +492,19 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
 
     setEntitySpeed(id, 0.0, 0.0, 0.0);
     
+    local level_version = getLevelVersion();
+    if((level_version < TR_II) or (level_version >= TR_III)) then setEntityVisibility(id, 0) end;
+    
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
             return;
         end
+        
 
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
             setEntityAnim(object_id, 1);
+            setEntityVisibility(object_id, 1);
             addTask(
             function()
                 if(dropEntity(object_id, frame_time)) then

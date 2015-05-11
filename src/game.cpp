@@ -825,7 +825,7 @@ void Game_Frame(btScalar time)
         {
             Character_ApplyCommands(engine_world.Character);
             Entity_Frame(engine_world.Character, engine_frame_time);
-            Cam_FollowEntity(renderer.cam, engine_world.Character, 128.0, 400.0);
+            Cam_FollowEntity(renderer.cam, engine_world.Character, 16.0, 128.0);
         }
     }
 
