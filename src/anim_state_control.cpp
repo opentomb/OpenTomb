@@ -3002,12 +3002,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
      */
     switch(ss_anim->current_animation)
     {
-        case TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG:
-        case TR_ANIMATION_LARA_FLY_FORWARD_TRY_TO_HANG:
-            if(ent->dir_flag == ENT_MOVE_BACKWARD)
-            {
-                //ent->character->complex_collision = 0x01;
-            }
+        case TR_ANIMATION_LARA_STAY_JUMP_SIDES:
+            ent->character->no_fix = 0x01;
             break;
     };
 

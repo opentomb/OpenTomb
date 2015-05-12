@@ -117,7 +117,7 @@ void Character_Create(struct entity_s *ent)
             ent->character->shapes[i] = new btBoxShape(box);
 
             ret->ghostObjects[i] = new btPairCachingGhostObject();
-            Mat4_Mat4_inv_mul(gltr, ent->transform, ent->bf.bone_tags[i].full_transform);
+            Mat4_Mat4_mul(gltr, ent->transform, ent->bf.bone_tags[i].full_transform);
             tr.setFromOpenGLMatrix(gltr);
             ret->ghostObjects[i]->setWorldTransform(tr);
             ret->ghostObjects[i]->setCollisionFlags(ret->ghostObjects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
@@ -1121,7 +1121,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
 }
 
 
-void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar step_up_check)
+void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], int step_up_map_filter)
 {
     btVector3 pos;
     btScalar t1, t2, reaction[3];
@@ -1137,16 +1137,17 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar 
     resp->step_up               = 0x00;
 
     int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction);
-    if((numPenetrationLoops > 0) && (step_up_check != 0.0))
+    if((numPenetrationLoops > 0) && (step_up_map_filter > 0))
     {
-        ent->transform[12 + 2] += step_up_check;
+        int orig_map_size = ent->bf.animations.model->collision_map_size;
+        ent->bf.animations.model->collision_map_size = step_up_map_filter;      // disable hands and legs
         if(Character_GetPenetrationFixVector(ent, pos.m_floats) == 0)
         {
             numPenetrationLoops = 0;
             vec3_set_zero(reaction);
             resp->step_up = 0x01;
         }
-        ent->transform[12 + 2] -= step_up_check;
+        ent->bf.animations.model->collision_map_size = orig_map_size;
     }
 
     vec3_add(pos.m_floats, ent->transform+12, reaction);
@@ -1514,9 +1515,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        t = ent->character->max_step_up_height;
-        t = (ent->character->cmd.crouch)?(t / 4.0):(t);
-        Character_FixPenetrations(ent, move.m_floats, t);                       // get horizontal collide
+        Character_FixPenetrations(ent, move.m_floats, 3);                       // get horizontal collide
         if(ent->character->height_info.floor_hit)
         {
             if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height > pos[2])
@@ -1616,7 +1615,7 @@ int Character_FreeFalling(struct entity_s *ent)
             ent->speed.m_floats[2] = 0.0;
             ent->character->resp.vertical_collide |= 0x02;
             Character_UpdateCurrentHeight(ent);
-            Character_FixPenetrations(ent, move.m_floats, 0.0);
+            Character_FixPenetrations(ent, move.m_floats, 0);
             Entity_UpdateRoomPos(ent);
         }
     }
@@ -1630,7 +1629,7 @@ int Character_FreeFalling(struct entity_s *ent)
             ent->character->resp.vertical_collide |= 0x01;
             Entity_UpdateRoomPos(ent);
             Character_UpdateCurrentHeight(ent);
-            Character_FixPenetrations(ent, move.m_floats, 0.0);
+            Character_FixPenetrations(ent, move.m_floats, 0);
             Entity_UpdateRoomPos(ent);
             return 2;
         }
@@ -1640,7 +1639,7 @@ int Character_FreeFalling(struct entity_s *ent)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, move.m_floats, 0.0);                          // get horizontal collide
+        Character_FixPenetrations(ent, move.m_floats, 0);                       // get horizontal collide
 
         if(ent->character->height_info.ceiling_hit && ent->speed.m_floats[2] > 0.0)
         {
@@ -1661,7 +1660,7 @@ int Character_FreeFalling(struct entity_s *ent)
                 ent->character->resp.vertical_collide |= 0x01;
                 Entity_UpdateRoomPos(ent);
                 Character_UpdateCurrentHeight(ent);
-                Character_FixPenetrations(ent, move.m_floats, 0.0);
+                Character_FixPenetrations(ent, move.m_floats, 0);
                 Entity_UpdateRoomPos(ent);
                 return 2;
             }
@@ -1737,7 +1736,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, move.m_floats, 0.0);                     // get horizontal collide
+        Character_FixPenetrations(ent, move.m_floats, 0);                       // get horizontal collide
         Character_UpdateCurrentHeight(ent);
         ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
         if(ent->character->height_info.ceiling_hit && (pos[2] + ent->bf.bb_max[2] - ent->character->height_info.ceiling_point.m_floats[2] > - 0.33 * ent->character->min_step_up_height))
@@ -1820,7 +1819,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, move.m_floats, 0.0);                     // get horizontal collide
+        Character_FixPenetrations(ent, move.m_floats, 0);                       // get horizontal collide
         Character_UpdateCurrentHeight(ent);
         Entity_UpdateRoomPos(ent);
     }
@@ -1873,7 +1872,7 @@ int Character_Climbing(struct entity_s *ent)
     else
     {
         ent->character->resp.slide = 0x00;
-        Character_FixPenetrations(ent, NULL, 0.0);
+        Character_FixPenetrations(ent, NULL, 0);
         return 1;
     }
 
@@ -1892,7 +1891,7 @@ int Character_Climbing(struct entity_s *ent)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, move.m_floats, 0.0);                     // get horizontal collide
+        Character_FixPenetrations(ent, move.m_floats, 0);                       // get horizontal collide
         Entity_UpdateRoomPos(ent);
     }
 
@@ -1960,7 +1959,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, move.m_floats, 0.0);                     // get horizontal collide
+        Character_FixPenetrations(ent, move.m_floats, 0);                       // get horizontal collide
 
         Entity_UpdateRoomPos(ent);
         if(ent->character->height_info.water && (pos[2] + ent->bf.bb_max[2] >= ent->character->height_info.transition_level))
@@ -2021,7 +2020,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     else
     {
         Character_UpdateCurrentHeight(ent);
-        Character_FixPenetrations(ent, NULL, 0.0);
+        Character_FixPenetrations(ent, NULL, 0);
         Entity_UpdateRoomPos(ent);
         if(ent->character->height_info.water)
         {
@@ -2052,7 +2051,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, move.m_floats, 0.0);                     // get horizontal collide
+        Character_FixPenetrations(ent, move.m_floats, 0);                       // get horizontal collide
 
         Entity_UpdateRoomPos(ent);
         if(ent->character->height_info.water)
