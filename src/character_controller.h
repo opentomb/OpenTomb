@@ -19,8 +19,8 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
-#define NUM_PENETRATION_ITERATIONS      (6)
-#define PENETRATION_PART_COEF           (0.20)
+#define NUM_PENETRATION_ITERATIONS      (5)
+#define PENETRATION_PART_COEF           (1.0 / (double)NUM_PENETRATION_ITERATIONS)
 
 /*
  * default legs offsets

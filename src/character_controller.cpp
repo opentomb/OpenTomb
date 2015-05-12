@@ -1060,7 +1060,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
                 if(dist < 0.0)
                 {
-                    t = pt.m_normalWorldOnB * dist * directionSign * PENETRATION_PART_COEF;
+                    t = pt.m_normalWorldOnB * dist * directionSign;
                     vec3_add(correction, correction, t.m_floats)
                     ret++;
                 }
@@ -1076,13 +1076,14 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
 {
     int ret = 0, numPenetrationLoops = 0;
     btVector3 pos;
-    btScalar tmp[3];
+    btScalar tmp[3], orig_pos[3];
 
     if(ent->character && ent->character->no_fix)
     {
         return 0;
     }
 
+    vec3_copy(orig_pos, ent->transform + 12);
     vec3_set_zero(reaction);
     if(ent->character->shapes != NULL)              /* complex collision shape */
     {
@@ -1103,16 +1104,18 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             {
                 numPenetrationLoops++;
                 ret++;
-                vec3_add(pos, pos, tmp);
+                vec3_add_mul(pos, pos, tmp, PENETRATION_PART_COEF);
+                vec3_add(ent->transform + 12, ent->transform + 12, tmp);
                 ent->character->ghostObjects[m]->getWorldTransform().setOrigin(pos);
                 vec3_add(reaction, reaction, tmp);
-                if(numPenetrationLoops > NUM_PENETRATION_ITERATIONS)
+                if(numPenetrationLoops >= NUM_PENETRATION_ITERATIONS)
                 {
                     break;
                 }
             }
         }
     }
+    vec3_copy(ent->transform + 12, orig_pos);
 
     return ret;
 }
@@ -1198,12 +1201,12 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], btScalar 
  */
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
 {
-    btScalar t1, t2, reaction[3], *tr = ent->transform + 12;
+    btScalar t1, t2, reaction[3], *pos = ent->transform + 12;
     character_response_p resp = &ent->character->resp;
 
-    vec3_add(tr, tr, move);
+    vec3_add(pos, pos, move);
     resp->horizontal_collide = 0x00;
-    /*if(Ghost_GetPenetrationFixVector(ent->character->ghostObject, ent->character->manifoldArray, reaction))
+    if(Character_GetPenetrationFixVector(ent, reaction))
     {
         t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
         t2 = move[0] * move[0] + move[1] * move[1];
@@ -1218,8 +1221,8 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
                 resp->horizontal_collide |= 0x01;
             }
         }
-    }*/
-    vec3_sub(tr, tr, move);
+    }
+    vec3_sub(pos, pos, move);
 }
 
 
@@ -1511,7 +1514,9 @@ int Character_MoveOnFloor(struct entity_s *ent)
     {
         Character_UpdateCurrentHeight(ent);
         vec3_add(pos, pos, move.m_floats);
-        Character_FixPenetrations(ent, move.m_floats, ent->character->max_step_up_height);  // get horizontal collide
+        t = ent->character->max_step_up_height;
+        t = (ent->character->cmd.crouch)?(t / 4.0):(t);
+        Character_FixPenetrations(ent, move.m_floats, t);                       // get horizontal collide
         if(ent->character->height_info.floor_hit)
         {
             if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height > pos[2])
