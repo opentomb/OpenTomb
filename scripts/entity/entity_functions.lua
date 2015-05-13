@@ -369,6 +369,12 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
     prepareEntity(id);
 end
 
+function boulder_init(id)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+
+end
+
 function pickup_init(id, item_id)    -- Pick-ups
 
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);

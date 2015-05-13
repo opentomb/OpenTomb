@@ -16,7 +16,7 @@ gameflow_paths[GAME_1].level = {};
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Array                             [1]    Level Name                 [2] Level File Path                          [3] Level Load Screen Path
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-gameflow_paths[GAME_1].level[00] = { name = "Lara's Home",             filepath = "data/tr1/data/GYM.PHD",          picpath = "data/tr1/pix/gymloa.jpg"   };
+gameflow_paths[GAME_1].level[00] = { name = "Lara's Home",             filepath = "data/tr1/data/GYM.PHD",          picpath = "data/tr1/pix/gymload.jpg"  };
 gameflow_paths[GAME_1].level[01] = { name = "Caves",                   filepath = "data/tr1/data/LEVEL1.PHD",       picpath = "data/tr1/pix/aztecloa.jpg" };
 gameflow_paths[GAME_1].level[02] = { name = "City of Vilcabamba",      filepath = "data/tr1/data/LEVEL2.PHD",       picpath = "data/tr1/pix/aztecloa.jpg" };
 gameflow_paths[GAME_1].level[03] = { name = "Lost Valley",             filepath = "data/tr1/data/LEVEL3A.PHD",      picpath = "data/tr1/pix/aztecloa.jpg" };

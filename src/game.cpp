@@ -650,8 +650,12 @@ void Game_LoopEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
 
-    Entity_ProcessSector(entity);
-    lua_LoopEntity(engine_lua, entity->id);
+    if(entity->state_flags & ENTITY_STATE_ENABLED)
+    {
+        Entity_ProcessSector(entity);
+        lua_LoopEntity(engine_lua, entity->id);
+    }
+    
 
     if(x->left != NULL)
     {

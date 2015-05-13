@@ -2492,6 +2492,7 @@ void TR_GenRoomCollision(struct world_s *world)
             r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
             bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
             r->bt_body->setUserPointer(r->self);
+            r->bt_body->setRestitution(1.0);
             r->self->collide_flag = COLLISION_TRIMESH;                          // meshtree
         }
 

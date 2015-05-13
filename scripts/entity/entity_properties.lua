@@ -18,6 +18,7 @@
 --   0x0000  - Object has no collisions
 --   0x0001  - Object uses real mesh data for collision.
 --   0x0002  - Object uses bounding box for collision.
+--   0x0003  - Object uses sphere of a specified radius for collision. 
 
 -- [ func ] :
 
@@ -73,7 +74,7 @@ tr1_entity_tbl[34] = {coll = 0x01, func = "baddie"};                      -- Tor
 tr1_entity_tbl[35] = {coll = 0x02, func = "fallblock"};  -- Falling floor
 tr1_entity_tbl[36] = {coll = 0x01, func = "swingblade"}; -- Swinging blade (Vilcabamba, etc.)
 tr1_entity_tbl[37] = {coll = 0x02, func = "oldspike"};   -- Spikes
-tr1_entity_tbl[38] = {coll = 0x01};                      -- Boulder
+tr1_entity_tbl[38] = {coll = 0x01, func = "boulder"};                      -- Boulder
 tr1_entity_tbl[39] = {coll = 0x01};                      -- Dart
 tr1_entity_tbl[40] = {coll = 0x01};                      -- Dartgun
 tr1_entity_tbl[41] = {coll = 0x01};                      -- Lifting door
@@ -268,7 +269,7 @@ tr2_entity_tbl[55] = {coll = 0x02, func = "fallblock"}; -- Collapsible floor
 tr2_entity_tbl[57] = {coll = 0x01};                     -- Loose boards
 tr2_entity_tbl[58] = {coll = 0x02};                     -- Swinging sandbag / spiky ball
 tr2_entity_tbl[59] = {coll = 0x02, func = "oldspike"};  -- Spikes / Glass shards
-tr2_entity_tbl[60] = {coll = 0x01};                     -- Boulder
+tr2_entity_tbl[60] = {coll = 0x01, func = "boulder"};                     -- Boulder
 tr2_entity_tbl[61] = {coll = 0x02};                     -- Disk (like dart)
 tr2_entity_tbl[62] = {coll = 0x00};                     -- Wall-mounted disk shooter (like dartgun)
 tr2_entity_tbl[63] = {coll = 0x01};                     -- Drawbridge
@@ -289,7 +290,7 @@ tr2_entity_tbl[79] = {coll = 0x02, func = "fallceiling"};                     --
 tr2_entity_tbl[80] = {coll = 0x02};                     -- Rolling spindle
 tr2_entity_tbl[81] = {coll = 0x02, func = "wallblade"};                     -- Wall-mounted knife blade
 tr2_entity_tbl[82] = {coll = 0x02};                     -- Statue with knife blade
-tr2_entity_tbl[83] = {coll = 0x02};                     -- Multiple boulders / snowballs
+tr2_entity_tbl[83] = {coll = 0x02, func = "boulder"};                     -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = 0x02};                     -- Detachable icicles
 tr2_entity_tbl[85] = {coll = 0x02};                     -- Spiky movable wall
 tr2_entity_tbl[86] = {coll = 0x01};                     -- Bounce pad
@@ -497,7 +498,7 @@ tr3_entity_tbl[82] = {coll = 0x00, hide = 0x01};  -- Unknown Id #82
 tr3_entity_tbl[83] = {coll = 0x01, func = "fallblock"};                 -- Collapsible floor
 tr3_entity_tbl[86] = {coll = 0x01};                 -- Swinging thing
 tr3_entity_tbl[87] = {coll = 0x01, func = "oldspike"};                 -- Spikes / Barbed wire
-tr3_entity_tbl[88] = {coll = 0x01};                 -- Boulder / Barrel
+tr3_entity_tbl[88] = {coll = 0x01, func = "boulder"};                 -- Boulder / Barrel
 tr3_entity_tbl[89] = {coll = 0x01};                 -- Giant boulder (Temple of Puna)
 tr3_entity_tbl[90] = {coll = 0x01};                 -- Disk (like dart)
 tr3_entity_tbl[91] = {coll = 0x01, hide = 0x01};                 -- Dart shooter
@@ -844,7 +845,7 @@ tr4_entity_tbl[129] = {coll = 0x01}; -- Scaling trapdoor
 
 -- TRAPS & INTERACTION OBJECTS
 
-tr4_entity_tbl[130] = {coll = 0x01}; -- Rolling ball
+tr4_entity_tbl[130] = {coll = 0x01, func = "boulder"}; -- Rolling ball
 tr4_entity_tbl[131] = {coll = 0x00, func = "oldspike"}; -- Spikey floor - UNUSED?
 tr4_entity_tbl[132] = {coll = 0x00, func = "oldspike"}; -- Teeth spikes
 tr4_entity_tbl[133] = {coll = 0x00}; -- Joby spikes
