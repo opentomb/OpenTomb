@@ -94,6 +94,9 @@ void Character_Create(struct entity_s *ent)
     ret->climb.height_info = 0x00;
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
+    ret->ry = 8.0;                                                              ///@FIXME: magick stick for character moves iterations count calculation
+    ret->rx = 8.0;
+    ret->Height = CHARACTER_BASE_HEIGHT;
 
     ret->manifoldArray = NULL;
     ret->traversed_object = NULL;

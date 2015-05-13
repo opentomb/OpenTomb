@@ -1080,13 +1080,13 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     if(script[0])
                     {
                         strcat(script, header);
-                        
+
                         // Heavy trigger and antitrigger item events are engaged ONLY
                         // once, when triggering item is approaching sector. Hence, we
                         // copy item events to single events and nullify original item
                         // events sequence to prevent it to be merged into continous
                         // events.
-                        
+
                         if((sub_function == TR_FD_TRIGTYPE_HEAVY) ||
                            (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER))
                         {
@@ -1098,7 +1098,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                             {
                                 strcat(single_events, item_events);
                             }
-                            
+
                             anti_events[0] = 0;
                             item_events[0] = 0;
                         }
@@ -2086,13 +2086,13 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->was_rendered = 0;
         OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
         OBB_Transform(r_static->obb);
-        
+
         r_static->bt_body = NULL;
         r_static->hide = 0;
-        
+
         // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
         // coordinates are equal (TR2-5).
-        
+
         if((tr_static->flags == 3) ||
            ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
             (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])) )
@@ -2103,7 +2103,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         {
             r_static->self->collide_flag = COLLISION_BOX;
         }
-        
+
 
         if(r_static->self->collide_flag != COLLISION_NONE)
         {
@@ -2119,7 +2119,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         }
         r_static++;
     }
-    
+
     /*
      * sprites loading section
      */
@@ -3310,6 +3310,12 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     for(uint16_t k=0;k<model->mesh_count;k++,tree_tag++)
     {
         tree_tag->mesh_base = world->meshes + (mesh_index[k]);
+        tree_tag->mesh_skin = NULL;                                             ///@PARANOID: I use calloc for tree_tag's
+        tree_tag->replace_anim = 0x00;
+        tree_tag->replace_mesh = 0x00;
+        tree_tag->offset[0] = 0.0;
+        tree_tag->offset[1] = 0.0;
+        tree_tag->offset[2] = 0.0;
         if(k == 0)
         {
             tree_tag->flag = 0x02;
