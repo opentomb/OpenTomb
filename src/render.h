@@ -67,6 +67,10 @@ class render_DebugDrawer:public btIDebugDraw
         {
             return m_lines == 0;
         }
+        void reset()
+        {
+            m_lines = 0;
+        }
         void render();
         void setColor(GLfloat r, GLfloat g, GLfloat b)
         {

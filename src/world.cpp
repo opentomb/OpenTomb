@@ -494,11 +494,7 @@ void World_Empty(world_p world)
                         body->setCollisionShape(NULL);
                     }
 
-                    if(body->isInWorld())
-                    {
-                        bt_engine_dynamicsWorld->removeRigidBody(body);
-                    }
-
+                    bt_engine_dynamicsWorld->removeRigidBody(body);
                     cont->room = NULL;
                     free(cont);
                     delete body;

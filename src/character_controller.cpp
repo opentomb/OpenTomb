@@ -196,6 +196,7 @@ void Character_Clean(struct entity_s *ent)
 
     if(actor->manifoldArray)
     {
+        actor->manifoldArray->clear();
         delete actor->manifoldArray;
         actor->manifoldArray = NULL;
     }
@@ -1104,7 +1105,10 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             {
                 numPenetrationLoops++;
                 ret++;
-                vec3_add_mul(pos, pos, tmp, PENETRATION_PART_COEF);
+                tmp[0] *= PENETRATION_PART_COEF;
+                tmp[1] *= PENETRATION_PART_COEF;
+                tmp[2] *= PENETRATION_PART_COEF;
+                vec3_add(pos, pos, tmp);
                 vec3_add(ent->transform + 12, ent->transform + 12, tmp);
                 ent->character->ghostObjects[m]->getWorldTransform().setOrigin(pos);
                 vec3_add(reaction, reaction, tmp);
