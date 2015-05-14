@@ -2674,7 +2674,9 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
 int lua_LockEntityBodyLinearFactor(lua_State *lua)
 {
-    if(lua_gettop(lua) < 2)
+    int top = lua_gettop(lua);
+    
+    if(top < 2)
     {
         Con_Printf("Wrong arguments count. Must be [entity_id, body_number, (vertical_factor)]");
         return 0;
@@ -2691,15 +2693,13 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
         btScalar ang2 = cosf(t);
         btScalar ang3 = 1.0;
         
-        if(!lua_isnil(lua, 3))
+        if(top >= 3)
         {
             ang3 = abs(lua_tonumber(lua, 3));
             ang3 = (ang3 > 1.0)?(1.0):(ang3);
         }
         
-        btVector3 angle = {abs(ang1), abs(ang2), ang3};
-        
-        ent->bt_body[body_number]->setLinearFactor(angle);
+        ent->bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
     }
     else
     {
