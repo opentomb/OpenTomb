@@ -290,7 +290,7 @@ tr2_entity_tbl[79] = {coll = 0x02, func = "fallceiling"};                     --
 tr2_entity_tbl[80] = {coll = 0x02};                     -- Rolling spindle
 tr2_entity_tbl[81] = {coll = 0x02, func = "wallblade"};                     -- Wall-mounted knife blade
 tr2_entity_tbl[82] = {coll = 0x02};                     -- Statue with knife blade
-tr2_entity_tbl[83] = {coll = 0x02, func = "boulder"};                     -- Multiple boulders / snowballs
+tr2_entity_tbl[83] = {coll = 0x02};                     -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = 0x02};                     -- Detachable icicles
 tr2_entity_tbl[85] = {coll = 0x02};                     -- Spiky movable wall
 tr2_entity_tbl[86] = {coll = 0x01};                     -- Bounce pad

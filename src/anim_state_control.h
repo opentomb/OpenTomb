@@ -18,6 +18,7 @@ struct character_command_s;
  */
 #define ANIM_NORMAL_CONTROL             (0)
 #define ANIM_LOOP_LAST_FRAME            (1)
+#define ANIM_LOCK                       (2)
 /*
  * SURFACE MOVEMENT DIRECTIONS
  */

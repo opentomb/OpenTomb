@@ -29,7 +29,8 @@ ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR        = 0x0004;
 ENTITY_TYPE_PICKABLE                      = 0x0008;
 ENTITY_TYPE_TRAVERSE                      = 0x0010;
 ENTITY_TYPE_TRAVERSE_FLOOR                = 0x0020;
-ENTITY_TYPE_ACTOR                         = 0x0040;
+ENTITY_TYPE_KINEMATIC                     = 0x0040;
+ENTITY_TYPE_ACTOR                         = 0x0080;
 
 ENTITY_CALLBACK_NONE                      = 0x00000000;
 ENTITY_CALLBACK_ACTIVATE                  = 0x00000001;
@@ -37,6 +38,10 @@ ENTITY_CALLBACK_DEACTIVATE                = 0x00000002;
 ENTITY_CALLBACK_COLLISION                 = 0x00000004;
 ENTITY_CALLBACK_STAND                     = 0x00000008;
 ENTITY_CALLBACK_HIT                       = 0x00000010;
+
+ANIM_NORMAL_CONTROL  = 0;
+ANIM_LOOP_LAST_FRAME = 1;
+ANIM_LOCK            = 2;
 
 MOVE_STATIC_POS    = 0;
 MOVE_KINEMATIC     = 1;

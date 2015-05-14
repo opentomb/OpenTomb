@@ -150,7 +150,7 @@ You can also fully compile engine using build.sh file in /src folder.
 On Mac, use XCode project, which is also available in source code.
 
 NB: Please note that OpenTomb requires C++11 (-std=c++11) flag to compile properly!
-You may use CPU-specific optimization flags ("-march=prescott", "march=i486", "march=core2"),
+You may use CPU-specific optimization flags (-march=prescott, -march=i486, -march=core2),
 as well as general optimization flags (-O1 and -O2), but DON'T USE -O3 flag, as Bullet tends to
 crash with this optimization level.
 

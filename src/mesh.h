@@ -12,6 +12,7 @@
 #define COLLISION_NONE              (0x00)
 #define COLLISION_TRIMESH           (0x01)
 #define COLLISION_BOX               (0x02)
+#define COLLISION_SPHERE            (0x03)
 
 
 #include <SDL2/SDL_platform.h>
@@ -54,7 +55,7 @@ typedef struct base_mesh_s
     btScalar              centre[3];                                            // geometry centre of mesh
     btScalar              bb_min[3];                                            // AABB bounding volume
     btScalar              bb_max[3];                                            // AABB bounding volume
-    btScalar              R;                                                    // radius of the bounbing sphere
+    btScalar              R;                                                    // radius of the bounding sphere
     int8_t               *skin_map;                                             // vertices map for skin mesh
 
     GLuint                vbo_vertex_array;
@@ -358,7 +359,7 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
 void Mesh_GenFaces(base_mesh_p mesh);
 
 /* bullet collision model calculation */
-btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag);
+btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
 #endif

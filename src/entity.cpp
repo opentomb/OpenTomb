@@ -250,7 +250,7 @@ void BT_GenEntityRigidBody(entity_p ent)
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         ent->bt_body[i] = NULL;
-        cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag);
+        cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag, false);
         if(cshape)
         {
             Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -316,9 +316,14 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
     btScalar tr[16];
     btTransform bt_tr;
 
-    if((ent->bf.animations.model == NULL) || (ent->bt_body == NULL) || ((force == 0) && (ent->bf.animations.model->animation_count == 1) && (ent->bf.animations.model->animations->frames_count == 1)))
+    if(!(ent->type_flags & ENTITY_TYPE_KINEMATIC))
     {
-        return;
+        if((ent->bf.animations.model == NULL) ||
+           (ent->bt_body == NULL) ||
+           ((force == 0) && (ent->bf.animations.model->animation_count == 1) && (ent->bf.animations.model->animations->frames_count == 1)))
+        {
+            return;
+        }
     }
 
     Entity_UpdateRoomPos(ent);
@@ -329,10 +334,20 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         {
             if(ent->bt_body[i])
             {
-                Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
-                bt_tr.setFromOpenGLMatrix(tr);
-                ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-                ent->bt_body[i]->setWorldTransform(bt_tr);
+                if(ent->type_flags & ENTITY_TYPE_KINEMATIC)
+                {
+                    ent->bt_body[i]->getMotionState()->getWorldTransform(bt_tr);
+                
+                    if(i==0) bt_tr.getOpenGLMatrix(ent->transform);
+                             bt_tr.getOpenGLMatrix(ent->bf.bone_tags[i].full_transform);
+                }
+                else
+                {
+                    Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
+                    bt_tr.setFromOpenGLMatrix(tr);
+                    ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+                    ent->bt_body[i]->setWorldTransform(bt_tr);
+                }
             }
         }
     }
@@ -1080,6 +1095,12 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
         }
         return;
     }
+    else if(anim_flags == ANIM_LOCK)
+    {
+        *frame = 0;
+        *anim  = bf->animations.current_animation;
+        return;
+    }
 
     /*
      * Check next anim if frame >= frames_count
@@ -1172,6 +1193,8 @@ int Entity_Frame(entity_p entity, btScalar time)
     {
         return 0;
     }
+    
+    if(entity->bf.animations.anim_flags & ANIM_LOCK) return 1;
 
     ss_anim = &entity->bf.animations;
 

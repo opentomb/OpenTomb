@@ -581,7 +581,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
 }
 
 
-btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag)
+btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag, bool is_static)
 {
     uint32_t cnt = 0;
     polygon_p p;
@@ -617,8 +617,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
                 delete trimesh;
                 return NULL;
             }
-
-            ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+            
             break;
 
         case COLLISION_BOX:                                                     // the box with deviated centre
@@ -646,12 +645,20 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
                 delete trimesh;
                 return NULL;
             }
-
-            ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+            
             OBB_Clear(obb);
             free(obb);
             break;
     };
+    
+    if(is_static)
+    {
+        ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+    }
+    else
+    {
+        ret = new btConvexTriangleMeshShape(trimesh, true);
+    }
 
     return ret;
 }

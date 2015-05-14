@@ -372,6 +372,23 @@ end
 function boulder_init(id)
 
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+    setEntityAnimFlag(id, ANIM_LOCK);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityActivity(object_id == 0)) then
+            local mesh_count = getEntityMeshCount(object_id);
+            
+            if(mesh_count == 1) then
+                setEntityBodyMass(object_id, mesh_count, 2000.0);
+                setEntityActivity(object_id, 1);
+            end;
+            
+            if(getLevelVersion() < TR_IV) then
+                pushEntityBody(object_id, 0, math.random(150) + 2500.0, 10.0, true);
+            end;
+        end;
+    end
 
 end
 

@@ -1,4 +1,4 @@
--- OPENTOMB STATIC MESH SCRIPT
+-- OPENTOMB STATIC PROPERTY SCRIPT
 -- By Lwmte, Apr 2015
 
 --------------------------------------------------------------------------------
@@ -7,10 +7,6 @@
 -- Please note that static mesh properties may vary from level to level, so
 -- static table is frequently redefined on a per-level basis.
 
--- [ hide ] flag values:
-
---   0x00    - Object is visible.
---   0x01    - Object is invisible.
 
 -- [ coll ] flag values:
 
@@ -24,7 +20,7 @@ static_tbl = {};    -- Define static mesh property table.
 
 -- Get static mesh flags from property table.
 
-function getStaticMeshFlags(id)
+function getStaticMeshProperties(id)
     if((static_tbl == nil) or (static_tbl[id] == nil)) then
         return nil, nil;
     else

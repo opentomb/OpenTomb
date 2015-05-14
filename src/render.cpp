@@ -724,7 +724,16 @@ void Render_Entity(struct entity_s *entity, const btScalar matrix[16])
     {
         // base frame offset
         btScalar transform[16];
-        Mat4_Mat4_mul(transform, matrix, entity->transform);
+        if(entity->type_flags & ENTITY_TYPE_KINEMATIC)
+        {
+            btScalar null_transform[16];
+            Mat4_E_macro(null_transform);
+            Mat4_Mat4_mul(transform, matrix, null_transform);
+        }
+        else
+        {
+            Mat4_Mat4_mul(transform, matrix, entity->transform);
+        }
         Render_SkeletalModel(&entity->bf, transform);
     }
 }

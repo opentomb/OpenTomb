@@ -137,6 +137,31 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     return false;
 }
 
+void TR_SetStaticMeshProperties(struct static_mesh_s *r_static)
+{
+    if(level_script != NULL)
+    {
+        int top = lua_gettop(level_script);
+        lua_getglobal(level_script, "getStaticMeshProperties");
+        if(lua_isfunction(level_script, -1))
+        {
+            lua_pushinteger(level_script, r_static->object_id);
+            if(lua_CallAndLog(level_script, 1, 2, 0))
+            {
+                if(!lua_isnil(level_script, -2))
+                {
+                    r_static->self->collide_flag = lua_tointeger(level_script, -2);
+                }
+                if(!lua_isnil(level_script, -1))
+                {
+                    r_static->hide = lua_tointeger(level_script, -1);
+                }
+            }
+        }
+        lua_settop(level_script, top);
+    }
+}
+
 /*
  * BASIC SECTOR COLLISION LAYOUT
  *
@@ -1741,6 +1766,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
 
+        luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
         int lua_err = luaL_dofile(level_script, temp_script_name);
 
         if(lua_err)
@@ -2104,10 +2130,15 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             r_static->self->collide_flag = COLLISION_BOX;
         }
         
+        // Set additional static mesh properties from level script override.
+        
+        TR_SetStaticMeshProperties(r_static);        
+
+        // Set static mesh collision.
 
         if(r_static->self->collide_flag != COLLISION_NONE)
         {
-            cshape = BT_CSfromMesh(r_static->mesh, true, true, r_static->self->collide_flag);
+            cshape = BT_CSfromMesh(r_static->mesh, true, true, r_static->self->collide_flag, true);
             if(cshape)
             {
                 startTransform.setFromOpenGLMatrix(r_static->transform);
