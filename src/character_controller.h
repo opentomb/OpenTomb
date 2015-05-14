@@ -250,8 +250,8 @@ typedef struct character_s
     btScalar                     critical_wall_component;
 
     btScalar                     climb_r;                // climbing sensor radius
-    btScalar                     rx;                     // base character radius X
-    btScalar                     ry;                     // base character radius Y
+    btScalar                     forvard_size;           // offset for climbing calculation
+    btScalar                     max_ghost_move;         // maximum distance that ghost object can be moved before collision test
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
     btScalar                     swim_depth;             // depth offset for starting to swim

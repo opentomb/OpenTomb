@@ -94,8 +94,8 @@ void Character_Create(struct entity_s *ent)
     ret->climb.height_info = 0x00;
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
-    ret->ry = 8.0;                                                              ///@FIXME: magick stick for character moves iterations count calculation
-    ret->rx = 8.0;
+    ret->forvard_size = 32.0;                                                   ///@FIXME: magick number
+    ret->max_ghost_move = 8.0;                                                  ///@FIXME: magick number
     ret->Height = CHARACTER_BASE_HEIGHT;
 
     ret->manifoldArray = NULL;
@@ -920,7 +920,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
     from.m_floats[1] = pos[1] + ent->transform[8 + 1] * ent->bf.bb_max[2] - ent->transform[4 + 1] * ent->character->climb_r;
     from.m_floats[2] = pos[2] + ent->transform[8 + 2] * ent->bf.bb_max[2] - ent->transform[4 + 2] * ent->character->climb_r;
     to = from;
-    t = ent->character->ry + ent->bf.bb_max[1];
+    t = ent->character->forvard_size + ent->bf.bb_max[1];
     to.m_floats[0] += ent->transform[4 + 0] * t;
     to.m_floats[1] += ent->transform[4 + 1] * t;
     to.m_floats[2] += ent->transform[4 + 2] * t;
@@ -974,7 +974,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
         from.m_floats[1] -= ent->transform[8 + 1] * t;
         from.m_floats[2] -= ent->transform[8 + 2] * t;
         to = from;
-        t = ent->character->ry + ent->bf.bb_max[1];
+        t = ent->character->forvard_size + ent->bf.bb_max[1];
         to.m_floats[0] += ent->transform[4 + 0] * t;
         to.m_floats[1] += ent->transform[4 + 1] * t;
         to.m_floats[2] += ent->transform[4 + 2] * t;
@@ -1081,11 +1081,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
     int ret = 0, numPenetrationLoops = 0;
     btVector3 pos;
     btScalar tmp[3], orig_pos[3];
-
-    if(ent->character && ent->character->no_fix)
-    {
-        return 0;
-    }
+    bool skip_test = ent->character && ent->character->no_fix;
 
     vec3_copy(orig_pos, ent->transform + 12);
     vec3_set_zero(reaction);
@@ -1104,7 +1100,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             ent->character->ghostObjects[m]->getWorldTransform().setFromOpenGLMatrix(tr);
             Mat4_vec3_mul_macro(pos.m_floats, tr, v);
             ent->character->ghostObjects[m]->getWorldTransform().setOrigin(pos);
-            while(Ghost_GetPenetrationFixVector(ent->character->ghostObjects[m], ent->character->manifoldArray, tmp))
+            while(!skip_test && Ghost_GetPenetrationFixVector(ent->character->ghostObjects[m], ent->character->manifoldArray, tmp))
             {
                 numPenetrationLoops++;
                 ret++;
@@ -1134,16 +1130,16 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], int step_
     btScalar t1, t2, reaction[3];
     character_response_p resp = &ent->character->resp;
 
+    resp->horizontal_collide    = 0x00;
+    resp->vertical_collide      = 0x00;
+    resp->step_up               = 0x00;
+
+    int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction); // update ghost objects positions first
     if(ent->character && ent->character->no_fix)
     {
         return;
     }
 
-    resp->horizontal_collide    = 0x00;
-    resp->vertical_collide      = 0x00;
-    resp->step_up               = 0x00;
-
-    int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction);
     if((numPenetrationLoops > 0) && (step_up_map_filter > 0))
     {
         int orig_map_size = ent->bf.animations.model->collision_map_size;
@@ -1186,7 +1182,7 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], int step_
 
     if(ent->character->height_info.ceiling_hit && (pos.m_floats[2] > ent->character->height_info.ceiling_point.m_floats[2]))
     {
-        pos.m_floats[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->character->ry;
+        pos.m_floats[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->character->forvard_size;
         resp->vertical_collide |= 0x02;
     }
 
@@ -1498,7 +1494,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    int iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->max_ghost_move + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1589,7 +1585,7 @@ int Character_FreeFalling(struct entity_s *ent)
     vec3_RotateZ(ent->speed.m_floats, ent->speed.m_floats, ent->character->cmd.rot[0] * 0.5);  ///@FIXME magic const
 
     t = move.length();
-    int iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->max_ghost_move + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1732,7 +1728,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     move = spd * engine_frame_time;
     move.m_floats[2] = 0.0;
     t = move.length();
-    int iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->max_ghost_move + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1815,7 +1811,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     move = ent->speed * engine_frame_time;
 
     t = move.length();
-    int iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->max_ghost_move + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1887,7 +1883,7 @@ int Character_Climbing(struct entity_s *ent)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    int iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->max_ghost_move + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -1955,7 +1951,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
 
     move = spd * engine_frame_time;
     t = move.length();
-    int iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->max_ghost_move + 1;
     if(iter < 1)
     {
         iter = 1;
@@ -2047,7 +2043,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     ent->speed = spd;
     move = spd * engine_frame_time;
     t = move.length();
-    int iter = 2.0 * t / ent->character->ry + 1;
+    int iter = 2.0 * t / ent->character->max_ghost_move + 1;
     if(iter < 1)
     {
         iter = 1;

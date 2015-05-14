@@ -29,7 +29,7 @@
 #define LEFT_LEG                    (3)
 #define RIGHT_LEG                   (6)
 
-#define PENETRATION_TEST_OFFSET     (0.16 * ent->character->ry)
+#define PENETRATION_TEST_OFFSET     (0.16 * ent->character->forvard_size)
 #define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
 #define WALK_BACK_OFFSET            (16.0)
 #define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
@@ -385,7 +385,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                      (ss_anim->current_animation == TR_ANIMATION_LARA_WALL_SMASH_LEFT)  ||
                      (ss_anim->current_animation == TR_ANIMATION_LARA_WALL_SMASH_RIGHT)) )
                 {
-                    t = ent->character->ry + LARA_TRY_HANG_WALL_OFFSET;
+                    t = ent->character->forvard_size + LARA_TRY_HANG_WALL_OFFSET;
                     vec3_mul_scalar(global_offset, ent->transform + 4, t);
 
                     global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
@@ -1677,8 +1677,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 // depending on the current angle.
                 if((ent->dir_flag == ENT_MOVE_BACKWARD) && (ent->move_type == MOVE_CLIMBING))
                 {
-                    pos[0] = climb->point[0] - ent->transform[4 + 0] * (ent->character->ry + 16.0);
-                    pos[1] = climb->point[1] - ent->transform[4 + 1] * (ent->character->ry + 16.0);
+                    pos[0] = climb->point[0] - ent->transform[4 + 0] * (ent->character->forvard_size + 16.0);
+                    pos[1] = climb->point[1] - ent->transform[4 + 1] * (ent->character->forvard_size + 16.0);
                 }
             }
 
