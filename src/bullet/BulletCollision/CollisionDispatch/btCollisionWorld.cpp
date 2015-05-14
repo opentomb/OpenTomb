@@ -1424,7 +1424,6 @@ void btCollisionWorld::debugDrawObject(const btTransform& worldTransform, const 
 	}
 }
 
-bool btCollisionObjectIsVisible(btCollisionObject *colObj);
 
 void	btCollisionWorld::debugDrawWorld()
 {
@@ -1457,7 +1456,7 @@ void	btCollisionWorld::debugDrawWorld()
 		for (  i=0;i<m_collisionObjects.size();i++)
 		{
 			btCollisionObject* colObj = m_collisionObjects[i];
-			if (((colObj->getCollisionFlags() & btCollisionObject::CF_DISABLE_VISUALIZE_OBJECT)==0) && btCollisionObjectIsVisible(colObj))
+			if ((colObj->getCollisionFlags() & btCollisionObject::CF_DISABLE_VISUALIZE_OBJECT)==0)
 			{
 				if (getDebugDrawer() && (getDebugDrawer()->getDebugMode() & btIDebugDraw::DBG_DrawWireframe))
 				{

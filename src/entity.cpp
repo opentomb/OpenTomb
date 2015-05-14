@@ -92,7 +92,7 @@ void Entity_Clear(entity_p entity)
             entity->obb = NULL;
         }
 
-        if(entity->bf.animations.model && entity->bt_body)
+        if(entity->bt_body)
         {
             for(int i=0;i<entity->bf.bone_tag_count;i++)
             {
@@ -111,14 +111,13 @@ void Entity_Clear(entity_p entity)
                         body->setCollisionShape(NULL);
                     }
 
-                    if(body->isInWorld())
-                    {
-                        bt_engine_dynamicsWorld->removeRigidBody(body);
-                    }
+                    bt_engine_dynamicsWorld->removeRigidBody(body);
                     delete body;
                     entity->bt_body[i] = NULL;
                 }
             }
+            free(entity->bt_body);
+            entity->bt_body = NULL;
         }
 
         if(entity->character)
@@ -905,7 +904,7 @@ room_sector_s* Entity_GetHighestSector(room_sector_s* sector)
 void Entity_ProcessSector(struct entity_s *ent)
 {
     if(!ent->current_sector) return;
-    
+
     // Calculate both above and below sectors for further usage.
     // Sector below is generally needed for getting proper trigger index,
     // as many triggers tend to be called from the lowest room in a row
@@ -944,10 +943,10 @@ void Entity_ProcessSector(struct entity_s *ent)
             }
         }
     }
-    
+
     // If entity either marked as trigger activator (Lara) or heavytrigger activator (other entities),
     // we try to execute a trigger for this sector.
-    
+
     if((ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR) || (ent->type_flags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
     {
         // Look up trigger function table and run trigger if it exists.
@@ -986,7 +985,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
         if((!model) || (animation >= model->animation_count)) return;
         entity->bf.animations.model = model;
     }
-    
+
     animation_frame_p anim = &entity->bf.animations.model->animations[animation];
 
     entity->bf.animations.lerp = 0.0;

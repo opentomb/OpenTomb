@@ -37,14 +37,11 @@ GLint       room_tint_pos, room_current_tick, room_flags, room_light_mode;
 /*GLhandleARB main_vsh, main_fsh, main_program;
 GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
 */
-bool btCollisionObjectIsVisible(btCollisionObject *colObj)
+/*bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
     engine_container_p cont = (engine_container_p)colObj->getUserPointer();
     return (cont == NULL) || (cont->room == NULL) || (cont->room->is_in_r_list && cont->room->active);
-}
-
-int R_List_Less(const void *v1, const void *v2);
-int R_List_Great(const void *v1, const void *v2);
+}*/
 
 void Render_InitGlobals()
 {
@@ -773,7 +770,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar ma
         btScalar transform[16];
         Mat4_Mat4_mul(transform, matrix, room->transform);
         glLoadMatrixbt(transform);
-        
+
         GLfloat tint[4];
         Render_CalculateWaterTint(tint, 1);
         glUseProgramObjectARB(room_program);
@@ -1097,6 +1094,8 @@ void Render_DrawList_DebugLines()
     {
         return;
     }
+
+    debugDrawer.reset();
 
     if(renderer.world->Character)
     {
