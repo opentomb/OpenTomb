@@ -19,8 +19,6 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
-#define NUM_PENETRATION_ITERATIONS      (5)
-#define PENETRATION_PART_COEF           (1.0 / (double)NUM_PENETRATION_ITERATIONS)
 
 /*
  * default legs offsets
@@ -251,7 +249,7 @@ typedef struct character_s
 
     btScalar                     climb_r;                // climbing sensor radius
     btScalar                     forvard_size;           // offset for climbing calculation
-    btScalar                     max_ghost_move;         // maximum distance that ghost object can be moved before collision test
+    btScalar                     max_ghost_move;         // maximum distance that ghost object can be moved before collision test; TODO: delete it!
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
     btScalar                     swim_depth;             // depth offset for starting to swim
@@ -285,6 +283,7 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
+void Character_GhostUpdate(struct entity_s *ent);
 int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]);
 void Character_FixPenetrations(struct entity_s *ent, btScalar move[3], int step_up_map_filter);
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);

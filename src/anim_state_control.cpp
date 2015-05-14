@@ -54,6 +54,7 @@ void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
         i = v[1] / TR_METERING_SECTORSIZE;
         v[1] = i * TR_METERING_SECTORSIZE + 512.0;
         Entity_UpdateRigidBody(ent->character->traversed_object, 1);
+        Character_GhostUpdate(ent);
         ent->character->traversed_object = NULL;
         ss_anim->onFrame = NULL;
     }
@@ -65,6 +66,7 @@ void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim, int state)
     {
         ent->move_type = MOVE_ON_FLOOR;
         ent->transform[12 + 2] = ent->character->height_info.floor_point.m_floats[2];
+        Character_GhostUpdate(ent);
         ss_anim->onFrame = NULL;
     }
 }
@@ -85,6 +87,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
         ent->move_type = MOVE_ON_FLOOR;
         ent->transform[12 + 2] = ent->character->climb.point[2];
         //vec3_copy(ent->transform+12,ent->character->climb.point);
+        Character_GhostUpdate(ent);
         ss_anim->onFrame = NULL;
     }
 }
@@ -121,6 +124,7 @@ void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim, int state)
     if(state == 0x02)
     {
         ent->angles[1] = -45.0;
+        ///@TODO: add Character_GhostUpdate(ent); correctly here
         ss_anim->onFrame = NULL;
     }
 }
@@ -130,6 +134,7 @@ void ent_to_on_water(entity_p ent, ss_animation_p ss_anim, int state)
     if(state == 0x02)
     {
         ent->transform[12 + 2] = ent->character->height_info.transition_level;
+        Character_GhostUpdate(ent);
         ent->move_type = MOVE_ON_WATER;
         ss_anim->onFrame = NULL;
     }
@@ -144,6 +149,7 @@ void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim, int state)
         ent->transform[12 + 0] = v[0];
         ent->transform[12 + 1] = v[1];
         ent->transform[12 + 2] = v[2];
+        Character_GhostUpdate(ent);
         ss_anim->onFrame = NULL;
     }
 }
@@ -157,6 +163,7 @@ void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim, int state)
         ent->transform[12 + 0] = v[0] - ent->transform[4 + 0] * ent->bf.bb_max[1];
         ent->transform[12 + 1] = v[1] - ent->transform[4 + 1] * ent->bf.bb_max[1];
         ent->transform[12 + 2] = v[2] - ent->bf.bb_max[2];
+        Character_GhostUpdate(ent);
         ss_anim->onFrame = NULL;
     }
 }
@@ -167,6 +174,7 @@ void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim, int state)
     {
         ent->move_type = MOVE_MONKEYSWING;
         ent->transform[12 + 2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->bf.bb_max[2];
+        Character_GhostUpdate(ent);
         ss_anim->onFrame = NULL;
     }
 }

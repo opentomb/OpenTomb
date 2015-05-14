@@ -336,7 +336,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
                 if(ent->type_flags & ENTITY_TYPE_KINEMATIC)
                 {
                     ent->bt_body[i]->getMotionState()->getWorldTransform(bt_tr);
-                
+
                     if(i==0) bt_tr.getOpenGLMatrix(ent->transform);
                              bt_tr.getOpenGLMatrix(ent->bf.bone_tags[i].full_transform);
                 }
@@ -974,9 +974,10 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
 
     animation = (animation < 0)?(0):(animation);
 
-    if(entity->character)
+    if(entity->character != NULL)
     {
         entity->character->no_fix = 0x00;
+        Character_GhostUpdate(entity);
     }
 
     if(another_model >= 0)
@@ -1008,6 +1009,10 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity, 0);
+    if(entity->character != NULL)
+    {
+        Character_FixPenetrations(entity, NULL, 0);
+    }
 }
 
 
@@ -1192,10 +1197,15 @@ int Entity_Frame(entity_p entity, btScalar time)
     {
         return 0;
     }
-    
+
     if(entity->bf.animations.anim_flags & ANIM_LOCK) return 1;
 
     ss_anim = &entity->bf.animations;
+
+    if(entity->character != NULL)
+    {
+        Character_GhostUpdate(entity);
+    }
 
     entity->bf.animations.lerp = 0.0;
     stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
@@ -1639,6 +1649,10 @@ int Entity_Frame(entity_p entity, btScalar time)
     if(entity->bf.animations.onFrame != NULL)
     {
         entity->bf.animations.onFrame(entity, &entity->bf.animations, ret);
+    }
+    if(entity->character != NULL)
+    {
+        Character_FixPenetrations(entity, NULL, 0);
     }
 
     return ret;
