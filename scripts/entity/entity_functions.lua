@@ -382,10 +382,11 @@ function boulder_init(id)
             if(mesh_count == 1) then
                 setEntityBodyMass(object_id, mesh_count, 2000.0);
                 setEntityActivity(object_id, 1);
-            end;
-            
-            if(getLevelVersion() < TR_IV) then
-                pushEntityBody(object_id, 0, math.random(150) + 2500.0, 10.0, true);
+                
+                if(getLevelVersion() < TR_IV) then
+                    pushEntityBody(object_id, 0, math.random(150) + 2500.0, 10.0, true);
+                    lockEntityBodyLinearFactor(object_id, 0);
+                end;
             end;
         end;
     end

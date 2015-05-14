@@ -2565,7 +2565,7 @@ int lua_PushEntityBody(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
     
-    if((ent != NULL) || (ent->bt_body[body_number] != NULL) || (ent->type_flags & ENTITY_TYPE_KINEMATIC))
+    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_KINEMATIC))
     {
         btScalar h_force = lua_tonumber(lua, 3);
         btScalar v_force = lua_tonumber(lua, 4);
@@ -2618,37 +2618,41 @@ int lua_SetEntityBodyMass(lua_State *lua)
             
             if(!lua_isnil(lua, argn))
                 mass = lua_tonumber(lua, argn);
-                
-            if(mass > 0.0) kinematic = true;
-                
-            bt_engine_dynamicsWorld->removeRigidBody(ent->bt_body[i]);
 
-                ent->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-            
-                ent->bt_body[i]->setMassProps(mass, inertia);
-            
-                ent->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
-                ent->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
-            
-                ent->bt_body[i]->updateInertiaTensor();
-                ent->bt_body[i]->clearForces();
-            
-                ent->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
-            
-                //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
+            if(ent->bt_body[i] != NULL)
+            {
+                bt_engine_dynamicsWorld->removeRigidBody(ent->bt_body[i]);
+
+                    ent->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
                 
-                //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
-                //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
+                    ent->bt_body[i]->setMassProps(mass, inertia);
+                
+                    ent->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
+                    ent->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
+                
+                    ent->bt_body[i]->updateInertiaTensor();
+                    ent->bt_body[i]->clearForces();
+                
+                    ent->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
+                
+                    //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
+                    
+                    //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
+                    //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
+                
+                bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i]);
+                
+                ent->bt_body[i]->activate();
+                
+                //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
+                //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
+                
+                //ent->self->object_type = OBJECT_ENTITY;
+                //ent->bt_body[i]->setUserPointer(ent->self);
+                
+                if(mass > 0.0) kinematic = true;
+            }
             
-            bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i]);
-            
-            ent->bt_body[i]->activate();
-            
-            //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
-            //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
-            
-            //ent->self->object_type = OBJECT_ENTITY;
-            //ent->bt_body[i]->setUserPointer(ent->self);
         }
         
         if(kinematic)
@@ -2665,6 +2669,43 @@ int lua_SetEntityBodyMass(lua_State *lua)
         Con_Printf("Can't find entity %d or body number is more than %d", id, body_number);
     }
 
+    return 0;
+}
+
+int lua_LockEntityBodyLinearFactor(lua_State *lua)
+{
+    if(lua_gettop(lua) < 2)
+    {
+        Con_Printf("Wrong arguments count. Must be [entity_id, body_number, (vertical_factor)]");
+        return 0;
+    }
+    
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    int body_number = lua_tointeger(lua, 2);
+    
+    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_KINEMATIC))
+    {
+        btScalar t    = ent->angles[0] * M_PI / 180.0;
+        btScalar ang1 = sinf(t);
+        btScalar ang2 = cosf(t);
+        btScalar ang3 = 1.0;
+        
+        if(!lua_isnil(lua, 3))
+        {
+            ang3 = abs(lua_tonumber(lua, 3));
+            ang3 = (ang3 > 1.0)?(1.0):(ang3);
+        }
+        
+        btVector3 angle = {abs(ang1), abs(ang2), ang3};
+        
+        ent->bt_body[body_number]->setLinearFactor(angle);
+    }
+    else
+    {
+        Con_Printf("Can't apply force to entity %d - no entity, body, or entity is not kinematic!", id);
+    }
+    
     return 0;
 }
 
@@ -3361,6 +3402,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     
     lua_register(lua, "setEntityBodyMass", lua_SetEntityBodyMass);
     lua_register(lua, "pushEntityBody", lua_PushEntityBody);
+    lua_register(lua, "lockEntityBodyLinearFactor", lua_LockEntityBodyLinearFactor);
 
     lua_register(lua, "getEntityTriggerLayout", lua_GetEntityTriggerLayout);
     lua_register(lua, "setEntityTriggerLayout", lua_SetEntityTriggerLayout);
