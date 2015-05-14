@@ -2575,7 +2575,7 @@ int lua_PushEntityBody(lua_State *lua)
         btScalar ang1 = sinf(t);
         btScalar ang2 = cosf(t);
         
-        btVector3 angle = {-ang1 * h_force, ang2 * h_force, v_force};
+        btVector3 angle (-ang1 * h_force, ang2 * h_force, v_force);
         
         if(lua_toboolean(lua, 5))
             ent->bt_body[body_number]->clearForces();
