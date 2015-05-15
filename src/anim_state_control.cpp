@@ -601,9 +601,9 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 Entity_UpdateCurrentSpeed(ent, 1);
             }
-            else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2)
+            else if((ent->move_type == MOVE_UNDERWATER) || (ent->speed.m_floats[2] <= -FREE_FALL_SPEED_2))
             {
-                ss_anim->next_state = TR_STATE_LARA_FREEFALL;                    // free falling
+                ss_anim->next_state = TR_STATE_LARA_FREEFALL;                   // free falling
             }
             else if(cmd->roll)
             {

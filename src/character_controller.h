@@ -221,6 +221,11 @@ typedef struct inventory_node_s
     struct inventory_node_s    *next;
 }inventory_node_t, *inventory_node_p;
 
+typedef struct character_collision_node_s
+{
+    btCollisionObject          *obj;
+}character_collision_node_t, *character_collision_node_p;
+
 typedef struct character_s
 {
     struct entity_s             *ent;                    // actor entity
@@ -265,7 +270,8 @@ typedef struct character_s
     struct climb_info_s          climb;
 
     struct entity_s             *traversed_object;
-
+    
+    struct character_collision_node_s                   *last_collisions;
     bt_engine_ClosestRayResultCallback                  *ray_cb;
     bt_engine_ClosestConvexResultCallback               *convex_cb;
 }character_t, *character_p;

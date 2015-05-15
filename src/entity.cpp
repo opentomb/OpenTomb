@@ -1149,6 +1149,11 @@ void Entity_DoAnimMove(entity_p entity)
     {
         bone_frame_p curr_bf = entity->bf.animations.model->animations[entity->bf.animations.current_animation].frames + entity->bf.animations.current_frame;
 
+        if(entity->character != NULL)
+        {
+            Character_GhostUpdate(entity);
+        }
+
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
             Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
@@ -1175,6 +1180,11 @@ void Entity_DoAnimMove(entity_p entity)
             btScalar tr[3];
             Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
             vec3_add(entity->transform+12, entity->transform+12, tr);
+        }
+
+        if(entity->character != NULL)
+        {
+            Character_FixPenetrations(entity, NULL);
         }
     }
 }

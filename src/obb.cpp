@@ -8,8 +8,6 @@
 #include "entity.h"
 
 #include "bullet/LinearMath/btScalar.h"
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
 #include "engine.h"
 
 obb_p OBB_Create()
@@ -369,56 +367,4 @@ int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
     /*no separating axis found,
     the two boxes overlap */
     return 1;
-}
-
-
-
-/**
- * Creates Z capsule - convex shape; Uses for full 3d scaling;
- * @param size = {x/2, y/2, z_cyl/2, z_capsule/2};
- * @param n = number of segments;
- * @return btCollisionShape (is convex);
- */
-btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n)
-{
-    btScalar fi, dfi;
-    btVector3 v;
-    btConvexHullShape *ret;
-
-    if(n < 3 || n > 64)
-    {
-        return NULL;
-    }
-
-    fi = 0.0;
-    dfi = M_PI * 2.0 / (btScalar)n;
-    ret = new btConvexHullShape();
-
-    for(int i=0;i<n;i++,fi+=dfi)
-    {
-        v.m_floats[0] = 0.0;
-        v.m_floats[1] = 0.0;
-        v.m_floats[2] = size[3];
-        ret->addPoint(v);
-        v.m_floats[0] = size[0] * cos(fi);
-        v.m_floats[1] = size[1] * sin(fi);
-        v.m_floats[2] = size[2];
-        ret->addPoint(v);
-        v.m_floats[0] = size[0] * cos(fi + dfi);
-        v.m_floats[1] = size[1] * sin(fi + dfi);
-        v.m_floats[2] = size[2];
-        ret->addPoint(v);
-
-        v.m_floats[2] =-size[2];
-        ret->addPoint(v);
-        v.m_floats[0] = size[0] * cos(fi);
-        v.m_floats[1] = size[1] * sin(fi);
-        ret->addPoint(v);
-        v.m_floats[0] = 0.0;
-        v.m_floats[1] = 0.0;
-        v.m_floats[2] =-size[3];
-        ret->addPoint(v);
-    }
-
-    return ret;
 }

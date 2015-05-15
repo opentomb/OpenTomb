@@ -12,7 +12,6 @@
 
 #include "polygon.h"
 #include "bullet/LinearMath/btScalar.h"
-#include "bullet/btBulletCollisionCommon.h"
 
 /*
  * In base_edges we safe the initial shape polygons
@@ -38,8 +37,6 @@ void OBB_Clear(obb_p bv);
 void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3]);
 void OBB_Transform(obb_p obb);
 int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2);
-
-btCollisionShape *BV_CreateBTCapsuleZ(btScalar size[4], int n);
 
 #endif /* OBB_H */
 

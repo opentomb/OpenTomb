@@ -103,6 +103,7 @@ void Character_Create(struct entity_s *ent)
     ret->traversed_object = NULL;
     ent->character->shapes = NULL;
     ent->character->ghostObjects = NULL;
+    ent->character->last_collisions = NULL;
 
     if(ent->bf.animations.model->mesh_count > 0)
     {
@@ -112,6 +113,7 @@ void Character_Create(struct entity_s *ent)
         ret->manifoldArray = new btManifoldArray();
         ent->character->shapes = (btCollisionShape**)malloc(ent->bf.bone_tag_count * sizeof(btCollisionShape*));
         ent->character->ghostObjects = (btPairCachingGhostObject**)malloc(ent->bf.bone_tag_count * sizeof(btPairCachingGhostObject*));
+        ent->character->last_collisions = (character_collision_node_p)malloc(ent->bf.bone_tag_count * sizeof(character_collision_node_t));
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btVector3 box;
@@ -128,6 +130,8 @@ void Character_Create(struct entity_s *ent)
             ret->ghostObjects[i]->setUserPointer(ent->self);
             ret->ghostObjects[i]->setCollisionShape(ent->character->shapes[i]);
             bt_engine_dynamicsWorld->addCollisionObject(ret->ghostObjects[i], btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::DefaultFilter);
+
+            ent->character->last_collisions[i].obj = NULL;
         }
     }
 }
@@ -163,6 +167,12 @@ void Character_Clean(struct entity_s *ent)
         }
         free(actor->ghostObjects);
         actor->ghostObjects = NULL;
+    }
+
+    if(ent->character->last_collisions)
+    {
+        free(ent->character->last_collisions);
+        ent->character->last_collisions = NULL;
     }
 
     if(actor->shapes)
