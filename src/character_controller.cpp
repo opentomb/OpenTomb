@@ -1175,19 +1175,18 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
     }
 
     int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction);
-    // that commented code prevents to ugly collision bugs, shakes and other bad things!
-    /*if((numPenetrationLoops > 0) && (ent->character->ghost_step_up_map_filter > 0))
+    // temporary stick, but not so bad
+    if((numPenetrationLoops > 0) && (ent->character->ghost_step_up_map_filter > 0))
     {
         int orig_map_size = ent->bf.animations.model->collision_map_size;
         ent->bf.animations.model->collision_map_size = ent->character->ghost_step_up_map_filter;      // disable hands and legs
+        Character_GhostUpdate(ent);
         if(Character_GetPenetrationFixVector(ent, pos.m_floats) == 0)
         {
-            numPenetrationLoops = 0;
-            vec3_set_zero(reaction);
             resp->step_up = 0x01;
         }
         ent->bf.animations.model->collision_map_size = orig_map_size;
-    }*/
+    }
 
     vec3_add(pos.m_floats, ent->transform+12, reaction);
     Character_UpdateCurrentHeight(ent);
@@ -1197,11 +1196,14 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         t2 = move[0] * move[0] + move[1] * move[1];
         if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))        // we have horizontal move and horizontal correction
         {
-            t2 = btSqrt(t2 * t1);
-            t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / t2;
-            if(t1 < -ent->character->critical_wall_component)                   // cos(alpha) < -0.707
+            if(resp->step_up == 0x00)
             {
-                resp->horizontal_collide |= 0x01;
+                t2 = btSqrt(t2 * t1);
+                t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / t2;
+                if(t1 < -ent->character->critical_wall_component)                   // cos(alpha) < -0.707
+                {
+                    resp->horizontal_collide |= 0x01;
+                }
             }
         }
         else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
