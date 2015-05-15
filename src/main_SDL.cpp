@@ -866,7 +866,6 @@ void ShowDebugInfo()
         }
     }
     Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
-    Gui_OutTextXY(30.0, 180.0, "sector = %d", engine_world.Character->current_sector->trig_index);
 #endif
 }
 
