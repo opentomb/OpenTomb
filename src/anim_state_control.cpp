@@ -1552,13 +1552,13 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_ROLL_FORWARD:
             ent->dir_flag = ENT_MOVE_FORWARD;
             ent->character->ghost_step_up_map_filter = 0;
-            if(ent->move_type == MOVE_FREE_FALLING)
-            {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0); ///@FIXME: check
-            }
-            else if(low_vertical_space)
+            if(low_vertical_space || ent->character->resp.horizontal_collide)
             {
                 ent->dir_flag = ENT_STAY;
+            }
+            else if(ent->move_type == MOVE_FREE_FALLING)
+            {
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0); ///@FIXME: check
             }
             break;
 

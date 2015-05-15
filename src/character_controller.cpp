@@ -95,7 +95,6 @@ void Character_Create(struct entity_s *ent)
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
     ret->forvard_size = 32.0;                                                   ///@FIXME: magick number
-    ret->max_ghost_move = 6.0;                                                  ///@FIXME: magick number
     ret->ghost_step_up_map_filter = 0;
     ret->Height = CHARACTER_BASE_HEIGHT;
 
@@ -121,6 +120,8 @@ void Character_Create(struct entity_s *ent)
             box.m_floats[1] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[1] - ent->bf.bone_tags[i].mesh_base->bb_min[1]);
             box.m_floats[2] = 0.40 * (ent->bf.bone_tags[i].mesh_base->bb_max[2] - ent->bf.bone_tags[i].mesh_base->bb_min[2]);
             ent->character->shapes[i] = new btBoxShape(box);
+            ent->bf.bone_tags[i].mesh_base->R = (box.m_floats[0] < box.m_floats[1])?(box.m_floats[0]):(box.m_floats[1]);
+            ent->bf.bone_tags[i].mesh_base->R = (ent->bf.bone_tags[i].mesh_base->R < box.m_floats[2])?(ent->bf.bone_tags[i].mesh_base->R):(box.m_floats[2]);
 
             ret->ghostObjects[i] = new btPairCachingGhostObject();
             Mat4_Mat4_mul(gltr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -1129,7 +1130,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
                 Mat4_vec3_mul_macro(to.m_floats, tr, v);
                 curr = from;
                 move = to - from;
-                int iter = ((btScalar)move.length() / (btScalar)ent->character->max_ghost_move) + 1;
+                int iter = (5.0 * (btScalar)move.length() / (btScalar)ent->bf.animations.model->mesh_tree[m].mesh_base->R) + 1;
                 move.m_floats[0] /= (btScalar)iter;
                 move.m_floats[1] /= (btScalar)iter;
                 move.m_floats[2] /= (btScalar)iter;
