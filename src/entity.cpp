@@ -1011,7 +1011,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     Entity_UpdateRigidBody(entity, 0);
     if(entity->character != NULL)
     {
-        Character_FixPenetrations(entity, NULL, 0);
+        Character_FixPenetrations(entity, NULL);
     }
 }
 
@@ -1652,7 +1652,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     }
     if(entity->character != NULL)
     {
-        Character_FixPenetrations(entity, NULL, 0);
+        Character_FixPenetrations(entity, NULL);
     }
 
     return ret;
