@@ -82,7 +82,7 @@ tr1_entity_tbl[42] = {coll = 0x01, func = "slamdoor"};   -- Slamming sawtooth do
 tr1_entity_tbl[43] = {coll = 0x01};                      -- Sword of Damocles
 tr1_entity_tbl[44] = {coll = 0x01};                      -- Thor's hammer (handle)
 tr1_entity_tbl[45] = {coll = 0x01};                      -- Thor's hammer (block)
-tr1_entity_tbl[46] = {coll = 0x01};                      -- Thor's lightning ball
+tr1_entity_tbl[46] = {coll = 0x01, hide = 0x01};                      -- Thor's lightning ball
 tr1_entity_tbl[47] = {coll = 0x01};                      -- Barricade
 tr1_entity_tbl[48] = {coll = 0x02, trav = 0x18};         -- Pushable block
 tr1_entity_tbl[49] = {coll = 0x02, trav = 0x18};         -- Pushable block
@@ -265,7 +265,7 @@ tr2_entity_tbl[54] = {coll = 0x02, func = "baddie"};                -- Monk with
 
 -- TRAPS --
 
-tr2_entity_tbl[55] = {coll = 0x02, func = "fallblock"}; -- Collapsible floor
+tr2_entity_tbl[55] = {coll = 0x01, func = "fallblock"}; -- Collapsible floor
 tr2_entity_tbl[57] = {coll = 0x01};                     -- Loose boards
 tr2_entity_tbl[58] = {coll = 0x02};                     -- Swinging sandbag / spiky ball
 tr2_entity_tbl[59] = {coll = 0x02, func = "oldspike"};  -- Spikes / Glass shards
@@ -290,7 +290,7 @@ tr2_entity_tbl[79] = {coll = 0x02, func = "fallceiling"};                     --
 tr2_entity_tbl[80] = {coll = 0x02};                     -- Rolling spindle
 tr2_entity_tbl[81] = {coll = 0x02, func = "wallblade"};                     -- Wall-mounted knife blade
 tr2_entity_tbl[82] = {coll = 0x02};                     -- Statue with knife blade
-tr2_entity_tbl[83] = {coll = 0x02};                     -- Multiple boulders / snowballs
+tr2_entity_tbl[83] = {coll = 0x01};                     -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = 0x02};                     -- Detachable icicles
 tr2_entity_tbl[85] = {coll = 0x02};                     -- Spiky movable wall
 tr2_entity_tbl[86] = {coll = 0x01};                     -- Bounce pad
@@ -810,7 +810,7 @@ tr4_entity_tbl[103] = {coll = 0x02}; -- Ahmet MIP - UNUSED
 tr4_entity_tbl[104] = {coll = 0x01}; -- Lara double
 tr4_entity_tbl[105] = {coll = 0x01}; -- Lara double MIP - UNUSED
 tr4_entity_tbl[106] = {coll = 0x02}; -- Small scorpion
-tr4_entity_tbl[107] = {coll = 0x00}; -- Locust (ex-Fish) - NO COLLISION, SWARM
+tr4_entity_tbl[107] = {coll = 0x00, hide = 0x01}; -- Locust (ex-Fish) - NO COLLISION, SWARM
 
 -- PUZZLE ACTION ITEMS
 

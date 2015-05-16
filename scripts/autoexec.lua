@@ -247,7 +247,8 @@ setAnimCommandTransform(0, 146, -1, 0x03);
 setAnimCommandTransform(0, 205, 1, 0x00);   -- underwater roll animation smooth fix 
 setAnimCommandTransform(0, 205, 0, 0x00);
 setAnimCommandTransform(0, 203, -1, 0x03);
-if(getLevelVersion >= TR_II) then
+
+if(getLevelVersion() >= TR_II) then
     setAnimCommandTransform(0, 205, 1, 0x00);   -- underwater roll animation smooth fix 
     setAnimCommandTransform(0, 205, 0, 0x00);
     setAnimCommandTransform(0, 203, -1, 0x03);

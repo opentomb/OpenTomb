@@ -3179,10 +3179,10 @@ int lua_genUVRotateAnimation(lua_State *lua)
             seq->frame_lock        = false; // by default anim is playing
             seq->uvrotate          = true;
             seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-            seq->frame_rate        = 0.05;  // Should be passed as 1 / FPS.
+            seq->frame_rate        = 0.025;  // Should be passed as 1 / FPS.
             seq->frame_time        = 0.0;   // Reset frame time to initial state.
             seq->current_frame     = 0;     // Reset current frame to zero.
-            seq->frames_count      = 8;
+            seq->frames_count      = 16;
             seq->frame_list        = (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
             seq->frame_list[0]     = 0;
             seq->frames            = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
