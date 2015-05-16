@@ -1470,6 +1470,8 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    
+    glLoadIdentity();
 
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
