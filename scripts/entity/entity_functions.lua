@@ -122,6 +122,10 @@ function anim_init(id)      -- Ordinary animatings
     end
 end
 
+function pushable_init(id)
+    setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+end
+
 function venicebird_init(id)    -- Venice singing birds (TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);

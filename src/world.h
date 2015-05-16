@@ -68,7 +68,7 @@
 #define TR_FD_TRIGFUNC_PLAYTRACK        0x08
 #define TR_FD_TRIGFUNC_FLIPEFFECT       0x09
 #define TR_FD_TRIGFUNC_SECRET           0x0A
-#define TR_FD_TRIGFUNC_BODYBAG          0x0B    // Unused in TR4
+#define TR_FD_TRIGFUNC_CLEARBODIES      0x0B    // Unused in TR4
 #define TR_FD_TRIGFUNC_FLYBY            0x0C
 #define TR_FD_TRIGFUNC_CUTSCENE         0x0D
 

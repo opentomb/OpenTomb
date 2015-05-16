@@ -1081,8 +1081,8 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                 strcat(single_events, buf);
                                 break;
 
-                            case TR_FD_TRIGFUNC_BODYBAG:
-                                snprintf(buf, 128, "   setBodybag(%d); \n", operands);
+                            case TR_FD_TRIGFUNC_CLEARBODIES:
+                                snprintf(buf, 128, "   clearBodies(); \n");
                                 strcat(single_events, buf);
                                 break;
 

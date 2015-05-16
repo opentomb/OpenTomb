@@ -163,10 +163,10 @@ function findSecret(secret_number)
 end
 
 
--- WHAT IS THIS?
+-- Clear dead enemies, if they have CLEAR BODY flag specified.
 
-function setBodybag(bodybag_index)
-    print("BODYBAG: index = " .. bodybag_index);
+function clearBodies()
+    print("CLEAR BODIES");
 end
 
 
