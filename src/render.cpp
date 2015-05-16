@@ -39,7 +39,7 @@ struct room_shader_description
     GLint tint_mult;
     GLint model_view_projection;
     GLint sampler;
-    
+
     room_shader_description(const char *filename, GLhandleARB fragmentShader);
 };
 
@@ -84,15 +84,15 @@ room_shader_description::room_shader_description(const char *filename, GLhandleA
 {
     GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
     loadShaderFromFile(vertexShader, filename);
-    
+
     program = glCreateProgramObjectARB();
     glAttachObjectARB(program, vertexShader);
     glAttachObjectARB(program, fragmentShader);
     glLinkProgramARB(program);
     printInfoLog(program);
-    
+
     glDeleteObjectARB(vertexShader);
-    
+
     current_tick = glGetUniformLocationARB(program, "fCurrentTick");
     tint_mult = glGetUniformLocationARB(program, "tintMult");
     model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
@@ -127,7 +127,7 @@ void Render_DoShaders()
     //Room prog
     GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
     loadShaderFromFile(fragmentShader, "shaders/room.fsh");
-    
+
     room_shaders[ROOM_SHADER_NORMAL] = new room_shader_description("shaders/room_normal.vsh", fragmentShader);
     room_shaders[ROOM_SHADER_FLICKERING] = new room_shader_description("shaders/room_flickering.vsh", fragmentShader);
     room_shaders[ROOM_SHADER_FLICKERING_WATER] = new room_shader_description("shaders/room_flickering_water.vsh", fragmentShader);
@@ -777,10 +777,10 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     entity_p ent;
 
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
-    {        
+    {
         btScalar modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
-        
+
         room_shader_description *shader = room_shaders[ROOM_SHADER_NORMAL];
         if (room->flags & 1) // Is water
         {
@@ -792,14 +792,14 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         {
             shader = room_shaders[ROOM_SHADER_FLICKERING];
         }
-        
+
         GLfloat tint[4];
         Render_CalculateWaterTint(tint, 1);
         glUseProgramObjectARB(shader->program);
         glUniform4fvARB(shader->tint_mult, 1, tint);
-        glUniform1f(shader->current_tick, (GLfloat) SDL_GetTicks());
-        glUniform1i(shader->sampler, 0);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, modelViewProjectionTransform);
+        glUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
+        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
         Render_Mesh(room->mesh, NULL, NULL);
         glUseProgramObjectARB(0);
     }
