@@ -1,5 +1,6 @@
 
 #include <math.h>
+#include <string.h>
 #include "vmath.h"
 
 void vec4_rev(btScalar rev[4], btScalar src[4])
@@ -405,45 +406,32 @@ void Mat4_inv(btScalar mat[16])
 
 
 /**
- * OpenGL matrices multiplication. serult = src1 x src2.
- * Works only with OpenGL transformation matrices!
+ * Matrix multiplication. serult = src1 x src2.
  */
 void Mat4_Mat4_mul(btScalar result[16], const btScalar src1[16], const btScalar src2[16])
 {
+    // Store in temporary matrix so we don't overwrite anything if src1,2 alias result
     btScalar t_res[16];
-
-    t_res[0] = src1[0] * src2[0] + src1[4] * src2[1] + src1[8] * src2[2];
-    t_res[1] = src1[1] * src2[0] + src1[5] * src2[1] + src1[9] * src2[2];
-    t_res[2] = src1[2] * src2[0] + src1[6] * src2[1] + src1[10] * src2[2];
-    t_res[3] = 0.0;
-
-    t_res[4] = src1[0] * src2[4] + src1[4] * src2[5] + src1[8] * src2[6];
-    t_res[5] = src1[1] * src2[4] + src1[5] * src2[5] + src1[9] * src2[6];
-    t_res[6] = src1[2] * src2[4] + src1[6] * src2[5] + src1[10] * src2[6];
-    t_res[7] = 0.0;
-
-    t_res[8] = src1[0] * src2[8] + src1[4] * src2[9] + src1[8] * src2[10];
-    t_res[9] = src1[1] * src2[8] + src1[5] * src2[9] + src1[9] * src2[10];
-    t_res[10] = src1[2] * src2[8] + src1[6] * src2[9] + src1[10] * src2[10];
-    t_res[11] = 0.0;
-
-    t_res[12] = src1[12] + src1[0] * src2[12] + src1[4] * src2[13] + src1[8] * src2[14];
-    t_res[13] = src1[13] + src1[1] * src2[12] + src1[5] * src2[13] + src1[9] * src2[14];
-    t_res[14] = src1[14] + src1[2] * src2[12] + src1[6] * src2[13] + src1[10] * src2[14];
-    t_res[15] = 1.0;
-
-    vec4_copy(result  , t_res);
-    vec4_copy(result+4, t_res+4);
-    vec4_copy(result+8, t_res+8);
-    vec4_copy(result+12, t_res+12);
+    
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            t_res[i*4 + j] = 0;
+            for (int k = 0; k < 4; k++)
+                t_res[i*4 + j] += src1[k*4+j] * src2[i*4 + k];
+        }
+    }
+    
+    memcpy(result, t_res, sizeof(t_res));
 }
 
 
 /**
  * OpenGL matrices multiplication. serult = (src1^-1) x src2.
- * Works only with OpenGL transformation matrices!
+ * Works only with affine transformation matrices!
  */
-void Mat4_inv_Mat4_mul(btScalar result[16], btScalar src1[16], btScalar src2[16])
+void Mat4_inv_Mat4_affine_mul(btScalar result[16], btScalar src1[16], btScalar src2[16])
 {
     btScalar t_res[16], v[3];
 
@@ -476,46 +464,6 @@ void Mat4_inv_Mat4_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]
     vec4_copy(result+8, t_res+8);
     vec4_copy(result+12, t_res+12);
 }
-
-
-/**
- * OpenGL matrices multiplication. serult = src1 x (src2^-1).
- * Works only with OpenGL transformation matrices!
- */
-void Mat4_Mat4_inv_mul(btScalar result[16], btScalar src1[16], btScalar src2[16])
-{
-    btScalar t_res[16], v[3];
-
-    v[0] = -(src2[0] * src2[12] + src2[1] * src2[13] + src2[2] * src2[14]);
-    v[1] = -(src2[4] * src2[12] + src2[5] * src2[13] + src2[6] * src2[14]);
-    v[2] = -(src2[8] * src2[12] + src2[9] * src2[13] + src2[10] * src2[14]);
-
-    t_res[0] = src1[0] * src2[0] + src1[4] * src2[4] + src1[8] * src2[8];
-    t_res[1] = src1[1] * src2[0] + src1[5] * src2[4] + src1[9] * src2[8];
-    t_res[2] = src1[2] * src2[0] + src1[6] * src2[4] + src1[10] * src2[8];
-    t_res[3] = 0.0;
-
-    t_res[4] = src1[0] * src2[1] + src1[4] * src2[5] + src1[8] * src2[9];
-    t_res[5] = src1[1] * src2[1] + src1[5] * src2[5] + src1[9] * src2[9];
-    t_res[6] = src1[2] * src2[1] + src1[6] * src2[5] + src1[10] * src2[9];
-    t_res[7] = 0.0;
-
-    t_res[8] = src1[0] * src2[2] + src1[4] * src2[6] + src1[8] * src2[10];
-    t_res[9] = src1[1] * src2[2] + src1[5] * src2[6] + src1[9] * src2[10];
-    t_res[10] = src1[2] * src2[2] + src1[6] * src2[6] + src1[10] * src2[10];
-    t_res[11] = 0.0;
-
-    t_res[12] = src1[12] + src1[0] * v[0] + src1[4] * v[1] + src1[8] * v[2];
-    t_res[13] = src1[13] + src1[1] * v[0] + src1[5] * v[1] + src1[9] * v[2];
-    t_res[14] = src1[14] + src1[2] * v[0] + src1[6] * v[1] + src1[10] * v[2];
-    t_res[15] = 1.0;
-
-    vec4_copy(result  , t_res);
-    vec4_copy(result+4, t_res+4);
-    vec4_copy(result+8, t_res+8);
-    vec4_copy(result+12, t_res+12);
-}
-
 
 void Mat4_vec3_mul(btScalar v[3], btScalar mat[16], btScalar src[3])
 {

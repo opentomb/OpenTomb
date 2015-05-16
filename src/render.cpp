@@ -31,8 +31,27 @@ extern render_DebugDrawer debugDrawer;
  */
 GLhandleARB color_mult_vsh, color_mult_program;
 GLint       color_mult_tint_pos;
-GLhandleARB room_vsh, room_program;
-GLint       room_tint_pos, room_current_tick, room_flags, room_light_mode;
+
+struct room_shader_description
+{
+    GLhandleARB program;
+    GLint current_tick;
+    GLint tint_mult;
+    GLint model_view_projection;
+    GLint sampler;
+    
+    room_shader_description(const char *filename, GLhandleARB fragmentShader);
+};
+
+enum room_shader_type
+{
+    ROOM_SHADER_NORMAL,
+    ROOM_SHADER_FLICKERING,
+    ROOM_SHADER_FLICKERING_WATER,
+    ROOM_SHADER_WATER
+};
+
+room_shader_description *room_shaders[4];
 
 /*GLhandleARB main_vsh, main_fsh, main_program;
 GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
@@ -61,6 +80,24 @@ void Render_InitGlobals()
     renderer.settings.fog_end_depth = 16000.0f;
 }
 
+room_shader_description::room_shader_description(const char *filename, GLhandleARB fragmentShader)
+{
+    GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+    loadShaderFromFile(vertexShader, filename);
+    
+    program = glCreateProgramObjectARB();
+    glAttachObjectARB(program, vertexShader);
+    glAttachObjectARB(program, fragmentShader);
+    glLinkProgramARB(program);
+    printInfoLog(program);
+    
+    glDeleteObjectARB(vertexShader);
+    
+    current_tick = glGetUniformLocationARB(program, "fCurrentTick");
+    tint_mult = glGetUniformLocationARB(program, "tintMult");
+    model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
+    sampler = glGetUniformLocationARB(program, "color_map");
+}
 
 void Render_DoShaders()
 {
@@ -88,19 +125,14 @@ void Render_DoShaders()
     color_mult_tint_pos = glGetUniformLocationARB(color_mult_program, "tintMult");
 
     //Room prog
-    room_program = glCreateProgramObjectARB();
-    room_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-    loadShaderFromFile(room_vsh, "shaders/room.vsh");
-    glAttachObjectARB(room_program, room_vsh);
-    glLinkProgramARB(room_program);
-    printInfoLog(room_program);
-    room_tint_pos = glGetUniformLocationARB(room_program, "tintMult");
-    room_current_tick = glGetUniformLocationARB(room_program, "iCurrentTick");
-    room_flags = glGetUniformLocationARB(room_program, "iRoomFlags");
-    room_light_mode = glGetUniformLocationARB(room_program, "iRoomLightMode");
-
-    //Set current shader program to 0 (off)
-    glUseProgramObjectARB(0);
+    GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+    loadShaderFromFile(fragmentShader, "shaders/room.fsh");
+    
+    room_shaders[ROOM_SHADER_NORMAL] = new room_shader_description("shaders/room_normal.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_FLICKERING] = new room_shader_description("shaders/room_flickering.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_FLICKERING_WATER] = new room_shader_description("shaders/room_flickering_water.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_WATER] = new room_shader_description("shaders/room_water.vsh", fragmentShader);
+    glDeleteObjectARB(fragmentShader);
 }
 
 
@@ -137,18 +169,8 @@ void Render_Empty(render_p render)
         glDeleteObjectARB(color_mult_vsh);
     }
 
-    if((room_program != 0) && (room_vsh != 0))
-    {
-        glDetachObjectARB(room_program, room_vsh);
-        glDeleteObjectARB(room_program);
-        glDeleteObjectARB(room_vsh);
-    }
-
     color_mult_program = 0;
     color_mult_vsh = 0;
-
-    room_program = 0;
-    room_vsh = 0;
 }
 
 
@@ -252,14 +274,6 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
         glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
     }
-    else
-    {
-        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), mesh->vertices->position);
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), mesh->vertices->color);
-        glNormalPointer(GL_FLOAT, sizeof(vertex_t), mesh->vertices->normal);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), mesh->vertices->tex_coord);
-    }
 
     // Bind overriden vertices if they exist
     if (overrideVertices != NULL)
@@ -272,11 +286,8 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
     }
 
     const uint32_t *elementsbase = mesh->elements;
-    if(mesh->vbo_index_array)
-    {
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
         elementsbase = NULL;
-    }
 
     unsigned long offset = 0;
     for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
@@ -760,24 +771,35 @@ void Render_StaticMesh(struct static_mesh_s *static_mesh, struct room_s *room)
 /**
  * drawing world models.
  */
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16])
+void Render_Room(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
 {
     engine_container_p cont;
     entity_p ent;
 
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
-    {
-        btScalar transform[16];
-        Mat4_Mat4_mul(transform, matrix, room->transform);
-        glLoadMatrixbt(transform);
-
+    {        
+        btScalar modelViewProjectionTransform[16];
+        Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
+        
+        room_shader_description *shader = room_shaders[ROOM_SHADER_NORMAL];
+        if (room->flags & 1) // Is water
+        {
+            if (room->light_mode == 1) // Also flickering
+                shader = room_shaders[ROOM_SHADER_FLICKERING_WATER];
+            else
+                shader = room_shaders[ROOM_SHADER_WATER];
+        } else if (room->light_mode == 1) // Only flickering
+        {
+            shader = room_shaders[ROOM_SHADER_FLICKERING];
+        }
+        
         GLfloat tint[4];
         Render_CalculateWaterTint(tint, 1);
-        glUseProgramObjectARB(room_program);
-        glUniform4fvARB(room_tint_pos, 1, tint);
-        glUniform1iARB(room_current_tick, SDL_GetTicks());
-        glUniform1iARB(room_flags, room->flags);
-        glUniform1iARB(room_light_mode, room->light_mode);
+        glUseProgramObjectARB(shader->program);
+        glUniform4fvARB(shader->tint_mult, 1, tint);
+        glUniform1f(shader->current_tick, (GLfloat) SDL_GetTicks());
+        glUniform1i(shader->sampler, 0);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, modelViewProjectionTransform);
         Render_Mesh(room->mesh, NULL, NULL);
         glUseProgramObjectARB(0);
     }
@@ -795,7 +817,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar ma
         }
 
         btScalar transform[16];
-        Mat4_Mat4_mul(transform, matrix, room->static_mesh[i].transform);
+        Mat4_Mat4_mul(transform, modelViewMatrix, room->static_mesh[i].transform);
         glLoadMatrixbt(transform);
         if(room->static_mesh[i].mesh->uses_vertex_colors > 0)
         {
@@ -837,7 +859,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar ma
             {
                 if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                 {
-                    Render_Entity(ent, matrix);
+                    Render_Entity(ent, modelViewMatrix);
                 }
                 ent->was_rendered = 1;
             }
@@ -1001,7 +1023,7 @@ void Render_DrawList()
      */
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat);
+        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
     }
 
     glDisable(GL_CULL_FACE);
@@ -1667,7 +1689,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
         ss_bone_tag_p btag = bframe->bone_tags;
         for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
         {
-            Mat4_Mat4_mul_macro(tr, transform, btag->full_transform);
+            Mat4_Mat4_mul(tr, transform, btag->full_transform);
             drawMeshDebugLines(btag->mesh_base, tr, NULL, NULL);
         }
     }

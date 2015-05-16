@@ -181,7 +181,7 @@ void Render_UpdateAnimTextures();
 void Render_CleanList();
 
 
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16]);
+void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16]);
 void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar matrix[16]);
 int Render_AddRoom(struct room_s *room);
 void Render_DrawList();

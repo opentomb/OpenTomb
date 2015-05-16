@@ -120,7 +120,7 @@ void Cam_Apply(camera_p cam)
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(M);
 
-    Mat4_Mat4_mul_macro(cam->gl_view_proj_mat, cam->gl_view_mat, cam->gl_proj_mat);
+    Mat4_Mat4_mul(cam->gl_view_proj_mat, cam->gl_proj_mat, cam->gl_view_mat);
 }
 
 void Cam_SetFovAspect(camera_p cam, GLfloat fov, GLfloat aspect)

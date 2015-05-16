@@ -453,7 +453,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
             btScalar trpl[16];
             ent->character->platform->getWorldTransform().getOpenGLMatrix(trpl);
             /* local_platform = (global_platform ^ -1) x (global_entity); */
-            Mat4_inv_Mat4_mul(ent->character->local_platform, trpl, ent->transform);
+            Mat4_inv_Mat4_affine_mul(ent->character->local_platform, trpl, ent->transform);
         }
         else
         {

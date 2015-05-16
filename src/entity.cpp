@@ -252,7 +252,7 @@ void BT_GenEntityRigidBody(entity_p ent)
         cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag, false);
         if(cshape)
         {
-            Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
+            Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
             startTransform.setFromOpenGLMatrix(tr);
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             ent->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
@@ -342,7 +342,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
                 }
                 else
                 {
-                    Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
+                    Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
                     bt_tr.setFromOpenGLMatrix(tr);
                     ent->bt_body[i]->setWorldTransform(bt_tr);
                 }

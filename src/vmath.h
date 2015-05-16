@@ -148,28 +148,6 @@ void vec4_SetTRRotations(btScalar v[4], btScalar rot[3]);
     (ret)[2]  = (tr)[8] * (src)[0] + (tr)[9] * (src)[1] + (tr)[10] * (src)[2];  /* (M^-1 * src).z*/\
 }
 
-#define Mat4_Mat4_mul_macro(result, src1, src2)\
-{\
-    (result)[0] = (src1)[0] * (src2)[0] + (src1)[4] * (src2)[1] + (src1)[8] * (src2)[2];\
-    (result)[1] = (src1)[1] * (src2)[0] + (src1)[5] * (src2)[1] + (src1)[9] * (src2)[2];\
-    (result)[2] = (src1)[2] * (src2)[0] + (src1)[6] * (src2)[1] + (src1)[10] * (src2)[2];\
-    (result)[3] = 0.0;\
-    \
-    (result)[4] = (src1)[0] * (src2)[4] + (src1)[4] * (src2)[5] + (src1)[8] * (src2)[6];\
-    (result)[5] = (src1)[1] * (src2)[4] + (src1)[5] * (src2)[5] + (src1)[9] * (src2)[6];\
-    (result)[6] = (src1)[2] * (src2)[4] + (src1)[6] * (src2)[5] + (src1)[10] * (src2)[6];\
-    (result)[7] = 0.0;\
-    \
-    (result)[8] = (src1)[0] * (src2)[8] + (src1)[4] * (src2)[9] + (src1)[8] * (src2)[10];\
-    (result)[9] = (src1)[1] * (src2)[8] + (src1)[5] * (src2)[9] + (src1)[9] * (src2)[10];\
-    (result)[10] = (src1)[2] * (src2)[8] + (src1)[6] * (src2)[9] + (src1)[10] * (src2)[10];\
-    (result)[11] = 0.0;\
-    \
-    (result)[12] = (src1)[12] + (src1)[0] * (src2)[12] + (src1)[4] * (src2)[13] + (src1)[8] * (src2)[14];\
-    (result)[13] = (src1)[13] + (src1)[1] * (src2)[12] + (src1)[5] * (src2)[13] + (src1)[9] * (src2)[14];\
-    (result)[14] = (src1)[14] + (src1)[2] * (src2)[12] + (src1)[6] * (src2)[13] + (src1)[10] * (src2)[14];\
-    (result)[15] = 1.0;\
-}
 /**
  * That macro does not touch mat transformation
  * @param mat
@@ -226,8 +204,7 @@ void Mat4_RotateY(btScalar mat[16], btScalar ang);
 void Mat4_RotateZ(btScalar mat[16], btScalar ang);
 void Mat4_T(btScalar mat[16]);
 void Mat4_Mat4_mul(btScalar result[16], const btScalar src1[16], const btScalar src2[16]);
-void Mat4_inv_Mat4_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]);
-void Mat4_Mat4_inv_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]);
+void Mat4_inv_Mat4_affine_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]);
 void Mat4_vec3_mul(btScalar v[3], btScalar mat[16], btScalar src[3]);
 void Mat4_vec3_mul_inv(btScalar v[3], btScalar mat[16], btScalar src[3]);
 void Mat4_vec3_mul_T(btScalar v[3], btScalar mat[16], btScalar src[3]);
