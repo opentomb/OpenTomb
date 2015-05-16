@@ -84,8 +84,8 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
     if(state == 0x02)
     {
         ent->move_type = MOVE_ON_FLOOR;
+        // vec3_add_mul(ent->transform+12, ent->character->climb.point, ent->transform+4, ent->character->forvard_size);
         ent->transform[12 + 2] = ent->character->climb.point[2];
-        //vec3_copy(ent->transform+12,ent->character->climb.point);
         Character_GhostUpdate(ent);
         ss_anim->onFrame = NULL;
     }
@@ -307,7 +307,10 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->roll)
             {
                 if(!curr_fc->quicksand)
+                {
+                    ent->dir_flag = ENT_MOVE_FORWARD;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_ROLL_BEGIN, 0);
+                }
             }
             else if(cmd->crouch)
             {
@@ -865,6 +868,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else if(cmd->roll == 1)
                 {
+                    ent->dir_flag = ENT_MOVE_FORWARD;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_ROLL_BEGIN, 0);
                 }
                 else if(cmd->sprint == 1)
@@ -953,6 +957,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else if(cmd->roll == 1)
                 {
+                    ent->dir_flag = ENT_MOVE_FORWARD;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_ROLL_BEGIN, 0);
                 }
                 else if(cmd->crouch == 1)
@@ -1549,16 +1554,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_ROLL_FORWARD:
-            ent->dir_flag = ENT_MOVE_FORWARD;
             ent->character->ghost_step_up_map_filter = 0;
-            if(low_vertical_space || ent->character->resp.horizontal_collide)
-            {
-                ent->dir_flag = ENT_STAY;
-            }
-            else if(ent->move_type == MOVE_FREE_FALLING)
-            {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0); ///@FIXME: check
-            }
             break;
 
         case TR_STATE_LARA_ROLL_BACKWARD:

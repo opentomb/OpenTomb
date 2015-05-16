@@ -363,6 +363,10 @@ void Entity_UpdateRotation(entity_p entity)
     btScalar *right_dir = entity->transform + 0;                                // OX
     int i;
 
+    if(entity->character != NULL)
+    {
+        Character_GhostUpdate(entity);
+    }
     i = entity->angles[0] / 360.0;
     i = (entity->angles[0] < 0.0)?(i-1):(i);
     entity->angles[0] -= 360.0 * i;
@@ -435,6 +439,11 @@ void Entity_UpdateRotation(entity_p entity)
     view_dir[3] = 0.0;
     right_dir[3] = 0.0;
     up_dir[3] = 0.0;
+
+    if(entity->character != NULL)
+    {
+        Character_FixPenetrations(entity, NULL);
+    }
 }
 
 
