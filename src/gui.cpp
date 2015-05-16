@@ -63,7 +63,7 @@ void Gui_InitShaders()
     loadShaderFromFile(squareFragmentShader, "shaders/square.fsh");
     GLhandleARB squareFragmentShaderTexture = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
     loadShaderFromFile(squareFragmentShaderTexture, "shaders/square_tex.fsh");
-    
+
     square_program = glCreateProgramObjectARB();
     glAttachObjectARB(square_program, squareVertexShader);
     glAttachObjectARB(square_program, squareFragmentShader);
@@ -71,7 +71,7 @@ void Gui_InitShaders()
     square_texture_program_offset = glGetUniformLocationARB(square_program, "offset");
     square_texture_program_factor = glGetUniformLocationARB(square_program, "factor");
     printInfoLog(square_program);
-    
+
     square_texture_program = glCreateProgramObjectARB();
     glAttachObjectARB(square_texture_program, squareVertexShader);
     glAttachObjectARB(square_texture_program, squareFragmentShaderTexture);
@@ -80,7 +80,7 @@ void Gui_InitShaders()
     square_texture_program_sampler = glGetUniformLocationARB(square_texture_program, "color_map");
     square_texture_program_offset = glGetUniformLocationARB(square_texture_program, "offset");
     square_texture_program_factor = glGetUniformLocationARB(square_texture_program, "factor");
-    
+
     glDeleteObjectARB(squareVertexShader);
     glDeleteObjectARB(squareFragmentShader);
     glDeleteObjectARB(squareFragmentShaderTexture);
@@ -303,7 +303,7 @@ void Gui_Destroy()
         delete FontManager;
         FontManager = NULL;
     }
-    
+
     glDeleteObjectARB(square_program);
     glDeleteObjectARB(square_texture_program);
 }
@@ -1373,7 +1373,7 @@ void Gui_DrawBars()
     {
         if(engine_world.Character->character->weapon_current_state > WEAPON_STATE_HIDE_TO_READY)
             Bar[BAR_HEALTH].Forced = true;
-        
+
         Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));
         Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
         Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
@@ -1515,24 +1515,24 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glDisable(GL_DEPTH_TEST);
 
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    
+
     const GLfloat offset[2] = { x / screen_info.w - 1.f, y / screen_info.h - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
     if(texture)
     {
         glUseProgramObjectARB(square_texture_program);
-        glUniform1i(square_texture_program_sampler, 0);
-        glActiveTexture(GL_TEXTURE0);
+        glUniform1iARB(square_texture_program_sampler, 0);
+        glActiveTextureARB(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform2fv(square_texture_program_offset, 1, offset);
-        glUniform2fv(square_texture_program_factor, 1, factor);
+        glUniform2fvARB(square_texture_program_offset, 1, offset);
+        glUniform2fvARB(square_texture_program_factor, 1, factor);
     }
     else
     {
         glUseProgramObjectARB(square_program);
-        glUniform2fv(square_program_offset, 1, offset);
-        glUniform2fv(square_program_factor, 1, factor);
+        glUniform2fvARB(square_program_offset, 1, offset);
+        glUniform2fvARB(square_program_factor, 1, factor);
     }
 
     GLfloat rectCoords[8] = { 0, 0,
@@ -2425,7 +2425,7 @@ void gui_ProgressBar::Show(float value)
         {
             Visible = false;
         }
-        
+
         // 1. If bar value gone less than warning value, we show it
         //    in any case, bypassing all other conditions.
         if(value <= mWarnValue)

@@ -1607,10 +1607,15 @@ int Character_MoveOnFloor(struct entity_s *ent)
     {
         if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height > pos[2])
         {
-            btScalar dz_to_land = engine_frame_time * 2400.0;
+            btScalar dz_to_land = engine_frame_time * 2400.0;                   ///@FIXME: magick
             if(pos[2] > ent->character->height_info.floor_point.m_floats[2] + dz_to_land)
             {
-                pos[2] -= dz_to_land;                           ///@FIXME: magick
+                pos[2] -= dz_to_land;
+                Character_FixPenetrations(ent, NULL);
+            }
+            else if(pos[2] > ent->character->height_info.floor_point.m_floats[2])
+            {
+                pos[2] = ent->character->height_info.floor_point.m_floats[2];
                 Character_FixPenetrations(ent, NULL);
             }
         }

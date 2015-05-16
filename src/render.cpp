@@ -113,9 +113,9 @@ void shader_description::load(GLhandleARB vertexShader, GLhandleARB fragmentShad
     glAttachObjectARB(program, fragmentShader);
     glLinkProgramARB(program);
     printInfoLog(program);
-    
+
     glDeleteObjectARB(vertexShader);
-    
+
     current_tick = glGetUniformLocationARB(program, "fCurrentTick");
     tint_mult = glGetUniformLocationARB(program, "tintMult");
     model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
@@ -773,7 +773,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     entity_p ent;
 
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
-    {        
+    {
         btScalar modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
         
@@ -788,14 +788,14 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         {
             shader = room_shaders[ROOM_SHADER_FLICKERING];
         }
-        
+
         GLfloat tint[4];
         Render_CalculateWaterTint(tint, 1);
         glUseProgramObjectARB(shader->program);
         glUniform4fvARB(shader->tint_mult, 1, tint);
-        glUniform1f(shader->current_tick, (GLfloat) SDL_GetTicks());
-        glUniform1i(shader->sampler, 0);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, modelViewProjectionTransform);
+        glUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
+        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
         Render_Mesh(room->mesh, NULL, NULL);
         glUseProgramObjectARB(0);
     }
@@ -815,7 +815,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
         btScalar transform[16];
         Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->static_mesh[i].transform);
-        glUniformMatrix4fv(static_mesh_shader->model_view_projection, 1, false, transform);
+        glUniformMatrix4fvARB(static_mesh_shader->model_view_projection, 1, false, transform);
         glLoadMatrixbt(transform);
         base_mesh_s *mesh = room->static_mesh[i].mesh;
         GLfloat tint[4];
