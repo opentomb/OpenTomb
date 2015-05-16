@@ -2593,6 +2593,8 @@ int lua_PushEntityBody(lua_State *lua)
 
 int lua_SetEntityBodyMass(lua_State *lua)
 {
+    int top = lua_gettop(lua);
+    
     if(lua_gettop(lua) < 3)
     {
         Con_Printf("Wrong arguments count. Must be [entity_id, body_number, (mass / each body mass)]");
@@ -2608,16 +2610,16 @@ int lua_SetEntityBodyMass(lua_State *lua)
     uint16_t argn  = 3;
     bool kinematic = false;
     
-    btScalar mass = lua_tonumber(lua, 3);
+    btScalar mass;
     
-    if((ent != NULL) || (ent->bf.bone_tag_count >= body_number))
+    if((ent != NULL) && (ent->bf.bone_tag_count >= body_number))
     {
         for(int i=0; i<body_number; i++)
         {
             btVector3 inertia (0.0, 0.0, 0.0);
             
-            if(!lua_isnil(lua, argn))
-                mass = lua_tonumber(lua, argn);
+            if(top >= argn) mass = lua_tonumber(lua, argn);
+            argn++;
 
             if(ent->bt_body[i] != NULL)
             {
@@ -2654,6 +2656,8 @@ int lua_SetEntityBodyMass(lua_State *lua)
             }
             
         }
+        
+        Entity_UpdateRigidBody(ent, 1);
         
         if(kinematic)
         {

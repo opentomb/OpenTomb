@@ -344,7 +344,6 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
                 {
                     Mat4_Mat4_mul_macro(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
                     bt_tr.setFromOpenGLMatrix(tr);
-                    ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
                     ent->bt_body[i]->setWorldTransform(bt_tr);
                 }
             }
