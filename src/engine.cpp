@@ -373,17 +373,18 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
         return 0;
     }
 
-    uint32_t id = lua_tointeger(lua, 1);
-    if(id > engine_world.skeletal_model_count - 1)
+    /// engine_world.skeletal_models[id] != World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
+    skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
+    if(model == NULL)
     {
-        Con_Warning(SYSWARN_MODELID_OVERFLOW, id);
+        Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
         return 0;
     }
 
     int size = lua_tointeger(lua, 2);
-    if(size >= 0 && size < engine_world.skeletal_models[id].mesh_count)
+    if(size >= 0 && size < model->mesh_count)
     {
-        engine_world.skeletal_models[id].collision_map_size = size;
+        model->collision_map_size = size;
     }
 
     return 0;
@@ -398,19 +399,20 @@ int lua_SetModelCollisionMap(lua_State * lua)
         return 0;
     }
 
-    uint32_t id = lua_tointeger(lua, 1);
-    if(id > engine_world.skeletal_model_count - 1)
+    /// engine_world.skeletal_models[id] != World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
+    skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
+    if(model == NULL)
     {
-        Con_Warning(SYSWARN_MODELID_OVERFLOW, id);
+        Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
         return 0;
     }
 
     int arg = lua_tointeger(lua, 2);
     int val = lua_tointeger(lua, 3);
-    if((arg >= 0) && (arg < engine_world.skeletal_models[id].mesh_count) &&
-       (val >= 0) && (val < engine_world.skeletal_models[id].mesh_count))
+    if((arg >= 0) && (arg < model->mesh_count) &&
+       (val >= 0) && (val < model->mesh_count))
     {
-        engine_world.skeletal_models[id].collision_map[arg] = val;
+        model->collision_map[arg] = val;
     }
 
     return 0;
@@ -1754,7 +1756,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
         Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
-        
+
     ent->bf.animations.anim_flags = lua_tointeger(lua,2);
 
     return 0;
@@ -2412,7 +2414,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
         Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
-    
+
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
 
@@ -2421,7 +2423,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
         Con_Warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
-    
+
     lua_pushinteger(lua, ent->bf.bone_tag_count);
     return 1;
 }
@@ -2560,26 +2562,26 @@ int lua_PushEntityBody(lua_State *lua)
         Con_Printf("Wrong arguments count. Must be [entity_id, body_number, h_force, v_force, reset_flag]");
         return 0;
     }
-    
+
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
-    
+
     if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_KINEMATIC))
     {
         btScalar h_force = lua_tonumber(lua, 3);
         btScalar v_force = lua_tonumber(lua, 4);
 
         btScalar t    = ent->angles[0] * M_PI / 180.0;
-        
+
         btScalar ang1 = sinf(t);
         btScalar ang2 = cosf(t);
-        
+
         btVector3 angle (-ang1 * h_force, ang2 * h_force, v_force);
-        
+
         if(lua_toboolean(lua, 5))
             ent->bt_body[body_number]->clearForces();
-        
+
         ent->bt_body[body_number]->setLinearVelocity(angle);
         ent->bt_body[body_number]->setAngularVelocity(angle / 1024.0);
     }
@@ -2587,14 +2589,14 @@ int lua_PushEntityBody(lua_State *lua)
     {
         Con_Printf("Can't apply force to entity %d - no entity, body, or entity is not kinematic!", id);
     }
-    
+
     return 0;
 }
 
 int lua_SetEntityBodyMass(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(lua_gettop(lua) < 3)
     {
         Con_Printf("Wrong arguments count. Must be [entity_id, body_number, (mass / each body mass)]");
@@ -2603,21 +2605,21 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
-    
+
     int body_number = lua_tointeger(lua, 2);
     body_number = (body_number < 1)?(1):(body_number);
-    
+
     uint16_t argn  = 3;
     bool kinematic = false;
-    
+
     btScalar mass;
-    
+
     if((ent != NULL) && (ent->bf.bone_tag_count >= body_number))
     {
         for(int i=0; i<body_number; i++)
         {
             btVector3 inertia (0.0, 0.0, 0.0);
-            
+
             if(top >= argn) mass = lua_tonumber(lua, argn);
             argn++;
 
@@ -2626,39 +2628,39 @@ int lua_SetEntityBodyMass(lua_State *lua)
                 bt_engine_dynamicsWorld->removeRigidBody(ent->bt_body[i]);
 
                     ent->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-                
+
                     ent->bt_body[i]->setMassProps(mass, inertia);
-                
+
                     ent->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
                     ent->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
-                
+
                     ent->bt_body[i]->updateInertiaTensor();
                     ent->bt_body[i]->clearForces();
-                
+
                     ent->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
-                
+
                     //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
-                    
+
                     //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
                     //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
-                
+
                 bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i]);
-                
+
                 ent->bt_body[i]->activate();
-                
+
                 //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
                 //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
-                
+
                 //ent->self->object_type = OBJECT_ENTITY;
                 //ent->bt_body[i]->setUserPointer(ent->self);
-                
+
                 if(mass > 0.0) kinematic = true;
             }
-            
+
         }
-        
+
         Entity_UpdateRigidBody(ent, 1);
-        
+
         if(kinematic)
         {
             ent->type_flags |=  ENTITY_TYPE_KINEMATIC;
@@ -2679,37 +2681,37 @@ int lua_SetEntityBodyMass(lua_State *lua)
 int lua_LockEntityBodyLinearFactor(lua_State *lua)
 {
     int top = lua_gettop(lua);
-    
+
     if(top < 2)
     {
         Con_Printf("Wrong arguments count. Must be [entity_id, body_number, (vertical_factor)]");
         return 0;
     }
-    
+
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
-    
+
     if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_KINEMATIC))
     {
         btScalar t    = ent->angles[0] * M_PI / 180.0;
         btScalar ang1 = sinf(t);
         btScalar ang2 = cosf(t);
         btScalar ang3 = 1.0;
-        
+
         if(top >= 3)
         {
             ang3 = abs(lua_tonumber(lua, 3));
             ang3 = (ang3 > 1.0)?(1.0):(ang3);
         }
-        
+
         ent->bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
     }
     else
     {
         Con_Printf("Can't apply force to entity %d - no entity, body, or entity is not kinematic!", id);
     }
-    
+
     return 0;
 }
 
@@ -3367,7 +3369,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
     lua_register(lua, "moveEntityToSink", lua_MoveEntityToSink);
-    lua_register(lua, "moveEntityToEntity", lua_MoveEntityToEntity);    
+    lua_register(lua, "moveEntityToEntity", lua_MoveEntityToEntity);
 
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
@@ -3403,7 +3405,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
     lua_register(lua, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
     lua_register(lua, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
-    
+
     lua_register(lua, "setEntityBodyMass", lua_SetEntityBodyMass);
     lua_register(lua, "pushEntityBody", lua_PushEntityBody);
     lua_register(lua, "lockEntityBodyLinearFactor", lua_LockEntityBodyLinearFactor);

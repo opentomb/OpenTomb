@@ -107,7 +107,7 @@ void Character_Create(struct entity_s *ent)
     if(ent->bf.animations.model->mesh_count > 0)
     {
         btTransform tr;
-        btScalar gltr[16];
+        btScalar gltr[16], v[3];
 
         ret->manifoldArray = new btManifoldArray();
         ent->character->shapes = (btCollisionShape**)malloc(ent->bf.bone_tag_count * sizeof(btCollisionShape*));
@@ -125,6 +125,8 @@ void Character_Create(struct entity_s *ent)
 
             ret->ghostObjects[i] = new btPairCachingGhostObject();
             Mat4_Mat4_mul(gltr, ent->transform, ent->bf.bone_tags[i].full_transform);
+            Mat4_vec3_mul(v, gltr, ent->bf.bone_tags[i].mesh_base->centre);
+            vec3_copy(gltr+12, v);
             tr.setFromOpenGLMatrix(gltr);
             ret->ghostObjects[i]->setWorldTransform(tr);
             ret->ghostObjects[i]->setCollisionFlags(ret->ghostObjects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
@@ -1122,6 +1124,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             {
                 btTransform tr_current;
                 btVector3 from, to, curr, move;
+                btScalar move_len;
                 uint16_t m = ent->bf.animations.model->collision_map[i];
 
                 from = ent->character->ghostObjects[m]->getWorldTransform().getOrigin();
@@ -1130,14 +1133,15 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
                 Mat4_vec3_mul_macro(to.m_floats, tr, v);
                 curr = from;
                 move = to - from;
-                int iter = (5.0 * (btScalar)move.length() / (btScalar)ent->bf.animations.model->mesh_tree[m].mesh_base->R) + 1;
-                move.m_floats[0] /= (btScalar)iter;
-                move.m_floats[1] /= (btScalar)iter;
-                move.m_floats[2] /= (btScalar)iter;
-                if(iter > 64)
+                move_len = move.length();
+                if(move_len > 1024.0)                                           ///@FIXME: magick const 1024.0!
                 {
                     break;
                 }
+                int iter = (btScalar)(4.0 * move_len / ent->bf.animations.model->mesh_tree[m].mesh_base->R) + 1;   ///@FIXME (not a critical): magick const 4.0!
+                move.m_floats[0] /= (btScalar)iter;
+                move.m_floats[1] /= (btScalar)iter;
+                move.m_floats[2] /= (btScalar)iter;
 
                 for(int j=0;j<=iter;j++)
                 {
@@ -1278,6 +1282,42 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
     }
     vec3_sub(pos, pos, move);
     Character_GhostUpdate(ent);
+}
+
+
+bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
+{
+    if(ent->character != NULL)
+    {
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            if((ent->bf.bone_tags[i].body_part & parts_flags) && (ent->character->last_collisions[i].obj != NULL))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+
+struct engine_container_s *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
+{
+    if(ent->character != NULL)
+    {
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            if((ent->bf.bone_tags[i].body_part & parts_flags) && (ent->character->last_collisions[i].obj != NULL))
+            {
+                engine_container_p ret = (engine_container_p)ent->character->last_collisions[i].obj->getUserPointer();
+                ent->character->last_collisions[i].obj = NULL;
+                return ret;
+            }
+        }
+    }
+
+    return NULL;
 }
 
 
@@ -1567,9 +1607,11 @@ int Character_MoveOnFloor(struct entity_s *ent)
     {
         if(ent->character->height_info.floor_point.m_floats[2] + ent->character->fall_down_height > pos[2])
         {
-            if(pos[2] > ent->character->height_info.floor_point.m_floats[2])
+            btScalar dz_to_land = engine_frame_time * 2400.0;
+            if(pos[2] > ent->character->height_info.floor_point.m_floats[2] + dz_to_land)
             {
-                pos[2] -= engine_frame_time * 2400.0;                           ///@FIXME: magick
+                pos[2] -= dz_to_land;                           ///@FIXME: magick
+                Character_FixPenetrations(ent, NULL);
             }
         }
         else
@@ -1582,6 +1624,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         if((pos[2] < ent->character->height_info.floor_point.m_floats[2]) && (ent->character->no_fix == 0x00))
         {
             pos[2] = ent->character->height_info.floor_point.m_floats[2];
+            Character_FixPenetrations(ent, NULL);
             ent->character->resp.vertical_collide |= 0x01;
         }
     }

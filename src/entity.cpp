@@ -1148,11 +1148,6 @@ void Entity_DoAnimMove(entity_p entity)
     {
         bone_frame_p curr_bf = entity->bf.animations.model->animations[entity->bf.animations.current_animation].frames + entity->bf.animations.current_frame;
 
-        if(entity->character != NULL)
-        {
-            Character_GhostUpdate(entity);
-        }
-
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
             Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
@@ -1180,13 +1175,10 @@ void Entity_DoAnimMove(entity_p entity)
             Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
             vec3_add(entity->transform+12, entity->transform+12, tr);
         }
-
-        if(entity->character != NULL)
-        {
-            Character_FixPenetrations(entity, NULL);
-        }
     }
 }
+
+void Character_DoWeaponFrame(struct entity_s *entity, btScalar time);
 
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
@@ -1207,7 +1199,7 @@ int Entity_Frame(entity_p entity, btScalar time)
         return 0;
     }
 
-    if(entity->bf.animations.anim_flags & ANIM_LOCK) return 1;
+    if(entity->bf.animations.anim_flags & ANIM_LOCK) return 1;                  // penetration fix will be applyed in Character_Move... functions
 
     ss_anim = &entity->bf.animations;
 
@@ -1251,9 +1243,113 @@ int Entity_Frame(entity_p entity, btScalar time)
     entity->bf.animations.lerp = (entity->smooth_anim)?(dt / entity->bf.animations.period):(0.0);
     Entity_GetNextFrame(&entity->bf, entity->bf.animations.period, stc, &entity->bf.animations.next_frame, &entity->bf.animations.next_animation, ss_anim->anim_flags);
 
-    /* There are stick code for multianimation (weapon mode) testing
-     * Model replacing will be upgraded too, I have to add override
-     * flags to model manually in the script*/
+    Character_DoWeaponFrame(entity, time);
+    /*
+     * Update acceleration
+     */
+    if(entity->character)
+    {
+        entity->current_speed += time * entity->character->speed_mult * (btScalar)af->accel_hi;
+    }
+
+    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
+    if(entity->bf.animations.onFrame != NULL)
+    {
+        entity->bf.animations.onFrame(entity, &entity->bf.animations, ret);
+    }
+    if(entity->character != NULL)
+    {
+        Character_FixPenetrations(entity, NULL);
+    }
+
+    return ret;
+}
+
+/**
+ * The function rebuild / renew entity's BV
+ */
+void Entity_RebuildBV(entity_p ent)
+{
+    if((ent != NULL) && (ent->bf.animations.model != NULL))
+    {
+        /*
+         * get current BB from animation
+         */
+        OBB_Rebuild(ent->obb, ent->bf.bb_min, ent->bf.bb_max);
+        OBB_Transform(ent->obb);
+    }
+}
+
+
+void Entity_CheckActivators(struct entity_s *ent)
+{
+    if((ent != NULL) && (ent->self->room != NULL))
+    {
+        btScalar ppos[3];
+
+        ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf.bb_max[1];
+        ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf.bb_max[1];
+        ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf.bb_max[1];
+        engine_container_p cont = ent->self->room->containers;
+        for(;cont;cont=cont->next)
+        {
+            if((cont->object_type == OBJECT_ENTITY) && (cont->object))
+            {
+                entity_p e = (entity_p)cont->object;
+                btScalar r = e->activation_offset[3];
+                r *= r;
+                if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
+                {
+                    //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
+                    if((e != ent) && (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
+                    {
+                        lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
+                    }
+                }
+                else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
+                {
+                    btScalar *v = e->transform + 12;
+                    if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
+                                      (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
+                    {
+                        lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void Entity_MoveForward(struct entity_s *ent, btScalar dist)
+{
+    ent->transform[12] += ent->transform[4] * dist;
+    ent->transform[13] += ent->transform[5] * dist;
+    ent->transform[14] += ent->transform[6] * dist;
+}
+
+
+void Entity_MoveStrafe(struct entity_s *ent, btScalar dist)
+{
+    ent->transform[12] += ent->transform[0] * dist;
+    ent->transform[13] += ent->transform[1] * dist;
+    ent->transform[14] += ent->transform[2] * dist;
+}
+
+
+void Entity_MoveVertical(struct entity_s *ent, btScalar dist)
+{
+    ent->transform[12] += ent->transform[8] * dist;
+    ent->transform[13] += ent->transform[9] * dist;
+    ent->transform[14] += ent->transform[10] * dist;
+}
+
+
+/* There are stick code for multianimation (weapon mode) testing
+ * Model replacing will be upgraded too, I have to add override
+ * flags to model manually in the script*/
+void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
+{
     if(entity->character != NULL)
     {
         /* anims (TR_I - TR_V):
@@ -1274,6 +1370,9 @@ int Entity_Frame(entity_p entity, btScalar time)
         {
             Character_SetWeaponModel(entity, entity->character->current_weapon, 1);
         }
+
+        btScalar dt;
+        int t;
 
         for(ss_animation_p ss_anim=entity->bf.animations.next;ss_anim!=NULL;ss_anim=ss_anim->next)
         {
@@ -1645,103 +1744,4 @@ int Entity_Frame(entity_p entity, btScalar time)
             Entity_DoAnimCommands(entity, ss_anim, 0);
         }
     }
-
-    /*
-     * Update acceleration
-     */
-    if(entity->character)
-    {
-        entity->current_speed += time * entity->character->speed_mult * (btScalar)af->accel_hi;
-    }
-
-    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-    if(entity->bf.animations.onFrame != NULL)
-    {
-        entity->bf.animations.onFrame(entity, &entity->bf.animations, ret);
-    }
-    if(entity->character != NULL)
-    {
-        Character_FixPenetrations(entity, NULL);
-    }
-
-    return ret;
-}
-
-/**
- * The function rebuild / renew entity's BV
- */
-void Entity_RebuildBV(entity_p ent)
-{
-    if((ent != NULL) && (ent->bf.animations.model != NULL))
-    {
-        /*
-         * get current BB from animation
-         */
-        OBB_Rebuild(ent->obb, ent->bf.bb_min, ent->bf.bb_max);
-        OBB_Transform(ent->obb);
-    }
-}
-
-
-void Entity_CheckActivators(struct entity_s *ent)
-{
-    if((ent != NULL) && (ent->self->room != NULL))
-    {
-        btScalar ppos[3];
-
-        ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf.bb_max[1];
-        ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf.bb_max[1];
-        ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf.bb_max[1];
-        engine_container_p cont = ent->self->room->containers;
-        for(;cont;cont=cont->next)
-        {
-            if((cont->object_type == OBJECT_ENTITY) && (cont->object))
-            {
-                entity_p e = (entity_p)cont->object;
-                btScalar r = e->activation_offset[3];
-                r *= r;
-                if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
-                {
-                    //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e != ent) && (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
-                    {
-                        lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
-                    }
-                }
-                else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
-                {
-                    btScalar *v = e->transform + 12;
-                    if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                                      (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
-                    {
-                        lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-void Entity_MoveForward(struct entity_s *ent, btScalar dist)
-{
-    ent->transform[12] += ent->transform[4] * dist;
-    ent->transform[13] += ent->transform[5] * dist;
-    ent->transform[14] += ent->transform[6] * dist;
-}
-
-
-void Entity_MoveStrafe(struct entity_s *ent, btScalar dist)
-{
-    ent->transform[12] += ent->transform[0] * dist;
-    ent->transform[13] += ent->transform[1] * dist;
-    ent->transform[14] += ent->transform[2] * dist;
-}
-
-
-void Entity_MoveVertical(struct entity_s *ent, btScalar dist)
-{
-    ent->transform[12] += ent->transform[8] * dist;
-    ent->transform[13] += ent->transform[9] * dist;
-    ent->transform[14] += ent->transform[10] * dist;
 }

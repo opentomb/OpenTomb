@@ -2129,10 +2129,10 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         {
             r_static->self->collide_flag = COLLISION_BOX;
         }
-        
+
         // Set additional static mesh properties from level script override.
-        
-        TR_SetStaticMeshProperties(r_static);        
+
+        TR_SetStaticMeshProperties(r_static);
 
         // Set static mesh collision.
 
@@ -3344,6 +3344,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         tree_tag->mesh_skin = NULL;                                             ///@PARANOID: I use calloc for tree_tag's
         tree_tag->replace_anim = 0x00;
         tree_tag->replace_mesh = 0x00;
+        tree_tag->body_part    = 0x00;
         tree_tag->offset[0] = 0.0;
         tree_tag->offset[1] = 0.0;
         tree_tag->offset[2] = 0.0;
@@ -3956,7 +3957,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->bf.bone_tags[j].mesh_base = entity->bf.animations.model->mesh_tree[j].mesh_base;
             entity->bf.bone_tags[j].mesh_skin = entity->bf.animations.model->mesh_tree[j].mesh_skin;
             entity->bf.bone_tags[j].mesh_slot = NULL;
-
+            entity->bf.bone_tags[j].body_part = entity->bf.animations.model->mesh_tree[j].body_part;
+            
             vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.animations.model->mesh_tree[j].offset);
             vec4_set_zero(entity->bf.bone_tags[j].qrotate);
             Mat4_E_macro(entity->bf.bone_tags[j].transform);

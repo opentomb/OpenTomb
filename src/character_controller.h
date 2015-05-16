@@ -15,6 +15,47 @@
 #include "engine.h"
 
 
+/*------ Lara's model-------
+             .=.
+            | 14|
+             \ / \
+         / |     | \
+    11  / |   7   | \  8
+       /   |     |   \
+       |    =====    |
+    12 |    =====    | 9
+       |   /  0  \   |
+    13 0  /_______\  0 10
+          |  | |  |
+          |1 | |4 |
+          |  | |  |
+          |__| |__|
+          |  | |  |
+          |2 | |5 |
+          |  | |  |
+          |__| |__|
+       3  |__| |__|  6
+--------------------------*/
+
+#define BODY_PART_BODY_LOW      (0x00000001)            // 0
+#define BODY_PART_BODY_UPPER    (0x00000002)            // 7
+#define BODY_PART_HEAD          (0x00000004)            // 14
+
+#define BODY_PART_LEFT_HAND_1   (0x00000008)            // 11
+#define BODY_PART_LEFT_HAND_2   (0x00000010)            // 12
+#define BODY_PART_LEFT_HAND_3   (0x00000020)            // 13
+#define BODY_PART_RIGHT_HAND_1  (0x00000040)            // 8
+#define BODY_PART_RIGHT_HAND_2  (0x00000080)            // 9
+#define BODY_PART_RIGHT_HAND_3  (0x00000100)            // 10
+
+#define BODY_PART_LEFT_LEG_1    (0x00000200)            // 1
+#define BODY_PART_LEFT_LEG_2    (0x00000400)            // 2
+#define BODY_PART_LEFT_LEG_3    (0x00000800)            // 3
+#define BODY_PART_RIGHT_LEG_1   (0x00001000)            // 4
+#define BODY_PART_RIGHT_LEG_2   (0x00002000)            // 5
+#define BODY_PART_RIGHT_LEG_3   (0x00004000)            // 6
+
+
 #define CHARACTER_BOX_HALF_SIZE (128.0)
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
@@ -116,6 +157,7 @@ enum CharParameters
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
+struct engine_container_s;
 struct entity_s;
 class bt_engine_ClosestConvexResultCallback;
 class bt_engine_ClosestRayResultCallback;
@@ -293,6 +335,9 @@ void Character_GhostUpdate(struct entity_s *ent);
 int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]);
 void Character_FixPenetrations(struct entity_s *ent, btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
+
+bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
+struct engine_container_s *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
 
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);

@@ -54,7 +54,6 @@ void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
         i = v[1] / TR_METERING_SECTORSIZE;
         v[1] = i * TR_METERING_SECTORSIZE + 512.0;
         Entity_UpdateRigidBody(ent->character->traversed_object, 1);
-        Character_GhostUpdate(ent);
         ent->character->traversed_object = NULL;
         ss_anim->onFrame = NULL;
     }
@@ -1752,8 +1751,10 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_HANDSTAND:
         case TR_STATE_LARA_GRABBING:
+        case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
             ent->character->no_fix = 0x01;
+            ss_anim->onFrame = ent_set_on_floor_after_climb;
             break;
 
         case TR_STATE_LARA_HANG:
@@ -3033,7 +3034,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     switch(ss_anim->current_animation)
     {
         case TR_ANIMATION_LARA_STAY_JUMP_SIDES:
-            ent->character->no_fix = 0x01;
+            //ent->character->no_fix = 0x01;
             break;
     };
 

@@ -191,6 +191,7 @@ typedef struct ss_bone_tag_s
     btScalar            transform[16];                                          // 4x4 OpenGL matrix for stack usage
     btScalar            full_transform[16];                                     // 4x4 OpenGL matrix for global usage
 
+    uint32_t            body_part;                                              // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
     uint16_t            flag;                                                   // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
 }ss_bone_tag_t, *ss_bone_tag_p;
 
@@ -267,6 +268,7 @@ typedef struct mesh_tree_tag_s
     base_mesh_p                 mesh_skin;                                      // base skinned mesh for ТР4+
     btScalar                    offset[3];                                      // model position offset
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
+    uint32_t                    body_part;
     uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
     uint8_t                     replace_anim;
 }mesh_tree_tag_t, *mesh_tree_tag_p;
