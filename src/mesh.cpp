@@ -181,8 +181,6 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
     }
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);
-
-    glUnmapBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
 
