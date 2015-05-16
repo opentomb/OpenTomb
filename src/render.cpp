@@ -29,10 +29,7 @@ extern render_DebugDrawer debugDrawer;
 /*
  * Shaders section
  */
-GLhandleARB color_mult_vsh, color_mult_program;
-GLint       color_mult_tint_pos;
-
-struct room_shader_description
+struct shader_description
 {
     GLhandleARB program;
     GLint current_tick;
@@ -40,7 +37,11 @@ struct room_shader_description
     GLint model_view_projection;
     GLint sampler;
     
-    room_shader_description(const char *filename, GLhandleARB fragmentShader);
+    shader_description(const char *vertexFilename, const char *fragmentFilename);
+    shader_description(const char *vertexFilename, GLhandleARB fragmentShader);
+    void load(GLhandleARB vertexShader, GLhandleARB fragmentShader);
+    
+    ~shader_description();
 };
 
 enum room_shader_type
@@ -51,7 +52,8 @@ enum room_shader_type
     ROOM_SHADER_WATER
 };
 
-room_shader_description *room_shaders[4];
+shader_description *room_shaders[4];
+shader_description *static_mesh_shader;
 
 /*GLhandleARB main_vsh, main_fsh, main_program;
 GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
@@ -80,11 +82,32 @@ void Render_InitGlobals()
     renderer.settings.fog_end_depth = 16000.0f;
 }
 
-room_shader_description::room_shader_description(const char *filename, GLhandleARB fragmentShader)
+shader_description::shader_description(const char *vertexFilename, const char *fragmentFilename)
+{
+    GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+    loadShaderFromFile(vertexShader, vertexFilename);
+
+    GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+    loadShaderFromFile(fragmentShader, fragmentFilename);
+    
+    load(vertexShader, fragmentShader);
+    
+    glDeleteObjectARB(vertexShader);
+    glDeleteObjectARB(fragmentShader);
+}
+
+shader_description::shader_description(const char *filename, GLhandleARB fragmentShader)
 {
     GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
     loadShaderFromFile(vertexShader, filename);
     
+    load(vertexShader, fragmentShader);
+    
+    glDeleteObjectARB(vertexShader);
+}
+
+void shader_description::load(GLhandleARB vertexShader, GLhandleARB fragmentShader)
+{
     program = glCreateProgramObjectARB();
     glAttachObjectARB(program, vertexShader);
     glAttachObjectARB(program, fragmentShader);
@@ -97,6 +120,11 @@ room_shader_description::room_shader_description(const char *filename, GLhandleA
     tint_mult = glGetUniformLocationARB(program, "tintMult");
     model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
     sampler = glGetUniformLocationARB(program, "color_map");
+}
+
+shader_description::~shader_description()
+{
+    glDeleteObjectARB(program);
 }
 
 void Render_DoShaders()
@@ -116,22 +144,16 @@ void Render_DoShaders()
     glUseProgramObjectARB(0);*/
 
     //Color mult prog
-    color_mult_program = glCreateProgramObjectARB();
-    color_mult_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-    loadShaderFromFile(color_mult_vsh, "shaders/color_mult.vsh");
-    glAttachObjectARB(color_mult_program, color_mult_vsh);
-    glLinkProgramARB(color_mult_program);
-    printInfoLog(color_mult_program);
-    color_mult_tint_pos = glGetUniformLocationARB(color_mult_program, "tintMult");
+    static_mesh_shader = new shader_description("shaders/static_mesh.vsh", "shaders/static_mesh.fsh");
 
     //Room prog
     GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
     loadShaderFromFile(fragmentShader, "shaders/room.fsh");
     
-    room_shaders[ROOM_SHADER_NORMAL] = new room_shader_description("shaders/room_normal.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_FLICKERING] = new room_shader_description("shaders/room_flickering.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_FLICKERING_WATER] = new room_shader_description("shaders/room_flickering_water.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_WATER] = new room_shader_description("shaders/room_water.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_NORMAL] = new shader_description("shaders/room_normal.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_FLICKERING] = new shader_description("shaders/room_flickering.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_FLICKERING_WATER] = new shader_description("shaders/room_flickering_water.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_WATER] = new shader_description("shaders/room_water.vsh", fragmentShader);
     glDeleteObjectARB(fragmentShader);
 }
 
@@ -162,15 +184,11 @@ void Render_Empty(render_p render)
         render->r_list = NULL;
     }
 
-    if((color_mult_program != 0) && (color_mult_vsh != 0))
+    if(static_mesh_shader != 0)
     {
-        glDetachObjectARB(color_mult_program, color_mult_vsh);
-        glDeleteObjectARB(color_mult_program);
-        glDeleteObjectARB(color_mult_vsh);
+        delete static_mesh_shader;
+        static_mesh_shader = 0;
     }
-
-    color_mult_program = 0;
-    color_mult_vsh = 0;
 }
 
 
@@ -362,7 +380,7 @@ void Render_PolygonTransparency(struct polygon_s *p)
         glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
         glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
         glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_POLYGON, 0, p->vertex_count);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
 
         for(uint16_t i=0;i<p->vertex_count;i++)
         {
@@ -380,7 +398,7 @@ void Render_PolygonTransparency(struct polygon_s *p)
         glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
         glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
         glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_POLYGON, 0, p->vertex_count);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
     }
 }
 
@@ -746,28 +764,6 @@ void Render_Entity(struct entity_s *entity, const btScalar matrix[16])
     }
 }
 
-void Render_StaticMesh(struct static_mesh_s *static_mesh, struct room_s *room)
-{
-    base_mesh_s *mesh = static_mesh->mesh;
-    GLfloat tint[4];
-
-    vec4_copy(tint, static_mesh->tint);
-
-    //If this static mesh is in a water room
-    if(room->flags & TR_ROOM_FLAG_WATER)
-    {
-        Render_CalculateWaterTint(tint, 0);
-        glUseProgramObjectARB(color_mult_program);
-        glUniform4fvARB(color_mult_tint_pos, 1, tint);
-        Render_Mesh(mesh, NULL, NULL);
-        glUseProgramObjectARB(0);
-    }
-    else
-    {
-        Render_Mesh(mesh, NULL, NULL);
-    }
-}
-
 /**
  * drawing world models.
  */
@@ -781,7 +777,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         btScalar modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
         
-        room_shader_description *shader = room_shaders[ROOM_SHADER_NORMAL];
+        shader_description *shader = room_shaders[ROOM_SHADER_NORMAL];
         if (room->flags & 1) // Is water
         {
             if (room->light_mode == 1) // Also flickering
@@ -803,7 +799,8 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         Render_Mesh(room->mesh, NULL, NULL);
         glUseProgramObjectARB(0);
     }
-
+    
+    glUseProgramObjectARB(static_mesh_shader->program);
     for(uint32_t i=0; i<room->static_mesh_count; i++)
     {
         if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
@@ -817,36 +814,24 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         }
 
         btScalar transform[16];
-        Mat4_Mat4_mul(transform, modelViewMatrix, room->static_mesh[i].transform);
+        Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->static_mesh[i].transform);
+        glUniformMatrix4fv(static_mesh_shader->model_view_projection, 1, false, transform);
         glLoadMatrixbt(transform);
-        if(room->static_mesh[i].mesh->uses_vertex_colors > 0)
+        base_mesh_s *mesh = room->static_mesh[i].mesh;
+        GLfloat tint[4];
+        
+        vec4_copy(tint, room->static_mesh[i].tint);
+        
+        //If this static mesh is in a water room
+        if(room->flags & TR_ROOM_FLAG_WATER)
         {
-            Render_StaticMesh(&room->static_mesh[i], room);
+            Render_CalculateWaterTint(tint, 0);
         }
-        else
-        {
-            GLfloat tint[4];
-            tint[0] = room->static_mesh[i].tint[0];
-            tint[1] = room->static_mesh[i].tint[1];
-            tint[2] = room->static_mesh[i].tint[2];
-            tint[3] = 1.0f;
-
-            //If this mesh is in a water room
-            if(room->flags & TR_ROOM_FLAG_WATER)
-            {
-                Render_CalculateWaterTint(tint, 0);
-                glUseProgramObjectARB(color_mult_program);
-                glUniform4fvARB(color_mult_tint_pos, 1, tint);
-                Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
-                glUseProgramObjectARB(0);
-            }
-            else
-            {
-                Render_Mesh(room->static_mesh[i].mesh, NULL, NULL);
-            }
-        }
+        glUniform4fvARB(static_mesh_shader->tint_mult, 1, tint);
+        Render_Mesh(mesh, NULL, NULL);
         room->static_mesh[i].was_rendered = 1;
     }
+    glUseProgramObjectARB(0);
 
     glEnable(GL_LIGHTING);
     for(cont=room->containers; cont; cont=cont->next)

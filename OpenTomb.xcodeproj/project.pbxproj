@@ -352,6 +352,7 @@
 		52D5D5E21B079B6E00B99A38 /* room_water.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5E11B079B6E00B99A38 /* room_water.vsh */; };
 		52D5D5E41B079B8300B99A38 /* room_flickering_water.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5E31B079B8300B99A38 /* room_flickering_water.vsh */; };
 		52D5D5E81B07A86000B99A38 /* room.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5E71B07A86000B99A38 /* room.fsh */; };
+		52D5D5EA1B07CCFF00B99A38 /* static_mesh.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5E91B07CCFF00B99A38 /* static_mesh.fsh */; };
 		52DF7FF21B0769D700A7DE0E /* square.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF11B0769D700A7DE0E /* square.vsh */; };
 		52DF7FF41B076B1700A7DE0E /* square.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF31B076B1700A7DE0E /* square.fsh */; };
 		52DF7FF61B076BBA00A7DE0E /* square_tex.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF51B076BBA00A7DE0E /* square_tex.fsh */; };
@@ -1459,7 +1460,8 @@
 		52D5D5E11B079B6E00B99A38 /* room_water.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = room_water.vsh; sourceTree = "<group>"; };
 		52D5D5E31B079B8300B99A38 /* room_flickering_water.vsh */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; fileEncoding = 4; path = room_flickering_water.vsh; sourceTree = "<group>"; };
 		52D5D5E71B07A86000B99A38 /* room.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = room.fsh; sourceTree = "<group>"; };
-		52DF7FEF1B07683F00A7DE0E /* color_mult.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = color_mult.vsh; sourceTree = "<group>"; };
+		52D5D5E91B07CCFF00B99A38 /* static_mesh.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = static_mesh.fsh; sourceTree = "<group>"; };
+		52DF7FEF1B07683F00A7DE0E /* static_mesh.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = static_mesh.vsh; sourceTree = "<group>"; };
 		52DF7FF01B07683F00A7DE0E /* room_normal.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = room_normal.vsh; sourceTree = "<group>"; };
 		52DF7FF11B0769D700A7DE0E /* square.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = square.vsh; sourceTree = "<group>"; };
 		52DF7FF31B076B1700A7DE0E /* square.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = square.fsh; sourceTree = "<group>"; };
@@ -3141,7 +3143,6 @@
 		52DF7FEE1B07683F00A7DE0E /* shaders */ = {
 			isa = PBXGroup;
 			children = (
-				52DF7FEF1B07683F00A7DE0E /* color_mult.vsh */,
 				52D5D5E71B07A86000B99A38 /* room.fsh */,
 				52DF7FF01B07683F00A7DE0E /* room_normal.vsh */,
 				52D5D5DF1B079B5F00B99A38 /* room_flickering.vsh */,
@@ -3150,6 +3151,8 @@
 				52DF7FF11B0769D700A7DE0E /* square.vsh */,
 				52DF7FF31B076B1700A7DE0E /* square.fsh */,
 				52DF7FF51B076BBA00A7DE0E /* square_tex.fsh */,
+				52D5D5E91B07CCFF00B99A38 /* static_mesh.fsh */,
+				52DF7FEF1B07683F00A7DE0E /* static_mesh.vsh */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -3218,6 +3221,7 @@
 				52B833551AED5B06003B8288 /* README in Resources */,
 				52DF7FF21B0769D700A7DE0E /* square.vsh in Resources */,
 				52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */,
+				52D5D5EA1B07CCFF00B99A38 /* static_mesh.fsh in Resources */,
 				52B833F21AED5B06003B8288 /* README in Resources */,
 				52D5D5E01B079B5F00B99A38 /* room_flickering.vsh in Resources */,
 				52B833381AED5B06003B8288 /* afblue.cin in Resources */,
