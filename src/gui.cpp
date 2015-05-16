@@ -34,8 +34,17 @@ gui_Fader           Fader[FADER_LASTINDEX];
 gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
+GLhandleARB square_program;
+GLint       square_program_offset;
+GLint       square_program_factor;
+GLhandleARB square_texture_program;
+GLint       square_texture_program_sampler;
+GLint       square_texture_program_offset;
+GLint       square_texture_program_factor;
+
 void Gui_Init()
 {
+    Gui_InitShaders();
     Gui_InitBars();
     Gui_InitFaders();
     Gui_InitNotifier();
@@ -43,6 +52,38 @@ void Gui_Init()
 
     //main_inventory_menu = new gui_InventoryMenu();
     main_inventory_manager = new gui_InventoryManager();
+}
+
+void Gui_InitShaders()
+{
+    // Colored square program
+    GLhandleARB squareVertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+    loadShaderFromFile(squareVertexShader, "shaders/square.vsh");
+    GLhandleARB squareFragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+    loadShaderFromFile(squareFragmentShader, "shaders/square.fsh");
+    GLhandleARB squareFragmentShaderTexture = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+    loadShaderFromFile(squareFragmentShaderTexture, "shaders/square_tex.fsh");
+    
+    square_program = glCreateProgramObjectARB();
+    glAttachObjectARB(square_program, squareVertexShader);
+    glAttachObjectARB(square_program, squareFragmentShader);
+    glLinkProgramARB(square_program);
+    square_texture_program_offset = glGetUniformLocationARB(square_program, "offset");
+    square_texture_program_factor = glGetUniformLocationARB(square_program, "factor");
+    printInfoLog(square_program);
+    
+    square_texture_program = glCreateProgramObjectARB();
+    glAttachObjectARB(square_texture_program, squareVertexShader);
+    glAttachObjectARB(square_texture_program, squareFragmentShaderTexture);
+    glLinkProgramARB(square_texture_program);
+    printInfoLog(square_texture_program);
+    square_texture_program_sampler = glGetUniformLocationARB(square_texture_program, "color_map");
+    square_texture_program_offset = glGetUniformLocationARB(square_texture_program, "offset");
+    square_texture_program_factor = glGetUniformLocationARB(square_texture_program, "factor");
+    
+    glDeleteObjectARB(squareVertexShader);
+    glDeleteObjectARB(squareFragmentShader);
+    glDeleteObjectARB(squareFragmentShaderTexture);
 }
 
 void Gui_InitFontManager()
@@ -262,6 +303,9 @@ void Gui_Destroy()
         delete FontManager;
         FontManager = NULL;
     }
+    
+    glDeleteObjectARB(square_program);
+    glDeleteObjectARB(square_texture_program);
 }
 
 void Gui_AddLine(gui_text_line_p line)
@@ -1469,49 +1513,48 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     };
 
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    
-    glLoadIdentity();
 
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    
+    const GLfloat offset[2] = { x / screen_info.w - 1.f, y / screen_info.h - 1.f };
+    const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    GLfloat texCoords[8];
     if(texture)
     {
+        glUseProgramObjectARB(square_texture_program);
+        glUniform1i(square_texture_program_sampler, 0);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
-        texCoords[0] = 0; texCoords[1] = 1;
-        texCoords[2] = 1; texCoords[3] = 1;
-        texCoords[4] = 1; texCoords[5] = 0;
-        texCoords[6] = 0; texCoords[7] = 0;
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
+        glUniform2fv(square_texture_program_offset, 1, offset);
+        glUniform2fv(square_texture_program_factor, 1, factor);
     }
     else
     {
-        glBindTexture(GL_TEXTURE_2D, 0);
+        glUseProgramObjectARB(square_program);
+        glUniform2fv(square_program_offset, 1, offset);
+        glUniform2fv(square_program_factor, 1, factor);
     }
 
-    GLfloat rectCoords[8];
-    rectCoords[0] = x; rectCoords[1] = y;
-    rectCoords[2] = x + width; rectCoords[3] = y;
-    rectCoords[4] = x + width; rectCoords[5] = y + height;
-    rectCoords[6] = x; rectCoords[7] = y + height;
-    glVertexPointer(2, GL_FLOAT, 0, rectCoords);
+    GLfloat rectCoords[8] = { 0, 0,
+        1, 0,
+        1, 1,
+        0, 1 };
+    glVertexPointer(2, GL_FLOAT, sizeof(GLfloat [2]), rectCoords);
 
     GLfloat rectColors[16];
     memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
     memcpy(rectColors + 4,  colorLowerRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 12, colorUpperLeft,  sizeof(GLfloat) * 4);
-    glColorPointer(4, GL_FLOAT, 0, rectColors);
+    memcpy(rectColors + 8,  colorUpperLeft,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 12, colorUpperRight, sizeof(GLfloat) * 4);
+    glColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
 
-    glDrawArrays(GL_POLYGON, 0, 4);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     if(texture)
     {
         glBindTexture(GL_TEXTURE_2D, 0);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
+    glUseProgramObjectARB(0);
 }
 
 bool Gui_FadeStart(int fader, int fade_direction)

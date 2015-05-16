@@ -348,6 +348,9 @@
 		52B8342D1AED5C23003B8288 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834251AED5B96003B8288 /* SDL2.framework */; };
 		52B8342E1AED5C23003B8288 /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834251AED5B96003B8288 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		52B834311AED7BCC003B8288 /* libreadline.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834301AED7BCC003B8288 /* libreadline.dylib */; };
+		52DF7FF21B0769D700A7DE0E /* square.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF11B0769D700A7DE0E /* square.vsh */; };
+		52DF7FF41B076B1700A7DE0E /* square.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF31B076B1700A7DE0E /* square.fsh */; };
+		52DF7FF61B076BBA00A7DE0E /* square_tex.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF51B076BBA00A7DE0E /* square_tex.fsh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1448,6 +1451,11 @@
 		52B834281AED5BDE003B8288 /* FindConfigFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FindConfigFile.m; sourceTree = "<group>"; };
 		52B8342A1AED5BF7003B8288 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		52B834301AED7BCC003B8288 /* libreadline.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libreadline.dylib; path = usr/lib/libreadline.dylib; sourceTree = SDKROOT; };
+		52DF7FEF1B07683F00A7DE0E /* color_mult.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = color_mult.vsh; sourceTree = "<group>"; };
+		52DF7FF01B07683F00A7DE0E /* room.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = room.vsh; sourceTree = "<group>"; };
+		52DF7FF11B0769D700A7DE0E /* square.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = square.vsh; sourceTree = "<group>"; };
+		52DF7FF31B076B1700A7DE0E /* square.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = square.fsh; sourceTree = "<group>"; };
+		52DF7FF51B076BBA00A7DE0E /* square_tex.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = square_tex.fsh; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1962,6 +1970,7 @@
 			isa = PBXGroup;
 			children = (
 				52B834231AED5B7E003B8288 /* lib */,
+				52DF7FEE1B07683F00A7DE0E /* shaders */,
 				52B82DB81AED5B02003B8288 /* src */,
 				52B82DA51AED5ACA003B8288 /* resource */,
 				52B82D831AED5A45003B8288 /* Products */,
@@ -3121,6 +3130,18 @@
 			name = System;
 			sourceTree = "<group>";
 		};
+		52DF7FEE1B07683F00A7DE0E /* shaders */ = {
+			isa = PBXGroup;
+			children = (
+				52DF7FEF1B07683F00A7DE0E /* color_mult.vsh */,
+				52DF7FF01B07683F00A7DE0E /* room.vsh */,
+				52DF7FF11B0769D700A7DE0E /* square.vsh */,
+				52DF7FF31B076B1700A7DE0E /* square.fsh */,
+				52DF7FF51B076BBA00A7DE0E /* square_tex.fsh */,
+			);
+			path = shaders;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -3179,8 +3200,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52DF7FF61B076BBA00A7DE0E /* square_tex.fsh in Resources */,
 				52B8335B1AED5B06003B8288 /* README in Resources */,
 				52B833551AED5B06003B8288 /* README in Resources */,
+				52DF7FF21B0769D700A7DE0E /* square.vsh in Resources */,
 				52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */,
 				52B833F21AED5B06003B8288 /* README in Resources */,
 				52B833381AED5B06003B8288 /* afblue.cin in Resources */,
@@ -3188,6 +3211,7 @@
 				52B833601AED5B06003B8288 /* README in Resources */,
 				52B82DB61AED5ACA003B8288 /* Images.xcassets in Resources */,
 				52B82DB71AED5ACA003B8288 /* Info.plist in Resources */,
+				52DF7FF41B076B1700A7DE0E /* square.fsh in Resources */,
 				52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */,
 				52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */,
 				524E0F5D1AFF968A00F56FF6 /* premake4.lua in Resources */,

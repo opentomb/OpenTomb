@@ -115,6 +115,7 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
         fwrite(data, strlen(data), 1, fp);
         fclose(fp);
     }
+    fwrite(data, strlen(data), 1, stderr);
 }
 
 /*

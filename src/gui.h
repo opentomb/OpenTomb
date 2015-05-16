@@ -500,6 +500,7 @@ void Gui_InitFontManager();
 void Gui_Init();
 void Gui_Destroy();
 
+void Gui_InitShaders();
 void Gui_InitBars();
 void Gui_InitFaders();
 void Gui_InitNotifier();
