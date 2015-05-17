@@ -42,6 +42,8 @@ GLint       square_texture_program_sampler;
 GLint       square_texture_program_offset;
 GLint       square_texture_program_factor;
 
+GLuint crosshairBuffer;
+
 void Gui_Init()
 {
     Gui_InitShaders();
@@ -49,6 +51,9 @@ void Gui_Init()
     Gui_InitFaders();
     Gui_InitNotifier();
     Gui_InitTempLines();
+    
+    glGenBuffers(1, &crosshairBuffer);
+    Gui_FillCrosshairBuffer();
 
     //main_inventory_menu = new gui_InventoryMenu();
     main_inventory_manager = new gui_InventoryManager();
@@ -1342,22 +1347,28 @@ void Gui_SwitchGLMode(char is_gui)
     }
 }
 
-void Gui_DrawCrosshair()
+void Gui_FillCrosshairBuffer()
 {
     GLfloat crosshair_buf[] = {
-            (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
-            (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
-            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 1.0f, 0.0f, 0.0f,
-            (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 1.0f, 0.0f, 0.0f
+        (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
+        (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
+        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 1.0f, 0.0f, 0.0f,
+        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 1.0f, 0.0f, 0.0f
     };
 
+    glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
+    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
+}
+
+void Gui_DrawCrosshair()
+{
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);
 
-    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), crosshair_buf);
-    glColorPointer(3, GL_FLOAT, 5 * sizeof(GLfloat), crosshair_buf + 2);
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
+    glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), 0);
+    glColorPointer(3, GL_FLOAT, 5 * sizeof(GLfloat), (void *) sizeof(GLfloat [2]));
     glDrawArrays(GL_LINES, 0, 4);
 
     glPopAttrib();

@@ -202,7 +202,7 @@ void Render_SkyBox(const btScalar matrix[16])
     btScalar tr[16];
     btScalar *p;
 
-    glUseProgram(0);
+    glUseProgramObjectARB(0);
     if((renderer.style & R_DRAW_SKYBOX) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
     {
         glDepthMask(GL_FALSE);
@@ -227,11 +227,11 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
     if(mesh->num_animated_elements > 0)
     {
         // Respecify the tex coord buffer
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
         // Tell OpenGL to discard the old values
-        glBufferData(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        glBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
-        GLfloat *data = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
         
         size_t offset = 0;
         for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
@@ -248,17 +248,17 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
                 offset += 2;
             }
         }
-        glUnmapBuffer(GL_ARRAY_BUFFER);
+        glUnmapBufferARB(GL_ARRAY_BUFFER);
         
         // Setup altered buffer
         glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
         // Setup static data
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
         glVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
         glColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
         glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
         glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
     }
@@ -826,19 +826,22 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
 void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar matrix[16])
 {
-    glUseProgram(0);
-    glLoadMatrixbt(matrix);
-    for(unsigned int i=0; i<room->sprites_count; i++)
+    if (room->sprites_count > 0)
     {
-        if(!room->sprites[i].was_rendered)
+        glUseProgramObjectARB(0);
+        glLoadMatrixbt(matrix);
+        for(unsigned int i=0; i<room->sprites_count; i++)
         {
-            btScalar *v = room->sprites[i].pos;
-            if(room->sprites[i].sprite)
+            if(!room->sprites[i].was_rendered)
             {
-                Render_Sprite(room->sprites[i].sprite, v[0], v[1], v[2]);
+                btScalar *v = room->sprites[i].pos;
+                if(room->sprites[i].sprite)
+                {
+                    Render_Sprite(room->sprites[i].sprite, v[0], v[1], v[2]);
+                }
             }
+            room->sprites[i].was_rendered = 1;
         }
-        room->sprites[i].was_rendered = 1;
     }
 }
 

@@ -505,6 +505,7 @@ void Gui_InitBars();
 void Gui_InitFaders();
 void Gui_InitNotifier();
 void Gui_InitTempLines();
+void Gui_FillCrosshairBuffer();
 
 void Gui_AddLine(gui_text_line_p line);
 void Gui_DeleteLine(gui_text_line_p line);

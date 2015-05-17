@@ -233,20 +233,20 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         }
         
         // And upload.
-        glGenBuffers(1, &mesh->animated_vertex_array);
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        glBufferData(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
+        glGenBuffersARB(1, &mesh->animated_vertex_array);
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
+        glBufferDataARB(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
         delete [] vertexData;
         
-        glGenBuffers(1, &mesh->animated_index_array);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_index_array_length, elementData, GL_STATIC_DRAW);
+        glGenBuffersARB(1, &mesh->animated_index_array);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
+        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_index_array_length, elementData, GL_STATIC_DRAW);
         delete [] elementData;
         
         // Prepare empty buffer for tex coords
-        glGenBuffers(1, &mesh->animated_texcoord_array);
-        glBindBuffer(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->num_animated_elements, 0, GL_STREAM_DRAW);
+        glGenBuffersARB(1, &mesh->animated_texcoord_array);
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
+        glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->num_animated_elements, 0, GL_STREAM_DRAW);
     }
     else
     {
