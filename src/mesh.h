@@ -182,17 +182,18 @@ typedef struct static_mesh_s
  */
 typedef struct ss_bone_tag_s
 {
-    base_mesh_p         mesh_base;                                              // base mesh - pointer to the first mesh in array
-    base_mesh_p         mesh_skin;                                              // base skinned mesh for ТР4+
-    base_mesh_p         mesh_slot;
-    btScalar            offset[3];                                              // model position offset
+    struct ss_bone_tag_s   *parent;
+    base_mesh_p             mesh_base;                                          // base mesh - pointer to the first mesh in array
+    base_mesh_p             mesh_skin;                                          // base skinned mesh for ТР4+
+    base_mesh_p             mesh_slot;
+    btScalar                offset[3];                                          // model position offset
 
-    btScalar            qrotate[4];                                             // quaternion rotation
-    btScalar            transform[16];                                          // 4x4 OpenGL matrix for stack usage
-    btScalar            full_transform[16];                                     // 4x4 OpenGL matrix for global usage
+    btScalar                qrotate[4];                                         // quaternion rotation
+    btScalar                transform[16];                                      // 4x4 OpenGL matrix for stack usage
+    btScalar                full_transform[16];                                 // 4x4 OpenGL matrix for global usage
 
-    uint32_t            body_part;                                              // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
-    uint16_t            flag;                                                   // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
+    uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
+    uint16_t                flag;                                               // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 
@@ -350,6 +351,8 @@ void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletonModel_FillTransparency(skeletal_model_p model);
 void SkeletalModel_InterpolateFrames(skeletal_model_p models);
 void FillSkinnedMeshMap(skeletal_model_p model);
+
+void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
 
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count);

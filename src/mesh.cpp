@@ -246,6 +246,69 @@ void SkeletalModel_Clear(skeletal_model_p model)
 }
 
 
+void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
+{
+    vec3_set_zero(bf->bb_min);
+    vec3_set_zero(bf->bb_max);
+    vec3_set_zero(bf->centre);
+    vec3_set_zero(bf->pos);
+    bf->animations.anim_flags = 0x0000;
+    bf->animations.frame_time = 0.0;
+    bf->animations.period = 1.0 / 30.0;
+    bf->animations.next_state = 0;
+    bf->animations.lerp = 0.0;
+    bf->animations.current_animation = 0;
+    bf->animations.current_frame = 0;
+    bf->animations.next_animation = 0;
+    bf->animations.next_frame = 0;
+
+    bf->animations.next = NULL;
+    bf->animations.onFrame = NULL;
+    bf->animations.model = model;
+    bf->bone_tag_count = model->mesh_count;
+    bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
+
+    int stack = 0;
+    ss_bone_tag_p parents[bf->bone_tag_count];
+    parents[0] = NULL;
+    bf->bone_tags[0].parent = NULL;                                             // root
+    for(uint16_t i=0;i<bf->bone_tag_count;i++)
+    {
+        bf->bone_tags[i].flag = model->mesh_tree[i].flag;
+        bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
+        bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
+        bf->bone_tags[i].mesh_slot = NULL;
+        bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
+
+        vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
+        vec4_set_zero(bf->bone_tags[i].qrotate);
+        Mat4_E_macro(bf->bone_tags[i].transform);
+        Mat4_E_macro(bf->bone_tags[i].full_transform);
+
+        if(i > 0)
+        {
+            bf->bone_tags[i].parent = &bf->bone_tags[i-1];
+            if(bf->bone_tags[i].flag & 0x01)                                    // POP
+            {
+                if(stack > 0)
+                {
+                    bf->bone_tags[i].parent = parents[stack];
+                    stack--;
+                }
+            }
+            if(bf->bone_tags[i].flag & 0x02)                                    // PUSH
+            {
+                if(stack + 1 < (int16_t)model->mesh_count)
+                {
+                    stack++;
+                    parents[stack] = bf->bone_tags[i].parent;
+                }
+            }
+        }
+    }
+}
+
+
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
 {
     if(dst->bone_tag_count < src->bone_tag_count)
@@ -531,7 +594,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
             {
                 elementCount *= 2;
             }
-                
+
             mesh->element_count_per_texture[texture] += elementCount;
             elements_for_texture[texture] = (uint32_t *)realloc(elements_for_texture[texture], mesh->element_count_per_texture[texture] * sizeof(uint32_t));
 
@@ -547,7 +610,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 0] = startElement;
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 1] = previousElement;
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 2] = thisElement;
-                
+
                 if (p->double_side)
                 {
                     elements_for_texture[texture][backwardsStart + (j - 2)*3 + 0] = startElement;
@@ -615,7 +678,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
                 delete trimesh;
                 return NULL;
             }
-            
+
             break;
 
         case COLLISION_BOX:                                                     // the box with deviated centre
@@ -643,12 +706,12 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
                 delete trimesh;
                 return NULL;
             }
-            
+
             OBB_Clear(obb);
             free(obb);
             break;
     };
-    
+
     if(is_static)
     {
         ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);

@@ -589,39 +589,13 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
     /*
      * build absolute coordinate matrix system
      */
-    sp = stack = GetTempbtScalar(model->mesh_count * 16);
-    int16_t stack_use = 0;
-
     btag = bf->bone_tags;
-
     Mat4_Copy(btag->full_transform, btag->transform);
-    Mat4_Copy(sp, btag->transform);
     btag++;
-
     for(uint16_t k=1;k<curr_bf->bone_tag_count;k++,btag++)
     {
-        if(btag->flag & 0x01)
-        {
-            if(stack_use > 0)
-            {
-                sp -= 16;// glPopMatrix();
-                stack_use--;
-            }
-        }
-        if(btag->flag & 0x02)
-        {
-            if(stack_use + 1 < (int16_t)model->mesh_count)
-            {
-                Mat4_Copy(sp+16, sp);
-                sp += 16;// glPushMatrix();
-                stack_use++;
-            }
-        }
-        Mat4_Mat4_mul(sp, sp, btag->transform); // glMultMatrixd(btag->transform);
-        Mat4_Copy(btag->full_transform, sp);
+        Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
     }
-
-    ReturnTempbtScalar(model->mesh_count * 16);
 }
 
 

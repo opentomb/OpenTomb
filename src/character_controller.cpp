@@ -1126,22 +1126,30 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
                 btVector3 from, to, curr, move;
                 btScalar move_len;
                 uint16_t m = ent->bf.animations.model->collision_map[i];
+                ss_bone_tag_p btag = ent->bf.bone_tags + m;
 
+                v = btag->mesh_base->centre;
                 if(i == 0)
                 {
                     from = ent->character->ghostObjects[m]->getWorldTransform().getOrigin();
                 }
-                Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[m].full_transform);
-                v = ent->bf.animations.model->mesh_tree[m].mesh_base->centre;
+                /*else
+                {
+                    btScalar parent_from[3];
+                    Mat4_vec3_mul(parent_from, btag->parent->full_transform, v);
+                    Mat4_vec3_mul(from.m_floats, ent->transform, v);
+                }*/
+
+                Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
                 Mat4_vec3_mul_macro(to.m_floats, tr, v);
                 curr = from;
                 move = to - from;
                 move_len = move.length();
-                if(move_len > 1024.0)                                           ///@FIXME: magick const 1024.0!
+                if((i == 0) && (move_len > 1024.0))                             ///@FIXME: magick const 1024.0!
                 {
                     break;
                 }
-                int iter = (btScalar)(4.0 * move_len / ent->bf.animations.model->mesh_tree[m].mesh_base->R) + 1;   ///@FIXME (not a critical): magick const 4.0!
+                int iter = (btScalar)(4.0 * move_len / btag->mesh_base->R) + 1; ///@FIXME (not a critical): magick const 4.0!
                 move.m_floats[0] /= (btScalar)iter;
                 move.m_floats[1] /= (btScalar)iter;
                 move.m_floats[2] /= (btScalar)iter;

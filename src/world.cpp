@@ -1211,37 +1211,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     }
 
     ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
-    vec3_set_zero(bf->bb_min);
-    vec3_set_zero(bf->bb_max);
-    vec3_set_zero(bf->centre);
-    vec3_set_zero(bf->pos);
-    bf->animations.anim_flags = 0x0000;
-    bf->animations.frame_time = 0.0;
-    bf->animations.period = 1.0 / 30.0;
-    bf->animations.next_state = 0;
-    bf->animations.lerp = 0.0;
-    bf->animations.current_animation = 0;
-    bf->animations.current_frame = 0;
-    bf->animations.next_animation = 0;
-    bf->animations.next_frame = 0;
-
-    bf->animations.next = NULL;
-    bf->animations.onFrame = NULL;
-    bf->animations.model = model;
-    bf->bone_tag_count = model->mesh_count;
-    bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
-    for(uint16_t j=0;j<bf->bone_tag_count;j++)
-    {
-        bf->bone_tags[j].flag = bf->animations.model->mesh_tree[j].flag;
-        bf->bone_tags[j].mesh_base = bf->animations.model->mesh_tree[j].mesh_base;
-        bf->bone_tags[j].mesh_skin = bf->animations.model->mesh_tree[j].mesh_skin;
-        bf->bone_tags[j].mesh_slot = NULL;
-
-        vec3_copy(bf->bone_tags[j].offset, bf->animations.model->mesh_tree[j].offset);
-        vec4_set_zero(bf->bone_tags[j].qrotate);
-        Mat4_E_macro(bf->bone_tags[j].transform);
-        Mat4_E_macro(bf->bone_tags[j].full_transform);
-    }
+    SSBoneFrame_CreateFromModel(bf, model);
 
     base_item_p item = (base_item_p)malloc(sizeof(base_item_t));
     item->id = item_id;

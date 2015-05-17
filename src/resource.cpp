@@ -3871,15 +3871,11 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         }
 
         entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
-        entity->OCB             =  tr_item->ocb;
+        entity->OCB             = tr_item->ocb;
         entity->timer           = 0.0;
 
         entity->self->collide_flag = 0x00;
         entity->move_type = 0x0000;
-        entity->bf.animations.anim_flags = 0x0000;
-        entity->bf.animations.current_animation = 0;
-        entity->bf.animations.current_frame = 0;
-        entity->bf.animations.frame_time = 0.0;
         entity->inertia = 0.0;
         entity->move_type = 0;
 
@@ -3889,22 +3885,22 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         {
             if(entity->bf.animations.model == NULL)
             {
-                top = lua_gettop(ent_ID_override);                                         // save LUA stack
-                lua_getglobal(ent_ID_override, "getOverridedID");                          // add to the up of stack LUA's function
-                lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
-                lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
-                if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                         // call that function
+                top = lua_gettop(ent_ID_override);                              // save LUA stack
+                lua_getglobal(ent_ID_override, "getOverridedID");               // add to the up of stack LUA's function
+                lua_pushinteger(ent_ID_override, tr->game_version);             // add to stack first argument
+                lua_pushinteger(ent_ID_override, tr_item->object_id);           // add to stack second argument
+                if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                   // call that function
                 {
                     entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
                 }
-                lua_settop(ent_ID_override, top);                                      // restore LUA stack
+                lua_settop(ent_ID_override, top);                               // restore LUA stack
             }
 
-            top = lua_gettop(ent_ID_override);                                         // save LUA stack
-            lua_getglobal(ent_ID_override, "getOverridedAnim");                        // add to the up of stack LUA's function
-            lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
-            lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
-            if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                         // call that function
+            top = lua_gettop(ent_ID_override);                                  // save LUA stack
+            lua_getglobal(ent_ID_override, "getOverridedAnim");                 // add to the up of stack LUA's function
+            lua_pushinteger(ent_ID_override, tr->game_version);                 // add to stack first argument
+            lua_pushinteger(ent_ID_override, tr_item->object_id);               // add to stack second argument
+            if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                       // call that function
             {
                 int replace_anim_id = lua_tointeger(ent_ID_override, -1);
                 if(replace_anim_id > 0)
@@ -3942,28 +3938,14 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
         }
 
-        if(tr->game_version < TR_II && tr_item->object_id == 83)
+        if(tr->game_version < TR_II && tr_item->object_id == 83)                ///@FIXME: brutal magick hardcode! ;-)
         {
             Entity_Clear(entity);                                               // skip PSX save model
             free(entity);
             continue;
         }
 
-        entity->bf.bone_tag_count = entity->bf.animations.model->mesh_count;
-        entity->bf.bone_tags = (ss_bone_tag_p)malloc(entity->bf.bone_tag_count * sizeof(ss_bone_tag_t));
-        for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
-        {
-            entity->bf.bone_tags[j].flag = entity->bf.animations.model->mesh_tree[j].flag;
-            entity->bf.bone_tags[j].mesh_base = entity->bf.animations.model->mesh_tree[j].mesh_base;
-            entity->bf.bone_tags[j].mesh_skin = entity->bf.animations.model->mesh_tree[j].mesh_skin;
-            entity->bf.bone_tags[j].mesh_slot = NULL;
-            entity->bf.bone_tags[j].body_part = entity->bf.animations.model->mesh_tree[j].body_part;
-            
-            vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.animations.model->mesh_tree[j].offset);
-            vec4_set_zero(entity->bf.bone_tags[j].qrotate);
-            Mat4_E_macro(entity->bf.bone_tags[j].transform);
-            Mat4_E_macro(entity->bf.bone_tags[j].full_transform);
-        }
+        SSBoneFrame_CreateFromModel(&entity->bf, entity->bf.animations.model);
 
         if(0 == tr_item->object_id)                                             // Lara is unical model
         {
