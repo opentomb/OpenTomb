@@ -1356,6 +1356,7 @@ void Gui_SwitchGLMode(char is_gui)
     {
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(engine_camera.gl_proj_mat);
+        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(btScalar [16]));
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(engine_camera.gl_view_mat);
     }
@@ -1375,7 +1376,8 @@ void Gui_FillCrosshairBuffer()
 }
 
 void Gui_DrawCrosshair()
-{
+{        glUseProgramObjectARB(0);
+
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);

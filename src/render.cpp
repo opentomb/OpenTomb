@@ -830,7 +830,6 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             };
         }
     }
-    glUseProgramObjectARB(0);
 }
 
 

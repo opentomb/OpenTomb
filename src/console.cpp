@@ -189,6 +189,7 @@ void Con_Draw()
 
 void Con_DrawBackground()
 {
+    glUseProgramObjectARB(0);
     /*
      * Draw console background to see the text
      */
