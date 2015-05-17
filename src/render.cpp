@@ -224,9 +224,43 @@ void Render_SkyBox(const btScalar matrix[16])
  */
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
 {
-    for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
+    if(mesh->num_animated_elements > 0)
     {
-        Render_PolygonTransparency(p);
+        // Respecify the tex coord buffer
+        glBindBuffer(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
+        // Tell OpenGL to discard the old values
+        glBufferData(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        // Get writable data (to avoid copy)
+        GLfloat *data = (GLfloat *) glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        
+        size_t offset = 0;
+        for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
+        {
+            anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
+            uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
+            tex_frame_p tf = seq->frames + frame;
+            for(uint16_t i=0;i<p->vertex_count;i++)
+            {
+                const GLfloat *v = p->vertices[i].tex_coord;
+                data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
+                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
+                
+                offset += 2;
+            }
+        }
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        
+        // Setup altered buffer
+        glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
+        // Setup static data
+        glBindBuffer(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
+        glVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
+        glColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
+        glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
+        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
+        glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
     }
 
     if(mesh->vertex_count == 0)

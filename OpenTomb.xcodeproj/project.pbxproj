@@ -156,7 +156,6 @@
 		52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA91AED5ACA003B8288 /* RobotoCondensed-Regular.ttf */; };
 		52B82DB41AED5ACA003B8288 /* legal.png in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DAB1AED5ACA003B8288 /* legal.png */; };
 		52B82DB61AED5ACA003B8288 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DAF1AED5ACA003B8288 /* Images.xcassets */; };
-		52B82DB71AED5ACA003B8288 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DB01AED5ACA003B8288 /* Info.plist */; };
 		52B832861AED5B06003B8288 /* ALc.c in Sources */ = {isa = PBXBuildFile; fileRef = 52B82DC41AED5B02003B8288 /* ALc.c */; };
 		52B832871AED5B06003B8288 /* alcConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = 52B82DC51AED5B02003B8288 /* alcConfig.c */; };
 		52B832881AED5B06003B8288 /* alcRing.c in Sources */ = {isa = PBXBuildFile; fileRef = 52B82DC61AED5B02003B8288 /* alcRing.c */; };
@@ -3195,7 +3194,7 @@
 		52B82D7A1AED5A43003B8288 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0610;
+				LastUpgradeCheck = 0620;
 				ORGANIZATIONNAME = "Torsten Kammer";
 				TargetAttributes = {
 					52B82D811AED5A45003B8288 = {
@@ -3242,7 +3241,6 @@
 				52B82DB61AED5ACA003B8288 /* Images.xcassets in Resources */,
 				52D5D5E21B079B6E00B99A38 /* room_water.vsh in Resources */,
 				52D5D5E81B07A86000B99A38 /* room.fsh in Resources */,
-				52B82DB71AED5ACA003B8288 /* Info.plist in Resources */,
 				52DF7FF41B076B1700A7DE0E /* square.fsh in Resources */,
 				52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */,
 				52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */,

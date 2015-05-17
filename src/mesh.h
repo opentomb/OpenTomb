@@ -60,6 +60,15 @@ typedef struct base_mesh_s
 
     GLuint                vbo_vertex_array;
     GLuint                vbo_index_array;
+    
+    // Buffers for animated polygons
+    // The first contains position, normal and color.
+    // The second contains the texture coordinates. It gets updated every frame.
+    size_t                num_animated_elements;
+    GLuint                animated_vertex_array;
+    GLuint                animated_texcoord_array;
+    GLuint                animated_index_array;
+    size_t                animated_index_array_length;
 }base_mesh_t, *base_mesh_p;
 
 
