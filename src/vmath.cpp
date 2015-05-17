@@ -465,7 +465,7 @@ void Mat4_inv_Mat4_affine_mul(btScalar result[16], btScalar src1[16], btScalar s
     vec4_copy(result+12, t_res+12);
 }
 
-void Mat4_vec3_mul(btScalar v[3], btScalar mat[16], btScalar src[3])
+void Mat4_vec3_mul(btScalar v[3], const btScalar mat[16], const btScalar src[3])
 {
     btScalar ret[3];
 

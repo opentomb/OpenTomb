@@ -625,7 +625,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *matrix)
+void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix, const btScalar *mvpMatrix)
 {
     if(size != 0.0)
     {
@@ -642,16 +642,21 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         size *= 0.8;
 
         btScalar scaledMatrix[16];
-        Mat4_Copy(scaledMatrix, matrix);
+        Mat4_E(scaledMatrix);
         if(size < 1.0)          // only reduce items size...
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        Render_SkeletalModel(bf, scaledMatrix);
+        btScalar scaledMvpMatrix[16];
+        Mat4_Mat4_mul(scaledMvpMatrix, mvpMatrix, scaledMatrix);
+        
+        // Render with scaled model view projection matrix
+        // Use original modelview matrix, as that is used for normals whose size shouldn't change.
+        Render_SkeletalModel(bf, mvMatrix, scaledMvpMatrix);
     }
     else
     {
-        Render_SkeletalModel(bf, matrix);
+        Render_SkeletalModel(bf, mvMatrix, mvpMatrix);
     }
 }
 
@@ -1299,7 +1304,7 @@ void gui_InventoryManager::render()
             }
             Mat4_Translate(matrix, -0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
             Mat4_Scale(matrix, 0.7, 0.7, 0.7);
-            Gui_RenderItem(bi->bf, 0.0, matrix);
+            Gui_RenderItem(bi->bf, 0.0, matrix, matrix);
 
             num++;
         }
@@ -2753,7 +2758,7 @@ void gui_ItemNotifier::Draw()
             Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
             Mat4_RotateY(matrix, mCurrRotX + mRotX);
             Mat4_RotateX(matrix, mCurrRotY + mRotY);
-            Gui_RenderItem(item->bf, mSize, matrix);
+            Gui_RenderItem(item->bf, mSize, matrix, matrix);
 
             item->bf->animations.current_animation = anim;
             item->bf->animations.current_frame = frame;
