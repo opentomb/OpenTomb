@@ -1127,7 +1127,10 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
                 btScalar move_len;
                 uint16_t m = ent->bf.animations.model->collision_map[i];
 
-                from = ent->character->ghostObjects[m]->getWorldTransform().getOrigin();
+                if(i == 0)
+                {
+                    from = ent->character->ghostObjects[m]->getWorldTransform().getOrigin();
+                }
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[m].full_transform);
                 v = ent->bf.animations.model->mesh_tree[m].mesh_base->centre;
                 Mat4_vec3_mul_macro(to.m_floats, tr, v);
@@ -1156,6 +1159,9 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
                         curr.m_floats[0] += tmp[0];
                         curr.m_floats[1] += tmp[1];
                         curr.m_floats[2] += tmp[2];
+                        from.m_floats[0] += tmp[0];
+                        from.m_floats[1] += tmp[1];
+                        from.m_floats[2] += tmp[2];
                         ret++;
                     }
                     curr += move;
