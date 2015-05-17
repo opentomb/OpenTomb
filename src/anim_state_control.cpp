@@ -29,7 +29,7 @@
 #define LEFT_LEG                    (3)
 #define RIGHT_LEG                   (6)
 
-#define PENETRATION_TEST_OFFSET     (0.16 * ent->character->forvard_size)
+#define PENETRATION_TEST_OFFSET     (ent->character->forvard_size)
 #define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
 #define WALK_BACK_OFFSET            (16.0)
 #define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb

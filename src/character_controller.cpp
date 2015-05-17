@@ -1283,10 +1283,8 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
         if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))
         {
             t2 *= t1;
-            t1 = reaction[0] * move[0] + reaction[1] * move[1];
-            t1 = t1 * t1 / t2;
-
-            if(t1 > ent->character->critical_wall_component * ent->character->critical_wall_component)
+            t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
+            if(t1 > ent->character->critical_wall_component)
             {
                 resp->horizontal_collide |= 0x01;
             }
@@ -1294,6 +1292,7 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
     }
     vec3_sub(pos, pos, move);
     Character_GhostUpdate(ent);
+    Character_CleanCollisionAllBodyParts(ent);
 }
 
 
@@ -1311,6 +1310,33 @@ bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
     }
 
     return false;
+}
+
+
+void Character_CleanCollisionAllBodyParts(struct entity_s *ent)
+{
+    if(ent->character != NULL)
+    {
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            ent->character->last_collisions[i].obj = NULL;
+        }
+    }
+}
+
+
+void Character_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
+{
+    if(ent->character != NULL)
+    {
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            if(ent->bf.bone_tags[i].body_part & parts_flags)
+            {
+                ent->character->last_collisions[i].obj = NULL;
+            }
+        }
+    }
 }
 
 

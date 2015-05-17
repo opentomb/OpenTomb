@@ -1762,6 +1762,70 @@ int lua_SetEntityAnimFlag(lua_State * lua)
     return 0;
 }
 
+int lua_SetEntityBodyPartFlag(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, bone_id, body_part_flag]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    int bone_id = lua_tointeger(lua, 2);
+    if((bone_id < 0) || (bone_id >= ent->bf.bone_tag_count))
+    {
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        return 0;
+    }
+
+    ent->bf.bone_tags[bone_id].body_part = lua_tointeger(lua, 3);
+
+    return 0;
+}
+
+
+int lua_SetModelBodyPartFlag(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id, bone_id, body_part_flag]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    skeletal_model_p model = World_GetModelByID(&engine_world, id);
+
+    if(model == NULL)
+    {
+        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        return 0;
+    }
+
+    int bone_id = lua_tointeger(lua, 2);
+    if((bone_id < 0) || (bone_id >= model->mesh_count))
+    {
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        return 0;
+    }
+
+    model->mesh_tree[bone_id].body_part = lua_tointeger(lua, 3);
+
+    return 0;
+}
+
+
 int lua_GetEntityAnim(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
@@ -3382,6 +3446,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
     lua_register(lua, "setEntityAnimFlag", lua_SetEntityAnimFlag);
+    lua_register(lua, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
+    lua_register(lua, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);
     lua_register(lua, "getEntityModel", lua_GetEntityModel);
     lua_register(lua, "getEntityVisibility", lua_GetEntityVisibility);
     lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);

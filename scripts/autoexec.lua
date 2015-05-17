@@ -31,6 +31,8 @@ dofile("scripts/inventory/items.lua");
 -- 0x03: overriding mesh in disarmed state;
 -- 0x04: add mesh to slot in disarmed state;
 
+setHumanoidBodyParts(player);
+
 -- creates map for left and right hands
 function setDefaultModelAnimReplaceFlag(m_id)
     setModelAnimReplaceFlag(m_id, 8, 0x01);
