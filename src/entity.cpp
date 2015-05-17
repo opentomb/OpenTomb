@@ -504,10 +504,9 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
 
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
 {
-    btScalar cmd_tr[3], tr[3];
+    btScalar cmd_tr[3], tr[3], t;
     ss_bone_tag_p btag = bf->bone_tags;
     bone_tag_p src_btag, next_btag;
-    btScalar *stack, *sp, t;
     skeletal_model_p model = bf->animations.model;
     bone_frame_p curr_bf, next_bf;
 

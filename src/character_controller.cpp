@@ -1105,7 +1105,7 @@ void Character_GhostUpdate(struct entity_s *ent)
     }
 }
 
-///@TODO: maybe "bt_engine_dynamicsWorld->convexSweepTest(...)" will be faster or more correctly?
+///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
 int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3])
 {
     int ret = 0;
@@ -1124,6 +1124,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             btScalar move_len;
             uint16_t m = ent->bf.animations.model->collision_map[i];
             ss_bone_tag_p btag = ent->bf.bone_tags + m;
+            ent->character->last_collisions[m].obj = NULL;
 
             if(i == 0)
             {
@@ -1141,11 +1142,11 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             curr = from;
             move = to - from;
             move_len = move.length();
-            if((i == 0) && (move_len > 1024.0))                             ///@FIXME: magick const 1024.0!
+            if((i == 0) && (move_len > 1024.0))                                 ///@FIXME: magick const 1024.0!
             {
                 break;
             }
-            int iter = (btScalar)(4.0 * move_len / btag->mesh_base->R) + 1; ///@FIXME (not a critical): magick const 4.0!
+            int iter = (btScalar)(4.0 * move_len / btag->mesh_base->R) + 1;     ///@FIXME (not a critical): magick const 4.0!
             move.m_floats[0] /= (btScalar)iter;
             move.m_floats[1] /= (btScalar)iter;
             move.m_floats[2] /= (btScalar)iter;
@@ -1157,6 +1158,14 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
                 ent->character->ghostObjects[m]->setWorldTransform(tr_current);
                 if(Ghost_GetPenetrationFixVector(ent->character->ghostObjects[m], ent->character->manifoldArray, tmp))
                 {
+                    if(ent->character->manifoldArray->size() > 0)
+                    {
+                        ent->character->last_collisions[m].obj = (btCollisionObject*)(*ent->character->manifoldArray)[0]->getBody0();
+                        if(ent->self == (engine_container_p)ent->character->last_collisions[m].obj->getUserPointer())
+                        {
+                            ent->character->last_collisions[m].obj = (btCollisionObject*)(*ent->character->manifoldArray)[0]->getBody1();
+                        }
+                    }
                     ent->transform[12+0] += tmp[0];
                     ent->transform[12+1] += tmp[1];
                     ent->transform[12+2] += tmp[2];
@@ -1200,16 +1209,10 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
 
     int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction);
     // temporary stick, but not so bad
-    if((numPenetrationLoops > 0) && (ent->character->ghost_step_up_map_filter > 0))
+    if((numPenetrationLoops > 0) && (ent->character->ghost_step_up_map_filter > 0) &&
+       !Character_WasCollisionBodyParts(ent, ~(BODY_PART_LEGS_1 & BODY_PART_LEGS_2 & BODY_PART_LEGS_3)))
     {
-        int orig_map_size = ent->bf.animations.model->collision_map_size;
-        ent->bf.animations.model->collision_map_size = ent->character->ghost_step_up_map_filter;      // disable hands and legs
-        Character_GhostUpdate(ent);
-        if(Character_GetPenetrationFixVector(ent, pos.m_floats) == 0)
-        {
-            resp->step_up = 0x01;
-        }
-        ent->bf.animations.model->collision_map_size = orig_map_size;
+        resp->step_up = 0x01;
     }
 
     vec3_add(pos.m_floats, ent->transform+12, reaction);
