@@ -18,6 +18,7 @@
 #include "vmath.h"
 #include "camera.h"
 #include "string.h"
+#include "shader_description.h"
 
 #define MAX_TEMP_LINES   (256)
 
@@ -43,6 +44,8 @@ GLint       square_texture_program_offset;
 GLint       square_texture_program_factor;
 
 GLuint crosshairBuffer;
+
+GLfloat guiProjectionMatrix[16];
 
 void Gui_Init()
 {
@@ -629,8 +632,13 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix, const btScalar *mvpMatrix)
+void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix)
 {
+    lit_shader_description *shader = Render_GetEntityShader();
+    glUseProgramObjectARB(shader->program);
+    glUniform1iARB(shader->number_of_lights, 0);
+    glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
+    
     if(size != 0.0)
     {
         btScalar bb[3];
@@ -651,15 +659,19 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        btScalar scaledMvpMatrix[16];
-        Mat4_Mat4_mul(scaledMvpMatrix, mvpMatrix, scaledMatrix);
+        btScalar scaledMvMatrix[16];
+        Mat4_Mat4_mul(scaledMvMatrix, mvMatrix, scaledMatrix);
+        btScalar mvpMatrix[16];
+        Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, scaledMvMatrix);
         
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        Render_SkeletalModel(bf, mvMatrix, scaledMvpMatrix);
+        Render_SkeletalModel(bf, mvMatrix, mvpMatrix);
     }
     else
     {
+        btScalar mvpMatrix[16];
+        Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
         Render_SkeletalModel(bf, mvMatrix, mvpMatrix);
     }
 }
@@ -1308,7 +1320,7 @@ void gui_InventoryManager::render()
             }
             Mat4_Translate(matrix, -0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
             Mat4_Scale(matrix, 0.7, 0.7, 0.7);
-            Gui_RenderItem(bi->bf, 0.0, matrix, matrix);
+            Gui_RenderItem(bi->bf, 0.0, matrix);
 
             num++;
         }
@@ -1328,14 +1340,16 @@ void Gui_SwitchGLMode(char is_gui)
         Mat4_E_macro(M);
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(M);
+        
         glMatrixMode(GL_PROJECTION);
-        M[0 * 4 + 0] = 2.0 / ((GLfloat)screen_info.w);
-        M[1 * 4 + 1] = 2.0 / ((GLfloat)screen_info.h);
-        M[2 * 4 + 2] =-2.0 / (far_dist - near_dist);
-        M[3 * 4 + 0] =-1.0;
-        M[3 * 4 + 1] =-1.0;
-        M[3 * 4 + 2] =-(far_dist + near_dist) / (far_dist - near_dist);
-        glLoadMatrixf(M);
+        Mat4_E_macro(guiProjectionMatrix);
+        guiProjectionMatrix[0 * 4 + 0] = 2.0 / ((GLfloat)screen_info.w);
+        guiProjectionMatrix[1 * 4 + 1] = 2.0 / ((GLfloat)screen_info.h);
+        guiProjectionMatrix[2 * 4 + 2] =-2.0 / (far_dist - near_dist);
+        guiProjectionMatrix[3 * 4 + 0] =-1.0;
+        guiProjectionMatrix[3 * 4 + 1] =-1.0;
+        guiProjectionMatrix[3 * 4 + 2] =-(far_dist + near_dist) / (far_dist - near_dist);
+        glLoadMatrixf(guiProjectionMatrix);
         glMatrixMode(GL_MODELVIEW);
     }
     else                                                                        // set camera coordinate system
@@ -1409,7 +1423,6 @@ void Gui_DrawInventory()
 
     glPopClientAttrib();
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glPolygonMode(GL_FRONT, GL_FILL);
@@ -1418,9 +1431,6 @@ void Gui_DrawInventory()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
-
-    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // Background
 
@@ -1562,12 +1572,6 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-    if(texture)
-    {
-        glBindTexture(GL_TEXTURE_2D, 0);
-    }
-    glUseProgramObjectARB(0);
 }
 
 bool Gui_FadeStart(int fader, int fade_direction)
@@ -2766,7 +2770,7 @@ void gui_ItemNotifier::Draw()
             Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
             Mat4_RotateY(matrix, mCurrRotX + mRotX);
             Mat4_RotateX(matrix, mCurrRotY + mRotY);
-            Gui_RenderItem(item->bf, mSize, matrix, matrix);
+            Gui_RenderItem(item->bf, mSize, matrix);
 
             item->bf->animations.current_animation = anim;
             item->bf->animations.current_frame = frame;

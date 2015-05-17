@@ -47,6 +47,7 @@ struct entity_s;
 struct sprite_s;
 struct base_mesh_s;
 struct obb_s;
+struct lit_shader_description;
 
 class render_DebugDrawer:public btIDebugDraw
 {
@@ -166,6 +167,8 @@ void Render_DoShaders();
 void Render_Empty(render_p render);
 void Render_InitGlobals();
 void Render_Init();
+
+lit_shader_description *Render_GetEntityShader();
 
 render_list_p Render_CreateRoomListArray(unsigned int count);
 void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);                                    // отрисовка одного фрейма скелетной анимации

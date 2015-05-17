@@ -154,6 +154,10 @@ render_list_p Render_CreateRoomListArray(unsigned int count)
     return ret;
 }
 
+lit_shader_description *Render_GetEntityShader()
+{
+    return entity_shader;
+}
 
 /**
  * sprite draw
@@ -771,54 +775,60 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         Render_Mesh(room->mesh, NULL, NULL);
     }
     
-    glUseProgramObjectARB(static_mesh_shader->program);
-    for(uint32_t i=0; i<room->static_mesh_count; i++)
+    if (room->static_mesh_count > 0)
     {
-        if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
+        glUseProgramObjectARB(static_mesh_shader->program);
+        for(uint32_t i=0; i<room->static_mesh_count; i++)
         {
-            continue;
-        }
+            if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
+            {
+                continue;
+            }
 
-        if((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS))
-        {
-            continue;
-        }
+            if((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS))
+            {
+                continue;
+            }
 
-        btScalar transform[16];
-        Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->static_mesh[i].transform);
-        glUniformMatrix4fvARB(static_mesh_shader->model_view_projection, 1, false, transform);
-        base_mesh_s *mesh = room->static_mesh[i].mesh;
-        GLfloat tint[4];
-        
-        vec4_copy(tint, room->static_mesh[i].tint);
-        
-        //If this static mesh is in a water room
-        if(room->flags & TR_ROOM_FLAG_WATER)
-        {
-            Render_CalculateWaterTint(tint, 0);
+            btScalar transform[16];
+            Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->static_mesh[i].transform);
+            glUniformMatrix4fvARB(static_mesh_shader->model_view_projection, 1, false, transform);
+            base_mesh_s *mesh = room->static_mesh[i].mesh;
+            GLfloat tint[4];
+            
+            vec4_copy(tint, room->static_mesh[i].tint);
+            
+            //If this static mesh is in a water room
+            if(room->flags & TR_ROOM_FLAG_WATER)
+            {
+                Render_CalculateWaterTint(tint, 0);
+            }
+            glUniform4fvARB(static_mesh_shader->tint_mult, 1, tint);
+            Render_Mesh(mesh, NULL, NULL);
+            room->static_mesh[i].was_rendered = 1;
         }
-        glUniform4fvARB(static_mesh_shader->tint_mult, 1, tint);
-        Render_Mesh(mesh, NULL, NULL);
-        room->static_mesh[i].was_rendered = 1;
     }
 
-    glUseProgramObjectARB(entity_shader->program);
-    for(cont=room->containers; cont; cont=cont->next)
+    if (room->containers)
     {
-        switch(cont->object_type)
+        glUseProgramObjectARB(entity_shader->program);
+        for(cont=room->containers; cont; cont=cont->next)
         {
-        case OBJECT_ENTITY:
-            ent = (entity_p)cont->object;
-            if(ent->was_rendered == 0)
+            switch(cont->object_type)
             {
-                if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
+            case OBJECT_ENTITY:
+                ent = (entity_p)cont->object;
+                if(ent->was_rendered == 0)
                 {
-                    Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix);
+                    if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
+                    {
+                        Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix);
+                    }
+                    ent->was_rendered = 1;
                 }
-                ent->was_rendered = 1;
-            }
-            break;
-        };
+                break;
+            };
+        }
     }
     glUseProgramObjectARB(0);
 }
