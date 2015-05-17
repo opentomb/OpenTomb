@@ -21,6 +21,7 @@
 #include "obb.h"
 #include "bsp_tree.h"
 #include "resource.h"
+#include "shader_description.h"
 
 render_t renderer;
 class dynamicBSP render_dBSP(16 * 1024 * 1024);
@@ -29,32 +30,6 @@ extern render_DebugDrawer debugDrawer;
 /*
  * Shaders section
  */
-struct shader_description
-{
-    GLhandleARB program;
-    GLint current_tick;
-    GLint tint_mult;
-    GLint model_view_projection;
-    GLint sampler;
-    
-    shader_description(const char *vertexFilename, const char *fragmentFilename);
-    shader_description(const char *vertexFilename, GLhandleARB fragmentShader);
-    void load(GLhandleARB vertexShader, GLhandleARB fragmentShader);
-    
-    ~shader_description();
-};
-
-struct entity_shader_description : public shader_description
-{
-    GLint model_view;
-    GLint number_of_lights;
-    GLint light_position;
-    GLint light_color;
-    GLint light_falloff;
-    GLint light_ambient;
-
-    entity_shader_description(const char *vertexFilename, const char *fragmentFilename);
-};
 
 enum room_shader_type
 {
@@ -64,9 +39,9 @@ enum room_shader_type
     ROOM_SHADER_WATER
 };
 
-shader_description *room_shaders[4];
-shader_description *static_mesh_shader;
-entity_shader_description *entity_shader;
+unlit_tinted_shader_description *room_shaders[4];
+unlit_tinted_shader_description *static_mesh_shader;
+lit_shader_description *entity_shader;
 
 // Highest number of lights that will show up in the shader. If you increase this, increase the limit in entity.fsh as well.
 #define MAX_NUM_LIGHTS 8
@@ -98,62 +73,6 @@ void Render_InitGlobals()
     renderer.settings.fog_end_depth = 16000.0f;
 }
 
-shader_description::shader_description(const char *vertexFilename, const char *fragmentFilename)
-{
-    GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-    loadShaderFromFile(vertexShader, vertexFilename);
-
-    GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-    loadShaderFromFile(fragmentShader, fragmentFilename);
-    
-    load(vertexShader, fragmentShader);
-    
-    glDeleteObjectARB(vertexShader);
-    glDeleteObjectARB(fragmentShader);
-}
-
-shader_description::shader_description(const char *filename, GLhandleARB fragmentShader)
-{
-    GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-    loadShaderFromFile(vertexShader, filename);
-    
-    load(vertexShader, fragmentShader);
-    
-    glDeleteObjectARB(vertexShader);
-}
-
-void shader_description::load(GLhandleARB vertexShader, GLhandleARB fragmentShader)
-{
-    program = glCreateProgramObjectARB();
-    glAttachObjectARB(program, vertexShader);
-    glAttachObjectARB(program, fragmentShader);
-    glLinkProgramARB(program);
-    printInfoLog(program);
-
-    glDeleteObjectARB(vertexShader);
-
-    current_tick = glGetUniformLocationARB(program, "fCurrentTick");
-    tint_mult = glGetUniformLocationARB(program, "tintMult");
-    model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
-    sampler = glGetUniformLocationARB(program, "color_map");
-}
-
-shader_description::~shader_description()
-{
-    glDeleteObjectARB(program);
-}
-
-entity_shader_description::entity_shader_description(const char *vertexFilename, const char *fragmentFilename)
-: shader_description(vertexFilename, fragmentFilename)
-{
-    model_view = glGetUniformLocationARB(program, "modelView");
-    number_of_lights = glGetUniformLocationARB(program, "number_of_lights");
-    light_position = glGetUniformLocationARB(program, "light_position");
-    light_color = glGetUniformLocationARB(program, "light_color");
-    light_falloff = glGetUniformLocationARB(program, "light_falloff");
-    light_ambient = glGetUniformLocationARB(program, "light_ambient");
-}
-
 void Render_DoShaders()
 {
     /*main_program = glCreateProgramObjectARB();
@@ -171,20 +90,20 @@ void Render_DoShaders()
     glUseProgramObjectARB(0);*/
 
     //Color mult prog
-    static_mesh_shader = new shader_description("shaders/static_mesh.vsh", "shaders/static_mesh.fsh");
+    static_mesh_shader = new unlit_tinted_shader_description("shaders/static_mesh.vsh", "shaders/static_mesh.fsh");
 
     //Room prog
     GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
     loadShaderFromFile(fragmentShader, "shaders/room.fsh");
     
-    room_shaders[ROOM_SHADER_NORMAL] = new shader_description("shaders/room_normal.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_FLICKERING] = new shader_description("shaders/room_flickering.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_FLICKERING_WATER] = new shader_description("shaders/room_flickering_water.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_WATER] = new shader_description("shaders/room_water.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_NORMAL] = new unlit_tinted_shader_description("shaders/room_normal.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_FLICKERING] = new unlit_tinted_shader_description("shaders/room_flickering.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_FLICKERING_WATER] = new unlit_tinted_shader_description("shaders/room_flickering_water.vsh", fragmentShader);
+    room_shaders[ROOM_SHADER_WATER] = new unlit_tinted_shader_description("shaders/room_water.vsh", fragmentShader);
     glDeleteObjectARB(fragmentShader);
     
     // Entity prog
-    entity_shader = new entity_shader_description("shaders/entity.vsh", "shaders/entity.fsh");
+    entity_shader = new lit_shader_description("shaders/entity.vsh", "shaders/entity.fsh");
 }
 
 
@@ -791,7 +710,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         btScalar modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
         
-        shader_description *shader = room_shaders[ROOM_SHADER_NORMAL];
+        unlit_tinted_shader_description *shader = room_shaders[ROOM_SHADER_NORMAL];
         if (room->flags & 1) // Is water
         {
             if (room->light_mode == 1) // Also flickering
@@ -1010,7 +929,6 @@ void Render_DrawList()
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
 
-    glDisable(GL_LIGHTING);
     Render_SkyBox(renderer.cam->gl_view_mat);
 
     if(renderer.world->Character)

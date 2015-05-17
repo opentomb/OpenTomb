@@ -355,6 +355,7 @@
 		52D5D5EA1B07CCFF00B99A38 /* static_mesh.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5E91B07CCFF00B99A38 /* static_mesh.fsh */; };
 		52D5D5EC1B07E5F500B99A38 /* entity.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5EB1B07E5F500B99A38 /* entity.vsh */; };
 		52D5D5EE1B07E5FF00B99A38 /* entity.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5ED1B07E5FF00B99A38 /* entity.fsh */; };
+		52D5D5F91B08758700B99A38 /* shader_description.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 52D5D5F71B08758700B99A38 /* shader_description.cpp */; };
 		52DF7FF21B0769D700A7DE0E /* square.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF11B0769D700A7DE0E /* square.vsh */; };
 		52DF7FF41B076B1700A7DE0E /* square.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF31B076B1700A7DE0E /* square.fsh */; };
 		52DF7FF61B076BBA00A7DE0E /* square_tex.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF51B076BBA00A7DE0E /* square_tex.fsh */; };
@@ -1465,6 +1466,8 @@
 		52D5D5E91B07CCFF00B99A38 /* static_mesh.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = static_mesh.fsh; sourceTree = "<group>"; };
 		52D5D5EB1B07E5F500B99A38 /* entity.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = entity.vsh; sourceTree = "<group>"; };
 		52D5D5ED1B07E5FF00B99A38 /* entity.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = entity.fsh; sourceTree = "<group>"; };
+		52D5D5F71B08758700B99A38 /* shader_description.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shader_description.cpp; sourceTree = "<group>"; };
+		52D5D5F81B08758700B99A38 /* shader_description.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_description.h; sourceTree = "<group>"; };
 		52DF7FEF1B07683F00A7DE0E /* static_mesh.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = static_mesh.vsh; sourceTree = "<group>"; };
 		52DF7FF01B07683F00A7DE0E /* room_normal.vsh */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = room_normal.vsh; sourceTree = "<group>"; };
 		52DF7FF11B0769D700A7DE0E /* square.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = square.vsh; sourceTree = "<group>"; };
@@ -2109,6 +2112,8 @@
 				52B832741AED5B06003B8288 /* vt */,
 				52B832841AED5B06003B8288 /* world.cpp */,
 				52B832851AED5B06003B8288 /* world.h */,
+				52D5D5F71B08758700B99A38 /* shader_description.cpp */,
+				52D5D5F81B08758700B99A38 /* shader_description.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -3308,6 +3313,7 @@
 				524E0ED01AFF968A00F56FF6 /* btCollisionAlgorithm.cpp in Sources */,
 				52B8334C1AED5B06003B8288 /* ftpfr.c in Sources */,
 				52B833371AED5B06003B8288 /* entity.cpp in Sources */,
+				52D5D5F91B08758700B99A38 /* shader_description.cpp in Sources */,
 				52B833581AED5B06003B8288 /* cff.c in Sources */,
 				524E0F081AFF968A00F56FF6 /* btPolyhedralConvexShape.cpp in Sources */,
 				52B833661AED5B06003B8288 /* sfnt.c in Sources */,

@@ -439,7 +439,6 @@ void Gui_Render()
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_LIGHTING);
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
 
@@ -1406,7 +1405,6 @@ void Gui_DrawInventory()
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_LIGHTING);
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
 
@@ -1467,7 +1465,6 @@ void Gui_DrawLoadScreen(int value)
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_LIGHTING);
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
 

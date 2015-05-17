@@ -610,7 +610,6 @@ void Engine_Display()
             //glEnable(GL_LIGHT0);
             //glEnable(GL_BLEND);
             glEnable(GL_ALPHA_TEST);
-            glLightfv(GL_LIGHT0, GL_POSITION, lp);
 
 #if !SKELETAL_TEST
             Gui_DrawNotifier();
@@ -790,7 +789,6 @@ void ShowDebugInfo()
     GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
     vec3_copy(light_position, engine_camera.pos);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
