@@ -711,29 +711,10 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
 
             ent->self->collide_flag = 0x00;
             ent->move_type = 0x0000;
-            ent->bf.animations.anim_flags = 0x0000;
-            ent->bf.animations.current_animation = 0;
-            ent->bf.animations.current_frame = 0;
-            ent->bf.animations.frame_time = 0.0;
             ent->inertia = 0.0;
             ent->move_type = 0;
 
-            ent->bf.animations.model = model;
-            ent->bf.bone_tag_count = model->mesh_count;
-            ent->bf.bone_tags = (ss_bone_tag_p)malloc(model->mesh_count * sizeof(ss_bone_tag_t));
-            for(uint16_t j=0;j<model->mesh_count;j++)
-            {
-                ent->bf.bone_tags[j].flag = model->mesh_tree[j].flag;
-                ent->bf.bone_tags[j].mesh_base = model->mesh_tree[j].mesh_base;
-                ent->bf.bone_tags[j].mesh_skin = model->mesh_tree[j].mesh_skin;
-                ent->bf.bone_tags[j].mesh_slot = NULL;
-
-                vec3_copy(ent->bf.bone_tags[j].offset, model->mesh_tree[j].offset);
-                vec4_set_zero(ent->bf.bone_tags[j].qrotate);
-                Mat4_E_macro(ent->bf.bone_tags[j].transform);
-                Mat4_E_macro(ent->bf.bone_tags[j].full_transform);
-            }
-
+            SSBoneFrame_CreateFromModel(&ent->bf, model);
             Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
             BT_GenEntityRigidBody(ent);
 

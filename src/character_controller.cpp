@@ -1114,69 +1114,64 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
 
     vec3_copy(orig_pos, ent->transform + 12);
     vec3_set_zero(reaction);
-    if(ent->character->shapes != NULL)              /* complex collision shape */
+    if((ent->character->shapes != NULL) && !skip_test)                          /* complex collision shape */
     {
-        btScalar tr[16], *v;
-
-        if(!skip_test)
+        btScalar tr[16];
+        for(uint16_t i=0;i<ent->bf.animations.model->collision_map_size;i++)
         {
-            for(uint16_t i=0;i<ent->bf.animations.model->collision_map_size;i++)
+            btTransform tr_current;
+            btVector3 from, to, curr, move;
+            btScalar move_len;
+            uint16_t m = ent->bf.animations.model->collision_map[i];
+            ss_bone_tag_p btag = ent->bf.bone_tags + m;
+
+            if(i == 0)
             {
-                btTransform tr_current;
-                btVector3 from, to, curr, move;
-                btScalar move_len;
-                uint16_t m = ent->bf.animations.model->collision_map[i];
-                ss_bone_tag_p btag = ent->bf.bone_tags + m;
-
-                v = btag->mesh_base->centre;
-                if(i == 0)
-                {
-                    from = ent->character->ghostObjects[m]->getWorldTransform().getOrigin();
-                }
-                /*else
-                {
-                    btScalar parent_from[3];
-                    Mat4_vec3_mul(parent_from, btag->parent->full_transform, v);
-                    Mat4_vec3_mul(from.m_floats, ent->transform, v);
-                }*/
-
-                Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
-                Mat4_vec3_mul_macro(to.m_floats, tr, v);
-                curr = from;
-                move = to - from;
-                move_len = move.length();
-                if((i == 0) && (move_len > 1024.0))                             ///@FIXME: magick const 1024.0!
-                {
-                    break;
-                }
-                int iter = (btScalar)(4.0 * move_len / btag->mesh_base->R) + 1; ///@FIXME (not a critical): magick const 4.0!
-                move.m_floats[0] /= (btScalar)iter;
-                move.m_floats[1] /= (btScalar)iter;
-                move.m_floats[2] /= (btScalar)iter;
-
-                for(int j=0;j<=iter;j++)
-                {
-                    vec3_copy(tr+12, curr.m_floats);
-                    tr_current.setFromOpenGLMatrix(tr);
-                    ent->character->ghostObjects[m]->setWorldTransform(tr_current);
-                    if(Ghost_GetPenetrationFixVector(ent->character->ghostObjects[m], ent->character->manifoldArray, tmp))
-                    {
-                        ent->transform[12+0] += tmp[0];
-                        ent->transform[12+1] += tmp[1];
-                        ent->transform[12+2] += tmp[2];
-                        curr.m_floats[0] += tmp[0];
-                        curr.m_floats[1] += tmp[1];
-                        curr.m_floats[2] += tmp[2];
-                        from.m_floats[0] += tmp[0];
-                        from.m_floats[1] += tmp[1];
-                        from.m_floats[2] += tmp[2];
-                        ret++;
-                    }
-                    curr += move;
-                }
+                from = ent->character->ghostObjects[m]->getWorldTransform().getOrigin();
             }
-            vec3_sub(reaction, ent->transform+12, orig_pos);
+            else
+            {
+                btScalar parent_from[3];
+                Mat4_vec3_mul(parent_from, btag->parent->full_transform, btag->parent->mesh_base->centre);
+                Mat4_vec3_mul(from.m_floats, ent->transform, parent_from);
+            }
+
+            Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
+            Mat4_vec3_mul(to.m_floats, tr, btag->mesh_base->centre);
+            curr = from;
+            move = to - from;
+            move_len = move.length();
+            if((i == 0) && (move_len > 1024.0))                             ///@FIXME: magick const 1024.0!
+            {
+                break;
+            }
+            int iter = (btScalar)(4.0 * move_len / btag->mesh_base->R) + 1; ///@FIXME (not a critical): magick const 4.0!
+            move.m_floats[0] /= (btScalar)iter;
+            move.m_floats[1] /= (btScalar)iter;
+            move.m_floats[2] /= (btScalar)iter;
+
+            for(int j=0;j<=iter;j++)
+            {
+                vec3_copy(tr+12, curr.m_floats);
+                tr_current.setFromOpenGLMatrix(tr);
+                ent->character->ghostObjects[m]->setWorldTransform(tr_current);
+                if(Ghost_GetPenetrationFixVector(ent->character->ghostObjects[m], ent->character->manifoldArray, tmp))
+                {
+                    ent->transform[12+0] += tmp[0];
+                    ent->transform[12+1] += tmp[1];
+                    ent->transform[12+2] += tmp[2];
+                    curr.m_floats[0] += tmp[0];
+                    curr.m_floats[1] += tmp[1];
+                    curr.m_floats[2] += tmp[2];
+                    from.m_floats[0] += tmp[0];
+                    from.m_floats[1] += tmp[1];
+                    from.m_floats[2] += tmp[2];
+                    ret++;
+                }
+                curr += move;
+            }
         }
+        vec3_sub(reaction, ent->transform+12, orig_pos);
     }
     vec3_copy(ent->transform + 12, orig_pos);
 
