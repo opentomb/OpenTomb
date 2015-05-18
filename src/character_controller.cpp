@@ -95,7 +95,7 @@ void Character_Create(struct entity_s *ent)
     ret->climb.height_info = 0x00;
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
-    ret->forvard_size = 32.0;                                                   ///@FIXME: magick number
+    ret->forvard_size = 48.0;                                                   ///@FIXME: magick number
     ret->ghost_step_up_map_filter = 0;
     ret->Height = CHARACTER_BASE_HEIGHT;
 
@@ -388,8 +388,9 @@ int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         
 void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
     btScalar pos[3], t[3];
-    t[0] = t[1] = 0.0;
-    t[2] = 0.5 * (ent->bf.bb_max[2] + ent->bf.bb_min[2]);
+    t[0] = 0.0;
+    t[1] = 0.0;
+    t[2] = ent->bf.bone_tags[0].transform[12+2];
     Mat4_vec3_mul_macro(pos, ent->transform, t);
     Character_GetHeightInfo(pos, &ent->character->height_info, ent->character->Height);
 }
@@ -1107,7 +1108,7 @@ void Character_GhostUpdate(struct entity_s *ent)
 }
 
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3])
+int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move[3])
 {
     int ret = 0;
     btScalar tmp[3], orig_pos[3];
@@ -1132,9 +1133,13 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
                 continue;
             }
 
-            if(i == 0)
+            // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
+            if((btag->parent == NULL) || ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
             {
                 from = ent->character->ghostObjects[m]->getWorldTransform().getOrigin();
+                from.m_floats[0] += ent->transform[12+0] - orig_pos[0];
+                from.m_floats[1] += ent->transform[12+1] - orig_pos[1];
+                from.m_floats[2] += ent->transform[12+2] - orig_pos[2];
             }
             else
             {
@@ -1196,7 +1201,6 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
 
 void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
 {
-    btVector3 pos;
     btScalar t1, t2, reaction[3];
     character_response_p resp = &ent->character->resp;
 
@@ -1213,7 +1217,7 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         return;
     }
 
-    int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction);
+    int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction, move);
     // temporary stick, but not so bad
     if((numPenetrationLoops > 0) && (ent->character->ghost_step_up_map_filter > 0) &&
        !Character_WasCollisionBodyParts(ent, ~(BODY_PART_LEGS_1 & BODY_PART_LEGS_2 & BODY_PART_LEGS_3)))
@@ -1221,7 +1225,7 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         resp->step_up = 0x01;
     }
 
-    vec3_add(pos.m_floats, ent->transform+12, reaction);
+    vec3_add(ent->transform+12, ent->transform+12, reaction);
     Character_UpdateCurrentHeight(ent);
     if((move != NULL) && (numPenetrationLoops > 0))
     {
@@ -1252,17 +1256,17 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         }
     }
 
-    if(ent->character->height_info.ceiling_hit && (pos.m_floats[2] > ent->character->height_info.ceiling_point.m_floats[2]))
+    if(ent->character->height_info.ceiling_hit && (reaction[2] < 0.0))
     {
         resp->vertical_collide |= 0x02;
     }
 
-    if(ent->character->height_info.floor_hit && pos.m_floats[2] < ent->character->height_info.floor_point.m_floats[2])
+    if(ent->character->height_info.floor_hit && (reaction[2] > 0.0))
     {
         resp->vertical_collide |= 0x01;
     }
 
-    vec3_copy(ent->transform+12, pos.m_floats);
+    //vec3_copy(ent->transform+12, pos.m_floats);
     Character_GhostUpdate(ent);
 }
 
@@ -1282,7 +1286,7 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
     Character_GhostUpdate(ent);
     vec3_add(pos, pos, move);
     resp->horizontal_collide = 0x00;
-    if(Character_GetPenetrationFixVector(ent, reaction))
+    if(Character_GetPenetrationFixVector(ent, reaction, move))
     {
         t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
         t2 = move[0] * move[0] + move[1] * move[1];

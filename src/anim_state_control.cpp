@@ -261,7 +261,11 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 (ss_anim->current_animation == TR_ANIMATION_LARA_STAY_SOLID) )
             {
                 ent->move_type = MOVE_ON_FLOOR;
-                ent->character->ghost_step_up_map_filter = 3;
+            }
+
+            if(ent->move_type == MOVE_ON_FLOOR)
+            {
+                ent->character->no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
             }
 
             if(ent->move_type == MOVE_FREE_FALLING)
@@ -692,6 +696,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_STAY;
             Character_Lean(ent, cmd, 0.0);
             ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
 
             if(cmd->move[0] == 1)
             {
@@ -739,6 +744,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             // 65 - wade
             ent->dir_flag = ENT_STAY;
             ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
             Character_Lean(ent, cmd, 0.0);
 
             if(ent->move_type == MOVE_FREE_FALLING)
@@ -2642,7 +2648,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
              */
         case TR_STATE_LARA_CROUCH_IDLE:
             ent->dir_flag = ENT_MOVE_FORWARD;
-            ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             move[0] = pos[0];
             move[1] = pos[1];
             move[2] = pos[2] + 0.5 * (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
@@ -2705,7 +2711,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_CRAWL_IDLE:
             ent->dir_flag = ENT_MOVE_FORWARD;
-            ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             if(resp->kill == 1)
             {
                 ent->dir_flag = ENT_STAY;
@@ -2794,7 +2800,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_CRAWL_FORWARD:
             ent->dir_flag = ENT_MOVE_FORWARD;
-            ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             cmd->rot[0] = cmd->rot[0] * 0.5;
             vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
             Character_CheckNextPenetration(ent, move);
@@ -2807,7 +2813,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop
             }
-            else if( (resp->horizontal_collide != 0)                                                   ||
+            else if( (resp->horizontal_collide != 0)                                                  ||
                      (next_fc.floor_point.m_floats[2] >= pos[2] + ent->character->min_step_up_height) ||
                      (next_fc.floor_point.m_floats[2] <= pos[2] - ent->character->min_step_up_height)  )
             {
@@ -2818,7 +2824,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_CRAWL_BACK:
             ent->dir_flag = ENT_MOVE_BACKWARD;
-            ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             cmd->rot[0] = cmd->rot[0] * 0.5;
             vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
             Character_CheckNextPenetration(ent, move);
@@ -2852,7 +2858,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_CRAWL_TURN_LEFT:
             ent->dir_flag = ENT_MOVE_FORWARD;
-            ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 14))?(1.0):(0.0);
 
             if((cmd->move[1] != -1) || (resp->kill == 1))
@@ -2863,7 +2869,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_CRAWL_TURN_RIGHT:
             ent->dir_flag = ENT_MOVE_FORWARD;
-            ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 14))?(1.0):(0.0);
 
             if((cmd->move[1] != 1) || (resp->kill == 1))
@@ -2874,7 +2880,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_CROUCH_TURN_LEFT:
         case TR_STATE_LARA_CROUCH_TURN_RIGHT:
-            ent->character->ghost_step_up_map_filter = 3;
+            ent->character->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             cmd->rot[0] *= ((ss_anim->current_frame > 3) && (ss_anim->current_frame < 23))?(0.6):(0.0);
 
             if((cmd->move[1] == 0) || (resp->kill == 1))
@@ -3030,7 +3036,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     switch(ss_anim->current_animation)
     {
         case TR_ANIMATION_LARA_STAY_JUMP_SIDES:
-            //ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+            ent->character->no_fix_body_parts |= BODY_PART_HEAD;
             break;
     };
 
