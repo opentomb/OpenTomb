@@ -53,7 +53,8 @@ void Character_Create(struct entity_s *ent)
     vec3_set_zero(ret->cmd.move);
     vec3_set_zero(ret->cmd.rot);
 
-    ret->no_fix = 0x00;
+    ret->no_fix_all = 0x00;
+    ret->no_fix_body_parts = 0x00000000;
     ret->cam_follow_center = 0x00;
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->max_move_iterations = DEFAULT_MAX_MOVE_ITERATIONS;
@@ -1110,7 +1111,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
 {
     int ret = 0;
     btScalar tmp[3], orig_pos[3];
-    bool skip_test = ent->character && ent->character->no_fix;
+    bool skip_test = ent->character && ent->character->no_fix_all;
 
     vec3_copy(orig_pos, ent->transform + 12);
     vec3_set_zero(reaction);
@@ -1125,6 +1126,11 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             uint16_t m = ent->bf.animations.model->collision_map[i];
             ss_bone_tag_p btag = ent->bf.bone_tags + m;
             ent->character->last_collisions[m].obj = NULL;
+
+            if(btag->body_part & ent->character->no_fix_body_parts)
+            {
+                continue;
+            }
 
             if(i == 0)
             {
@@ -1201,7 +1207,7 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         resp->step_up               = 0x00;
     }
 
-    if(ent->character && ent->character->no_fix)
+    if(ent->character && ent->character->no_fix_all)
     {
         Character_GhostUpdate(ent);
         return;
@@ -1227,7 +1233,7 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
             {
                 t2 = btSqrt(t2 * t1);
                 t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / t2;
-                if(t1 < -ent->character->critical_wall_component)                   // cos(alpha) < -0.707
+                if(t1 < -ent->character->critical_wall_component)               // cos(alpha) < -0.707
                 {
                     resp->horizontal_collide |= 0x01;
                 }
@@ -1664,7 +1670,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             Entity_UpdateRoomPos(ent);
             return 2;
         }
-        if((pos[2] < ent->character->height_info.floor_point.m_floats[2]) && (ent->character->no_fix == 0x00))
+        if((pos[2] < ent->character->height_info.floor_point.m_floats[2]) && (ent->character->no_fix_all == 0x00))
         {
             pos[2] = ent->character->height_info.floor_point.m_floats[2];
             Character_FixPenetrations(ent, NULL);

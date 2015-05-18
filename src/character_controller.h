@@ -55,9 +55,9 @@
 #define BODY_PART_RIGHT_LEG_2   (0x00002000)            // 5
 #define BODY_PART_RIGHT_LEG_3   (0x00004000)            // 6
 
-#define BODY_PART_LEGS_1        (BODY_PART_LEFT_LEG_1 & BODY_PART_RIGHT_LEG_1)
-#define BODY_PART_LEGS_2        (BODY_PART_LEFT_LEG_2 & BODY_PART_RIGHT_LEG_2)
-#define BODY_PART_LEGS_3        (BODY_PART_LEFT_LEG_3 & BODY_PART_RIGHT_LEG_3)
+#define BODY_PART_LEGS_1        (BODY_PART_LEFT_LEG_1 | BODY_PART_RIGHT_LEG_1)
+#define BODY_PART_LEGS_2        (BODY_PART_LEFT_LEG_2 | BODY_PART_RIGHT_LEG_2)
+#define BODY_PART_LEGS_3        (BODY_PART_LEFT_LEG_3 | BODY_PART_RIGHT_LEG_3)
 
 #define CHARACTER_BOX_HALF_SIZE (128.0)
 #define CHARACTER_BASE_RADIUS   (128.0)
@@ -286,8 +286,9 @@ typedef struct character_s
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     int16_t                      max_move_iterations;
     
-    int8_t                       no_fix;                     
+    int8_t                       no_fix_all;
     int8_t                       cam_follow_center;
+    uint32_t                     no_fix_body_parts;
 
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;

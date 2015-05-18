@@ -957,7 +957,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
 
     if(entity->character != NULL)
     {
-        entity->character->no_fix = 0x00;
+        entity->character->no_fix_all = 0x00;
         Character_GhostUpdate(entity);
     }
 
