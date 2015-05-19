@@ -82,6 +82,7 @@ static int frame =  0;
 static int anim =   0;
 static int sprite = 0;
 
+static btScalar time_scale = 1.0;
 
 engine_container_p      last_cont = NULL;
 
@@ -543,7 +544,7 @@ int main(int argc, char **argv)
         newtime = Sys_FloatTime();
         time = newtime - oldtime;
         oldtime = newtime;
-        Engine_Frame(time);
+        Engine_Frame(time * time_scale);
     }
 
     // Main loop interrupted; shutting down.
@@ -833,7 +834,8 @@ void ShowDebugInfo()
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         */
 
-        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.animations.last_animation, ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.last_state, ent->bf.animations.next_state);
+        //Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.animations.last_animation, ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.last_state, ent->bf.animations.next_state);
+        Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
@@ -1017,6 +1019,17 @@ void DebugKeys(int button, int state)
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_ACTIVATE);
+                }
+                break;
+
+            case SDLK_g:
+                if(time_scale == 1.0)
+                {
+                    time_scale = 0.033;
+                }
+                else
+                {
+                    time_scale = 1.0;
                 }
                 break;
 

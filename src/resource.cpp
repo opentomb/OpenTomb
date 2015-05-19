@@ -1437,6 +1437,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
                                 af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
+                                Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
                                 //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
                                 break;
                         }
@@ -3619,7 +3620,6 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
      * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
      */
     SkeletalModel_InterpolateFrames(model);
-    GenerateAnimCommandsTransform(model);
     /*
      * state change's loading
      */
@@ -3709,6 +3709,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             }
         }
     }
+    GenerateAnimCommandsTransform(model);
 }
 
 int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
