@@ -1135,12 +1135,9 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
             Entity_UpdateRotation(entity);
-            if(entity->bf.animations.current_frame > 1)                         ///@FIXME: hardcoded stick!
-            {
-                Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_anim->next_frame);
-                *anim = entity->bf.animations.current_animation;
-                *frame = entity->bf.animations.current_frame;
-            }
+            Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_anim->next_frame);
+            *anim = entity->bf.animations.current_animation;
+            *frame = entity->bf.animations.current_frame;
         }
         if(curr_bf->command & ANIM_CMD_MOVE)
         {

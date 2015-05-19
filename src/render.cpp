@@ -36,11 +36,11 @@ struct shader_description
     GLint tint_mult;
     GLint model_view_projection;
     GLint sampler;
-    
+
     shader_description(const char *vertexFilename, const char *fragmentFilename);
     shader_description(const char *vertexFilename, GLhandleARB fragmentShader);
     void load(GLhandleARB vertexShader, GLhandleARB fragmentShader);
-    
+
     ~shader_description();
 };
 
@@ -89,9 +89,9 @@ shader_description::shader_description(const char *vertexFilename, const char *f
 
     GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
     loadShaderFromFile(fragmentShader, fragmentFilename);
-    
+
     load(vertexShader, fragmentShader);
-    
+
     glDeleteObjectARB(vertexShader);
     glDeleteObjectARB(fragmentShader);
 }
@@ -100,9 +100,9 @@ shader_description::shader_description(const char *filename, GLhandleARB fragmen
 {
     GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
     loadShaderFromFile(vertexShader, filename);
-    
+
     load(vertexShader, fragmentShader);
-    
+
     glDeleteObjectARB(vertexShader);
 }
 
@@ -149,7 +149,7 @@ void Render_DoShaders()
     //Room prog
     GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
     loadShaderFromFile(fragmentShader, "shaders/room.fsh");
-    
+
     room_shaders[ROOM_SHADER_NORMAL] = new shader_description("shaders/room_normal.vsh", fragmentShader);
     room_shaders[ROOM_SHADER_FLICKERING] = new shader_description("shaders/room_flickering.vsh", fragmentShader);
     room_shaders[ROOM_SHADER_FLICKERING_WATER] = new shader_description("shaders/room_flickering_water.vsh", fragmentShader);
@@ -776,7 +776,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     {
         btScalar modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
-        
+
         shader_description *shader = room_shaders[ROOM_SHADER_NORMAL];
         if (room->flags & 1) // Is water
         {
@@ -799,7 +799,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         Render_Mesh(room->mesh, NULL, NULL);
         glUseProgramObjectARB(0);
     }
-    
+
     glUseProgramObjectARB(static_mesh_shader->program);
     for(uint32_t i=0; i<room->static_mesh_count; i++)
     {
@@ -819,9 +819,9 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         glLoadMatrixbt(transform);
         base_mesh_s *mesh = room->static_mesh[i].mesh;
         GLfloat tint[4];
-        
+
         vec4_copy(tint, room->static_mesh[i].tint);
-        
+
         //If this static mesh is in a water room
         if(room->flags & TR_ROOM_FLAG_WATER)
         {
