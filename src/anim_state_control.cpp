@@ -82,7 +82,7 @@ void ent_set_turn_fast(entity_p ent, ss_animation_p ss_anim, int state)
 void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int state)
 {
     animation_frame_p af = ss_anim->model->animations + ss_anim->current_animation;
-    if(ss_anim->current_frame >= af->frames_count - 2)
+    if(ss_anim->current_frame >= af->frames_count - 1)
     {
         btScalar p[3], move[3];
 
@@ -92,6 +92,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
         vec3_sub(move, move, p);
         vec3_add(ent->transform+12, ent->transform+12, move);
         ent->transform[12 + 2] = ent->character->climb.point[2];
+        Entity_UpdateCurrentBoneFrame(&ent->bf, ent->transform);
         Entity_UpdateRigidBody(ent, 0);
         Character_GhostUpdate(ent);
         ent->move_type = MOVE_ON_FLOOR;
@@ -131,7 +132,7 @@ void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim, int state)
     if(state == 0x02)
     {
         ent->angles[1] = -45.0;
-        ///@TODO: add Character_GhostUpdate(ent); correctly here
+        Entity_UpdateRotation(ent);
         ss_anim->onFrame = NULL;
     }
 }
@@ -1652,6 +1653,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
+                Entity_UpdateRotation(ent);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
             else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 64.0))
@@ -1685,6 +1687,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
+                Entity_UpdateRotation(ent);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 break;
             }
@@ -2196,6 +2199,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
+                Entity_UpdateRotation(ent);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
             else if(resp->horizontal_collide & 0x01)
@@ -2245,6 +2249,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_UNDERWATER_DIVING:
             ent->angles[1] = -45.0;
             cmd->rot[1] = 0.0;
+            Entity_UpdateRotation(ent);
             ss_anim->onFrame = ent_correct_diving_angle;
             break;
 
@@ -2265,6 +2270,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
+                Entity_UpdateRotation(ent);                                     // needed here to fix underwater in wall collision bug
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->id);       // Stop scream
 
