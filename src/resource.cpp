@@ -2797,10 +2797,10 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         else
         {
             seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], 0, &p0);
+            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
             for(uint16_t j=0;j<seq->frames_count;j++)
             {
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], 0, &p);
+                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
                 seq->frames[j].tex_ind = p.tex_index;
 
                 GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move

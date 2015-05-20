@@ -941,7 +941,6 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     if(entity->character != NULL)
     {
         entity->character->no_fix_all = 0x00;
-        Character_GhostUpdate(entity);
     }
 
     if(another_model >= 0)
@@ -973,10 +972,6 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity, 0);
-    if(entity->character != NULL)
-    {
-        Character_FixPenetrations(entity, NULL);
-    }
 }
 
 
@@ -1223,11 +1218,12 @@ int Entity_Frame(entity_p entity, btScalar time)
         entity->current_speed += time * entity->character->speed_mult * (btScalar)af->accel_hi;
     }
 
-    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     if(entity->bf.animations.onFrame != NULL)
     {
         entity->bf.animations.onFrame(entity, &entity->bf.animations, ret);
     }
+
+    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     if(entity->character != NULL)
     {
         Character_FixPenetrations(entity, NULL);
