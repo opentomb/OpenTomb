@@ -250,13 +250,16 @@ void BT_GenEntityRigidBody(entity_p ent)
     {
         ent->bt_body[i] = NULL;
         cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag, false);
+        cshape->calculateLocalInertia(0.0, localInertia);
+        
         if(cshape)
         {
             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
             startTransform.setFromOpenGLMatrix(tr);
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             ent->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
-            bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_CINEMATIC, COLLISION_MASK_ALL);
+            ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+            bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             ent->bt_body[i]->setUserPointer(ent->self);
         }
     }
@@ -977,7 +980,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
 
     entity->bf.animations.last_state = anim->state_id;
     entity->bf.animations.next_state = anim->state_id;
-    entity->current_speed = anim->speed;
+    entity->current_speed = anim->speed_x;
     entity->bf.animations.current_animation = animation;
     entity->bf.animations.current_frame = frame;
     entity->bf.animations.next_animation = animation;
@@ -1213,7 +1216,6 @@ int Entity_Frame(entity_p entity, btScalar time)
         ret = 0x01;
         Entity_DoAnimCommands(entity, &entity->bf.animations, ret);
         Entity_DoAnimMove(entity);
-        entity->bf.animations.current_frame = frame;
     }
 
     af = entity->bf.animations.model->animations + entity->bf.animations.current_animation;
@@ -1225,14 +1227,29 @@ int Entity_Frame(entity_p entity, btScalar time)
     entity->bf.animations.lerp = (entity->smooth_anim)?(dt / entity->bf.animations.period):(0.0);
     Entity_GetNextFrame(&entity->bf, entity->bf.animations.period, stc, &entity->bf.animations.next_frame, &entity->bf.animations.next_animation, ss_anim->anim_flags);
 
-    Character_DoWeaponFrame(entity, time);
-    /*
-     * Update acceleration
-     */
-    if(entity->character)
-    {
-        entity->current_speed += time * entity->character->speed_mult * (btScalar)af->accel_hi;
+    // Update acceleration.
+    // With variable framerate, we don't know when we'll reach final
+    // frame for sure, so we use native frame number check to increase acceleration.
+
+    if((entity->character) && (ss_anim->current_frame != frame))
+    {        
+        
+        // NB!!! For Lara, we update ONLY X-axis speed/accel.
+        
+        if(af->accel_x == 0)
+        {
+            entity->current_speed  = af->speed_x;
+        }
+        else
+        {
+            entity->current_speed += af->accel_x;
+        }
     }
+    
+    entity->bf.animations.current_frame = frame;
+    
+    
+    Character_DoWeaponFrame(entity, time);
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     if(entity->bf.animations.onFrame != NULL)

@@ -250,7 +250,14 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
          * Base onfloor animations
          */
         case TR_STATE_LARA_STOP:
-            ent->dir_flag = ENT_STAY;
+            
+            // Reset directional flag only on intermediate animation!
+            
+            if(ss_anim->current_animation == TR_ANIMATION_LARA_STAY_SOLID)
+            {
+                ent->dir_flag = ENT_STAY;
+            }
+            
             cmd->rot[0] = 0;
             cmd->crouch |= low_vertical_space;
             Character_Lean(ent, cmd, 0.0);
@@ -674,10 +681,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_RUN_BACK:
             ent->dir_flag = ENT_MOVE_BACKWARD;
-            if(ss_anim->current_animation == TR_ANIMATION_LARA_RUN_BACK_BEGIN)
-            {
-                ent->current_speed = 16.0;      ///@FIXME: magick!
-            }
 
             if(ent->move_type == MOVE_FREE_FALLING)
             {
@@ -1069,8 +1072,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->character->height_info.quicksand)
             {
-                ent->current_speed = 8.0;
-                Entity_UpdateCurrentSpeed(ent, 0);
+                ent->current_speed *= 0.5;
             }
 
             if(cmd->move[0] == 1)
@@ -1142,17 +1144,16 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_WALK_BACK:
             cmd->rot[0] *= 0.4;
-            vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);
-            global_offset[2] += ent->bf.bb_max[2];
-            i = Character_CheckNextStep(ent, global_offset, &next_fc);
-            //ent->dir_flag = ENT_MOVE_BACKWARD;
+            ent->dir_flag = ENT_MOVE_BACKWARD;
 
             if(ent->character->height_info.quicksand)
             {
-                ent->current_speed = 4.0;
-                Entity_UpdateCurrentSpeed(ent, 0);
+                ent->current_speed *= 0.5;
             }
-
+            
+            vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);
+            global_offset[2] += ent->bf.bb_max[2];
+            i = Character_CheckNextStep(ent, global_offset, &next_fc);
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
@@ -1961,7 +1962,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_LADDER_LEFT:
             //ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_LEFT;
-            ent->current_speed = 5.0;
             if((cmd->action == 0) || (ent->character->climb.wall_hit == 0))
             {
                 ss_anim->next_state = TR_STATE_LARA_HANG;
@@ -1975,7 +1975,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_LADDER_RIGHT:
             //ent->character->complex_collision = 0x01;
             ent->dir_flag = ENT_MOVE_RIGHT;
-            ent->current_speed = 5.0;
             if((cmd->action == 0) || (ent->character->climb.wall_hit == 0))
             {
                 ss_anim->next_state = TR_STATE_LARA_HANG;
@@ -2040,7 +2039,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_SHIMMY_LEFT:
-            ent->current_speed = 5.0;
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_LEFT;
             if(cmd->action == 0)
@@ -2100,7 +2098,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_SHIMMY_RIGHT:
-            ent->current_speed = 5.0;
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_RIGHT;
             if(cmd->action == 0)
@@ -2823,7 +2820,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_CRAWL_BACK:
-            ent->dir_flag = ENT_MOVE_BACKWARD;
+            ent->dir_flag = ENT_MOVE_FORWARD;   // Absurd? No, Core Design.
             ent->character->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             cmd->rot[0] = cmd->rot[0] * 0.5;
             vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
@@ -2842,17 +2839,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->dir_flag = ENT_STAY;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_CRAWL_IDLE, 0);
-            }
-            else
-            {
-                if(ss_anim->current_animation == TR_ANIMATION_LARA_CRAWL_BACKWARD)
-                {
-                    ent->current_speed = 16.0;      ///@FIXME: magick!
-                }
-                else
-                {
-                    ent->current_speed = 6.0;
-                }
             }
             break;
 

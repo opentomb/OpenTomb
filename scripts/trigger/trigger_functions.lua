@@ -172,9 +172,9 @@ end
 
 -- Plays specified flyby. Only valid in TR4-5.
 
-function playFlyby(flyby_index)
+function playFlyby(flyby_index, once)
     if(getLevelVersion() < TR_IV) then return 0 end;
-    print("FLYBY: index = " .. flyby_index);
+    print("FLYBY: index = " .. flyby_index .. " once = " .. once);
 end
 
 

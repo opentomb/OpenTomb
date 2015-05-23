@@ -159,8 +159,8 @@ enum CharParameters
 
 #define PARAM_ABSOLUTE_MAX                (-1)
 
-#define LARA_PARAM_HEALTH_MAX             (1000.0)      // 30 secs of air
-#define LARA_PARAM_AIR_MAX                (1800.0)      // 30 secs of air
+#define LARA_PARAM_HEALTH_MAX             (1000.0)      // 1000 HP
+#define LARA_PARAM_AIR_MAX                (3600.0)      // 60 secs of air
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
@@ -280,6 +280,7 @@ typedef struct character_s
     struct entity_s             *ent;                    // actor entity
     struct character_command_s   cmd;                    // character control commands
     struct character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    
     struct inventory_node_s     *inventory;
     struct character_param_s     parameters;
     struct character_stats_s     statistics;

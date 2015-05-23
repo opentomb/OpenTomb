@@ -430,15 +430,11 @@ typedef struct {                // 32 bytes TR1/2/3 40 bytes TR4
     uint8_t frame_size;         // number of bit16's in Frames[] used by this animation
     uint16_t state_id;
 
-    int16_t unknown;
-    int16_t speed;
-    int16_t accel_lo;
-    int16_t accel_hi;
+    float   speed;
+    float   accel;
 
-    int16_t unknown2;               // new in TR4 -->
-    int16_t speed2;                 // not really sure what these mean.
-    int16_t accel_lo2;
-    int16_t accel_hi2;              // <-- TR4
+    float   speed_lateral;      // new in TR4 -->
+    float   accel_lateral;      // lateral speed and acceleration.
 
     uint16_t frame_start;           // first frame in this animation
     uint16_t frame_end;             // last frame in this animation (numframes = (End - Start) + 1)

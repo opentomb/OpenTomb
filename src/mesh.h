@@ -299,25 +299,23 @@ typedef struct animation_frame_s
 {
     uint32_t                    id;
     uint8_t                     original_frame_rate;
-    int                         accel_hi;
-    int                         accel_hi2;
-    int                         accel_lo;
-    int                         accel_lo2;
-    int                         speed;
-    int                         speed2;
+    btScalar                    speed_x;                // Forward-backward speed
+    btScalar                    accel_x;                // Forward-backward accel
+    btScalar                    speed_y;                // Left-right speed
+    btScalar                    accel_y;                // Left-right accel
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     uint16_t                    state_id;
     int16_t                     unknown;
     int16_t                     unknown2;
-    uint16_t                    frames_count;                                   // number of frames
-    struct bone_frame_s        *frames;                                         // frames data
+    uint16_t                    frames_count;           // Number of frames
+    struct bone_frame_s        *frames;                 // Frame data
 
-    uint16_t                    state_change_count;                             // number of animation statechanges
-    struct state_change_s      *state_change;                                   // animation statechanges data
+    uint16_t                    state_change_count;     // Number of animation statechanges
+    struct state_change_s      *state_change;           // Animation statechanges data
 
-    struct animation_frame_s   *next_anim;                                      // next default animation
-    int                         next_frame;                                     // next default frame
+    struct animation_frame_s   *next_anim;              // Next default animation
+    int                         next_frame;             // Next default frame
 }animation_frame_t, *animation_frame_p;
 
 /*

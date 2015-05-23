@@ -752,13 +752,12 @@ void Game_UpdateCharacters()
     }
 }
 
-
 __inline btScalar Game_Tick(btScalar *game_logic_time)
 {
-    int t;
-    t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-    *game_logic_time -= (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
-    return *game_logic_time;
+    int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
+    btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+    *game_logic_time -= dt;
+    return dt;
 }
 
 
@@ -801,14 +800,14 @@ void Game_Frame(btScalar time)
         return;
     }
 
+
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
-        int32_t t = game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-        btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
-        game_logic_time -= dt;
+        btScalar dt = Game_Tick(&game_logic_time);
+        
         bt_engine_dynamicsWorld->stepSimulation(dt, 8);
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
@@ -822,6 +821,7 @@ void Game_Frame(btScalar time)
             
         if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
     }
+    
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.

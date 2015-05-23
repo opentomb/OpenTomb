@@ -148,6 +148,28 @@ function venicebird_init(id)    -- Venice singing birds (TR2)
     prepareEntity(id);
 end
 
+function drips_init(id)    -- Maria Doria drips (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+        if(getEntityDistance(player, object_id) < 8192.0) then
+            if(math.random(100000) > 99500) then playSound(329, object_id) end;
+        end;
+    end
+    
+    prepareEntity(id);
+end
+
 function doorbell_init(id)    -- Lara's Home doorbell (TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);

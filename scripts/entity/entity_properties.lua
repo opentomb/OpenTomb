@@ -379,7 +379,7 @@ tr2_entity_tbl[209] = {coll = 0x00};               -- Dragon explosion effect (e
 tr2_entity_tbl[210] = {coll = 0x00};               -- Dragon explosion effect (expanding netted bubble)
 tr2_entity_tbl[211] = {coll = 0x00};               -- Dragon explosion effect (expanding solid bubble)
 tr2_entity_tbl[212] = {coll = 0x00, func = "alarm_TR2"};               -- Alarm
-tr2_entity_tbl[213] = {coll = 0x00, hide = 0x01};  -- Placeholder
+tr2_entity_tbl[213] = {coll = 0x00, hide = 0x01, func = "drips"};  -- Dripping water
 tr2_entity_tbl[214] = {coll = 0x02};               -- Tyrannosaur
 tr2_entity_tbl[215] = {coll = 0x00, hide = 0x01, func = "venicebird"};  -- Singing birds
 tr2_entity_tbl[216] = {coll = 0x00, hide = 0x01};  -- Placeholder

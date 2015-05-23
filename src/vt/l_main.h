@@ -545,6 +545,7 @@ class TR_Level {
     int32_t read_bit32(SDL_RWops * const src);
     uint32_t read_bitu32(SDL_RWops * const src);
     float read_float(SDL_RWops * const src);
+    float read_mixfloat(SDL_RWops * const src);
 
     void read_mesh_data(SDL_RWops * const src);
     void read_frame_moveable_data(SDL_RWops * const src);

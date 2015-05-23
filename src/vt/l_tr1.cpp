@@ -499,10 +499,8 @@ void TR_Level::read_tr_animation(SDL_RWops * const src, tr_animation_t & animati
     animation.frame_size = read_bitu8(src);
     animation.state_id = read_bitu16(src);
 
-    animation.unknown = read_bit16(src);
-    animation.speed = read_bit16(src);
-    animation.accel_lo = read_bit16(src);
-    animation.accel_hi = read_bit16(src);
+    animation.speed = read_mixfloat(src);
+    animation.accel = read_mixfloat(src);
 
     animation.frame_start = read_bitu16(src);
     animation.frame_end = read_bitu16(src);

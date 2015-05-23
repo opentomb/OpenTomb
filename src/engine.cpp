@@ -245,7 +245,7 @@ void Engine_BTInit()
     bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
-    debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+    debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
     bt_engine_dynamicsWorld->setDebugDrawer(&debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
