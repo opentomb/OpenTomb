@@ -294,6 +294,7 @@ typedef struct character_s
     int8_t                       no_fix_all;
     int8_t                       cam_follow_center;
     uint32_t                     no_fix_body_parts;
+    uint32_t                     ghost_step_up_map_filter;
 
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;
@@ -308,7 +309,6 @@ typedef struct character_s
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
     btScalar                     swim_depth;             // depth offset for starting to swim
-    int                          ghost_step_up_map_filter;
     
     btCollisionShape           **shapes;
     btSphereShape               *sphere;                 // needs to height calculation
@@ -341,7 +341,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
 void Character_GhostUpdate(struct entity_s *ent);
-int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move[3]);
+int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
 void Character_FixPenetrations(struct entity_s *ent, btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
 

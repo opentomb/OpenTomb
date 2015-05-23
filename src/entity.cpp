@@ -546,25 +546,8 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
         btag->transform[15] = 1.0;
         if(k == 0)
         {
-            btScalar tq[4];
-            if(next_bf->command & ANIM_CMD_CHANGE_DIRECTION)
-            {
-                ///@TODO: add OX rotation inverse for underwater case
-                tq[0] =-next_btag->qrotate[1];  // -  +
-                tq[1] = next_btag->qrotate[0];  // +  -
-                tq[2] = next_btag->qrotate[3];  // +  +
-                tq[3] =-next_btag->qrotate[2];  // -  -
-
-                btag->transform[12 + 0] -= bf->pos[0];
-                btag->transform[12 + 1] -= bf->pos[1];
-                btag->transform[12 + 2] += bf->pos[2];
-            }
-            else
-            {
-                vec4_copy(tq, next_btag->qrotate);
-                vec3_add(btag->transform+12, btag->transform+12, bf->pos);
-            }
-            vec4_slerp(btag->qrotate, src_btag->qrotate, tq, bf->animations.lerp);
+            vec3_add(btag->transform+12, btag->transform+12, bf->pos);
+            vec4_slerp(btag->qrotate, src_btag->qrotate, next_btag->qrotate, bf->animations.lerp);
         }
         else
         {
@@ -961,7 +944,6 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     if(entity->character != NULL)
     {
         entity->character->no_fix_all = 0x00;
-        Character_GhostUpdate(entity);
     }
 
     if(another_model >= 0)
@@ -987,16 +969,12 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     entity->bf.animations.next_frame = frame;
 
     entity->bf.animations.frame_time = (btScalar)frame * entity->bf.animations.period;
-    long int t = (entity->bf.animations.frame_time) / entity->bf.animations.period;
-    btScalar dt = entity->bf.animations.frame_time - (btScalar)t * entity->bf.animations.period;
-    entity->bf.animations.frame_time = (btScalar)frame * entity->bf.animations.period + dt;
+    //long int t = (entity->bf.animations.frame_time) / entity->bf.animations.period;
+    //btScalar dt = entity->bf.animations.frame_time - (btScalar)t * entity->bf.animations.period;
+    entity->bf.animations.frame_time = (btScalar)frame * entity->bf.animations.period;// + dt;
 
     Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity, 0);
-    if(entity->character != NULL)
-    {
-        Character_FixPenetrations(entity, NULL);
-    }
 }
 
 
@@ -1127,11 +1105,12 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
 }
 
 
-void Entity_DoAnimMove(entity_p entity)
+void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
 {
     if(entity->bf.animations.model != NULL)
     {
-        bone_frame_p curr_bf = entity->bf.animations.model->animations[entity->bf.animations.current_animation].frames + entity->bf.animations.current_frame;
+        animation_frame_p curr_af = entity->bf.animations.model->animations + entity->bf.animations.current_animation;
+        bone_frame_p curr_bf = curr_af->frames + entity->bf.animations.current_frame;
 
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
@@ -1139,6 +1118,7 @@ void Entity_DoAnimMove(entity_p entity)
         }
         if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
         {
+            //Con_Printf("ROTATED: anim = %d, frame = %d of %d", entity->bf.animations.current_animation, entity->bf.animations.current_frame, entity->bf.animations.model->animations[entity->bf.animations.current_animation].frames_count);
             entity->angles[0] += 180.0;
             if(entity->move_type == MOVE_UNDERWATER)
             {
@@ -1153,6 +1133,9 @@ void Entity_DoAnimMove(entity_p entity)
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
             Entity_UpdateRotation(entity);
+            Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_anim->next_frame);
+            *anim = entity->bf.animations.current_animation;
+            *frame = entity->bf.animations.current_frame;
         }
         if(curr_bf->command & ANIM_CMD_MOVE)
         {
@@ -1196,13 +1179,14 @@ int Entity_Frame(entity_p entity, btScalar time)
     entity->bf.animations.lerp = 0.0;
     stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
     Entity_GetNextFrame(&entity->bf, time, stc, &frame, &anim, ss_anim->anim_flags);
-    if(anim != ss_anim->current_animation)
+    if(ss_anim->current_animation != anim)
     {
         ss_anim->last_animation = ss_anim->current_animation;
 
         ret = 0x02;
         Entity_DoAnimCommands(entity, &entity->bf.animations, ret);
-        Entity_DoAnimMove(entity);
+        Entity_DoAnimMove(entity, &anim, &frame);
+
         Entity_SetAnimation(entity, anim, frame);
         stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
     }
@@ -1215,7 +1199,7 @@ int Entity_Frame(entity_p entity, btScalar time)
 
         ret = 0x01;
         Entity_DoAnimCommands(entity, &entity->bf.animations, ret);
-        Entity_DoAnimMove(entity);
+        Entity_DoAnimMove(entity, &anim, &frame);
     }
 
     af = entity->bf.animations.model->animations + entity->bf.animations.current_animation;
@@ -1251,11 +1235,12 @@ int Entity_Frame(entity_p entity, btScalar time)
     
     Character_DoWeaponFrame(entity, time);
 
-    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     if(entity->bf.animations.onFrame != NULL)
     {
         entity->bf.animations.onFrame(entity, &entity->bf.animations, ret);
     }
+
+    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
     if(entity->character != NULL)
     {
         Character_FixPenetrations(entity, NULL);

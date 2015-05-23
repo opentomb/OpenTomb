@@ -96,7 +96,7 @@ void Character_Create(struct entity_s *ent)
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
     ret->forvard_size = 48.0;                                                   ///@FIXME: magick number
-    ret->ghost_step_up_map_filter = 0;
+    ret->ghost_step_up_map_filter = 0x00;
     ret->Height = CHARACTER_BASE_HEIGHT;
 
     ret->manifoldArray = NULL;
@@ -1108,7 +1108,7 @@ void Character_GhostUpdate(struct entity_s *ent)
 }
 
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move[3])
+int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3])
 {
     int ret = 0;
     btScalar tmp[3], orig_pos[3];
@@ -1134,7 +1134,7 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             }
 
             // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
-            if((btag->parent == NULL) || ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
+            if((btag->parent == NULL) || ((move_global != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
             {
                 from = ent->character->ghostObjects[m]->getWorldTransform().getOrigin();
                 from.m_floats[0] += ent->transform[12+0] - orig_pos[0];
@@ -1219,8 +1219,8 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
 
     int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction, move);
     // temporary stick, but not so bad
-    if((numPenetrationLoops > 0) && (ent->character->ghost_step_up_map_filter > 0) &&
-       !Character_WasCollisionBodyParts(ent, ~(BODY_PART_LEGS_1 & BODY_PART_LEGS_2 & BODY_PART_LEGS_3)))
+    if((numPenetrationLoops > 0) && (ent->character->ghost_step_up_map_filter != 0x00) &&
+       !Character_WasCollisionBodyParts(ent, ~(ent->character->ghost_step_up_map_filter)))
     {
         resp->step_up = 0x01;
     }
@@ -1709,7 +1709,7 @@ int Character_FreeFalling(struct entity_s *ent)
      * init height info structure
      */
 
-    ent->character->ghost_step_up_map_filter = 0;
+    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -1750,7 +1750,7 @@ int Character_FreeFalling(struct entity_s *ent)
             pos[2] = ent->character->height_info.ceiling_point.m_floats[2] - ent->bf.bb_max[2];
             ent->speed.m_floats[2] = 0.0;
             ent->character->resp.vertical_collide |= 0x02;
-            Character_FixPenetrations(ent, move.m_floats);
+            Character_FixPenetrations(ent, NULL);
             Entity_UpdateRoomPos(ent);
         }
     }
@@ -1762,7 +1762,7 @@ int Character_FreeFalling(struct entity_s *ent)
             //ent->speed.m_floats[2] = 0.0;
             ent->move_type = MOVE_ON_FLOOR;
             ent->character->resp.vertical_collide |= 0x01;
-            Character_FixPenetrations(ent, move.m_floats);
+            Character_FixPenetrations(ent, NULL);
             Entity_UpdateRoomPos(ent);
             return 2;
         }
@@ -1788,7 +1788,7 @@ int Character_FreeFalling(struct entity_s *ent)
             //ent->speed.m_floats[2] = 0.0;
             ent->move_type = MOVE_ON_FLOOR;
             ent->character->resp.vertical_collide |= 0x01;
-            Character_FixPenetrations(ent, move.m_floats);
+            Character_FixPenetrations(ent, NULL);
             Entity_UpdateRoomPos(ent);
             return 2;
         }
@@ -1813,7 +1813,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
 
-    ent->character->ghost_step_up_map_filter = 0;
+    ent->character->ghost_step_up_map_filter = 0x00;
     ent->speed.m_floats[2] = 0.0;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
@@ -1882,7 +1882,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     btVector3 spd, move;
     btScalar t, *pos = ent->transform + 12;
 
-    ent->character->ghost_step_up_map_filter = 0;
+    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -1949,7 +1949,7 @@ int Character_Climbing(struct entity_s *ent)
     btScalar t, *pos = ent->transform + 12;
     btScalar z = pos[2];
 
-    ent->character->ghost_step_up_map_filter = 0;
+    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -2018,7 +2018,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
         return 2;
     }
 
-    ent->character->ghost_step_up_map_filter = 0;
+    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -2075,7 +2075,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
 
-    ent->character->ghost_step_up_map_filter = 0;
+    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;

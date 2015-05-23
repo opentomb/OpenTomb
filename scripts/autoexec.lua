@@ -244,31 +244,13 @@ setModelCollisionMap(0, 12, 6);
 setModelCollisionMap(0, 13, 10);            -- braces 3
 setModelCollisionMap(0, 14, 13);
 
--- dir[anim = 147, frame = 0, frames = 16]
-setAnimCommandTransform(0, 147, 0, 0x00);   -- roll animation smooth fix 
-setAnimCommandTransform(0, 146, -1, 0x03);
+setAnimCommandTransform(0, 147,  0, 0x00);   -- roll animation smooth fix 
+setAnimCommandTransform(0, 146, -2, 0x03);
 
-setAnimCommandTransform(0, 147, 0, 0x00);   -- roll animation smooth fix 
-setAnimCommandTransform(0, 146, -1, 0x03);
-
-setAnimCommandTransform(0, 205, 1, 0x00);   -- underwater roll animation smooth fix 
-setAnimCommandTransform(0, 205, 0, 0x00);
-setAnimCommandTransform(0, 203, -1, 0x03);
-
-if(getLevelVersion() >= TR_II) then
-    setAnimCommandTransform(0, 205, 1, 0x00);   -- underwater roll animation smooth fix 
-    setAnimCommandTransform(0, 205, 0, 0x00);
-    setAnimCommandTransform(0, 203, -1, 0x03);
-end;
-
---setAnimCommandTransform(0, 207, 13, 0x00);   -- jump roll animation smooth fix 
---setAnimCommandTransform(0, 207, 12, 0x03);
-
---setAnimCommandTransform(0, 210, 8, 0x00);   -- standing jump roll animation smooth fix 
---setAnimCommandTransform(0, 210, 7, 0x03);
-
-setAnimCommandTransform(0, 212, 10, 0x00);   -- back jump roll animation smooth fix 
-setAnimCommandTransform(0, 212, 9, 0x03);
+if(getLevelVersion() >= TR_IV) then
+    setAnimCommandTransform(0, 205,  1, 0x00);
+    setAnimCommandTransform(0, 203, -2, 0x03);
+end
 
 -- generate UV rotation texture animations for waterfalls in TR4+ versions
 
