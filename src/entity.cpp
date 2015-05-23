@@ -46,7 +46,6 @@ entity_p Entity_Create()
     ret->obb->transform = ret->transform;
     ret->bt_body = NULL;
     ret->character = NULL;
-    ret->smooth_anim = 1;
     ret->current_sector = NULL;
     ret->bf.animations.model = NULL;
     ret->bf.animations.onFrame = NULL;
@@ -251,7 +250,7 @@ void BT_GenEntityRigidBody(entity_p ent)
         ent->bt_body[i] = NULL;
         cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag, false);
         cshape->calculateLocalInertia(0.0, localInertia);
-        
+
         if(cshape)
         {
             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
@@ -277,7 +276,7 @@ void Entity_UpdateRoomPos(entity_p ent)
     v[1] /= 2.0;
     v[2] /= 2.0;
     Mat4_vec3_mul_macro(pos, ent->transform, v);
-    new_room = Room_FindPosCogerrence(&engine_world, pos, ent->self->room);
+    new_room = Room_FindPosCogerrence(pos, ent->self->room);
     if(new_room)
     {
         new_sector = Room_GetSectorXYZ(new_room, pos);
@@ -1208,7 +1207,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     t = (entity->bf.animations.frame_time) / entity->bf.animations.period;
     dt = entity->bf.animations.frame_time - (btScalar)t * entity->bf.animations.period;
     entity->bf.animations.frame_time = (btScalar)frame * entity->bf.animations.period + dt;
-    entity->bf.animations.lerp = (entity->smooth_anim)?(dt / entity->bf.animations.period):(0.0);
+    entity->bf.animations.lerp = dt / entity->bf.animations.period;
     Entity_GetNextFrame(&entity->bf, entity->bf.animations.period, stc, &entity->bf.animations.next_frame, &entity->bf.animations.next_animation, ss_anim->anim_flags);
 
     // Update acceleration.
@@ -1216,10 +1215,10 @@ int Entity_Frame(entity_p entity, btScalar time)
     // frame for sure, so we use native frame number check to increase acceleration.
 
     if((entity->character) && (ss_anim->current_frame != frame))
-    {        
-        
+    {
+
         // NB!!! For Lara, we update ONLY X-axis speed/accel.
-        
+
         if(af->accel_x == 0)
         {
             entity->current_speed  = af->speed_x;
@@ -1229,10 +1228,10 @@ int Entity_Frame(entity_p entity, btScalar time)
             entity->current_speed += af->accel_x;
         }
     }
-    
+
     entity->bf.animations.current_frame = frame;
-    
-    
+
+
     Character_DoWeaponFrame(entity, time);
 
     if(entity->bf.animations.onFrame != NULL)
@@ -1380,7 +1379,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
                         if(ss_anim->current_frame < t - 1)
@@ -1434,7 +1433,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->lerp = dt / ss_anim->period;
                         ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                         if(ss_anim->current_frame > 0)
                         {
@@ -1453,7 +1452,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
                         if(ss_anim->current_frame < t - 1)
@@ -1489,7 +1488,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                             ss_anim->frame_time += time;
                             ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                             dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                            ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                            ss_anim->lerp = dt / ss_anim->period;
                             t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
                             if(ss_anim->current_frame < t - 1)
@@ -1525,7 +1524,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->lerp = dt / ss_anim->period;
                         if(ss_anim->current_frame < t - 1)
                         {
                             ss_anim->next_frame = ss_anim->current_frame + 1;
@@ -1561,7 +1560,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
                         if(ss_anim->current_frame < t - 1)
@@ -1615,7 +1614,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->lerp = dt / ss_anim->period;
                         ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                         if(ss_anim->current_frame > 0)
                         {
@@ -1634,7 +1633,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->lerp = dt / ss_anim->period;
                         t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
                         if(ss_anim->current_frame < t - 1)
@@ -1670,7 +1669,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                             ss_anim->frame_time += time;
                             ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                             dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                            ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                            ss_anim->lerp = dt / ss_anim->period;
                             t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
                             if(ss_anim->current_frame < t - 1)
@@ -1707,7 +1706,7 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = (entity->smooth_anim)?(dt / ss_anim->period):(0.0);
+                        ss_anim->lerp = dt / ss_anim->period;
                         ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                         if(ss_anim->current_frame > 0)
                         {

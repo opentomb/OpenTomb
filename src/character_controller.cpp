@@ -483,7 +483,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
     fc->quicksand = 0x00;
     fc->transition_level = 32512.0;
 
-    r = Room_FindPosCogerrence(&engine_world, pos, r);
+    r = Room_FindPosCogerrence(pos, r);
     r = Room_CheckFlip(r);
     if(r)
     {
@@ -1592,7 +1592,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             t = ent->current_speed * ent->character->speed_mult;
             ent->character->resp.vertical_collide |= 0x01;
             ent->angles[0] += ent->character->cmd.rot[0];
-            
+
             Entity_UpdateRotation(ent); // apply rotations
 
             if(ent->dir_flag & ENT_MOVE_FORWARD)

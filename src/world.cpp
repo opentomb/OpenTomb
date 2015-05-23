@@ -786,10 +786,10 @@ inline int Room_IsPointIn(room_p room, btScalar dot[3])
 }
 
 
-room_p Room_FindPos(world_p w, btScalar pos[3])
+room_p Room_FindPos(btScalar pos[3])
 {
-    room_p r = w->rooms;
-    for(uint32_t i=0;i<w->room_count;i++,r++)
+    room_p r = engine_world.rooms;
+    for(uint32_t i=0;i<engine_world.room_count;i++,r++)
     {
         if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
@@ -803,81 +803,40 @@ room_p Room_FindPos(world_p w, btScalar pos[3])
 }
 
 
-room_p Room_FindPos2d(world_p w, btScalar pos[3])
+room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room)
 {
-    room_p r = w->rooms;
-    for(uint32_t i=0;i<w->room_count;i++,r++)
-    {
-        if(r->active &&
-           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]))
-        {
-            return r;
-        }
-    }
-    return NULL;
-}
-
-
-room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room)
-{
-    room_p r;
-
     if(room == NULL)
     {
-        return Room_FindPos(w, pos);
+        return Room_FindPos(new_pos);
     }
 
     if(room->active &&
-       (pos[0] >= room->bb_min[0]) && (pos[0] < room->bb_max[0]) &&
-       (pos[1] >= room->bb_min[1]) && (pos[1] < room->bb_max[1]) &&
-       (pos[2] >= room->bb_min[2]) && (pos[2] < room->bb_max[2]))
+       (new_pos[0] >= room->bb_min[0]) && (new_pos[0] < room->bb_max[0]) &&
+       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]) &&
+       (new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
     {
         return room;
+    }
+
+    room_sector_p new_sector = Room_GetSectorRaw(room, new_pos);
+    if((new_sector != NULL) && (new_sector->portal_to_room >= 0))
+    {
+        return Room_CheckFlip(engine_world.rooms + new_sector->portal_to_room);
     }
 
     for(uint16_t i=0;i<room->near_room_list_size;i++)
     {
-        r = room->near_room_list[i];
+        room_p r = room->near_room_list[i];
         if(r->active &&
-           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
-           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
+           (new_pos[0] >= r->bb_min[0]) && (new_pos[0] < r->bb_max[0]) &&
+           (new_pos[1] >= r->bb_min[1]) && (new_pos[1] < r->bb_max[1]) &&
+           (new_pos[2] >= r->bb_min[2]) && (new_pos[2] < r->bb_max[2]))
         {
             return r;
         }
     }
 
-    return Room_FindPos(w, pos);
-}
-
-
-room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room)
-{
-    room_p r;
-    if(room == NULL)
-    {
-        return Room_FindPos2d(w, pos);
-    }
-
-    if((pos[0] >= room->bb_min[0]) && (pos[0] < room->bb_max[0]) &&
-       (pos[1] >= room->bb_min[1]) && (pos[1] < room->bb_max[1]) &&
-       (pos[2] >= room->bb_min[2]) && (pos[2] < room->bb_max[2]))
-    {
-        return room;
-    }
-
-    for(uint16_t i=0;i<room->portal_count;i++)
-    {
-        r = room->portals[i].dest_room;
-        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
-           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
-        {
-            return r;
-        }
-    }
-    return Room_FindPos2d(w, pos);
+    return Room_FindPos(new_pos);
 }
 
 

@@ -193,7 +193,6 @@ typedef struct ss_bone_tag_s
     btScalar                full_transform[16];                                 // 4x4 OpenGL matrix for global usage
 
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
-    uint16_t                flag;                                               // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 

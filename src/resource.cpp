@@ -1090,8 +1090,8 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                 {
                                     entry++;
                                     uint8_t flyby_once  = ((*entry) & 0x0100) >> 8;
-                                    cont_bit  = ((*entry) & 0x8000) >> 15;   
-                                
+                                    cont_bit  = ((*entry) & 0x8000) >> 15;
+
                                     snprintf(buf, 128, "   playFlyby(%d, %d); \n", operands, flyby_once);
                                     strcat(cont_events, buf);
                                 }
@@ -3446,18 +3446,18 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
 
         anim->id = i;
         anim->original_frame_rate = tr_animation->frame_rate;
-        
+
         anim->speed_x = tr_animation->speed;
         anim->accel_x = tr_animation->accel;
         anim->speed_y = tr_animation->accel_lateral;
         anim->accel_y = tr_animation->speed_lateral;
-        
+
         anim->anim_command = tr_animation->anim_command;
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
-        
+
         anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
-        
+
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
         // Parse AnimCommands

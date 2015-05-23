@@ -136,7 +136,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
             engine_container_p cont = (engine_container_p)body->getUserPointer();
             if(cont && (cont->object_type == OBJECT_BULLET_MISC))
             {
-                cont->room = Room_FindPosCogerrence(&engine_world, trans.getOrigin().m_floats, cont->room);
+                cont->room = Room_FindPosCogerrence(trans.getOrigin().m_floats, cont->room);
             }
         }
     }

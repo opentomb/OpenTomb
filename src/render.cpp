@@ -1194,7 +1194,7 @@ void Render_GenWorldList()
 
     Render_CleanList();                                                         // clear old render list
 
-    room_p curr_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
+    room_p curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
 
     renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room

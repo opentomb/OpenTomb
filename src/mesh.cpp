@@ -274,7 +274,6 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->bone_tags[0].parent = NULL;                                             // root
     for(uint16_t i=0;i<bf->bone_tag_count;i++)
     {
-        bf->bone_tags[i].flag = model->mesh_tree[i].flag;
         bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
         bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
         bf->bone_tags[i].mesh_slot = NULL;
@@ -288,7 +287,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
         if(i > 0)
         {
             bf->bone_tags[i].parent = &bf->bone_tags[i-1];
-            if(bf->bone_tags[i].flag & 0x01)                                    // POP
+            if(model->mesh_tree[i].flag & 0x01)                                 // POP
             {
                 if(stack > 0)
                 {
@@ -296,7 +295,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
                     stack--;
                 }
             }
-            if(bf->bone_tags[i].flag & 0x02)                                    // PUSH
+            if(model->mesh_tree[i].flag & 0x02)                                 // PUSH
             {
                 if(stack + 1 < (int16_t)model->mesh_count)
                 {

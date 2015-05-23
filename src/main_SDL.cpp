@@ -681,7 +681,7 @@ void Engine_PrimaryMouseDown()
     body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    cont->room = Room_FindPosCogerrence(&engine_world, new_pos, engine_camera.current_room);
+    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.current_room);
     cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
