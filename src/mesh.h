@@ -306,8 +306,6 @@ typedef struct animation_frame_s
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     uint16_t                    state_id;
-    int16_t                     unknown;
-    int16_t                     unknown2;
     uint16_t                    frames_count;           // Number of frames
     struct bone_frame_s        *frames;                 // Frame data
 
