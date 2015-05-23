@@ -249,10 +249,11 @@ void BT_GenEntityRigidBody(entity_p ent)
     {
         ent->bt_body[i] = NULL;
         cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag, false);
-        cshape->calculateLocalInertia(0.0, localInertia);
-
+        
         if(cshape)
         {
+            cshape->calculateLocalInertia(0.0, localInertia);
+
             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
             startTransform.setFromOpenGLMatrix(tr);
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
