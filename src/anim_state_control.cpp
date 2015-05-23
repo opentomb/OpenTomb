@@ -524,7 +524,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }       //end IF CMD->SHIFT
                 else
                 {
-                    ent->dir_flag = ENT_MOVE_RIGHT;
                     ss_anim->next_state = TR_STATE_LARA_TURN_RIGHT_SLOW;
                 }
             }       // end MOVE RIGHT
@@ -546,7 +545,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }       //end IF CMD->SHIFT
                 else
                 {
-                    ent->dir_flag = ENT_MOVE_LEFT;
                     ss_anim->next_state = TR_STATE_LARA_TURN_LEFT_SLOW;
                 }
             }       // end MOVE LEFT
