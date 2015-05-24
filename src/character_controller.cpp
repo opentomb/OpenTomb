@@ -1491,13 +1491,13 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_
  * Inertia is absolutely needed for in-water states, and also it gives
  * more organic feel to land animations.
  */
-void Character_Inertia(struct entity_s *ent, btScalar max_speed, btScalar in_speed, btScalar out_speed, int8_t command)
+void Character_Inertia(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command)
 {
     if(command)
     {
         if(ent->inertia < max_speed)
         {
-            ent->inertia += in_speed * engine_frame_time;
+            ent->inertia += max_speed * accel * engine_frame_time;
             if(ent->inertia > max_speed) ent->inertia = max_speed;
         }
     }
@@ -1505,7 +1505,7 @@ void Character_Inertia(struct entity_s *ent, btScalar max_speed, btScalar in_spe
     {
         if(ent->inertia > 0.0)
         {
-            ent->inertia -= out_speed * engine_frame_time;
+            ent->inertia -= max_speed * accel * engine_frame_time;
             if(ent->inertia < 0.0) ent->inertia = 0.0;
         }
     }
@@ -2009,9 +2009,8 @@ int Character_MoveUnderWater(struct entity_s *ent)
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
 
-    /*
-     * check current place
-     */
+    // Check current place.
+
     if(ent->self->room && !(ent->self->room->flags & TR_ROOM_FLAG_WATER))
     {
         ent->move_type = MOVE_FREE_FALLING;
@@ -2023,7 +2022,9 @@ int Character_MoveUnderWater(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    Character_Inertia(ent, 64.0, 64.0, 64.0, ent->character->cmd.jump);
+    // Calculate current speed.
+
+    Character_Inertia(ent, MAX_UNDERWATER_SPEED, 1.0, ent->character->cmd.jump);
     t = ent->inertia * ent->character->speed_mult;
 
     if(!ent->character->resp.kill)   // Block controls if Lara is dead.
@@ -2083,14 +2084,13 @@ int Character_MoveOnWater(struct entity_s *ent)
     ent->angles[0] += ent->character->cmd.rot[0];
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
-    Entity_UpdateRotation(ent);                                                 // apply rotations
+    Entity_UpdateRotation(ent);     // apply rotations
 
-    /*
-     * Find speed
-     */
-    //t = ent->current_speed * ent->character->speed_mult;
-    t = 24.0 * ent->character->speed_mult;                                      ///@FIXME: magick!
-    t = (t < 0.0)?(0.0):(t);                                                    /// stick or feature: that is a serious question!
+    // Calculate current speed.
+    
+    Character_Inertia(ent, MAX_ONWATER_SPEED, 1.0, ((abs(ent->character->cmd.move[0])) | (abs(ent->character->cmd.move[1]))));
+    t = ent->inertia * ent->character->speed_mult;
+    
     if((ent->dir_flag & ENT_MOVE_FORWARD) && (ent->character->cmd.move[0] == 1))
     {
         vec3_mul_scalar(spd.m_floats, ent->transform+4, t);
@@ -2131,7 +2131,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     move = spd * engine_frame_time;
     Character_GhostUpdate(ent);
     vec3_add(pos, pos, move.m_floats);
-    Character_FixPenetrations(ent, move.m_floats);                              // get horizontal collide
+    Character_FixPenetrations(ent, move.m_floats);  // get horizontal collide
 
     Entity_UpdateRoomPos(ent);
     if(ent->character->height_info.water)

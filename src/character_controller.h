@@ -112,11 +112,14 @@
 
 // Speed limits
 
-#define FREE_FALL_SPEED_1        (2000)
-#define FREE_FALL_SPEED_2        (4500)
-#define FREE_FALL_SPEED_MAXSAFE  (5500)
-#define FREE_FALL_SPEED_CRITICAL (7500)
-#define FREE_FALL_SPEED_MAXIMUM  (7800)
+#define FREE_FALL_SPEED_1        (2000.0)
+#define FREE_FALL_SPEED_2        (4500.0)
+#define FREE_FALL_SPEED_MAXSAFE  (5500.0)
+#define FREE_FALL_SPEED_CRITICAL (7500.0)
+#define FREE_FALL_SPEED_MAXIMUM  (7800.0)
+
+#define MAX_UNDERWATER_SPEED     (64.0)
+#define MAX_ONWATER_SPEED        (24.0)
 
 // flags constants
 #define CHARACTER_SLIDE_FRONT                   (0x02)
@@ -356,7 +359,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent);
 
 void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);
-void Character_Inertia(struct entity_s *ent, int8_t command, btScalar max_speed, btScalar in_speed, btScalar out_speed);
+void Character_Inertia(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command);
 
 int Character_MoveOnFloor(struct entity_s *ent);
 int Character_FreeFalling(struct entity_s *ent);
