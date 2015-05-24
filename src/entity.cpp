@@ -1220,7 +1220,7 @@ int Entity_Frame(entity_p entity, btScalar time)
 
         // NB!!! For Lara, we update ONLY X-axis speed/accel.
 
-        if(af->accel_x == 0)
+        if((af->accel_x == 0) || (frame == 0))
         {
             entity->current_speed  = af->speed_x;
         }
