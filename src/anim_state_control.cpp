@@ -1080,7 +1080,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->character->height_info.quicksand)
             {
-                ent->current_speed *= 0.5;
+                ent->current_speed = (ent->current_speed > MAX_QUICKSAND_SPEED)?MAX_QUICKSAND_SPEED:ent->current_speed;
             }
 
             if(cmd->move[0] == 1)
@@ -1156,7 +1156,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->character->height_info.quicksand)
             {
-                ent->current_speed *= 0.5;
+                ent->current_speed = (ent->current_speed > MAX_QUICKSAND_SPEED)?MAX_QUICKSAND_SPEED:ent->current_speed;
             }
             
             vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);

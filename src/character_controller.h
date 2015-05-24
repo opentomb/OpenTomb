@@ -120,6 +120,7 @@
 
 #define MAX_UNDERWATER_SPEED     (64.0)
 #define MAX_ONWATER_SPEED        (24.0)
+#define MAX_QUICKSAND_SPEED      (5.0 )
 
 // flags constants
 #define CHARACTER_SLIDE_FRONT                   (0x02)
