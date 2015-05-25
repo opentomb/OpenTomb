@@ -3881,9 +3881,11 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->timer           = 0.0;
 
         entity->self->collide_flag = 0x00;
-        entity->move_type = 0x0000;
-        entity->inertia = 0.0;
-        entity->move_type = 0;
+        entity->move_type          = 0x0000;
+        entity->inertia_linear     = 0.0;
+        entity->inertia_angular[0] = 0.0;
+        entity->inertia_angular[1] = 0.0;
+        entity->move_type          = 0;
 
         entity->bf.animations.model = World_GetModelByID(world, tr_item->object_id);
 

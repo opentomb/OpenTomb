@@ -1080,7 +1080,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->character->height_info.quicksand)
             {
-                ent->current_speed = (ent->current_speed > MAX_QUICKSAND_SPEED)?MAX_QUICKSAND_SPEED:ent->current_speed;
+                ent->current_speed = (ent->current_speed > MAX_SPEED_QUICKSAND)?MAX_SPEED_QUICKSAND:ent->current_speed;
             }
 
             if(cmd->move[0] == 1)
@@ -1156,7 +1156,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->character->height_info.quicksand)
             {
-                ent->current_speed = (ent->current_speed > MAX_QUICKSAND_SPEED)?MAX_QUICKSAND_SPEED:ent->current_speed;
+                ent->current_speed = (ent->current_speed > MAX_SPEED_QUICKSAND)?MAX_SPEED_QUICKSAND:ent->current_speed;
             }
             
             vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);
@@ -2350,6 +2350,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else
                 {
+                    Character_SetParam(ent, PARAM_HEALTH, 0.0);
                     ss_anim->next_state = TR_STATE_LARA_DEATH;
                 }
             }
@@ -2417,7 +2418,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 if(ent->move_type == MOVE_ON_WATER)
                 {
-                    ent->inertia = 0.0;
+                    ent->inertia_linear = 0.0;
                     ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
                 }
@@ -2431,7 +2432,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_UNDERWATER_INERTIA:
             if(ent->move_type == MOVE_ON_WATER)
             {
-                ent->inertia = 0.0;
+                ent->inertia_linear = 0.0;
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
             }
             else if(resp->kill == 1)

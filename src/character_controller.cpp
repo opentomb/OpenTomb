@@ -1488,29 +1488,95 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_
 
 
 /*
- * Inertia is absolutely needed for in-water states, and also it gives
+ * Linear inertia is absolutely needed for in-water states, and also it gives
  * more organic feel to land animations.
  */
-void Character_Inertia(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command)
+btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command)
 {
-    if(command)
+    if((!ent) || (!ent->character)) return 0.0;
+    
+    if((accel == 0.0) || (accel >= max_speed))
     {
-        if(ent->inertia < max_speed)
+        if(command)
         {
-            ent->inertia += max_speed * accel * engine_frame_time;
-            if(ent->inertia > max_speed) ent->inertia = max_speed;
+            ent->inertia_linear = max_speed;
+        }
+        else
+        {
+            ent->inertia_linear = 0.0;
         }
     }
     else
     {
-        if(ent->inertia > 0.0)
+        if(command)
         {
-            ent->inertia -= max_speed * accel * engine_frame_time;
-            if(ent->inertia < 0.0) ent->inertia = 0.0;
+            if(ent->inertia_linear < max_speed)
+            {
+                ent->inertia_linear += max_speed * accel * engine_frame_time;
+                if(ent->inertia_linear > max_speed) ent->inertia_linear = max_speed;
+            }
+        }
+        else
+        {
+            if(ent->inertia_linear > 0.0)
+            {
+                ent->inertia_linear -= max_speed * accel * engine_frame_time;
+                if(ent->inertia_linear < 0.0) ent->inertia_linear = 0.0;
+            }
         }
     }
+    
+    return ent->inertia_linear * ent->character->speed_mult;
 }
 
+/*
+ * Angular inertia is used on keyboard-driven (non-analog) rotational controls.
+ */
+btScalar Character_InertiaAngular(struct entity_s *ent, btScalar max_angle, btScalar accel, uint8_t axis)
+{
+    if((!ent) || (!ent->character) || (axis > 1)) return 0.0;
+    
+    uint8_t curr_rot_dir = 0;
+    if     (ent->character->cmd.rot[axis] < 0.0) { curr_rot_dir = 1; }
+    else if(ent->character->cmd.rot[axis] > 0.0) { curr_rot_dir = 2; }
+    
+    if((!curr_rot_dir) || (max_angle == 0.0) || (accel == 0.0))
+    {
+        ent->inertia_angular[axis] = 0.0;
+    }
+    else
+    {
+        if(ent->inertia_angular[axis] != max_angle)
+        {
+            if(curr_rot_dir == 2)
+            {
+                if(ent->inertia_angular[axis] < 0.0)
+                {
+                    ent->inertia_angular[axis] = 0.0;
+                }
+                else
+                {
+                    ent->inertia_angular[axis] += max_angle * accel * engine_frame_time;
+                    if(ent->inertia_angular[axis] > max_angle) ent->inertia_angular[axis] = max_angle;
+                }
+            }
+            else
+            {
+                if(ent->inertia_angular[axis] > 0.0)
+                {
+                    ent->inertia_angular[axis] = 0.0;
+                }
+                else
+                {
+                    ent->inertia_angular[axis] -= max_angle * accel * engine_frame_time;
+                    if(ent->inertia_angular[axis] < -max_angle) ent->inertia_angular[axis] = -max_angle;
+                }
+            }
+        }
+    }
+    
+    return fabs(ent->inertia_angular[axis]) * ent->character->cmd.rot[axis];
+}
 
 /*
  * MOVE IN DIFFERENCE CONDITIONS
@@ -1591,7 +1657,8 @@ int Character_MoveOnFloor(struct entity_s *ent)
         {
             t = ent->current_speed * ent->character->speed_mult;
             ent->character->resp.vertical_collide |= 0x01;
-            ent->angles[0] += ent->character->cmd.rot[0];
+            
+            ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_LAND, 0);
 
             Entity_UpdateRotation(ent); // apply rotations
 
@@ -1713,7 +1780,9 @@ int Character_FreeFalling(struct entity_s *ent)
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
-    ent->angles[0] += ent->character->cmd.rot[0] * 0.5;                         ///@FIXME magic const
+    
+    btScalar rot = Character_InertiaAngular(ent, 1.0, ROT_SPEED_FREEFALL, 0);
+    ent->angles[0] += rot;
     ent->angles[1] = 0.0;
 
     Entity_UpdateRotation(ent);                                                 // apply rotations
@@ -1722,7 +1791,7 @@ int Character_FreeFalling(struct entity_s *ent)
     move *= engine_frame_time;
     ent->speed += bt_engine_dynamicsWorld->getGravity() * engine_frame_time;
     ent->speed.m_floats[2] = (ent->speed.m_floats[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(ent->speed.m_floats[2]);
-    vec3_RotateZ(ent->speed.m_floats, ent->speed.m_floats, ent->character->cmd.rot[0] * 0.5);  ///@FIXME magic const
+    vec3_RotateZ(ent->speed.m_floats, ent->speed.m_floats, rot);
 
     Character_UpdateCurrentHeight(ent);
 
@@ -1821,7 +1890,8 @@ int Character_MonkeyClimbing(struct entity_s *ent)
 
     t = ent->current_speed * ent->character->speed_mult;
     ent->character->resp.vertical_collide |= 0x01;
-    ent->angles[0] += ent->character->cmd.rot[0];
+    
+    ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_MONKEYSWING, 0);
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
     Entity_UpdateRotation(ent);                                                 // apply rotations
@@ -2007,7 +2077,7 @@ int Character_Climbing(struct entity_s *ent)
 int Character_MoveUnderWater(struct entity_s *ent)
 {
     btVector3 move, spd(0.0, 0.0, 0.0);
-    btScalar t, *pos = ent->transform + 12;
+    btScalar *pos = ent->transform + 12;
 
     // Check current place.
 
@@ -2024,14 +2094,14 @@ int Character_MoveUnderWater(struct entity_s *ent)
 
     // Calculate current speed.
 
-    Character_Inertia(ent, MAX_UNDERWATER_SPEED, 1.0, ent->character->cmd.jump);
-    t = ent->inertia * ent->character->speed_mult;
+    btScalar t = Character_InertiaLinear(ent, MAX_SPEED_UNDERWATER, INERTIA_SPEED_UNDERWATER, ent->character->cmd.jump);
 
     if(!ent->character->resp.kill)   // Block controls if Lara is dead.
     {
-        ent->angles[0] += ent->character->cmd.rot[0];
-        ent->angles[1] -= ent->character->cmd.rot[1];
-        ent->angles[2] = 0.0;
+        ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_UNDERWATER, 0);
+        ent->angles[1] -= Character_InertiaAngular(ent, 1.0, ROT_SPEED_UNDERWATER, 1);
+        ent->angles[2]  = 0.0;
+        
         if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                 // Underwater angle limiter.
         {
            ent->angles[1] = 70.0;
@@ -2040,6 +2110,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
         {
             ent->angles[1] = 270.0;
         }
+        
         Entity_UpdateRotation(ent);                                             // apply rotations
 
         vec3_mul_scalar(spd.m_floats, ent->transform+4, t);                     // OY move only!
@@ -2074,22 +2145,21 @@ int Character_MoveUnderWater(struct entity_s *ent)
 int Character_MoveOnWater(struct entity_s *ent)
 {
     btVector3 move, spd(0.0, 0.0, 0.0);
-    btScalar t, *pos = ent->transform + 12;
+    btScalar *pos = ent->transform + 12;
 
     ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    ent->angles[0] += ent->character->cmd.rot[0];
+    ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_ONWATER, 0);
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
     Entity_UpdateRotation(ent);     // apply rotations
 
     // Calculate current speed.
     
-    Character_Inertia(ent, MAX_ONWATER_SPEED, 1.0, ((abs(ent->character->cmd.move[0])) | (abs(ent->character->cmd.move[1]))));
-    t = ent->inertia * ent->character->speed_mult;
+    btScalar t = Character_InertiaLinear(ent, MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, ((abs(ent->character->cmd.move[0])) | (abs(ent->character->cmd.move[1]))));
     
     if((ent->dir_flag & ENT_MOVE_FORWARD) && (ent->character->cmd.move[0] == 1))
     {

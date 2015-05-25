@@ -308,24 +308,19 @@ void Game_ApplyControls(struct entity_s *ent)
     int8_t move_logic[3];
     int8_t look_logic[3];
 
-    /*
-     * MOVE KB LOGIC
-     */
+    // Keyboard move logic
+     
     move_logic[0] = control_states.move_forward - control_states.move_backward;
     move_logic[1] = control_states.move_right - control_states.move_left;
     move_logic[2] = control_states.move_up - control_states.move_down;
 
-    /*
-     * VIEW KB LOGIC
-     */
-
+    // Keyboard look logic
+    
     look_logic[0] = control_states.look_left - control_states.look_right;
     look_logic[1] = control_states.look_down - control_states.look_up;
     look_logic[2] = control_states.look_roll_right - control_states.look_roll_left;
 
-    /*
-     * CONTROL  APPLY
-     */
+    // APPLY CONTROLS
 
     cam_angles[0] += 2.2 * engine_frame_time * look_logic[0];
     cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
