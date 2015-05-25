@@ -328,6 +328,18 @@ int lua_DumpRoom(lua_State * lua)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, rs->portal_to_room);
         }
+        for(static_mesh_p sm=r->static_mesh;sm<r->static_mesh+r->static_mesh_count;sm++)
+        {
+            Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->object_id);
+        }
+        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p ent = (entity_p)cont->object;
+                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id, ent->bf.animations.model->id);
+            }
+        }
     }
 
     return 0;

@@ -12,8 +12,8 @@
 
 COLL_NONE = 0x00;  -- Object has no collisions
 COLL_MESH = 0x01;  -- Object uses real mesh data for collision.
-COLL_BBOX = 0x02;  -- Object uses bounding box for collision.
-
+COLL_BBOX = 0x02;  -- Object uses bounding box from static_mesh for collision.
+COLL_BBOX_BASE = 0x04; -- Object uses bounding box from base mesh for collision.
 --------------------------------------------------------------------------------
 
 static_tbl = {};    -- Define static mesh property table.

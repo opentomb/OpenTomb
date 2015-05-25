@@ -2101,8 +2101,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->cbb_max[0] = tr_static->collision_box[1].x;
         r_static->cbb_max[1] =-tr_static->collision_box[1].z;
         r_static->cbb_max[2] = tr_static->collision_box[0].y;
-        vec3_copy(r_static->mesh->bb_min, r_static->cbb_min);
-        vec3_copy(r_static->mesh->bb_max, r_static->cbb_max);
 
         r_static->vbb_min[0] = tr_static->visibility_box[0].x;
         r_static->vbb_min[1] =-tr_static->visibility_box[0].z;
@@ -2142,6 +2140,16 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         TR_SetStaticMeshProperties(r_static);
 
         // Set static mesh collision.
+
+        if(r_static->self->collide_flag == COLLISION_BASE_BOX)
+        {
+            r_static->self->collide_flag = COLLISION_BOX;
+        }
+        else
+        {
+            vec3_copy(r_static->mesh->bb_min, r_static->cbb_min);
+            vec3_copy(r_static->mesh->bb_max, r_static->cbb_max);
+        }
 
         if(r_static->self->collide_flag != COLLISION_NONE)
         {
@@ -3018,6 +3026,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         vec3_set_zero(vertex->normal);                                          // paranoid
     }
 
+    BaseMesh_FindBB(mesh);
+
     mesh->polygons_count = tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles;
     p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
 
@@ -3141,7 +3151,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         tr_copyNormals(p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }
 
-    BaseMesh_FindBB(mesh);
     if(mesh->vertex_count > 0)
     {
         mesh->vertex_count = 0;
@@ -3207,6 +3216,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         vec3_set_zero(vertex->normal);                                          // paranoid
     }
 
+    BaseMesh_FindBB(mesh);
+
     mesh->polygons_count = tr_room->num_triangles + tr_room->num_rectangles;
     p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
 
@@ -3253,7 +3264,6 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         tr_copyNormals(p, mesh, tr_room->rectangles[i].vertices);
     }
 
-    BaseMesh_FindBB(mesh);
     if(mesh->vertex_count > 0)
     {
         mesh->vertex_count = 0;

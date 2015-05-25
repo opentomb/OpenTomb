@@ -13,6 +13,7 @@
 #define COLLISION_TRIMESH           (0x01)
 #define COLLISION_BOX               (0x02)
 #define COLLISION_SPHERE            (0x03)
+#define COLLISION_BASE_BOX          (0x04)
 
 
 #include <SDL2/SDL_platform.h>
