@@ -44,7 +44,7 @@ typedef struct base_mesh_s
 
     struct polygon_s     *transparency_polygons;                                // transparency mesh's polygons list
     struct polygon_s     *animated_polygons;                                    // opaque animated mesh's polygons list
-    
+
     uint32_t              num_texture_pages;                                    // face without structure wrapping
     uint32_t             *element_count_per_texture;                            //
     uint32_t             *elements;                                             //
@@ -122,24 +122,24 @@ typedef struct anim_seq_s
 {
     bool        uvrotate;               // UVRotate mode flag.
     bool        frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
-    
+
     bool        blend;                  // Blend flag.  Reserved for future use!
     btScalar    blend_rate;             // Blend rate.  Reserved for future use!
     btScalar    blend_time;             // Blend value. Reserved for future use!
-    
+
     int8_t      anim_type;              // 0 = normal, 1 = back, 2 = reverse.
     bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
     btScalar    frame_time;             // Time passed since last frame update.
     uint16_t    current_frame;          // Current frame for this sequence.
     btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
     uint16_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
-      
+
     btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
     btScalar    uvrotate_max;           // Reference value used to restart rotation.
     btScalar    current_uvrotate;       // Current coordinate window position.
 
     struct tex_frame_s  *frames;
-    
+
     uint32_t*   frame_list;       // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;
 
@@ -207,13 +207,13 @@ typedef struct ss_animation_s
     int16_t                     next_frame;                                     //
 
     uint16_t                    anim_flags;                                     // additional animation control param
-    
+
     btScalar                    period;                                         // one frame change period
     btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
-    
+
     void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
-    
+
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;
 }ss_animation_t, *ss_animation_p;

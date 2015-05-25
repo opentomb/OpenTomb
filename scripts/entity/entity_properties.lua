@@ -18,7 +18,7 @@
 --   0x0000  - Object has no collisions
 --   0x0001  - Object uses real mesh data for collision.
 --   0x0002  - Object uses bounding box for collision.
---   0x0003  - Object uses sphere of a specified radius for collision. 
+--   0x0003  - Object uses sphere of a specified radius for collision.
 
 -- [ func ] :
 
@@ -1748,7 +1748,7 @@ function getEntityProperties(ver, id)
     elseif(ver < 9) then                -- TR_V
         tbl = tr5_entity_tbl;
     else
-        return nil, nil, nil;
+        return nil, nil, nil, nil;
     end;
 
     if(tbl[id] == nil) then

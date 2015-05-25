@@ -54,7 +54,7 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // model id
+            lua_pushinteger(objects_flags_conf, ent->id);                           // entity id
             if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
                 ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
@@ -78,21 +78,21 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->bf.animations.model->id);        // model id
-            if (lua_CallAndLog(level_script, 2, 4, 0))                     // call that function
+            lua_pushinteger(level_script, ent->id);                             // entity id
+            if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
                 {
-                    ent->self->collide_flag = 0xff & lua_tointeger(level_script, -3);   // get collision flag
+                    ent->self->collide_flag = 0xff & lua_tointeger(level_script, -4);   // get collision flag
                 }
                 if(!lua_isnil(level_script, -3))
                 {
-                    ent->bf.animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
+                    ent->bf.animations.model->hide = lua_tointeger(level_script, -3);   // get info about model visibility
                 }
                 if(!lua_isnil(level_script, -2))
                 {
                     ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-                    ent->type_flags |= lua_tointeger(level_script, -1);                 // get traverse information
+                    ent->type_flags |= lua_tointeger(level_script, -2);                 // get traverse information
                 }
                 if(!lua_isnil(level_script, -1))
                 {
@@ -1814,10 +1814,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         int lua_err = luaL_loadfile(ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
         if(lua_err)
         {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(objects_flags_conf, -1));
-            lua_pop(objects_flags_conf, 1);
-            lua_close(objects_flags_conf);
-            objects_flags_conf = NULL;
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(ent_ID_override, -1));
+            lua_pop(ent_ID_override, 1);
+            lua_close(ent_ID_override);
+            ent_ID_override = NULL;
         }
         lua_err = lua_pcall(ent_ID_override, 0, 0, 0);
         if(lua_err)

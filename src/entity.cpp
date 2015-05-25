@@ -249,7 +249,7 @@ void BT_GenEntityRigidBody(entity_p ent)
     {
         ent->bt_body[i] = NULL;
         cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag, false);
-        
+
         if(cshape)
         {
             cshape->calculateLocalInertia(0.0, localInertia);
@@ -1133,7 +1133,7 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
             Entity_UpdateRotation(entity);
-            Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_anim->next_frame);
+            Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_frame);
             *anim = entity->bf.animations.current_animation;
             *frame = entity->bf.animations.current_frame;
         }

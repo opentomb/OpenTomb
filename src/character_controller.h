@@ -354,6 +354,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
 void Character_GhostUpdate(struct entity_s *ent);
+void Character_UpdateCurrentCollisions(struct entity_s *ent);
 int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
 void Character_FixPenetrations(struct entity_s *ent, btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);

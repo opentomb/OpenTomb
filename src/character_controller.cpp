@@ -1107,6 +1107,63 @@ void Character_GhostUpdate(struct entity_s *ent)
     }
 }
 
+
+void Character_UpdateCurrentCollisions(struct entity_s *ent)
+{
+    btScalar tr[16], *v;
+    btVector3 pos;
+
+    for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+    {
+        btPairCachingGhostObject *ghost = ent->character->ghostObjects[i];
+
+        ent->character->last_collisions[i].obj = NULL;
+        Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
+        v = ent->bf.animations.model->mesh_tree[i].mesh_base->centre;
+        ghost->getWorldTransform().setFromOpenGLMatrix(tr);
+        Mat4_vec3_mul_macro(pos.m_floats, tr, v);
+        ghost->getWorldTransform().setOrigin(pos);
+////////////////////////////////////////////////////////////////////////////////
+
+        int num_pairs;
+        const btCollisionShape *cs = ghost->getCollisionShape();
+        btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
+        btVector3 aabb_min, aabb_max;
+
+        cs->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
+        bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
+        bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
+
+        num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+        for(int j=0;j<num_pairs;j++)
+        {
+            ent->character->manifoldArray->clear();
+            btBroadphasePair *collisionPair = &pairArray[j];
+
+            if(!collisionPair)
+            {
+                continue;
+            }
+
+            if(collisionPair->m_algorithm)
+            {
+                collisionPair->m_algorithm->getAllContactManifolds(*ent->character->manifoldArray);
+            }
+
+            if(ent->character->manifoldArray->size() > 0)
+            {
+                ent->character->last_collisions[i].obj = (btCollisionObject*)(*ent->character->manifoldArray)[0]->getBody0();
+                if(ent->self == (engine_container_p)ent->character->last_collisions[i].obj->getUserPointer())
+                {
+                    ent->character->last_collisions[i].obj = (btCollisionObject*)(*ent->character->manifoldArray)[0]->getBody1();
+                }
+                break;
+            }
+        }
+    }
+}
+
+
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
 int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3])
 {
@@ -1494,7 +1551,7 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_
 btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command)
 {
     if((!ent) || (!ent->character)) return 0.0;
-    
+
     if((accel == 0.0) || (accel >= max_speed))
     {
         if(command)
@@ -1525,7 +1582,7 @@ btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btSca
             }
         }
     }
-    
+
     return ent->inertia_linear * ent->character->speed_mult;
 }
 
@@ -1535,11 +1592,11 @@ btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btSca
 btScalar Character_InertiaAngular(struct entity_s *ent, btScalar max_angle, btScalar accel, uint8_t axis)
 {
     if((!ent) || (!ent->character) || (axis > 1)) return 0.0;
-    
+
     uint8_t curr_rot_dir = 0;
     if     (ent->character->cmd.rot[axis] < 0.0) { curr_rot_dir = 1; }
     else if(ent->character->cmd.rot[axis] > 0.0) { curr_rot_dir = 2; }
-    
+
     if((!curr_rot_dir) || (max_angle == 0.0) || (accel == 0.0))
     {
         ent->inertia_angular[axis] = 0.0;
@@ -1574,7 +1631,7 @@ btScalar Character_InertiaAngular(struct entity_s *ent, btScalar max_angle, btSc
             }
         }
     }
-    
+
     return fabs(ent->inertia_angular[axis]) * ent->character->cmd.rot[axis];
 }
 
@@ -1657,7 +1714,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         {
             t = ent->current_speed * ent->character->speed_mult;
             ent->character->resp.vertical_collide |= 0x01;
-            
+
             ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_LAND, 0);
 
             Entity_UpdateRotation(ent); // apply rotations
@@ -1780,7 +1837,7 @@ int Character_FreeFalling(struct entity_s *ent)
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
-    
+
     btScalar rot = Character_InertiaAngular(ent, 1.0, ROT_SPEED_FREEFALL, 0);
     ent->angles[0] += rot;
     ent->angles[1] = 0.0;
@@ -1890,7 +1947,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
 
     t = ent->current_speed * ent->character->speed_mult;
     ent->character->resp.vertical_collide |= 0x01;
-    
+
     ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_MONKEYSWING, 0);
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
@@ -2101,7 +2158,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
         ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_UNDERWATER, 0);
         ent->angles[1] -= Character_InertiaAngular(ent, 1.0, ROT_SPEED_UNDERWATER, 1);
         ent->angles[2]  = 0.0;
-        
+
         if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                 // Underwater angle limiter.
         {
            ent->angles[1] = 70.0;
@@ -2110,7 +2167,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
         {
             ent->angles[1] = 270.0;
         }
-        
+
         Entity_UpdateRotation(ent);                                             // apply rotations
 
         vec3_mul_scalar(spd.m_floats, ent->transform+4, t);                     // OY move only!
@@ -2158,9 +2215,9 @@ int Character_MoveOnWater(struct entity_s *ent)
     Entity_UpdateRotation(ent);     // apply rotations
 
     // Calculate current speed.
-    
+
     btScalar t = Character_InertiaLinear(ent, MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, ((abs(ent->character->cmd.move[0])) | (abs(ent->character->cmd.move[1]))));
-    
+
     if((ent->dir_flag & ENT_MOVE_FORWARD) && (ent->character->cmd.move[0] == 1))
     {
         vec3_mul_scalar(spd.m_floats, ent->transform+4, t);
