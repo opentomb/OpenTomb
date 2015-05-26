@@ -249,12 +249,7 @@ void BT_GenEntityRigidBody(entity_p ent)
     {
         base_mesh_p mesh = ent->bf.animations.model->mesh_tree[i].mesh_base;
         ent->bt_body[i] = NULL;
-        cshape = NULL;
-
-        if(ent->self->collide_flag != COLLISION_NONE)
-        {
-            cshape = BT_CSfromMesh(mesh, true, true, false);
-        }
+        cshape = BT_CSfromMesh(mesh, true, true, false);
 
         if(cshape)
         {
