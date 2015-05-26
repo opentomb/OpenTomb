@@ -209,7 +209,7 @@ void Entity_EnableCollision(entity_p ent)
     }
     else
     {
-        ent->self->collide_flag = 0x01;
+        ent->self->collide_flag = COLLISION_TRIMESH;                            ///@TODO: order collision shape and entity collision type flags! it is a different things!
         BT_GenEntityRigidBody(ent);
     }
 }
@@ -247,8 +247,14 @@ void BT_GenEntityRigidBody(entity_p ent)
 
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
+        base_mesh_p mesh = ent->bf.animations.model->mesh_tree[i].mesh_base;
         ent->bt_body[i] = NULL;
-        cshape = BT_CSfromMesh(ent->bf.animations.model->mesh_tree[i].mesh_base, true, true, ent->self->collide_flag, false);
+        cshape = NULL;
+
+        if(ent->self->collide_flag != COLLISION_NONE)
+        {
+            cshape = BT_CSfromMesh(mesh, true, true, false);
+        }
 
         if(cshape)
         {

@@ -641,75 +641,85 @@ void Mesh_GenFaces(base_mesh_p mesh)
 }
 
 
-btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag, bool is_static)
+btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh, bool is_static)
+{
+    obb_p obb = OBB_Create();
+    polygon_p p = obb->base_polygons;
+    btTriangleMesh *trimesh = new btTriangleMesh;
+    btVector3 v0, v1, v2;
+    btCollisionShape* ret;
+    int cnt = 0;
+
+    OBB_Rebuild(obb, bb_min, bb_max);
+    for(uint16_t i=0;i<6;i++,p++)
+    {
+        if(Polygon_IsBroken(p))
+        {
+            continue;
+        }
+        for(uint16_t j=1;j+1<p->vertex_count;j++)
+        {
+            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+            vec3_copy(v1.m_floats, p->vertices[j].position);
+            vec3_copy(v2.m_floats, p->vertices[0].position);
+            trimesh->addTriangle(v0, v1, v2, true);
+        }
+        cnt ++;
+    }
+
+    if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
+    {
+        delete trimesh;
+        return NULL;
+    }
+
+    OBB_Clear(obb);
+    free(obb);
+
+    if(is_static)
+    {
+        ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+    }
+    else
+    {
+        ret = new btConvexTriangleMeshShape(trimesh, true);
+    }
+
+    return ret;
+}
+
+
+btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static)
 {
     uint32_t cnt = 0;
     polygon_p p;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
     btVector3 v0, v1, v2;
-    obb_p obb;
 
-    switch(cflag)
+    p = mesh->polygons;
+    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
     {
-        default:
-        case COLLISION_TRIMESH:
-            p = mesh->polygons;
-            for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
-            {
-                if(Polygon_IsBroken(p))
-                {
-                    continue;
-                }
+        if(Polygon_IsBroken(p))
+        {
+            continue;
+        }
 
-                for(uint16_t j=1;j+1<p->vertex_count;j++)
-                {
-                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-                    vec3_copy(v1.m_floats, p->vertices[j].position);
-                    vec3_copy(v2.m_floats, p->vertices[0].position);
-                    trimesh->addTriangle(v0, v1, v2, true);
-                }
-                cnt ++;
-            }
+        for(uint16_t j=1;j+1<p->vertex_count;j++)
+        {
+            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+            vec3_copy(v1.m_floats, p->vertices[j].position);
+            vec3_copy(v2.m_floats, p->vertices[0].position);
+            trimesh->addTriangle(v0, v1, v2, true);
+        }
+        cnt ++;
+    }
 
-            if(cnt == 0)
-            {
-                delete trimesh;
-                return NULL;
-            }
-
-            break;
-
-        case COLLISION_BOX:                                                     // the box with deviated centre
-            obb = OBB_Create();
-            OBB_Rebuild(obb, mesh->bb_min, mesh->bb_max);
-            p = obb->base_polygons;
-            for(uint16_t i=0;i<6;i++,p++)
-            {
-                if(Polygon_IsBroken(p))
-                {
-                    continue;
-                }
-                for(uint16_t j=1;j+1<p->vertex_count;j++)
-                {
-                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-                    vec3_copy(v1.m_floats, p->vertices[j].position);
-                    vec3_copy(v2.m_floats, p->vertices[0].position);
-                    trimesh->addTriangle(v0, v1, v2, true);
-                }
-                cnt ++;
-            }
-
-            if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
-            {
-                delete trimesh;
-                return NULL;
-            }
-
-            OBB_Clear(obb);
-            free(obb);
-            break;
-    };
+    if(cnt == 0)
+    {
+        delete trimesh;
+        return NULL;
+    }
 
     if(is_static)
     {

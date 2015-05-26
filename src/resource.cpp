@@ -2140,20 +2140,27 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         TR_SetStaticMeshProperties(r_static);
 
         // Set static mesh collision.
-
-        if(r_static->self->collide_flag == COLLISION_BASE_BOX)
-        {
-            r_static->self->collide_flag = COLLISION_BOX;
-        }
-        else
-        {
-            vec3_copy(r_static->mesh->bb_min, r_static->cbb_min);
-            vec3_copy(r_static->mesh->bb_max, r_static->cbb_max);
-        }
-
         if(r_static->self->collide_flag != COLLISION_NONE)
         {
-            cshape = BT_CSfromMesh(r_static->mesh, true, true, r_static->self->collide_flag, true);
+            switch(r_static->self->collide_flag)
+            {
+                case COLLISION_BOX:
+                    cshape = BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max, true, true, false);
+                    break;
+
+                case COLLISION_BASE_BOX:
+                    cshape = BT_CSfromBBox(r_static->mesh->bb_min, r_static->mesh->bb_max, true, true, false);
+                    break;
+
+                case COLLISION_TRIMESH:
+                    cshape = BT_CSfromMesh(r_static->mesh, true, true, false);
+                    break;
+
+                default:
+                    cshape = NULL;
+                    break;
+            };
+
             if(cshape)
             {
                 startTransform.setFromOpenGLMatrix(r_static->transform);
