@@ -65,7 +65,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         
         // Make collision shape out of mesh.
         
-        hair->elements[i].shape = BT_CSfromMesh(hair->elements[i].mesh, true, true, COLLISION_TRIMESH, false);
+        hair->elements[i].shape = BT_CSfromMesh(hair->elements[i].mesh, true, true, false);
         hair->elements[i].shape->calculateLocalInertia((current_weight * setup->hair_inertia), localInertia);
         
         // Decrease next body weight to weight_step parameter.
