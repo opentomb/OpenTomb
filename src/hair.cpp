@@ -148,7 +148,6 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
             
         for(int j=0; j<setup->joints_per_body; j++, d += step)
         {
-        
             if(setup->joints_per_body > 1)
             {
                 joint_x = btCos(d) * ((body_depth*0.5) * setup->joint_radius);
@@ -183,8 +182,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
                 
                 prev_body = hair->elements[i-1].body;   // Previous body is preceiding hair mesh.
             }
-                
-        
+
             // Create 6DOF constraint.
             
             hair->joints[curr_joint] = new btGeneric6DofConstraint(*prev_body, *(hair->elements[i].body), localA, localB, true);
@@ -192,19 +190,11 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
             // CFM and ERP parameters are critical for making joint "hard" and link
             // to Lara's head. With wrong values, constraints may become "elastic".
             
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, 0);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, 1);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, 2);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, 3);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, 4);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, 5);
-            
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, 0);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, 1);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, 2);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, 3);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, 4);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, 5);
+            for(int axis=0;axis<=5;axis++)
+            {
+                hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, axis);
+                hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, axis);
+            }
             
             if(i == 0)
             {
