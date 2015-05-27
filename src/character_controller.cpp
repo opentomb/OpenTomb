@@ -36,7 +36,7 @@ void Character_Create(struct entity_s *ent)
     ret->ent = ent;
     ent->character = ret;
     ent->dir_flag = ENT_STAY;
-    
+
     ret->hair_count = 0;
     ret->hairs = NULL;
 
@@ -2609,8 +2609,8 @@ void Character_ApplyCommands(struct entity_s *ent)
             break;
     };
 
-    Hair_Update(engine_world.Character->character->hairs);
     Entity_UpdateRigidBody(ent, 1);
+    Hair_Update(engine_world.Character->character->hairs);
     Character_UpdatePlatformPostStep(ent);
 }
 

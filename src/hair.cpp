@@ -1,10 +1,7 @@
 
 #include <math.h>
+#include "bullet/LinearMath/btScalar.h"
 #include "hair.h"
-
-#ifndef M_PI_2
-#define M_PI_2		1.57079632679489661923
-#endif
 
 bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 {
@@ -23,8 +20,9 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
     hair->container = Container_Create();
-    hair->container->room = NULL;
+    hair->container->room = parent_entity->self->room;
     hair->container->object_type = OBJECT_HAIR;
+    hair->container->object = hair;
 
     // Setup initial hair parameters.
 
@@ -112,6 +110,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         // bodies (e. g. animated meshes), or else Lara's ghost object or anything else will be able to
         // collide with hair!
 
+        hair->elements[i].body->setUserPointer(hair->container);
         bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, COLLISION_GROUP_KINEMATIC, COLLISION_MASK_NONE);
 
         hair->elements[i].body->activate();
@@ -168,7 +167,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
                 localA.getBasis().setEulerZYX(setup->root_angle[0], setup->root_angle[1], setup->root_angle[2]);
 
                 localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
-                localB.getBasis().setEulerZYX(0,-M_PI_2,0);
+                localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
 
                 prev_body = parent_entity->bt_body[hair->owner_body];   // Previous body is parent body.
             }
@@ -179,12 +178,12 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
                 body_length = abs(hair->elements[i-1].mesh->bb_max[1] - hair->elements[i-1].mesh->bb_min[1]) * setup->joint_overlap;
 
                 localA.setOrigin(btVector3(joint_x, body_length, joint_y));
-                localA.getBasis().setEulerZYX(0,M_PI_2,0);
+                localA.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
 
                 // Pivot point B is automatically adjusted by Bullet.
 
                 localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
-                localB.getBasis().setEulerZYX(0,M_PI_2,0);
+                localB.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
 
                 prev_body = hair->elements[i-1].body;   // Previous body is preceiding hair mesh.
             }
@@ -246,6 +245,7 @@ void Hair_Clear(hair_p hair)
     {
         if(hair->elements[i].body)
         {
+            hair->elements[i].body->setUserPointer(NULL);
             bt_engine_dynamicsWorld->removeRigidBody(hair->elements[i].body);
             delete hair->elements[i].body;
             hair->elements[i].body = NULL;
@@ -333,7 +333,7 @@ void Hair_Update(hair_p hair)
 
     // FIXME: DOESN'T WORK!!!
 
-    hair->container->room = Room_FindPosCogerrence(new_char_pos.m_floats, hair->container->room);
+    hair->container->room = hair->owner_char->self->room;//Room_FindPosCogerrence(new_char_pos.m_floats, hair->container->room);
 }
 
 bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)

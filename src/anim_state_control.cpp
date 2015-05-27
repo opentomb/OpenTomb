@@ -258,14 +258,14 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
          * Base onfloor animations
          */
         case TR_STATE_LARA_STOP:
-            
+
             // Reset directional flag only on intermediate animation!
-            
+
             if(ss_anim->current_animation == TR_ANIMATION_LARA_STAY_SOLID)
             {
                 ent->dir_flag = ENT_STAY;
             }
-            
+
             cmd->rot[0] = 0;
             cmd->crouch |= low_vertical_space;
             Character_Lean(ent, cmd, 0.0);
@@ -816,23 +816,25 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_CROUCH_IDLE;
             }
-            else if((cmd->crouch == 0) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_UP_BIG))
+            /*else if((cmd->crouch == 0) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_UP_BIG))
             {
                 ent->dir_flag = ENT_STAY;
                 i = Entity_GetAnimDispatchCase(ent, 2);                         // MOST CORRECT STATECHANGE!!!
                 if(i == 0)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_UP_STEP_RIGHT, 0);
-                    vec3_copy(pos, next_fc.floor_point);
+                    //vec3_copy(pos, next_fc.floor_point);
+                    pos[2] = next_fc.floor_point.m_floats[2];
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
                 else //if(i == 1)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_UP_STEP_LEFT, 0);
-                    vec3_copy(pos, next_fc.floor_point);
+                    //vec3_copy(pos, next_fc.floor_point);
+                    pos[2] = next_fc.floor_point.m_floats[2];
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
-            }
+            }*/
             else if(resp->horizontal_collide & 0x01)
             {
                 vec3_mul_scalar(global_offset, ent->transform + 4, RUN_FORWARD_OFFSET);
@@ -1158,7 +1160,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->current_speed = (ent->current_speed > MAX_SPEED_QUICKSAND)?MAX_SPEED_QUICKSAND:ent->current_speed;
             }
-            
+
             vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);
             global_offset[2] += ent->bf.bb_max[2];
             i = Character_CheckNextStep(ent, global_offset, &next_fc);
