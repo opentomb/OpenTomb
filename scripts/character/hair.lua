@@ -86,8 +86,8 @@ hair[HAIR_TR4_OLD]   = { props = new_hair_old_props, model = 30 , link_body = 14
 -- TR3 hair is similar to TR2, TR5 hair is similar to TR4.
 
 hair[HAIR_TR3]       = hair[HAIR_TR2]
-hair[HAIR_TR5_KID_1] = hair[HAIR_TR4_KID1]
-hair[HAIR_TR5_KID_2] = hair[HAIR_TR4_KID2]
+hair[HAIR_TR5_KID_1] = hair[HAIR_TR4_KID_1]
+hair[HAIR_TR5_KID_2] = hair[HAIR_TR4_KID_2]
 hair[HAIR_TR5_OLD]   = hair[HAIR_TR4_OLD]
 
 
