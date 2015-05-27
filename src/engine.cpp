@@ -49,6 +49,7 @@ extern "C" {
 #include "redblack.h"
 #include "gl_font.h"
 #include "string.h"
+#include "hair.h"
 
 extern SDL_Window             *sdl_window;
 extern SDL_GLContext           sdl_gl_context;
@@ -810,6 +811,85 @@ int lua_ChangeCharacterParam(lua_State * lua)
     }
     Character_ChangeParam(ent, parameter, value);
 
+    return 0;
+}
+
+
+int lua_AddCharacterHair(lua_State *lua)
+{
+    if(lua_gettop(lua) != 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [hair_setup_index]");
+    }
+    else
+    {
+        int ent_id       = lua_tointeger(lua, 1);
+        int setup_index  = lua_tointeger(lua, 2);
+        
+        entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
+        
+        if(!IsCharacter(ent))
+        {
+            Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+        }
+        else
+        {
+            hair_setup_s hair_setup;
+            memset(&hair_setup, 0, sizeof(hair_setup_s));
+        
+            if(!Hair_GetSetup(setup_index, &hair_setup))
+            {
+                Con_Warning(SYSWARN_NO_HAIR_SETUP, setup_index);
+            }
+            else
+            {
+                ent->character->hair_count++;
+                ent->character->hairs = (hair_p)realloc(ent->character->hairs, (sizeof(hair_t) * ent->character->hair_count));
+        
+                if(!Hair_Create((ent->character->hairs + (ent->character->hair_count-1)), &hair_setup, ent))
+                {
+                    Con_Warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int lua_ResetCharacterHair(lua_State *lua)
+{
+    if(lua_gettop(lua) != 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+    else
+    {
+        int ent_id = lua_tointeger(lua, 1);
+        entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
+        
+        if(!IsCharacter(ent))
+        {
+            Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+        }
+        else
+        {
+            if(ent->character->hairs)
+            {
+                for(int i=0;i<ent->character->hair_count;i++)
+                {
+                    Hair_Clear(ent->character->hairs+i);
+                }
+                free(ent->character->hairs);
+                ent->character->hairs = NULL;
+                ent->character->hair_count = 0;
+            }
+            else
+            {
+                Con_Warning(SYSWARN_CANT_RESET_HAIR, ent_id);
+            }
+        }
+    }
     return 0;
 }
 
@@ -3338,6 +3418,7 @@ bool Engine_LuaInit()
         luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
         luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");
         luaL_dofile(engine_lua, "scripts/entity/entity_functions.lua");
+        luaL_dofile(engine_lua, "scripts/character/hair.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
@@ -3510,6 +3591,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
     lua_register(lua, "getCharacterCombatMode", lua_GetCharacterCombatMode);
+    
+    lua_register(lua, "addCharacterHair", lua_AddCharacterHair);
+    lua_register(lua, "resetCharacterHair", lua_ResetCharacterHair);
 
     lua_register(lua, "getSecretStatus", lua_GetSecretStatus);
     lua_register(lua, "setSecretStatus", lua_SetSecretStatus);

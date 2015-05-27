@@ -22,7 +22,7 @@ int   SC_ParseInt(char **ch);
 void lua_Clean(lua_State *lua);
 
 #define lua_CallAndLog(L,n,r,f) lua_CallWithError(L, n, r, f, __FILE__, __LINE__)
-bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline);
+bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline);
 
 int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc);
 int lua_ParseRender(lua_State *lua, struct render_settings_s *rs);
@@ -41,6 +41,7 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path);
 bool lua_GetString(lua_State *lua, int string_index, size_t string_size, char *buffer);
 bool lua_GetSysNotify(lua_State *lua, int string_index, size_t string_size, char *buffer);
 
+btScalar lua_GetScalarField(lua_State *lua, int index);
 btScalar lua_GetScalarField(lua_State *lua, const char *key);
 int lua_SetScalarField(lua_State *lua, const char *key, btScalar val);
 

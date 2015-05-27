@@ -699,12 +699,12 @@ tr3_entity_tbl[347] = {coll = 0x00, hide = 0x01};   -- Bat swarm
 
 -- ANIMATINGS --
 
-tr3_entity_tbl[349] = {coll = 0x01};           -- Misc item (Animating 1)
-tr3_entity_tbl[350] = {coll = 0x01};           -- Misc item (Animating 2)
-tr3_entity_tbl[351] = {coll = 0x01};           -- Misc item (Animating 3)
-tr3_entity_tbl[352] = {coll = 0x01};           -- Misc item (Animating 4)
-tr3_entity_tbl[353] = {coll = 0x01};           -- Footstool / Fish swimming in tank / Radar display
-tr3_entity_tbl[354] = {coll = 0x01};           -- Dead raptor / Alarm box / Mason-lodge dagger / Small version of big antenna
+tr3_entity_tbl[349] = {coll = 0x01, func = "anim"};           -- Misc item (Animating 1)
+tr3_entity_tbl[350] = {coll = 0x01, func = "anim"};           -- Misc item (Animating 2)
+tr3_entity_tbl[351] = {coll = 0x01, func = "anim"};           -- Misc item (Animating 3)
+tr3_entity_tbl[352] = {coll = 0x01, func = "anim"};           -- Misc item (Animating 4)
+tr3_entity_tbl[353] = {coll = 0x01, func = "anim"};           -- Footstool / Fish swimming in tank / Radar display
+tr3_entity_tbl[354] = {coll = 0x01, func = "anim"};           -- Dead raptor / Alarm box / Mason-lodge dagger / Small version of big antenna
 
 
 tr3_entity_tbl[355] = {coll = 0x00};                -- Skybox

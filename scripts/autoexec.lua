@@ -1,7 +1,7 @@
-dofile("scripts/entity/character.lua")
+dofile("scripts/character/character.lua")
 dofile("scripts/inventory/item_list.lua")
 dofile("scripts/inventory/item_combine.lua")
-dofile("scripts/inventory/items.lua");
+dofile("scripts/inventory/items.lua")
 
 -------- Lara's model-------
 --           .=.
@@ -247,7 +247,7 @@ setModelCollisionMap(0, 14, 13);
 setAnimCommandTransform(0, 147,  0, 0x00);   -- roll animation smooth fix 
 setAnimCommandTransform(0, 146, -2, 0x03);
 
-if(getLevelVersion() >= TR_IV) then
+if(getLevelVersion() >= TR_II) then
     setAnimCommandTransform(0, 205,  1, 0x00);
     setAnimCommandTransform(0, 203, -2, 0x03);
 end

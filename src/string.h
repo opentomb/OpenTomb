@@ -111,6 +111,9 @@
 #define SYSWARN_BAD_FILE_FORMAT          29
 #define SYSWARN_INVALID_LINECOUNT        30
 #define SYSWARN_WRONG_FLIPMAP_INDEX      31
+#define SYSWARN_NO_HAIR_SETUP            32
+#define SYSWARN_CANT_CREATE_HAIR         33
+#define SYSWARN_CANT_RESET_HAIR          34
 
 #define SYSNOTE_OGG_OPENED               1000
 #define SYSNOTE_READING_FILE             1001

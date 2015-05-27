@@ -13,6 +13,7 @@
 #include "entity.h"
 #include "gui.h"
 #include "mesh.h"
+#include "hair.h"
 #include "vmath.h"
 #include "polygon.h"
 #include "resource.h"
@@ -35,6 +36,9 @@ void Character_Create(struct entity_s *ent)
     ret->ent = ent;
     ent->character = ret;
     ent->dir_flag = ENT_STAY;
+    
+    ret->hair_count = 0;
+    ret->hairs = NULL;
 
     ret->weapon_current_state = 0x00;
     ret->current_weapon = 0;
@@ -158,6 +162,17 @@ void Character_Clean(struct entity_s *ent)
         rn = in;
         in = in->next;
         free(rn);
+    }
+
+    if(actor->hairs)
+    {
+        for(int i=0;i<actor->hair_count;i++)
+        {
+            Hair_Clear(actor->hairs+i);
+        }
+        free(actor->hairs);
+        actor->hairs = NULL;
+        actor->hair_count = 0;
     }
 
     if(actor->ghostObjects)
@@ -2594,6 +2609,7 @@ void Character_ApplyCommands(struct entity_s *ent)
             break;
     };
 
+    Hair_Update(engine_world.Character->character->hairs);
     Entity_UpdateRigidBody(ent, 1);
     Character_UpdatePlatformPostStep(ent);
 }

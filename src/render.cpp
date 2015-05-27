@@ -16,6 +16,7 @@
 #include "script.h"
 #include "vmath.h"
 #include "mesh.h"
+#include "hair.h"
 #include "entity.h"
 #include "engine.h"
 #include "obb.h"
@@ -764,6 +765,29 @@ void Render_Entity(struct entity_s *entity, const btScalar matrix[16])
     }
 }
 
+void Render_Hair(struct entity_s *entity, const btScalar matrix[16])
+{ 
+    if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
+        return;
+    
+    btTransform bt_tr;
+    
+    for(int h=0; h<entity->character->hair_count; h++)
+    {
+        for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
+        {
+            btScalar transform[16];
+            
+            entity->character->hairs[h].elements[i].body->getMotionState()->getWorldTransform(bt_tr);
+            bt_tr.getOpenGLMatrix(transform);
+            
+            Mat4_Mat4_mul(transform, matrix, transform);
+            glLoadMatrixbt(transform);
+            Render_Mesh(entity->character->hairs[h].elements[i].mesh, NULL, NULL);
+        }
+    }
+}
+
 /**
  * drawing world models.
  */
@@ -1000,6 +1024,7 @@ void Render_DrawList()
     if(renderer.world->Character)
     {
         Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat);
+        Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat);
     }
     glDisable(GL_LIGHTING);
 

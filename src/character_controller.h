@@ -298,6 +298,9 @@ typedef struct character_s
     struct character_param_s     parameters;
     struct character_stats_s     statistics;
     
+    int8_t                       hair_count;
+    struct hair_s               *hairs;
+    
     int                          current_weapon;
     int                          weapon_current_state;
     

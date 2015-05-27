@@ -146,6 +146,22 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key)
     return ret;
 }
 
+btScalar lua_GetScalarField(lua_State *lua, int index)
+{
+    btScalar ret = 0.0;
+    int top = lua_gettop(lua);
+
+    if (!lua_istable(lua, -1))
+    {
+        return 0.0;
+    }
+
+    lua_rawgeti(lua, -1, index);
+    ret = lua_tonumber(lua, -1);
+    lua_settop(lua, top);
+    return ret;
+}
+
 
 /*
  *   Specific functions to get specific parameters from script.
