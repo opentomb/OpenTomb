@@ -124,6 +124,6 @@ void Hair_Clear(hair_p hair);
 
 // Constantly updates some specific parameters to keep hair aligned to entity.
 
-void Hair_Update(hair_p hair);
+void Hair_Update(entity_p entity);
 
 #endif  // HAIR_H
