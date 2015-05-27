@@ -288,52 +288,59 @@ void Hair_Clear(hair_p hair)
     hair->tail_index = 0;
 }
 
-void Hair_Update(hair_p hair)
+void Hair_Update(entity_p entity)
 {
-    if((!hair) || (hair->element_count < 1)) return;
+    if((!IsCharacter(entity)) || (entity->character->hair_count == 0)) return;
 
-    btVector3 char_vel, char_ang;
-    btVector3 body_vel, body_ang;
+    hair_p hair = entity->character->hairs;
 
-    btVector3 new_char_pos = btVector3(hair->owner_char->transform[12], hair->owner_char->transform[13], hair->owner_char->transform[14]);
-    btVector3 new_body_pos = btVector3(hair->owner_char->bf.bone_tags[14].full_transform[12], hair->owner_char->bf.bone_tags[14].full_transform[13], hair->owner_char->bf.bone_tags[14].full_transform[14]);
+    for(int i=0; i<entity->character->hair_count; i++, hair++)
+    {
+        if((!hair) || (hair->element_count < 1)) continue;
 
-    btVector3 new_char_ang = btVector3(hair->owner_char->transform[8], hair->owner_char->transform[4], hair->owner_char->transform[0]);
-    btVector3 new_body_ang = btVector3(hair->owner_char->bf.bone_tags[14].full_transform[8], hair->owner_char->bf.bone_tags[14].full_transform[4], hair->owner_char->bf.bone_tags[14].full_transform[0]);
+        btVector3 char_vel, char_ang;
+        btVector3 body_vel, body_ang;
 
-    // Update previous speeds.
+        btVector3 new_char_pos = btVector3(hair->owner_char->transform[12], hair->owner_char->transform[13], hair->owner_char->transform[14]);
+        btVector3 new_body_pos = btVector3(hair->owner_char->bf.bone_tags[14].full_transform[12], hair->owner_char->bf.bone_tags[14].full_transform[13], hair->owner_char->bf.bone_tags[14].full_transform[14]);
 
-    char_vel = hair->owner_char_pos - new_char_pos;
-    hair->owner_char_pos = new_char_pos;
+        btVector3 new_char_ang = btVector3(hair->owner_char->transform[8], hair->owner_char->transform[4], hair->owner_char->transform[0]);
+        btVector3 new_body_ang = btVector3(hair->owner_char->bf.bone_tags[14].full_transform[8], hair->owner_char->bf.bone_tags[14].full_transform[4], hair->owner_char->bf.bone_tags[14].full_transform[0]);
 
-    char_ang = hair->owner_char_ang - new_char_ang;
-    hair->owner_char_ang = new_char_ang;
+        // Update previous speeds.
 
-    body_vel = hair->owner_body_pos - new_body_pos;
-    hair->owner_body_pos = new_body_pos;
+        char_vel = hair->owner_char_pos - new_char_pos;
+        hair->owner_char_pos = new_char_pos;
 
-    body_ang = hair->owner_body_ang - new_body_ang;
-    hair->owner_body_ang = new_body_ang;
+        char_ang = hair->owner_char_ang - new_char_ang;
+        hair->owner_char_ang = new_char_ang;
 
-    // Calculate mixed velocities.
+        body_vel = hair->owner_body_pos - new_body_pos;
+        hair->owner_body_pos = new_body_pos;
 
-    btVector3 mix_vel = (char_vel) + (body_vel);    mix_vel *= -100.;
-    btVector3 mix_ang = (char_ang) + (body_ang);    mix_ang *= -100.;
+        body_ang = hair->owner_body_ang - new_body_ang;
+        hair->owner_body_ang = new_body_ang;
 
-    // Set mixed velocities to both parent body and first hair body.
+        // Calculate mixed velocities.
 
-    hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
-    hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
+        btVector3 mix_vel = (char_vel) + (body_vel);    mix_vel *= -100.;
+        btVector3 mix_ang = (char_ang) + (body_ang);    mix_ang *= -100.;
 
-    // Looks like angular velocity breaks up constraints on VERY fast moves,
-    // like mid-air turn. Probably, I've messed up with multiplier value...
+        // Set mixed velocities to both parent body and first hair body.
 
-    //hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-    //hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+        hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
+        hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
 
-    // FIXME: DOESN'T WORK!!!
+        // Looks like angular velocity breaks up constraints on VERY fast moves,
+        // like mid-air turn. Probably, I've messed up with multiplier value...
 
-    hair->container->room = hair->owner_char->self->room;//Room_FindPosCogerrence(new_char_pos.m_floats, hair->container->room);
+        //hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
+        //hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+
+        // FIXME: DOESN'T WORK!!!
+
+        hair->container->room = hair->owner_char->self->room;//Room_FindPosCogerrence(new_char_pos.m_floats, hair->container->room);
+    }
 }
 
 bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
