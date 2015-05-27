@@ -237,7 +237,7 @@ void BT_GenEntityRigidBody(entity_p ent)
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
-    btCollisionShape *cshape;
+    
     if(ent->bf.animations.model == NULL)
     {
         return;
@@ -248,8 +248,8 @@ void BT_GenEntityRigidBody(entity_p ent)
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         base_mesh_p mesh = ent->bf.animations.model->mesh_tree[i].mesh_base;
+        btCollisionShape *cshape = BT_CSfromMesh(mesh, true, true, false);
         ent->bt_body[i] = NULL;
-        cshape = BT_CSfromMesh(mesh, true, true, false);
 
         if(cshape)
         {

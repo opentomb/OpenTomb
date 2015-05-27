@@ -50,11 +50,11 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     {
         int top = lua_gettop(objects_flags_conf);
         assert(top >= 0);
-        lua_getglobal(objects_flags_conf, "getEntityProperties");
+        lua_getglobal(objects_flags_conf, "getEntityModelProperties");
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->id);                           // entity id
+            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
             if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
                 ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
@@ -74,11 +74,11 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     {
         int top = lua_gettop(level_script);
         assert(top >= 0);
-        lua_getglobal(level_script, "getEntityProperties");
+        lua_getglobal(level_script, "getEntityModelProperties");
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->id);                             // entity id
+            lua_pushinteger(level_script, ent->bf.animations.model->id);        // entity model id
             if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))

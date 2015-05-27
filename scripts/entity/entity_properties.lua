@@ -1222,7 +1222,7 @@ tr4_entity_tbl[453] = {coll = 0x01}; -- Animating 14 (sunlight)
 tr4_entity_tbl[454] = {coll = 0x01}; -- Animating 14 MIP
 tr4_entity_tbl[455] = {coll = 0x01}; -- Animating 15 (basket, hub.tr4, sunlight)
 tr4_entity_tbl[456] = {coll = 0x01}; -- Animating 15 MIP
-tr4_entity_tbl[457] = {coll = 0x01}; -- Animating 16
+tr4_entity_tbl[457] = {coll = 0x01}; -- Animating 16 (map 9 - coll = 0x00)
 tr4_entity_tbl[458] = {coll = 0x01}; -- Animating 16 MIP
 
 --------------------------------------------------------------------------------
@@ -1735,7 +1735,7 @@ tr5_entity_tbl[452] = {coll = 0x01}; -- Bridge tilt 2
 tr5_entity_tbl[453] = {coll = 0x01}; -- Bridge tilt 2 MIP
 
 
-function getEntityProperties(ver, id)
+function getEntityModelProperties(ver, id)
     tbl = {};
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         tbl = tr1_entity_tbl;
