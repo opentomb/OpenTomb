@@ -1601,6 +1601,8 @@
 		<Unit filename="src/gui.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/hair.cpp" />
+		<Unit filename="src/hair.h" />
 		<Unit filename="src/image/IMG.c">
 			<Option compilerVar="CC" />
 		</Unit>
