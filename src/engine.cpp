@@ -825,9 +825,9 @@ int lua_AddCharacterHair(lua_State *lua)
     {
         int ent_id       = lua_tointeger(lua, 1);
         int setup_index  = lua_tointeger(lua, 2);
-        
+
         entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
-        
+
         if(!IsCharacter(ent))
         {
             Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
@@ -836,7 +836,7 @@ int lua_AddCharacterHair(lua_State *lua)
         {
             hair_setup_s hair_setup;
             memset(&hair_setup, 0, sizeof(hair_setup_s));
-        
+
             if(!Hair_GetSetup(setup_index, &hair_setup))
             {
                 Con_Warning(SYSWARN_NO_HAIR_SETUP, setup_index);
@@ -845,7 +845,7 @@ int lua_AddCharacterHair(lua_State *lua)
             {
                 ent->character->hair_count++;
                 ent->character->hairs = (hair_p)realloc(ent->character->hairs, (sizeof(hair_t) * ent->character->hair_count));
-        
+
                 if(!Hair_Create((ent->character->hairs + (ent->character->hair_count-1)), &hair_setup, ent))
                 {
                     Con_Warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
@@ -867,7 +867,7 @@ int lua_ResetCharacterHair(lua_State *lua)
     {
         int ent_id = lua_tointeger(lua, 1);
         entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
-        
+
         if(!IsCharacter(ent))
         {
             Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
@@ -3591,7 +3591,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
     lua_register(lua, "getCharacterCombatMode", lua_GetCharacterCombatMode);
-    
+
     lua_register(lua, "addCharacterHair", lua_AddCharacterHair);
     lua_register(lua, "resetCharacterHair", lua_ResetCharacterHair);
 
@@ -3973,6 +3973,11 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
     else
     {
         strcat(name, "tr5/");
+    }
+
+    for(char *ch=level_name;*ch!=0;ch++)
+    {
+        *ch = toupper(*ch);
     }
 
     strcat(name, level_name);
