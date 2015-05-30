@@ -2610,7 +2610,6 @@ void Character_ApplyCommands(struct entity_s *ent)
     };
 
     Entity_UpdateRigidBody(ent, 1);
-    Hair_Update(engine_world.Character);
     Character_UpdatePlatformPostStep(ent);
 }
 

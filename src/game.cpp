@@ -32,6 +32,7 @@ extern "C" {
 #include "gameflow.h"
 #include "gui.h"
 #include "inventory.h"
+#include "hair.h"
 
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
 extern lua_State *engine_lua;
@@ -309,13 +310,13 @@ void Game_ApplyControls(struct entity_s *ent)
     int8_t look_logic[3];
 
     // Keyboard move logic
-     
+
     move_logic[0] = control_states.move_forward - control_states.move_backward;
     move_logic[1] = control_states.move_right - control_states.move_left;
     move_logic[2] = control_states.move_up - control_states.move_down;
 
     // Keyboard look logic
-    
+
     look_logic[0] = control_states.look_left - control_states.look_right;
     look_logic[1] = control_states.look_down - control_states.look_up;
     look_logic[2] = control_states.look_roll_right - control_states.look_roll_left;
@@ -710,8 +711,8 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
         {
             ent->character->resp.kill = 1;                                      // Kill, if no HP.
         }
-
         Character_ApplyCommands(ent);
+        Hair_Update(ent);
     }
 
     if(x->left != NULL)
@@ -739,6 +740,7 @@ void Game_UpdateCharacters()
         {
             ent->character->resp.kill = 1;   // Kill, if no HP.
         }
+        Hair_Update(ent);
     }
 
     if(engine_world.entity_tree && engine_world.entity_tree->root)
@@ -799,11 +801,11 @@ void Game_Frame(btScalar time)
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
+    bt_engine_dynamicsWorld->stepSimulation(time, 8);
+
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
         btScalar dt = Game_Tick(&game_logic_time);
-
-        bt_engine_dynamicsWorld->stepSimulation(dt, 8);
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
         Audio_Update();
