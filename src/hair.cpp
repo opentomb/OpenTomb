@@ -31,7 +31,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
     // Setup initial position / angles.
 
-    Mat4_Mat4_mul(hair->owner_body_transform, parent_entity->transform, hair->owner_char->bf.bone_tags[hair->owner_body].full_transform);
+    Mat4_Mat4_mul(hair->owner_body_transform, parent_entity->transform, parent_entity->bf.bone_tags[hair->owner_body].full_transform);
     // Number of elements (bodies) is equal to number of hair meshes.
 
     hair->element_count = model->mesh_count;
@@ -58,7 +58,6 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
         // Begin creating ACTUAL physical hair mesh.
 
-        btScalar    tr[16];
         btVector3   localInertia(0, 0, 0);
         btTransform startTransform;
 
@@ -73,8 +72,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
         // Initialize motion state for body.
 
-        Mat4_Mat4_mul(tr, hair->owner_char->transform, hair->owner_char->bf.bone_tags[hair->root_index].full_transform);
-        startTransform.setFromOpenGLMatrix(tr);
+        startTransform.setFromOpenGLMatrix(hair->owner_body_transform);
         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
 
         // Make rigid body.
@@ -109,8 +107,6 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, COLLISION_GROUP_KINEMATIC, COLLISION_MASK_NONE);
 
         hair->elements[i].body->activate();
-
-        //hair->elements[i].body->setUserPointer(hair->container);  //FIXME: DOESN'T WORK ATM.
     }
 
     // GENERATE CONSTRAINTS.
@@ -123,11 +119,11 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
     hair->joints      = (btGeneric6DofConstraint**)calloc(sizeof(btGeneric6DofConstraint*), hair->joint_count);
 
     // If multiple joints per body is specified, joints are placed in circular manner,
-    // with obvious step of (PI*2) / joint count. It means that all joints will form
+    // with obvious step of (SIMD_2_PI) / joint count. It means that all joints will form
     // circle-like figure.
 
     int curr_joint = 0;
-    btScalar step  = (M_PI*2) / setup->joints_per_body;
+    btScalar step  = SIMD_2_PI / setup->joints_per_body;
 
     for(uint16_t i=0; i<hair->element_count; i++)
     {
@@ -136,8 +132,8 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
         // Each body width and height are used to calculate position of each joint.
 
-        btScalar body_width = abs(hair->elements[i].mesh->bb_max[0] - hair->elements[i].mesh->bb_min[0]);
-        btScalar body_depth = abs(hair->elements[i].mesh->bb_max[3] - hair->elements[i].mesh->bb_min[3]);
+        btScalar body_width = fabs(hair->elements[i].mesh->bb_max[0] - hair->elements[i].mesh->bb_min[0]);
+        btScalar body_depth = fabs(hair->elements[i].mesh->bb_max[3] - hair->elements[i].mesh->bb_min[3]);
 
         btTransform localA; localA.setIdentity();
         btTransform localB; localB.setIdentity();
@@ -170,7 +166,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
             {
                 // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
 
-                body_length = abs(hair->elements[i-1].mesh->bb_max[1] - hair->elements[i-1].mesh->bb_min[1]) * setup->joint_overlap;
+                body_length = fabs(hair->elements[i-1].mesh->bb_max[1] - hair->elements[i-1].mesh->bb_min[1]) * setup->joint_overlap;
 
                 localA.setOrigin(btVector3(joint_x, body_length, joint_y));
                 localA.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
@@ -203,8 +199,8 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
                 hair->joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
                 hair->joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
-                hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI, 0., -SIMD_HALF_PI*0.4));
-                hair->joints[curr_joint]->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0., SIMD_HALF_PI*0.4));
+                hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI,     0., -SIMD_HALF_PI*0.4));
+                hair->joints[curr_joint]->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0.,  SIMD_HALF_PI*0.4));
 
                 // Increased solver iterations make constraint even more stable.
 
@@ -288,17 +284,20 @@ void Hair_Update(entity_p entity)
     {
         if((!hair) || (hair->element_count < 1)) continue;
 
-        btScalar new_transform[16];
+        btScalar new_transform[16];//, sub_tr[16];
+
         Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
 
         // Calculate mixed velocities.
         btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
                           new_transform[12+1] - hair->owner_body_transform[12+1],
                           new_transform[12+2] - hair->owner_body_transform[12+2]);
-        mix_vel /= engine_frame_time;                                           ///@TODO: may be we need some magick const here&
+        mix_vel *= 1.0 / GAME_LOGIC_REFRESH_INTERVAL;                           ///@TODO: may be we need to add here some magick const?
 
-        //btVector3 mix_ang(0.0, 0.0, 0.0);
-        //mix_ang /= engine_frame_time;
+        /*btVector3 mix_ang(0.0, 0.0, 0.0);
+        Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
+        mat4_getXYZ_anggles(mix_ang.m_floats, sub_tr);                          ///@FIXME: DOESN'T IMPLEMENTED!!!
+        mix_ang *= 1.0 / GAME_LOGIC_REFRESH_INTERVAL;*/
 
         Mat4_Copy(hair->owner_body_transform, new_transform);
 
@@ -312,8 +311,6 @@ void Hair_Update(entity_p entity)
 
         //hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
         //hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
-
-        // FIXME: DOESN'T WORK!!!
 
         hair->container->room = hair->owner_char->self->room;
     }

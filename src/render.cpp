@@ -766,21 +766,22 @@ void Render_Entity(struct entity_s *entity, const btScalar matrix[16])
 }
 
 void Render_Hair(struct entity_s *entity, const btScalar matrix[16])
-{ 
+{
     if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
         return;
-    
+
     btTransform bt_tr;
-    
+
     for(int h=0; h<entity->character->hair_count; h++)
     {
         for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
         {
             btScalar transform[16];
-            
-            entity->character->hairs[h].elements[i].body->getMotionState()->getWorldTransform(bt_tr);
+
+            bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
+            //entity->character->hairs[h].elements[i].body->getMotionState()->getWorldTransform(bt_tr);
             bt_tr.getOpenGLMatrix(transform);
-            
+
             Mat4_Mat4_mul(transform, matrix, transform);
             glLoadMatrixbt(transform);
             Render_Mesh(entity->character->hairs[h].elements[i].mesh, NULL, NULL);
