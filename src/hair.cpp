@@ -31,12 +31,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
     // Setup initial position / angles.
 
-    hair->owner_char_pos = btVector3(parent_entity->transform[12], parent_entity->transform[13], parent_entity->transform[14]);
-    hair->owner_char_ang = btVector3(parent_entity->transform[0],  parent_entity->transform[4],  parent_entity->transform[8] );
-
-    hair->owner_body_pos = btVector3(hair->owner_char->bf.bone_tags[hair->owner_body].full_transform[12], hair->owner_char->bf.bone_tags[hair->owner_body].full_transform[13], hair->owner_char->bf.bone_tags[hair->owner_body].full_transform[14]);
-    hair->owner_body_ang = btVector3(hair->owner_char->bf.bone_tags[hair->owner_body].full_transform[0],  hair->owner_char->bf.bone_tags[hair->owner_body].full_transform[4],  hair->owner_char->bf.bone_tags[hair->owner_body].full_transform[8] );
-
+    Mat4_Mat4_mul(hair->owner_body_transform, parent_entity->transform, hair->owner_char->bf.bone_tags[hair->owner_body].full_transform);
     // Number of elements (bodies) is equal to number of hair meshes.
 
     hair->element_count = model->mesh_count;
@@ -222,7 +217,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
                 hair->joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
                 hair->joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
                 hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI*0.5, 0., -SIMD_HALF_PI*0.5));
-                hair->joints[curr_joint]->setAngularUpperLimit(btVector3(SIMD_HALF_PI*0.5, 0.,  SIMD_HALF_PI*0.5));
+                hair->joints[curr_joint]->setAngularUpperLimit(btVector3( SIMD_HALF_PI*0.5, 0.,  SIMD_HALF_PI*0.5));
 
             }
 
@@ -279,11 +274,6 @@ void Hair_Clear(hair_p hair)
     hair->owner_char = NULL;
     hair->owner_body = 0;
 
-    hair->owner_char_ang = btVector3(0.,0.,0.);
-    hair->owner_char_pos = btVector3(0.,0.,0.);
-    hair->owner_body_ang = btVector3(0.,0.,0.);
-    hair->owner_body_pos = btVector3(0.,0.,0.);
-
     hair->root_index = 0;
     hair->tail_index = 0;
 }
@@ -298,33 +288,19 @@ void Hair_Update(entity_p entity)
     {
         if((!hair) || (hair->element_count < 1)) continue;
 
-        btVector3 char_vel, char_ang;
-        btVector3 body_vel, body_ang;
-
-        btVector3 new_char_pos = btVector3(hair->owner_char->transform[12], hair->owner_char->transform[13], hair->owner_char->transform[14]);
-        btVector3 new_body_pos = btVector3(hair->owner_char->bf.bone_tags[14].full_transform[12], hair->owner_char->bf.bone_tags[14].full_transform[13], hair->owner_char->bf.bone_tags[14].full_transform[14]);
-
-        btVector3 new_char_ang = btVector3(hair->owner_char->transform[8], hair->owner_char->transform[4], hair->owner_char->transform[0]);
-        btVector3 new_body_ang = btVector3(hair->owner_char->bf.bone_tags[14].full_transform[8], hair->owner_char->bf.bone_tags[14].full_transform[4], hair->owner_char->bf.bone_tags[14].full_transform[0]);
-
-        // Update previous speeds.
-
-        char_vel = hair->owner_char_pos - new_char_pos;
-        hair->owner_char_pos = new_char_pos;
-
-        char_ang = hair->owner_char_ang - new_char_ang;
-        hair->owner_char_ang = new_char_ang;
-
-        body_vel = hair->owner_body_pos - new_body_pos;
-        hair->owner_body_pos = new_body_pos;
-
-        body_ang = hair->owner_body_ang - new_body_ang;
-        hair->owner_body_ang = new_body_ang;
+        btScalar new_transform[16];
+        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
 
         // Calculate mixed velocities.
+        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
+                          new_transform[12+1] - hair->owner_body_transform[12+1],
+                          new_transform[12+2] - hair->owner_body_transform[12+2]);
+        mix_vel /= engine_frame_time;                                           ///@TODO: may be we need some magick const here&
 
-        btVector3 mix_vel = (char_vel) + (body_vel);    mix_vel *= -100.;
-        btVector3 mix_ang = (char_ang) + (body_ang);    mix_ang *= -100.;
+        //btVector3 mix_ang(0.0, 0.0, 0.0);
+        //mix_ang /= engine_frame_time;
+
+        Mat4_Copy(hair->owner_body_transform, new_transform);
 
         // Set mixed velocities to both parent body and first hair body.
 
@@ -339,7 +315,7 @@ void Hair_Update(entity_p entity)
 
         // FIXME: DOESN'T WORK!!!
 
-        hair->container->room = hair->owner_char->self->room;//Room_FindPosCogerrence(new_char_pos.m_floats, hair->container->room);
+        hair->container->room = hair->owner_char->self->room;
     }
 }
 

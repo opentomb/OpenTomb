@@ -58,13 +58,9 @@ typedef struct hair_s
     engine_container_p        container;
     
     entity_p                  owner_char;         // Entity who owns this hair.
-    btVector3                 owner_char_pos;     // Global entity position - needed for correct alignment.
-    btVector3                 owner_char_ang;     // Global entity rotation - needed for correct alignment.
-    
     uint32_t                  owner_body;         // Owner entity's body ID.
-    btVector3                 owner_body_pos;     // Local body position - needed for correct alignment.
-    btVector3                 owner_body_ang;     // Local body rotation - needed for correct alignment.
-    
+    btScalar                  owner_body_transform[16]; // contains real hair base position and orientation
+
     uint8_t                   root_index;         // Index of "root" element.
     uint8_t                   tail_index;         // Index of "tail" element.
     
