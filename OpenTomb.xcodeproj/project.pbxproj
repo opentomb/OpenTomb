@@ -152,6 +152,8 @@
 		524E0F5C1AFF968A00F56FF6 /* btVector3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 524E0ECB1AFF968A00F56FF6 /* btVector3.cpp */; };
 		524E0F5D1AFF968A00F56FF6 /* premake4.lua in Resources */ = {isa = PBXBuildFile; fileRef = 524E0ECD1AFF968A00F56FF6 /* premake4.lua */; };
 		5252A50C1B1A530100E8CE1D /* shader_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A50A1B1A530100E8CE1D /* shader_manager.cpp */; };
+		5252A50E1B1AE24600E8CE1D /* text.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A50D1B1AE24600E8CE1D /* text.vsh */; };
+		5252A5101B1AE24F00E8CE1D /* text.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A50F1B1AE24F00E8CE1D /* text.fsh */; };
 		52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */; };
 		52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */; };
 		52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA91AED5ACA003B8288 /* RobotoCondensed-Regular.ttf */; };
@@ -743,6 +745,8 @@
 		524E0ECD1AFF968A00F56FF6 /* premake4.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premake4.lua; sourceTree = "<group>"; };
 		5252A50A1B1A530100E8CE1D /* shader_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shader_manager.cpp; sourceTree = "<group>"; };
 		5252A50B1B1A530100E8CE1D /* shader_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_manager.h; sourceTree = "<group>"; };
+		5252A50D1B1AE24600E8CE1D /* text.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = text.vsh; sourceTree = "<group>"; };
+		5252A50F1B1AE24F00E8CE1D /* text.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = text.fsh; sourceTree = "<group>"; };
 		52B82D821AED5A45003B8288 /* OpenTomb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTomb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DroidSansMono.ttf; sourceTree = "<group>"; };
 		52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
@@ -3160,6 +3164,8 @@
 				52DF7FF51B076BBA00A7DE0E /* gui_tex.fsh */,
 				52D5D5E91B07CCFF00B99A38 /* static_mesh.fsh */,
 				52DF7FEF1B07683F00A7DE0E /* static_mesh.vsh */,
+				5252A50D1B1AE24600E8CE1D /* text.vsh */,
+				5252A50F1B1AE24F00E8CE1D /* text.fsh */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -3224,6 +3230,7 @@
 			files = (
 				52DF7FF61B076BBA00A7DE0E /* gui_tex.fsh in Resources */,
 				52D5D5E41B079B8300B99A38 /* room.vsh in Resources */,
+				5252A50E1B1AE24600E8CE1D /* text.vsh in Resources */,
 				52B8335B1AED5B06003B8288 /* README in Resources */,
 				52B833551AED5B06003B8288 /* README in Resources */,
 				52DF7FF21B0769D700A7DE0E /* gui.vsh in Resources */,
@@ -3236,6 +3243,7 @@
 				52B833601AED5B06003B8288 /* README in Resources */,
 				52B82DB61AED5ACA003B8288 /* Images.xcassets in Resources */,
 				52D5D5E81B07A86000B99A38 /* room.fsh in Resources */,
+				5252A5101B1AE24F00E8CE1D /* text.fsh in Resources */,
 				52DF7FF41B076B1700A7DE0E /* gui.fsh in Resources */,
 				52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */,
 				52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */,

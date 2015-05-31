@@ -2,6 +2,7 @@
 #include <stdint.h>
 #ifdef __APPLE_CC__
 #include <ImageIO/ImageIO.h>
+#include <OpenGL/OpenGL.h>
 #else
 #include <SDL2/SDL_image.h>
 #endif
@@ -486,7 +487,6 @@ void Gui_RenderStringLine(gui_text_line_p l)
         glDrawArrays(GL_POLYGON, 0, 4);
     }*/
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     if(style->shadowed)
     {
         gl_font->gl_font_color[0] = 0.0f;
@@ -512,6 +512,18 @@ void Gui_RenderStrings()
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        
+        const text_shader_description *shader = renderer.shader_manager->getTextShader();
+        glUseProgramObjectARB(shader->program);
+        GLfloat screenSize[2] = {
+            (GLfloat) screen_info.w,
+            (GLfloat) screen_info.h
+        };
+        glUniform2fvARB(shader->screenSize, 1, screenSize);
+        glUniform1iARB(shader->sampler, 0);
+        
+        glNormal3f(0, 0, 0);
+        
         while(l)
         {
             Gui_RenderStringLine(l);
@@ -1147,11 +1159,21 @@ void Gui_FillCrosshairBuffer()
 }
 
 void Gui_DrawCrosshair()
-{        glUseProgramObjectARB(0);
-
+{
+    const gui_shader_description *shader = renderer.shader_manager->getGuiShader(false);
+    
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);
+    
+    glUseProgramObjectARB(shader->program);
+    GLfloat factor[2] = {
+        2.0f / screen_info.w,
+        2.0f / screen_info.h
+    };
+    glUniform2fvARB(shader->factor, 1, factor);
+    GLfloat offset[2] = { -1.f, -1.f };
+    glUniform2fvARB(shader->offset, 1, offset);
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
     glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), 0);

@@ -34,8 +34,18 @@ struct gui_shader_description : public shader_description
 {
     GLint offset;
     GLint factor;
-
+    
     gui_shader_description(GLhandleARB vertexShader, const char *fragmentFilename);
+};
+
+/*!
+ * A shader description for text
+ */
+struct text_shader_description : public shader_description
+{
+    GLint screenSize;
+    
+    text_shader_description(const char *vertexFilename, const char *fragmentFilename);
 };
 
 /*!

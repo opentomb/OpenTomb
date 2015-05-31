@@ -39,7 +39,8 @@ shader_manager::shader_manager()
     loadShaderFromFile(guiVertexShader, "shaders/gui.vsh", 0);
     gui = new gui_shader_description(guiVertexShader, "shaders/gui.fsh");
     gui_textured = new gui_shader_description(guiVertexShader, "shaders/gui_tex.fsh");
-
+    
+    text = new text_shader_description("shaders/text.vsh", "shaders/text.fsh");
 }
 
 shader_manager::~shader_manager()

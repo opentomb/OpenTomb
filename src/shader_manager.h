@@ -3,7 +3,7 @@
 
 #include "shader_description.h"
 
-// Highest number of lights that will show up in the entity shader. If you increase this, increase the limit in entity.fsh as well.
+// Highest number of lights that will show up in the entity shader.
 #define MAX_NUM_LIGHTS 8
 
 class shader_manager {
@@ -12,6 +12,7 @@ class shader_manager {
     lit_shader_description *entity_shader[MAX_NUM_LIGHTS];
     gui_shader_description *gui;
     gui_shader_description *gui_textured;
+    text_shader_description *text;
 
 public:
     shader_manager();
@@ -23,6 +24,7 @@ public:
     
     const unlit_tinted_shader_description *getRoomShader(bool isFlickering, bool isWater) const;
     const gui_shader_description *getGuiShader(bool includingTexture) const;
+    const text_shader_description *getTextShader() const { return text; }
 };
 
 #endif /* defined(__OpenTomb__shader_manager__) */

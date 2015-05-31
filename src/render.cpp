@@ -150,12 +150,11 @@ void Render_Sprite(struct sprite_s *sprite, GLfloat x, GLfloat y, GLfloat z)
 }
 
 
-void Render_SkyBox(const btScalar matrix[16])
+void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
 {
     btScalar tr[16];
     btScalar *p;
 
-    glUseProgramObjectARB(0);
     if((renderer.style & R_DRAW_SKYBOX) && (renderer.world != NULL) && (renderer.world->sky_box != NULL))
     {
         glDepthMask(GL_FALSE);
@@ -164,9 +163,16 @@ void Render_SkyBox(const btScalar matrix[16])
         vec3_add(tr+12, renderer.cam->pos, p);
         p = renderer.world->sky_box->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
-        btScalar full[16];
-        Mat4_Mat4_mul(full, matrix, tr);
-        glLoadMatrixbt(full);
+        btScalar fullView[16];
+        Mat4_Mat4_mul(fullView, modelViewProjectionMatrix, tr);
+        
+        const unlit_tinted_shader_description *shader = renderer.shader_manager->getStaticMeshShader();
+        glUseProgramObjectARB(shader->program);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, fullView);
+        glUniform1iARB(shader->sampler, 0);
+        GLfloat tint[] = { 1, 1, 1, 1 };
+        glUniform4fvARB(shader->tint_mult, 1, tint);
+        
         Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base, NULL, NULL);
         glDepthMask(GL_TRUE);
     }
@@ -584,7 +590,7 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
 }
 
 
-void Render_Entity(const lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
 {
     if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
@@ -592,6 +598,7 @@ void Render_Entity(const lit_shader_description *shader, struct entity_s *entity
     }
 
     // Calculate lighting
+    const lit_shader_description *shader;
 
     room_s *room = entity->self->room;
     if(room != NULL)
@@ -607,8 +614,6 @@ void Render_Entity(const lit_shader_description *shader, struct entity_s *entity
         {
             Render_CalculateWaterTint(ambient_component, 0);
         }
-
-        glUniform4fv(shader->light_ambient, 1, ambient_component);
         
         GLenum current_light_number = 0;
         light_s *current_light = NULL;
@@ -657,10 +662,15 @@ void Render_Entity(const lit_shader_description *shader, struct entity_s *entity
             }
         }
         
-        glUniform1iARB(shader->number_of_lights, current_light_number);
+        shader = renderer.shader_manager->getEntityShader(current_light_number);
+        glUseProgramObjectARB(shader->program);
+        glUniform4fv(shader->light_ambient, 1, ambient_component);
         glUniform4fvARB(shader->light_color, current_light_number, colors);
         glUniform3fvARB(shader->light_position, current_light_number, positions);
         glUniform1fvARB(shader->light_falloff, current_light_number, falloffs);
+    } else {
+        shader = renderer.shader_manager->getEntityShader(0);
+        glUseProgramObjectARB(shader->program);
     }
 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
@@ -750,8 +760,6 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
     if (room->containers)
     {
-        const lit_shader_description *shader = render->shader_manager->getEntityShader(room->light_count);
-        glUseProgramObjectARB(shader->program);
         for(cont=room->containers; cont; cont=cont->next)
         {
             switch(cont->object_type)
@@ -762,7 +770,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                 {
                     if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                     {
-                        Render_Entity(shader, ent, modelViewMatrix, modelViewProjectionMatrix);
+                        Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix);
                     }
                     ent->was_rendered = 1;
                 }
@@ -915,22 +923,11 @@ void Render_DrawList()
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
 
-    Render_SkyBox(renderer.cam->gl_view_mat);
+    Render_SkyBox(renderer.cam->gl_view_proj_mat);
 
     if(renderer.world->Character)
     {
-        int lights = 0;
-        struct room_sector_s *sector = renderer.world->Character->current_sector;
-        if (sector)
-        {
-            struct room_s *room = sector->owner_room;
-            if (room)
-                lights = room->light_count;
-        }
-        const lit_shader_description *shader = renderer.shader_manager->getEntityShader(lights);
-        
-        glUseProgramObjectARB(shader->program);
-        Render_Entity(shader, renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
     }
 
     /*

@@ -67,6 +67,12 @@ gui_shader_description::gui_shader_description(GLhandleARB vertexShader, const c
     factor = glGetUniformLocationARB(program, "factor");
 }
 
+text_shader_description::text_shader_description(const char *vertexFilename, const char *fragmentFilename)
+: shader_description(vertexFilename, fragmentFilename, 0)
+{
+    screenSize = glGetUniformLocationARB(program, "screenSize");
+}
+
 unlit_shader_description::unlit_shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines)
 : shader_description(vertexFilename, fragmentFilename, additionalDefines)
 {
