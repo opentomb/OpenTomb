@@ -13,6 +13,7 @@
 #include "system.h"
 #include "engine.h"
 #include "script.h"
+#include "shader_manager.h"
 #include "gui.h"
 #include "vmath.h"
 
@@ -176,6 +177,16 @@ void Con_Draw()
         y = con_base.cursor_y;
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        
+        const text_shader_description *shader = renderer.shader_manager->getTextShader();
+        glUseProgramObjectARB(shader->program);
+        glUniform1i(shader->sampler, 0);
+        GLfloat screenSize[2] = {
+            static_cast<GLfloat>(screen_info.w),
+            static_cast<GLfloat>(screen_info.h)
+        };
+        glUniform2fv(shader->screenSize, 2, screenSize);
+        
         for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
             GLfloat *col = FontManager->GetFontStyle((font_Style)con_base.line_style_id[i])->real_color;
@@ -189,37 +200,24 @@ void Con_Draw()
 
 void Con_DrawBackground()
 {
-    glUseProgramObjectARB(0);
     /*
      * Draw console background to see the text
      */
-    GLfloat *v, rect_array[24];
-    v = rect_array;
-    *v = 0.0;                                               v++;
-    *v = screen_info.h;                                     v++;
-    vec4_copy(v, con_base.background_color);                v += 4;
-    *v = 0.0;                                               v++;
-    *v = con_base.cursor_y + con_base.line_height - 8;      v++;
-    vec4_copy(v, con_base.background_color);                v += 4;
-    *v = screen_info.w;                                     v++;
-    *v = con_base.cursor_y + con_base.line_height - 8;      v++;
-    vec4_copy(v, con_base.background_color);                v += 4;
-    *v = screen_info.w;                                     v++;
-    *v = screen_info.h;                                     v++;
-    vec4_copy(v, con_base.background_color);
-
-    glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), rect_array);
-    glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), rect_array + 2);
-    glDrawArrays(GL_POLYGON, 0, 4);
+    Gui_DrawRect(0.0, con_base.cursor_y + con_base.line_height - 8, screen_info.w, screen_info.h, con_base.background_color, con_base.background_color, con_base.background_color, con_base.background_color, BM_SCREEN);
 
     /*
      * Draw finalise line
      */
-    v = rect_array + 8;
-    v[0] = 1.0; v[1] = 1.0; v[2] = 1.0; v[3] = 0.7;     v += 6;
-    v[0] = 1.0; v[1] = 1.0; v[2] = 1.0; v[3] = 0.7;
-    glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), rect_array + 6);
-    glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), rect_array + 8);
+    GLfloat lineCoords[4] = {
+        0.0f, 0.0,
+        1.0, 0.0
+    };
+    GLfloat lineColors[8] = {
+        1.0f, 1.0f, 1.0f, 0.7,
+        1.0f, 1.0f, 1.0f, 0.7
+    };
+    glVertexPointer(2, GL_FLOAT, 2 * sizeof(GLfloat), lineCoords);
+    glColorPointer(4, GL_FLOAT, 4 * sizeof(GLfloat), lineColors);
     glDrawArrays(GL_LINES, 0, 2);
 }
 
