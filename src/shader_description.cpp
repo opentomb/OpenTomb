@@ -50,8 +50,6 @@ void shader_description::load(GLhandleARB vertexShader, GLhandleARB fragmentShad
     glLinkProgramARB(program);
     printInfoLog(program);
     
-    glDeleteObjectARB(vertexShader);
-    
     sampler = glGetUniformLocationARB(program, "color_map");
 }
 

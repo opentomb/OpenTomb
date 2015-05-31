@@ -509,6 +509,7 @@ void Gui_RenderStrings()
     {
         gui_text_line_p l = gui_base_lines;
 
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
