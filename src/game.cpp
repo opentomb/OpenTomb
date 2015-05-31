@@ -32,6 +32,7 @@ extern "C" {
 #include "gameflow.h"
 #include "gui.h"
 #include "inventory.h"
+#include "hair.h"
 
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
 extern lua_State *engine_lua;
@@ -308,24 +309,19 @@ void Game_ApplyControls(struct entity_s *ent)
     int8_t move_logic[3];
     int8_t look_logic[3];
 
-    /*
-     * MOVE KB LOGIC
-     */
+    // Keyboard move logic
+
     move_logic[0] = control_states.move_forward - control_states.move_backward;
     move_logic[1] = control_states.move_right - control_states.move_left;
     move_logic[2] = control_states.move_up - control_states.move_down;
 
-    /*
-     * VIEW KB LOGIC
-     */
+    // Keyboard look logic
 
     look_logic[0] = control_states.look_left - control_states.look_right;
     look_logic[1] = control_states.look_down - control_states.look_up;
     look_logic[2] = control_states.look_roll_right - control_states.look_roll_left;
 
-    /*
-     * CONTROL  APPLY
-     */
+    // APPLY CONTROLS
 
     cam_angles[0] += 2.2 * engine_frame_time * look_logic[0];
     cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
@@ -382,7 +378,7 @@ void Game_ApplyControls(struct entity_s *ent)
         control_states.look_axis_x = 0.0;
         control_states.look_axis_y = 0.0;
     }
-    
+
     if((control_states.free_look != 0) || !IsCharacter(ent))
     {
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
@@ -390,7 +386,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
         Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
         Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
-        renderer.cam->current_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);
+        renderer.cam->current_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);
     }
     else if(control_states.noclip != 0)
     {
@@ -400,7 +396,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
         Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
         Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
-        renderer.cam->current_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);
+        renderer.cam->current_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);
 
         ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
         pos.m_floats[0] = renderer.cam->pos[0] + renderer.cam->view_dir[0] * control_states.cam_distance;
@@ -631,7 +627,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
 
     //Modify cam pos for quicksand rooms
     cam->pos[2] -= 128.0;
-    cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
+    cam->current_room = Room_FindPosCogerrence(cam->pos, cam->current_room);
     cam->pos[2] += 128.0;
     if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
@@ -639,7 +635,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
     }
 
     Cam_SetRotation(cam, cam_angles);
-    cam->current_room = Room_FindPosCogerrence(&engine_world, cam->pos, cam->current_room);
+    cam->current_room = Room_FindPosCogerrence(cam->pos, cam->current_room);
 
     if(!ent->character)
         delete[] cb;
@@ -655,7 +651,7 @@ void Game_LoopEntities(struct RedBlackNode_s *x)
         Entity_ProcessSector(entity);
         lua_LoopEntity(engine_lua, entity->id);
     }
-    
+
 
     if(x->left != NULL)
     {
@@ -715,8 +711,8 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
         {
             ent->character->resp.kill = 1;                                      // Kill, if no HP.
         }
-
         Character_ApplyCommands(ent);
+        Hair_Update(ent);
     }
 
     if(x->left != NULL)
@@ -744,6 +740,7 @@ void Game_UpdateCharacters()
         {
             ent->character->resp.kill = 1;   // Kill, if no HP.
         }
+        Hair_Update(ent);
     }
 
     if(engine_world.entity_tree && engine_world.entity_tree->root)
@@ -752,13 +749,12 @@ void Game_UpdateCharacters()
     }
 }
 
-
 __inline btScalar Game_Tick(btScalar *game_logic_time)
 {
-    int t;
-    t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-    *game_logic_time -= (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
-    return *game_logic_time;
+    int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
+    btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
+    *game_logic_time -= dt;
+    return dt;
 }
 
 
@@ -801,15 +797,15 @@ void Game_Frame(btScalar time)
         return;
     }
 
+
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
+    bt_engine_dynamicsWorld->stepSimulation(time, 8);
+
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
-        int32_t t = game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-        btScalar dt = (btScalar)t * GAME_LOGIC_REFRESH_INTERVAL;
-        game_logic_time -= dt;
-        bt_engine_dynamicsWorld->stepSimulation(dt, 8);
+        btScalar dt = Game_Tick(&game_logic_time);
         lua_DoTasks(engine_lua, dt);
         Game_UpdateAI();
         Audio_Update();
@@ -819,13 +815,14 @@ void Game_Frame(btScalar time)
             Entity_ProcessSector(engine_world.Character);
             Character_UpdateParams(engine_world.Character);
         }
-            
+
         if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
     }
 
+
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-    
+
     Game_ApplyControls(engine_world.Character);
 
     if(is_character)
@@ -877,7 +874,7 @@ void Game_Prepare()
     {
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
-        
+
         engine_camera.pos[0] = engine_world.rooms[0].bb_max[0];
         engine_camera.pos[1] = engine_world.rooms[0].bb_max[1];
         engine_camera.pos[2] = engine_world.rooms[0].bb_max[2];

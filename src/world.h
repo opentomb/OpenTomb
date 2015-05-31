@@ -68,7 +68,7 @@
 #define TR_FD_TRIGFUNC_PLAYTRACK        0x08
 #define TR_FD_TRIGFUNC_FLIPEFFECT       0x09
 #define TR_FD_TRIGFUNC_SECRET           0x0A
-#define TR_FD_TRIGFUNC_BODYBAG          0x0B    // Unused in TR4
+#define TR_FD_TRIGFUNC_CLEARBODIES      0x0B    // Unused in TR4
 #define TR_FD_TRIGFUNC_FLYBY            0x0C
 #define TR_FD_TRIGFUNC_CUTSCENE         0x0D
 
@@ -385,11 +385,9 @@ int Room_RemoveEntity(room_p room, struct entity_s *entity);
 
 void Room_AddToNearRoomsList(room_p room, room_p r);
 int Room_IsPointIn(room_p room, btScalar dot[3]);
-room_p Room_FindPos2d(world_p w, btScalar pos[3]);
 
-room_p Room_FindPos(world_p w, btScalar pos[3]);
-room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room);
-room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room);
+room_p Room_FindPos(btScalar pos[3]);
+room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room);
 room_p Room_GetByID(world_p w, unsigned int ID);
 room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3]);
 room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3]);

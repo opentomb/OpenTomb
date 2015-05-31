@@ -33,6 +33,7 @@ IF(MINGW)
         SET(SDL2_IMAGE_LIBRARIES /usr/${COMPILER_PREFIX}/lib/libSDL2_image.dll.a)
         ADD_DEFINITIONS("-Dmain=SDL_main")
         SET(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+        SET(PRJ_ICON_RES "resource/icon/opentomb.rc")
     ELSE()
         # We are probably creating project files for CodeBlocks on Windows
         MESSAGE(STATUS "MinGW Compilation")
@@ -141,7 +142,7 @@ ADD_EXECUTABLE(
     ${BULLET_FILES}
     ${LUA_FILES}
     ${OGG_FILES}
-    ${PRJ_HDR} ${PRJ_SRC}
+    ${PRJ_HDR} ${PRJ_SRC} ${PRJ_ICON_RES}
 )
 
 TARGET_LINK_LIBRARIES(

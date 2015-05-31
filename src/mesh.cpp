@@ -321,6 +321,68 @@ void SkeletalModel_Clear(skeletal_model_p model)
 }
 
 
+void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
+{
+    vec3_set_zero(bf->bb_min);
+    vec3_set_zero(bf->bb_max);
+    vec3_set_zero(bf->centre);
+    vec3_set_zero(bf->pos);
+    bf->animations.anim_flags = 0x0000;
+    bf->animations.frame_time = 0.0;
+    bf->animations.period = 1.0 / 30.0;
+    bf->animations.next_state = 0;
+    bf->animations.lerp = 0.0;
+    bf->animations.current_animation = 0;
+    bf->animations.current_frame = 0;
+    bf->animations.next_animation = 0;
+    bf->animations.next_frame = 0;
+
+    bf->animations.next = NULL;
+    bf->animations.onFrame = NULL;
+    bf->animations.model = model;
+    bf->bone_tag_count = model->mesh_count;
+    bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
+
+    int stack = 0;
+    ss_bone_tag_p parents[bf->bone_tag_count];
+    parents[0] = NULL;
+    bf->bone_tags[0].parent = NULL;                                             // root
+    for(uint16_t i=0;i<bf->bone_tag_count;i++)
+    {
+        bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
+        bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
+        bf->bone_tags[i].mesh_slot = NULL;
+        bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
+
+        vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
+        vec4_set_zero(bf->bone_tags[i].qrotate);
+        Mat4_E_macro(bf->bone_tags[i].transform);
+        Mat4_E_macro(bf->bone_tags[i].full_transform);
+
+        if(i > 0)
+        {
+            bf->bone_tags[i].parent = &bf->bone_tags[i-1];
+            if(model->mesh_tree[i].flag & 0x01)                                 // POP
+            {
+                if(stack > 0)
+                {
+                    bf->bone_tags[i].parent = parents[stack];
+                    stack--;
+                }
+            }
+            if(model->mesh_tree[i].flag & 0x02)                                 // PUSH
+            {
+                if(stack + 1 < (int16_t)model->mesh_count)
+                {
+                    stack++;
+                    parents[stack] = bf->bone_tags[i].parent;
+                }
+            }
+        }
+    }
+}
+
+
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
 {
     if(dst->bone_tag_count < src->bone_tag_count)
@@ -606,7 +668,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
             {
                 elementCount *= 2;
             }
-                
+
             mesh->element_count_per_texture[texture] += elementCount;
             elements_for_texture[texture] = (uint32_t *)realloc(elements_for_texture[texture], mesh->element_count_per_texture[texture] * sizeof(uint32_t));
 
@@ -622,7 +684,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 0] = startElement;
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 1] = previousElement;
                 elements_for_texture[texture][oldStart + (j - 2)*3 + 2] = thisElement;
-                
+
                 if (p->double_side)
                 {
                     elements_for_texture[texture][backwardsStart + (j - 2)*3 + 0] = startElement;
@@ -654,76 +716,86 @@ void Mesh_GenFaces(base_mesh_p mesh)
 }
 
 
-btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag, bool is_static)
+btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh, bool is_static)
+{
+    obb_p obb = OBB_Create();
+    polygon_p p = obb->base_polygons;
+    btTriangleMesh *trimesh = new btTriangleMesh;
+    btVector3 v0, v1, v2;
+    btCollisionShape* ret;
+    int cnt = 0;
+
+    OBB_Rebuild(obb, bb_min, bb_max);
+    for(uint16_t i=0;i<6;i++,p++)
+    {
+        if(Polygon_IsBroken(p))
+        {
+            continue;
+        }
+        for(uint16_t j=1;j+1<p->vertex_count;j++)
+        {
+            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+            vec3_copy(v1.m_floats, p->vertices[j].position);
+            vec3_copy(v2.m_floats, p->vertices[0].position);
+            trimesh->addTriangle(v0, v1, v2, true);
+        }
+        cnt ++;
+    }
+
+    if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
+    {
+        delete trimesh;
+        return NULL;
+    }
+
+    OBB_Clear(obb);
+    free(obb);
+
+    if(is_static)
+    {
+        ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
+    }
+    else
+    {
+        ret = new btConvexTriangleMeshShape(trimesh, true);
+    }
+
+    return ret;
+}
+
+
+btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static)
 {
     uint32_t cnt = 0;
     polygon_p p;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
     btVector3 v0, v1, v2;
-    obb_p obb;
 
-    switch(cflag)
+    p = mesh->polygons;
+    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
     {
-        default:
-        case COLLISION_TRIMESH:
-            p = mesh->polygons;
-            for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
-            {
-                if(Polygon_IsBroken(p))
-                {
-                    continue;
-                }
+        if(Polygon_IsBroken(p))
+        {
+            continue;
+        }
 
-                for(uint16_t j=1;j+1<p->vertex_count;j++)
-                {
-                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-                    vec3_copy(v1.m_floats, p->vertices[j].position);
-                    vec3_copy(v2.m_floats, p->vertices[0].position);
-                    trimesh->addTriangle(v0, v1, v2, true);
-                }
-                cnt ++;
-            }
+        for(uint16_t j=1;j+1<p->vertex_count;j++)
+        {
+            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+            vec3_copy(v1.m_floats, p->vertices[j].position);
+            vec3_copy(v2.m_floats, p->vertices[0].position);
+            trimesh->addTriangle(v0, v1, v2, true);
+        }
+        cnt ++;
+    }
 
-            if(cnt == 0)
-            {
-                delete trimesh;
-                return NULL;
-            }
-            
-            break;
+    if(cnt == 0)
+    {
+        delete trimesh;
+        return NULL;
+    }
 
-        case COLLISION_BOX:                                                     // the box with deviated centre
-            obb = OBB_Create();
-            OBB_Rebuild(obb, mesh->bb_min, mesh->bb_max);
-            p = obb->base_polygons;
-            for(uint16_t i=0;i<6;i++,p++)
-            {
-                if(Polygon_IsBroken(p))
-                {
-                    continue;
-                }
-                for(uint16_t j=1;j+1<p->vertex_count;j++)
-                {
-                    vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-                    vec3_copy(v1.m_floats, p->vertices[j].position);
-                    vec3_copy(v2.m_floats, p->vertices[0].position);
-                    trimesh->addTriangle(v0, v1, v2, true);
-                }
-                cnt ++;
-            }
-
-            if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
-            {
-                delete trimesh;
-                return NULL;
-            }
-            
-            OBB_Clear(obb);
-            free(obb);
-            break;
-    };
-    
     if(is_static)
     {
         ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);

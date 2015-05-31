@@ -22,12 +22,10 @@
 #include "shader_description.h"
 #include "shader_manager.h"
 
-#define MAX_TEMP_LINES   (256)
-
 extern SDL_Window  *sdl_window;
 
 gui_text_line_p     gui_base_lines = NULL;
-gui_text_line_t     gui_temp_lines[MAX_TEMP_LINES];
+gui_text_line_t     gui_temp_lines[GUI_MAX_TEMP_LINES];
 uint16_t            temp_lines_used = 0;
 
 gui_ItemNotifier    Notifier;
@@ -62,7 +60,7 @@ void Gui_InitFontManager()
 
 void Gui_InitTempLines()
 {
-    for(int i=0;i<MAX_TEMP_LINES;i++)
+    for(int i=0;i<GUI_MAX_TEMP_LINES;i++)
     {
         gui_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
         gui_temp_lines[i].text = (char*)malloc(GUI_LINE_DEFAULTSIZE * sizeof(char));
@@ -240,7 +238,7 @@ void Gui_InitNotifier()
 
 void Gui_Destroy()
 {
-    for(int i = 0; i < MAX_TEMP_LINES ;i++)
+    for(int i = 0; i < GUI_MAX_TEMP_LINES ;i++)
     {
         gui_temp_lines[i].show = 0;
         gui_temp_lines[i].text_size = 0;
@@ -253,7 +251,7 @@ void Gui_Destroy()
         Fader[i].Cut();
     }
 
-    temp_lines_used = MAX_TEMP_LINES;
+    temp_lines_used = GUI_MAX_TEMP_LINES;
 
     /*if(main_inventory_menu)
     {
@@ -322,7 +320,7 @@ void Gui_MoveLine(gui_text_line_p line)
  */
 gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
-    if(FontManager && (temp_lines_used < MAX_TEMP_LINES - 1))
+    if(FontManager && (temp_lines_used < GUI_MAX_TEMP_LINES - 1))
     {
         va_list argptr;
         gui_text_line_p l = gui_temp_lines + temp_lines_used;

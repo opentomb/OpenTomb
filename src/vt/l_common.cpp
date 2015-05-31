@@ -155,3 +155,24 @@ float TR_Level::read_float(SDL_RWops * const src)
 
     return data;
 }
+
+/** \brief reads mixed TR-specific float value (used in animation speed/accel fields).
+  *
+  * uses current position from src. does endian correction. throws TR_ReadError when not successful.
+  */
+float TR_Level::read_mixfloat(SDL_RWops * const src)
+{
+     int16_t base_int;
+    uint16_t sign_int;
+    
+    if (src == NULL)
+        Sys_extError("read_mixfloat: src == NULL");
+
+    if ((SDL_RWread(src, &sign_int, 2, 1) < 1) || (SDL_RWread(src, &base_int, 2, 1) < 1))
+        Sys_extError("read_mixfloat");
+
+    base_int = SDL_SwapLE32(base_int);
+    sign_int = SDL_SwapLE32(sign_int);
+    
+    return ((float)base_int + ((float)sign_int / 65535.0));
+}

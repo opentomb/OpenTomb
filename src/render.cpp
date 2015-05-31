@@ -16,6 +16,7 @@
 #include "script.h"
 #include "vmath.h"
 #include "mesh.h"
+#include "hair.h"
 #include "entity.h"
 #include "engine.h"
 #include "obb.h"
@@ -547,27 +548,25 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
     }
 }
 
-
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+/**
+ * Sets up the light calculations for the given entity based on its current
+ * room. Returns the used shader, which will have been made current already.
+ */
+const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const btScalar modelViewMatrix[16])
 {
-    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
-    {
-        return;
-    }
-
     // Calculate lighting
     const lit_shader_description *shader;
-
+    
     room_s *room = entity->self->room;
     if(room != NULL)
     {
         GLfloat ambient_component[4];
-
+        
         ambient_component[0] = room->ambient_lighting[0];
         ambient_component[1] = room->ambient_lighting[1];
         ambient_component[2] = room->ambient_lighting[2];
         ambient_component[3] = 1.0f;
-
+        
         if(room->flags & TR_ROOM_FLAG_WATER)
         {
             Render_CalculateWaterTint(ambient_component, 0);
@@ -582,23 +581,23 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
         memset(positions, 0, sizeof(positions));
         memset(colors, 0, sizeof(positions));
         memset(falloffs, 0, sizeof(positions));
-
+        
         for(uint32_t i = 0; i < room->light_count && current_light_number < MAX_NUM_LIGHTS; i++)
         {
             current_light = &room->lights[i];
-
+            
             float x = entity->transform[12] - current_light->pos[0];
             float y = entity->transform[13] - current_light->pos[1];
             float z = entity->transform[14] - current_light->pos[2];
-
+            
             float distance = sqrt(x * x + y * y + z * z);
-
+            
             // Find color
             colors[current_light_number*4 + 0] = current_light->colour[0];
             colors[current_light_number*4 + 1] = current_light->colour[1];
             colors[current_light_number*4 + 2] = current_light->colour[2];
             colors[current_light_number*4 + 3] = current_light->colour[3];
-
+            
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
                 Render_CalculateWaterTint(colors + current_light_number * 4, 0);
@@ -606,7 +605,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             
             // Find position
             Mat4_vec3_mul(&positions[3*current_light_number], modelViewMatrix, current_light->pos);
-
+            
             // Find fall-off
             if(current_light->light_type == LT_SUN)
             {
@@ -630,6 +629,18 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
         shader = renderer.shader_manager->getEntityShader(0);
         glUseProgramObjectARB(shader->program);
     }
+    return shader;
+}
+
+void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+{
+    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    {
+        return;
+    }
+
+    // Calculate lighting
+    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
@@ -648,6 +659,35 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
         }
         
         Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
+    }
+}
+
+void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+{
+    if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
+        return;
+    
+    // Calculate lighting
+    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
+
+    for(int h=0; h<entity->character->hair_count; h++)
+    {
+        for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
+        {
+            btScalar subModelView[16];
+            btScalar subModelViewProjection[16];
+
+            btScalar transform[16];
+            const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
+            bt_tr.getOpenGLMatrix(transform);
+
+            Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
+            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
+            
+            glUniformMatrix4fv(shader->model_view, 1, GL_FALSE, subModelView);
+            glUniformMatrix4fv(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
+            Render_Mesh(entity->character->hairs[h].elements[i].mesh, NULL, NULL);
+        }
     }
 }
 
@@ -914,6 +954,7 @@ void Render_DrawList()
     if(renderer.world->Character)
     {
         Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
     }
 
     /*
@@ -1107,7 +1148,7 @@ void Render_GenWorldList()
 
     Render_CleanList();                                                         // clear old render list
 
-    room_p curr_room = Room_FindPosCogerrence(renderer.world, renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
+    room_p curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
 
     renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room

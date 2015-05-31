@@ -55,6 +55,13 @@
 #define BODY_PART_RIGHT_LEG_2   (0x00002000)            // 5
 #define BODY_PART_RIGHT_LEG_3   (0x00004000)            // 6
 
+#define BODY_PART_LEGS_1        (BODY_PART_LEFT_LEG_1 | BODY_PART_RIGHT_LEG_1)
+#define BODY_PART_LEGS_2        (BODY_PART_LEFT_LEG_2 | BODY_PART_RIGHT_LEG_2)
+#define BODY_PART_LEGS_3        (BODY_PART_LEFT_LEG_3 | BODY_PART_RIGHT_LEG_3)
+
+#define BODY_PART_HANDS_1        (BODY_PART_LEFT_HAND_1 | BODY_PART_RIGHT_HAND_1)
+#define BODY_PART_HANDS_2        (BODY_PART_LEFT_HAND_2 | BODY_PART_RIGHT_HAND_2)
+#define BODY_PART_HANDS_3        (BODY_PART_LEFT_HAND_3 | BODY_PART_RIGHT_HAND_3)
 
 #define CHARACTER_BOX_HALF_SIZE (128.0)
 #define CHARACTER_BASE_RADIUS   (128.0)
@@ -105,11 +112,24 @@
 
 // Speed limits
 
-#define FREE_FALL_SPEED_1        (2000)
-#define FREE_FALL_SPEED_2        (4500)
-#define FREE_FALL_SPEED_MAXSAFE  (5500)
-#define FREE_FALL_SPEED_CRITICAL (7500)
-#define FREE_FALL_SPEED_MAXIMUM  (7800)
+#define FREE_FALL_SPEED_1        (2000.0)
+#define FREE_FALL_SPEED_2        (4500.0)
+#define FREE_FALL_SPEED_MAXSAFE  (5500.0)
+#define FREE_FALL_SPEED_CRITICAL (7500.0)
+#define FREE_FALL_SPEED_MAXIMUM  (7800.0)
+
+#define MAX_SPEED_UNDERWATER     (64.0)
+#define MAX_SPEED_ONWATER        (24.0)
+#define MAX_SPEED_QUICKSAND      (5.0 )
+
+#define ROT_SPEED_UNDERWATER     (2.0)
+#define ROT_SPEED_ONWATER        (3.0)
+#define ROT_SPEED_LAND           (4.5)
+#define ROT_SPEED_FREEFALL       (0.5)
+#define ROT_SPEED_MONKEYSWING    (3.5)
+
+#define INERTIA_SPEED_UNDERWATER (1.0)
+#define INERTIA_SPEED_ONWATER    (1.5)
 
 // flags constants
 #define CHARACTER_SLIDE_FRONT                   (0x02)
@@ -152,8 +172,8 @@ enum CharParameters
 
 #define PARAM_ABSOLUTE_MAX                (-1)
 
-#define LARA_PARAM_HEALTH_MAX             (1000.0)      // 30 secs of air
-#define LARA_PARAM_AIR_MAX                (1800.0)      // 30 secs of air
+#define LARA_PARAM_HEALTH_MAX             (1000.0)      // 1000 HP
+#define LARA_PARAM_AIR_MAX                (3600.0)      // 60 secs of air
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
@@ -273,9 +293,13 @@ typedef struct character_s
     struct entity_s             *ent;                    // actor entity
     struct character_command_s   cmd;                    // character control commands
     struct character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    
     struct inventory_node_s     *inventory;
     struct character_param_s     parameters;
     struct character_stats_s     statistics;
+    
+    int8_t                       hair_count;
+    struct hair_s               *hairs;
     
     int                          current_weapon;
     int                          weapon_current_state;
@@ -283,8 +307,10 @@ typedef struct character_s
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     int16_t                      max_move_iterations;
     
-    int8_t                       no_fix;                     
+    int8_t                       no_fix_all;
     int8_t                       cam_follow_center;
+    uint32_t                     no_fix_body_parts;
+    uint32_t                     ghost_step_up_map_filter;
 
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;
@@ -299,7 +325,6 @@ typedef struct character_s
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
     btScalar                     swim_depth;             // depth offset for starting to swim
-    int                          ghost_step_up_map_filter;
     
     btCollisionShape           **shapes;
     btSphereShape               *sphere;                 // needs to height calculation
@@ -332,11 +357,14 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
 void Character_GhostUpdate(struct entity_s *ent);
-int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]);
+void Character_UpdateCurrentCollisions(struct entity_s *ent);
+int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
 void Character_FixPenetrations(struct entity_s *ent, btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
 
 bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
+void Character_CleanCollisionAllBodyParts(struct entity_s *ent);
+void Character_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
 struct engine_container_s *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
 
 void Character_UpdateCurrentHeight(struct entity_s *ent);
@@ -345,7 +373,8 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent);
 
 void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);
-void Character_Inertia(struct entity_s *ent, int8_t command, btScalar max_speed, btScalar in_speed, btScalar out_speed);
+btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command);
+btScalar Character_InertiaAngular(struct entity_s *ent, btScalar max_angle, btScalar accel, uint8_t axis);
 
 int Character_MoveOnFloor(struct entity_s *ent);
 int Character_FreeFalling(struct entity_s *ent);

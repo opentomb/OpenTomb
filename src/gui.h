@@ -7,6 +7,9 @@
 #include "render.h"
 #include "character_controller.h"
 
+
+#define GUI_MAX_TEMP_LINES   (256)
+
 // Screen metering resolution specifies user-friendly relative dimensions of screen,
 // which are not dependent on screen resolution. They're primarily used to parse
 // bar and string dimensions.

@@ -163,18 +163,18 @@ function findSecret(secret_number)
 end
 
 
--- WHAT IS THIS?
+-- Clear dead enemies, if they have CLEAR BODY flag specified.
 
-function setBodybag(bodybag_index)
-    print("BODYBAG: index = " .. bodybag_index);
+function clearBodies()
+    print("CLEAR BODIES");
 end
 
 
 -- Plays specified flyby. Only valid in TR4-5.
 
-function playFlyby(flyby_index)
+function playFlyby(flyby_index, once)
     if(getLevelVersion() < TR_IV) then return 0 end;
-    print("FLYBY: index = " .. flyby_index);
+    print("FLYBY: index = " .. flyby_index .. " once = " .. once);
 end
 
 

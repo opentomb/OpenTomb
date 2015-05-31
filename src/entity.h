@@ -86,14 +86,16 @@ typedef struct entity_s
     
     uint8_t                             was_rendered;       // render once per frame trigger
     uint8_t                             was_rendered_lines; // same for debug lines
-    uint8_t                             smooth_anim;
 
     btScalar                            current_speed;      // current linear speed from animation info
     btVector3                           speed;              // speed of the entity XYZ
-    btScalar                            inertia;
+    
+    btScalar                            inertia_linear;     // linear inertia
+    btScalar                            inertia_angular[2]; // angular inertia - X and Y axes
+    
     struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
     btScalar                            angles[3];
-    btScalar                            transform[16];      // GL transformation matrix
+    alignas(16) btScalar                transform[16];      // GL transformation matrix
 
     struct obb_s                       *obb;                // oriented bounding box
 

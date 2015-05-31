@@ -82,6 +82,7 @@ static int frame =  0;
 static int anim =   0;
 static int sprite = 0;
 
+static btScalar time_scale = 1.0;
 
 engine_container_p      last_cont = NULL;
 
@@ -182,7 +183,7 @@ void SkeletalModelTestDraw()
     Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
     Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
     Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
-    Gui_OutTextXY(screen_info.w-632, 48, "v1 = %d, v2 = %d, al1 = %d, ah1 = %d, al2 = %d, ah2 = %d", af->speed, af->speed2, af->accel_lo, af->accel_hi, af->accel_lo2, af->accel_hi2);
+    Gui_OutTextXY(screen_info.w-632, 48, "vx = %f, vy = %f, ax = %f, ay = %f", af->speed_x, af->speed_y, af->accel_x, af->accel_y);
     Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
     Gui_OutTextXY(screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
 
@@ -543,7 +544,7 @@ int main(int argc, char **argv)
         newtime = Sys_FloatTime();
         time = newtime - oldtime;
         oldtime = newtime;
-        Engine_Frame(time);
+        Engine_Frame(time * time_scale);
     }
 
     // Main loop interrupted; shutting down.
@@ -657,7 +658,7 @@ void Engine_PrimaryMouseDown()
     body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    cont->room = Room_FindPosCogerrence(&engine_world, new_pos, engine_camera.current_room);
+    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.current_room);
     cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
@@ -810,6 +811,7 @@ void ShowDebugInfo()
         */
 
         Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.animations.last_animation, ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.last_state, ent->bf.animations.next_state);
+        //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
@@ -993,6 +995,17 @@ void DebugKeys(int button, int state)
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_ACTIVATE);
+                }
+                break;
+
+            case SDLK_g:
+                if(time_scale == 1.0)
+                {
+                    time_scale = 0.033;
+                }
+                else
+                {
+                    time_scale = 1.0;
                 }
                 break;
 

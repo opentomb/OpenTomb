@@ -1,7 +1,7 @@
-dofile("scripts/entity/character.lua")
+dofile("scripts/character/character.lua")
 dofile("scripts/inventory/item_list.lua")
 dofile("scripts/inventory/item_combine.lua")
-dofile("scripts/inventory/items.lua");
+dofile("scripts/inventory/items.lua")
 
 -------- Lara's model-------
 --           .=.
@@ -30,6 +30,8 @@ dofile("scripts/inventory/items.lua");
 -- 0x02: add mesh to slot in armed state;
 -- 0x03: overriding mesh in disarmed state;
 -- 0x04: add mesh to slot in disarmed state;
+
+setHumanoidBodyParts(player);
 
 -- creates map for left and right hands
 function setDefaultModelAnimReplaceFlag(m_id)
@@ -222,46 +224,33 @@ elseif (getLevelVersion() <= TR_V) then
     setModelMeshReplaceFlag(7, 13, 0x01);
 end
 
-setModelCollisionMapSize(0, 9);            
+setModelCollisionMapSize(0, 11);            
 setModelCollisionMap(0, 0, 0);              -- butt
 setModelCollisionMap(0, 1, 7);              -- body
 setModelCollisionMap(0, 2, 14);             -- head
 
-setModelCollisionMap(0, 3, 1);              -- greawes
+setModelCollisionMap(0, 3, 1);              -- legs 1
 setModelCollisionMap(0, 4, 4);
-setModelCollisionMap(0, 5, 11);             -- pauldrons
+setModelCollisionMap(0, 5, 11);             -- hands 1
 setModelCollisionMap(0, 6, 8);
 
-setModelCollisionMap(0, 7, 2);              -- boots
+setModelCollisionMap(0, 7, 2);              -- legs 2
 setModelCollisionMap(0, 8, 5);
---setModelCollisionMap(0, 9, 12);             -- braces
---setModelCollisionMap(0, 10, 9);
+setModelCollisionMap(0, 9, 12);             -- hands 2
+setModelCollisionMap(0, 10, 9);
 
--- dir[anim = 147, frame = 0, frames = 16]
-setAnimCommandTransform(0, 147, 0, 0x00);   -- roll animation smooth fix 
-setAnimCommandTransform(0, 146, -1, 0x03);
+setModelCollisionMap(0, 11, 3);             -- boots 3
+setModelCollisionMap(0, 12, 6);
+setModelCollisionMap(0, 13, 10);            -- braces 3
+setModelCollisionMap(0, 14, 13);
 
-setAnimCommandTransform(0, 147, 0, 0x00);   -- roll animation smooth fix 
-setAnimCommandTransform(0, 146, -1, 0x03);
-
-setAnimCommandTransform(0, 205, 1, 0x00);   -- underwater roll animation smooth fix 
-setAnimCommandTransform(0, 205, 0, 0x00);
-setAnimCommandTransform(0, 203, -1, 0x03);
+setAnimCommandTransform(0, 147,  0, 0x00);   -- roll animation smooth fix 
+setAnimCommandTransform(0, 146, -2, 0x03);
 
 if(getLevelVersion() >= TR_II) then
-    setAnimCommandTransform(0, 205, 1, 0x00);   -- underwater roll animation smooth fix 
-    setAnimCommandTransform(0, 205, 0, 0x00);
-    setAnimCommandTransform(0, 203, -1, 0x03);
-end;
-
---setAnimCommandTransform(0, 207, 13, 0x00);   -- jump roll animation smooth fix 
---setAnimCommandTransform(0, 207, 12, 0x03);
-
---setAnimCommandTransform(0, 210, 8, 0x00);   -- standing jump roll animation smooth fix 
---setAnimCommandTransform(0, 210, 7, 0x03);
-
-setAnimCommandTransform(0, 212, 10, 0x00);   -- back jump roll animation smooth fix 
-setAnimCommandTransform(0, 212, 9, 0x03);
+    setAnimCommandTransform(0, 205,  1, 0x00);
+    setAnimCommandTransform(0, 203, -2, 0x03);
+end
 
 -- generate UV rotation texture animations for waterfalls in TR4+ versions
 

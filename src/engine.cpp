@@ -49,6 +49,7 @@ extern "C" {
 #include "redblack.h"
 #include "gl_font.h"
 #include "string.h"
+#include "hair.h"
 
 extern SDL_Window             *sdl_window;
 extern SDL_GLContext           sdl_gl_context;
@@ -136,7 +137,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
             engine_container_p cont = (engine_container_p)body->getUserPointer();
             if(cont && (cont->object_type == OBJECT_BULLET_MISC))
             {
-                cont->room = Room_FindPosCogerrence(&engine_world, trans.getOrigin().m_floats, cont->room);
+                cont->room = Room_FindPosCogerrence(trans.getOrigin().m_floats, cont->room);
             }
         }
     }
@@ -245,7 +246,7 @@ void Engine_BTInit()
     bt_engine_dynamicsWorld->setInternalTickCallback(Engine_InternalTickCallback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
-    debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+    debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
     bt_engine_dynamicsWorld->setDebugDrawer(&debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
@@ -327,6 +328,18 @@ int lua_DumpRoom(lua_State * lua)
         for(uint32_t i=0;i<r->sectors_count;i++,rs++)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, rs->portal_to_room);
+        }
+        for(static_mesh_p sm=r->static_mesh;sm<r->static_mesh+r->static_mesh_count;sm++)
+        {
+            Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->object_id);
+        }
+        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p ent = (entity_p)cont->object;
+                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id, ent->bf.animations.model->id);
+            }
         }
     }
 
@@ -798,6 +811,85 @@ int lua_ChangeCharacterParam(lua_State * lua)
     }
     Character_ChangeParam(ent, parameter, value);
 
+    return 0;
+}
+
+
+int lua_AddCharacterHair(lua_State *lua)
+{
+    if(lua_gettop(lua) != 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [hair_setup_index]");
+    }
+    else
+    {
+        int ent_id       = lua_tointeger(lua, 1);
+        int setup_index  = lua_tointeger(lua, 2);
+
+        entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
+
+        if(!IsCharacter(ent))
+        {
+            Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+        }
+        else
+        {
+            hair_setup_s hair_setup;
+            memset(&hair_setup, 0, sizeof(hair_setup_s));
+
+            if(!Hair_GetSetup(setup_index, &hair_setup))
+            {
+                Con_Warning(SYSWARN_NO_HAIR_SETUP, setup_index);
+            }
+            else
+            {
+                ent->character->hair_count++;
+                ent->character->hairs = (hair_p)realloc(ent->character->hairs, (sizeof(hair_t) * ent->character->hair_count));
+
+                if(!Hair_Create((ent->character->hairs + (ent->character->hair_count-1)), &hair_setup, ent))
+                {
+                    Con_Warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int lua_ResetCharacterHair(lua_State *lua)
+{
+    if(lua_gettop(lua) != 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+    else
+    {
+        int ent_id = lua_tointeger(lua, 1);
+        entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
+
+        if(!IsCharacter(ent))
+        {
+            Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+        }
+        else
+        {
+            if(ent->character->hairs)
+            {
+                for(int i=0;i<ent->character->hair_count;i++)
+                {
+                    Hair_Clear(ent->character->hairs+i);
+                }
+                free(ent->character->hairs);
+                ent->character->hairs = NULL;
+                ent->character->hair_count = 0;
+            }
+            else
+            {
+                Con_Warning(SYSWARN_CANT_RESET_HAIR, ent_id);
+            }
+        }
+    }
     return 0;
 }
 
@@ -1761,6 +1853,70 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     return 0;
 }
+
+int lua_SetEntityBodyPartFlag(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, bone_id, body_part_flag]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    int bone_id = lua_tointeger(lua, 2);
+    if((bone_id < 0) || (bone_id >= ent->bf.bone_tag_count))
+    {
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        return 0;
+    }
+
+    ent->bf.bone_tags[bone_id].body_part = lua_tointeger(lua, 3);
+
+    return 0;
+}
+
+
+int lua_SetModelBodyPartFlag(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id, bone_id, body_part_flag]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    skeletal_model_p model = World_GetModelByID(&engine_world, id);
+
+    if(model == NULL)
+    {
+        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        return 0;
+    }
+
+    int bone_id = lua_tointeger(lua, 2);
+    if((bone_id < 0) || (bone_id >= model->mesh_count))
+    {
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        return 0;
+    }
+
+    model->mesh_tree[bone_id].body_part = lua_tointeger(lua, 3);
+
+    return 0;
+}
+
 
 int lua_GetEntityAnim(lua_State * lua)
 {
@@ -3262,6 +3418,7 @@ bool Engine_LuaInit()
         luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
         luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");
         luaL_dofile(engine_lua, "scripts/entity/entity_functions.lua");
+        luaL_dofile(engine_lua, "scripts/character/hair.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
@@ -3382,6 +3539,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
     lua_register(lua, "setEntityAnimFlag", lua_SetEntityAnimFlag);
+    lua_register(lua, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
+    lua_register(lua, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);
     lua_register(lua, "getEntityModel", lua_GetEntityModel);
     lua_register(lua, "getEntityVisibility", lua_GetEntityVisibility);
     lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);
@@ -3432,6 +3591,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
     lua_register(lua, "getCharacterCombatMode", lua_GetCharacterCombatMode);
+
+    lua_register(lua, "addCharacterHair", lua_AddCharacterHair);
+    lua_register(lua, "resetCharacterHair", lua_ResetCharacterHair);
 
     lua_register(lua, "getSecretStatus", lua_GetSecretStatus);
     lua_register(lua, "setSecretStatus", lua_SetSecretStatus);
@@ -3811,6 +3973,11 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
     else
     {
         strcat(name, "tr5/");
+    }
+
+    for(char *ch=level_name;*ch!=0;ch++)
+    {
+        *ch = toupper(*ch);
     }
 
     strcat(name, level_name);

@@ -710,30 +710,13 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             ent->timer          = 0.0;
 
             ent->self->collide_flag = 0x00;
-            ent->move_type = 0x0000;
-            ent->bf.animations.anim_flags = 0x0000;
-            ent->bf.animations.current_animation = 0;
-            ent->bf.animations.current_frame = 0;
-            ent->bf.animations.frame_time = 0.0;
-            ent->inertia = 0.0;
-            ent->move_type = 0;
+            ent->move_type          = 0x0000;
+            ent->inertia_linear     = 0.0;
+            ent->inertia_angular[0] = 0.0;
+            ent->inertia_angular[1] = 0.0;
+            ent->move_type          = 0;
 
-            ent->bf.animations.model = model;
-            ent->bf.bone_tag_count = model->mesh_count;
-            ent->bf.bone_tags = (ss_bone_tag_p)malloc(model->mesh_count * sizeof(ss_bone_tag_t));
-            for(uint16_t j=0;j<model->mesh_count;j++)
-            {
-                ent->bf.bone_tags[j].flag = model->mesh_tree[j].flag;
-                ent->bf.bone_tags[j].mesh_base = model->mesh_tree[j].mesh_base;
-                ent->bf.bone_tags[j].mesh_skin = model->mesh_tree[j].mesh_skin;
-                ent->bf.bone_tags[j].mesh_slot = NULL;
-
-                vec3_copy(ent->bf.bone_tags[j].offset, model->mesh_tree[j].offset);
-                vec4_set_zero(ent->bf.bone_tags[j].qrotate);
-                Mat4_E_macro(ent->bf.bone_tags[j].transform);
-                Mat4_E_macro(ent->bf.bone_tags[j].full_transform);
-            }
-
+            SSBoneFrame_CreateFromModel(&ent->bf, model);
             Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
             BT_GenEntityRigidBody(ent);
 
@@ -805,10 +788,10 @@ inline int Room_IsPointIn(room_p room, btScalar dot[3])
 }
 
 
-room_p Room_FindPos(world_p w, btScalar pos[3])
+room_p Room_FindPos(btScalar pos[3])
 {
-    room_p r = w->rooms;
-    for(uint32_t i=0;i<w->room_count;i++,r++)
+    room_p r = engine_world.rooms;
+    for(uint32_t i=0;i<engine_world.room_count;i++,r++)
     {
         if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
@@ -822,81 +805,40 @@ room_p Room_FindPos(world_p w, btScalar pos[3])
 }
 
 
-room_p Room_FindPos2d(world_p w, btScalar pos[3])
+room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room)
 {
-    room_p r = w->rooms;
-    for(uint32_t i=0;i<w->room_count;i++,r++)
-    {
-        if(r->active &&
-           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]))
-        {
-            return r;
-        }
-    }
-    return NULL;
-}
-
-
-room_p Room_FindPosCogerrence(world_p w, btScalar pos[3], room_p room)
-{
-    room_p r;
-
     if(room == NULL)
     {
-        return Room_FindPos(w, pos);
+        return Room_FindPos(new_pos);
     }
 
     if(room->active &&
-       (pos[0] >= room->bb_min[0]) && (pos[0] < room->bb_max[0]) &&
-       (pos[1] >= room->bb_min[1]) && (pos[1] < room->bb_max[1]) &&
-       (pos[2] >= room->bb_min[2]) && (pos[2] < room->bb_max[2]))
+       (new_pos[0] >= room->bb_min[0]) && (new_pos[0] < room->bb_max[0]) &&
+       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]) &&
+       (new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
     {
         return room;
+    }
+
+    room_sector_p new_sector = Room_GetSectorRaw(room, new_pos);
+    if((new_sector != NULL) && (new_sector->portal_to_room >= 0))
+    {
+        return Room_CheckFlip(engine_world.rooms + new_sector->portal_to_room);
     }
 
     for(uint16_t i=0;i<room->near_room_list_size;i++)
     {
-        r = room->near_room_list[i];
+        room_p r = room->near_room_list[i];
         if(r->active &&
-           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
-           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
+           (new_pos[0] >= r->bb_min[0]) && (new_pos[0] < r->bb_max[0]) &&
+           (new_pos[1] >= r->bb_min[1]) && (new_pos[1] < r->bb_max[1]) &&
+           (new_pos[2] >= r->bb_min[2]) && (new_pos[2] < r->bb_max[2]))
         {
             return r;
         }
     }
 
-    return Room_FindPos(w, pos);
-}
-
-
-room_p Room_FindPosCogerrence2d(world_p w, btScalar pos[3], room_p room)
-{
-    room_p r;
-    if(room == NULL)
-    {
-        return Room_FindPos2d(w, pos);
-    }
-
-    if((pos[0] >= room->bb_min[0]) && (pos[0] < room->bb_max[0]) &&
-       (pos[1] >= room->bb_min[1]) && (pos[1] < room->bb_max[1]) &&
-       (pos[2] >= room->bb_min[2]) && (pos[2] < room->bb_max[2]))
-    {
-        return room;
-    }
-
-    for(uint16_t i=0;i<room->portal_count;i++)
-    {
-        r = room->portals[i].dest_room;
-        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
-           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
-        {
-            return r;
-        }
-    }
-    return Room_FindPos2d(w, pos);
+    return Room_FindPos(new_pos);
 }
 
 
@@ -1211,37 +1153,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     }
 
     ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
-    vec3_set_zero(bf->bb_min);
-    vec3_set_zero(bf->bb_max);
-    vec3_set_zero(bf->centre);
-    vec3_set_zero(bf->pos);
-    bf->animations.anim_flags = 0x0000;
-    bf->animations.frame_time = 0.0;
-    bf->animations.period = 1.0 / 30.0;
-    bf->animations.next_state = 0;
-    bf->animations.lerp = 0.0;
-    bf->animations.current_animation = 0;
-    bf->animations.current_frame = 0;
-    bf->animations.next_animation = 0;
-    bf->animations.next_frame = 0;
-
-    bf->animations.next = NULL;
-    bf->animations.onFrame = NULL;
-    bf->animations.model = model;
-    bf->bone_tag_count = model->mesh_count;
-    bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
-    for(uint16_t j=0;j<bf->bone_tag_count;j++)
-    {
-        bf->bone_tags[j].flag = bf->animations.model->mesh_tree[j].flag;
-        bf->bone_tags[j].mesh_base = bf->animations.model->mesh_tree[j].mesh_base;
-        bf->bone_tags[j].mesh_skin = bf->animations.model->mesh_tree[j].mesh_skin;
-        bf->bone_tags[j].mesh_slot = NULL;
-
-        vec3_copy(bf->bone_tags[j].offset, bf->animations.model->mesh_tree[j].offset);
-        vec4_set_zero(bf->bone_tags[j].qrotate);
-        Mat4_E_macro(bf->bone_tags[j].transform);
-        Mat4_E_macro(bf->bone_tags[j].full_transform);
-    }
+    SSBoneFrame_CreateFromModel(bf, model);
 
     base_item_p item = (base_item_p)malloc(sizeof(base_item_t));
     item->id = item_id;

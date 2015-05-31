@@ -106,13 +106,17 @@ end
 function anim_init(id)      -- Ordinary animatings
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(object_id, 0);
+    disableEntity(id);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
+        enableEntity(id);
         setEntityActivity(object_id, 1);
         setEntityState(object_id, 1);
     end    
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        disableEntity(id);
         setEntityActivity(object_id, 0);
         setEntityState(object_id, 0);
     end
@@ -120,6 +124,10 @@ function anim_init(id)      -- Ordinary animatings
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
+end
+
+function pushable_init(id)
+    setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
 end
 
 function venicebird_init(id)    -- Venice singing birds (TR2)
@@ -138,6 +146,28 @@ function venicebird_init(id)    -- Venice singing birds (TR2)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
         if(getEntityDistance(player, object_id) < 8192.0) then
             if(math.random(100000) > 99500) then playSound(316, object_id) end;
+        end;
+    end
+    
+    prepareEntity(id);
+end
+
+function drips_init(id)    -- Maria Doria drips (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+        if(getEntityDistance(player, object_id) < 8192.0) then
+            if(math.random(100000) > 99500) then playSound(329, object_id) end;
         end;
     end
     

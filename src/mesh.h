@@ -13,6 +13,7 @@
 #define COLLISION_TRIMESH           (0x01)
 #define COLLISION_BOX               (0x02)
 #define COLLISION_SPHERE            (0x03)
+#define COLLISION_BASE_BOX          (0x04)
 
 
 #include <SDL2/SDL_platform.h>
@@ -44,7 +45,7 @@ typedef struct base_mesh_s
 
     struct polygon_s     *transparency_polygons;                                // transparency mesh's polygons list
     struct polygon_s     *animated_polygons;                                    // opaque animated mesh's polygons list
-    
+
     uint32_t              num_texture_pages;                                    // face without structure wrapping
     uint32_t             *element_count_per_texture;                            //
     uint32_t             *elements;                                             //
@@ -146,24 +147,24 @@ typedef struct anim_seq_s
 {
     bool        uvrotate;               // UVRotate mode flag.
     bool        frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
-    
+
     bool        blend;                  // Blend flag.  Reserved for future use!
     btScalar    blend_rate;             // Blend rate.  Reserved for future use!
     btScalar    blend_time;             // Blend value. Reserved for future use!
-    
+
     int8_t      anim_type;              // 0 = normal, 1 = back, 2 = reverse.
     bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
     btScalar    frame_time;             // Time passed since last frame update.
     uint16_t    current_frame;          // Current frame for this sequence.
     btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
     uint16_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
-      
+
     btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
     btScalar    uvrotate_max;           // Reference value used to restart rotation.
     btScalar    current_uvrotate;       // Current coordinate window position.
 
     struct tex_frame_s  *frames;
-    
+
     uint32_t*   frame_list;       // Offset into anim textures frame list.
 }anim_seq_t, *anim_seq_p;
 
@@ -206,17 +207,17 @@ typedef struct static_mesh_s
  */
 typedef struct ss_bone_tag_s
 {
-    base_mesh_p         mesh_base;                                              // base mesh - pointer to the first mesh in array
-    base_mesh_p         mesh_skin;                                              // base skinned mesh for ТР4+
-    base_mesh_p         mesh_slot;
-    btScalar            offset[3];                                              // model position offset
+    struct ss_bone_tag_s   *parent;
+    base_mesh_p             mesh_base;                                          // base mesh - pointer to the first mesh in array
+    base_mesh_p             mesh_skin;                                          // base skinned mesh for ТР4+
+    base_mesh_p             mesh_slot;
+    btScalar                offset[3];                                          // model position offset
 
-    btScalar            qrotate[4];                                             // quaternion rotation
-    btScalar            transform[16];                                          // 4x4 OpenGL matrix for stack usage
-    btScalar            full_transform[16];                                     // 4x4 OpenGL matrix for global usage
+    btScalar                qrotate[4];                                         // quaternion rotation
+    alignas(16) btScalar    transform[16];                                      // 4x4 OpenGL matrix for stack usage
+    alignas(16) btScalar    full_transform[16];                                 // 4x4 OpenGL matrix for global usage
 
-    uint32_t            body_part;                                              // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
-    uint16_t            flag;                                                   // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
+    uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 
@@ -231,13 +232,13 @@ typedef struct ss_animation_s
     int16_t                     next_frame;                                     //
 
     uint16_t                    anim_flags;                                     // additional animation control param
-    
+
     btScalar                    period;                                         // one frame change period
     btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
-    
+
     void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
-    
+
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;
 }ss_animation_t, *ss_animation_p;
@@ -322,25 +323,21 @@ typedef struct animation_frame_s
 {
     uint32_t                    id;
     uint8_t                     original_frame_rate;
-    int                         accel_hi;
-    int                         accel_hi2;
-    int                         accel_lo;
-    int                         accel_lo2;
-    int                         speed;
-    int                         speed2;
+    btScalar                    speed_x;                // Forward-backward speed
+    btScalar                    accel_x;                // Forward-backward accel
+    btScalar                    speed_y;                // Left-right speed
+    btScalar                    accel_y;                // Left-right accel
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     uint16_t                    state_id;
-    int16_t                     unknown;
-    int16_t                     unknown2;
-    uint16_t                    frames_count;                                   // number of frames
-    struct bone_frame_s        *frames;                                         // frames data
+    uint16_t                    frames_count;           // Number of frames
+    struct bone_frame_s        *frames;                 // Frame data
 
-    uint16_t                    state_change_count;                             // number of animation statechanges
-    struct state_change_s      *state_change;                                   // animation statechanges data
+    uint16_t                    state_change_count;     // Number of animation statechanges
+    struct state_change_s      *state_change;           // Animation statechanges data
 
-    struct animation_frame_s   *next_anim;                                      // next default animation
-    int                         next_frame;                                     // next default frame
+    struct animation_frame_s   *next_anim;              // Next default animation
+    int                         next_frame;             // Next default frame
 }animation_frame_t, *animation_frame_p;
 
 /*
@@ -375,6 +372,8 @@ void SkeletonModel_FillTransparency(skeletal_model_p model);
 void SkeletalModel_InterpolateFrames(skeletal_model_p models);
 void FillSkinnedMeshMap(skeletal_model_p model);
 
+void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
+
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count);
 void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
@@ -385,7 +384,8 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
 void Mesh_GenFaces(base_mesh_p mesh);
 
 /* bullet collision model calculation */
-btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, int cflag, bool is_static = true);
+btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh, bool is_static);
+btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
 #endif

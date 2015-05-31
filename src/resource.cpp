@@ -51,11 +51,11 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     {
         int top = lua_gettop(objects_flags_conf);
         assert(top >= 0);
-        lua_getglobal(objects_flags_conf, "getEntityProperties");
+        lua_getglobal(objects_flags_conf, "getEntityModelProperties");
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // model id
+            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
             if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
                 ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
@@ -75,25 +75,25 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     {
         int top = lua_gettop(level_script);
         assert(top >= 0);
-        lua_getglobal(level_script, "getEntityProperties");
+        lua_getglobal(level_script, "getEntityModelProperties");
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->bf.animations.model->id);        // model id
-            if (lua_CallAndLog(level_script, 2, 4, 0))                     // call that function
+            lua_pushinteger(level_script, ent->bf.animations.model->id);        // entity model id
+            if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
                 {
-                    ent->self->collide_flag = 0xff & lua_tointeger(level_script, -3);   // get collision flag
+                    ent->self->collide_flag = 0xff & lua_tointeger(level_script, -4);   // get collision flag
                 }
                 if(!lua_isnil(level_script, -3))
                 {
-                    ent->bf.animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
+                    ent->bf.animations.model->hide = lua_tointeger(level_script, -3);   // get info about model visibility
                 }
                 if(!lua_isnil(level_script, -2))
                 {
                     ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-                    ent->type_flags |= lua_tointeger(level_script, -1);                 // get traverse information
+                    ent->type_flags |= lua_tointeger(level_script, -2);                 // get traverse information
                 }
                 if(!lua_isnil(level_script, -1))
                 {
@@ -1082,14 +1082,20 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                 strcat(single_events, buf);
                                 break;
 
-                            case TR_FD_TRIGFUNC_BODYBAG:
-                                snprintf(buf, 128, "   setBodybag(%d); \n", operands);
+                            case TR_FD_TRIGFUNC_CLEARBODIES:
+                                snprintf(buf, 128, "   clearBodies(); \n");
                                 strcat(single_events, buf);
                                 break;
 
                             case TR_FD_TRIGFUNC_FLYBY:
-                                snprintf(buf, 128, "   playFlyby(%d); \n", operands);
-                                strcat(cont_events, buf);
+                                {
+                                    entry++;
+                                    uint8_t flyby_once  = ((*entry) & 0x0100) >> 8;
+                                    cont_bit  = ((*entry) & 0x8000) >> 15;
+
+                                    snprintf(buf, 128, "   playFlyby(%d, %d); \n", operands, flyby_once);
+                                    strcat(cont_events, buf);
+                                }
                                 break;
 
                             case TR_FD_TRIGFUNC_CUTSCENE:
@@ -1438,6 +1444,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
                                 af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
+                                Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
                                 //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
                                 break;
                         }
@@ -1808,10 +1815,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         int lua_err = luaL_loadfile(ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
         if(lua_err)
         {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(objects_flags_conf, -1));
-            lua_pop(objects_flags_conf, 1);
-            lua_close(objects_flags_conf);
-            objects_flags_conf = NULL;
+            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(ent_ID_override, -1));
+            lua_pop(ent_ID_override, 1);
+            lua_close(ent_ID_override);
+            ent_ID_override = NULL;
         }
         lua_err = lua_pcall(ent_ID_override, 0, 0, 0);
         if(lua_err)
@@ -2099,8 +2106,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->cbb_max[0] = tr_static->collision_box[1].x;
         r_static->cbb_max[1] =-tr_static->collision_box[1].z;
         r_static->cbb_max[2] = tr_static->collision_box[0].y;
-        vec3_copy(r_static->mesh->bb_min, r_static->cbb_min);
-        vec3_copy(r_static->mesh->bb_max, r_static->cbb_max);
 
         r_static->vbb_min[0] = tr_static->visibility_box[0].x;
         r_static->vbb_min[1] =-tr_static->visibility_box[0].z;
@@ -2140,10 +2145,27 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         TR_SetStaticMeshProperties(r_static);
 
         // Set static mesh collision.
-
         if(r_static->self->collide_flag != COLLISION_NONE)
         {
-            cshape = BT_CSfromMesh(r_static->mesh, true, true, r_static->self->collide_flag, true);
+            switch(r_static->self->collide_flag)
+            {
+                case COLLISION_BOX:
+                    cshape = BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max, true, true, false);
+                    break;
+
+                case COLLISION_BASE_BOX:
+                    cshape = BT_CSfromBBox(r_static->mesh->bb_min, r_static->mesh->bb_max, true, true, false);
+                    break;
+
+                case COLLISION_TRIMESH:
+                    cshape = BT_CSfromMesh(r_static->mesh, true, true, false);
+                    break;
+
+                default:
+                    cshape = NULL;
+                    break;
+            };
+
             if(cshape)
             {
                 startTransform.setFromOpenGLMatrix(r_static->transform);
@@ -2801,10 +2823,10 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         else
         {
             seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], 0, &p0);
+            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
             for(uint16_t j=0;j<seq->frames_count;j++)
             {
-                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], 0, &p);
+                engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
                 seq->frames[j].tex_ind = p.tex_index;
 
                 GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
@@ -3016,6 +3038,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         vec3_set_zero(vertex->normal);                                          // paranoid
     }
 
+    BaseMesh_FindBB(mesh);
+
     mesh->polygons_count = tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles;
     p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
 
@@ -3139,7 +3163,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         tr_copyNormals(p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }
 
-    BaseMesh_FindBB(mesh);
     if(mesh->vertex_count > 0)
     {
         mesh->vertex_count = 0;
@@ -3205,6 +3228,8 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         vec3_set_zero(vertex->normal);                                          // paranoid
     }
 
+    BaseMesh_FindBB(mesh);
+
     mesh->polygons_count = tr_room->num_triangles + tr_room->num_rectangles;
     p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
 
@@ -3251,7 +3276,6 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         tr_copyNormals(p, mesh, tr_room->rectangles[i].vertices);
     }
 
-    BaseMesh_FindBB(mesh);
     if(mesh->vertex_count > 0)
     {
         mesh->vertex_count = 0;
@@ -3554,21 +3578,20 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         }
         frame_step = tr_animation->frame_size;
 
-        //Sys_DebugLog(LOG_FILENAME, "frame_step = %d", frame_step);
         anim->id = i;
         anim->original_frame_rate = tr_animation->frame_rate;
-        anim->accel_hi = tr_animation->accel_hi;
-        anim->accel_hi2 = tr_animation->accel_hi2;
-        anim->accel_lo = tr_animation->accel_lo;
-        anim->accel_lo2 = tr_animation->accel_lo2;
-        anim->speed = tr_animation->speed;
-        anim->speed2 = tr_animation->speed2;
+
+        anim->speed_x = tr_animation->speed;
+        anim->accel_x = tr_animation->accel;
+        anim->speed_y = tr_animation->accel_lateral;
+        anim->accel_y = tr_animation->speed_lateral;
+
         anim->anim_command = tr_animation->anim_command;
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
-        anim->unknown = tr_animation->unknown;
-        anim->unknown2 = tr_animation->unknown2;
+
         anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
+
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
         // Parse AnimCommands
@@ -3736,7 +3759,6 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
      * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
      */
     SkeletalModel_InterpolateFrames(model);
-    GenerateAnimCommandsTransform(model);
     /*
      * state change's loading
      */
@@ -3826,6 +3848,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             }
         }
     }
+    GenerateAnimCommandsTransform(model);
 }
 
 int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
@@ -3988,17 +4011,15 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         }
 
         entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
-        entity->OCB             =  tr_item->ocb;
+        entity->OCB             = tr_item->ocb;
         entity->timer           = 0.0;
 
         entity->self->collide_flag = 0x00;
-        entity->move_type = 0x0000;
-        entity->bf.animations.anim_flags = 0x0000;
-        entity->bf.animations.current_animation = 0;
-        entity->bf.animations.current_frame = 0;
-        entity->bf.animations.frame_time = 0.0;
-        entity->inertia = 0.0;
-        entity->move_type = 0;
+        entity->move_type          = 0x0000;
+        entity->inertia_linear     = 0.0;
+        entity->inertia_angular[0] = 0.0;
+        entity->inertia_angular[1] = 0.0;
+        entity->move_type          = 0;
 
         entity->bf.animations.model = World_GetModelByID(world, tr_item->object_id);
 
@@ -4006,22 +4027,22 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         {
             if(entity->bf.animations.model == NULL)
             {
-                top = lua_gettop(ent_ID_override);                                         // save LUA stack
-                lua_getglobal(ent_ID_override, "getOverridedID");                          // add to the up of stack LUA's function
-                lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
-                lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
-                if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                         // call that function
+                top = lua_gettop(ent_ID_override);                              // save LUA stack
+                lua_getglobal(ent_ID_override, "getOverridedID");               // add to the up of stack LUA's function
+                lua_pushinteger(ent_ID_override, tr->game_version);             // add to stack first argument
+                lua_pushinteger(ent_ID_override, tr_item->object_id);           // add to stack second argument
+                if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                   // call that function
                 {
                     entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
                 }
-                lua_settop(ent_ID_override, top);                                      // restore LUA stack
+                lua_settop(ent_ID_override, top);                               // restore LUA stack
             }
 
-            top = lua_gettop(ent_ID_override);                                         // save LUA stack
-            lua_getglobal(ent_ID_override, "getOverridedAnim");                        // add to the up of stack LUA's function
-            lua_pushinteger(ent_ID_override, tr->game_version);                        // add to stack first argument
-            lua_pushinteger(ent_ID_override, tr_item->object_id);                      // add to stack second argument
-            if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                         // call that function
+            top = lua_gettop(ent_ID_override);                                  // save LUA stack
+            lua_getglobal(ent_ID_override, "getOverridedAnim");                 // add to the up of stack LUA's function
+            lua_pushinteger(ent_ID_override, tr->game_version);                 // add to stack first argument
+            lua_pushinteger(ent_ID_override, tr_item->object_id);               // add to stack second argument
+            if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                       // call that function
             {
                 int replace_anim_id = lua_tointeger(ent_ID_override, -1);
                 if(replace_anim_id > 0)
@@ -4059,28 +4080,14 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
         }
 
-        if(tr->game_version < TR_II && tr_item->object_id == 83)
+        if(tr->game_version < TR_II && tr_item->object_id == 83)                ///@FIXME: brutal magick hardcode! ;-)
         {
             Entity_Clear(entity);                                               // skip PSX save model
             free(entity);
             continue;
         }
 
-        entity->bf.bone_tag_count = entity->bf.animations.model->mesh_count;
-        entity->bf.bone_tags = (ss_bone_tag_p)malloc(entity->bf.bone_tag_count * sizeof(ss_bone_tag_t));
-        for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
-        {
-            entity->bf.bone_tags[j].flag = entity->bf.animations.model->mesh_tree[j].flag;
-            entity->bf.bone_tags[j].mesh_base = entity->bf.animations.model->mesh_tree[j].mesh_base;
-            entity->bf.bone_tags[j].mesh_skin = entity->bf.animations.model->mesh_tree[j].mesh_skin;
-            entity->bf.bone_tags[j].mesh_slot = NULL;
-            entity->bf.bone_tags[j].body_part = entity->bf.animations.model->mesh_tree[j].body_part;
-            
-            vec3_copy(entity->bf.bone_tags[j].offset, entity->bf.animations.model->mesh_tree[j].offset);
-            vec4_set_zero(entity->bf.bone_tags[j].qrotate);
-            Mat4_E_macro(entity->bf.bone_tags[j].transform);
-            Mat4_E_macro(entity->bf.bone_tags[j].full_transform);
-        }
+        SSBoneFrame_CreateFromModel(&entity->bf, entity->bf.animations.model);
 
         if(0 == tr_item->object_id)                                             // Lara is unical model
         {

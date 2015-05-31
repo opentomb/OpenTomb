@@ -18,7 +18,7 @@
 --   0x0000  - Object has no collisions
 --   0x0001  - Object uses real mesh data for collision.
 --   0x0002  - Object uses bounding box for collision.
---   0x0003  - Object uses sphere of a specified radius for collision. 
+--   0x0003  - Object uses sphere of a specified radius for collision.
 
 -- [ func ] :
 
@@ -84,10 +84,10 @@ tr1_entity_tbl[44] = {coll = 0x01};                      -- Thor's hammer (handl
 tr1_entity_tbl[45] = {coll = 0x01};                      -- Thor's hammer (block)
 tr1_entity_tbl[46] = {coll = 0x01, hide = 0x01};                      -- Thor's lightning ball
 tr1_entity_tbl[47] = {coll = 0x01};                      -- Barricade
-tr1_entity_tbl[48] = {coll = 0x02, trav = 0x18};         -- Pushable block
-tr1_entity_tbl[49] = {coll = 0x02, trav = 0x18};         -- Pushable block
-tr1_entity_tbl[50] = {coll = 0x02, trav = 0x18};         -- Pushable block
-tr1_entity_tbl[51] = {coll = 0x02, trav = 0x18};         -- Pushable block
+tr1_entity_tbl[48] = {coll = 0x02, trav = 0x18, func = "pushable"};         -- Pushable block
+tr1_entity_tbl[49] = {coll = 0x02, trav = 0x18, func = "pushable"};         -- Pushable block
+tr1_entity_tbl[50] = {coll = 0x02, trav = 0x18, func = "pushable"};         -- Pushable block
+tr1_entity_tbl[51] = {coll = 0x02, trav = 0x18, func = "pushable"};         -- Pushable block
 tr1_entity_tbl[52] = {coll = 0x01, func = "tallblock"};                      -- Moving block
 tr1_entity_tbl[53] = {coll = 0x02, func = "fallceiling"};                      -- Falling ceiling
 tr1_entity_tbl[54] = {coll = 0x01};                      -- Sword of Damocles (unused?)
@@ -276,10 +276,10 @@ tr2_entity_tbl[63] = {coll = 0x01};                     -- Drawbridge
 tr2_entity_tbl[64] = {coll = 0x02, func = "slamdoor"};                     -- Slamming door
 tr2_entity_tbl[65] = {coll = 0x01};                     -- Elevator
 tr2_entity_tbl[66] = {coll = 0x02};                     -- Minisub
-tr2_entity_tbl[67] = {coll = 0x02, trav = 0x18};        -- Movable cubical block (pushable)
-tr2_entity_tbl[68] = {coll = 0x02, trav = 0x18};        -- Movable cubical block (pushable)
-tr2_entity_tbl[69] = {coll = 0x02, trav = 0x18};        -- Movable cubical block (pushable)
-tr2_entity_tbl[70] = {coll = 0x02, trav = 0x18};        -- Movable cubical block (pushable)
+tr2_entity_tbl[67] = {coll = 0x02, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
+tr2_entity_tbl[68] = {coll = 0x02, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
+tr2_entity_tbl[69] = {coll = 0x02, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
+tr2_entity_tbl[70] = {coll = 0x02, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
 tr2_entity_tbl[71] = {coll = 0x02};                     -- Big bowl (Ice Palace)
 tr2_entity_tbl[72] = {coll = 0x02};                     -- Breakable window (can shoot out)
 tr2_entity_tbl[73] = {coll = 0x02};                     -- Breakable window (must jump through)
@@ -379,7 +379,7 @@ tr2_entity_tbl[209] = {coll = 0x00};               -- Dragon explosion effect (e
 tr2_entity_tbl[210] = {coll = 0x00};               -- Dragon explosion effect (expanding netted bubble)
 tr2_entity_tbl[211] = {coll = 0x00};               -- Dragon explosion effect (expanding solid bubble)
 tr2_entity_tbl[212] = {coll = 0x00, func = "alarm_TR2"};               -- Alarm
-tr2_entity_tbl[213] = {coll = 0x00, hide = 0x01};  -- Placeholder
+tr2_entity_tbl[213] = {coll = 0x00, hide = 0x01, func = "drips"};  -- Dripping water
 tr2_entity_tbl[214] = {coll = 0x02};               -- Tyrannosaur
 tr2_entity_tbl[215] = {coll = 0x00, hide = 0x01, func = "venicebird"};  -- Singing birds
 tr2_entity_tbl[216] = {coll = 0x00, hide = 0x01};  -- Placeholder
@@ -503,8 +503,8 @@ tr3_entity_tbl[89] = {coll = 0x01};                 -- Giant boulder (Temple of 
 tr3_entity_tbl[90] = {coll = 0x01};                 -- Disk (like dart)
 tr3_entity_tbl[91] = {coll = 0x01, hide = 0x01};                 -- Dart shooter
 tr3_entity_tbl[94] = {coll = 0x01, func = "slamdoor"};                 -- Spiked impaled skeleton / Slamming door
-tr3_entity_tbl[97] = {coll = 0x01, trav = 0x18};    -- Movable cubical block (pushable)
-tr3_entity_tbl[98] = {coll = 0x01, trav = 0x18};    -- Movable cubical block (pushable)
+tr3_entity_tbl[97] = {coll = 0x01, trav = 0x18, func = "pushable"};    -- Movable cubical block (pushable)
+tr3_entity_tbl[98] = {coll = 0x01, trav = 0x18, func = "pushable"};    -- Movable cubical block (pushable)
 tr3_entity_tbl[101] = {coll = 0x01};                -- Destroyable boarded-up window
 tr3_entity_tbl[102] = {coll = 0x01};                -- Destroyable boarded-up window / wall
 tr3_entity_tbl[106] = {coll = 0x01};                -- Overhead pulley hook
@@ -699,12 +699,12 @@ tr3_entity_tbl[347] = {coll = 0x00, hide = 0x01};   -- Bat swarm
 
 -- ANIMATINGS --
 
-tr3_entity_tbl[349] = {coll = 0x01};           -- Misc item (Animating 1)
-tr3_entity_tbl[350] = {coll = 0x01};           -- Misc item (Animating 2)
-tr3_entity_tbl[351] = {coll = 0x01};           -- Misc item (Animating 3)
-tr3_entity_tbl[352] = {coll = 0x01};           -- Misc item (Animating 4)
-tr3_entity_tbl[353] = {coll = 0x01};           -- Footstool / Fish swimming in tank / Radar display
-tr3_entity_tbl[354] = {coll = 0x01};           -- Dead raptor / Alarm box / Mason-lodge dagger / Small version of big antenna
+tr3_entity_tbl[349] = {coll = 0x01, func = "anim"};           -- Misc item (Animating 1)
+tr3_entity_tbl[350] = {coll = 0x01, func = "anim"};           -- Misc item (Animating 2)
+tr3_entity_tbl[351] = {coll = 0x01, func = "anim"};           -- Misc item (Animating 3)
+tr3_entity_tbl[352] = {coll = 0x01, func = "anim"};           -- Misc item (Animating 4)
+tr3_entity_tbl[353] = {coll = 0x01, func = "anim"};           -- Footstool / Fish swimming in tank / Radar display
+tr3_entity_tbl[354] = {coll = 0x01, func = "anim"};           -- Dead raptor / Alarm box / Mason-lodge dagger / Small version of big antenna
 
 
 tr3_entity_tbl[355] = {coll = 0x00};                -- Skybox
@@ -874,11 +874,11 @@ tr4_entity_tbl[153] = {coll = 0x02}; -- Expanding platform - RESIZABLE MESH!
 tr4_entity_tbl[154] = {coll = 0x02}; -- Squishy block 1
 tr4_entity_tbl[155] = {coll = 0x02}; -- Squishy block 2
 
-tr4_entity_tbl[156] = {coll = 0x02, trav = 0x10}; -- Pushable object 1
-tr4_entity_tbl[157] = {coll = 0x02, trav = 0x10}; -- Pushable object 2
-tr4_entity_tbl[158] = {coll = 0x02, trav = 0x10}; -- Pushable object 3
-tr4_entity_tbl[159] = {coll = 0x02, trav = 0x10}; -- Pushable object 4
-tr4_entity_tbl[160] = {coll = 0x02, trav = 0x10}; -- Pushable object 5
+tr4_entity_tbl[156] = {coll = 0x02, trav = 0x10, func = "pushable"}; -- Pushable object 1
+tr4_entity_tbl[157] = {coll = 0x02, trav = 0x10, func = "pushable"}; -- Pushable object 2
+tr4_entity_tbl[158] = {coll = 0x02, trav = 0x10, func = "pushable"}; -- Pushable object 3
+tr4_entity_tbl[159] = {coll = 0x02, trav = 0x10, func = "pushable"}; -- Pushable object 4
+tr4_entity_tbl[160] = {coll = 0x02, trav = 0x10, func = "pushable"}; -- Pushable object 5
 
 tr4_entity_tbl[161] = {coll = 0x00}; -- Tripwire  - UNUSED
 tr4_entity_tbl[162] = {coll = 0x02}; -- Sentry gun
@@ -1222,7 +1222,7 @@ tr4_entity_tbl[453] = {coll = 0x01}; -- Animating 14 (sunlight)
 tr4_entity_tbl[454] = {coll = 0x01}; -- Animating 14 MIP
 tr4_entity_tbl[455] = {coll = 0x01}; -- Animating 15 (basket, hub.tr4, sunlight)
 tr4_entity_tbl[456] = {coll = 0x01}; -- Animating 15 MIP
-tr4_entity_tbl[457] = {coll = 0x01}; -- Animating 16
+tr4_entity_tbl[457] = {coll = 0x01}; -- Animating 16 (map 9 - coll = 0x00)
 tr4_entity_tbl[458] = {coll = 0x01}; -- Animating 16 MIP
 
 --------------------------------------------------------------------------------
@@ -1356,11 +1356,11 @@ tr5_entity_tbl[134] = {coll = 0x01}; -- Box 2 (Ex-RAISING_BLOCK1?)
 tr5_entity_tbl[135] = {coll = 0x00, hide = 0x01}; -- Teleport (Ex-RAISING_BLOCK2?)
 tr5_entity_tbl[136] = {coll = 0x00, hide = 0x01}; -- Headset talk point (Ex-EXPANDING_PLATFORM?)
 
-tr5_entity_tbl[137] = {coll = 0x01, trav = 0x10}; -- Pushable 1
-tr5_entity_tbl[138] = {coll = 0x01, trav = 0x10}; -- Pushable 2
-tr5_entity_tbl[139] = {coll = 0x01, trav = 0x10}; -- Pushable 3 - UNUSED?
-tr5_entity_tbl[140] = {coll = 0x01, trav = 0x10}; -- Pushable 4 - UNUSED?
-tr5_entity_tbl[141] = {coll = 0x01, trav = 0x10}; -- Pushable 5 - UNUSED?
+tr5_entity_tbl[137] = {coll = 0x01, trav = 0x10, func = "pushable"}; -- Pushable 1
+tr5_entity_tbl[138] = {coll = 0x01, trav = 0x10, func = "pushable"}; -- Pushable 2
+tr5_entity_tbl[139] = {coll = 0x01, trav = 0x10, func = "pushable"}; -- Pushable 3 - UNUSED?
+tr5_entity_tbl[140] = {coll = 0x01, trav = 0x10, func = "pushable"}; -- Pushable 4 - UNUSED?
+tr5_entity_tbl[141] = {coll = 0x01, trav = 0x10, func = "pushable"}; -- Pushable 5 - UNUSED?
 
 tr5_entity_tbl[142] = {coll = 0x00}; -- Robot arm (Ex-WRECKING BALL?)
 tr5_entity_tbl[142] = {coll = 0x00}; -- Death slide - UNUSED?
@@ -1735,7 +1735,7 @@ tr5_entity_tbl[452] = {coll = 0x01}; -- Bridge tilt 2
 tr5_entity_tbl[453] = {coll = 0x01}; -- Bridge tilt 2 MIP
 
 
-function getEntityProperties(ver, id)
+function getEntityModelProperties(ver, id)
     tbl = {};
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
         tbl = tr1_entity_tbl;
@@ -1748,7 +1748,7 @@ function getEntityProperties(ver, id)
     elseif(ver < 9) then                -- TR_V
         tbl = tr5_entity_tbl;
     else
-        return nil, nil, nil;
+        return nil, nil, nil, nil;
     end;
 
     if(tbl[id] == nil) then
