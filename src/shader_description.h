@@ -5,6 +5,14 @@
 #include <SDL2/SDL_opengl.h>
 #include "gl_util.h"
 
+struct shader_stage
+{
+    GLhandleARB shader;
+    
+    shader_stage(GLenum type, const char *filename, const char *additionalDefines = 0);
+    ~shader_stage();
+};
+
 /*!
  * A shader description consists of a program, code to load the
  * program, and the indices of the various uniform values. Each
@@ -17,14 +25,8 @@ struct shader_description
     GLhandleARB program;
     GLint sampler;
     
-    shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines);
-    shader_description(const char *vertexFilename, GLhandleARB fragmentShader, const char *additionalDefines);
-    shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines);
+    shader_description(const shader_stage &vertex, const shader_stage &fragment);
     ~shader_description();
-    
-private:
-    /*! Called by constructor to load data. */
-    void load(GLhandleARB vertex, GLhandleARB fragment);
 };
 
 /*!
@@ -35,7 +37,7 @@ struct gui_shader_description : public shader_description
     GLint offset;
     GLint factor;
     
-    gui_shader_description(GLhandleARB vertexShader, const char *fragmentFilename);
+    gui_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 
 /*!
@@ -52,7 +54,7 @@ struct sprite_shader_description : public shader_description
         tex_coord
     };
     
-    sprite_shader_description(const char *vertexFilename, const char *fragmentFilename);
+    sprite_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 
 /*!
@@ -62,7 +64,7 @@ struct text_shader_description : public shader_description
 {
     GLint screenSize;
     
-    text_shader_description(const char *vertexFilename, const char *fragmentFilename);
+    text_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 
 /*!
@@ -72,9 +74,7 @@ struct unlit_shader_description : public shader_description
 {
     GLint model_view_projection;
     
-    unlit_shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines);
-    unlit_shader_description(const char *vertexFilename, GLhandleARB fragmentShader, const char *additionalDefines);
-    unlit_shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines);
+    unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 
 /*!
@@ -91,7 +91,7 @@ struct lit_shader_description : public unlit_shader_description
     GLint light_falloff;
     GLint light_ambient;
     
-    lit_shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines);
+    lit_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 
 struct unlit_tinted_shader_description : public unlit_shader_description
@@ -99,8 +99,7 @@ struct unlit_tinted_shader_description : public unlit_shader_description
     GLint current_tick;
     GLint tint_mult;
     
-    unlit_tinted_shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines);
-    unlit_tinted_shader_description(const char *vertexFilename, GLhandleARB fragmentShader, const char *additionalDefines);
+    unlit_tinted_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 
 #endif /* defined(__OpenTomb__shader_description__) */

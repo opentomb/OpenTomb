@@ -8,45 +8,22 @@
 
 #include "shader_description.h"
 
-shader_description::shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines)
+shader_stage::shader_stage(GLenum type, const char *filename, const char *additionalDefines)
 {
-    GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-    loadShaderFromFile(vertexShader, vertexFilename, additionalDefines);
-    
-    GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-    loadShaderFromFile(fragmentShader, fragmentFilename, additionalDefines);
-    
-    load(vertexShader, fragmentShader);
-    
-    glDeleteObjectARB(vertexShader);
-    glDeleteObjectARB(fragmentShader);
+    shader = glCreateShaderObjectARB(type);
+    loadShaderFromFile(shader, filename, additionalDefines);
 }
 
-shader_description::shader_description(const char *filename, GLhandleARB fragmentShader, const char *additionalDefines)
+shader_stage::~shader_stage()
 {
-    GLhandleARB vertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-    loadShaderFromFile(vertexShader, filename, additionalDefines);
-    
-    load(vertexShader, fragmentShader);
-    
-    glDeleteObjectARB(vertexShader);
+    glDeleteObjectARB(shader);
 }
 
-shader_description::shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines)
-{
-    GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-    loadShaderFromFile(fragmentShader, fragmentFilename, additionalDefines);
-    
-    load(vertexShader, fragmentShader);
-    
-    glDeleteObjectARB(fragmentShader);
-}
-
-void shader_description::load(GLhandleARB vertexShader, GLhandleARB fragmentShader)
+shader_description::shader_description(const shader_stage &vertex, const shader_stage &fragment)
 {
     program = glCreateProgramObjectARB();
-    glAttachObjectARB(program, vertexShader);
-    glAttachObjectARB(program, fragmentShader);
+    glAttachObjectARB(program, vertex.shader);
+    glAttachObjectARB(program, fragment.shader);
     glLinkProgramARB(program);
     printInfoLog(program);
     
@@ -58,21 +35,21 @@ shader_description::~shader_description()
     glDeleteObjectARB(program);
 }
 
-gui_shader_description::gui_shader_description(GLhandleARB vertexShader, const char *fragmentFilename)
-: shader_description(vertexShader, fragmentFilename, 0)
+gui_shader_description::gui_shader_description(const shader_stage &vertex, const shader_stage &fragment)
+: shader_description(vertex, fragment)
 {
     offset = glGetUniformLocationARB(program, "offset");
     factor = glGetUniformLocationARB(program, "factor");
 }
 
-text_shader_description::text_shader_description(const char *vertexFilename, const char *fragmentFilename)
-: shader_description(vertexFilename, fragmentFilename, 0)
+text_shader_description::text_shader_description(const shader_stage &vertex, const shader_stage &fragment)
+: shader_description(vertex, fragment)
 {
     screenSize = glGetUniformLocationARB(program, "screenSize");
 }
 
-sprite_shader_description::sprite_shader_description(const char *vertexFilename, const char *fragmentFilename)
-: shader_description(vertexFilename, fragmentFilename, 0)
+sprite_shader_description::sprite_shader_description(const shader_stage &vertex, const shader_stage &fragment)
+: shader_description(vertex, fragment)
 {
     model_view = glGetUniformLocationARB(program, "modelView");
     projection = glGetUniformLocationARB(program, "projection");
@@ -80,28 +57,17 @@ sprite_shader_description::sprite_shader_description(const char *vertexFilename,
     glBindAttribLocationARB(program, vertex_attribs::corner_offset, "cornerOffset");
     glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
     glLinkProgramARB(program);
+    printInfoLog(program);
 }
 
-unlit_shader_description::unlit_shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines)
-: shader_description(vertexFilename, fragmentFilename, additionalDefines)
+unlit_shader_description::unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment)
+: shader_description(vertex, fragment)
 {
     model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
 }
 
-unlit_shader_description::unlit_shader_description(const char *vertexFilename, GLhandleARB fragmentShader, const char *additionalDefines)
-: shader_description(vertexFilename, fragmentShader, additionalDefines)
-{
-    model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
-}
-
-unlit_shader_description::unlit_shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines)
-: shader_description(vertexShader, fragmentFilename, additionalDefines)
-{
-    model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
-}
-
-lit_shader_description::lit_shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines)
-: unlit_shader_description(vertexShader, fragmentFilename, additionalDefines)
+lit_shader_description::lit_shader_description(const shader_stage &vertex, const shader_stage &fragment)
+: unlit_shader_description(vertex, fragment)
 {
     model_view = glGetUniformLocationARB(program, "modelView");
     number_of_lights = glGetUniformLocationARB(program, "number_of_lights");
@@ -111,15 +77,8 @@ lit_shader_description::lit_shader_description(GLhandleARB vertexShader, const c
     light_ambient = glGetUniformLocationARB(program, "light_ambient");
 }
 
-unlit_tinted_shader_description::unlit_tinted_shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines)
-: unlit_shader_description(vertexFilename, fragmentFilename, additionalDefines)
-{
-    current_tick = glGetUniformLocationARB(program, "fCurrentTick");
-    tint_mult = glGetUniformLocationARB(program, "tintMult");
-}
-
-unlit_tinted_shader_description::unlit_tinted_shader_description(const char *vertexFilename, GLhandleARB fragmentShader, const char *additionalDefines)
-: unlit_shader_description(vertexFilename, fragmentShader, additionalDefines)
+unlit_tinted_shader_description::unlit_tinted_shader_description(const shader_stage &vertex, const shader_stage &fragment)
+: unlit_shader_description(vertex, fragment)
 {
     current_tick = glGetUniformLocationARB(program, "fCurrentTick");
     tint_mult = glGetUniformLocationARB(program, "tintMult");
