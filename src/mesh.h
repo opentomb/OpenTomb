@@ -87,6 +87,21 @@ typedef struct sprite_s
     btScalar            bottom;
 }sprite_t, *sprite_p;
 
+/*
+ * Structure for all the sprites in a room
+ */
+typedef struct sprite_buffer_s
+{
+    // Vertex data for the sprites
+    GLuint                array_buffer;
+    // Element data for the sprites
+    GLuint                element_array_buffer;
+    
+    // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
+    uint32_t              num_texture_pages;
+    // The element count for each sub-range.
+    uint32_t             *element_count_per_texture;
+}sprite_buffer_t, *sprite_buffer_p;
 
 /*
  * lights

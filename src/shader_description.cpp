@@ -71,6 +71,17 @@ text_shader_description::text_shader_description(const char *vertexFilename, con
     screenSize = glGetUniformLocationARB(program, "screenSize");
 }
 
+sprite_shader_description::sprite_shader_description(const char *vertexFilename, const char *fragmentFilename)
+: shader_description(vertexFilename, fragmentFilename, 0)
+{
+    model_view = glGetUniformLocationARB(program, "modelView");
+    projection = glGetUniformLocationARB(program, "projection");
+    glBindAttribLocationARB(program, vertex_attribs::position, "position");
+    glBindAttribLocationARB(program, vertex_attribs::corner_offset, "cornerOffset");
+    glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
+    glLinkProgramARB(program);
+}
+
 unlit_shader_description::unlit_shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines)
 : shader_description(vertexFilename, fragmentFilename, additionalDefines)
 {

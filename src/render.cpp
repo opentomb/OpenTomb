@@ -108,48 +108,6 @@ render_list_p Render_CreateRoomListArray(unsigned int count)
     return ret;
 }
 
-/**
- * sprite draw
- * @FIXME: use pixel and pixel size for vertex position calculation disabling
- */
-void Render_Sprite(struct sprite_s *sprite, GLfloat x, GLfloat y, GLfloat z)
-{
-    GLfloat *v, buf[24], *up, *right;
-
-    up = renderer.cam->up_dir;
-    right = renderer.cam->right_dir;
-    v = buf;
-    *v = sprite->right * right[0] + sprite->top * up[0] + x;    v++;
-    *v = sprite->right * right[1] + sprite->top * up[1] + y;    v++;
-    *v = sprite->right * right[2] + sprite->top * up[2] + z;    v++;
-    vec3_set_one(v);    v += 3;
-
-    *v = sprite->left * right[0] + sprite->top * up[0] + x;     v++;
-    *v = sprite->left * right[1] + sprite->top * up[1] + y;     v++;
-    *v = sprite->left * right[2] + sprite->top * up[2] + z;     v++;
-    vec3_set_one(v);    v += 3;
-
-    *v = sprite->left * right[0] + sprite->bottom * up[0] + x;  v++;
-    *v = sprite->left * right[1] + sprite->bottom * up[1] + y;  v++;
-    *v = sprite->left * right[2] + sprite->bottom * up[2] + z;  v++;
-    vec3_set_one(v);    v += 3;
-
-    *v = sprite->right * right[0] + sprite->bottom * up[0] + x; v++;
-    *v = sprite->right * right[1] + sprite->bottom * up[1] + y; v++;
-    *v = sprite->right * right[2] + sprite->bottom * up[2] + z; v++;
-    vec3_set_one(v);
-
-    glBindTexture(GL_TEXTURE_2D, renderer.world->textures[sprite->texture]);
-
-    /// Perfect and easy Cochrane's optimisation!
-    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glVertexPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), buf);
-    glColorPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), buf + 3);
-    glTexCoordPointer(2, GL_FLOAT, 0, sprite->tex_coord);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-}
-
-
 void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
 {
     btScalar tr[16];
@@ -781,24 +739,52 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 }
 
 
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar matrix[16])
+void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16])
 {
-    if (room->sprites_count > 0)
+    if (room->sprites_count > 0 && room->sprite_buffer)
     {
-        glUseProgramObjectARB(0);
-        glLoadMatrixbt(matrix);
-        for(unsigned int i=0; i<room->sprites_count; i++)
+        const sprite_shader_description *shader = render->shader_manager->getSpriteShader();
+        glUseProgramObjectARB(shader->program);
+        glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, modelViewMatrix);
+        glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projectionMatrix);
+        glUniform1iARB(shader->sampler, 0);
+        
+        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_NORMAL_ARRAY);
+        glDisableClientState(GL_COLOR_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, room->sprite_buffer->array_buffer);
+        
+        glEnableVertexAttribArray(sprite_shader_description::vertex_attribs::position);
+        glVertexAttribPointer(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [0]));
+        
+        glEnableVertexAttribArray(sprite_shader_description::vertex_attribs::tex_coord);
+        glVertexAttribPointer(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [3]));
+        
+        glEnableVertexAttribArray(sprite_shader_description::vertex_attribs::corner_offset);
+        glVertexAttribPointer(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [5]));
+        
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, room->sprite_buffer->element_array_buffer);
+        
+        unsigned long offset = 0;
+        for(uint32_t texture = 0; texture < room->sprite_buffer->num_texture_pages; texture++)
         {
-            if(!room->sprites[i].was_rendered)
+            if(room->sprite_buffer->element_count_per_texture[texture] == 0)
             {
-                btScalar *v = room->sprites[i].pos;
-                if(room->sprites[i].sprite)
-                {
-                    Render_Sprite(room->sprites[i].sprite, v[0], v[1], v[2]);
-                }
+                continue;
             }
-            room->sprites[i].was_rendered = 1;
+            
+            glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
+            glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
+            offset += room->sprite_buffer->element_count_per_texture[texture];
         }
+        
+        glDisableVertexAttribArray(sprite_shader_description::vertex_attribs::position);
+        glDisableVertexAttribArray(sprite_shader_description::vertex_attribs::tex_coord);
+        glDisableVertexAttribArray(sprite_shader_description::vertex_attribs::corner_offset);
+        glPopClientAttrib();
     }
 }
 
@@ -942,7 +928,7 @@ void Render_DrawList()
     glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat);
+        Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
     }
     glEnableClientState(GL_NORMAL_ARRAY);
 

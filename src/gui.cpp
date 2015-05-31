@@ -1241,7 +1241,6 @@ void Gui_DrawInventory()
     glPopClientAttrib();
     glPopAttrib();
 
-    glEnable(GL_TEXTURE_2D);
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);

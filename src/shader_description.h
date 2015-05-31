@@ -39,6 +39,23 @@ struct gui_shader_description : public shader_description
 };
 
 /*!
+ * A shader description specifically for use in GUI situations.
+ */
+struct sprite_shader_description : public shader_description
+{
+    GLint model_view;
+    GLint projection;
+    
+    enum vertex_attribs {
+        position = 0,
+        corner_offset,
+        tex_coord
+    };
+    
+    sprite_shader_description(const char *vertexFilename, const char *fragmentFilename);
+};
+
+/*!
  * A shader description for text
  */
 struct text_shader_description : public shader_description

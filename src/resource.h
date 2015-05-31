@@ -99,6 +99,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 void TR_GenRoomCollision(struct world_s *world);
 void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
 void TR_GenRoomFlipMap(struct world_s *world);
+void TR_GenRoomSpritesBuffer(struct room_s *room);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 

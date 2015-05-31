@@ -247,11 +247,11 @@ void SkeletalModelTestDraw()
     stack = 0;
     glPopMatrix();
 
-    glPushAttrib(GL_ENABLE_BIT);
-    glEnable(GL_ALPHA_TEST);
-    glDisable(GL_CULL_FACE);
-    Render_Sprite(bsprite, 1024.0, 0.0, 0.0);
-    glPopAttrib();
+//    glPushAttrib(GL_ENABLE_BIT);
+//    glEnable(GL_ALPHA_TEST);
+//    glDisable(GL_CULL_FACE);
+//    Render_Sprite(bsprite, 1024.0, 0.0, 0.0);
+//    glPopAttrib();
 
     glPushMatrix();
     btScalar matrix[16];
@@ -567,7 +567,6 @@ void Engine_Display()
             ShowDebugInfo();
         }
 
-        glEnable(GL_TEXTURE_2D);
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT); ///@PUSH <- GL_VERTEX_ARRAY | GL_COLOR_ARRAY
         glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -585,13 +584,9 @@ void Engine_Display()
             glEnable(GL_FOG);
         }
 
-#if !SKELETAL_TEST
         Render_GenWorldList();
         Render_DrawList();
         if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-#else
-        SkeletalModelTestDraw();
-#endif
 
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);
@@ -605,19 +600,13 @@ void Engine_Display()
 
         Gui_SwitchGLMode(1);
         {
-            GLfloat lp[] = {250.0, 120.0, 0.0, 0.0};
-            //glEnable(GL_LIGHTING);
-            //glEnable(GL_LIGHT0);
-            //glEnable(GL_BLEND);
             glEnable(GL_ALPHA_TEST);
 
-#if !SKELETAL_TEST
             Gui_DrawNotifier();
             if(engine_world.Character && engine_world.Character->character && main_inventory_manager)
             {
                 Gui_DrawInventory();
             }
-#endif
         }
         glPopClientAttrib();        ///@POP -> GL_VERTEX_ARRAY | GL_COLOR_ARRAY
 

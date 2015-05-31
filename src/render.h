@@ -172,7 +172,6 @@ void Render_Init();
 render_list_p Render_CreateRoomListArray(unsigned int count);
 void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);                                    // отрисовка одного фрейма скелетной анимации
 void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16]);
-void Render_Sprite(struct sprite_s *sprite, GLfloat x, GLfloat y, GLfloat z);
 void Render_SkyBox(const btScalar matrix[16]);
 void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
 void Render_PolygonTransparency(struct polygon_s *p);
@@ -184,7 +183,7 @@ void Render_CleanList();
 
 
 void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16]);
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar matrix[16]);
+void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16]);
 int Render_AddRoom(struct room_s *room);
 void Render_DrawList();
 void Render_DrawList_DebugLines();
