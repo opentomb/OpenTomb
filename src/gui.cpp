@@ -45,8 +45,8 @@ void Gui_Init()
     Gui_InitFaders();
     Gui_InitNotifier();
     Gui_InitTempLines();
-    
-    glGenBuffers(1, &crosshairBuffer);
+
+    glGenBuffersARB(1, &crosshairBuffer);
     Gui_FillCrosshairBuffer();
 
     //main_inventory_menu = new gui_InventoryMenu();
@@ -510,7 +510,7 @@ void Gui_RenderStrings()
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        
+
         const text_shader_description *shader = renderer.shader_manager->getTextShader();
         glUseProgramObjectARB(shader->program);
         GLfloat screenSize[2] = {
@@ -519,9 +519,9 @@ void Gui_RenderStrings()
         };
         glUniform2fvARB(shader->screenSize, 1, screenSize);
         glUniform1iARB(shader->sampler, 0);
-        
+
         glNormal3f(0, 0, 0);
-        
+
         while(l)
         {
             Gui_RenderStringLine(l);
@@ -605,7 +605,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
     glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
-    
+
     if(size != 0.0)
     {
         btScalar bb[3];
@@ -630,7 +630,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         Mat4_Mat4_mul(scaledMvMatrix, mvMatrix, scaledMatrix);
         btScalar mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, scaledMvMatrix);
-        
+
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
         Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix);
@@ -1117,7 +1117,7 @@ void Gui_SwitchGLMode(char is_gui)
     {
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
-        
+
         Mat4_E_macro(guiProjectionMatrix);
         guiProjectionMatrix[0 * 4 + 0] = 2.0 / ((GLfloat)screen_info.w);
         guiProjectionMatrix[1 * 4 + 1] = 2.0 / ((GLfloat)screen_info.h);
@@ -1148,11 +1148,11 @@ void Gui_FillCrosshairBuffer()
 void Gui_DrawCrosshair()
 {
     const gui_shader_description *shader = renderer.shader_manager->getGuiShader(false);
-    
+
     glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);
-    
+
     glUseProgramObjectARB(shader->program);
     GLfloat factor[2] = {
         2.0f / screen_info.w,

@@ -1909,7 +1909,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     Gui_DrawLoadScreen(700);
 
     TR_GenEntities(world, tr);  // Build all moveables (entities)
-    
+
     // Generate sprite buffers. Only now because entity generation adds new sprites
     for (uint32_t i = 0; i < world->room_count; i++)
         TR_GenRoomSpritesBuffer(&world->rooms[i]);
@@ -3304,16 +3304,16 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
         room->sprite_buffer = 0;
         return;
     }
-    
+
     room->sprite_buffer = (struct sprite_buffer_s *) calloc(sizeof(struct sprite_buffer_s), 1);
     room->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
     room->sprite_buffer->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), room->sprite_buffer->num_texture_pages);
 
     // First collect indices on a per-texture basis
     uint16_t **elements_for_texture = (uint16_t **)calloc(sizeof(uint16_t*), highestTexturePageFound + 1);
-    
+
     GLfloat *spriteData = (GLfloat *) calloc(sizeof(GLfloat [7]), actualSpritesFound * 4);
-    
+
     int writeIndex = 0;
     for (int i = 0; i < room->sprites_count; i++)
     {
@@ -3326,41 +3326,41 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
             memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[0], sizeof(GLfloat [2]));
             spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
             spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
-            
+
             writeIndex += 1;
-            
+
             // top left
             memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
             memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[2], sizeof(GLfloat [2]));
             spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
             spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
-            
+
             writeIndex += 1;
-            
+
             // bottom left
             memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
             memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[4], sizeof(GLfloat [2]));
             spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
             spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
-            
+
             writeIndex += 1;
-            
+
             // bottom right
             memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
             memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[6], sizeof(GLfloat [2]));
             spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
             spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
-            
+
             writeIndex += 1;
-            
-            
+
+
             // Assign indices
             uint32_t texture = room_sprite.sprite->texture;
             uint32_t start = room->sprite_buffer->element_count_per_texture[texture];
             uint32_t newElementCount = start + 6;
             room->sprite_buffer->element_count_per_texture[texture] = newElementCount;
             elements_for_texture[texture] = (uint16_t *)realloc(elements_for_texture[texture], newElementCount * sizeof(uint16_t));
-            
+
             elements_for_texture[texture][start + 0] = vertexStart + 0;
             elements_for_texture[texture][start + 1] = vertexStart + 1;
             elements_for_texture[texture][start + 2] = vertexStart + 2;
@@ -3369,7 +3369,7 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
             elements_for_texture[texture][start + 5] = vertexStart + 0;
         }
     }
-    
+
     // Now flatten all these indices to a single array
     uint16_t *elements = NULL;
     uint32_t elementsSoFar = 0;
@@ -3381,7 +3381,7 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
         }
         elements = (uint16_t*)realloc(elements, (elementsSoFar + room->sprite_buffer->element_count_per_texture[i])*sizeof(elements_for_texture[0][0]));
         memcpy(elements + elementsSoFar, elements_for_texture[i], room->sprite_buffer->element_count_per_texture[i]*sizeof(elements_for_texture[0][0]));
-        
+
         elementsSoFar += room->sprite_buffer->element_count_per_texture[i];
         free(elements_for_texture[i]);
     }
@@ -3389,13 +3389,13 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
 
     // Now load into OpenGL
     glGenBuffersARB(1, &room->sprite_buffer->array_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, room->sprite_buffer->array_buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
+    glBindBufferARB(GL_ARRAY_BUFFER, room->sprite_buffer->array_buffer);
+    glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
     free(spriteData);
-    
+
     glGenBuffersARB(1, &room->sprite_buffer->element_array_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, room->sprite_buffer->element_array_buffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->sprite_buffer->element_array_buffer);
+    glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
 }
 

@@ -49,441 +49,192 @@
 		<Unit filename="config.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="scripts/audio/common_sounds.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/audio/sample_override.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/audio/soundtrack.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/config/control_constants.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/entity/collide_flags.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/entity/door_script.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/entity/entity_model_ID_override.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="scripts/audio/common_sounds.lua" />
+		<Unit filename="scripts/audio/sample_override.lua" />
+		<Unit filename="scripts/audio/soundtrack.lua" />
+		<Unit filename="scripts/autoexec.lua" />
+		<Unit filename="scripts/character/character.lua" />
+		<Unit filename="scripts/character/hair.lua" />
+		<Unit filename="scripts/character/ragdoll.lua" />
+		<Unit filename="scripts/config/control_constants.lua" />
+		<Unit filename="scripts/entity/entity_functions.lua" />
+		<Unit filename="scripts/entity/entity_model_ID_override.lua" />
+		<Unit filename="scripts/entity/entity_properties.lua" />
+		<Unit filename="scripts/entity/script_switch.lua" />
 		<Unit filename="scripts/entity/switch_script.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="scripts/gameflow/TR1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR1_gold.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR2.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR2_gold.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR3.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR3_gold.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR4.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/TR5.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/gameflow/gameflow.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/GYM.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL10B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL10C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="scripts/gameflow/TR1.lua" />
+		<Unit filename="scripts/gameflow/TR1_gold.lua" />
+		<Unit filename="scripts/gameflow/TR2.lua" />
+		<Unit filename="scripts/gameflow/TR2_gold.lua" />
+		<Unit filename="scripts/gameflow/TR3.lua" />
+		<Unit filename="scripts/gameflow/TR3_gold.lua" />
+		<Unit filename="scripts/gameflow/TR4.lua" />
+		<Unit filename="scripts/gameflow/TR5.lua" />
+		<Unit filename="scripts/gameflow/gameflow.lua" />
+		<Unit filename="scripts/gui/fonts.lua" />
+		<Unit filename="scripts/inventory/item_combine.lua" />
+		<Unit filename="scripts/inventory/item_list.lua" />
+		<Unit filename="scripts/inventory/items.lua" />
+		<Unit filename="scripts/level/tr1/GYM.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL1.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10C_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL3A_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL3B_autoexec.lua" />
 		<Unit filename="scripts/level/tr1/LEVEL4_autoexec.lua" />
-		<Unit filename="scripts/level/tr1/LEVEL6_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL7A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/ASSAULT.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/CATACOMB_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/DECK_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/EMPRTOMB_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/FLOATING_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/ICECAVE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/KEEL_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/LIVING_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/OPERA_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/PLATFORM_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/RIG_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/SKIDOO_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/UNWATER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/VENICE.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/WALL.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/WALL_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/WALL_trigger.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/WALL_trigger.txt">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr2/XIAN_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/ANTARC.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/ANTARC_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/AREA51.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/AREA51_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CHAMBER.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CHAMBER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CITY.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CITY_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/COMPOUND.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/COMPOUND_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CRASH.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/CRASH_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/HOUSE.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/HOUSE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="scripts/level/tr1/LEVEL5_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL6_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL7A_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL7B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8A_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8C_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/ASSAULT.lua" />
+		<Unit filename="scripts/level/tr2/CATACOMB_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/DECK_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/EMPRTOMB_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/FLOATING_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/ICECAVE_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/KEEL_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/LIVING_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/MONASTRY_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/OPERA_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/PLATFORM_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/RIG_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/SKIDOO_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/UNWATER_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/VENICE.lua" />
+		<Unit filename="scripts/level/tr2/VENICE_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/WALL.lua" />
+		<Unit filename="scripts/level/tr2/WALL_autoexec.lua" />
+		<Unit filename="scripts/level/tr2/WALL_trigger.lua" />
+		<Unit filename="scripts/level/tr2/WALL_trigger.txt" />
+		<Unit filename="scripts/level/tr2/XIAN_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/ANTARC.lua" />
+		<Unit filename="scripts/level/tr3/ANTARC_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/AREA51.lua" />
+		<Unit filename="scripts/level/tr3/AREA51_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/CHAMBER.lua" />
+		<Unit filename="scripts/level/tr3/CHAMBER_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/CITY.lua" />
+		<Unit filename="scripts/level/tr3/CITY_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/COMPOUND.lua" />
+		<Unit filename="scripts/level/tr3/COMPOUND_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/CRASH.lua" />
+		<Unit filename="scripts/level/tr3/CRASH_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/HOUSE.lua" />
+		<Unit filename="scripts/level/tr3/HOUSE_autoexec.lua" />
 		<Unit filename="scripts/level/tr3/JUNGLE.lua" />
-		<Unit filename="scripts/level/tr3/JUNGLE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/MINES.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/MINES_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/NEVADA.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/NEVADA_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/OFFICE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/QUADCHAS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/RAPIDS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/ROOFS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/ROOFS_trigger.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/SEWER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/SHORE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/STPAUL_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/TEMPLE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/TONYBOSS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/TOWER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr3/TRIBOSS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ALEXHUB.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ALEXHUB2.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ALEXHUB2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ALEXHUB_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ANGKOR1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ANGKOR1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ANG_RACE.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/ANG_RACE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/BIKEBIT.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/BIKEBIT_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CITNEW.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CITNEW_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CORTYARD_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CSPLIT1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/CSPLIT2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/HALL_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/HIGHSTRT_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JEEPCHAS_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JEEPCHS2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY1A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY3A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY3B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY4A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY4B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY4C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY5A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY5B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/JOBY5C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/KARNAK1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/KARNAK1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/LAKE_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/LIBEND_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/LIBRARY_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/LOWSTRT_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/NUTRENCH_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/PALACES2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/PALACES_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SEMER2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SEMER_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SETTOMB1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SETTOMB2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/SETTOMB_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr4/TRAIN_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDREA1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDREA2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDREA3_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDY1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDY2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/ANDY3_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/JOBY2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/JOBY3_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/JOBY4_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/JOBY5_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/RICH1_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/RICH2_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/RICH3_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr5/RICHCUT_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/system/sys_scripts.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="shaders/color_mult.vsh" />
-		<Unit filename="src/al/AL/al.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/alc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/alext.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/efx-creative.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/efx-presets.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/efx.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="scripts/level/tr3/JUNGLE_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/MINES.lua" />
+		<Unit filename="scripts/level/tr3/MINES_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/NEVADA.lua" />
+		<Unit filename="scripts/level/tr3/NEVADA_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/OFFICE_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/QUADCHAS_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/RAPIDS_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/ROOFS_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/ROOFS_trigger.lua" />
+		<Unit filename="scripts/level/tr3/SEWER_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/SHORE.lua" />
+		<Unit filename="scripts/level/tr3/SHORE_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/STPAUL_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/TEMPLE.lua" />
+		<Unit filename="scripts/level/tr3/TEMPLE_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/TONYBOSS_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/TOWER_autoexec.lua" />
+		<Unit filename="scripts/level/tr3/TRIBOSS_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/ALEXHUB.lua" />
+		<Unit filename="scripts/level/tr4/ALEXHUB2.lua" />
+		<Unit filename="scripts/level/tr4/ALEXHUB2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/ALEXHUB_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/ANGKOR1.lua" />
+		<Unit filename="scripts/level/tr4/ANGKOR1_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/ANG_RACE.lua" />
+		<Unit filename="scripts/level/tr4/ANG_RACE_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/BIKEBIT.lua" />
+		<Unit filename="scripts/level/tr4/BIKEBIT_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/CITNEW.lua" />
+		<Unit filename="scripts/level/tr4/CITNEW_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/CORTYARD_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/CSPLIT1_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/CSPLIT2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/HALL_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/HIGHSTRT_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JEEPCHAS_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JEEPCHS2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY1A_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY3A_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY3B_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY4A_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY4B_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY4C_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY5A_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY5B_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/JOBY5C_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/KARNAK1.lua" />
+		<Unit filename="scripts/level/tr4/KARNAK1_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/LAKE_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/LIBEND_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/LIBRARY_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/LOWSTRT_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/NUTRENCH_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/PALACES2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/PALACES_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SEMER.lua" />
+		<Unit filename="scripts/level/tr4/SEMER2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SEMER_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SETTOMB1_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SETTOMB2_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/SETTOMB_autoexec.lua" />
+		<Unit filename="scripts/level/tr4/TRAIN_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDREA1_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDREA2_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDREA3_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDY1_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDY2_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/ANDY3_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/JOBY2_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/JOBY3_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/JOBY4_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/JOBY5_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/RICH1_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/RICH2_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/RICH3_autoexec.lua" />
+		<Unit filename="scripts/level/tr5/RICHCUT_autoexec.lua" />
+		<Unit filename="scripts/staticmesh/staticmesh_script.lua" />
+		<Unit filename="scripts/strings/english/generic.lua" />
+		<Unit filename="scripts/strings/english/global_items.lua" />
+		<Unit filename="scripts/strings/english/sys_notify.lua" />
+		<Unit filename="scripts/strings/french/generic.lua" />
+		<Unit filename="scripts/strings/french/global_items.lua" />
+		<Unit filename="scripts/strings/getstring.lua" />
+		<Unit filename="scripts/strings/italian/generic.lua" />
+		<Unit filename="scripts/strings/italian/global_items.lua" />
+		<Unit filename="scripts/strings/russian/generic.lua" />
+		<Unit filename="scripts/strings/russian/global_items.lua" />
+		<Unit filename="scripts/strings/russian/sys_notify.lua" />
+		<Unit filename="scripts/strings/spanish/generic.lua" />
+		<Unit filename="scripts/strings/spanish/global_items.lua" />
+		<Unit filename="scripts/system/sys_scripts.lua" />
+		<Unit filename="scripts/trigger/flipeffects.lua" />
+		<Unit filename="scripts/trigger/helper_functions.lua" />
+		<Unit filename="scripts/trigger/trigger_functions.lua" />
+		<Unit filename="shaders/sprite.fsh" />
+		<Unit filename="shaders/sprite.vsh" />
+		<Unit filename="shaders/static_mesh.fsh" />
+		<Unit filename="shaders/static_mesh.vsh" />
+		<Unit filename="shaders/text.fsh" />
+		<Unit filename="shaders/text.vsh" />
+		<Unit filename="src/al/AL/al.h" />
+		<Unit filename="src/al/AL/alc.h" />
+		<Unit filename="src/al/AL/alext.h" />
+		<Unit filename="src/al/AL/efx-creative.h" />
+		<Unit filename="src/al/AL/efx-presets.h" />
+		<Unit filename="src/al/AL/efx.h" />
 		<Unit filename="src/al/Alc/ALc.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -553,9 +304,7 @@
 		<Unit filename="src/al/Alc/mixer_c.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/Alc/mixer_defs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/al/Alc/mixer_defs.h" />
 		<Unit filename="src/al/Alc/mixer_inc.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -598,64 +347,30 @@
 		<Unit filename="src/al/OpenAL32/alThunk.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/alAuxEffectSlot.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alBuffer.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alEffect.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alError.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alFilter.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alListener.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alMain.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alSource.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alThunk.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alu.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/bs2b.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/config.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/al/alAuxEffectSlot.h" />
+		<Unit filename="src/al/alBuffer.h" />
+		<Unit filename="src/al/alEffect.h" />
+		<Unit filename="src/al/alError.h" />
+		<Unit filename="src/al/alFilter.h" />
+		<Unit filename="src/al/alListener.h" />
+		<Unit filename="src/al/alMain.h" />
+		<Unit filename="src/al/alSource.h" />
+		<Unit filename="src/al/alThunk.h" />
+		<Unit filename="src/al/alu.h" />
+		<Unit filename="src/al/bs2b.h" />
+		<Unit filename="src/al/config.h" />
 		<Unit filename="src/anim_state_control.cpp" />
-		<Unit filename="src/anim_state_control.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/anim_state_control.h" />
 		<Unit filename="src/audio.cpp" />
-		<Unit filename="src/audio.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/audio.h" />
 		<Unit filename="src/bordered_texture_atlas.cpp" />
-		<Unit filename="src/bordered_texture_atlas.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/bordered_texture_atlas.h" />
 		<Unit filename="src/bsp_tree.cpp" />
-		<Unit filename="src/bsp_tree.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/bsp_tree.h" />
 		<Unit filename="src/bsp_tree_2d.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/bsp_tree_2d.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/bsp_tree_2d.h" />
 		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp" />
 		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.h" />
 		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btBroadphaseInterface.h" />
@@ -1023,33 +738,19 @@
 		<Unit filename="src/bullet/btBulletCollisionCommon.h" />
 		<Unit filename="src/bullet/btBulletDynamicsCommon.h" />
 		<Unit filename="src/camera.cpp" />
-		<Unit filename="src/camera.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/camera.h" />
 		<Unit filename="src/character_controller.cpp" />
-		<Unit filename="src/character_controller.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/character_controller.h" />
 		<Unit filename="src/common.cpp" />
-		<Unit filename="src/common.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/common.h" />
 		<Unit filename="src/console.cpp" />
-		<Unit filename="src/console.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/console.h" />
 		<Unit filename="src/controls.cpp" />
-		<Unit filename="src/controls.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/controls.h" />
 		<Unit filename="src/engine.cpp" />
-		<Unit filename="src/engine.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/engine.h" />
 		<Unit filename="src/entity.cpp" />
-		<Unit filename="src/entity.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/entity.h" />
 		<Unit filename="src/freetype2/include/config/ftconfig.h" />
 		<Unit filename="src/freetype2/include/config/ftheader.h" />
 		<Unit filename="src/freetype2/include/config/ftmodule.h" />
@@ -1578,29 +1279,19 @@
 		</Unit>
 		<Unit filename="src/freetype2/src/winfonts/winfnt.h" />
 		<Unit filename="src/frustum.cpp" />
-		<Unit filename="src/frustum.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/frustum.h" />
 		<Unit filename="src/game.cpp" />
-		<Unit filename="src/game.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/game.h" />
 		<Unit filename="src/gameflow.cpp" />
-		<Unit filename="src/gameflow.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/gameflow.h" />
 		<Unit filename="src/gl_font.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/gl_font.h" />
 		<Unit filename="src/gl_util.cpp" />
-		<Unit filename="src/gl_util.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/gl_util.h" />
 		<Unit filename="src/gui.cpp" />
-		<Unit filename="src/gui.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/gui.h" />
 		<Unit filename="src/hair.cpp" />
 		<Unit filename="src/hair.h" />
 		<Unit filename="src/image/IMG.c">
@@ -1648,18 +1339,12 @@
 		<Unit filename="src/image/IMG_xxx.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/SDL_image.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/image/jpeg-9/cderror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/SDL_image.h" />
+		<Unit filename="src/image/jpeg-9/cderror.h" />
 		<Unit filename="src/image/jpeg-9/cdjpeg.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/jpeg-9/cdjpeg.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/jpeg-9/cdjpeg.h" />
 		<Unit filename="src/image/jpeg-9/jaricom.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1699,9 +1384,7 @@
 		<Unit filename="src/image/jpeg-9/jcomapi.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/jpeg-9/jconfig.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/jpeg-9/jconfig.h" />
 		<Unit filename="src/image/jpeg-9/jcparam.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1735,9 +1418,7 @@
 		<Unit filename="src/image/jpeg-9/jdcolor.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/jpeg-9/jdct.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/jpeg-9/jdct.h" />
 		<Unit filename="src/image/jpeg-9/jddctmgr.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1771,9 +1452,7 @@
 		<Unit filename="src/image/jpeg-9/jerror.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/jpeg-9/jerror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/jpeg-9/jerror.h" />
 		<Unit filename="src/image/jpeg-9/jfdctflt.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1792,27 +1471,17 @@
 		<Unit filename="src/image/jpeg-9/jidctint.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/jpeg-9/jinclude.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/jpeg-9/jinclude.h" />
 		<Unit filename="src/image/jpeg-9/jmemmgr.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/image/jpeg-9/jmemname.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/jpeg-9/jmemsys.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/image/jpeg-9/jmorecfg.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/image/jpeg-9/jpegint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/image/jpeg-9/jpeglib.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/jpeg-9/jmemsys.h" />
+		<Unit filename="src/image/jpeg-9/jmorecfg.h" />
+		<Unit filename="src/image/jpeg-9/jpegint.h" />
+		<Unit filename="src/image/jpeg-9/jpeglib.h" />
 		<Unit filename="src/image/jpeg-9/jquant1.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1822,9 +1491,7 @@
 		<Unit filename="src/image/jpeg-9/jutils.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/jpeg-9/jversion.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/jpeg-9/jversion.h" />
 		<Unit filename="src/image/jpeg-9/rdbmp.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1849,9 +1516,7 @@
 		<Unit filename="src/image/jpeg-9/transupp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/jpeg-9/transupp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/jpeg-9/transupp.h" />
 		<Unit filename="src/image/jpeg-9/wrbmp.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1870,36 +1535,24 @@
 		<Unit filename="src/image/libpng-1.6.2/png.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/libpng-1.6.2/png.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/image/libpng-1.6.2/pngconf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/image/libpng-1.6.2/pngdebug.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/libpng-1.6.2/png.h" />
+		<Unit filename="src/image/libpng-1.6.2/pngconf.h" />
+		<Unit filename="src/image/libpng-1.6.2/pngdebug.h" />
 		<Unit filename="src/image/libpng-1.6.2/pngerror.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/image/libpng-1.6.2/pngget.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/libpng-1.6.2/pnginfo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/image/libpng-1.6.2/pnglibconf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/libpng-1.6.2/pnginfo.h" />
+		<Unit filename="src/image/libpng-1.6.2/pnglibconf.h" />
 		<Unit filename="src/image/libpng-1.6.2/pngmem.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/image/libpng-1.6.2/pngpread.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/libpng-1.6.2/pngpriv.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/libpng-1.6.2/pngpriv.h" />
 		<Unit filename="src/image/libpng-1.6.2/pngread.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1915,9 +1568,7 @@
 		<Unit filename="src/image/libpng-1.6.2/pngset.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/libpng-1.6.2/pngstruct.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/libpng-1.6.2/pngstruct.h" />
 		<Unit filename="src/image/libpng-1.6.2/pngtrans.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1933,21 +1584,16 @@
 		<Unit filename="src/image/libpng-1.6.2/pngwutil.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/image/miniz.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/image/miniz.h" />
+		<Unit filename="src/inventory.h" />
 		<Unit filename="src/lua/lapi.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lapi.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lapi.h" />
 		<Unit filename="src/lua/lauxlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lauxlib.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lauxlib.h" />
 		<Unit filename="src/lua/lbaselib.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -1957,48 +1603,36 @@
 		<Unit filename="src/lua/lcode.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lcode.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lcode.h" />
 		<Unit filename="src/lua/lcorolib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/lctype.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lctype.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lctype.h" />
 		<Unit filename="src/lua/ldblib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/ldebug.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/ldebug.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/ldebug.h" />
 		<Unit filename="src/lua/ldo.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/ldo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/ldo.h" />
 		<Unit filename="src/lua/ldump.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/lfunc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lfunc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lfunc.h" />
 		<Unit filename="src/lua/lgc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lgc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lgc.h" />
 		<Unit filename="src/lua/linit.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -2008,123 +1642,80 @@
 		<Unit filename="src/lua/llex.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/llex.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/lua/llimits.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/llex.h" />
+		<Unit filename="src/lua/llimits.h" />
 		<Unit filename="src/lua/lmathlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/lmem.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lmem.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lmem.h" />
 		<Unit filename="src/lua/loadlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/lobject.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lobject.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lobject.h" />
 		<Unit filename="src/lua/lopcodes.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lopcodes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lopcodes.h" />
 		<Unit filename="src/lua/loslib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/lparser.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lparser.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lparser.h" />
 		<Unit filename="src/lua/lstate.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lstate.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lstate.h" />
 		<Unit filename="src/lua/lstring.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lstring.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lstring.h" />
 		<Unit filename="src/lua/lstrlib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/ltable.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/ltable.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/ltable.h" />
 		<Unit filename="src/lua/ltablib.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/ltm.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/ltm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/lua/lua.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/lua/lua.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/lua/luaconf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/lua/lualib.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/ltm.h" />
+		<Unit filename="src/lua/lua.h" />
+		<Unit filename="src/lua/lua.hpp" />
+		<Unit filename="src/lua/luaconf.h" />
+		<Unit filename="src/lua/lualib.h" />
 		<Unit filename="src/lua/lundump.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lundump.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lundump.h" />
 		<Unit filename="src/lua/lvm.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lvm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lvm.h" />
 		<Unit filename="src/lua/lzio.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/lua/lzio.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/lua/lzio.h" />
+		<Unit filename="src/mac/FindConfigFile.h" />
 		<Unit filename="src/main_SDL.cpp" />
-		<Unit filename="src/main_SDL.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/main_SDL.h" />
 		<Unit filename="src/mesh.cpp" />
-		<Unit filename="src/mesh.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/mesh.h" />
 		<Unit filename="src/obb.cpp" />
-		<Unit filename="src/obb.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/codec.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/config_types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/obb.h" />
+		<Unit filename="src/ogg/codec.h" />
+		<Unit filename="src/ogg/config_types.h" />
 		<Unit filename="src/ogg/libogg/bitwise.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -2134,180 +1725,98 @@
 		<Unit filename="src/ogg/libvorbis/analysis.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/backends.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/backends.h" />
 		<Unit filename="src/ogg/libvorbis/bitrate.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/bitrate.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/bitrate.h" />
 		<Unit filename="src/ogg/libvorbis/block.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/books/coupled/res_books_51.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/books/coupled/res_books_stereo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/books/floor/floor_books.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/books/uncoupled/res_books_uncoupled.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/books/coupled/res_books_51.h" />
+		<Unit filename="src/ogg/libvorbis/books/coupled/res_books_stereo.h" />
+		<Unit filename="src/ogg/libvorbis/books/floor/floor_books.h" />
+		<Unit filename="src/ogg/libvorbis/books/uncoupled/res_books_uncoupled.h" />
 		<Unit filename="src/ogg/libvorbis/codebook.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/codebook.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/codec_internal.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/codebook.h" />
+		<Unit filename="src/ogg/libvorbis/codec_internal.h" />
 		<Unit filename="src/ogg/libvorbis/envelope.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/envelope.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/envelope.h" />
 		<Unit filename="src/ogg/libvorbis/floor0.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/ogg/libvorbis/floor1.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/highlevel.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/highlevel.h" />
 		<Unit filename="src/ogg/libvorbis/info.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/ogg/libvorbis/lookup.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/lookup.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/lookup_data.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/lookup.h" />
+		<Unit filename="src/ogg/libvorbis/lookup_data.h" />
 		<Unit filename="src/ogg/libvorbis/lpc.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/lpc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/lpc.h" />
 		<Unit filename="src/ogg/libvorbis/lsp.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/lsp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/lsp.h" />
 		<Unit filename="src/ogg/libvorbis/mapping0.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/masking.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/masking.h" />
 		<Unit filename="src/ogg/libvorbis/mdct.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/mdct.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/misc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/floor_all.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/psych_11.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/psych_16.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/psych_44.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/psych_8.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_16.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_44.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_44p51.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_44u.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_8.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_11.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_16.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_22.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_32.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_44.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_44p51.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_44u.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_8.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_X.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/os.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/mdct.h" />
+		<Unit filename="src/ogg/libvorbis/misc.h" />
+		<Unit filename="src/ogg/libvorbis/modes/floor_all.h" />
+		<Unit filename="src/ogg/libvorbis/modes/psych_11.h" />
+		<Unit filename="src/ogg/libvorbis/modes/psych_16.h" />
+		<Unit filename="src/ogg/libvorbis/modes/psych_44.h" />
+		<Unit filename="src/ogg/libvorbis/modes/psych_8.h" />
+		<Unit filename="src/ogg/libvorbis/modes/residue_16.h" />
+		<Unit filename="src/ogg/libvorbis/modes/residue_44.h" />
+		<Unit filename="src/ogg/libvorbis/modes/residue_44p51.h" />
+		<Unit filename="src/ogg/libvorbis/modes/residue_44u.h" />
+		<Unit filename="src/ogg/libvorbis/modes/residue_8.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_11.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_16.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_22.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_32.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_44.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_44p51.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_44u.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_8.h" />
+		<Unit filename="src/ogg/libvorbis/modes/setup_X.h" />
+		<Unit filename="src/ogg/libvorbis/os.h" />
 		<Unit filename="src/ogg/libvorbis/psy.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/psy.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/psy.h" />
 		<Unit filename="src/ogg/libvorbis/registry.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/registry.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/registry.h" />
 		<Unit filename="src/ogg/libvorbis/res0.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/scales.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/scales.h" />
 		<Unit filename="src/ogg/libvorbis/sharedbook.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/ogg/libvorbis/smallft.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/smallft.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/smallft.h" />
 		<Unit filename="src/ogg/libvorbis/synthesis.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -2317,81 +1826,49 @@
 		<Unit filename="src/ogg/libvorbis/window.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/ogg/libvorbis/window.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/ogg.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/os_types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/vorbisfile.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/ogg/libvorbis/window.h" />
+		<Unit filename="src/ogg/ogg.h" />
+		<Unit filename="src/ogg/os_types.h" />
+		<Unit filename="src/ogg/vorbisfile.h" />
 		<Unit filename="src/polygon.cpp" />
-		<Unit filename="src/polygon.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/polygon.h" />
 		<Unit filename="src/portal.cpp" />
-		<Unit filename="src/portal.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/portal.h" />
 		<Unit filename="src/redblack.cpp" />
-		<Unit filename="src/redblack.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/redblack.h" />
 		<Unit filename="src/render.cpp" />
-		<Unit filename="src/render.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/render.h" />
 		<Unit filename="src/resource.cpp" />
-		<Unit filename="src/resource.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/resource.h" />
 		<Unit filename="src/script.cpp" />
-		<Unit filename="src/script.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/script.h" />
+		<Unit filename="src/shader_description.cpp" />
+		<Unit filename="src/shader_description.h" />
+		<Unit filename="src/shader_manager.cpp" />
+		<Unit filename="src/shader_manager.h" />
+		<Unit filename="src/string.cpp" />
+		<Unit filename="src/string.h" />
 		<Unit filename="src/system.cpp" />
-		<Unit filename="src/system.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/system.h" />
 		<Unit filename="src/vmath.cpp" />
-		<Unit filename="src/vmath.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/vt/glmath.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/vmath.h" />
+		<Unit filename="src/vt/glmath.h" />
 		<Unit filename="src/vt/l_common.cpp" />
 		<Unit filename="src/vt/l_main.cpp" />
-		<Unit filename="src/vt/l_main.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/vt/l_main.h" />
 		<Unit filename="src/vt/l_tr1.cpp" />
 		<Unit filename="src/vt/l_tr2.cpp" />
 		<Unit filename="src/vt/l_tr3.cpp" />
 		<Unit filename="src/vt/l_tr4.cpp" />
 		<Unit filename="src/vt/l_tr5.cpp" />
 		<Unit filename="src/vt/scaler.cpp" />
-		<Unit filename="src/vt/scaler.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/vt/tr_types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/vt/tr_versions.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/vt/scaler.h" />
+		<Unit filename="src/vt/tr_types.h" />
+		<Unit filename="src/vt/tr_versions.h" />
 		<Unit filename="src/vt/vt_level.cpp" />
-		<Unit filename="src/vt/vt_level.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/vt/vt_level.h" />
 		<Unit filename="src/world.cpp" />
-		<Unit filename="src/world.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/world.h" />
 		<Extensions>
 			<code_completion>
 				<search_path add="src\bullet" />

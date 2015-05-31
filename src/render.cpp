@@ -87,7 +87,7 @@ void Render_Empty(render_p render)
         free(render->r_list);
         render->r_list = NULL;
     }
-    
+
     if (render->shader_manager)
     {
         delete render->shader_manager;
@@ -124,14 +124,14 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
         Mat4_set_qrotation(tr, p);
         btScalar fullView[16];
         Mat4_Mat4_mul(fullView, modelViewProjectionMatrix, tr);
-        
+
         const unlit_tinted_shader_description *shader = renderer.shader_manager->getStaticMeshShader();
         glUseProgramObjectARB(shader->program);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, fullView);
         glUniform1iARB(shader->sampler, 0);
         GLfloat tint[] = { 1, 1, 1, 1 };
         glUniform4fvARB(shader->tint_mult, 1, tint);
-        
+
         Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base, NULL, NULL);
         glDepthMask(GL_TRUE);
     }
@@ -150,7 +150,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         glBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
         GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        
+
         size_t offset = 0;
         for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
         {
@@ -162,12 +162,12 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
                 const GLfloat *v = p->vertices[i].tex_coord;
                 data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
                 data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
-                
+
                 offset += 2;
             }
         }
         glUnmapBufferARB(GL_ARRAY_BUFFER);
-        
+
         // Setup altered buffer
         glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
         // Setup static data
@@ -530,12 +530,12 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
     {
         btScalar mvTransform[16];
         Mat4_Mat4_mul(mvTransform, mvMatrix, btag->full_transform);
-        glUniformMatrix4fv(shader->model_view, 1, false, mvTransform);
-        
+        glUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
+
         btScalar mvpTransform[16];
         Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, mvpTransform);
-        
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
+
         Render_Mesh(btag->mesh_base, NULL, NULL);
         if(btag->mesh_slot)
         {
@@ -556,56 +556,56 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
 {
     // Calculate lighting
     const lit_shader_description *shader;
-    
+
     room_s *room = entity->self->room;
     if(room != NULL)
     {
         GLfloat ambient_component[4];
-        
+
         ambient_component[0] = room->ambient_lighting[0];
         ambient_component[1] = room->ambient_lighting[1];
         ambient_component[2] = room->ambient_lighting[2];
         ambient_component[3] = 1.0f;
-        
+
         if(room->flags & TR_ROOM_FLAG_WATER)
         {
             Render_CalculateWaterTint(ambient_component, 0);
         }
-        
+
         GLenum current_light_number = 0;
         light_s *current_light = NULL;
-        
+
         GLfloat positions[3*MAX_NUM_LIGHTS];
         GLfloat colors[4*MAX_NUM_LIGHTS];
         GLfloat falloffs[1*MAX_NUM_LIGHTS];
         memset(positions, 0, sizeof(positions));
         memset(colors, 0, sizeof(positions));
         memset(falloffs, 0, sizeof(positions));
-        
+
         for(uint32_t i = 0; i < room->light_count && current_light_number < MAX_NUM_LIGHTS; i++)
         {
             current_light = &room->lights[i];
-            
+
             float x = entity->transform[12] - current_light->pos[0];
             float y = entity->transform[13] - current_light->pos[1];
             float z = entity->transform[14] - current_light->pos[2];
-            
+
             float distance = sqrt(x * x + y * y + z * z);
-            
+
             // Find color
             colors[current_light_number*4 + 0] = current_light->colour[0];
             colors[current_light_number*4 + 1] = current_light->colour[1];
             colors[current_light_number*4 + 2] = current_light->colour[2];
             colors[current_light_number*4 + 3] = current_light->colour[3];
-            
+
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
                 Render_CalculateWaterTint(colors + current_light_number * 4, 0);
             }
-            
+
             // Find position
             Mat4_vec3_mul(&positions[3*current_light_number], modelViewMatrix, current_light->pos);
-            
+
             // Find fall-off
             if(current_light->light_type == LT_SUN)
             {
@@ -618,10 +618,10 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
                 current_light_number++;
             }
         }
-        
+
         shader = renderer.shader_manager->getEntityShader(current_light_number);
         glUseProgramObjectARB(shader->program);
-        glUniform4fv(shader->light_ambient, 1, ambient_component);
+        glUniform4fvARB(shader->light_ambient, 1, ambient_component);
         glUniform4fvARB(shader->light_color, current_light_number, colors);
         glUniform3fvARB(shader->light_position, current_light_number, positions);
         glUniform1fvARB(shader->light_falloff, current_light_number, falloffs);
@@ -657,7 +657,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
         }
-        
+
         Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
     }
 }
@@ -666,7 +666,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 {
     if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
         return;
-    
+
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
 
@@ -683,9 +683,9 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
             Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
-            
-            glUniformMatrix4fv(shader->model_view, 1, GL_FALSE, subModelView);
-            glUniformMatrix4fv(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
+
+            glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
+            glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
             Render_Mesh(entity->character->hairs[h].elements[i].mesh, NULL, NULL);
         }
     }
@@ -704,7 +704,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     {
         btScalar modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
-        
+
         const unlit_tinted_shader_description *shader = render->shader_manager->getRoomShader(room->light_mode == 1, room->flags & 1);
 
         GLfloat tint[4];
@@ -713,7 +713,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         {
             glUseProgramObjectARB(shader->program);
         }
-        
+
         lastShader = shader;
         glUniform4fvARB(shader->tint_mult, 1, tint);
         glUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
@@ -721,7 +721,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
         Render_Mesh(room->mesh, NULL, NULL);
     }
-    
+
     if (room->static_mesh_count > 0)
     {
         glUseProgramObjectARB(render->shader_manager->getStaticMeshShader()->program);
@@ -742,9 +742,9 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             glUniformMatrix4fvARB(render->shader_manager->getStaticMeshShader()->model_view_projection, 1, false, transform);
             base_mesh_s *mesh = room->static_mesh[i].mesh;
             GLfloat tint[4];
-            
+
             vec4_copy(tint, room->static_mesh[i].tint);
-            
+
             //If this static mesh is in a water room
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
@@ -788,26 +788,26 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
         glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, modelViewMatrix);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projectionMatrix);
         glUniform1iARB(shader->sampler, 0);
-        
+
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        
+
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, room->sprite_buffer->array_buffer);
-        
+
         glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
         glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [0]));
-        
+
         glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
         glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [3]));
-        
+
         glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
         glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [5]));
-        
+
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, room->sprite_buffer->element_array_buffer);
-        
+
         unsigned long offset = 0;
         for(uint32_t texture = 0; texture < room->sprite_buffer->num_texture_pages; texture++)
         {
@@ -815,12 +815,12 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
             {
                 continue;
             }
-            
+
             glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
             glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
-        
+
         glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
         glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
         glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);

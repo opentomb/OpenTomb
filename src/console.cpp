@@ -177,16 +177,16 @@ void Con_Draw()
         y = con_base.cursor_y;
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        
+
         const text_shader_description *shader = renderer.shader_manager->getTextShader();
         glUseProgramObjectARB(shader->program);
-        glUniform1i(shader->sampler, 0);
+        glUniform1iARB(shader->sampler, 0);
         GLfloat screenSize[2] = {
             static_cast<GLfloat>(screen_info.w),
             static_cast<GLfloat>(screen_info.h)
         };
-        glUniform2fv(shader->screenSize, 2, screenSize);
-        
+        glUniform2fvARB(shader->screenSize, 2, screenSize);
+
         for(uint16_t i=0;i<con_base.showing_lines;i++)
         {
             GLfloat *col = FontManager->GetFontStyle((font_Style)con_base.line_style_id[i])->real_color;
@@ -490,9 +490,9 @@ void Con_Warning(int warn_string_index, ...)
     va_list argptr;
     char buf[4096];
     char fmt[256];
-    
+
     lua_GetSysNotify(engine_lua, warn_string_index, 256, fmt);
-    
+
     va_start(argptr, warn_string_index);
     vsnprintf(buf, 4096, (const char*)fmt, argptr);
     buf[4096-1] = 0;
@@ -505,9 +505,9 @@ void Con_Notify(int notify_string_index, ...)
     va_list argptr;
     char buf[4096];
     char fmt[256];
-    
+
     lua_GetSysNotify(engine_lua, notify_string_index, 256, fmt);
-    
+
     va_start(argptr, notify_string_index);
     vsnprintf(buf, 4096, (const char*)fmt, argptr);
     buf[4096-1] = 0;
