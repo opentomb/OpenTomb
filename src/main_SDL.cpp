@@ -258,7 +258,6 @@ void SkeletalModelTestDraw()
     btScalar matrix[16];
     Mat4_E_macro(matrix);
     Mat4_Translate(matrix, -1024.0, 0.0, 0.0);
-    glMultMatrixbt(matrix);
     Render_Mesh(engine_world.meshes + mesh, NULL, NULL);
     glPopMatrix();
 }
@@ -624,10 +623,6 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     Cam_RecalcClipPlanes(&engine_camera);
 
     glViewport(0, 0, pixelsW, pixelsH);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
 }
 
 

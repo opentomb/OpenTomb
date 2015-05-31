@@ -29,12 +29,8 @@
 #define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
 
 #ifdef BT_USE_DOUBLE_PRECISION
-    #define glMultMatrixbt glMultMatrixd
-    #define glLoadMatrixbt glLoadMatrixd
     #define GL_BT_SCALAR GL_DOUBLE
 #else
-    #define glMultMatrixbt glMultMatrixf
-    #define glLoadMatrixbt glLoadMatrixf
     #define GL_BT_SCALAR GL_FLOAT
 #endif
 

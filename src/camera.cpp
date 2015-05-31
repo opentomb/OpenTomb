@@ -92,9 +92,6 @@ void Cam_Apply(camera_p cam)
     M[3 * 4 + 2] = 2.0 * cam->dist_near * cam->dist_far / (cam->dist_near - cam->dist_far);
     M[3 * 4 + 3] = 0.0;
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(M);
-
     M = cam->gl_view_mat;
     M[0 * 4 + 0] = cam->right_dir[0];
     M[1 * 4 + 0] = cam->right_dir[1];
@@ -116,9 +113,6 @@ void Cam_Apply(camera_p cam)
     M[1 * 4 + 3] = 0.0;
     M[2 * 4 + 3] = 0.0;
     M[3 * 4 + 3] = 1.0;
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(M);
 
     Mat4_Mat4_mul(cam->gl_view_proj_mat, cam->gl_proj_mat, cam->gl_view_mat);
 }

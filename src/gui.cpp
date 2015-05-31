@@ -409,7 +409,6 @@ void Gui_Render()
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    glLoadIdentity();
     Gui_DrawCrosshair();
     Gui_DrawBars();
     Gui_DrawFaders();
@@ -1116,14 +1115,9 @@ void Gui_SwitchGLMode(char is_gui)
 {
     if(0 != is_gui)                                                             // set gui coordinate system
     {
-        GLfloat M[16];
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
-        Mat4_E_macro(M);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadMatrixf(M);
         
-        glMatrixMode(GL_PROJECTION);
         Mat4_E_macro(guiProjectionMatrix);
         guiProjectionMatrix[0 * 4 + 0] = 2.0 / ((GLfloat)screen_info.w);
         guiProjectionMatrix[1 * 4 + 1] = 2.0 / ((GLfloat)screen_info.h);
@@ -1131,16 +1125,10 @@ void Gui_SwitchGLMode(char is_gui)
         guiProjectionMatrix[3 * 4 + 0] =-1.0;
         guiProjectionMatrix[3 * 4 + 1] =-1.0;
         guiProjectionMatrix[3 * 4 + 2] =-(far_dist + near_dist) / (far_dist - near_dist);
-        glLoadMatrixf(guiProjectionMatrix);
-        glMatrixMode(GL_MODELVIEW);
     }
     else                                                                        // set camera coordinate system
     {
-        glMatrixMode(GL_PROJECTION);
-        glLoadMatrixf(engine_camera.gl_proj_mat);
         memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(btScalar [16]));
-        glMatrixMode(GL_MODELVIEW);
-        glLoadMatrixf(engine_camera.gl_view_mat);
     }
 }
 
