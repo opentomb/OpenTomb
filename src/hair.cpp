@@ -97,14 +97,13 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         // on a ledge), hair bodies shouldn't deactivate over time.
 
         hair->elements[i].body->forceActivationState(DISABLE_DEACTIVATION);
-        //hair->elements[i].body->setCollisionFlags(hair->elements[i].body->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
 
         // Hair bodies must not collide with each other, and also collide ONLY with kinematic
         // bodies (e. g. animated meshes), or else Lara's ghost object or anything else will be able to
         // collide with hair!
 
         hair->elements[i].body->setUserPointer(hair->container);
-        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, COLLISION_GROUP_KINEMATIC, COLLISION_MASK_NONE);
+        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, COLLISION_GROUP_KINEMATIC, COLLISION_GROUP_KINEMATIC);
 
         hair->elements[i].body->activate();
     }
