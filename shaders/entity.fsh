@@ -1,11 +1,13 @@
 // GLSL fragment program for rendering entities
+// Must be created with a define for NUMBER_OF_LIGHTS first.
 
 uniform sampler2D color_map;
 
-uniform int number_of_lights;
-uniform vec3 light_position[8];
-uniform vec4 light_color[8];
-uniform float light_falloff[8];
+#if NUMBER_OF_LIGHTS > 0
+uniform vec3 light_position[NUMBER_OF_LIGHTS];
+uniform vec4 light_color[NUMBER_OF_LIGHTS];
+uniform float light_falloff[NUMBER_OF_LIGHTS];
+#endif
 uniform vec4 light_ambient;
 
 varying vec4 varying_color;
@@ -19,7 +21,8 @@ void main()
     vec4 lightColor = light_ambient;
     vec3 normal = normalize(varying_normal);
     
-    for (int i = 0; i < number_of_lights; i++)
+#if NUMBER_OF_LIGHTS > 0
+    for (int i = 0; i < NUMBER_OF_LIGHTS; i++)
     {
         // Geometry
         vec3 toLight = light_position[i] - varying_position;
@@ -32,6 +35,7 @@ void main()
         
         // Specular currently term is not used (only TR4 and up, was not yet implemented. Maybe later.)
     }
+#endif
     
     // Combine with color from texture and vertex
     vec4 texColor = texture2D(color_map, varying_texCoord);

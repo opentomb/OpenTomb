@@ -23,24 +23,28 @@ void main(void)
     float fGlow = 0.0;
     float fFlicker = 0.0;
 
+#if IS_WATER
     //Calculate sum and time
     float fSum = vPos.x + vPos.y + vPos.z;
     float fTime = fCurrentTick * 0.00157;
-    float fFlickerTime = fCurrentTick * 0.80;
 
     //This room is a water room
     //Calculate peturb and glow values
     fPerturb = 0.5 * abs(sin(fSum * 8.0 + fTime)) + 0.5;
     fGlow = 0.5 * abs(sin(8.0 + fTime)) + 0.5;
     vCol *= tintMult * mix(1.0, fPerturb, 1.0) * mix(1.0, fGlow, 0.8);
+#endif
 
+#if IS_FLICKER
     //The room has flickering flags set
+    float fFlickerTime = fCurrentTick * 0.80;
     fFlicker = 0.4 * abs(sin(fFlickerTime)) + 0.6;
     vCol *=  mix(1.0, fFlicker, 0.6);
+#endif
 
     //Set texture co-ord
     varying_texCoord = gl_MultiTexCoord0.xy;
 
     //Set color
-    varying_color = vCol * tintMult;
+    varying_color = vCol;
 }

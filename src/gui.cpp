@@ -19,6 +19,7 @@
 #include "camera.h"
 #include "string.h"
 #include "shader_description.h"
+#include "shader_manager.h"
 
 #define MAX_TEMP_LINES   (256)
 
@@ -35,21 +36,12 @@ gui_Fader           Fader[FADER_LASTINDEX];
 gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
-GLhandleARB square_program;
-GLint       square_program_offset;
-GLint       square_program_factor;
-GLhandleARB square_texture_program;
-GLint       square_texture_program_sampler;
-GLint       square_texture_program_offset;
-GLint       square_texture_program_factor;
-
 GLuint crosshairBuffer;
 
 GLfloat guiProjectionMatrix[16];
 
 void Gui_Init()
 {
-    Gui_InitShaders();
     Gui_InitBars();
     Gui_InitFaders();
     Gui_InitNotifier();
@@ -60,38 +52,6 @@ void Gui_Init()
 
     //main_inventory_menu = new gui_InventoryMenu();
     main_inventory_manager = new gui_InventoryManager();
-}
-
-void Gui_InitShaders()
-{
-    // Colored square program
-    GLhandleARB squareVertexShader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-    loadShaderFromFile(squareVertexShader, "shaders/square.vsh");
-    GLhandleARB squareFragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-    loadShaderFromFile(squareFragmentShader, "shaders/square.fsh");
-    GLhandleARB squareFragmentShaderTexture = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-    loadShaderFromFile(squareFragmentShaderTexture, "shaders/square_tex.fsh");
-
-    square_program = glCreateProgramObjectARB();
-    glAttachObjectARB(square_program, squareVertexShader);
-    glAttachObjectARB(square_program, squareFragmentShader);
-    glLinkProgramARB(square_program);
-    square_texture_program_offset = glGetUniformLocationARB(square_program, "offset");
-    square_texture_program_factor = glGetUniformLocationARB(square_program, "factor");
-    printInfoLog(square_program);
-
-    square_texture_program = glCreateProgramObjectARB();
-    glAttachObjectARB(square_texture_program, squareVertexShader);
-    glAttachObjectARB(square_texture_program, squareFragmentShaderTexture);
-    glLinkProgramARB(square_texture_program);
-    printInfoLog(square_texture_program);
-    square_texture_program_sampler = glGetUniformLocationARB(square_texture_program, "color_map");
-    square_texture_program_offset = glGetUniformLocationARB(square_texture_program, "offset");
-    square_texture_program_factor = glGetUniformLocationARB(square_texture_program, "factor");
-
-    glDeleteObjectARB(squareVertexShader);
-    glDeleteObjectARB(squareFragmentShader);
-    glDeleteObjectARB(squareFragmentShaderTexture);
 }
 
 void Gui_InitFontManager()
@@ -311,9 +271,6 @@ void Gui_Destroy()
         delete FontManager;
         FontManager = NULL;
     }
-
-    glDeleteObjectARB(square_program);
-    glDeleteObjectARB(square_texture_program);
 }
 
 void Gui_AddLine(gui_text_line_p line)
@@ -634,7 +591,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix)
 {
-    lit_shader_description *shader = Render_GetEntityShader();
+    const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
     glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -666,201 +623,15 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        Render_SkeletalModel(bf, mvMatrix, mvpMatrix);
+        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix);
     }
     else
     {
         btScalar mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
-        Render_SkeletalModel(bf, mvMatrix, mvpMatrix);
+        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix);
     }
 }
-
-#if 0
-void gui_InventoryMenu::UpdateMovements()
-{
-    mShiftBig = 0, mShiftSmall = 0;
-    if(mMovementC == 0 && mMovementDirectionC == 0 && mMovementDirectionV == 0)
-    {
-        mMovementV = 0;
-        mRowOffset = 1;
-        mSelected = 0;
-        mVisible = 0;
-    }
-    mMovementH -= engine_frame_time * 2.1 * mMovementDirectionH;
-    if ((mMovementH < 0 && mMovementDirectionH == 1)||(mMovementH > 0 && mMovementDirectionH == -1))
-    {
-        mMovementH = 0;
-        mMovementDirectionH = 0;
-    }
-    mMovementV += engine_frame_time * 2.3 * mMovementDirectionV;
-    if(mMovementV < -2)
-    {
-        mMovementV = -2; mMovementDirectionV = 0;
-    }
-    if ((mMovementV < 0 && mMovementDirectionV == -1 && mRowOffset == 1)||(mMovementV > 0 && mMovementDirectionV == 1 && mRowOffset == 1))
-    {
-        mMovementV = 0; mMovementDirectionV = 0;
-    }
-    if(mMovementV > 2)
-    {
-        mMovementV = 2; mMovementDirectionV = 0;
-    }
-    mMovementC += engine_frame_time * 2.3 * mMovementDirectionC;
-    if (mMovementC < 0 || mMovementC > 1)
-    {
-        if(mMovementC < 0)
-            mMovementC = 0;
-        else
-            mMovementC = 1;
-        if(mMovementDirectionV == 0)
-            mMovementDirectionC = 0;
-        else
-            mMovementDirectionC = -mMovementDirectionC;
-    }
-    mShiftSmall = 200 * sin(mMovementC*3.14) ;
-}
-
-
-void gui_InventoryMenu::Render()
-{
-    if(FontManager == NULL)
-    {
-        return;
-    }
-
-    UpdateMovements();
-
-    int items_count = 0, current_row;
-    gui_invmenu_item_s *inv = NULL;
-
-    if(mMovementV<=-1)
-    {
-        if (mMovementDirectionV==-1)
-            mSelected = 0;
-        mShiftBig = mMovementV + 2;
-        items_count = mRow3Max;
-        inv = mFirstInRow3;
-        current_row = 2;
-    }
-    else if(mMovementV<1)
-    {
-        if (mMovementV<0 && mMovementDirectionV==1)
-            mSelected = 0;
-        else if (mMovementV>0 && mMovementDirectionV==-1)
-            mSelected = 0;
-        mShiftBig = mMovementV;
-        items_count = mRow2Max;
-        inv = mFirstInRow2;
-        current_row = 1;
-    }
-    else if(mMovementV>=1)
-    {
-        if (mMovementDirectionV==1)
-            mSelected = 0;
-        mShiftBig = mMovementV - 2;
-        items_count = mRow1Max;
-        inv = mFirstInRow1;
-        current_row = 0;
-    }
-    if ((items_count==0)||(inv==NULL))
-        return;
-    mAngle = -360/(GLfloat)items_count;
-
-    int mov_dirC_sign = mMovementDirectionC;
-    if(mov_dirC_sign == 0)
-        mov_dirC_sign = 1;
-
-    /*int anim = bf->current_animation;
-        int frame = bf->current_frame;
-        btScalar time = bf->frame_time;
-        bf->current_animation = mAnim;
-        bf->current_frame = mFrame;
-        bf->frame_time = mTime;
-        Item_Frame(bf, engine_frame_time);
-        mAnim = bf->current_animation;
-        mFrame = bf->current_frame;
-        mTime = bf->frame_time;
-        bf->current_animation = anim;
-        bf->current_frame = frame;
-        bf->frame_time = time;*/
-
-    for(int i=0;inv;inv=inv->next,i++)
-    {
-        if(inv==NULL)
-            break;
-        base_item_p item = NULL;
-        if(inv->linked_item)
-            item = World_GetBaseItemByID(&engine_world, inv->linked_item->id);
-        if(item == NULL)
-        {
-            continue;
-        }
-        Item_Frame(item->bf, 0.0);
-
-        btScalar matrix[16];
-        Mat4_E_macro(matrix);
-        Mat4_Translate(matrix, 0.0, 50.0 - 800 * mShiftBig + mShiftSmall, -950.0);
-        Mat4_RotateX(matrix, 10 + 80 * cos(1.57 * mMovementC));
-        Mat4_RotateY(matrix, (i - mSelected + mMovementH) * mAngle - 90 + (180 * mMovementC * mov_dirC_sign));
-        Mat4_Translate(matrix, -600 * mMovementC, 0.0, 0.0);
-        Mat4_RotateX(matrix, -90.0);
-        Mat4_RotateZ(matrix, 90.0);
-        if(i == mSelected)
-        {
-            if(mMovementH==0 && (mMovementV==-2||mMovementV==0||mMovementV==2) && mMovementC==1)
-                inv->angle -= engine_frame_time * 75.0;
-            if(inv->angle < -180)
-            {
-                inv->angle_dir = 1;
-                inv->angle += 360;
-            }
-            else if (inv->angle < 0)
-            {
-                inv->angle_dir = -1;
-            }
-
-            if(item->name[0])
-            {
-                if(inv->linked_item->id == 0 && (engine_world.version == 3 || engine_world.version == 4))
-                {
-                    //strcpy(mLabel_ItemName_text, "Statistics");
-                    strncpy(mLabel_ItemName_text, item->name, 128); // <-- Not so easy. Gotta either implement a separate item
-                                                                    // for each name or mess with the strings!
-                }
-                else
-                {
-                    if(inv->linked_item->count > 1)
-                    {
-                        snprintf(mLabel_ItemName_text, 128, "%s (%d)", item->name, inv->linked_item->count);
-                    }
-                    else
-                    {
-                        strncpy(mLabel_ItemName_text, item->name, 128);
-                    }
-                }
-            }
-        }
-        else
-        {
-            if((inv->angle_dir==-1 && inv->angle>0)||(inv->angle_dir==1 && inv->angle<0))
-            {
-                inv->angle = 0;
-                inv->angle_dir = 0;
-            }
-            if(inv->angle!=0 && inv->angle_dir!=0)
-            {
-                inv->angle -= inv->angle_dir * engine_frame_time * 75.0;
-            }
-        }
-        Mat4_RotateZ(matrix, inv->angle);
-        Mat4_Translate(matrix, -0.5 * item->bf->centre[0], -0.5 * item->bf->centre[1], -0.5 * item->bf->centre[2]);
-        Mat4_Scale(matrix, 0.7, 0.7, 0.7);
-        glLoadMatrixbt(matrix);
-        Gui_RenderItem(item->bf, 0.0);
-    }
-}
-#endif
 
 /*
  * GUI RENDEDR CLASS
@@ -1541,24 +1312,19 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
-    const GLfloat offset[2] = { x / screen_info.w - 1.f, y / screen_info.h - 1.f };
+    const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    if(texture)
+    const gui_shader_description *shader = renderer.shader_manager->getGuiShader(texture != 0);
+    glUseProgramObjectARB(shader->program);
+    glUniform1iARB(shader->sampler, 0);
+    if (texture)
     {
-        glUseProgramObjectARB(square_texture_program);
-        glUniform1iARB(square_texture_program_sampler, 0);
         glActiveTextureARB(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform2fvARB(square_texture_program_offset, 1, offset);
-        glUniform2fvARB(square_texture_program_factor, 1, factor);
     }
-    else
-    {
-        glUseProgramObjectARB(square_program);
-        glUniform2fvARB(square_program_offset, 1, offset);
-        glUniform2fvARB(square_program_factor, 1, factor);
-    }
+    glUniform2fvARB(shader->offset, 1, offset);
+    glUniform2fvARB(shader->factor, 1, factor);
 
     GLfloat rectCoords[8] = { 0, 0,
         1, 0,
@@ -1568,8 +1334,8 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     GLfloat rectColors[16];
     memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 4,  colorLowerRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorUpperLeft,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 8,  colorLowerRight, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 4,  colorUpperLeft,  sizeof(GLfloat) * 4);
     memcpy(rectColors + 12, colorUpperRight, sizeof(GLfloat) * 4);
     glColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
 

@@ -134,6 +134,6 @@ int IsGLExtensionSupported(const char *ext);
 int checkOpenGLError();
 void printInfoLog (GLhandleARB object);
 int loadShaderFromBuff(GLhandleARB ShaderObj, char * source);
-int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName);
+int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName, const char *additionalDefines);
 
 #endif

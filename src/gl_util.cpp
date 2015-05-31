@@ -363,7 +363,7 @@ int loadShaderFromBuff(GLhandleARB ShaderObj, char * source)
     return compileStatus != 0;
 }
 
-int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName)
+int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName, const char *additionalDefines)
 {
     GLint   compileStatus;
     int size;
@@ -392,7 +392,16 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char * fileName)
     fclose(file);
 
     //printf ( "source = %s\n", buf );
-    glShaderSourceARB(ShaderObj, 1, (const char **)&buf, &size);
+    if (additionalDefines)
+    {
+        const char *bufs[2] = { additionalDefines, buf };
+        const GLint lengths[2] = { (GLint) strlen(additionalDefines), size };
+        glShaderSourceARB(ShaderObj, 2, bufs, lengths);
+    }
+    else
+    {
+        glShaderSourceARB(ShaderObj, 1, (const char **)&buf, &size);
+    }
     Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
     free(buf);                                   // compile the particle vertex shader, and print out
     glCompileShaderARB(ShaderObj);

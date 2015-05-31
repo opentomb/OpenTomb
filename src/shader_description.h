@@ -17,13 +17,25 @@ struct shader_description
     GLhandleARB program;
     GLint sampler;
     
-    shader_description(const char *vertexFilename, const char *fragmentFilename);
-    shader_description(const char *vertexFilename, GLhandleARB fragmentShader);
+    shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines);
+    shader_description(const char *vertexFilename, GLhandleARB fragmentShader, const char *additionalDefines);
+    shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines);
     ~shader_description();
     
 private:
     /*! Called by constructor to load data. */
     void load(GLhandleARB vertex, GLhandleARB fragment);
+};
+
+/*!
+ * A shader description specifically for use in GUI situations.
+ */
+struct gui_shader_description : public shader_description
+{
+    GLint offset;
+    GLint factor;
+
+    gui_shader_description(GLhandleARB vertexShader, const char *fragmentFilename);
 };
 
 /*!
@@ -33,8 +45,9 @@ struct unlit_shader_description : public shader_description
 {
     GLint model_view_projection;
     
-    unlit_shader_description(const char *vertexFilename, const char *fragmentFilename);
-    unlit_shader_description(const char *vertexFilename, GLhandleARB fragmentShader);
+    unlit_shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines);
+    unlit_shader_description(const char *vertexFilename, GLhandleARB fragmentShader, const char *additionalDefines);
+    unlit_shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines);
 };
 
 /*!
@@ -51,7 +64,7 @@ struct lit_shader_description : public unlit_shader_description
     GLint light_falloff;
     GLint light_ambient;
     
-    lit_shader_description(const char *vertexFilename, const char *fragmentFilename);
+    lit_shader_description(GLhandleARB vertexShader, const char *fragmentFilename, const char *additionalDefines);
 };
 
 struct unlit_tinted_shader_description : public unlit_shader_description
@@ -59,8 +72,8 @@ struct unlit_tinted_shader_description : public unlit_shader_description
     GLint current_tick;
     GLint tint_mult;
     
-    unlit_tinted_shader_description(const char *vertexFilename, const char *fragmentFilename);
-    unlit_tinted_shader_description(const char *vertexFilename, GLhandleARB fragmentShader);
+    unlit_tinted_shader_description(const char *vertexFilename, const char *fragmentFilename, const char *additionalDefines);
+    unlit_tinted_shader_description(const char *vertexFilename, GLhandleARB fragmentShader, const char *additionalDefines);
 };
 
 #endif /* defined(__OpenTomb__shader_description__) */

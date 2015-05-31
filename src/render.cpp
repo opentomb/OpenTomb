@@ -22,29 +22,11 @@
 #include "bsp_tree.h"
 #include "resource.h"
 #include "shader_description.h"
+#include "shader_manager.h"
 
 render_t renderer;
 class dynamicBSP render_dBSP(16 * 1024 * 1024);
 extern render_DebugDrawer debugDrawer;
-
-/*
- * Shaders section
- */
-
-enum room_shader_type
-{
-    ROOM_SHADER_NORMAL,
-    ROOM_SHADER_FLICKERING,
-    ROOM_SHADER_FLICKERING_WATER,
-    ROOM_SHADER_WATER
-};
-
-unlit_tinted_shader_description *room_shaders[4];
-unlit_tinted_shader_description *static_mesh_shader;
-lit_shader_description *entity_shader;
-
-// Highest number of lights that will show up in the shader. If you increase this, increase the limit in entity.fsh as well.
-#define MAX_NUM_LIGHTS 8
 
 /*GLhandleARB main_vsh, main_fsh, main_program;
 GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main_tr_mat_pos;
@@ -75,35 +57,7 @@ void Render_InitGlobals()
 
 void Render_DoShaders()
 {
-    /*main_program = glCreateProgramObjectARB();
-    main_vsh = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-    loadShaderFromFile(main_vsh, "shaders/main.vsh");
-    glAttachObjectARB(main_program, main_vsh);
-    glLinkProgramARB(main_program);
-    printInfoLog(main_program);
-
-    glUseProgramObjectARB(main_program);
-    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "modelViewProjectionMat");      //uniform   mat4
-    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "modelViewMat");                //uniform   mat4
-    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "projectionMat");               //uniform   mat4
-    main_model_proj_mat_pos = glGetUniformLocationARB(main_program, "transformMat");                //uniform   mat4
-    glUseProgramObjectARB(0);*/
-
-    //Color mult prog
-    static_mesh_shader = new unlit_tinted_shader_description("shaders/static_mesh.vsh", "shaders/static_mesh.fsh");
-
-    //Room prog
-    GLhandleARB fragmentShader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
-    loadShaderFromFile(fragmentShader, "shaders/room.fsh");
-    
-    room_shaders[ROOM_SHADER_NORMAL] = new unlit_tinted_shader_description("shaders/room_normal.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_FLICKERING] = new unlit_tinted_shader_description("shaders/room_flickering.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_FLICKERING_WATER] = new unlit_tinted_shader_description("shaders/room_flickering_water.vsh", fragmentShader);
-    room_shaders[ROOM_SHADER_WATER] = new unlit_tinted_shader_description("shaders/room_water.vsh", fragmentShader);
-    glDeleteObjectARB(fragmentShader);
-    
-    // Entity prog
-    entity_shader = new lit_shader_description("shaders/entity.vsh", "shaders/entity.fsh");
+    renderer.shader_manager = new shader_manager();
 }
 
 
@@ -132,11 +86,11 @@ void Render_Empty(render_p render)
         free(render->r_list);
         render->r_list = NULL;
     }
-
-    if(static_mesh_shader != 0)
+    
+    if (render->shader_manager)
     {
-        delete static_mesh_shader;
-        static_mesh_shader = 0;
+        delete render->shader_manager;
+        render->shader_manager = 0;
     }
 }
 
@@ -152,11 +106,6 @@ render_list_p Render_CreateRoomListArray(unsigned int count)
         ret[i].dist = 0.0;
     }
     return ret;
-}
-
-lit_shader_description *Render_GetEntityShader()
-{
-    return entity_shader;
 }
 
 /**
@@ -608,7 +557,7 @@ void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16])
+void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -616,11 +565,11 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe, const btScalar mvMatri
     {
         btScalar mvTransform[16];
         Mat4_Mat4_mul(mvTransform, mvMatrix, btag->full_transform);
-        glUniformMatrix4fv(entity_shader->model_view, 1, false, mvTransform);
+        glUniformMatrix4fv(shader->model_view, 1, false, mvTransform);
         
         btScalar mvpTransform[16];
         Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
-        glUniformMatrix4fv(entity_shader->model_view_projection, 1, false, mvpTransform);
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, mvpTransform);
         
         Render_Mesh(btag->mesh_base, NULL, NULL);
         if(btag->mesh_slot)
@@ -635,7 +584,7 @@ void Render_SkeletalModel(struct ss_bone_frame_s *bframe, const btScalar mvMatri
 }
 
 
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Entity(const lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
 {
     if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
@@ -659,7 +608,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             Render_CalculateWaterTint(ambient_component, 0);
         }
 
-        glUniform4fv(entity_shader->light_ambient, 1, ambient_component);
+        glUniform4fv(shader->light_ambient, 1, ambient_component);
         
         GLenum current_light_number = 0;
         light_s *current_light = NULL;
@@ -708,10 +657,10 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             }
         }
         
-        glUniform1iARB(entity_shader->number_of_lights, current_light_number);
-        glUniform4fvARB(entity_shader->light_color, current_light_number, colors);
-        glUniform3fvARB(entity_shader->light_position, current_light_number, positions);
-        glUniform1fvARB(entity_shader->light_falloff, current_light_number, falloffs);
+        glUniform1iARB(shader->number_of_lights, current_light_number);
+        glUniform4fvARB(shader->light_color, current_light_number, colors);
+        glUniform3fvARB(shader->light_position, current_light_number, positions);
+        glUniform1fvARB(shader->light_falloff, current_light_number, falloffs);
     }
 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
@@ -730,7 +679,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
         }
         
-        Render_SkeletalModel(&entity->bf, subModelView, subModelViewProjection);
+        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
     }
 }
 
@@ -742,23 +691,13 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     engine_container_p cont;
     entity_p ent;
 
-    shader_description *lastShader = 0;
+    const shader_description *lastShader = 0;
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
     {
         btScalar modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
         
-        unlit_tinted_shader_description *shader = room_shaders[ROOM_SHADER_NORMAL];
-        if (room->flags & 1) // Is water
-        {
-            if (room->light_mode == 1) // Also flickering
-                shader = room_shaders[ROOM_SHADER_FLICKERING_WATER];
-            else
-                shader = room_shaders[ROOM_SHADER_WATER];
-        } else if (room->light_mode == 1) // Only flickering
-        {
-            shader = room_shaders[ROOM_SHADER_FLICKERING];
-        }
+        const unlit_tinted_shader_description *shader = render->shader_manager->getRoomShader(room->light_mode == 1, room->flags & 1);
 
         GLfloat tint[4];
         Render_CalculateWaterTint(tint, 1);
@@ -777,7 +716,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     
     if (room->static_mesh_count > 0)
     {
-        glUseProgramObjectARB(static_mesh_shader->program);
+        glUseProgramObjectARB(render->shader_manager->getStaticMeshShader()->program);
         for(uint32_t i=0; i<room->static_mesh_count; i++)
         {
             if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
@@ -792,7 +731,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
             btScalar transform[16];
             Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->static_mesh[i].transform);
-            glUniformMatrix4fvARB(static_mesh_shader->model_view_projection, 1, false, transform);
+            glUniformMatrix4fvARB(render->shader_manager->getStaticMeshShader()->model_view_projection, 1, false, transform);
             base_mesh_s *mesh = room->static_mesh[i].mesh;
             GLfloat tint[4];
             
@@ -803,7 +742,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             {
                 Render_CalculateWaterTint(tint, 0);
             }
-            glUniform4fvARB(static_mesh_shader->tint_mult, 1, tint);
+            glUniform4fvARB(render->shader_manager->getStaticMeshShader()->tint_mult, 1, tint);
             Render_Mesh(mesh, NULL, NULL);
             room->static_mesh[i].was_rendered = 1;
         }
@@ -811,7 +750,8 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
     if (room->containers)
     {
-        glUseProgramObjectARB(entity_shader->program);
+        const lit_shader_description *shader = render->shader_manager->getEntityShader(room->light_count);
+        glUseProgramObjectARB(shader->program);
         for(cont=room->containers; cont; cont=cont->next)
         {
             switch(cont->object_type)
@@ -822,7 +762,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                 {
                     if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                     {
-                        Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix);
+                        Render_Entity(shader, ent, modelViewMatrix, modelViewProjectionMatrix);
                     }
                     ent->was_rendered = 1;
                 }
@@ -979,8 +919,18 @@ void Render_DrawList()
 
     if(renderer.world->Character)
     {
-        glUseProgramObjectARB(entity_shader->program);
-        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        int lights = 0;
+        struct room_sector_s *sector = renderer.world->Character->current_sector;
+        if (sector)
+        {
+            struct room_s *room = sector->owner_room;
+            if (room)
+                lights = room->light_count;
+        }
+        const lit_shader_description *shader = renderer.shader_manager->getEntityShader(lights);
+        
+        glUseProgramObjectARB(shader->program);
+        Render_Entity(shader, renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
     }
 
     /*
