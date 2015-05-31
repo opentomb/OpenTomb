@@ -200,7 +200,7 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
     {
         // Standard normals are always float. Overridden normals (from skinning)
         // are btScalar.
-        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
         glNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
     }
@@ -277,7 +277,7 @@ void Render_PolygonTransparency(struct polygon_s *p)
         }
 
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[tf->tex_ind]);
-        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
         glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
         glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
@@ -295,7 +295,7 @@ void Render_PolygonTransparency(struct polygon_s *p)
     else
     {
         glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
         glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
         glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
@@ -1089,9 +1089,9 @@ void Render_DrawList_DebugLines()
 
     if(!debugDrawer.IsEmpty())
     {
-        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
-        if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
         debugDrawer.render();

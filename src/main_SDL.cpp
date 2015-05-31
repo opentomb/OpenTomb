@@ -575,7 +575,7 @@ void Engine_Display()
 
         Render_GenWorldList();
         Render_DrawList();
-        if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);
@@ -764,7 +764,7 @@ void ShowDebugInfo()
 
     vec3_copy(light_position, engine_camera.pos);
 
-    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);

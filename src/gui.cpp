@@ -1318,7 +1318,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     glDisable(GL_DEPTH_TEST);
 
-    if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };

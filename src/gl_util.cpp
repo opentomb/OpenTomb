@@ -199,6 +199,11 @@ void InitGLExtFuncs()
 
         SAFE_GET_PROC(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC, "glGenerateMipmap");
     }
+    else
+    {
+        fprintf(stderr, "VBOs not supported");
+        abort();
+    }
     if(IsGLExtensionSupported("GL_ARB_shading_language_100"))
     {
         SAFE_GET_PROC(glDeleteObjectARB, PFNGLDELETEOBJECTARBPROC, "glDeleteObjectARB");
@@ -248,6 +253,11 @@ void InitGLExtFuncs()
         SAFE_GET_PROC(glDisableVertexAttribArrayARB, PFNGLDISABLEVERTEXATTRIBARRAYARBPROC, "glDisableVertexAttribArrayARB");
 
         SAFE_GET_PROC(glVertexAttribPointerARB, PFNGLVERTEXATTRIBPOINTERARBPROC, "glVertexAttribPointerARB");
+    }
+    else
+    {
+        fprintf(stderr, "Shaders not supported");
+        abort();
     }
 #endif
 }

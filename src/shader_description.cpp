@@ -8,10 +8,13 @@
 
 #include "shader_description.h"
 
+#include <stdlib.h>
+
 shader_stage::shader_stage(GLenum type, const char *filename, const char *additionalDefines)
 {
     shader = glCreateShaderObjectARB(type);
-    loadShaderFromFile(shader, filename, additionalDefines);
+    if (!loadShaderFromFile(shader, filename, additionalDefines))
+        abort();
 }
 
 shader_stage::~shader_stage()

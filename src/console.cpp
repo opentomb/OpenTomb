@@ -169,7 +169,7 @@ void Con_Draw()
         int x, y;
         glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
         glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        if(glBindBufferARB)glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         Con_DrawBackground();
         Con_DrawCursor();
 
