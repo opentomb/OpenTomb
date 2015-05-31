@@ -77,6 +77,9 @@ PFNGLGETSHADERSOURCEARBPROC             glGetShaderSourceARB =                  
 PFNGLBINDATTRIBLOCATIONARBPROC          glBindAttribLocationARB =               NULL;
 PFNGLGETACTIVEATTRIBARBPROC             glGetActiveAttribARB =                  NULL;
 PFNGLGETATTRIBLOCATIONARBPROC           glGetAttribLocationARB =                NULL;
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC     glEnableVertexAttribArrayARB =          NULL;
+PFNGLENABLEVERTEXATTRIBARRAYARBPROC     glDisableVertexAttribArrayARB =          NULL;
+PFNGLVERTEXATTRIBPOINTERARBPROC         glVertexAttribPointerARB =              NULL;
 
 PFNGLACTIVETEXTUREARBPROC               glActiveTextureARB =                    NULL;
 PFNGLCLIENTACTIVETEXTUREARBPROC         glClientActiveTextureARB =              NULL;
@@ -241,6 +244,10 @@ void InitGLExtFuncs()
         SAFE_GET_PROC(glBindAttribLocationARB, PFNGLBINDATTRIBLOCATIONARBPROC, "glBindAttribLocationARB");
         SAFE_GET_PROC(glGetActiveAttribARB, PFNGLGETACTIVEATTRIBARBPROC, "glGetActiveAttribARB");
         SAFE_GET_PROC(glGetAttribLocationARB, PFNGLGETATTRIBLOCATIONARBPROC, "glGetAttribLocationARB");
+        SAFE_GET_PROC(glEnableVertexAttribArrayARB, PFNGLENABLEVERTEXATTRIBARRAYARBPROC, "glEnableVertexAttribArrayARB");
+        SAFE_GET_PROC(glDisableVertexAttribArrayARB, PFNGLDISABLEVERTEXATTRIBARRAYARBPROC, "glDisableVertexAttribArrayARB");
+
+        SAFE_GET_PROC(glVertexAttribPointerARB, PFNGLVERTEXATTRIBPOINTERARBPROC, "glVertexAttribPointerARB");
     }
 #endif
 }
