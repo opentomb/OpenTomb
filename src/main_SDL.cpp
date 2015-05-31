@@ -573,17 +573,6 @@ void Engine_Display()
 
         glFrontFace(GL_CW);
 
-        // GL_VERTEX_ARRAY | GL_COLOR_ARRAY | GL_NORMAL_ARRAY | GL_TEXTURE_COORD_ARRAY
-        if (renderer.settings.fog_enabled == 1)
-        {
-            glFogi(GL_FOG_MODE, GL_LINEAR);
-            glFogfv(GL_FOG_COLOR, renderer.settings.fog_color);
-            glHint(GL_FOG_HINT, GL_DONT_CARE);
-            glFogf(GL_FOG_START, renderer.settings.fog_start_depth);
-            glFogf(GL_FOG_END, renderer.settings.fog_end_depth);
-            glEnable(GL_FOG);
-        }
-
         Render_GenWorldList();
         Render_DrawList();
         if(glBindBufferARB)glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
