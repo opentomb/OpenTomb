@@ -1342,9 +1342,9 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     GLfloat rectColors[16];
     memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorLowerRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 4,  colorUpperLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 12, colorUpperRight, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
     glColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

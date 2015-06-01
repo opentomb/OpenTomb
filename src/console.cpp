@@ -223,7 +223,7 @@ void Con_DrawBackground()
 
 void Con_DrawCursor()
 {
-    GLint y = con_base.cursor_y + con_base.line_height;
+    GLint y = con_base.cursor_y;
 
     if(con_base.show_cursor_period)
     {
@@ -239,11 +239,15 @@ void Con_DrawCursor()
     {
         GLfloat *v, cursor_array[12];
         v = cursor_array;
-        *v = (GLfloat)con_base.cursor_x;                            v++;
-        *v = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;      v++;
+        *v = (GLfloat)con_base.cursor_x;
+        *v /= (GLfloat)screen_info.w;                               v++;
+        *v = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
+        *v /= (GLfloat)screen_info.h;                               v++;
         v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
-        *v = (GLfloat)con_base.cursor_x;                            v++;
-        *v = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;      v++;
+        *v = (GLfloat)con_base.cursor_x;
+        *v /= (GLfloat)screen_info.w;                               v++;
+        *v = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
+        *v /= (GLfloat)screen_info.h;                               v++;
         v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;
         glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array);
         glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array + 2);
