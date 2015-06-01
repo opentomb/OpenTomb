@@ -1707,7 +1707,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/lua/lzio.h" />
-		<Unit filename="src/mac/FindConfigFile.h" />
 		<Unit filename="src/main_SDL.cpp" />
 		<Unit filename="src/main_SDL.h" />
 		<Unit filename="src/mesh.cpp" />

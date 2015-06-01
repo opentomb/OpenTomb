@@ -1037,6 +1037,10 @@ void Render_DrawList()
 
     if(render_dBSP.m_root->polygons_front != NULL)
     {
+        const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
+        glUseProgramObjectARB(shader->program);
+        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
@@ -1089,6 +1093,10 @@ void Render_DrawList_DebugLines()
 
     if(!debugDrawer.IsEmpty())
     {
+        const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
+        glUseProgramObjectARB(shader->program);
+        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
