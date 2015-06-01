@@ -1,3 +1,4 @@
+#include <cassert>
 #include <sstream>
 
 #include "shader_manager.h"
@@ -23,7 +24,7 @@ shader_manager::shader_manager()
     
     // Entity prog
     shader_stage entityVertexShader(GL_VERTEX_SHADER_ARB, "shaders/entity.vsh");
-    for (int i = 0; i < MAX_NUM_LIGHTS; i++) {
+    for (int i = 0; i <= MAX_NUM_LIGHTS; i++) {
         std::ostringstream stream;
         stream << "#define NUMBER_OF_LIGHTS " << i << std::endl;
         
@@ -42,6 +43,12 @@ shader_manager::shader_manager()
 shader_manager::~shader_manager()
 {
     // Do nothing. All shaders are released by OpenGL anyway.
+}
+
+const lit_shader_description *shader_manager::getEntityShader(unsigned numberOfLights) const {
+    assert(numberOfLights <= MAX_NUM_LIGHTS);
+    
+    return entity_shader[numberOfLights];
 }
 
 const unlit_tinted_shader_description *shader_manager::getRoomShader(bool isFlickering, bool isWater) const

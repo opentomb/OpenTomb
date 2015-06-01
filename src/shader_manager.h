@@ -9,7 +9,7 @@
 class shader_manager {
     unlit_tinted_shader_description *room_shaders[2][2];
     unlit_tinted_shader_description *static_mesh_shader;
-    lit_shader_description *entity_shader[MAX_NUM_LIGHTS];
+    lit_shader_description *entity_shader[MAX_NUM_LIGHTS+1];
     gui_shader_description *gui;
     gui_shader_description *gui_textured;
     text_shader_description *text;
@@ -19,7 +19,7 @@ public:
     shader_manager();
     ~shader_manager();
     
-    const lit_shader_description *getEntityShader(int numberOfLights) const { return entity_shader[numberOfLights]; }
+    const lit_shader_description *getEntityShader(unsigned numberOfLights) const;
     
     const unlit_tinted_shader_description *getStaticMeshShader() const { return static_mesh_shader; }
     
