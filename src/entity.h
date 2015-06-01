@@ -95,7 +95,7 @@ typedef struct entity_s
     
     struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
     btScalar                            angles[3];
-    alignas(16) btScalar                transform[16];      // GL transformation matrix
+    btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
 
     struct obb_s                       *obb;                // oriented bounding box
 
