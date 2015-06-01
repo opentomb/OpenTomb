@@ -6,7 +6,8 @@ uniform sampler2D color_map;
 #if NUMBER_OF_LIGHTS > 0
 uniform vec3 light_position[NUMBER_OF_LIGHTS];
 uniform vec4 light_color[NUMBER_OF_LIGHTS];
-uniform float light_falloff[NUMBER_OF_LIGHTS];
+uniform float light_innerRadius[NUMBER_OF_LIGHTS];
+uniform float light_outerRadius[NUMBER_OF_LIGHTS];
 #endif
 uniform vec4 light_ambient;
 
@@ -27,7 +28,7 @@ void main()
         // Geometry
         vec3 toLight = light_position[i] - varying_position;
         float lengthToLight = length(toLight);
-        float intensity = 1.0 / (1.0 + light_falloff[i] * lengthToLight);
+        float intensity = 1.0 - smoothstep(light_innerRadius[i], light_outerRadius[i], lengthToLight);
         
         // Diffuse term
         vec4 diffuse = light_color[i] * max(dot(normal, toLight / lengthToLight), 0.0);

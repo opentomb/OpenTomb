@@ -76,7 +76,8 @@ lit_shader_description::lit_shader_description(const shader_stage &vertex, const
     number_of_lights = glGetUniformLocationARB(program, "number_of_lights");
     light_position = glGetUniformLocationARB(program, "light_position");
     light_color = glGetUniformLocationARB(program, "light_color");
-    light_falloff = glGetUniformLocationARB(program, "light_falloff");
+    light_inner_radius = glGetUniformLocationARB(program, "light_innerRadius");
+    light_outer_radius = glGetUniformLocationARB(program, "light_outerRadius");
     light_ambient = glGetUniformLocationARB(program, "light_ambient");
 }
 

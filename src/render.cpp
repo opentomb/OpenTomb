@@ -1,4 +1,5 @@
 
+#include <cmath>
 #include <stdlib.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
@@ -577,10 +578,12 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
 
         GLfloat positions[3*MAX_NUM_LIGHTS];
         GLfloat colors[4*MAX_NUM_LIGHTS];
-        GLfloat falloffs[1*MAX_NUM_LIGHTS];
+        GLfloat innerRadiuses[1*MAX_NUM_LIGHTS];
+        GLfloat outerRadiuses[1*MAX_NUM_LIGHTS];
         memset(positions, 0, sizeof(positions));
-        memset(colors, 0, sizeof(positions));
-        memset(falloffs, 0, sizeof(positions));
+        memset(colors, 0, sizeof(colors));
+        memset(innerRadiuses, 0, sizeof(innerRadiuses));
+        memset(outerRadiuses, 0, sizeof(outerRadiuses));
 
         for(uint32_t i = 0; i < room->light_count && current_light_number < MAX_NUM_LIGHTS; i++)
         {
@@ -593,10 +596,10 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
             float distance = sqrt(x * x + y * y + z * z);
 
             // Find color
-            colors[current_light_number*4 + 0] = current_light->colour[0];
-            colors[current_light_number*4 + 1] = current_light->colour[1];
-            colors[current_light_number*4 + 2] = current_light->colour[2];
-            colors[current_light_number*4 + 3] = current_light->colour[3];
+            colors[current_light_number*4 + 0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
+            colors[current_light_number*4 + 1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
+            colors[current_light_number*4 + 2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
+            colors[current_light_number*4 + 3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
 
             if(room->flags & TR_ROOM_FLAG_WATER)
             {
@@ -609,12 +612,14 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
             // Find fall-off
             if(current_light->light_type == LT_SUN)
             {
-                falloffs[current_light_number] = 0.0f;
+                innerRadiuses[current_light_number] = 1e20f;
+                outerRadiuses[current_light_number] = 1e21f;
                 current_light_number++;
             }
             else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == LT_POINT || current_light->light_type == LT_SHADOW))
             {
-                falloffs[current_light_number] = current_light->falloff;
+                innerRadiuses[current_light_number] = std::fabs(current_light->inner);
+                outerRadiuses[current_light_number] = std::fabs(current_light->outer);
                 current_light_number++;
             }
         }
@@ -624,7 +629,8 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
         glUniform4fvARB(shader->light_ambient, 1, ambient_component);
         glUniform4fvARB(shader->light_color, current_light_number, colors);
         glUniform3fvARB(shader->light_position, current_light_number, positions);
-        glUniform1fvARB(shader->light_falloff, current_light_number, falloffs);
+        glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
+        glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
     } else {
         shader = renderer.shader_manager->getEntityShader(0);
         glUseProgramObjectARB(shader->program);

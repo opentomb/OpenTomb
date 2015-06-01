@@ -88,7 +88,8 @@ struct lit_shader_description : public unlit_shader_description
     GLint number_of_lights;
     GLint light_position;
     GLint light_color;
-    GLint light_falloff;
+    GLint light_inner_radius;
+    GLint light_outer_radius;
     GLint light_ambient;
     
     lit_shader_description(const shader_stage &vertex, const shader_stage &fragment);
