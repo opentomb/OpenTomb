@@ -20,6 +20,7 @@
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 #include "bullet/LinearMath/btScalar.h"
+#include "vertex_array.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -94,9 +95,7 @@ typedef struct sprite_s
 typedef struct sprite_buffer_s
 {
     // Vertex data for the sprites
-    GLuint                array_buffer;
-    // Element data for the sprites
-    GLuint                element_array_buffer;
+    vertex_array *data;
     
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
     uint32_t              num_texture_pages;

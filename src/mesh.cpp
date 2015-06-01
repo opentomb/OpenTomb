@@ -253,10 +253,7 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         // No animated data
         mesh->animated_vertex_array = 0;
         mesh->animated_texcoord_array = 0;
-    }
-    
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    }    
 }
 
 

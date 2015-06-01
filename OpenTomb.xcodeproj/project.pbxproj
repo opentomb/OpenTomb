@@ -157,6 +157,7 @@
 		5252A5121B1B117500E8CE1D /* sprite.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5111B1B117500E8CE1D /* sprite.vsh */; };
 		5252A5141B1B591F00E8CE1D /* sprite.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5131B1B591F00E8CE1D /* sprite.fsh */; };
 		5252A5171B1B8B9500E8CE1D /* hair.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5151B1B8B9500E8CE1D /* hair.cpp */; };
+		5252A51B1B1CE01500E8CE1D /* vertex_array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5181B1BB21600E8CE1D /* vertex_array.cpp */; };
 		52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */; };
 		52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */; };
 		52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA91AED5ACA003B8288 /* RobotoCondensed-Regular.ttf */; };
@@ -754,6 +755,8 @@
 		5252A5131B1B591F00E8CE1D /* sprite.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sprite.fsh; sourceTree = "<group>"; };
 		5252A5151B1B8B9500E8CE1D /* hair.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hair.cpp; sourceTree = "<group>"; };
 		5252A5161B1B8B9500E8CE1D /* hair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hair.h; sourceTree = "<group>"; };
+		5252A5181B1BB21600E8CE1D /* vertex_array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertex_array.cpp; sourceTree = "<group>"; };
+		5252A5191B1BB21600E8CE1D /* vertex_array.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vertex_array.h; sourceTree = "<group>"; };
 		52B82D821AED5A45003B8288 /* OpenTomb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTomb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DroidSansMono.ttf; sourceTree = "<group>"; };
 		52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
@@ -2126,6 +2129,8 @@
 				52D5D5F81B08758700B99A38 /* shader_description.h */,
 				5252A50A1B1A530100E8CE1D /* shader_manager.cpp */,
 				5252A50B1B1A530100E8CE1D /* shader_manager.h */,
+				5252A5181B1BB21600E8CE1D /* vertex_array.cpp */,
+				5252A5191B1BB21600E8CE1D /* vertex_array.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -3581,6 +3586,7 @@
 				524E0EE41AFF968A00F56FF6 /* btConvexConvexAlgorithm.cpp in Sources */,
 				52B833401AED5B06003B8288 /* ftbitmap.c in Sources */,
 				524E0EE31AFF968A00F56FF6 /* btConvexConcaveCollisionAlgorithm.cpp in Sources */,
+				5252A51B1B1CE01500E8CE1D /* vertex_array.cpp in Sources */,
 				52B832901AED5B06003B8288 /* chorus.c in Sources */,
 				52B833F01AED5B06003B8288 /* lvm.c in Sources */,
 				52B833EE1AED5B06003B8288 /* ltm.c in Sources */,

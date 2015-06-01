@@ -60,6 +60,7 @@ void Render_InitGlobals()
 void Render_DoShaders()
 {
     renderer.shader_manager = new shader_manager();
+    renderer.vertex_array_manager = vertex_array_manager::createManager();
 }
 
 
@@ -801,18 +802,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
         glDisableClientState(GL_COLOR_ARRAY);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, room->sprite_buffer->array_buffer);
-
-        glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
-        glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [0]));
-
-        glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
-        glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [3]));
-
-        glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
-        glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [5]));
-
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, room->sprite_buffer->element_array_buffer);
+        room->sprite_buffer->data->use();
 
         unsigned long offset = 0;
         for(uint32_t texture = 0; texture < room->sprite_buffer->num_texture_pages; texture++)
@@ -826,10 +816,9 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
             glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
+        
+        render->vertex_array_manager->unbind();
 
-        glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
-        glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
-        glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
         glPopClientAttrib();
     }
 }

@@ -575,7 +575,6 @@ void Engine_Display()
 
         Render_GenWorldList();
         Render_DrawList();
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);

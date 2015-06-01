@@ -39,6 +39,7 @@ extern "C" {
 #include "render.h"
 #include "redblack.h"
 #include "bsp_tree.h"
+#include "shader_description.h"
 
 lua_State *objects_flags_conf = NULL;
 lua_State *ent_ID_override = NULL;
@@ -3388,15 +3389,24 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
     free(elements_for_texture);
 
     // Now load into OpenGL
-    glGenBuffersARB(1, &room->sprite_buffer->array_buffer);
-    glBindBufferARB(GL_ARRAY_BUFFER, room->sprite_buffer->array_buffer);
+    GLuint arrayBuffer, elementBuffer;
+    glGenBuffersARB(1, &arrayBuffer);
+    glBindBufferARB(GL_ARRAY_BUFFER, arrayBuffer);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
     free(spriteData);
 
-    glGenBuffersARB(1, &room->sprite_buffer->element_array_buffer);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->sprite_buffer->element_array_buffer);
+    glGenBuffersARB(1, &elementBuffer);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
+    
+    struct vertex_array_attribute attribs[3] = {
+        vertex_array_attribute(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
+        vertex_array_attribute(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
+        vertex_array_attribute(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
+    };
+    
+    room->sprite_buffer->data = renderer.vertex_array_manager->createArray(elementBuffer, 3, attribs);
 }
 
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr)
