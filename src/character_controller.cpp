@@ -100,7 +100,6 @@ void Character_Create(struct entity_s *ent)
     ret->climb.edge_hit = 0x00;
     ret->climb.wall_hit = 0x00;
     ret->forvard_size = 48.0;                                                   ///@FIXME: magick number
-    ret->ghost_step_up_map_filter = 0x00;
     ret->Height = CHARACTER_BASE_HEIGHT;
 
     ret->manifoldArray = NULL;
@@ -139,7 +138,7 @@ void Character_Create(struct entity_s *ent)
             ret->ghostObjects[i]->setCollisionShape(ent->character->shapes[i]);
             bt_engine_dynamicsWorld->addCollisionObject(ret->ghostObjects[i], btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::DefaultFilter);
 
-            ent->character->last_collisions[i].obj = NULL;
+            ent->character->last_collisions[i].obj_count = 0;
         }
     }
 }
@@ -483,7 +482,6 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
 
 /**
  * Start position are taken from ent->transform
- * @TODO: ADD ACTIVE FLIP CHECKS!!!
  */
 void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset)
 {
@@ -1126,15 +1124,18 @@ void Character_GhostUpdate(struct entity_s *ent)
 void Character_UpdateCurrentCollisions(struct entity_s *ent)
 {
     btScalar tr[16], *v;
+    btTransform orig_tr;
     btVector3 pos;
 
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         btPairCachingGhostObject *ghost = ent->character->ghostObjects[i];
+        character_collision_node_p cn = ent->character->last_collisions + i;
 
-        ent->character->last_collisions[i].obj = NULL;
+        cn->obj_count = 0;
         Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
         v = ent->bf.animations.model->mesh_tree[i].mesh_base->centre;
+        orig_tr = ghost->getWorldTransform();
         ghost->getWorldTransform().setFromOpenGLMatrix(tr);
         Mat4_vec3_mul_macro(pos.m_floats, tr, v);
         ghost->getWorldTransform().setOrigin(pos);
@@ -1165,16 +1166,20 @@ void Character_UpdateCurrentCollisions(struct entity_s *ent)
                 collisionPair->m_algorithm->getAllContactManifolds(*ent->character->manifoldArray);
             }
 
-            if(ent->character->manifoldArray->size() > 0)
+            for(int k=0;k<ent->character->manifoldArray->size();k++)
             {
-                ent->character->last_collisions[i].obj = (btCollisionObject*)(*ent->character->manifoldArray)[0]->getBody0();
-                if(ent->self == (engine_container_p)ent->character->last_collisions[i].obj->getUserPointer())
+                if(cn->obj_count < MAX_OBJECTS_IN_COLLSION_NODE - 1)
                 {
-                    ent->character->last_collisions[i].obj = (btCollisionObject*)(*ent->character->manifoldArray)[0]->getBody1();
+                    cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->character->manifoldArray)[k]->getBody0();
+                    if(ent->self == (engine_container_p)(cn->obj[cn->obj_count]->getUserPointer()))
+                    {
+                        cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->character->manifoldArray)[k]->getBody1();
+                    }
+                    cn->obj_count++;
                 }
-                break;
             }
         }
+        ghost->setWorldTransform(orig_tr);
     }
 }
 
@@ -1198,7 +1203,6 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
             btScalar move_len;
             uint16_t m = ent->bf.animations.model->collision_map[i];
             ss_bone_tag_p btag = ent->bf.bone_tags + m;
-            ent->character->last_collisions[m].obj = NULL;
 
             if(btag->body_part & ent->character->no_fix_body_parts)
             {
@@ -1241,14 +1245,6 @@ int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3]
                 ent->character->ghostObjects[m]->setWorldTransform(tr_current);
                 if(Ghost_GetPenetrationFixVector(ent->character->ghostObjects[m], ent->character->manifoldArray, tmp))
                 {
-                    if(ent->character->manifoldArray->size() > 0)
-                    {
-                        ent->character->last_collisions[m].obj = (btCollisionObject*)(*ent->character->manifoldArray)[0]->getBody0();
-                        if(ent->self == (engine_container_p)ent->character->last_collisions[m].obj->getUserPointer())
-                        {
-                            ent->character->last_collisions[m].obj = (btCollisionObject*)(*ent->character->manifoldArray)[0]->getBody1();
-                        }
-                    }
                     ent->transform[12+0] += tmp[0];
                     ent->transform[12+1] += tmp[1];
                     ent->transform[12+2] += tmp[2];
@@ -1280,7 +1276,6 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
     {
         resp->horizontal_collide    = 0x00;
         resp->vertical_collide      = 0x00;
-        resp->step_up               = 0x00;
     }
 
     if(ent->character && ent->character->no_fix_all)
@@ -1290,12 +1285,6 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
     }
 
     int numPenetrationLoops = Character_GetPenetrationFixVector(ent, reaction, move);
-    // temporary stick, but not so bad
-    if((numPenetrationLoops > 0) && (ent->character->ghost_step_up_map_filter != 0x00) &&
-       !Character_WasCollisionBodyParts(ent, ~(ent->character->ghost_step_up_map_filter)))
-    {
-        resp->step_up = 0x01;
-    }
 
     vec3_add(ent->transform+12, ent->transform+12, reaction);
     Character_UpdateCurrentHeight(ent);
@@ -1305,14 +1294,11 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         t2 = move[0] * move[0] + move[1] * move[1];
         if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))        // we have horizontal move and horizontal correction
         {
-            if(resp->step_up == 0x00)
+            t2 *= t1;
+            t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
+            if(t1 < ent->character->critical_wall_component)
             {
-                t2 = btSqrt(t2 * t1);
-                t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / t2;
-                if(t1 < -ent->character->critical_wall_component)               // cos(alpha) < -0.707
-                {
-                    resp->horizontal_collide |= 0x01;
-                }
+                resp->horizontal_collide |= 0x01;
             }
         }
         else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
@@ -1328,17 +1314,16 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         }
     }
 
-    if(ent->character->height_info.ceiling_hit && (reaction[2] < 0.0))
+    if(ent->character->height_info.ceiling_hit && (reaction[2] < -0.1))
     {
         resp->vertical_collide |= 0x02;
     }
 
-    if(ent->character->height_info.floor_hit && (reaction[2] > 0.0))
+    if(ent->character->height_info.floor_hit && (reaction[2] > 0.1))
     {
         resp->vertical_collide |= 0x01;
     }
 
-    //vec3_copy(ent->transform+12, pos.m_floats);
     Character_GhostUpdate(ent);
 }
 
@@ -1357,7 +1342,7 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
 
     Character_GhostUpdate(ent);
     vec3_add(pos, pos, move);
-    resp->horizontal_collide = 0x00;
+    //resp->horizontal_collide = 0x00;
     if(Character_GetPenetrationFixVector(ent, reaction, move))
     {
         t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
@@ -1366,7 +1351,7 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
         {
             t2 *= t1;
             t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
-            if(t1 > ent->character->critical_wall_component)
+            if(t1 < ent->character->critical_wall_component)
             {
                 resp->horizontal_collide |= 0x01;
             }
@@ -1384,7 +1369,7 @@ bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
     {
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            if((ent->bf.bone_tags[i].body_part & parts_flags) && (ent->character->last_collisions[i].obj != NULL))
+            if((ent->bf.bone_tags[i].body_part & parts_flags) && (ent->character->last_collisions[i].obj_count > 0))
             {
                 return true;
             }
@@ -1401,7 +1386,7 @@ void Character_CleanCollisionAllBodyParts(struct entity_s *ent)
     {
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            ent->character->last_collisions[i].obj = NULL;
+            ent->character->last_collisions[i].obj_count = 0;
         }
     }
 }
@@ -1415,24 +1400,26 @@ void Character_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flag
         {
             if(ent->bf.bone_tags[i].body_part & parts_flags)
             {
-                ent->character->last_collisions[i].obj = NULL;
+                ent->character->last_collisions[i].obj_count = 0;
             }
         }
     }
 }
 
 
-struct engine_container_s *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
+btCollisionObject *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 {
     if(ent->character != NULL)
     {
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            if((ent->bf.bone_tags[i].body_part & parts_flags) && (ent->character->last_collisions[i].obj != NULL))
+            if(ent->bf.bone_tags[i].body_part & parts_flags)
             {
-                engine_container_p ret = (engine_container_p)ent->character->last_collisions[i].obj->getUserPointer();
-                ent->character->last_collisions[i].obj = NULL;
-                return ret;
+                character_collision_node_p cn = ent->character->last_collisions + i;
+                if(cn->obj_count > 0)
+                {
+                    return cn->obj[--cn->obj_count];
+                }
             }
         }
     }
@@ -1848,7 +1835,6 @@ int Character_FreeFalling(struct entity_s *ent)
      * init height info structure
      */
 
-    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -1954,7 +1940,6 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
 
-    ent->character->ghost_step_up_map_filter = 0x00;
     ent->speed.m_floats[2] = 0.0;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
@@ -2024,7 +2009,6 @@ int Character_WallsClimbing(struct entity_s *ent)
     btVector3 spd, move;
     btScalar t, *pos = ent->transform + 12;
 
-    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -2091,7 +2075,6 @@ int Character_Climbing(struct entity_s *ent)
     btScalar t, *pos = ent->transform + 12;
     btScalar z = pos[2];
 
-    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -2159,7 +2142,6 @@ int Character_MoveUnderWater(struct entity_s *ent)
         return 2;
     }
 
-    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -2219,7 +2201,6 @@ int Character_MoveOnWater(struct entity_s *ent)
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar *pos = ent->transform + 12;
 
-    ent->character->ghost_step_up_map_filter = 0x00;
     ent->character->resp.slide = 0x00;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
@@ -2608,6 +2589,16 @@ void Character_ApplyCommands(struct entity_s *ent)
             ent->move_type = MOVE_ON_FLOOR;
             break;
     };
+
+    ///@TODO: work in progress, Character_UpdateCurrentCollisions() generates too many collisions
+    int xxx = 0;
+    Character_UpdateCurrentCollisions(ent);
+    while(Character_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF))
+    {
+        xxx ++;
+    }
+    if(xxx > 0)
+        Con_Printf("xxx = %d", xxx);
 
     Entity_UpdateRigidBody(ent, 1);
     Character_UpdatePlatformPostStep(ent);

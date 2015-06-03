@@ -102,7 +102,7 @@
 #define DEFAULT_FALL_DAWN_HEIGHT                (320.0)                         ///@FIXME: check original
 #define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
-#define DEFAULT_CRITICAL_WALL_COMPONENT         (0.707)                         ///@FIXME: cos(alpha = 45 deg)
+#define DEFAULT_CRITICAL_WALL_COMPONENT         (-0.707)                        ///@FIXME: cos(alpha = 45 deg)
 #define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_CLIMB_R               (32.0)
@@ -253,7 +253,7 @@ typedef struct character_response_s
     int8_t      kill;
     int8_t      vertical_collide;
     int8_t      horizontal_collide;
-    int8_t      step_up;
+    //int8_t      step_up;
     int8_t      slide;
 }character_response_t, *character_response_p;
 
@@ -283,9 +283,12 @@ typedef struct inventory_node_s
     struct inventory_node_s    *next;
 }inventory_node_t, *inventory_node_p;
 
+#define MAX_OBJECTS_IN_COLLSION_NODE    (4)
+
 typedef struct character_collision_node_s
 {
-    btCollisionObject          *obj;
+    uint16_t                    obj_count;
+    btCollisionObject          *obj[MAX_OBJECTS_IN_COLLSION_NODE];
 }character_collision_node_t, *character_collision_node_p;
 
 typedef struct character_s
@@ -310,7 +313,6 @@ typedef struct character_s
     int8_t                       no_fix_all;
     int8_t                       cam_follow_center;
     uint32_t                     no_fix_body_parts;
-    uint32_t                     ghost_step_up_map_filter;
 
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;
@@ -365,7 +367,7 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
 bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
 void Character_CleanCollisionAllBodyParts(struct entity_s *ent);
 void Character_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-struct engine_container_s *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
+btCollisionObject *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
 
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);

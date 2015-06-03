@@ -237,7 +237,7 @@ void BT_GenEntityRigidBody(entity_p ent)
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
-    
+
     if(ent->bf.animations.model == NULL)
     {
         return;
@@ -262,6 +262,7 @@ void BT_GenEntityRigidBody(entity_p ent)
             //ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
             bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             ent->bt_body[i]->setUserPointer(ent->self);
+            ent->bt_body[i]->setUserIndex(i);
         }
     }
 }
