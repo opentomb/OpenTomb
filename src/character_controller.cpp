@@ -2591,14 +2591,14 @@ void Character_ApplyCommands(struct entity_s *ent)
     };
 
     ///@TODO: work in progress, Character_UpdateCurrentCollisions() generates too many collisions
-    int xxx = 0;
+    /*int xxx = 0;
     Character_UpdateCurrentCollisions(ent);
     while(Character_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF))
     {
         xxx ++;
     }
     if(xxx > 0)
-        Con_Printf("xxx = %d", xxx);
+        Con_Printf("xxx = %d", xxx);*/
 
     Entity_UpdateRigidBody(ent, 1);
     Character_UpdatePlatformPostStep(ent);
