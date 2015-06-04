@@ -218,16 +218,16 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
     
     // Now for animated polygons, if any
     mesh->num_animated_elements = 0;
-    mesh->animated_index_array_length = 0;
+    mesh->animated_vbo_index_array_length = 0;
     if (mesh->animated_polygons != 0)
     {
         for (polygon_s *p = mesh->animated_polygons; p != 0; p = p->next)
         {
             mesh->num_animated_elements += p->vertex_count;
-            mesh->animated_index_array_length += 3*(p->vertex_count - 2);
+            mesh->animated_vbo_index_array_length += 3*(p->vertex_count - 2);
             if (p->double_side)
             {
-                mesh->animated_index_array_length += 3*(p->vertex_count - 2);
+                mesh->animated_vbo_index_array_length += 3*(p->vertex_count - 2);
             }
         }
         
@@ -235,7 +235,7 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         size_t stride = sizeof(GLfloat[3]) + sizeof(GLfloat [4]) + sizeof(GLfloat[3]);
         
         uint8_t *vertexData = new uint8_t[mesh->num_animated_elements * stride];
-        uint32_t *elementData = new uint32_t[mesh->animated_index_array_length];
+        uint32_t *elementData = new uint32_t[mesh->animated_vbo_index_array_length];
         
         // Fill it.
         size_t offset = 0;
@@ -269,26 +269,37 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         }
         
         // And upload.
-        glGenBuffersARB(1, &mesh->animated_vertex_array);
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
+        glGenBuffersARB(1, &mesh->animated_vbo_vertex_array);
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_vertex_array);
         glBufferDataARB(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
         delete [] vertexData;
         
-        glGenBuffersARB(1, &mesh->animated_index_array);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_index_array_length, elementData, GL_STATIC_DRAW);
+        glGenBuffersARB(1, &mesh->animated_vbo_index_array);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_vbo_index_array);
+        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_vbo_index_array_length, elementData, GL_STATIC_DRAW);
         delete [] elementData;
         
         // Prepare empty buffer for tex coords
-        glGenBuffersARB(1, &mesh->animated_texcoord_array);
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
+        glGenBuffersARB(1, &mesh->animated_vbo_texcoord_array);
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_texcoord_array);
         glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->num_animated_elements, 0, GL_STREAM_DRAW);
+        
+        // Create vertex array object.
+        vertex_array_attribute attribs[] = {
+            vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(GLfloat [10]), 0),
+            vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(GLfloat [10]), 12),
+            vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(GLfloat [10]), 28),
+            
+            vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, mesh->animated_vbo_texcoord_array, sizeof(GLfloat [2]), 0),
+        };
+        mesh->animated_vertex_array = renderer->vertex_array_manager->createArray(mesh->animated_vbo_index_array, 4, attribs);
     }
     else
     {
         // No animated data
+        mesh->animated_vbo_vertex_array = 0;
+        mesh->animated_vbo_texcoord_array = 0;
         mesh->animated_vertex_array = 0;
-        mesh->animated_texcoord_array = 0;
     }    
 }
 

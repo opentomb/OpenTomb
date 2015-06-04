@@ -69,10 +69,11 @@ typedef struct base_mesh_s
     // The first contains position, normal and color.
     // The second contains the texture coordinates. It gets updated every frame.
     size_t                num_animated_elements;
-    GLuint                animated_vertex_array;
-    GLuint                animated_texcoord_array;
-    GLuint                animated_index_array;
-    size_t                animated_index_array_length;
+    GLuint                animated_vbo_vertex_array;
+    GLuint                animated_vbo_texcoord_array;
+    GLuint                animated_vbo_index_array;
+    size_t                animated_vbo_index_array_length;
+    vertex_array *        animated_vertex_array;
 }base_mesh_t, *base_mesh_p;
 
 

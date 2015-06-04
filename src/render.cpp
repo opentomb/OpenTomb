@@ -144,73 +144,63 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
  */
 void Render_Mesh(struct base_mesh_s *mesh)
 {
-//    if(mesh->num_animated_elements > 0)
-//    {
-//        // Respecify the tex coord buffer
-//        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
-//        // Tell OpenGL to discard the old values
-//        glBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
-//        // Get writable data (to avoid copy)
-//        GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-//
-//        size_t offset = 0;
-//        for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
-//        {
-//            anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
-//            uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
-//            tex_frame_p tf = seq->frames + frame;
-//            for(uint16_t i=0;i<p->vertex_count;i++)
-//            {
-//                const GLfloat *v = p->vertices[i].tex_coord;
-//                data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
-//                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
-//
-//                offset += 2;
-//            }
-//        }
-//        glUnmapBufferARB(GL_ARRAY_BUFFER);
-//
-//        // Setup altered buffer
-//        glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
-//        // Setup static data
-//        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-//        glVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
-//        glColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
-//        glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
-//
-//        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-//        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
-//        glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
-//    }
-
-    if(mesh->vertex_count == 0)
-    {
-        return;
-    }
-    
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    mesh->main_vertex_array->use();
-
-    const uint32_t *elementsbase = NULL;
-
-    unsigned long offset = 0;
-    for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
-    {
-        if(mesh->element_count_per_texture[texture] == 0)
-        {
-            continue;
-        }
-
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
-        glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
-        offset += mesh->element_count_per_texture[texture];
-    }
     
+    if(mesh->num_animated_elements > 0)
+    {
+        // Respecify the tex coord buffer
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_texcoord_array);
+        // Tell OpenGL to discard the old values
+        glBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        // Get writable data (to avoid copy)
+        GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+
+        size_t offset = 0;
+        for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
+        {
+            anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
+            uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
+            tex_frame_p tf = seq->frames + frame;
+            for(uint16_t i=0;i<p->vertex_count;i++)
+            {
+                const GLfloat *v = p->vertices[i].tex_coord;
+                data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
+                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
+
+                offset += 2;
+            }
+        }
+        glUnmapBufferARB(GL_ARRAY_BUFFER);
+
+        mesh->animated_vertex_array->use();
+        
+        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
+        glDrawElements(GL_TRIANGLES, mesh->animated_vbo_index_array_length, GL_UNSIGNED_INT, 0);
+    }
+
+    if(mesh->vertex_count != 0)
+    {
+        mesh->main_vertex_array->use();
+
+        const uint32_t *elementsbase = NULL;
+
+        unsigned long offset = 0;
+        for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
+        {
+            if(mesh->element_count_per_texture[texture] == 0)
+            {
+                continue;
+            }
+
+            glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
+            glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
+            offset += mesh->element_count_per_texture[texture];
+        }
+    }
     renderer.vertex_array_manager->unbind();
     
     glPopClientAttrib();
