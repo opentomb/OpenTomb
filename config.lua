@@ -30,6 +30,7 @@ render =
     z_depth = 24;                               -- Maximum and recommended is 24.
     texture_border = 16;
     fog_color = {r = 255, g = 255, b = 255};
+	brightness = 1.0;
 }
 
 controls =

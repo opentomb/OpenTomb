@@ -55,6 +55,7 @@ void Render_InitGlobals()
     renderer.settings.fog_color[2] = 0.0f;
     renderer.settings.fog_start_depth = 10000.0f;
     renderer.settings.fog_end_depth = 16000.0f;
+    renderer.settings.brightness = 1.0f;
 }
 
 void Render_DoShaders()

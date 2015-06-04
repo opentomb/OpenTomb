@@ -290,7 +290,7 @@ bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_numb
             {
                 *first_sample_number = (int)lua_tointeger(lua, -2);
                 *samples_count       = (int)lua_tointeger(lua, -1);
-                
+
                 if((*first_sample_number != -1) && (*samples_count != -1))
                     result = true;
             }
@@ -305,7 +305,7 @@ bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_numb
 bool lua_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
 {
     bool result = false;
-    
+
     if(lua)
     {
         int top = lua_gettop(lua);
@@ -424,7 +424,7 @@ bool lua_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 
                 // Lua returns constant string pointer, which we can't assign to
                 // provided argument; so we need to straightly copy it.
-                
+
                 strncpy(pic_path, real_path, MAX_ENGINE_PATH);
 
                 result = true;
@@ -589,6 +589,7 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
         rs->fog_enabled = lua_GetScalarField(lua, "fog_enabled");
         rs->fog_start_depth = lua_GetScalarField(lua, "fog_start_depth");
         rs->fog_end_depth = lua_GetScalarField(lua, "fog_end_depth");
+        rs->brightness = lua_GetScalarField(lua, "brightness");
 
         lua_getfield(lua, -1, "fog_color");
         if(lua_istable(lua, -1))
@@ -598,6 +599,7 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
             rs->fog_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
             rs->fog_color[3] = 1.0; // Not sure if we need this at all...
         }
+
 
         if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
         {
