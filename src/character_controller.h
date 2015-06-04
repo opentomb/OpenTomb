@@ -367,7 +367,7 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
 bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
 void Character_CleanCollisionAllBodyParts(struct entity_s *ent);
 void Character_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-btCollisionObject *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
+btCollisionObject *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag);
 
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);

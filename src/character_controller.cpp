@@ -1139,18 +1139,15 @@ void Character_UpdateCurrentCollisions(struct entity_s *ent)
         ghost->getWorldTransform().setFromOpenGLMatrix(tr);
         Mat4_vec3_mul_macro(pos.m_floats, tr, v);
         ghost->getWorldTransform().setOrigin(pos);
-////////////////////////////////////////////////////////////////////////////////
 
-        int num_pairs;
-        const btCollisionShape *cs = ghost->getCollisionShape();
         btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
         btVector3 aabb_min, aabb_max;
 
-        cs->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
+        ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
         bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
         bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
-        num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+        int num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
         for(int j=0;j<num_pairs;j++)
         {
             ent->character->manifoldArray->clear();
@@ -1170,12 +1167,21 @@ void Character_UpdateCurrentCollisions(struct entity_s *ent)
             {
                 if(cn->obj_count < MAX_OBJECTS_IN_COLLSION_NODE - 1)
                 {
-                    cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->character->manifoldArray)[k]->getBody0();
-                    if(ent->self == (engine_container_p)(cn->obj[cn->obj_count]->getUserPointer()))
+                    btPersistentManifold* manifold = (*ent->character->manifoldArray)[k];
+                    for(int c=0;c<manifold->getNumContacts();c++)               // c++ in C++
                     {
-                        cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->character->manifoldArray)[k]->getBody1();
+                        //const btManifoldPoint &pt = manifold->getContactPoint(c);
+                        if(manifold->getContactPoint(c).getDistance() < 0.0)
+                        {
+                            cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->character->manifoldArray)[k]->getBody0();
+                            if(ent->self == (engine_container_p)(cn->obj[cn->obj_count]->getUserPointer()))
+                            {
+                                cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->character->manifoldArray)[k]->getBody1();
+                            }
+                            cn->obj_count++;                                    // do it once in current cycle, so condition (cn->obj_count < MAX_OBJECTS_IN_COLLSION_NODE - 1) located in correct place
+                            break;
+                        }
                     }
-                    cn->obj_count++;
                 }
             }
         }
@@ -1407,8 +1413,9 @@ void Character_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flag
 }
 
 
-btCollisionObject *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
+btCollisionObject *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag)
 {
+    *curr_flag = 0x00;
     if(ent->character != NULL)
     {
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
@@ -1418,6 +1425,7 @@ btCollisionObject *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, u
                 character_collision_node_p cn = ent->character->last_collisions + i;
                 if(cn->obj_count > 0)
                 {
+                    *curr_flag = ent->bf.bone_tags[i].body_part;
                     return cn->obj[--cn->obj_count];
                 }
             }
@@ -1916,13 +1924,6 @@ int Character_FreeFalling(struct entity_s *ent)
             ent->move_type = MOVE_ON_FLOOR;
             ent->character->resp.vertical_collide |= 0x01;
             Character_FixPenetrations(ent, NULL);
-            Entity_UpdateRoomPos(ent);
-            return 2;
-        }
-        if(ent->character->resp.vertical_collide & 0x01)
-        {
-            ent->speed.m_floats[2] = 0.0;
-            ent->move_type = MOVE_ON_FLOOR;
             Entity_UpdateRoomPos(ent);
             return 2;
         }
@@ -2590,15 +2591,24 @@ void Character_ApplyCommands(struct entity_s *ent)
             break;
     };
 
-    ///@TODO: work in progress, Character_UpdateCurrentCollisions() generates too many collisions
-    /*int xxx = 0;
+    ///collision callbacks place
+    btCollisionObject *cobj;
+    uint32_t curr_flag;
     Character_UpdateCurrentCollisions(ent);
-    while(Character_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF))
+    while((cobj = Character_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF, &curr_flag)) != NULL)
     {
-        xxx ++;
+        // do callbacks here:
+        int type = -1;
+        engine_container_p cont = (engine_container_p)cobj->getUserPointer();
+        if(cont != NULL)
+        {
+            type = cont->object_type;
+        }
+        if(type == OBJECT_ENTITY)
+        {
+            Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
+        }
     }
-    if(xxx > 0)
-        Con_Printf("xxx = %d", xxx);*/
 
     Entity_UpdateRigidBody(ent, 1);
     Character_UpdatePlatformPostStep(ent);
