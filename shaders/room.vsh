@@ -1,7 +1,8 @@
 // GLSL vertex program for various room effects (water/flicker) etc.
 
-attribute vec3 vertex;
+attribute vec3 position;
 attribute vec4 color;
+attribute vec3 normal;
 attribute vec2 texCoord;
 
 uniform mat4 modelViewProjection;
@@ -14,10 +15,10 @@ varying vec2 varying_texCoord;
 void main(void)
 {
     //This is our vertex/vertex color
-    vec4 vPos = gl_Vertex;
-    vec4 vCol = gl_Color;
+    vec3 vPos = position;
+    vec4 vCol = color;
 
-    gl_Position = modelViewProjection * gl_Vertex;
+    gl_Position = modelViewProjection * vec4(position, 1.0);
 
     float fPerturb = 0.0;
     float fGlow = 0.0;
@@ -43,7 +44,7 @@ void main(void)
 #endif
 
     //Set texture co-ord
-    varying_texCoord = gl_MultiTexCoord0.xy;
+    varying_texCoord = texCoord;
 
     //Set color
     varying_color = vCol;

@@ -10,6 +10,8 @@
 #include "gl_util.h"
 #include "obb.h"
 #include "resource.h"
+#include "render.h"
+#include "shader_description.h"
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 
@@ -151,24 +153,45 @@ void BaseMesh_FindBB(base_mesh_p mesh)
 }
 
 
-void Mesh_GenVBO(struct base_mesh_s *mesh)
+void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
 {
     mesh->vbo_vertex_array = 0;
     mesh->vbo_index_array = 0;
-    if(glGenBuffersARB == NULL)                                                 // if not supported, pointer is NULL
-    {
-        abort();
-    }
 
     /// now, begin VBO filling!
     glGenBuffersARB(1, &mesh->vbo_vertex_array);
-    if(mesh->vbo_vertex_array == 0)
-    {
-        abort();
-    }
-
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
     glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
+    
+    // Transform skinning information into bone weights and store it as well.
+    if (mesh->skin_map)
+    {
+        uint8_t *skinData = (uint8_t *) malloc(mesh->vertex_count * 2);
+        for (int i = 0; i < mesh->vertex_count; i++)
+        {
+            switch (mesh->skin_map[i]) {
+                case 0:
+                    // Both. Apply random tiny bias so it adds up to 1.
+                    skinData[i*2+0] = 128;
+                    skinData[i*2+1] = 127;
+                    break;
+                case 1:
+                    // First matrix only
+                    skinData[i*2+0] = 255;
+                    skinData[i*2+1] = 0;
+                    break;
+                case 2:
+                    // Second matrix only
+                    skinData[i*2+0] = 0;
+                    skinData[i*2+1] = 255;
+                    break;
+            }
+        }
+        glGenBuffersARB(1, &mesh->vbo_skin_array);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_skin_array);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * 2, skinData, GL_STATIC_DRAW_ARB);
+        free(skinData);
+    }
 
     // Fill indexes vbo
     glGenBuffersARB(1, &mesh->vbo_index_array);
@@ -180,6 +203,18 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
     }
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);
+    
+    // Prepare vertex array
+    vertex_array_attribute attribs[] = {
+        vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, mesh->vbo_vertex_array, sizeof(vertex_t), offsetof(vertex_t, position)),
+        vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, mesh->vbo_vertex_array, sizeof(vertex_t), offsetof(vertex_t, normal)),
+        vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, mesh->vbo_vertex_array, sizeof(vertex_t), offsetof(vertex_t, color)),
+        vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, mesh->vbo_vertex_array, sizeof(vertex_t), offsetof(vertex_t, tex_coord)),
+        // Only used for skinned meshes
+        vertex_array_attribute(lit_shader_description::vertex_attribs::vertex_weight, 2, GL_UNSIGNED_BYTE, true, mesh->vbo_skin_array, 2, 0),
+    };
+    int numAttribs = mesh->skin_map ? 5 : 4;
+    mesh->main_vertex_array = renderer->vertex_array_manager->createArray(mesh->vbo_index_array, numAttribs, attribs);
     
     // Now for animated polygons, if any
     mesh->num_animated_elements = 0;
@@ -198,6 +233,7 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         
         // Prepare buffer data
         size_t stride = sizeof(GLfloat[3]) + sizeof(GLfloat [4]) + sizeof(GLfloat[3]);
+        
         uint8_t *vertexData = new uint8_t[mesh->num_animated_elements * stride];
         uint32_t *elementData = new uint32_t[mesh->animated_index_array_length];
         
@@ -320,6 +356,7 @@ void SkeletalModel_Clear(skeletal_model_p model)
 
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 {
+    bf->hasSkin = false;
     vec3_set_zero(bf->bb_min);
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
@@ -348,6 +385,8 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     {
         bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
         bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
+        if (bf->bone_tags[i].mesh_skin)
+            bf->hasSkin = true;
         bf->bone_tags[i].mesh_slot = NULL;
         bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
 

@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstring>
 
 #include "vertex_array.h"
@@ -24,6 +25,7 @@ class vao_vertex_array : public vertex_array {
     
 public:
     vao_vertex_array(vao_vertex_array_manager *manager, GLuint element_vbo, size_t numAttributes, struct vertex_array_attribute *attributes);
+    virtual ~vao_vertex_array();
     
     virtual void use();
 };
@@ -54,6 +56,7 @@ class manual_vertex_array : public vertex_array {
     
 public:
     manual_vertex_array(manual_vertex_array_manager *manager, GLuint element_vbo, size_t numAttributes, struct vertex_array_attribute *attributes);
+    virtual ~manual_vertex_array();
     
     virtual void use();
 };
@@ -99,6 +102,9 @@ vao_vertex_array::vao_vertex_array(vao_vertex_array_manager *manager, GLuint ele
     
     for (size_t i = 0; i < numAttributes; i++)
     {
+        assert(attributes[i].vbo != 0);
+        assert(attributes[i].stride != 0);
+        
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, attributes[i].vbo);
         glEnableVertexAttribArrayARB(attributes[i].index);
         glVertexAttribPointerARB(attributes[i].index, attributes[i].size,
@@ -117,6 +123,11 @@ void vao_vertex_array::use()
         glBindVertexArray(vertexArrayObject);
         manager->currentVertexArrayObject = vertexArrayObject;
     }
+}
+
+vao_vertex_array::~vao_vertex_array()
+{
+    glDeleteVertexArrays(1, &vertexArrayObject);
 }
 
 /*** Manual implementation. ***/
@@ -176,4 +187,10 @@ void manual_vertex_array::use()
     }
     
     manager->activeArray = this;
+}
+
+manual_vertex_array::~manual_vertex_array()
+{
+    numAttributes = 0;
+    delete [] attributes;
 }

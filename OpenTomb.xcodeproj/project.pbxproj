@@ -158,6 +158,7 @@
 		5252A5141B1B591F00E8CE1D /* sprite.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5131B1B591F00E8CE1D /* sprite.fsh */; };
 		5252A5171B1B8B9500E8CE1D /* hair.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5151B1B8B9500E8CE1D /* hair.cpp */; };
 		5252A51B1B1CE01500E8CE1D /* vertex_array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5181B1BB21600E8CE1D /* vertex_array.cpp */; };
+		5252A51D1B1D70CF00E8CE1D /* entity_skin.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */; };
 		52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */; };
 		52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */; };
 		52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA91AED5ACA003B8288 /* RobotoCondensed-Regular.ttf */; };
@@ -757,6 +758,7 @@
 		5252A5161B1B8B9500E8CE1D /* hair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hair.h; sourceTree = "<group>"; };
 		5252A5181B1BB21600E8CE1D /* vertex_array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertex_array.cpp; sourceTree = "<group>"; };
 		5252A5191B1BB21600E8CE1D /* vertex_array.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vertex_array.h; sourceTree = "<group>"; };
+		5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = entity_skin.vsh; sourceTree = "<group>"; };
 		52B82D821AED5A45003B8288 /* OpenTomb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTomb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DroidSansMono.ttf; sourceTree = "<group>"; };
 		52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
@@ -3171,6 +3173,7 @@
 			children = (
 				52D5D5EB1B07E5F500B99A38 /* entity.vsh */,
 				52D5D5ED1B07E5FF00B99A38 /* entity.fsh */,
+				5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */,
 				52D5D5E71B07A86000B99A38 /* room.fsh */,
 				52D5D5E31B079B8300B99A38 /* room.vsh */,
 				52DF7FF11B0769D700A7DE0E /* gui.vsh */,
@@ -3251,6 +3254,7 @@
 				52B8335B1AED5B06003B8288 /* README in Resources */,
 				52B833551AED5B06003B8288 /* README in Resources */,
 				52DF7FF21B0769D700A7DE0E /* gui.vsh in Resources */,
+				5252A51D1B1D70CF00E8CE1D /* entity_skin.vsh in Resources */,
 				52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */,
 				52D5D5EE1B07E5FF00B99A38 /* entity.fsh in Resources */,
 				5252A5141B1B591F00E8CE1D /* sprite.fsh in Resources */,

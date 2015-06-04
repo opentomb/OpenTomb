@@ -62,6 +62,8 @@ typedef struct base_mesh_s
 
     GLuint                vbo_vertex_array;
     GLuint                vbo_index_array;
+    GLuint                vbo_skin_array;
+    vertex_array *        main_vertex_array;
     
     // Buffers for animated polygons
     // The first contains position, normal and color.
@@ -255,6 +257,8 @@ typedef struct ss_bone_frame_s
     btScalar                    centre[3];                                      // bounding box centre
 
     struct ss_animation_s       animations;                                     // animations list
+    
+    bool hasSkin;                                       // whether any skinned meshes need rendering
 }ss_bone_frame_t, *ss_bone_frame_p;
 
 /*
@@ -364,7 +368,7 @@ typedef struct skeletal_model_s
 
 void BaseMesh_Clear(base_mesh_p mesh);
 void BaseMesh_FindBB(base_mesh_p mesh);
-void Mesh_GenVBO(struct base_mesh_s *mesh);
+void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh);
 
 void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletonModel_FillTransparency(skeletal_model_p model);

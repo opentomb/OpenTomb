@@ -1961,7 +1961,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         if(world->meshes[i].vertex_count)
         {
-            Mesh_GenVBO(world->meshes + i);
+            Mesh_GenVBO(&renderer, world->meshes + i);
         }
     }
 
@@ -1971,7 +1971,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     {
         if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count))
         {
-            Mesh_GenVBO(world->rooms[i].mesh);
+            Mesh_GenVBO(&renderer, world->rooms[i].mesh);
         }
     }
 

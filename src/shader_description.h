@@ -74,6 +74,14 @@ struct unlit_shader_description : public shader_description
 {
     GLint model_view_projection;
     
+    enum vertex_attribs {
+        position = 0,
+        color,
+        tex_coord,
+        normal,
+        vertex_weight
+    };
+    
     unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 
@@ -85,6 +93,7 @@ struct unlit_shader_description : public shader_description
 struct lit_shader_description : public unlit_shader_description
 {
     GLint model_view;
+    GLint projection;
     GLint number_of_lights;
     GLint light_position;
     GLint light_color;

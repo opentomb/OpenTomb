@@ -28,14 +28,14 @@ struct vertex_array_attribute {
      * vbo while it is referenced here, and it will not be deleted when the VAO
      * is. */
     GLuint vbo;
-    /*! The start offset of the attribute within its vbo in bytes. */
-    size_t offset;
     /*! The stride of the attribute in bytes. 0 is not allowed. */
     size_t stride;
+    /*! The start offset of the attribute within its vbo in bytes. */
+    size_t offset;
     
     vertex_array_attribute() = default;
     vertex_array_attribute(unsigned index, unsigned size, GLenum type, bool normalized, GLuint vbo, size_t stride, size_t offset)
-    : index(index), size(size), type(type), normalized(normalized), vbo(vbo), offset(offset), stride(stride)
+    : index(index), size(size), type(type), normalized(normalized), vbo(vbo), stride(stride), offset(offset)
     {}
 };
 
@@ -76,6 +76,7 @@ public:
      * amount of checks to make sure no duplicate work is being done.
      */
     virtual void use() = 0;
+    virtual ~vertex_array() {};
 };
 
 #endif /* defined(__OpenTomb__vertex_array__) */

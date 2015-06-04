@@ -134,7 +134,7 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
         GLfloat tint[] = { 1, 1, 1, 1 };
         glUniform4fvARB(shader->tint_mult, 1, tint);
 
-        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base, NULL, NULL);
+        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base);
         glDepthMask(GL_TRUE);
     }
 }
@@ -142,74 +142,61 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
 /**
  * Opaque meshes drawing
  */
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
+void Render_Mesh(struct base_mesh_s *mesh)
 {
-    if(mesh->num_animated_elements > 0)
-    {
-        // Respecify the tex coord buffer
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
-        // Tell OpenGL to discard the old values
-        glBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
-        // Get writable data (to avoid copy)
-        GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-
-        size_t offset = 0;
-        for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
-        {
-            anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
-            uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
-            tex_frame_p tf = seq->frames + frame;
-            for(uint16_t i=0;i<p->vertex_count;i++)
-            {
-                const GLfloat *v = p->vertices[i].tex_coord;
-                data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
-                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
-
-                offset += 2;
-            }
-        }
-        glUnmapBufferARB(GL_ARRAY_BUFFER);
-
-        // Setup altered buffer
-        glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
-        // Setup static data
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
-        glColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
-        glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
-
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
-        glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
-    }
+//    if(mesh->num_animated_elements > 0)
+//    {
+//        // Respecify the tex coord buffer
+//        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
+//        // Tell OpenGL to discard the old values
+//        glBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+//        // Get writable data (to avoid copy)
+//        GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+//
+//        size_t offset = 0;
+//        for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
+//        {
+//            anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
+//            uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
+//            tex_frame_p tf = seq->frames + frame;
+//            for(uint16_t i=0;i<p->vertex_count;i++)
+//            {
+//                const GLfloat *v = p->vertices[i].tex_coord;
+//                data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
+//                data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
+//
+//                offset += 2;
+//            }
+//        }
+//        glUnmapBufferARB(GL_ARRAY_BUFFER);
+//
+//        // Setup altered buffer
+//        glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
+//        // Setup static data
+//        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
+//        glVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
+//        glColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
+//        glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
+//
+//        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
+//        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
+//        glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
+//    }
 
     if(mesh->vertex_count == 0)
     {
         return;
     }
+    
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    if(mesh->vbo_vertex_array)
-    {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
-        glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
-    }
+    mesh->main_vertex_array->use();
 
-    // Bind overriden vertices if they exist
-    if (overrideVertices != NULL)
-    {
-        // Standard normals are always float. Overridden normals (from skinning)
-        // are btScalar.
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
-        glNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
-    }
-
-    const uint32_t *elementsbase = mesh->elements;
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
-        elementsbase = NULL;
+    const uint32_t *elementsbase = NULL;
 
     unsigned long offset = 0;
     for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
@@ -223,6 +210,10 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
         offset += mesh->element_count_per_texture[texture];
     }
+    
+    renderer.vertex_array_manager->unbind();
+    
+    glPopClientAttrib();
 }
 
 
@@ -459,72 +450,10 @@ void Render_UpdateAnimTextures()                                                
     }
 }
 
-
-void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
-{
-    uint32_t i;
-    vertex_p v;
-    btScalar *p_vertex, *src_v, *dst_v, t;
-    GLfloat *p_normale, *src_n, *dst_n;
-    int8_t *ch = mesh->skin_map;
-
-    p_vertex  = (GLfloat*)GetTempbtScalar(3 * mesh->vertex_count);
-    p_normale = (GLfloat*)GetTempbtScalar(3 * mesh->vertex_count);
-    dst_v = p_vertex;
-    dst_n = p_normale;
-    v = mesh->vertices;
-    for(i=0; i<mesh->vertex_count; i++,v++)
-    {
-        src_v = v->position;
-        src_n = v->normal;
-        switch(*ch)
-        {
-        case 0:
-            dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
-            dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
-            dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
-
-            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
-            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
-            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
-
-            vec3_add(dst_v, dst_v, src_v);
-            dst_v[0] /= 2.0;
-            dst_v[1] /= 2.0;
-            dst_v[2] /= 2.0;
-            vec3_add(dst_n, dst_n, src_n);
-            vec3_norm(dst_n, t);
-            break;
-
-        case 2:
-            dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
-            dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
-            dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
-
-            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
-            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
-            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
-            //vec3_copy(dst_n, src_n);
-            break;
-
-        case 1:
-            vec3_copy(dst_v, src_v);
-            vec3_copy(dst_n, src_n);
-            break;
-        }
-        ch++;
-        dst_v += 3;
-        dst_n += 3;
-    }
-
-    Render_Mesh(mesh, p_vertex, p_normale);
-    ReturnTempbtScalar(6 * mesh->vertex_count);
-}
-
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16])
+void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16], const btScalar pMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -538,14 +467,38 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
         Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
 
-        Render_Mesh(btag->mesh_base, NULL, NULL);
+        Render_Mesh(btag->mesh_base);
         if(btag->mesh_slot)
         {
-            Render_Mesh(btag->mesh_slot, NULL, NULL);
+            Render_Mesh(btag->mesh_slot);
         }
+    }
+}
+
+void Render_SkeletalModelSkin(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16])
+{
+    ss_bone_tag_p btag = bframe->bone_tags;
+    
+    glUniformMatrix4fvARB(shader->projection, 1, false, pMatrix);
+    
+    for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+    {
+        btScalar mvTransforms[32];
+        Mat4_Mat4_mul(&mvTransforms[0], mvMatrix, btag->full_transform);
+        // btag->transform is the second matrix, relative to full transform
+        btScalar rotateOnlyTransform[16];
+        Mat4_Copy(rotateOnlyTransform, btag->transform);
+        rotateOnlyTransform[12] = 0;
+        rotateOnlyTransform[13] = 0;
+        rotateOnlyTransform[14] = 0;
+        rotateOnlyTransform[15] = 1;
+        Mat4_T(rotateOnlyTransform);
+        Mat4_Mat4_mul(&mvTransforms[16], &mvTransforms[0], rotateOnlyTransform);
+        glUniformMatrix4fvARB(shader->model_view, 2, false, mvTransforms);
+        
         if(btag->mesh_skin)
         {
-            Render_SkinMesh(btag->mesh_skin, btag->transform);
+            Render_Mesh(btag->mesh_skin);
         }
     }
 }
@@ -554,7 +507,7 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const btScalar modelViewMatrix[16])
+const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const btScalar modelViewMatrix[16], bool skin)
 {
     // Calculate lighting
     const lit_shader_description *shader;
@@ -625,7 +578,7 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
             }
         }
 
-        shader = renderer.shader_manager->getEntityShader(current_light_number);
+        shader = renderer.shader_manager->getEntityShader(current_light_number, skin);
         glUseProgramObjectARB(shader->program);
         glUniform4fvARB(shader->light_ambient, 1, ambient_component);
         glUniform4fvARB(shader->light_color, current_light_number, colors);
@@ -633,13 +586,13 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
         glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
         glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
     } else {
-        shader = renderer.shader_manager->getEntityShader(0);
+        shader = renderer.shader_manager->getEntityShader(0, skin);
         glUseProgramObjectARB(shader->program);
     }
     return shader;
 }
 
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16])
 {
     if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
@@ -647,7 +600,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     }
 
     // Calculate lighting
-    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
+    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, false);
 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
@@ -665,7 +618,13 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
         }
 
-        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
+        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection, projection);
+        
+        if (entity->bf.bone_tags[0].mesh_skin)
+        {
+            const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
+            Render_SkeletalModelSkin(skinShader, &entity->bf, subModelView, projection);
+        }
     }
 }
 
@@ -675,7 +634,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
         return;
 
     // Calculate lighting
-    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
+    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, false);
 
     for(int h=0; h<entity->character->hair_count; h++)
     {
@@ -693,7 +652,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
             glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
             glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
-            Render_Mesh(entity->character->hairs[h].elements[i].mesh, NULL, NULL);
+            Render_Mesh(entity->character->hairs[h].elements[i].mesh);
         }
     }
 }
@@ -701,7 +660,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 /**
  * drawing world models.
  */
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Room(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16])
 {
     engine_container_p cont;
     entity_p ent;
@@ -726,7 +685,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         glUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
         glUniform1iARB(shader->sampler, 0);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
-        Render_Mesh(room->mesh, NULL, NULL);
+        Render_Mesh(room->mesh);
     }
 
     if (room->static_mesh_count > 0)
@@ -758,7 +717,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                 Render_CalculateWaterTint(tint, 0);
             }
             glUniform4fvARB(render->shader_manager->getStaticMeshShader()->tint_mult, 1, tint);
-            Render_Mesh(mesh, NULL, NULL);
+            Render_Mesh(mesh);
             room->static_mesh[i].was_rendered = 1;
         }
     }
@@ -775,7 +734,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                 {
                     if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                     {
-                        Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix);
+                        Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
                     }
                     ent->was_rendered = 1;
                 }
@@ -948,7 +907,7 @@ void Render_DrawList()
 
     if(renderer.world->Character)
     {
-        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat, renderer.cam->gl_proj_mat);
         Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
     }
 
@@ -957,16 +916,16 @@ void Render_DrawList()
      */
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat, renderer.cam->gl_proj_mat);
     }
 
     glDisable(GL_CULL_FACE);
-    glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
+
+    ///@FIXME: reduce number of gl state changes
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
     }
-    glEnableClientState(GL_NORMAL_ARRAY);
 
     /*
      * NOW render transparency polygons
