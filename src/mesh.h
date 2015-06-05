@@ -214,8 +214,8 @@ typedef struct ss_bone_tag_s
     btScalar                offset[3];                                          // model position offset
 
     btScalar                qrotate[4];                                         // quaternion rotation
-    alignas(16) btScalar    transform[16];                                      // 4x4 OpenGL matrix for stack usage
-    alignas(16) btScalar    full_transform[16];                                 // 4x4 OpenGL matrix for global usage
+    btScalar                transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
+    btScalar                full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
 
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
