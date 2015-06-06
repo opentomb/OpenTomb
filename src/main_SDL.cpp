@@ -421,7 +421,9 @@ void Engine_InitSDLVideo()
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
-
+#if STENCIL_FRUSTUM
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+#endif
     // set the opengl context version
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);

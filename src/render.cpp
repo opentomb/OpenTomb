@@ -706,6 +706,45 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     entity_p ent;
 
     const shader_description *lastShader = 0;
+////start test stencil test code
+#if STENCIL_FRUSTUM
+    if(room->frustum->active != 0)
+    {
+        const int elem = (3 + 3 + 4 + 2);
+        const unlit_tinted_shader_description *shader = render->shader_manager->getRoomShader(false, false);
+        glUseProgramObjectARB(shader->program);
+        glUniform1iARB(shader->sampler, 0);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, engine_camera.gl_view_proj_mat);
+        glEnable(GL_STENCIL_TEST);
+        glClear(GL_STENCIL_BUFFER_BIT);
+        glStencilFunc(GL_NEVER, 1, 0x00);
+        glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+        for(frustum_p f=room->frustum;(f!=NULL)&&(f->active);f=f->next)
+        {
+            GLfloat *v, *buf = (GLfloat*)GetTempbtScalar(f->count * elem);
+            v=buf;
+            for(int16_t i=f->count-1;i>=0;i--)
+            {
+                vec3_copy(v, f->vertex+3*i);                    v+=3;
+                vec3_copy_inv(v, engine_camera.view_dir);       v+=3;
+                vec4_set_one(v);                                v+=4;
+                v[0] = v[1] = 0.0;                              v+=2;
+            }
+
+            glBindTexture(GL_TEXTURE_2D, renderer.world->textures[renderer.world->tex_count-1]);
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+            glVertexPointer(3, GL_BT_SCALAR, elem * sizeof(GLfloat), buf+0);
+            glNormalPointer(GL_BT_SCALAR, elem * sizeof(GLfloat), buf+3);
+            glColorPointer(4, GL_FLOAT, elem * sizeof(GLfloat), buf+3+3);
+            glTexCoordPointer(2, GL_FLOAT, elem * sizeof(GLfloat), buf+3+3+4);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, f->count);
+
+            ReturnTempbtScalar(f->count * elem);
+        }
+        glStencilFunc(GL_EQUAL, 1, 0xFF);
+    }
+#endif
+
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
     {
         btScalar modelViewProjectionTransform[16];
@@ -782,6 +821,12 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             };
         }
     }
+#if STENCIL_FRUSTUM
+    if(room->frustum->active != 0)
+    {
+        glDisable(GL_STENCIL_TEST);
+    }
+#endif
 }
 
 

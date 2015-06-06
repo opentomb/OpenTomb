@@ -46,7 +46,7 @@ void Portal_Clear(portal_p p)
         if(p->vertex)
         {
             free(p->vertex);
-            p->vertex = NULL;                                                   // paranoid
+            p->vertex = NULL;
         }
         p->vertex_count = 0;
         p->flag = 0;
@@ -317,12 +317,6 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
 
     if(vec3_plane_dist(portal->norm, render->cam->pos) < -SPLIT_EPSILON)        // Портал вырожден в линию или не лицевой
     {
-        if((render->cam->pos[0] > portal->dest_room->bb_min[0]) && (render->cam->pos[0] < portal->dest_room->bb_max[0]) &&
-           (render->cam->pos[1] > portal->dest_room->bb_min[1]) && (render->cam->pos[1] < portal->dest_room->bb_max[1]) &&
-           (render->cam->pos[2] > portal->dest_room->bb_min[2]) && (render->cam->pos[2] < portal->dest_room->bb_max[2]))
-        {
-            return emitter;                                                     // Данная проверка введена из за возможности наложения соседних комнат друг на друга
-        }
         return NULL;
     }
 
