@@ -479,12 +479,22 @@ bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform &cameraFr
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz)
 {
     btTransform cameraFrom, cameraTo;
-    btVector3 cam_pos, cam_pos2;
+    btVector3 cam_pos(cam->pos[0], cam->pos[1], cam->pos[2]), cam_pos2;
     bt_engine_ClosestConvexResultCallback *cb;
 
     //Reset to initial
     cameraFrom.setIdentity();
     cameraTo.setIdentity();
+
+    if(ent->character)
+    {
+        cb = ent->character->convex_cb;
+    }
+    else
+    {
+        cb = new bt_engine_ClosestConvexResultCallback(ent->self);
+        cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    }
 
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(control_states.mouse_look == 0)//If mouse look is off
@@ -585,16 +595,6 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         cam_pos.m_floats[1] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
         cam_pos.m_floats[2] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
         renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time)-engine_frame_time;
-    }
-
-    if(ent->character)
-    {
-        cb = ent->character->convex_cb;
-    }
-    else
-    {
-        cb = new bt_engine_ClosestConvexResultCallback(ent->self);
-        cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     }
 
     cameraFrom.setOrigin(cam_pos);
