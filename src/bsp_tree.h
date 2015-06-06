@@ -7,6 +7,7 @@
 #include "bullet/LinearMath/btScalar.h"
 
 struct polygon_s;
+struct frustum_s;
 
 typedef struct bsp_node_s
 {
@@ -38,7 +39,7 @@ public:
     dynamicBSP(uint32_t size);
    ~dynamicBSP();
     void addNewPolygon(struct polygon_s *p, btScalar *transform);
-    void addNewPolygonList(struct polygon_s *p, btScalar *transform);
+    void addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f);
     void reset()
     {
         m_allocated = 0;

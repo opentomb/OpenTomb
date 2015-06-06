@@ -1034,7 +1034,7 @@ void Render_DrawList()
         room_p r = renderer.r_list[i].room;
         if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
         {
-            render_dBSP.addNewPolygonList(r->mesh->transparency_polygons, r->transform);
+            render_dBSP.addNewPolygonList(r->mesh->transparency_polygons, r->transform, r->frustum);
         }
     }
 
@@ -1046,7 +1046,7 @@ void Render_DrawList()
         {
             if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
             {
-                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform);
+                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform, r->frustum);
             }
         }
 
@@ -1064,7 +1064,7 @@ void Render_DrawList()
                         if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
                             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr);
+                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr, r->frustum);
                         }
                     }
                 }
@@ -1081,7 +1081,7 @@ void Render_DrawList()
             if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr);
+                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr, NULL);
             }
         }
     }

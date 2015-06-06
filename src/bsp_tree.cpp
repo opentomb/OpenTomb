@@ -6,6 +6,7 @@
 #include "polygon.h"
 #include "bsp_tree.h"
 #include "vmath.h"
+#include "frustum.h"
 
 
 struct bsp_node_s *dynamicBSP::createBSPNode()
@@ -152,7 +153,7 @@ void dynamicBSP::addNewPolygon(struct polygon_s *p, btScalar *transform)
 }
 
 
-void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform)
+void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f)
 {
     if(m_data_size - m_allocated < 1024)                                        ///@FIXME: magick 1024
     {
@@ -161,10 +162,29 @@ void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform)
 
     for(;p!=NULL;p=p->next)
     {
+        uint32_t orig_allocated = m_allocated;
         polygon_p np = this->createPolygon(p->vertex_count);
+        bool visible = (f == NULL) || (f->active == 0);
         Polygon_Copy(np, p);
         Polygon_Transform(np, p, transform);
-        this->addPolygon(m_root, np);
+
+        for(frustum_p ff=f;(ff!=NULL)&&(ff->active);ff=ff->next)
+        {
+            if(Frustum_IsPolyVisible(np, ff))
+            {
+                visible = true;
+                break;
+            }
+        }
+
+        if(visible)
+        {
+            this->addPolygon(m_root, np);
+        }
+        else
+        {
+            m_allocated = orig_allocated;
+        }
     }
 }
 
