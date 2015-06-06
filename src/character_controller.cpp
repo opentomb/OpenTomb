@@ -1053,11 +1053,10 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
     int ret = 0;
     int num_pairs, manifolds_size;
-    const btCollisionShape *cs = ghost->getCollisionShape();
     btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
     btVector3 aabb_min, aabb_max, t;
 
-    cs->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
+    ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
     bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
     bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
