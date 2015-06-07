@@ -168,7 +168,7 @@ void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, str
         Polygon_Copy(np, p);
         Polygon_Transform(np, p, transform);
 
-        for(frustum_p ff=f;(ff!=NULL)&&(ff->active);ff=ff->next)
+        for(frustum_p ff=f;(!visible)&&(ff!=NULL)&&(ff->active);ff=ff->next)
         {
             if(Frustum_IsPolyVisible(np, ff))
             {

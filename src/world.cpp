@@ -384,6 +384,11 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
 
 int Room_IsOverlapped(room_p r0, room_p r1)
 {
+    if((r0 == r1) || (r0 == r1->alternate_room) || (r0->alternate_room == r1))
+    {
+        return 0;
+    }
+
     if(r0->bb_min[0] >= r1->bb_max[0] || r0->bb_max[0] <= r1->bb_min[0] ||
        r0->bb_min[1] >= r1->bb_max[1] || r0->bb_max[1] <= r1->bb_min[1] ||
        r0->bb_min[2] >= r1->bb_max[2] || r0->bb_max[2] <= r1->bb_min[2])
@@ -1281,6 +1286,20 @@ void Room_BuildNearRoomsList(room_p room)
         for(uint16_t j=0;j<r->portal_count;j++,p++)
         {
             Room_AddToNearRoomsList(room, p->dest_room);
+        }
+    }
+}
+
+void Room_BuildOverlappedRoomsList(room_p room)
+{
+    room->overlapped_room_list_size = 0;
+
+    for(uint32_t i=0;i<engine_world.room_count;i++)
+    {
+        if(Room_IsOverlapped(room, engine_world.rooms+i))
+        {
+            room->overlapped_room_list[room->overlapped_room_list_size] = engine_world.rooms+i;
+            room->overlapped_room_list_size++;
         }
     }
 }
