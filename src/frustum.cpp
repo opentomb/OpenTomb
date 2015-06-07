@@ -254,7 +254,7 @@ int Frustum_IsPolyVisible(const struct polygon_s *p, const struct frustum_s *fru
     vertex_p curr_v, prev_v;
     char ins, outs;
 
-    if(vec3_plane_dist(p->plane, frustum->cam_pos) < 0.0)
+    if(!p->double_side && vec3_plane_dist(p->plane, frustum->cam_pos) < 0.0)
     {
         return 0;
     }

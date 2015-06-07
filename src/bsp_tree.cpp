@@ -132,6 +132,7 @@ void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygo
 
         Polygon_Resize(transformed, p[i].polygon->vertex_count);
         Polygon_Transform(transformed, p[i].polygon, transform);
+        transformed->double_side = p[i].polygon->double_side;
         
         for(frustum_p ff=f;(!visible)&&(ff!=NULL)&&(ff->active);ff=ff->next)
         {
