@@ -309,7 +309,7 @@ void Portal_GenNormale(portal_p p)
 
 struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emitter, struct render_s *render)
 {
-    int ins, bz;
+    int bz;
     btScalar *n, *v;
     frustum_p receiver = portal->dest_room->frustum;
     frustum_p prev = NULL, current_gen = receiver;
@@ -325,19 +325,22 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
         return NULL;                                                            // abort infinite cycling!
     }
 
-    ins = 0;
+    int in_dist = 0, in_face = 0;
     n = render->cam->frustum->norm;
     v = portal->vertex;
     for(uint16_t i=0;i<portal->vertex_count;i++,v+=3)
     {
-        if(vec3_plane_dist(n, v) < render->cam->dist_far)
+        if((in_dist == 0) && (vec3_plane_dist(n, v) < render->cam->dist_far))
         {
-            ins = 1;
-            break;
+            in_dist = 1;
+        }
+        if((in_face == 0) && (vec3_plane_dist(n, v) > 0.0))
+        {
+            in_face = 1;
         }
     }
 
-    if(ins == 0)
+    if((in_dist == 0) || (in_face == 0))
     {
         return NULL;
     }
@@ -356,7 +359,7 @@ struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emi
     }
     Frustum_SplitPrepare(current_gen, portal);                                  // prepare to the clipping
 
-    bz = 4 * (current_gen->count + emitter->count);                             // 4 - fo margin
+    bz = 4 * (current_gen->count + emitter->count + 4);                         // 4 - fo margin
     tmp = GetTempbtScalar(bz);
     if(Frustum_Split(current_gen, emitter->norm, tmp))                          // проводим отсечение плоскостью фрустума
     {

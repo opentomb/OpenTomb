@@ -3656,7 +3656,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
-    
+
     lua_register(lua, "addEntityRagdoll", lua_AddEntityRagdoll);
     lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
