@@ -46,8 +46,7 @@ typedef struct rd_joint_setup_s
 }rd_joint_setup_t, *rd_joint_setup_p;
 
 
-// Ragdoll body setup should be later implemented to modify body
-// properties.
+// Ragdoll body setup is used to modify body properties for ragdoll needs.
 
 typedef struct rd_body_setup_s
 {
@@ -71,7 +70,7 @@ typedef struct rd_setup_s
     rd_joint_setup_s   *joint_setup;
     rd_body_setup_s    *body_setup;
     
-    char               *hit_func;
+    char               *hit_func;   // Later to be implemented as hit callback function.
 }rd_setup_t, *rd_setup_p;
 
 
