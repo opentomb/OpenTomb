@@ -716,7 +716,7 @@ tr3_entity_tbl[360] = {coll = 0x01};           -- The butler
 tr3_entity_tbl[361] = {coll = 0x01};           -- The butler in military outfit and target
 
 
-tr3_entity_tbl[365] = {coll = 0x00};           -- Earthquake
+tr3_entity_tbl[365] = {coll = 0x00, hide = 0x01};           -- Earthquake
 tr3_entity_tbl[366] = {coll = 0x00};           -- Yellow shell casing
 tr3_entity_tbl[367] = {coll = 0x00};           -- Red shell casing
 tr3_entity_tbl[370] = {coll = 0x00};           -- Tinnos light shaft

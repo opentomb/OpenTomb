@@ -16,6 +16,7 @@
 #include "obb.h"
 #include "gameflow.h"
 #include "string.h"
+#include "ragdoll.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
@@ -45,6 +46,8 @@ entity_p Entity_Create()
     ret->obb = OBB_Create();
     ret->obb->transform = ret->transform;
     ret->bt_body = NULL;
+    ret->bt_joints = NULL;
+    ret->bt_joint_count = 0;
     ret->character = NULL;
     ret->current_sector = NULL;
     ret->bf.animations.model = NULL;
@@ -89,6 +92,11 @@ void Entity_Clear(entity_p entity)
             OBB_Clear(entity->obb);
             free(entity->obb);
             entity->obb = NULL;
+        }
+        
+        if(entity->bt_joint_count)
+        {
+            Ragdoll_Delete(entity);
         }
 
         if(entity->bt_body)
@@ -320,7 +328,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
     btScalar tr[16];
     btTransform bt_tr;
 
-    if(!(ent->type_flags & ENTITY_TYPE_KINEMATIC))
+    if(!(ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         if((ent->bf.animations.model == NULL) ||
            (ent->bt_body == NULL) ||
@@ -338,7 +346,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         {
             if(ent->bt_body[i])
             {
-                if(ent->type_flags & ENTITY_TYPE_KINEMATIC)
+                if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
                 {
                     ent->bt_body[i]->getMotionState()->getWorldTransform(bt_tr);
 
