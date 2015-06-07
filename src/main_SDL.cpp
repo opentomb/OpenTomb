@@ -433,6 +433,7 @@ void Engine_InitSDLVideo()
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+    SDL_SetWindowBrightness(sdl_window, renderer.settings.brightness);
 
     Con_AddLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
     Con_AddLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);

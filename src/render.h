@@ -55,7 +55,7 @@ class render_DebugDrawer:public btIDebugDraw
 
     GLfloat m_color[3];
     GLfloat *m_buffer;
-    
+
     struct obb_s *m_obb;
 
     public:
@@ -87,7 +87,7 @@ class render_DebugDrawer:public btIDebugDraw
         void drawEntityDebugLines(struct entity_s *entity);
         void drawSectorDebugLines(struct room_sector_s *rs);
         void drawRoomDebugLines(struct room_s *room, struct render_s *render);
-        
+
         // bullet's debug interface
         virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
         virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color);
@@ -144,6 +144,7 @@ typedef struct render_settings_s
     GLfloat   fog_color[4];
     float     fog_start_depth;
     float     fog_end_depth;
+    float     brightness;
 }render_settings_t, *render_settings_p;
 
 typedef struct render_s
