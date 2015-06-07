@@ -141,19 +141,14 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
     int top = lua_gettop(engine_lua);
     assert(top >= 0);
     
-    Sys_DebugLog("ragdoll.txt", "Attempt to create ragdoll %d", ragdoll_index);
-    
     lua_getglobal(engine_lua, "getRagdollSetup");
     if(lua_isfunction(engine_lua, -1))
     {
-        Sys_DebugLog("ragdoll.txt", "GJS func found");
         lua_pushinteger(engine_lua, ragdoll_index);
         if(lua_CallAndLog(engine_lua, 1, 1, 0))
         {
-            Sys_DebugLog("ragdoll.txt", "GJS func successfully called");
             if(lua_istable(engine_lua, -1))
             {
-                Sys_DebugLog("ragdoll.txt", "Entry exists, try to parse...");
                 lua_getfield(engine_lua, -1, "hit_callback");
                 if(lua_isstring(engine_lua, -1))
                 {
@@ -162,16 +157,12 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                     
                     setup->hit_func = (char*)calloc(string_length, sizeof(char));
                     memcpy(setup->hit_func, func_name, string_length * sizeof(char));
-                    
-                    Sys_DebugLog("ragdoll.txt", "hit_callback = %s", func_name);
                 }
                 else { result = false; }
                 lua_pop(engine_lua, 1);
                 
                 setup->joint_count = (uint32_t)lua_GetScalarField(engine_lua, "joint_count");
                 setup->body_count = (uint32_t)lua_GetScalarField(engine_lua, "body_count");
-                
-                Sys_DebugLog("ragdoll.txt", "jc = %d, bc = %d", setup->joint_count, setup->body_count);
                 
                 if(setup->body_count > 0)
                 {
@@ -180,26 +171,20 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                     lua_getfield(engine_lua, -1, "body");
                     if(lua_istable(engine_lua, -1))
                     {
-                        Sys_DebugLog("ragdoll.txt", "Table for bodies found!");
                         for(int i=0; i<setup->body_count; i++)
                         {
-                            Sys_DebugLog("ragdoll.txt", " Parsing body %d", i);
                             lua_rawgeti(engine_lua, -1, i+1);
                             if(lua_istable(engine_lua, -1))
                             {
-                                Sys_DebugLog("ragdoll.txt", "  Table for body %d found", i);
                                 setup->body_setup[i].weight = lua_GetScalarField(engine_lua, "weight");
                                 setup->body_setup[i].restitution = lua_GetScalarField(engine_lua, "restitution");
                                 setup->body_setup[i].friction = lua_GetScalarField(engine_lua, "friction");
-                                
-                                Sys_DebugLog("ragdoll.txt", "  Body %d mass = %f, rest = %f, fric = %f", i, setup->body_setup[i].weight, setup->body_setup[i].restitution, setup->body_setup[i].friction);
                                 
                                 lua_getfield(engine_lua, -1, "damping");
                                 if(lua_istable(engine_lua, -1))
                                 {
                                     setup->body_setup[i].damping[0] = lua_GetScalarField(engine_lua, 1);
                                     setup->body_setup[i].damping[1] = lua_GetScalarField(engine_lua, 2);
-                                    Sys_DebugLog("ragdoll.txt", "   Sub-table for damping found = %f / %f", setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
@@ -220,10 +205,8 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                     lua_getfield(engine_lua, -1, "joint");
                     if(lua_istable(engine_lua, -1))
                     {
-                        Sys_DebugLog("ragdoll.txt", "Table for joints found!");
                         for(int i=0; i<setup->joint_count; i++)
                         {
-                            Sys_DebugLog("ragdoll.txt", " Parsing joint %d", i);
                             lua_rawgeti(engine_lua, -1, i+1);
                             if(lua_istable(engine_lua, -1))
                             {
@@ -234,15 +217,12 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                 setup->joint_setup[i].joint_cfm   = lua_GetScalarField(engine_lua, "joint_cfm");
                                 setup->joint_setup[i].joint_erp   = lua_GetScalarField(engine_lua, "joint_erp");
                                 
-                                Sys_DebugLog("ragdoll.txt", "  Joint %d bi1 = %d, bi2 = %d, jt = %d, cfm = %f, erp = %f", i, setup->joint_setup[i].body1_index, setup->joint_setup[i].body2_index, setup->joint_setup[i].joint_type, setup->joint_setup[i].joint_cfm, setup->joint_setup[i].joint_erp);
-                                
                                 lua_getfield(engine_lua, -1, "body1_offset");
                                 if(lua_istable(engine_lua, -1))
                                 {
                                     setup->joint_setup[i].body1_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
                                     setup->joint_setup[i].body1_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
                                     setup->joint_setup[i].body1_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
-                                    Sys_DebugLog("ragdoll.txt", "   Sub-table for b1 offset found = %f, %f, %f", setup->joint_setup[i].body1_offset.m_floats[0], setup->joint_setup[i].body1_offset.m_floats[1], setup->joint_setup[i].body1_offset.m_floats[2]);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
@@ -253,7 +233,6 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                     setup->joint_setup[i].body2_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
                                     setup->joint_setup[i].body2_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
                                     setup->joint_setup[i].body2_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
-                                    Sys_DebugLog("ragdoll.txt", "   Sub-table for b2 offset found = %f, %f, %f", setup->joint_setup[i].body2_offset.m_floats[0], setup->joint_setup[i].body2_offset.m_floats[1], setup->joint_setup[i].body2_offset.m_floats[2]);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
@@ -264,7 +243,6 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                     setup->joint_setup[i].body1_angle[0] = lua_GetScalarField(engine_lua, 1);
                                     setup->joint_setup[i].body1_angle[1] = lua_GetScalarField(engine_lua, 2);
                                     setup->joint_setup[i].body1_angle[2] = lua_GetScalarField(engine_lua, 3);
-                                    Sys_DebugLog("ragdoll.txt", "   Sub-table for b1 angle found = %f, %f, %f", setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
@@ -275,7 +253,6 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                     setup->joint_setup[i].body2_angle[0] = lua_GetScalarField(engine_lua, 1);
                                     setup->joint_setup[i].body2_angle[1] = lua_GetScalarField(engine_lua, 2);
                                     setup->joint_setup[i].body2_angle[2] = lua_GetScalarField(engine_lua, 3);
-                                    Sys_DebugLog("ragdoll.txt", "   Sub-table for b2 angle found = %f, %f, %f", setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
                                 }
                                 else { result = false; }
                                 
@@ -287,7 +264,6 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                     setup->joint_setup[i].joint_limit[0] = lua_GetScalarField(engine_lua, 1);
                                     setup->joint_setup[i].joint_limit[1] = lua_GetScalarField(engine_lua, 2);
                                     setup->joint_setup[i].joint_limit[2] = lua_GetScalarField(engine_lua, 3);
-                                    Sys_DebugLog("ragdoll.txt", "   Sub-table for limits found = %f, %f, %f", setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2]);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
