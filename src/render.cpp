@@ -770,12 +770,6 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projectionMatrix);
         glUniform1iARB(shader->sampler, 0);
 
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_NORMAL_ARRAY);
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
         room->sprite_buffer->data->use();
 
         unsigned long offset = 0;
@@ -792,8 +786,6 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
         }
         
         render->vertex_array_manager->unbind();
-
-        glPopClientAttrib();
     }
 }
 
@@ -947,9 +939,6 @@ void Render_DrawList()
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
     }
-    
-    renderer.vertex_array_manager->unbind();
-    glPopClientAttrib();
 
     /*
      * NOW render transparency polygons
@@ -1028,6 +1017,8 @@ void Render_DrawList()
         glDisable(GL_BLEND);
     }
     renderer.vertex_array_manager->unbind();
+    glPopClientAttrib();
+    
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
 }
