@@ -653,7 +653,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
         // base frame offset
         btScalar subModelView[16];
         btScalar subModelViewProjection[16];
-        if(entity->type_flags & ENTITY_TYPE_KINEMATIC)
+        if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
         {
             memcpy(subModelView, modelViewMatrix, sizeof(subModelView));
             memcpy(subModelViewProjection, modelViewProjectionMatrix, sizeof(subModelViewProjection));
