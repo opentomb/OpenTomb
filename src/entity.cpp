@@ -16,6 +16,7 @@
 #include "obb.h"
 #include "gameflow.h"
 #include "string.h"
+#include "ragdoll.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
@@ -45,6 +46,8 @@ entity_p Entity_Create()
     ret->obb = OBB_Create();
     ret->obb->transform = ret->transform;
     ret->bt_body = NULL;
+    ret->bt_joints = NULL;
+    ret->bt_joint_count = 0;
     ret->character = NULL;
     ret->current_sector = NULL;
     ret->bf.animations.model = NULL;
@@ -89,6 +92,11 @@ void Entity_Clear(entity_p entity)
             OBB_Clear(entity->obb);
             free(entity->obb);
             entity->obb = NULL;
+        }
+        
+        if(entity->bt_joint_count)
+        {
+            Ragdoll_Delete(entity);
         }
 
         if(entity->bt_body)
@@ -237,7 +245,7 @@ void BT_GenEntityRigidBody(entity_p ent)
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
-    
+
     if(ent->bf.animations.model == NULL)
     {
         return;
@@ -262,6 +270,7 @@ void BT_GenEntityRigidBody(entity_p ent)
             //ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
             bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             ent->bt_body[i]->setUserPointer(ent->self);
+            ent->bt_body[i]->setUserIndex(i);
         }
     }
 }
@@ -319,7 +328,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
     btScalar tr[16];
     btTransform bt_tr;
 
-    if(!(ent->type_flags & ENTITY_TYPE_KINEMATIC))
+    if(!(ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         if((ent->bf.animations.model == NULL) ||
            (ent->bt_body == NULL) ||
@@ -337,7 +346,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         {
             if(ent->bt_body[i])
             {
-                if(ent->type_flags & ENTITY_TYPE_KINEMATIC)
+                if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
                 {
                     ent->bt_body[i]->getMotionState()->getWorldTransform(bt_tr);
 

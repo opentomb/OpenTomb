@@ -563,7 +563,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
         // base frame offset
         btScalar subModelView[16];
         btScalar subModelViewProjection[16];
-        if(entity->type_flags & ENTITY_TYPE_KINEMATIC)
+        if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
         {
             memcpy(subModelView, modelViewMatrix, sizeof(subModelView));
             memcpy(subModelViewProjection, modelViewProjectionMatrix, sizeof(subModelViewProjection));
@@ -622,6 +622,59 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     entity_p ent;
 
     const shader_description *lastShader = 0;
+
+    ////start test stencil test code
+    bool need_stencil = false;
+#if STENCIL_FRUSTUM
+    if(room->frustum->active != 0)
+    {
+        for(uint16_t i=0;i<room->overlapped_room_list_size;i++)
+        {
+            if(room->overlapped_room_list[i]->is_in_r_list)
+            {
+                need_stencil = true;
+                break;
+            }
+        }
+
+        if(need_stencil)
+        {
+            const int elem = (3 + 3 + 4 + 2);
+            const unlit_tinted_shader_description *shader = render->shader_manager->getRoomShader(false, false);
+            glUseProgramObjectARB(shader->program);
+            glUniform1iARB(shader->sampler, 0);
+            glUniformMatrix4fvARB(shader->model_view_projection, 1, false, engine_camera.gl_view_proj_mat);
+            glEnable(GL_STENCIL_TEST);
+            glClear(GL_STENCIL_BUFFER_BIT);
+            glStencilFunc(GL_NEVER, 1, 0x00);
+            glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+            for(frustum_p f=room->frustum;(f!=NULL)&&(f->active);f=f->next)
+            {
+                GLfloat *v, *buf = (GLfloat*)GetTempbtScalar(f->count * elem);
+                v=buf;
+                for(int16_t i=f->count-1;i>=0;i--)
+                {
+                    vec3_copy(v, f->vertex+3*i);                    v+=3;
+                    vec3_copy_inv(v, engine_camera.view_dir);       v+=3;
+                    vec4_set_one(v);                                v+=4;
+                    v[0] = v[1] = 0.0;                              v+=2;
+                }
+
+                glBindTexture(GL_TEXTURE_2D, renderer.world->textures[renderer.world->tex_count-1]);
+                glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+                glVertexPointer(3, GL_BT_SCALAR, elem * sizeof(GLfloat), buf+0);
+                glNormalPointer(GL_BT_SCALAR, elem * sizeof(GLfloat), buf+3);
+                glColorPointer(4, GL_FLOAT, elem * sizeof(GLfloat), buf+3+3);
+                glTexCoordPointer(2, GL_FLOAT, elem * sizeof(GLfloat), buf+3+3+4);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, f->count);
+
+                ReturnTempbtScalar(f->count * elem);
+            }
+            glStencilFunc(GL_EQUAL, 1, 0xFF);
+        }
+    }
+#endif
+
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
     {
         btScalar modelViewProjectionTransform[16];
@@ -698,6 +751,12 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             };
         }
     }
+#if STENCIL_FRUSTUM
+    if(need_stencil)
+    {
+        glDisable(GL_STENCIL_TEST);
+    }
+#endif
 }
 
 
@@ -902,7 +961,7 @@ void Render_DrawList()
         room_p r = renderer.r_list[i].room;
         if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
         {
-            render_dBSP.addNewPolygonList(r->mesh->transparent_polygon_count, r->mesh->transparent_polygons, r->transform);
+            render_dBSP.addNewPolygonList(r->mesh->transparent_polygon_count, r->mesh->transparent_polygons, r->transform, r->frustum);
         }
     }
 
@@ -914,7 +973,7 @@ void Render_DrawList()
         {
             if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
             {
-                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparent_polygon_count, r->static_mesh[j].mesh->transparent_polygons, r->static_mesh[j].transform);
+                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparent_polygon_count, r->static_mesh[j].mesh->transparent_polygons, r->static_mesh[j].transform, r->frustum);
             }
         }
 
@@ -932,7 +991,7 @@ void Render_DrawList()
                         if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
                             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr);
+                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr, r->frustum);
                         }
                     }
                 }
@@ -949,7 +1008,7 @@ void Render_DrawList()
             if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr);
+                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr, NULL);
             }
         }
     }
@@ -979,8 +1038,6 @@ void Render_DrawList_DebugLines()
     {
         return;
     }
-
-    debugDrawer.reset();
 
     if(renderer.world->Character)
     {
@@ -1075,6 +1132,8 @@ void Render_GenWorldList()
     }
 
     Render_CleanList();                                                         // clear old render list
+    debugDrawer.reset();
+    renderer.cam->frustum->next = NULL;
 
     room_p curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
 
@@ -1087,7 +1146,7 @@ void Render_GenWorldList()
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
         portal_p p = curr_room->portals;                                        // pointer to the portals array
-        for(uint32_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
+        for(uint16_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
         {
             frustum_p last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
             if(last_frus)

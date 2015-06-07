@@ -296,10 +296,12 @@ typedef struct room_s
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
     uint16_t                    near_room_list_size;
-    struct room_s               *near_room_list[64];
-    btRigidBody                 *bt_body;
+    struct room_s              *near_room_list[32];
+    uint16_t                    overlapped_room_list_size;
+    struct room_s              *overlapped_room_list[32];
+    btRigidBody                *bt_body;
 
-    struct engine_container_s   *self;
+    struct engine_container_s  *self;
 }room_t, *room_p;
 
 
@@ -326,7 +328,7 @@ typedef struct world_s
     uint32_t                    anim_sequences_count;   // Animated texture sequence count
     struct anim_seq_s          *anim_sequences;         // Animated textures
 
-    uint32_t                    meshes_count;            // Base meshes count
+    uint32_t                    meshes_count;           // Base meshes count
     struct base_mesh_s         *meshes;                 // Base meshes data
 
     uint32_t                    sprites_count;          // Base sprites count
@@ -402,6 +404,7 @@ room_p Room_CheckFlip(room_p r);
 void Room_SwapPortals(room_p room, room_p dest_room); //Swap room portals of input room to destination room
 void Room_SwapItems(room_p room, room_p dest_room);   //Swap room items of input room to destination room
 void Room_BuildNearRoomsList(room_p room);
+void Room_BuildOverlappedRoomsList(room_p room);
 
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);

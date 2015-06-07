@@ -40,6 +40,9 @@ sys_notify[031]     = "Flipmap with index %d doesn't exist!";
 sys_notify[032]     = "Hair setup with index %d doesn't exist!";
 sys_notify[033]     = "Can't create hair for character %d!";
 sys_notify[034]     = "No hairs for character %d - nothing to remove.";
+sys_notify[035]     = "Ragdoll setup with index %d is corrupted or doesn't exist!";
+sys_notify[036]     = "Can't create ragdoll for entity %d!";
+sys_notify[037]     = "Can't remove ragdoll for entity %d - possibly no ragdoll?";
 
 sys_notify[1000]    = "Ogg stream opened (%s): channels = %d, sample rate = %d, bitrate = %.1f";
 sys_notify[1001]    = "Reading file: \"%s\"";

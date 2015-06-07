@@ -7,6 +7,8 @@
 #include "bsp_tree.h"
 #include "vmath.h"
 #include "mesh.h"
+#include "frustum.h"
+
 
 struct bsp_node_s *dynamicBSP::createBSPNode()
 {
@@ -115,7 +117,7 @@ dynamicBSP::~dynamicBSP()
 }
 
 
-void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btScalar *transform)
+void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btScalar *transform, struct frustum_s *f)
 {
     if(m_data_size - m_allocated < 1024)                                        ///@FIXME: magick 1024
     {
@@ -125,9 +127,30 @@ void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygo
     polygon_s *transformed = Polygon_CreateArray(1);
     for(size_t i = 0; i < count; i++)
     {
+        uint32_t orig_allocated = m_allocated;
+        bool visible = (f == NULL) || (f->active == 0);
+
         Polygon_Resize(transformed, p[i].polygon->vertex_count);
-        bsp_face_ref_s *face = this->createFace(transform, &p[i]);
-        this->addPolygon(m_root, face, transformed);
+        Polygon_Transform(transformed, p[i].polygon, transform);
+        
+        for(frustum_p ff=f;(!visible)&&(ff!=NULL)&&(ff->active);ff=ff->next)
+        {
+            if(Frustum_IsPolyVisible(transformed, ff))
+            {
+                visible = true;
+                break;
+            }
+        }
+
+        if(visible)
+        {
+            bsp_face_ref_s *face = this->createFace(transform, &p[i]);
+            this->addPolygon(m_root, face, transformed);
+        }
+        else
+        {
+            m_allocated = orig_allocated;
+        }
     }
     Polygon_Clear(transformed);
 }

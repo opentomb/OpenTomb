@@ -8,6 +8,7 @@
 #include "bullet/LinearMath/btScalar.h"
 
 struct polygon_s;
+struct frustum_s;
 
 typedef struct bsp_face_ref_s {
     struct bsp_face_ref_s *next;
@@ -51,7 +52,7 @@ public:
     
     dynamicBSP(uint32_t size);
    ~dynamicBSP();
-    void addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btScalar *transform);
+    void addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btScalar *transform, struct frustum_s *f);
     void reset()
     {
         m_allocated = 0;

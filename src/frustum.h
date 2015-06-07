@@ -57,7 +57,7 @@ int Frustum_Split(frustum_p p, btScalar n[4], btScalar *buf);                   
 
 void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam);                  // генерация плоскостей отсечения
 
-int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum);
+int Frustum_IsPolyVisible(const struct polygon_s *p, const struct frustum_s *frustum);
 int Frustum_IsAABBVisible(btScalar bbmin[3], btScalar bbmax[3], struct frustum_s *frustum);
 int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum);
 int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room);

@@ -391,6 +391,7 @@ void Gui_Resize()
 
     /* let us update console too */
     Con_SetLineInterval(con_base.spacing);
+    Gui_FillCrosshairBuffer();
 }
 
 void Gui_Render()

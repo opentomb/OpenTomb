@@ -34,6 +34,8 @@
     #define GL_BT_SCALAR GL_FLOAT
 #endif
 
+#define STENCIL_FRUSTUM 1
+
 struct portal_s;
 struct frustum_s;
 struct world_s;

@@ -2060,6 +2060,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->self->room = room;
     room->self->object = room;
     room->self->object_type = OBJECT_ROOM_BASE;
+    room->near_room_list_size = 0;
+    room->overlapped_room_list_size = 0;
 
     TR_GenRoomMesh(world, room_index, room, tr);
 
@@ -2476,32 +2478,6 @@ void TR_GenRoomCollision(struct world_s *world)
 {
     room_p r = world->rooms;
 
-#if TR_MESH_ROOM_COLLISION
-    for(uint32_t i=0;i<world->room_count;i++,r++)
-    {
-        r->bt_body = NULL;
-
-        if(r->mesh)
-        {
-            cshape = BT_CSfromMesh(r->mesh, true, true, COLLISION_TRIMESH);
-
-            if(cshape)
-            {
-                startTransform.setFromOpenGLMatrix(r->transform);
-                btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-                r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-                r->bt_body->setUserPointer(room->self);
-                r->self->collide_flag = COLLISION_TRIMESH;                   // meshtree
-                if(!r->active)
-                {
-                    Room_Disable(r);
-                }
-            }
-        }
-    }
-
-#else
     /*
     if(level_script != NULL)
     {
@@ -2557,8 +2533,6 @@ void TR_GenRoomCollision(struct world_s *world)
 
         delete[] room_tween;
     }
-
-#endif
 }
 
 
@@ -2581,6 +2555,8 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 
         // Generate links to the near rooms.
         Room_BuildNearRoomsList(r);
+        // Generate links to the overlapped rooms.
+        Room_BuildOverlappedRoomsList(r);
 
         // Basic sector calculations.
         TR_Sector_Calculate(world, tr, i);

@@ -12,7 +12,7 @@
 #define SPLIT_IN_PLANE 0x02
 #define SPLIT_IN_BOTH  0x03
 
-#define SPLIT_EPSILON (0.2)
+#define SPLIT_EPSILON (0.02)
 
 #define Polygon_AddVertexMacro(p, v)\
 {\
@@ -64,7 +64,7 @@ void Polygon_Transform(polygon_p ret, const polygon_t *src, const btScalar tr[16
 void Polygon_TransformSelf(polygon_p p, btScalar tr[16]);
 
 void Polygon_FindNormale(polygon_p p);
-int  Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t);
+int  Polygon_RayIntersect(const polygon_t *p, btScalar dir[3], btScalar dot[3], btScalar *t);
 int  Polygon_IntersectPolygon(polygon_p p1, polygon_p p2);
 
 int  Polygon_SplitClassify(polygon_p p, btScalar n[4]);

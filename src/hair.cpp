@@ -103,7 +103,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         // collide with hair!
 
         hair->elements[i].body->setUserPointer(hair->container);
-        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, COLLISION_GROUP_KINEMATIC, COLLISION_GROUP_KINEMATIC);
+        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
 
         hair->elements[i].body->activate();
     }

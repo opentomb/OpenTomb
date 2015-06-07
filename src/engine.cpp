@@ -50,6 +50,7 @@ extern "C" {
 #include "gl_font.h"
 #include "string.h"
 #include "hair.h"
+#include "ragdoll.h"
 
 extern SDL_Window             *sdl_window;
 extern SDL_GLContext           sdl_gl_context;
@@ -865,8 +866,8 @@ int lua_ResetCharacterHair(lua_State *lua)
     }
     else
     {
-        int ent_id = lua_tointeger(lua, 1);
-        entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
+        int ent_id   = lua_tointeger(lua, 1);
+        entity_p ent = World_GetEntityByID(&engine_world, ent_id);
 
         if(!IsCharacter(ent))
         {
@@ -893,6 +894,74 @@ int lua_ResetCharacterHair(lua_State *lua)
     return 0;
 }
 
+int lua_AddEntityRagdoll(lua_State *lua)
+{
+    if(lua_gettop(lua) != 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [ragdoll_setup_index]");
+    }
+    else
+    {
+        int ent_id       = lua_tointeger(lua, 1);
+        int setup_index  = lua_tointeger(lua, 2);
+
+        entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
+
+        if(!ent)
+        {
+            Con_Warning(SYSWARN_NO_ENTITY, ent_id);
+        }
+        else
+        {
+            rd_setup_s ragdoll_setup;
+            memset(&ragdoll_setup, 0, sizeof(rd_setup_t));
+
+            if(!Ragdoll_GetSetup(setup_index, &ragdoll_setup))
+            {
+                Con_Warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
+            }
+            else
+            {
+                if(!Ragdoll_Create(ent, &ragdoll_setup))
+                {
+                    Con_Warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+int lua_RemoveEntityRagdoll(lua_State *lua)
+{
+    if(lua_gettop(lua) != 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        return 0;
+    }
+    else
+    {
+        int ent_id   = lua_tointeger(lua, 1);
+        entity_p ent = World_GetEntityByID(&engine_world, ent_id);
+
+        if(!ent)
+        {
+            Con_Warning(SYSWARN_NO_ENTITY, ent_id);
+        }
+        else
+        {
+            if(ent->bt_joint_count)
+            {
+                Ragdoll_Delete(ent);
+            }
+            else
+            {
+                Con_Warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
+            }
+        }
+    }
+    return 0;
+}
 
 int lua_GetSecretStatus(lua_State *lua)
 {
@@ -2723,7 +2792,7 @@ int lua_PushEntityBody(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_KINEMATIC))
+    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar h_force = lua_tonumber(lua, 3);
         btScalar v_force = lua_tonumber(lua, 4);
@@ -2766,7 +2835,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     body_number = (body_number < 1)?(1):(body_number);
 
     uint16_t argn  = 3;
-    bool kinematic = false;
+    bool dynamic = false;
 
     btScalar mass;
 
@@ -2787,13 +2856,14 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
                     ent->bt_body[i]->setMassProps(mass, inertia);
 
-                    ent->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
-                    ent->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
-
                     ent->bt_body[i]->updateInertiaTensor();
                     ent->bt_body[i]->clearForces();
 
                     ent->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
+
+                    btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
+                    ent->bt_body[i]->setLinearFactor (factor);
+                    ent->bt_body[i]->setAngularFactor(factor);
 
                     //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
 
@@ -2810,20 +2880,20 @@ int lua_SetEntityBodyMass(lua_State *lua)
                 //ent->self->object_type = OBJECT_ENTITY;
                 //ent->bt_body[i]->setUserPointer(ent->self);
 
-                if(mass > 0.0) kinematic = true;
+                if(mass > 0.0) dynamic = true;
             }
 
         }
 
         Entity_UpdateRigidBody(ent, 1);
 
-        if(kinematic)
+        if(dynamic)
         {
-            ent->type_flags |=  ENTITY_TYPE_KINEMATIC;
+            ent->type_flags |=  ENTITY_TYPE_DYNAMIC;
         }
         else
         {
-            ent->type_flags &= ~ENTITY_TYPE_KINEMATIC;
+            ent->type_flags &= ~ENTITY_TYPE_DYNAMIC;
         }
     }
     else
@@ -2848,7 +2918,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_KINEMATIC))
+    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar t    = ent->angles[0] * M_PI / 180.0;
         btScalar ang1 = sinf(t);
@@ -2865,7 +2935,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     }
     else
     {
-        Con_Printf("Can't apply force to entity %d - no entity, body, or entity is not kinematic!", id);
+        Con_Printf("Can't apply force to entity %d - no entity, body, or entity is not dynamic!", id);
     }
 
     return 0;
@@ -3419,6 +3489,7 @@ bool Engine_LuaInit()
         luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");
         luaL_dofile(engine_lua, "scripts/entity/entity_functions.lua");
         luaL_dofile(engine_lua, "scripts/character/hair.lua");
+        luaL_dofile(engine_lua, "scripts/character/ragdoll.lua");
         luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
         luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
         luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
@@ -3585,6 +3656,9 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
+
+    lua_register(lua, "addEntityRagdoll", lua_AddEntityRagdoll);
+    lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);

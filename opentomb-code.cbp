@@ -1833,6 +1833,8 @@
 		<Unit filename="src/polygon.h" />
 		<Unit filename="src/portal.cpp" />
 		<Unit filename="src/portal.h" />
+		<Unit filename="src/ragdoll.cpp" />
+		<Unit filename="src/ragdoll.h" />
 		<Unit filename="src/redblack.cpp" />
 		<Unit filename="src/redblack.h" />
 		<Unit filename="src/render.cpp" />

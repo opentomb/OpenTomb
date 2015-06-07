@@ -32,32 +32,31 @@ frustum_p Frustum_Create()
 
 void Frustum_Delete(frustum_p p)
 {
-    if(p)
+    if(p && (!renderer.cam || p != renderer.cam->frustum))
     {
-        if(!renderer.cam || p != renderer.cam->frustum)
-        {
-            p->active = 0;
-            p->count = 0;
-            if(p->planes)
-            {
-                free(p->planes);
-                p->planes = NULL;
-            }
+        frustum_p next = p->next;
 
-            if(p->vertex)
-            {
-                free(p->vertex);
-                p->vertex = NULL;
-            }
-        }
-        if(p->next)
+        p->next = NULL;
+        p->active = 0;
+        p->count = 0;
+        if(p->planes)
         {
-            Frustum_Delete(p->next);
-            p->next = NULL;
+            free(p->planes);
+            p->planes = NULL;
         }
-        if(!renderer.cam || p != renderer.cam->frustum)
+
+        if(p->vertex)
         {
-            free(p);
+            free(p->vertex);
+            p->vertex = NULL;
+        }
+
+        free(p);
+
+        if(next)
+        {
+            Frustum_Delete(next);
+            next = NULL;
         }
     }
 }
@@ -94,19 +93,13 @@ int Frustum_GetFrustumsCount(struct frustum_s *f)
  */
 int Frustum_HaveParent(frustum_p parent, frustum_p frustum)
 {
-    frustum_p base_parent = parent;
     while(frustum && frustum->active)
     {
-        while(parent && parent->active)
+        if(parent == frustum)
         {
-            if(parent == frustum)
-            {
-                return 1;
-            }
-            parent = parent->next;
+            return 1;
         }
         frustum = frustum->parent;
-        parent = base_parent;
     }
     return 0;
 }
@@ -116,21 +109,19 @@ void Frustum_SplitPrepare(frustum_p frustum, struct portal_s *p)
     frustum->count = p->vertex_count;
     frustum->vertex = (btScalar*)realloc(frustum->vertex, 3*p->vertex_count*sizeof(btScalar));
     memcpy(frustum->vertex, p->vertex, 3*p->vertex_count*sizeof(btScalar));
-    frustum->norm[0] = -p->norm[0];
-    frustum->norm[1] = -p->norm[1];
-    frustum->norm[2] = -p->norm[2];
-    frustum->norm[3] = -p->norm[3];
+    vec4_copy_inv(frustum->norm, p->norm);
     frustum->active = 0;
+    frustum->parent = NULL;
 }
 
 int Frustum_Split(frustum_p p, btScalar n[4], btScalar *buf)                    // отсечение части фрустума плоскостью
 {
     btScalar *curr_v, *prev_v, *v, t, dir[3];
     btScalar dist[2];
+    uint16_t added = 0;
 
     curr_v = p->vertex;
     prev_v = p->vertex + 3*(p->count-1);
-    uint16_t added = 0;
     dist[0] = vec3_plane_dist(n, prev_v);
     v = buf;
     for(uint16_t i=0;i<p->count;i++)
@@ -180,15 +171,40 @@ int Frustum_Split(frustum_p p, btScalar n[4], btScalar *buf)                    
     }
 
     p->vertex = (btScalar*)realloc(p->vertex, added*3*sizeof(btScalar));
+#if 1
     p->count = added;
     memcpy(p->vertex, buf, added*3*sizeof(btScalar));
+#else       // filter repeating (too closest) points
+    curr_v = buf;
+    prev_v = buf + 3*(added-1);
+    v = p->vertex;
+    p->count = 0;
+    for(uint16_t i=0;i<added;i++)
+    {
+        if(vec3_dist_sq(prev_v, curr_v) > SPLIT_EPSILON * SPLIT_EPSILON)
+        {
+            vec3_copy(v, curr_v);
+            v += 3;
+            p->count++;
+        }
+        prev_v = curr_v;
+        curr_v += 3;
+    }
+
+    if(p->count <= 2)
+    {
+        p->count = 0;
+        p->active = 0;
+        return SPLIT_EMPTY;
+    }
+#endif
     p->active = 1;
 
     return SPLIT_SUCCES;
 }
 
 /**
- * Генерация плоскостей отсеченияпортала
+ * Clip planes generation
  */
 void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam)
 {
@@ -207,16 +223,15 @@ void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam)
 
         for(uint16_t i=0;i<p->count;i++,r+=4)
         {
+            btScalar t;
             vec3_sub(V1, prev_v, cam->pos)                                      // вектор от наблюдателя до вершины полигона
             vec3_sub(V2, curr_v, prev_v)                                        // вектор соединяющий соседние вершины полигона
-
+            vec3_norm(V1, t);
+            vec3_norm(V2, t);
             vec3_cross(r, V1, V2)
-            r[3] = vec3_abs(r);
-            vec3_norm_plane(r, prev_v, r[3])
-            if(vec3_plane_dist(r, next_v) < 0)
-            {
-                vec4_inv(r);
-            }
+            vec3_norm(r, t);
+            r[3] = -vec3_dot(r, curr_v);
+            vec4_inv(r);
 
             prev_v = curr_v;
             curr_v = next_v;
@@ -232,7 +247,7 @@ void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam)
  * Проверка полигона на видимость через портал.
  * данный метод НЕ для реалтайма, т.к. проверка в общем случае выходит дороже отрисовки...
  */
-int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
+int Frustum_IsPolyVisible(const struct polygon_s *p, const struct frustum_s *frustum)
 {
     btScalar t, dir[3], T[3], dist[2];
     btScalar *prev_n, *curr_n, *next_n;

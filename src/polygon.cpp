@@ -194,7 +194,7 @@ void Polygon_vTransform(polygon_p ret, polygon_p src, btScalar tr[16])
 }
 
 
-int Polygon_RayIntersect(polygon_p p, btScalar dir[3], btScalar dot[3], btScalar *t)
+int Polygon_RayIntersect(const polygon_t *p, btScalar dir[3], btScalar dot[3], btScalar *t)
 {
     btScalar tt, u, v, E1[3], E2[3], P[3], Q[3], T[3];
     vertex_p vp;

@@ -29,7 +29,7 @@
 #define LEFT_LEG                    (3)
 #define RIGHT_LEG                   (6)
 
-#define PENETRATION_TEST_OFFSET     (ent->character->forvard_size)
+#define PENETRATION_TEST_OFFSET     (48.0)        ///@TODO: tune it!
 #define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
 #define WALK_BACK_OFFSET            (16.0)
 #define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
@@ -232,7 +232,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     next_fc.ccb->m_hitCollisionObject = NULL;
     ent->character->no_fix_body_parts = 0x00000000;
 
-    ent->character->ghost_step_up_map_filter = 0x00;
     ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
     Character_UpdateCurrentHeight(ent);
 
@@ -326,7 +325,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->roll)
             {
-                if(!curr_fc->quicksand)
+                if(!curr_fc->quicksand && ss_anim->current_animation != TR_ANIMATION_LARA_CLIMB_2CLICK)
                 {
                     ent->dir_flag = ENT_MOVE_FORWARD;
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_ROLL_BEGIN, 0);
@@ -786,7 +785,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_ON_FLOOR)
             {
-                ent->character->ghost_step_up_map_filter = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+                ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
             }
             Character_Lean(ent, cmd, 6.0);
 
@@ -816,25 +815,23 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_CROUCH_IDLE;
             }
-            /*else if((cmd->crouch == 0) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_UP_BIG))
+            else if((cmd->move[0] == 1) && (cmd->crouch == 0) && (next_fc.floor_normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_UP_BIG))
             {
                 ent->dir_flag = ENT_STAY;
                 i = Entity_GetAnimDispatchCase(ent, 2);                         // MOST CORRECT STATECHANGE!!!
                 if(i == 0)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_UP_STEP_RIGHT, 0);
-                    //vec3_copy(pos, next_fc.floor_point);
                     pos[2] = next_fc.floor_point.m_floats[2];
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
                 else //if(i == 1)
                 {
                     Entity_SetAnimation(ent, TR_ANIMATION_LARA_RUN_UP_STEP_LEFT, 0);
-                    //vec3_copy(pos, next_fc.floor_point);
                     pos[2] = next_fc.floor_point.m_floats[2];
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
-            }*/
+            }
             else if(resp->horizontal_collide & 0x01)
             {
                 vec3_mul_scalar(global_offset, ent->transform + 4, RUN_FORWARD_OFFSET);
@@ -905,7 +902,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_ON_FLOOR)
             {
-                ent->character->ghost_step_up_map_filter = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+                ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
             }
 
             if(!Character_GetParam(ent, PARAM_STAMINA))
@@ -996,7 +993,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_ON_FLOOR)
             {
-                ent->character->ghost_step_up_map_filter = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+                ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
             }
 
             if(ent->move_type == MOVE_FREE_FALLING)
