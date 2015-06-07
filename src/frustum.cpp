@@ -109,10 +109,7 @@ void Frustum_SplitPrepare(frustum_p frustum, struct portal_s *p)
     frustum->count = p->vertex_count;
     frustum->vertex = (btScalar*)realloc(frustum->vertex, 3*p->vertex_count*sizeof(btScalar));
     memcpy(frustum->vertex, p->vertex, 3*p->vertex_count*sizeof(btScalar));
-    frustum->norm[0] = -p->norm[0];
-    frustum->norm[1] = -p->norm[1];
-    frustum->norm[2] = -p->norm[2];
-    frustum->norm[3] = -p->norm[3];
+    vec4_copy_inv(frustum->norm, p->norm);
     frustum->active = 0;
     frustum->parent = NULL;
 }
@@ -121,10 +118,10 @@ int Frustum_Split(frustum_p p, btScalar n[4], btScalar *buf)                    
 {
     btScalar *curr_v, *prev_v, *v, t, dir[3];
     btScalar dist[2];
+    uint16_t added = 0;
 
     curr_v = p->vertex;
     prev_v = p->vertex + 3*(p->count-1);
-    uint16_t added = 0;
     dist[0] = vec3_plane_dist(n, prev_v);
     v = buf;
     for(uint16_t i=0;i<p->count;i++)
@@ -174,15 +171,40 @@ int Frustum_Split(frustum_p p, btScalar n[4], btScalar *buf)                    
     }
 
     p->vertex = (btScalar*)realloc(p->vertex, added*3*sizeof(btScalar));
+#if 1
     p->count = added;
     memcpy(p->vertex, buf, added*3*sizeof(btScalar));
+#else       // filter repeating (too closest) points
+    curr_v = buf;
+    prev_v = buf + 3*(added-1);
+    v = p->vertex;
+    p->count = 0;
+    for(uint16_t i=0;i<added;i++)
+    {
+        if(vec3_dist_sq(prev_v, curr_v) > SPLIT_EPSILON * SPLIT_EPSILON)
+        {
+            vec3_copy(v, curr_v);
+            v += 3;
+            p->count++;
+        }
+        prev_v = curr_v;
+        curr_v += 3;
+    }
+
+    if(p->count <= 2)
+    {
+        p->count = 0;
+        p->active = 0;
+        return SPLIT_EMPTY;
+    }
+#endif
     p->active = 1;
 
     return SPLIT_SUCCES;
 }
 
 /**
- * Генерация плоскостей отсеченияпортала
+ * Clip planes generation
  */
 void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam)
 {
@@ -201,20 +223,15 @@ void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam)
 
         for(uint16_t i=0;i<p->count;i++,r+=4)
         {
+            btScalar t;
             vec3_sub(V1, prev_v, cam->pos)                                      // вектор от наблюдателя до вершины полигона
             vec3_sub(V2, curr_v, prev_v)                                        // вектор соединяющий соседние вершины полигона
-
-            /*if(vec3_dot(V2, V2) < 0.04)
-            {
-                Con_AddLine("BAD FRUSTUM SPLITTER!");
-            }*/
+            vec3_norm(V1, t);
+            vec3_norm(V2, t);
             vec3_cross(r, V1, V2)
-            r[3] = vec3_abs(r);
-            vec3_norm_plane(r, prev_v, r[3])
-            if(vec3_plane_dist(r, next_v) < 0)
-            {
-                vec4_inv(r);
-            }
+            vec3_norm(r, t);
+            r[3] = -vec3_dot(r, curr_v);
+            vec4_inv(r);
 
             prev_v = curr_v;
             curr_v = next_v;

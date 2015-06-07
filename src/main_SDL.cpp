@@ -560,9 +560,8 @@ void Engine_Display()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
-        Cam_RecalcClipPlanes(&engine_camera);
         Cam_Apply(&engine_camera);
-
+        Cam_RecalcClipPlanes(&engine_camera);
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
         if(screen_info.show_debuginfo)
         {

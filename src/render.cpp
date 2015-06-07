@@ -1124,8 +1124,6 @@ void Render_DrawList_DebugLines()
         return;
     }
 
-    debugDrawer.reset();
-
     if(renderer.world->Character)
     {
         debugDrawer.drawEntityDebugLines(renderer.world->Character);
@@ -1219,6 +1217,8 @@ void Render_GenWorldList()
     }
 
     Render_CleanList();                                                         // clear old render list
+    debugDrawer.reset();
+    renderer.cam->frustum->next = NULL;
 
     room_p curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
 
@@ -1231,7 +1231,7 @@ void Render_GenWorldList()
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
         portal_p p = curr_room->portals;                                        // pointer to the portals array
-        for(uint32_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
+        for(uint16_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
         {
             frustum_p last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
             if(last_frus)

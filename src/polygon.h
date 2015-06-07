@@ -12,7 +12,7 @@
 #define SPLIT_IN_PLANE 0x02
 #define SPLIT_IN_BOTH  0x03
 
-#define SPLIT_EPSILON (0.2)
+#define SPLIT_EPSILON (0.02)
 
 #define Polygon_AddVertexMacro(p, v)\
 {\
