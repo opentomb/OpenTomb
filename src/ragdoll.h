@@ -51,7 +51,7 @@ typedef struct rd_joint_setup_s
 
 typedef struct rd_body_setup_s
 {
-    btScalar        weight;
+    btScalar        mass;
     
     btScalar        damping[2];
     btScalar        restitution;

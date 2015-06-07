@@ -40,7 +40,7 @@ RD_PARTS_LARA_RIGHT_PALM = 13;
 RD_PARTS_LARA_HEAD = 14;
 
 ragdoll                 = {};  -- Actual ragdoll array.
-ragdoll_hit_callback    = {};                       -- Not directly related - ragdoll body hit callbacks.
+ragdoll_hit_callback    = {};  -- Not directly related - ragdoll body hit callbacks.
 
 ragdoll[RD_TYPE_LARA] = {
 
@@ -51,21 +51,21 @@ ragdoll[RD_TYPE_LARA] = {
   -- Body properties array.
   
   body = {
-            {weight = 0.6, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 00 = Pelvis
-            {weight = 0.4, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 01 = Left upper leg
-            {weight = 0.3, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 02 = Left lower leg
-            {weight = 0.1, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 03 = Left foot
-            {weight = 0.4, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 04 = Right upper leg
-            {weight = 0.3, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 05 = Right lower leg
-            {weight = 0.1, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 06 = Right foot
-            {weight = 0.8, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 07 = Spine
-            {weight = 0.3, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 08 = Left upper arm
-            {weight = 0.2, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 09 = Left lower arm
-            {weight = 0.1, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 10 = Left palm
-            {weight = 0.3, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 11 = Right upper arm
-            {weight = 0.2, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 12 = Right lower arm
-            {weight = 0.1, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}},    -- 13 = Right palm
-            {weight = 0.5, restitution = 0.0, friction = 0.4, damping = {1.5, 1.5}}     -- 14 = Head
+            {mass = 0.6, restitution = 0.2, friction = 0.4, damping = {0.5, 0.5}},    -- 00 = Pelvis
+            {mass = 0.4, restitution = 0.1, friction = 0.4, damping = {0.5, 0.5}},    -- 01 = Left upper leg
+            {mass = 0.3, restitution = 0.1, friction = 0.4, damping = {0.5, 0.5}},    -- 02 = Left lower leg
+            {mass = 0.1, restitution = 0.3, friction = 1.0, damping = {0.8, 0.8}},    -- 03 = Left foot
+            {mass = 0.4, restitution = 0.1, friction = 0.4, damping = {0.5, 0.5}},    -- 04 = Right upper leg
+            {mass = 0.3, restitution = 0.1, friction = 0.4, damping = {0.5, 0.5}},    -- 05 = Right lower leg
+            {mass = 0.1, restitution = 0.2, friction = 1.0, damping = {0.8, 0.8}},    -- 06 = Right foot
+            {mass = 0.8, restitution = 0.4, friction = 0.5, damping = {0.5, 0.5}},    -- 07 = Spine
+            {mass = 0.3, restitution = 0.1, friction = 0.5, damping = {0.5, 0.5}},    -- 08 = Left upper arm
+            {mass = 0.2, restitution = 0.2, friction = 0.4, damping = {0.5, 0.5}},    -- 09 = Left lower arm
+            {mass = 0.1, restitution = 0.3, friction = 0.1, damping = {0.8, 0.8}},    -- 10 = Left palm
+            {mass = 0.3, restitution = 0.1, friction = 0.5, damping = {0.5, 0.5}},    -- 11 = Right upper arm
+            {mass = 0.2, restitution = 0.2, friction = 0.4, damping = {0.5, 0.5}},    -- 12 = Right lower arm
+            {mass = 0.1, restitution = 0.3, friction = 0.1, damping = {0.8, 0.8}},    -- 13 = Right palm
+            {mass = 0.5, restitution = 0.1, friction = 0.5, damping = {0.8, 0.8}}     -- 14 = Head
          },
   
   -- Actual joint array.
@@ -86,8 +86,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {-M_PI*0.25, M_PI*0.5},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- SPINE-HEAD
               
@@ -103,8 +103,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_CONE,
               joint_limit  = {M_PI*0.25, M_PI*0.25, M_PI*0.5},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- LEFT HIP
               
@@ -120,8 +120,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_CONE,
               joint_limit  = {M_PI*0.25, M_PI*0.25, 0},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- LEFT KNEE
               
@@ -137,8 +137,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {0.0, M_PI*0.5},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- LEFT ANKLE
               
@@ -154,8 +154,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {-M_PI*0.5, 0.0},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- RIGHT HIP
               
@@ -171,8 +171,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_CONE,
               joint_limit  = {M_PI*0.25, M_PI*0.25, 0.0},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- RIGHT KNEE
               
@@ -188,8 +188,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {0.0, M_PI*0.5},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- RIGHT ANKLE
               
@@ -205,8 +205,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {-M_PI*0.5, 0.0},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- LEFT SHOULDER
               
@@ -222,8 +222,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_CONE,
               joint_limit  = {M_PI*0.5, M_PI*0.5, 0.0},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- LEFT ELBOW
               
@@ -239,8 +239,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {-M_PI*0.5, 0.0, 0.0, M_PI*0.5},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- LEFT WRIST
               
@@ -256,8 +256,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {0.0, M_PI*0.5},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- RIGHT SHOULDER
               
@@ -273,8 +273,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_CONE,
               joint_limit  = {M_PI*0.5, M_PI*0.5, 0.0},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- RIGHT ELBOW
               
@@ -290,8 +290,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {-M_PI*0.5, 0.0, 0.0, M_PI*0.5},
     
-              joint_cfm    = 0.3,
-              joint_erp    = 0.5 },
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 },
               
               -- RIGHT WRIST
               
@@ -307,8 +307,8 @@ ragdoll[RD_TYPE_LARA] = {
               joint_type   = RD_CONSTRAINT_HINGE,
               joint_limit  = {0.0, M_PI*0.5},
     
-              joint_cfm    = 0.1,
-              joint_erp    = 0.8 }
+              joint_cfm    = 0.2,
+              joint_erp    = 0.6 }
           }
 }
 

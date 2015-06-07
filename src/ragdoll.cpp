@@ -72,6 +72,9 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
                 break;
         }
         
+        entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_setup[i].joint_cfm);
+        entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_setup[i].joint_erp);
+        
         entity->bt_joints[i]->setDbgDrawSize(64.0);        
         bt_engine_dynamicsWorld->addConstraint(entity->bt_joints[i], true);
     }
@@ -85,7 +88,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         }
            
         btVector3 inertia (0.0, 0.0, 0.0);
-        btScalar  mass = setup->body_setup[i].weight;
+        btScalar  mass = setup->body_setup[i].mass;
         
             bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
 
@@ -97,6 +100,10 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
                 entity->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
                 entity->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
+                
+                entity->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
+                entity->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
+                entity->bt_body[i]->setFriction(setup->body_setup[i].friction);
 
             bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i]);
 
@@ -106,6 +113,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     entity->type_flags |=  ENTITY_TYPE_DYNAMIC;
     Entity_UpdateRigidBody(entity, 1);
     
+    if(result == false) Ragdoll_Delete(entity);  // PARANOID: Clean up the mess, if something went wrong.
     return result;
 }
 
@@ -116,9 +124,12 @@ bool Ragdoll_Delete(entity_p entity)
     
     for(int i=0; i<entity->bt_joint_count; i++)
     {
-        bt_engine_dynamicsWorld->removeConstraint(entity->bt_joints[i]);
-        delete entity->bt_joints[i];
-        entity->bt_joints[i] = NULL;
+        if(entity->bt_joints[i] != NULL)
+        {
+            bt_engine_dynamicsWorld->removeConstraint(entity->bt_joints[i]);
+            delete entity->bt_joints[i];
+            entity->bt_joints[i] = NULL;
+        }
     }
     
     free(entity->bt_joints);
@@ -176,7 +187,7 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                             lua_rawgeti(engine_lua, -1, i+1);
                             if(lua_istable(engine_lua, -1))
                             {
-                                setup->body_setup[i].weight = lua_GetScalarField(engine_lua, "weight");
+                                setup->body_setup[i].mass = lua_GetScalarField(engine_lua, "mass");
                                 setup->body_setup[i].restitution = lua_GetScalarField(engine_lua, "restitution");
                                 setup->body_setup[i].friction = lua_GetScalarField(engine_lua, "friction");
                                 
