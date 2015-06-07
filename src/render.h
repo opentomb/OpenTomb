@@ -173,9 +173,9 @@ void Render_SkeletalModelSkin(const lit_shader_description *shader, struct entit
 void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
 void Render_SkyBox(const btScalar matrix[16]);
 void Render_Mesh(struct base_mesh_s *mesh);
-void Render_PolygonTransparency(struct polygon_s *p);
-void Render_BSPFrontToBack(struct bsp_node_s *root);
-void Render_BSPBackToFront(struct bsp_node_s *root);
+void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *p, const struct unlit_tinted_shader_description *shader);
+void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
+void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
 void Render_UpdateAnimTextures();
 void Render_CleanList();
 

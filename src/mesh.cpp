@@ -197,7 +197,7 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
     glGenBuffersARB(1, &mesh->vbo_index_array);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
 
-    GLsizeiptr elementsSize = 0;
+    GLsizeiptr elementsSize = sizeof(uint32_t) * mesh->alpha_elements;
     for (uint32_t i = 0; i < mesh->num_texture_pages; i++)
     {
         elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
@@ -217,78 +217,27 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
     mesh->main_vertex_array = renderer->vertex_array_manager->createArray(mesh->vbo_index_array, numAttribs, attribs);
     
     // Now for animated polygons, if any
-    mesh->num_animated_elements = 0;
-    mesh->animated_vbo_index_array_length = 0;
-    if (mesh->animated_polygons != 0)
+    if (mesh->num_animated_elements != 0 || mesh->num_alpha_animated_elements != 0)
     {
-        for (polygon_s *p = mesh->animated_polygons; p != 0; p = p->next)
-        {
-            mesh->num_animated_elements += p->vertex_count;
-            mesh->animated_vbo_index_array_length += 3*(p->vertex_count - 2);
-            if (p->double_side)
-            {
-                mesh->animated_vbo_index_array_length += 3*(p->vertex_count - 2);
-            }
-        }
-        
-        // Prepare buffer data
-        size_t stride = sizeof(GLfloat[3]) + sizeof(GLfloat [4]) + sizeof(GLfloat[3]);
-        
-        uint8_t *vertexData = new uint8_t[mesh->num_animated_elements * stride];
-        uint32_t *elementData = new uint32_t[mesh->animated_vbo_index_array_length];
-        
-        // Fill it.
-        size_t offset = 0;
-        size_t elementOffset = 0;
-        for (polygon_s *p = mesh->animated_polygons; p != 0; p = p->next)
-        {
-            size_t begin = offset;
-            for (int i = 0; i < p->vertex_count; i++)
-            {
-                memcpy(&vertexData[offset*stride + 0], p->vertices[i].position, sizeof(GLfloat [3]));
-                memcpy(&vertexData[offset*stride + 12], p->vertices[i].color, sizeof(GLfloat [4]));
-                memcpy(&vertexData[offset*stride + 28], p->vertices[i].normal, sizeof(GLfloat [3]));
-                
-                if (i >= 2)
-                {
-                    elementData[elementOffset+0] = begin;
-                    elementData[elementOffset+1] = offset-1;
-                    elementData[elementOffset+2] = offset;
-                    elementOffset += 3;
-                    
-                    if (p->double_side)
-                    {
-                        elementData[elementOffset+0] = offset;
-                        elementData[elementOffset+1] = offset-1;
-                        elementData[elementOffset+2] = begin;
-                        elementOffset += 3;
-                    }
-                }
-                offset++;
-            }
-        }
-        
         // And upload.
         glGenBuffersARB(1, &mesh->animated_vbo_vertex_array);
         glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_vertex_array);
-        glBufferDataARB(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
-        delete [] vertexData;
+        glBufferDataARB(GL_ARRAY_BUFFER, sizeof(animated_vertex_t) * mesh->animated_vertex_count, mesh->animated_vertices, GL_STATIC_DRAW);
         
         glGenBuffersARB(1, &mesh->animated_vbo_index_array);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_vbo_index_array);
-        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_vbo_index_array_length, elementData, GL_STATIC_DRAW);
-        delete [] elementData;
+        glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (mesh->num_animated_elements + mesh->num_alpha_animated_elements), mesh->animated_elements, GL_STATIC_DRAW);
         
         // Prepare empty buffer for tex coords
         glGenBuffersARB(1, &mesh->animated_vbo_texcoord_array);
         glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_texcoord_array);
-        glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->num_animated_elements, 0, GL_STREAM_DRAW);
+        glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->animated_vertex_count, 0, GL_STREAM_DRAW);
         
         // Create vertex array object.
         vertex_array_attribute attribs[] = {
-            vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(GLfloat [10]), 0),
-            vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(GLfloat [10]), 12),
-            vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(GLfloat [10]), 28),
+            vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(animated_vertex_t), offsetof(animated_vertex_t, position)),
+            vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(animated_vertex_t), offsetof(animated_vertex_t, color)),
+            vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(animated_vertex_t), offsetof(animated_vertex_t, normal)),
             
             vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, mesh->animated_vbo_texcoord_array, sizeof(GLfloat [2]), 0),
         };
@@ -300,7 +249,13 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         mesh->animated_vbo_vertex_array = 0;
         mesh->animated_vbo_texcoord_array = 0;
         mesh->animated_vertex_array = 0;
-    }    
+    }
+    
+    // Update references for transparent polygons
+    for (uint32_t i = 0; i < mesh->transparent_polygon_count; i++)
+    {
+        mesh->transparent_polygons[i].used_vertex_array = mesh->transparent_polygons[i].isAnimated ? mesh->animated_vertex_array : mesh->main_vertex_array;
+    }
 }
 
 
@@ -690,34 +645,142 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
     return ind;
 }
 
+uint32_t Mesh_AddAnimatedVertex(base_mesh_p mesh, struct vertex_s *vertex)
+{
+    animated_vertex_p v = mesh->animated_vertices;
+    uint32_t ind = 0;
+    
+    // Skip search for equal vertex; tex coords may differ but aren't stored in
+    // animated_vertex_s
+    
+    ind = mesh->animated_vertex_count;                                                   // paranoid
+    mesh->animated_vertex_count++;
+    mesh->animated_vertices = (animated_vertex_p)realloc(mesh->animated_vertices, mesh->animated_vertex_count * sizeof(animated_vertex_t));
+    
+    v = mesh->animated_vertices + ind;
+    vec3_copy(v->position, vertex->position);
+    vec3_copy(v->normal, vertex->normal);
+    vec4_copy(v->color, vertex->color);
+    
+    return ind;
+}
 
 void Mesh_GenFaces(base_mesh_p mesh)
 {
-    // Note: This code relies on NULL being an all-zero value, which is true on
-    // any reasonable system these days.
-    if(mesh->element_count_per_texture == NULL)
+    mesh->element_count_per_texture = (uint32_t *)calloc(sizeof(uint32_t), mesh->num_texture_pages);
+    
+    /*
+     * Layout of the buffers:
+     *
+     * Normal vertex buffer:
+     * - vertices of polygons in order, skipping only animated.
+     * Animated vertex buffer:
+     * - vertices (without tex coords) of polygons in order, skipping only
+     *   non-animated.
+     * Animated texture buffer:
+     * - tex coords of polygons in order, skipping only non-animated.
+     *   stream, initially empty.
+     *
+     * Normal elements:
+     * - elements for texture[0]
+     * ...
+     * - elements for texture[n]
+     * - elements for alpha
+     * Animated elements:
+     * - animated elements (opaque)
+     * - animated elements (blended)
+     */
+    
+    // Do a first pass to find the numbers of everything
+    mesh->alpha_elements = 0;
+    size_t numNormalElements = 0;
+    mesh->animated_vertex_count = 0;
+    mesh->num_animated_elements = 0;
+    mesh->num_alpha_animated_elements = 0;
+    for (uint32_t i = 0; i < mesh->polygons_count; i++)
     {
-        mesh->element_count_per_texture = (uint32_t *)calloc(sizeof(uint32_t), mesh->num_texture_pages);
+        if (Polygon_IsBroken(&mesh->polygons[i]))
+            continue;
+        
+        uint32_t elementCount = (mesh->polygons[i].vertex_count - 2) * 3;
+        if (mesh->polygons[i].double_side) elementCount *= 2;
+        
+        if (mesh->polygons[i].anim_id == 0)
+        {
+            if (mesh->polygons[i].transparency < 2)
+            {
+                mesh->element_count_per_texture[mesh->polygons[i].tex_index] += elementCount;
+                numNormalElements += elementCount;
+            }
+            else
+            {
+                mesh->alpha_elements += elementCount;
+                mesh->transparent_polygon_count += 1;
+            }
+        }
+        else
+        {
+            if (mesh->polygons[i].transparency < 2)
+                mesh->num_animated_elements += elementCount;
+            else
+            {
+                mesh->num_alpha_animated_elements += elementCount;
+                mesh->transparent_polygon_count += 1;
+            }
+        }
     }
-    // First collect indices on a per-texture basis
-    uint32_t **elements_for_texture = (uint32_t **)calloc(sizeof(uint32_t*), mesh->num_texture_pages);
+    
+    mesh->elements = (uint32_t *) calloc(sizeof(uint32_t), numNormalElements + mesh->alpha_elements);
+    uint32_t elementOffset = 0;
+    uint32_t *startPerTexture = (uint32_t *) calloc(sizeof(uint32_t), mesh->num_texture_pages);
+    for (uint32_t i = 0; i < mesh->num_texture_pages; i++)
+    {
+        startPerTexture[i] = elementOffset;
+        elementOffset += mesh->element_count_per_texture[i];
+    }
+    uint32_t startTransparent = elementOffset;
+    
+    mesh->animated_elements = (uint32_t *) calloc(sizeof(uint32_t), mesh->num_animated_elements + mesh->num_alpha_animated_elements);
+    uint32_t animatedStart = 0;
+    uint32_t animatedStartTransparent = mesh->num_animated_elements;
+    
+    mesh->transparent_polygons = (transparent_polygon_reference_s *) calloc(sizeof(transparent_polygon_reference_t), mesh->transparent_polygon_count);
+    uint32_t transparentPolygonStart = 0;
 
     polygon_p p = mesh->polygons;
     for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
     {
-        if((p->transparency < 2) && (p->anim_id == 0) && !Polygon_IsBroken(p))
+        if (Polygon_IsBroken(p)) continue;
+        
+        uint32_t elementCount = (p->vertex_count - 2) * 3;
+        uint32_t backwardsStartOffset = elementCount;
+        if (p->double_side)
         {
+            elementCount *= 2;
+        }
+        
+        if(p->anim_id == 0)
+        {
+            // Not animated
             uint32_t texture = p->tex_index;
-            uint32_t oldStart = mesh->element_count_per_texture[texture];
-            uint32_t elementCount = (p->vertex_count - 2) * 3;
-            uint32_t backwardsStart = oldStart + elementCount;
-            if (p->double_side)
+            
+            uint32_t oldStart;
+            if (p->transparency < 2)
             {
-                elementCount *= 2;
+                oldStart = startPerTexture[texture];
+                startPerTexture[texture] += elementCount;
             }
-
-            mesh->element_count_per_texture[texture] += elementCount;
-            elements_for_texture[texture] = (uint32_t *)realloc(elements_for_texture[texture], mesh->element_count_per_texture[texture] * sizeof(uint32_t));
+            else
+            {
+                oldStart = startTransparent;
+                startTransparent += elementCount;
+                mesh->transparent_polygons[transparentPolygonStart].firstIndex = oldStart;
+                mesh->transparent_polygons[transparentPolygonStart].count = elementCount;
+                mesh->transparent_polygons[transparentPolygonStart].polygon = p;
+                mesh->transparent_polygons[transparentPolygonStart].isAnimated = false;
+                transparentPolygonStart += 1;
+            }
+            uint32_t backwardsStart = oldStart + backwardsStartOffset;
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
@@ -728,38 +791,68 @@ void Mesh_GenFaces(base_mesh_p mesh)
             {
                 uint32_t thisElement = Mesh_AddVertex(mesh, p->vertices + j);
 
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 0] = startElement;
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 1] = previousElement;
-                elements_for_texture[texture][oldStart + (j - 2)*3 + 2] = thisElement;
+                mesh->elements[oldStart + (j - 2)*3 + 0] = startElement;
+                mesh->elements[oldStart + (j - 2)*3 + 1] = previousElement;
+                mesh->elements[oldStart + (j - 2)*3 + 2] = thisElement;
 
                 if (p->double_side)
                 {
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 0] = startElement;
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 1] = thisElement;
-                    elements_for_texture[texture][backwardsStart + (j - 2)*3 + 2] = previousElement;
+                    mesh->elements[backwardsStart + (j - 2)*3 + 0] = startElement;
+                    mesh->elements[backwardsStart + (j - 2)*3 + 1] = thisElement;
+                    mesh->elements[backwardsStart + (j - 2)*3 + 2] = previousElement;
                 }
 
                 previousElement = thisElement;
             }
         }
-    }
-
-    // Now flatten all these indices to a single array
-    mesh->elements = NULL;
-    uint32_t elementsSoFar = 0;
-    for(uint32_t i = 0; i < mesh->num_texture_pages; i++)
-    {
-        if(elements_for_texture[i] == NULL)
+        else
         {
-            continue;
+            // Animated
+            uint32_t oldStart;
+            if (p->transparency < 2)
+            {
+                oldStart = animatedStart;
+                animatedStart += elementCount;
+            }
+            else
+            {
+                oldStart = animatedStartTransparent;
+                animatedStartTransparent += elementCount;
+                mesh->transparent_polygons[transparentPolygonStart].firstIndex = oldStart;
+                mesh->transparent_polygons[transparentPolygonStart].count = elementCount;
+                mesh->transparent_polygons[transparentPolygonStart].polygon = p;
+                mesh->transparent_polygons[transparentPolygonStart].isAnimated = true;
+                transparentPolygonStart += 1;
+            }
+            uint32_t backwardsStart = oldStart + backwardsStartOffset;
+            
+            // Render the polygon as a triangle fan. That is obviously correct for
+            // a triangle and also correct for any quad.
+            uint32_t startElement = Mesh_AddAnimatedVertex(mesh, p->vertices);
+            uint32_t previousElement = Mesh_AddAnimatedVertex(mesh, p->vertices + 1);
+            
+            for(uint16_t j = 2; j < p->vertex_count; j++)
+            {
+                uint32_t thisElement = Mesh_AddAnimatedVertex(mesh, p->vertices + j);
+                
+                mesh->animated_elements[oldStart + (j - 2)*3 + 0] = startElement;
+                mesh->animated_elements[oldStart + (j - 2)*3 + 1] = previousElement;
+                mesh->animated_elements[oldStart + (j - 2)*3 + 2] = thisElement;
+                
+                if (p->double_side)
+                {
+                    mesh->animated_elements[backwardsStart + (j - 2)*3 + 0] = startElement;
+                    mesh->animated_elements[backwardsStart + (j - 2)*3 + 1] = thisElement;
+                    mesh->animated_elements[backwardsStart + (j - 2)*3 + 2] = previousElement;
+                }
+                
+                previousElement = thisElement;
+            }
         }
-        mesh->elements = (uint32_t*)realloc(mesh->elements, (elementsSoFar + mesh->element_count_per_texture[i])*sizeof(elements_for_texture[i][0]));
-        memcpy(mesh->elements + elementsSoFar, elements_for_texture[i], mesh->element_count_per_texture[i]*sizeof(elements_for_texture[i][0]));
-
-        elementsSoFar += mesh->element_count_per_texture[i];
-        free(elements_for_texture[i]);
     }
-    free(elements_for_texture);
+    free(startPerTexture);
+    
+    // Now same for animated triangles
 }
 
 

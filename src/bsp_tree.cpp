@@ -1,4 +1,4 @@
-
+#include <new>
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
@@ -6,7 +6,7 @@
 #include "polygon.h"
 #include "bsp_tree.h"
 #include "vmath.h"
-
+#include "mesh.h"
 
 struct bsp_node_s *dynamicBSP::createBSPNode()
 {
@@ -20,26 +20,22 @@ struct bsp_node_s *dynamicBSP::createBSPNode()
 }
 
 
-struct polygon_s *dynamicBSP::createPolygon(uint16_t vertex_count)
+struct bsp_face_ref_s *dynamicBSP::createFace(const btScalar transform[16], const struct transparent_polygon_reference_s *polygon)
 {
-    polygon_p ret = (polygon_p)((uint8_t*)m_data + m_allocated);
-    m_allocated += sizeof(polygon_t);
-    ret->next = NULL;
-    ret->vertex_count = vertex_count;
-    ret->vertices = (vertex_p)((uint8_t*)m_data + m_allocated);
-    m_allocated += vertex_count * sizeof(vertex_t);
+    assert(polygon && polygon->polygon);
+    uint8_t *start = ((uint8_t*)m_data + m_allocated);
+    bsp_face_ref_s *ret = new (start) bsp_face_ref_s(transform, polygon);
+    m_allocated += sizeof(bsp_face_ref_s);
     return ret;
 }
 
-
-void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
+void dynamicBSP::addPolygon(struct bsp_node_s *root, struct bsp_face_ref_s *const face, struct polygon_s *transformed)
 {
     if(root->polygons_front == NULL)
     {
         // we though root->front == NULL and root->back == NULL
-        vec4_copy(root->plane, p->plane);
-        p->next = NULL;
-        root->polygons_front = p;
+        vec4_copy(root->plane, transformed->plane);
+        root->polygons_front = face;
         return;
     }
 
@@ -47,8 +43,8 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
     uint16_t negative = 0;
     uint16_t in_plane = 0;
     btScalar dist;
-    vertex_p v = p->vertices;
-    for(uint16_t i=0;i<p->vertex_count;i++,v++)
+    vertex_p v = transformed->vertices;
+    for(uint16_t i=0;i<transformed->vertex_count;i++,v++)
     {
         dist = vec3_plane_dist(root->plane, v->position);
         if (dist > SPLIT_EPSILON)
@@ -71,7 +67,7 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
         {
             root->front = this->createBSPNode();
         }
-        this->addPolygon(root->front, p);
+        this->addPolygon(root->front, face, transformed);
     }
     else if((positive == 0) && (negative > 0))              // SPLIT_BACK
     {
@@ -79,40 +75,20 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
         {
             root->back = this->createBSPNode();
         }
-        this->addPolygon(root->back, p);
+        this->addPolygon(root->back, face, transformed);
     }
-    else if((positive == 0) && (negative == 0))             // SPLIT_IN_PLANE
+    else //((positive == 0) && (negative == 0))             // SPLIT_IN_PLANE
     {
-        if(vec3_dot(p->plane, root->plane) > 0.9)
+        if(vec3_dot(transformed->plane, root->plane) > 0.9)
         {
-            p->next = root->polygons_front;
-            root->polygons_front = p;
+            face->next = root->polygons_front;
+            root->polygons_front = face;
         }
         else
         {
-            p->next = root->polygons_back;
-            root->polygons_back = p;
+            face->next = root->polygons_back;
+            root->polygons_back = face;
         }
-    }
-    else                                                    // SPLIT_IN_BOTH
-    {
-        polygon_p front, back;
-        front = this->createPolygon(positive + in_plane + 2);
-        front->vertex_count = 0;
-        back = this->createPolygon(negative + in_plane + 2);
-        back->vertex_count = 0;
-        Polygon_Split(p, root->plane, front, back);
-
-        if(root->front == NULL)
-        {
-            root->front = this->createBSPNode();
-        }
-        this->addPolygon(root->front, front);
-        if(root->back == NULL)
-        {
-            root->back = this->createBSPNode();
-        }
-        this->addPolygon(root->back, back);
     }
 }
 
@@ -139,32 +115,20 @@ dynamicBSP::~dynamicBSP()
 }
 
 
-void dynamicBSP::addNewPolygon(struct polygon_s *p, btScalar *transform)
-{
-    polygon_p np = this->createPolygon(p->vertex_count);
-    Polygon_Copy(np, p);
-    Polygon_Transform(np, p, transform);
-    if(m_root == NULL)
-    {
-        m_root = this->createBSPNode();
-    }
-    this->addPolygon(m_root, np);
-}
-
-
-void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform)
+void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btScalar *transform)
 {
     if(m_data_size - m_allocated < 1024)                                        ///@FIXME: magick 1024
     {
         return;
     }
 
-    for(;p!=NULL;p=p->next)
+    polygon_s *transformed = Polygon_CreateArray(1);
+    for(size_t i = 0; i < count; i++)
     {
-        polygon_p np = this->createPolygon(p->vertex_count);
-        Polygon_Copy(np, p);
-        Polygon_Transform(np, p, transform);
-        this->addPolygon(m_root, np);
+        Polygon_Resize(transformed, p[i].polygon->vertex_count);
+        bsp_face_ref_s *face = this->createFace(transform, &p[i]);
+        this->addPolygon(m_root, face, transformed);
     }
+    Polygon_Clear(transformed);
 }
 

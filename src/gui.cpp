@@ -520,8 +520,6 @@ void Gui_RenderStrings()
         glUniform2fvARB(shader->screenSize, 1, screenSize);
         glUniform1iARB(shader->sampler, 0);
 
-        glNormal3f(0, 0, 0);
-
         while(l)
         {
             Gui_RenderStringLine(l);

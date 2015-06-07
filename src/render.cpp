@@ -144,18 +144,12 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
  */
 void Render_Mesh(struct base_mesh_s *mesh)
 {
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    
-    if(mesh->num_animated_elements > 0)
+    if(mesh->num_animated_elements > 0 || mesh->num_alpha_animated_elements > 0)
     {
         // Respecify the tex coord buffer
         glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_texcoord_array);
         // Tell OpenGL to discard the old values
-        glBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        glBufferDataARB(GL_ARRAY_BUFFER, mesh->animated_vertex_count * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
         GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
@@ -176,10 +170,13 @@ void Render_Mesh(struct base_mesh_s *mesh)
         }
         glUnmapBufferARB(GL_ARRAY_BUFFER);
 
-        mesh->animated_vertex_array->use();
-        
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
-        glDrawElements(GL_TRIANGLES, mesh->animated_vbo_index_array_length, GL_UNSIGNED_INT, 0);
+        if (mesh->num_animated_elements > 0)
+        {
+            mesh->animated_vertex_array->use();
+            
+            glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
+            glDrawElements(GL_TRIANGLES, mesh->num_animated_elements, GL_UNSIGNED_INT, 0);
+        }
     }
 
     if(mesh->vertex_count != 0)
@@ -201,94 +198,63 @@ void Render_Mesh(struct base_mesh_s *mesh)
             offset += mesh->element_count_per_texture[texture];
         }
     }
-    renderer.vertex_array_manager->unbind();
-    
-    glPopClientAttrib();
 }
 
 
 /**
  * draw transparency polygons
  */
-void Render_PolygonTransparency(struct polygon_s *p)
+void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *bsp_ref, const unlit_tinted_shader_description *shader)
 {
     // Blending mode switcher.
     // Note that modes above 2 aren't explicitly used in TR textures, only for
     // internal particle processing. Theoretically it's still possible to use
     // them if you will force type via TRTextur utility.
-    switch(p->transparency)
+    const struct transparent_polygon_reference_s *ref = bsp_ref->polygon;
+    const struct polygon_s *p = ref->polygon;
+    if (currentTransparency != p->transparency)
     {
-        case BM_MULTIPLY:                                    // Classic PC alpha
-            glBlendFunc(GL_ONE, GL_ONE);
-            break;
-
-        case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
-            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_INVERT_DEST:                                 // Inversion by dest
-            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_SCREEN:                                      // Screen (smoke, etc.)
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_ANIMATED_TEX:
-            glBlendFunc(GL_ONE, GL_ZERO);
-            break;
-
-        default:                                             // opaque animated textures case
-            break;
-    };
-
-    if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
-    {
-        anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
-        GLfloat *v, uv[2], *uv0 = (GLfloat*)GetTempbtScalar(2 * p->vertex_count);
-        uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
-        tex_frame_p tf = seq->frames + frame;
-        for(uint16_t i=0;i<p->vertex_count;i++)
+        currentTransparency = p->transparency;
+        switch(p->transparency)
         {
-            v = p->vertices[i].tex_coord;
-            uv0[2*i+0] = v[0];
-            uv0[2*i+1] = v[1];
-            uv[0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
-            uv[1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
-            v[0] = uv[0];
-            v[1] = uv[1];
-        }
+            case BM_MULTIPLY:                                    // Classic PC alpha
+                glBlendFunc(GL_ONE, GL_ONE);
+                break;
 
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[tf->tex_ind]);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
+            case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
+                glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+                break;
 
-        for(uint16_t i=0;i<p->vertex_count;i++)
-        {
-            v = p->vertices[i].tex_coord;
-            v[0] = uv0[2*i+0];
-            v[1] = uv0[2*i+1];
-        }
-        ReturnTempbtScalar(2 * p->vertex_count);
+            case BM_INVERT_DEST:                                 // Inversion by dest
+                glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+                break;
+
+            case BM_SCREEN:                                      // Screen (smoke, etc.)
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+                break;
+
+            case BM_ANIMATED_TEX:
+                glBlendFunc(GL_ONE, GL_ZERO);
+                break;
+
+            default:                                             // opaque animated textures case
+                break;
+        };
     }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
-    }
+    
+    GLfloat mvp[16];
+    Mat4_Mat4_mul(mvp, renderer.cam->gl_view_proj_mat, bsp_ref->transform);
+    
+    glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvp);
+    
+    ref->used_vertex_array->use();
+    glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
+    
+    glDrawElements(GL_TRIANGLES, ref->count, GL_UNSIGNED_INT, (GLvoid *) (sizeof(GLuint) * ref->firstIndex));
 }
 
 
-void Render_BSPFrontToBack(struct bsp_node_s *root)
+void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *root, const unlit_tinted_shader_description *shader)
 {
     btScalar d = vec3_plane_dist(root->plane, engine_camera.pos);
 
@@ -296,47 +262,47 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
     {
         if(root->front != NULL)
         {
-            Render_BSPFrontToBack(root->front);
+            Render_BSPFrontToBack(currentTransparency, root->front, shader);
         }
 
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
 
         if(root->back != NULL)
         {
-            Render_BSPFrontToBack(root->back);
+            Render_BSPFrontToBack(currentTransparency, root->back, shader);
         }
     }
     else
     {
         if(root->back != NULL)
         {
-            Render_BSPFrontToBack(root->back);
+            Render_BSPFrontToBack(currentTransparency, root->back, shader);
         }
 
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
 
         if(root->front != NULL)
         {
-            Render_BSPFrontToBack(root->front);
+            Render_BSPFrontToBack(currentTransparency, root->front, shader);
         }
     }
 }
 
-void Render_BSPBackToFront(struct bsp_node_s *root)
+void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *root, const unlit_tinted_shader_description *shader)
 {
     btScalar d = vec3_plane_dist(root->plane, engine_camera.pos);
 
@@ -344,42 +310,42 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
     {
         if(root->back != NULL)
         {
-            Render_BSPBackToFront(root->back);
+            Render_BSPBackToFront(currentTransparency, root->back, shader);
         }
 
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
 
         if(root->front != NULL)
         {
-            Render_BSPBackToFront(root->front);
+            Render_BSPBackToFront(currentTransparency, root->front, shader);
         }
     }
     else
     {
         if(root->front != NULL)
         {
-            Render_BSPBackToFront(root->front);
+            Render_BSPBackToFront(currentTransparency, root->front, shader);
         }
 
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
 
         if(root->back != NULL)
         {
-            Render_BSPBackToFront(root->back);
+            Render_BSPBackToFront(currentTransparency, root->back, shader);
         }
     }
 }
@@ -892,6 +858,12 @@ void Render_DrawList()
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
+    
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
     Render_SkyBox(renderer.cam->gl_view_proj_mat);
 
@@ -916,6 +888,9 @@ void Render_DrawList()
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
     }
+    
+    renderer.vertex_array_manager->unbind();
+    glPopClientAttrib();
 
     /*
      * NOW render transparency polygons
@@ -927,7 +902,7 @@ void Render_DrawList()
         room_p r = renderer.r_list[i].room;
         if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
         {
-            render_dBSP.addNewPolygonList(r->mesh->transparency_polygons, r->transform);
+            render_dBSP.addNewPolygonList(r->mesh->transparent_polygon_count, r->mesh->transparent_polygons, r->transform);
         }
     }
 
@@ -939,7 +914,7 @@ void Render_DrawList()
         {
             if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
             {
-                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform);
+                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparent_polygon_count, r->static_mesh[j].mesh->transparent_polygons, r->static_mesh[j].transform);
             }
         }
 
@@ -957,7 +932,7 @@ void Render_DrawList()
                         if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
                             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr);
+                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr);
                         }
                     }
                 }
@@ -974,7 +949,7 @@ void Render_DrawList()
             if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr);
+                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr);
             }
         }
     }
@@ -988,10 +963,12 @@ void Render_DrawList()
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
-        Render_BSPBackToFront(render_dBSP.m_root);
+        uint16_t transparency = BM_OPAQUE;
+        Render_BSPBackToFront(transparency, render_dBSP.m_root, shader);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
+    renderer.vertex_array_manager->unbind();
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
 }

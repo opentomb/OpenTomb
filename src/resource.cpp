@@ -2911,7 +2911,7 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
         {
             addPolygonCopyToList(p, mesh->transparency_polygons);
         }
-        else if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
+        if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
         {
             addPolygonCopyToList(p, mesh->animated_polygons);
         }

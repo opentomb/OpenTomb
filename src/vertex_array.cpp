@@ -118,11 +118,7 @@ vao_vertex_array::vao_vertex_array(vao_vertex_array_manager *manager, GLuint ele
 
 void vao_vertex_array::use()
 {
-    if (manager->currentVertexArrayObject != vertexArrayObject)
-    {
-        glBindVertexArray(vertexArrayObject);
-        manager->currentVertexArrayObject = vertexArrayObject;
-    }
+    glBindVertexArray(vertexArrayObject);
 }
 
 vao_vertex_array::~vao_vertex_array()

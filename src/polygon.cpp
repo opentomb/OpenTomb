@@ -74,7 +74,7 @@ int Polygon_IsBroken(polygon_p p)
 /*
  * We made independent copy of src;
  */
-void Polygon_Copy(polygon_p dst, polygon_p src)
+void Polygon_Copy(polygon_p dst, const polygon_t *src)
 {
     if(dst->vertex_count != src->vertex_count)
     {
@@ -160,8 +160,9 @@ void Polygon_TransformSelf(polygon_p p, btScalar tr[16])
 }
 
 
-void Polygon_Transform(polygon_p ret, polygon_p src, btScalar tr[16])
+void Polygon_Transform(polygon_p ret, const polygon_t *src, const btScalar tr[16])
 {
+    ret->vertex_count = src->vertex_count;
     vertex_p ret_v, src_v;
 
     Mat4_vec3_rot_macro(ret->plane, tr, src->plane);
