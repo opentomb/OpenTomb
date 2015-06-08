@@ -67,6 +67,10 @@ public:
  * An individual vertex array, containing the logic necessary to setup the
  * vertex state. This class is abstract; a concrete version is created by the
  * vertex array manager based on the current hardware's capabilities.
+ *
+ * A vertex array can be deleted, but only if it is not currently bound.
+ * Otherwise results are undefined (even if it is not used for drawing
+ * afterwards).
  */
 class vertex_array {
 public:
