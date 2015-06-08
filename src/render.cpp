@@ -646,39 +646,39 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             glClear(GL_STENCIL_BUFFER_BIT);
             glStencilFunc(GL_NEVER, 1, 0x00);
             glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
-            
+
             GLuint stencilVBO;
             glGenBuffersARB(1, &stencilVBO);
-            
+
             vertex_array_attribute attribs[] = {
                 vertex_array_attribute(unlit_shader_description::position, 3, GL_FLOAT, false, stencilVBO, sizeof(GLfloat [3]), 0)
             };
-            
+
             vertex_array *array = render->vertex_array_manager->createArray(0, 1, attribs);
             array->use();
-            
+
             for(frustum_p f=room->frustum;f!=NULL;f=f->next)
             {
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, stencilVBO);
                 glBufferDataARB(GL_ARRAY_BUFFER_ARB, f->vertex_count * sizeof(GLfloat [3]), NULL, GL_STREAM_DRAW_ARB);
-                
+
                 GLfloat *v = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
-                
+
                 for(int16_t i=f->vertex_count-1;i>=0;i--)
                 {
                     vec3_copy(v, f->vertex+3*i);
                     v+=3;
                 }
-                
+
                 glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
 
                 glDrawArrays(GL_TRIANGLE_FAN, 0, f->vertex_count);
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
-            
+
             render->vertex_array_manager->unbind();
             delete array;
-            glDeleteBuffers(1, &stencilVBO);
+            glDeleteBuffersARB(1, &stencilVBO);
         }
     }
 #endif
