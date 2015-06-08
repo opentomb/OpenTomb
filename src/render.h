@@ -25,7 +25,7 @@
 #define R_DRAW_SKYBOX           0x00002000      // Draw skybox
 #define R_DRAW_POINTS           0x00004000      // Points rendering
 
-#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (4096 * 1024)
+#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
 #define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
 
 #ifdef BT_USE_DOUBLE_PRECISION
@@ -52,6 +52,7 @@ class render_DebugDrawer:public btIDebugDraw
     uint32_t m_debugMode;
     uint32_t m_max_lines;
     uint32_t m_lines;
+    bool     m_need_realloc;
 
     GLfloat m_color[3];
     GLfloat *m_buffer;
@@ -66,10 +67,7 @@ class render_DebugDrawer:public btIDebugDraw
         {
             return m_lines == 0;
         }
-        void reset()
-        {
-            m_lines = 0;
-        }
+        void reset();
         void render();
         void setColor(GLfloat r, GLfloat g, GLfloat b)
         {
