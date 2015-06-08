@@ -283,7 +283,7 @@ void Hair_Update(entity_p entity)
     {
         if((!hair) || (hair->element_count < 1)) continue;
 
-        btScalar new_transform[16];//, sub_tr[16];
+        btScalar new_transform[16];
 
         Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
 
@@ -293,11 +293,21 @@ void Hair_Update(entity_p entity)
                           new_transform[12+2] - hair->owner_body_transform[12+2]);
         mix_vel *= 1.0 / engine_frame_time;
 
-        /*btVector3 mix_ang(0.0, 0.0, 0.0);
-        Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
-        mat4_getXYZ_anggles(mix_ang.m_floats, sub_tr);                          ///@FIXME: DOESN'T IMPLEMENTED!!!
-        mix_ang *= 1.0 / engine_frame_time;*/
+        {
+            btScalar sub_tr[16];
+            btTransform ang_tr;
+            btVector3 mix_ang;
+            Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
+            ang_tr.setFromOpenGLMatrix(sub_tr);
+            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
+            mix_ang *= 1.0 / engine_frame_time;
 
+            // Looks like angular velocity breaks up constraints on VERY fast moves,
+            // like mid-air turn. Probably, I've messed up with multiplier value...
+
+            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
+            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+        }
         Mat4_Copy(hair->owner_body_transform, new_transform);
 
         // Set mixed velocities to both parent body and first hair body.
@@ -305,17 +315,11 @@ void Hair_Update(entity_p entity)
         hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
         hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
 
-        mix_vel *= -40.0;                                                       ///@FIXME: magick speed coefficient (force air hair friction!);
-        for(int i=0;i<hair->element_count;i++)
+        mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
+        for(int j=0;j<hair->element_count;j++)
         {
-            hair->elements[i].body->applyCentralForce(mix_vel);
+            hair->elements[j].body->applyCentralForce(mix_vel);
         }
-
-        // Looks like angular velocity breaks up constraints on VERY fast moves,
-        // like mid-air turn. Probably, I've messed up with multiplier value...
-
-        //hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-        //hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
 
         hair->container->room = hair->owner_char->self->room;
     }
