@@ -9,6 +9,7 @@
 class shader_manager {
     unlit_tinted_shader_description *room_shaders[2][2];
     unlit_tinted_shader_description *static_mesh_shader;
+    unlit_shader_description *stencil;
     lit_shader_description *entity_shader[MAX_NUM_LIGHTS+1][2];
     gui_shader_description *gui;
     gui_shader_description *gui_textured;
@@ -22,6 +23,8 @@ public:
     const lit_shader_description *getEntityShader(unsigned numberOfLights, bool skin) const;
     
     const unlit_tinted_shader_description *getStaticMeshShader() const { return static_mesh_shader; }
+    
+    const unlit_shader_description *getStencilShader() const { return stencil; }
     
     const unlit_tinted_shader_description *getRoomShader(bool isFlickering, bool isWater) const;
     const gui_shader_description *getGuiShader(bool includingTexture) const;
