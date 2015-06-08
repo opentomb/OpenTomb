@@ -1851,6 +1851,8 @@
 		<Unit filename="src/string.h" />
 		<Unit filename="src/system.cpp" />
 		<Unit filename="src/system.h" />
+		<Unit filename="src/vertex_array.cpp" />
+		<Unit filename="src/vertex_array.h" />
 		<Unit filename="src/vmath.cpp" />
 		<Unit filename="src/vmath.h" />
 		<Unit filename="src/vt/glmath.h" />
