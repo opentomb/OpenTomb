@@ -2024,7 +2024,6 @@ void TR_GenRooms(struct world_s *world, class VT_Level *tr)
     for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         TR_GenRoom(i, r, world, tr);
-        r->frustum = Frustum_Create();
     }
 }
 
@@ -2043,6 +2042,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
     room->id = room_index;
     room->active = 1;
+    room->frustum = NULL;
     room->flags = tr->rooms[room_index].flags;
     room->light_mode = tr->rooms[room_index].light_mode;
     room->reverb_info = tr->rooms[room_index].reverb_info;
@@ -3375,13 +3375,13 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
-    
+
     struct vertex_array_attribute attribs[3] = {
         vertex_array_attribute(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
         vertex_array_attribute(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
         vertex_array_attribute(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
     };
-    
+
     room->sprite_buffer->data = renderer.vertex_array_manager->createArray(elementBuffer, 3, attribs);
 }
 

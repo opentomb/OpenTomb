@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+#include <assert.h>
 #include "bullet/LinearMath/btScalar.h"
 #include "polygon.h"
 #include "bsp_tree.h"
@@ -128,13 +129,13 @@ void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygo
     for(size_t i = 0; i < count; i++)
     {
         uint32_t orig_allocated = m_allocated;
-        bool visible = (f == NULL) || (f->active == 0);
+        bool visible = (f == NULL);
 
         Polygon_Resize(transformed, p[i].polygon->vertex_count);
         Polygon_Transform(transformed, p[i].polygon, transform);
         transformed->double_side = p[i].polygon->double_side;
-        
-        for(frustum_p ff=f;(!visible)&&(ff!=NULL)&&(ff->active);ff=ff->next)
+
+        for(frustum_p ff=f;(!visible)&&(ff!=NULL);ff=ff->next)
         {
             if(Frustum_IsPolyVisible(transformed, ff))
             {

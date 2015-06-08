@@ -204,7 +204,7 @@ typedef struct room_sector_s
 {
     uint32_t                    trig_index; // Trigger function index.
     int32_t                     box_index;
-    
+
     uint32_t                    flags;      // Climbability, death etc.
     uint32_t                    material;   // Footstep sound and footsteps.
 
@@ -292,7 +292,6 @@ typedef struct room_s
 
     uint16_t                    active_frustums;                                // current number of this room active frustums
     struct frustum_s           *frustum;
-    struct frustum_s           *last_frustum;
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
     uint16_t                    near_room_list_size;
@@ -316,7 +315,7 @@ typedef struct world_s
 
     uint32_t                    room_box_count;
     struct room_box_s          *room_boxes;
-    
+
     uint32_t                    flip_count;             // Number of flips
     uint8_t                    *flip_map;               // Flipped room activity array.
     uint8_t                    *flip_state;             // Flipped room state array.
@@ -344,9 +343,9 @@ typedef struct world_s
     struct RedBlackHeader_s    *items_tree;             // tree of world items
 
     uint32_t                    type;
-    
+
     uint32_t                    cameras_sinks_count;    // Amount of cameras and sinks.
-    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks. 
+    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks.
 
     uint32_t                    anim_commands_count;
     int16_t                    *anim_commands;

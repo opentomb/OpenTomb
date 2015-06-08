@@ -52,7 +52,6 @@ void Room_Empty(room_p room)
         room->portal_count = 0;
     }
 
-    Frustum_Delete(room->frustum);
     room->frustum = NULL;
 
     if(room->mesh)

@@ -173,7 +173,7 @@ void Render_Mesh(struct base_mesh_s *mesh)
         if (mesh->num_animated_elements > 0)
         {
             mesh->animated_vertex_array->use();
-            
+
             glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
             glDrawElements(GL_TRIANGLES, mesh->num_animated_elements, GL_UNSIGNED_INT, 0);
         }
@@ -241,15 +241,15 @@ void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_
                 break;
         };
     }
-    
+
     GLfloat mvp[16];
     Mat4_Mat4_mul(mvp, renderer.cam->gl_view_proj_mat, bsp_ref->transform);
-    
+
     glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvp);
-    
+
     ref->used_vertex_array->use();
     glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-    
+
     glDrawElements(GL_TRIANGLES, ref->count, GL_UNSIGNED_INT, (GLvoid *) (sizeof(GLuint) * ref->firstIndex));
 }
 
@@ -434,9 +434,9 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
 void Render_SkeletalModelSkin(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
-    
+
     glUniformMatrix4fvARB(shader->projection, 1, false, pMatrix);
-    
+
     for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
     {
         btScalar mvTransforms[32];
@@ -451,7 +451,7 @@ void Render_SkeletalModelSkin(const lit_shader_description *shader, struct ss_bo
         Mat4_T(rotateOnlyTransform);
         Mat4_Mat4_mul(&mvTransforms[16], &mvTransforms[0], rotateOnlyTransform);
         glUniformMatrix4fvARB(shader->model_view, 2, false, mvTransforms);
-        
+
         if(btag->mesh_skin)
         {
             Render_Mesh(btag->mesh_skin);
@@ -575,7 +575,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
         }
 
         Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection, projection);
-        
+
         if (entity->bf.bone_tags[0].mesh_skin)
         {
             const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
@@ -626,7 +626,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
     ////start test stencil test code
     bool need_stencil = false;
 #if STENCIL_FRUSTUM
-    if(room->frustum->active != 0)
+    if(room->frustum != NULL)
     {
         for(uint16_t i=0;i<room->overlapped_room_list_size;i++)
         {
@@ -648,11 +648,11 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             glClear(GL_STENCIL_BUFFER_BIT);
             glStencilFunc(GL_NEVER, 1, 0x00);
             glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
-            for(frustum_p f=room->frustum;(f!=NULL)&&(f->active);f=f->next)
+            for(frustum_p f=room->frustum;f!=NULL;f=f->next)
             {
-                GLfloat *v, *buf = (GLfloat*)GetTempbtScalar(f->count * elem);
+                GLfloat *v, *buf = (GLfloat*)GetTempbtScalar(f->vertex_count * elem);
                 v=buf;
-                for(int16_t i=f->count-1;i>=0;i--)
+                for(int16_t i=f->vertex_count-1;i>=0;i--)
                 {
                     vec3_copy(v, f->vertex+3*i);                    v+=3;
                     vec3_copy_inv(v, engine_camera.view_dir);       v+=3;
@@ -666,9 +666,9 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                 glNormalPointer(GL_BT_SCALAR, elem * sizeof(GLfloat), buf+3);
                 glColorPointer(4, GL_FLOAT, elem * sizeof(GLfloat), buf+3+3);
                 glTexCoordPointer(2, GL_FLOAT, elem * sizeof(GLfloat), buf+3+3+4);
-                glDrawArrays(GL_TRIANGLE_FAN, 0, f->count);
+                glDrawArrays(GL_TRIANGLE_FAN, 0, f->vertex_count);
 
-                ReturnTempbtScalar(f->count * elem);
+                ReturnTempbtScalar(f->vertex_count * elem);
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
         }
@@ -784,7 +784,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
             glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
-        
+
         render->vertex_array_manager->unbind();
     }
 }
@@ -868,13 +868,7 @@ void Render_CleanList()
 
         r->is_in_r_list = 0;
         r->active_frustums = 0;
-        frustum_p f = r->last_frustum = r->frustum;
-        for(; f; f=f->next)
-        {
-            f->active = 0;
-            f->parent = NULL;
-            f->parents_count = 0;
-        }
+        r->frustum = NULL;
     }
 
     renderer.style &= ~R_DRAW_SKYBOX;
@@ -909,7 +903,7 @@ void Render_DrawList()
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
-    
+
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
@@ -1018,7 +1012,7 @@ void Render_DrawList()
     }
     renderer.vertex_array_manager->unbind();
     glPopClientAttrib();
-    
+
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
 }
@@ -1100,7 +1094,7 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     {
         if((p->dest_room->active) && (p->dest_room != src_room))                // обратно идти даже не пытаемся
         {
-            gen_frus = Portal_FrustumIntersect(p, frus, &renderer);             // Главная ф-я портального рендерера. Тут и проверка
+            gen_frus = engine_frustumManager.portalFrustumIntersect(p, frus, &renderer);             // Главная ф-я портального рендерера. Тут и проверка
             if(NULL != gen_frus)                                                // на пересечение и генерация фрустума по порталу
             {
                 ret++;
@@ -1124,6 +1118,7 @@ void Render_GenWorldList()
 
     Render_CleanList();                                                         // clear old render list
     debugDrawer.reset();
+    engine_frustumManager.reset();
     renderer.cam->frustum->next = NULL;
 
     room_p curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
@@ -1131,15 +1126,13 @@ void Render_GenWorldList()
     renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
     {
-        curr_room->frustum->parent = NULL;                                      // room with camera inside has no frustums!
-        curr_room->frustum->parents_count = 0;
-        curr_room->frustum->active = 0;
+        curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
         portal_p p = curr_room->portals;                                        // pointer to the portals array
         for(uint16_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
         {
-            frustum_p last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
+            frustum_p last_frus = engine_frustumManager.portalFrustumIntersect(p, renderer.cam->frustum, &renderer);
             if(last_frus)
             {
                 Render_AddRoom(p->dest_room);                                   // portal destination room
@@ -1402,15 +1395,15 @@ void render_DebugDrawer::drawAxis(btScalar r, btScalar transform[16])
 
 void render_DebugDrawer::drawFrustum(struct frustum_s *f)
 {
-    if((f != NULL) && (m_lines + f->count < m_max_lines))
+    if((f != NULL) && (m_lines + f->vertex_count < m_max_lines))
     {
         GLfloat *v, *v0;
         btScalar *fv = f->vertex;
 
         v = v0 = m_buffer + 3 * 4 * m_lines;
-        m_lines += f->count;
+        m_lines += f->vertex_count;
 
-        for(uint16_t i=0;i<f->count-1;i++,fv += 3)
+        for(uint16_t i=0;i<f->vertex_count-1;i++,fv += 3)
         {
             vec3_copy(v, fv);
             v += 3;
@@ -1685,7 +1678,7 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     if(flag)
     {
         debugDrawer.setColor(1.0, 0.0, 0.0);
-        for(frus=room->frustum; frus && frus->active; frus=frus->next)
+        for(frus=room->frustum; frus; frus=frus->next)
         {
             debugDrawer.drawFrustum(frus);
         }
