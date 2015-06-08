@@ -1252,9 +1252,11 @@ void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour)
 render_DebugDrawer::render_DebugDrawer()
 :m_debugMode(0)
 {
-    m_buffer = (GLfloat*)malloc(2 * 3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
     m_max_lines = DEBUG_DRAWER_DEFAULT_BUFFER_SIZE;
+    m_buffer = (GLfloat*)malloc(2 * 6 * m_max_lines * sizeof(GLfloat));
+
     m_lines = 0;
+    m_need_realloc = false;
     vec3_set_zero(m_color);
     m_obb = OBB_Create();
 }
@@ -1265,6 +1267,22 @@ render_DebugDrawer::~render_DebugDrawer()
     m_buffer = NULL;
     OBB_Clear(m_obb);
     m_obb = NULL;
+}
+
+void render_DebugDrawer::reset()
+{
+    if(m_need_realloc)
+    {
+        uint32_t new_buffer_size = m_max_lines * 12 * 2;
+        GLfloat *new_buffer = (GLfloat*)realloc(m_buffer, new_buffer_size * sizeof(GLfloat));
+        if(new_buffer != NULL)
+        {
+            m_buffer = new_buffer;
+            m_max_lines *= 2;
+        }
+        m_need_realloc = false;
+    }
+    m_lines = 0;
 }
 
 void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
@@ -1283,6 +1301,10 @@ void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, co
         vec3_copy(v, to.m_floats);
         v += 3;
         vec3_copy(v, color.m_floats);
+    }
+    else
+    {
+        m_need_realloc = true;
     }
 }
 
@@ -1324,6 +1346,10 @@ void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVect
         //sprintf(buf," %d",lifeTime);
         //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),buf);
     }
+    else
+    {
+        m_need_realloc = true;
+    }
 }
 
 void render_DebugDrawer::render()
@@ -1332,7 +1358,7 @@ void render_DebugDrawer::render()
     {
         glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), m_buffer);
         glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]),  m_buffer + 3);
-        glDrawArrays(GL_LINES, 0, 4 * m_lines);
+        glDrawArrays(GL_LINES, 0, 2 * m_lines);
     }
 
     vec3_set_zero(m_color);
@@ -1345,6 +1371,7 @@ void render_DebugDrawer::drawAxis(btScalar r, btScalar transform[16])
 
     if(m_lines + 3 >= m_max_lines)
     {
+        m_need_realloc = true;
         return;
     }
 
@@ -1395,10 +1422,16 @@ void render_DebugDrawer::drawAxis(btScalar r, btScalar transform[16])
 
 void render_DebugDrawer::drawFrustum(struct frustum_s *f)
 {
-    if((f != NULL) && (m_lines + f->vertex_count < m_max_lines))
+    if(f != NULL)
     {
         GLfloat *v, *v0;
         btScalar *fv = f->vertex;
+
+        if(m_lines + f->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
 
         v = v0 = m_buffer + 3 * 4 * m_lines;
         m_lines += f->vertex_count;
@@ -1428,10 +1461,16 @@ void render_DebugDrawer::drawFrustum(struct frustum_s *f)
 
 void render_DebugDrawer::drawPortal(struct portal_s *p)
 {
-    if((p != NULL) && (m_lines + p->vertex_count < m_max_lines))
+    if(p != NULL)
     {
         GLfloat *v, *v0;
         btScalar *pv = p->vertex;
+
+        if(m_lines + p->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
 
         v = v0 = m_buffer + 3 * 4 * m_lines;
         m_lines += p->vertex_count;
@@ -1468,6 +1507,10 @@ void render_DebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScal
         OBB_Transform(m_obb);
         drawOBB(m_obb);
     }
+    else
+    {
+        m_need_realloc = true;
+    }
 }
 
 void render_DebugDrawer::drawOBB(struct obb_s *obb)
@@ -1477,6 +1520,7 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
 
     if(m_lines + 12 >= m_max_lines)
     {
+        m_need_realloc = true;
         return;
     }
 
@@ -1549,10 +1593,16 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
 
 void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals)
 {
-    if((renderer.style & R_DRAW_NORMALS) && (m_lines + mesh->vertex_count < m_max_lines))
+    if((!m_need_realloc) && (renderer.style & R_DRAW_NORMALS))
     {
         GLfloat *v = m_buffer + 3 * 4 * m_lines;
         btScalar n[3];
+
+        if(m_lines + mesh->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
 
         setColor(0.8, 0.0, 0.9);
         m_lines += mesh->vertex_count;
@@ -1592,7 +1642,7 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar t
 
 void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16])
 {
-    if(renderer.style & R_DRAW_NORMALS)
+    if((!m_need_realloc) && renderer.style & R_DRAW_NORMALS)
     {
         btScalar tr[16];
 
@@ -1607,7 +1657,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
 
 void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
 {
-    if(entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
+    if(m_need_realloc || entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
        !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
@@ -1643,6 +1693,10 @@ void render_DebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
 
         drawBBox(bb_min, bb_max, NULL);
     }
+    else
+    {
+        m_need_realloc = true;
+    }
 }
 
 
@@ -1652,6 +1706,11 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     frustum_p frus;
     engine_container_p cont;
     entity_p ent;
+
+    if(m_need_realloc)
+    {
+        return;
+    }
 
     flag = render->style & R_DRAW_ROOMBOXES;
     if(flag)
@@ -1732,4 +1791,3 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
         };
     }
 }
-

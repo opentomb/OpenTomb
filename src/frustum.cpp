@@ -17,7 +17,7 @@
 #include "obb.h"
 
 
-frustumManager engine_frustumManager(1024 * 1024);
+frustumManager engine_frustumManager(32768);
 
 frustumManager::frustumManager(uint32_t buffer_size)
 {
@@ -87,10 +87,10 @@ btScalar *frustumManager::alloc(uint32_t size)
     return NULL;
 }
 
-void frustumManager::splitPrepare(frustum_p frustum, struct portal_s *p)
+void frustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter)
 {
     frustum->vertex_count = p->vertex_count;
-    frustum->vertex = this->alloc(3 * p->vertex_count);
+    frustum->vertex = this->alloc(3 * (p->vertex_count + emitter->vertex_count + 1));
     if(frustum->vertex != NULL)
     {
         memcpy(frustum->vertex, p->vertex, 3 * p->vertex_count * sizeof(btScalar));
@@ -161,13 +161,6 @@ int frustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
             return SPLIT_EMPTY;
         }
 
-        uint32_t original_allocated = m_allocated;
-        p->vertex = this->alloc(added * 3);
-        if(p->vertex == NULL)
-        {
-            m_need_realloc = true;
-            return SPLIT_EMPTY;
-        }
     #if 0
         p->vertex_count = added;
         memcpy(p->vertex, buf, added*3*sizeof(btScalar));
@@ -191,7 +184,6 @@ int frustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
         if(p->vertex_count <= 2)
         {
             p->vertex_count = 0;
-            m_allocated = original_allocated;
             return SPLIT_EMPTY;
         }
     #endif
@@ -268,7 +260,7 @@ frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustu
             {
                 in_dist = 1;
             }
-            if((in_face == 0) && (vec3_plane_dist(n, v) > 0.0))
+            if((in_face == 0) && (vec3_plane_dist(emitter->norm, v) > 0.0))
             {
                 in_face = 1;
             }
@@ -303,7 +295,7 @@ frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustu
             return NULL;
         }
 
-        this->splitPrepare(current_gen, portal);                                // prepare to the clipping
+        this->splitPrepare(current_gen, portal, emitter);                       // prepare to the clipping
         if(m_need_realloc)
         {
             if(prev)
