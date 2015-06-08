@@ -4,13 +4,7 @@
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-<<<<<<< HEAD
-#include <assert.h>
-=======
-
->>>>>>> origin/master
 #include "bullet/LinearMath/btScalar.h"
-
 #include "polygon.h"
 #include "bsp_tree.h"
 #include "vmath.h"
