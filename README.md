@@ -1,5 +1,3 @@
-[![Build Status](https://drone.io/github.com/opentomb/OpenTomb/status.png)](http://sourceforge.net/projects/opentomb/files/NightlyBuilds/)
-
 OpenTomb — an open-source Tomb Raider 1-5 engine remake
 -------------------------------------------------------
 
@@ -120,21 +118,10 @@ Alternatively, you can manually compile it in Code::Blocks by recursively adding
 from /src directory, and adding these libraries in Linker Settings under Project Build options:
 
 * libmingw32.a
-* libglu32.a
 * libopengl32.a
-* libuser32.a
-* libgdi32.a
-* libwinmm.a
-* libmm32.a
-* libole32.a
-* liboleaut32.a
-* libversion.a
-* libuuid.a
 * libSDL2main.a
 * libSDL2.a
-* libSDL2_image.a
 * libz.a
-* libpthreadGC2.dll.a
 * libpthread.a
 
 On Linux, just download the source code and run in terminal:
