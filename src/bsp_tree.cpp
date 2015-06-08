@@ -11,7 +11,7 @@
 
 struct bsp_node_s *dynamicBSP::createBSPNode()
 {
-    bsp_node_p ret = (bsp_node_p)((uint8_t*)m_data + m_allocated);
+    bsp_node_p ret = (bsp_node_p)(m_buffer + m_allocated);
     m_allocated += sizeof(bsp_node_t);
     ret->front = NULL;
     ret->back = NULL;
@@ -23,11 +23,11 @@ struct bsp_node_s *dynamicBSP::createBSPNode()
 
 struct polygon_s *dynamicBSP::createPolygon(uint16_t vertex_count)
 {
-    polygon_p ret = (polygon_p)((uint8_t*)m_data + m_allocated);
+    polygon_p ret = (polygon_p)(m_buffer + m_allocated);
     m_allocated += sizeof(polygon_t);
     ret->next = NULL;
     ret->vertex_count = vertex_count;
-    ret->vertices = (vertex_p)((uint8_t*)m_data + m_allocated);
+    ret->vertices = (vertex_p)(m_buffer + m_allocated);
     m_allocated += vertex_count * sizeof(vertex_t);
     return ret;
 }
@@ -35,6 +35,16 @@ struct polygon_s *dynamicBSP::createPolygon(uint16_t vertex_count)
 
 void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
 {
+    if(m_allocated + 1024 > m_buffer_size)
+    {
+        m_need_realloc = true;
+    }
+
+    if(m_need_realloc)
+    {
+        return;
+    }
+
     if(root->polygons_front == NULL)
     {
         // we though root->front == NULL and root->back == NULL
@@ -120,47 +130,30 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct polygon_s *p)
 
 dynamicBSP::dynamicBSP(uint32_t size)
 {
-    m_data = malloc(size);
-    m_data_size = size;
+    m_buffer = (uint8_t*)malloc(size);
+    m_buffer_size = size;
     m_allocated = 0;
+    m_need_realloc = false;
     m_root = this->createBSPNode();
 }
 
 
 dynamicBSP::~dynamicBSP()
 {
-    if(m_data != NULL)
+    if(m_buffer != NULL)
     {
-        free(m_data);
-        m_data = NULL;
+        free(m_buffer);
+        m_buffer = NULL;
     }
     m_root = NULL;
     m_allocated = 0;
-    m_data_size = 0;
-}
-
-
-void dynamicBSP::addNewPolygon(struct polygon_s *p, btScalar *transform)
-{
-    polygon_p np = this->createPolygon(p->vertex_count);
-    Polygon_Copy(np, p);
-    Polygon_Transform(np, p, transform);
-    if(m_root == NULL)
-    {
-        m_root = this->createBSPNode();
-    }
-    this->addPolygon(m_root, np);
+    m_buffer_size = 0;
 }
 
 
 void dynamicBSP::addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f)
 {
-    if(m_data_size - m_allocated < 1024)                                        ///@FIXME: magick 1024
-    {
-        return;
-    }
-
-    for(;p!=NULL;p=p->next)
+    for(;(p!=NULL)&&(!m_need_realloc);p=p->next)
     {
         uint32_t orig_allocated = m_allocated;
         polygon_p np = this->createPolygon(p->vertex_count);

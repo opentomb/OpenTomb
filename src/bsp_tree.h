@@ -25,9 +25,10 @@ typedef struct bsp_node_s
  */
 class dynamicBSP
 {
-    void                *m_data;
-    uint32_t             m_data_size;
+    uint8_t             *m_buffer;
+    uint32_t             m_buffer_size;
     uint32_t             m_allocated;
+    bool                 m_need_realloc;
     
     struct bsp_node_s *createBSPNode();
     struct polygon_s  *createPolygon(uint16_t vertex_count);
@@ -38,10 +39,20 @@ public:
     
     dynamicBSP(uint32_t size);
    ~dynamicBSP();
-    void addNewPolygon(struct polygon_s *p, btScalar *transform);
     void addNewPolygonList(struct polygon_s *p, btScalar *transform, struct frustum_s *f);
     void reset()
     {
+        if(m_need_realloc)
+        {
+            uint32_t new_buffer_size = m_buffer_size * 1.5;
+            uint8_t *new_buffer = (uint8_t*)realloc(m_buffer, new_buffer_size * sizeof(uint8_t));
+            if(new_buffer != NULL)
+            {
+                m_buffer = new_buffer;
+                m_buffer_size = new_buffer_size;
+            }
+            m_need_realloc = false;
+        }
         m_allocated = 0;
         m_root = this->createBSPNode();
     }

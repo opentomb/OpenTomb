@@ -33,14 +33,15 @@ public:
     
     void reset();
     frustum_p createFrustum();
-    
-    void splitPrepare(frustum_p frustum, struct portal_s *p);                   // подготовка фрустума к сплиту
-    int split_by_plane(frustum_p p, btScalar n[4], btScalar *buf);              // отсечение части портала плоскостью
-    void genClipPlanes(frustum_p p, struct camera_s *cam);                      // генерация плоскостей отсечения
     frustum_p portalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct render_s *render);         // Основная функция для работы с порталами.
+
 private:
-    bool m_need_realloc;
     btScalar *alloc(uint32_t size);
+    void splitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter);// подготовка фрустума к сплиту
+    void genClipPlanes(frustum_p p, struct camera_s *cam);                      // генерация плоскостей отсечения
+    int split_by_plane(frustum_p p, btScalar n[4], btScalar *buf);              // отсечение части портала плоскостью
+    
+    bool m_need_realloc;
     uint32_t m_buffer_size;
     uint32_t m_allocated;
     uint8_t *m_buffer;
