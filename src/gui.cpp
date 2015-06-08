@@ -1223,7 +1223,6 @@ void Gui_DrawInventory()
                  BM_OPAQUE);
 
     glDepthMask(GL_TRUE);
-    glPopClientAttrib();
     glPopAttrib();
 
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
