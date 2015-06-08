@@ -128,6 +128,10 @@ PFNGLUNMAPBUFFERARBPROC                 glUnmapBufferARB =                      
 PFNGLGETBUFFERPARAMETERIVARBPROC        glGetBufferParameterivARB =             NULL;
 PFNGLGETBUFFERPOINTERVARBPROC           glGetBufferPointervARB =                NULL;
 
+PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
+PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
+PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
+
 PFNGLGENERATEMIPMAPEXTPROC              glGenerateMipmap =                      NULL;
 #endif
 
@@ -258,6 +262,22 @@ void InitGLExtFuncs()
     {
         fprintf(stderr, "Shaders not supported");
         abort();
+    }
+    if(IsGLExtensionSupported("GL_ARB_vertex_array_object"))
+    {
+        SAFE_GET_PROC(glGenVertexArrays, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArrays");
+        SAFE_GET_PROC(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
+        SAFE_GET_PROC(glDeleteVertexArrays, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArrays");
+    }
+    else if (IsGLExtensionSupported("GL_APPLE_vertex_array_object"))
+    {
+        // The Apple version of the extension is the one the ARB version was
+        // based on. It works the same. (Also supports some stuff the ARB
+        // version doesn't, but nothing actually useful, so this is ignored
+        // here).
+        SAFE_GET_PROC(glGenVertexArrays, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArraysAPPLE");
+        SAFE_GET_PROC(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArrayAPPLE");
+        SAFE_GET_PROC(glDeleteVertexArrays, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArraysAPPLE");
     }
 #endif
 }

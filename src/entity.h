@@ -6,6 +6,7 @@
 
 #include "bullet/LinearMath/btVector3.h"
 #include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
+#include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
 #include "mesh.h"
 
 class btCollisionShape;
@@ -29,7 +30,7 @@ struct ss_bone_frame_s;
 #define ENTITY_TYPE_PICKABLE                        (0x0008)    // Can be picked up.
 #define ENTITY_TYPE_TRAVERSE                        (0x0010)    // Can be pushed/pulled.
 #define ENTITY_TYPE_TRAVERSE_FLOOR                  (0x0020)    // Can be walked upon.
-#define ENTITY_TYPE_KINEMATIC                       (0x0040)    // Acts as a physical kinematic object.
+#define ENTITY_TYPE_DYNAMIC                         (0x0040)    // Acts as a physical dynamic object.
 #define ENTITY_TYPE_ACTOR                           (0x0080)    // Is actor.
 
 #define ENTITY_TYPE_SPAWNED                         (0x8000)    // Was spawned.
@@ -105,7 +106,12 @@ typedef struct entity_s
     struct engine_container_s          *self;
 
     btScalar                            activation_offset[4];   // where we can activate object (dx, dy, dz, r)
+    
     btRigidBody                       **bt_body;
+    
+    uint32_t                            bt_joint_count;         // Ragdoll joints
+    btTypedConstraint                 **bt_joints;              // Ragdoll joints
+    
     struct character_s                 *character;
 }entity_t, *entity_p;
 

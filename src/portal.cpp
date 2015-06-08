@@ -46,7 +46,7 @@ void Portal_Clear(portal_p p)
         if(p->vertex)
         {
             free(p->vertex);
-            p->vertex = NULL;                                                   // paranoid
+            p->vertex = NULL;
         }
         p->vertex_count = 0;
         p->flag = 0;
@@ -300,96 +300,4 @@ void Portal_GenNormale(portal_p p)
     vec3_cross(p->norm, v1, v2)
     p->norm[3] = vec3_abs(p->norm);
     vec3_norm_plane(p->norm, p->vertex, p->norm[3])
-}
-
-/*
- * receiver - указатель на базовый фрустум рума, куда ведет портал - берется из портала!!!
- * возвращает указатель на свежесгенеренный фрустум
- */
-
-struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emitter, struct render_s *render)
-{
-    int ins, bz;
-    btScalar *n, *v;
-    frustum_p receiver = portal->dest_room->frustum;
-    frustum_p prev = NULL, current_gen = receiver;
-    btScalar *tmp;
-
-    if(vec3_plane_dist(portal->norm, render->cam->pos) < -SPLIT_EPSILON)        // Портал вырожден в линию или не лицевой
-    {
-        if((render->cam->pos[0] > portal->dest_room->bb_min[0]) && (render->cam->pos[0] < portal->dest_room->bb_max[0]) &&
-           (render->cam->pos[1] > portal->dest_room->bb_min[1]) && (render->cam->pos[1] < portal->dest_room->bb_max[1]) &&
-           (render->cam->pos[2] > portal->dest_room->bb_min[2]) && (render->cam->pos[2] < portal->dest_room->bb_max[2]))
-        {
-            return emitter;                                                     // Данная проверка введена из за возможности наложения соседних комнат друг на друга
-        }
-        return NULL;
-    }
-
-    if(Frustum_HaveParent(receiver, emitter))
-    {
-        return NULL;                                                            // abort infinite cycling!
-    }
-
-    ins = 0;
-    n = render->cam->frustum->norm;
-    v = portal->vertex;
-    for(uint16_t i=0;i<portal->vertex_count;i++,v+=3)
-    {
-        if(vec3_plane_dist(n, v) < render->cam->dist_far)
-        {
-            ins = 1;
-            break;
-        }
-    }
-
-    if(ins == 0)
-    {
-        return NULL;
-    }
-
-    /*
-     * Search for the first free room's frustum
-     */
-    while(current_gen && current_gen->active)
-    {
-        prev = current_gen;
-        current_gen = current_gen->next;
-    }
-    if((current_gen == NULL) && (prev != NULL))                                 // There is no free frustums in this room
-    {
-        current_gen = prev->next = Frustum_Create();                            // generate new frustum.
-    }
-    Frustum_SplitPrepare(current_gen, portal);                                  // prepare to the clipping
-
-    bz = 4 * (current_gen->count + emitter->count);                             // 4 - fo margin
-    tmp = GetTempbtScalar(bz);
-    if(Frustum_Split(current_gen, emitter->norm, tmp))                          // проводим отсечение плоскостью фрустума
-    {
-        n = emitter->planes;
-        for(uint16_t i=0;i<emitter->count;i++,n+=4)
-        {
-            if(!Frustum_Split(current_gen, n, tmp))
-            {
-                ReturnTempbtScalar(bz);
-                return NULL;
-            }
-        }
-
-        Frustum_GenClipPlanes(current_gen, render->cam);                        // all is OK, let us generate clipplanes
-        current_gen->active = 1;
-        current_gen->parent = emitter;                                          // добавляем предка - кем был сгенерен
-        current_gen->parents_count = emitter->parents_count + 1;                // количество предков возросло на 1
-        portal->dest_room->active_frustums++;
-        portal->dest_room->last_frustum = current_gen;                          // указатель на последний добавленный фрустум
-        if(portal->dest_room->max_path < current_gen->parents_count)
-        {
-            portal->dest_room->max_path = current_gen->parents_count;           // максимальный путь к комнате
-        }
-        ReturnTempbtScalar(bz);
-        return current_gen;
-    }
-
-    ReturnTempbtScalar(bz);
-    return NULL;
 }

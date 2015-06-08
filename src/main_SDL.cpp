@@ -127,139 +127,139 @@ engine_container_p      last_cont = NULL;
 
 void SkeletalModelTestDraw()
 {
-    bone_frame_p bframe;
-    static btScalar time = 0.0;
-    skeletal_model_p smodel;
-    animation_frame_p af;
-    anim_dispatch_p adsp;
-    sprite_p bsprite;
-    bone_tag_p btag;
-    GLfloat tr[16];
-    mesh_tree_tag_p mt;
-    int i, j, y, stack;
-
-    if((engine_world.skeletal_models == NULL) || (engine_world.meshes == NULL))
-    {
-        return;
-    }
-
-    if(frame < 0)
-    {
-        frame = 0;
-    }
-
-    if((uint32_t)model > engine_world.skeletal_model_count)
-    {
-        model = 0;
-    }
-    smodel = engine_world.skeletal_models + model;
-
-    if((uint16_t)anim + 1 > smodel->animation_count)
-    {
-        anim = 0;
-    }
-    af = smodel->animations + anim;
-
-    if(!paused)
-    {
-        time += engine_frame_time;
-        if(time < 0.0)
-        {
-            time = 0.0;
-        }
-        if(time > 0.05)
-        {
-            frame ++;
-            time = 0.0;
-        }
-    }
-
-    sprite %= engine_world.sprites_count;
-    bsprite = engine_world.sprites + sprite;
-
-    frame %= smodel->animations[anim].frames_count;
-    bframe = smodel->animations[anim].frames + frame;
-
-    Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
-    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
-    Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
-    Gui_OutTextXY(screen_info.w-632, 48, "vx = %f, vy = %f, ax = %f, ay = %f", af->speed_x, af->speed_y, af->accel_x, af->accel_y);
-    Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
-    Gui_OutTextXY(screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
-
-    y = screen_info.h - 24;
-    for(i=0;i<af->state_change_count;i++)
-    {
-        for(j=0;j<af->state_change[i].anim_dispatch_count;j++)
-        {
-            adsp = af->state_change[i].anim_dispatch + j;
-            Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
-                          i, j, af->state_change[i].id, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
-            y -= 24;
-        }
-    }
-
-    /*
-     * RENDER MODEL
-     */
-    glPushMatrix();
-    btag = bframe->bone_tags;
-    mt = smodel->mesh_tree;
-
-    tr[15] = 1.0;
-    vec3_add(tr+12, mt->offset, bframe->pos);
-    Mat4_set_qrotation(tr, btag->qrotate);
-    //glEnable(GL_TEXTURE_2D);
-    glMultMatrixf(tr);
-    Render_Mesh(mt->mesh_base, NULL, NULL);
-    btag++;
-    mt++;
-    for(stack=0,i=1;i<bframe->bone_tag_count;i++,btag++,mt++)
-    {
-        tr[15] = 1.0;
-        vec3_copy(tr+12, mt->offset);
-        Mat4_set_qrotation(tr, btag->qrotate);
-        if(mt->flag & 0x01)
-        {
-            if(stack > 0)                                                       // PARANOID GL STACK CHECK
-            {
-                glPopMatrix();
-                stack--;
-            }
-        }
-        if(mt->flag & 0x02)
-        {
-            glPushMatrix();
-            stack++;
-        }
-        glMultMatrixf(tr);
-        Render_Mesh(mt->mesh_base, NULL, NULL);
-        //Render_BBox(tree_tag->mesh->bb_min, tree_tag->mesh->bb_max);
-        if(mt->mesh_skin)
-        {
-            Render_SkinMesh(mt->mesh_skin, tr);
-        }
-    }
-
-    for(i=0;i<stack;i++)                                                        // PARANOID: GL STACK CHECK AND CORRECTION
-    {
-        glPopMatrix();
-    }
-    stack = 0;
-    glPopMatrix();
-
-//    glPushAttrib(GL_ENABLE_BIT);
-//    glEnable(GL_ALPHA_TEST);
-//    glDisable(GL_CULL_FACE);
-//    Render_Sprite(bsprite, 1024.0, 0.0, 0.0);
-//    glPopAttrib();
-
-    glPushMatrix();
-    btScalar matrix[16];
-    Mat4_E_macro(matrix);
-    Mat4_Translate(matrix, -1024.0, 0.0, 0.0);
-    Render_Mesh(engine_world.meshes + mesh, NULL, NULL);
-    glPopMatrix();
+//    bone_frame_p bframe;
+//    static btScalar time = 0.0;
+//    skeletal_model_p smodel;
+//    animation_frame_p af;
+//    anim_dispatch_p adsp;
+//    sprite_p bsprite;
+//    bone_tag_p btag;
+//    GLfloat tr[16];
+//    mesh_tree_tag_p mt;
+//    int i, j, y, stack;
+//
+//    if((engine_world.skeletal_models == NULL) || (engine_world.meshes == NULL))
+//    {
+//        return;
+//    }
+//
+//    if(frame < 0)
+//    {
+//        frame = 0;
+//    }
+//
+//    if((uint32_t)model > engine_world.skeletal_model_count)
+//    {
+//        model = 0;
+//    }
+//    smodel = engine_world.skeletal_models + model;
+//
+//    if((uint16_t)anim + 1 > smodel->animation_count)
+//    {
+//        anim = 0;
+//    }
+//    af = smodel->animations + anim;
+//
+//    if(!paused)
+//    {
+//        time += engine_frame_time;
+//        if(time < 0.0)
+//        {
+//            time = 0.0;
+//        }
+//        if(time > 0.05)
+//        {
+//            frame ++;
+//            time = 0.0;
+//        }
+//    }
+//
+//    sprite %= engine_world.sprites_count;
+//    bsprite = engine_world.sprites + sprite;
+//
+//    frame %= smodel->animations[anim].frames_count;
+//    bframe = smodel->animations[anim].frames + frame;
+//
+//    Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
+//    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
+//    Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
+//    Gui_OutTextXY(screen_info.w-632, 48, "vx = %f, vy = %f, ax = %f, ay = %f", af->speed_x, af->speed_y, af->accel_x, af->accel_y);
+//    Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
+//    Gui_OutTextXY(screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
+//
+//    y = screen_info.h - 24;
+//    for(i=0;i<af->state_change_count;i++)
+//    {
+//        for(j=0;j<af->state_change[i].anim_dispatch_count;j++)
+//        {
+//            adsp = af->state_change[i].anim_dispatch + j;
+//            Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
+//                          i, j, af->state_change[i].id, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
+//            y -= 24;
+//        }
+//    }
+//
+//    /*
+//     * RENDER MODEL
+//     */
+//    glPushMatrix();
+//    btag = bframe->bone_tags;
+//    mt = smodel->mesh_tree;
+//
+//    tr[15] = 1.0;
+//    vec3_add(tr+12, mt->offset, bframe->pos);
+//    Mat4_set_qrotation(tr, btag->qrotate);
+//    //glEnable(GL_TEXTURE_2D);
+//    glMultMatrixf(tr);
+//    Render_Mesh(mt->mesh_base, NULL, NULL);
+//    btag++;
+//    mt++;
+//    for(stack=0,i=1;i<bframe->bone_tag_count;i++,btag++,mt++)
+//    {
+//        tr[15] = 1.0;
+//        vec3_copy(tr+12, mt->offset);
+//        Mat4_set_qrotation(tr, btag->qrotate);
+//        if(mt->flag & 0x01)
+//        {
+//            if(stack > 0)                                                       // PARANOID GL STACK CHECK
+//            {
+//                glPopMatrix();
+//                stack--;
+//            }
+//        }
+//        if(mt->flag & 0x02)
+//        {
+//            glPushMatrix();
+//            stack++;
+//        }
+//        glMultMatrixf(tr);
+//        Render_Mesh(mt->mesh_base, NULL, NULL);
+//        //Render_BBox(tree_tag->mesh->bb_min, tree_tag->mesh->bb_max);
+//        if(mt->mesh_skin)
+//        {
+//            Render_SkinMesh(mt->mesh_skin, tr);
+//        }
+//    }
+//
+//    for(i=0;i<stack;i++)                                                        // PARANOID: GL STACK CHECK AND CORRECTION
+//    {
+//        glPopMatrix();
+//    }
+//    stack = 0;
+//    glPopMatrix();
+//
+////    glPushAttrib(GL_ENABLE_BIT);
+////    glEnable(GL_ALPHA_TEST);
+////    glDisable(GL_CULL_FACE);
+////    Render_Sprite(bsprite, 1024.0, 0.0, 0.0);
+////    glPopAttrib();
+//
+//    glPushMatrix();
+//    btScalar matrix[16];
+//    Mat4_E_macro(matrix);
+//    Mat4_Translate(matrix, -1024.0, 0.0, 0.0);
+//    Render_Mesh(engine_world.meshes + mesh, NULL, NULL);
+//    glPopMatrix();
 }
 
 void Engine_InitGL()
@@ -274,8 +274,6 @@ void Engine_InitGL()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glEnable(GL_COLOR_MATERIAL);
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
     if(renderer.settings.antialias)
     {
@@ -421,7 +419,9 @@ void Engine_InitSDLVideo()
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
-
+#if STENCIL_FRUSTUM
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+#endif
     // set the opengl context version
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -558,9 +558,8 @@ void Engine_Display()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
-        Cam_RecalcClipPlanes(&engine_camera);
         Cam_Apply(&engine_camera);
-
+        Cam_RecalcClipPlanes(&engine_camera);
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
         if(screen_info.show_debuginfo)
         {
@@ -575,7 +574,6 @@ void Engine_Display()
 
         Render_GenWorldList();
         Render_DrawList();
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);

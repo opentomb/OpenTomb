@@ -27,10 +27,9 @@ void Cam_Init(camera_p cam)
     Mat4_E_macro(cam->gl_proj_mat);
     Mat4_E_macro(cam->gl_view_proj_mat);
 
-    cam->frustum = Frustum_Create();
-    cam->frustum->active = 1;
+    cam->frustum = (frustum_p)malloc(sizeof(frustum_t));
     cam->frustum->cam_pos = cam->pos;
-    cam->frustum->count = 4;
+    cam->frustum->vertex_count = 4;
     cam->frustum->next = NULL;
     cam->frustum->parent = NULL;
     cam->frustum->parents_count = 0;
