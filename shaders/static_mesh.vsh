@@ -1,4 +1,9 @@
 // GLSL vertex programm for color mult
+attribute vec3 position;
+attribute vec4 color;
+attribute vec3 normal;
+attribute vec2 texCoord;
+
 uniform mat4 modelViewProjection;
 uniform vec4 tintMult;
 
@@ -7,7 +12,7 @@ varying vec2 varying_texCoord;
 
 void main(void)
 {
-    gl_Position = modelViewProjection * gl_Vertex;
-    varying_color = gl_Color * tintMult;
-    varying_texCoord = gl_MultiTexCoord0.xy;
+    gl_Position = modelViewProjection * vec4(position, 1.0);
+    varying_color = color * tintMult;
+    varying_texCoord = texCoord;
 }

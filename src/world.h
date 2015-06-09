@@ -204,7 +204,7 @@ typedef struct room_sector_s
 {
     uint32_t                    trig_index; // Trigger function index.
     int32_t                     box_index;
-    
+
     uint32_t                    flags;      // Climbability, death etc.
     uint32_t                    material;   // Footstep sound and footsteps.
 
@@ -292,14 +292,15 @@ typedef struct room_s
 
     uint16_t                    active_frustums;                                // current number of this room active frustums
     struct frustum_s           *frustum;
-    struct frustum_s           *last_frustum;
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
     uint16_t                    near_room_list_size;
-    struct room_s               *near_room_list[64];
-    btRigidBody                 *bt_body;
+    struct room_s              *near_room_list[32];
+    uint16_t                    overlapped_room_list_size;
+    struct room_s              *overlapped_room_list[32];
+    btRigidBody                *bt_body;
 
-    struct engine_container_s   *self;
+    struct engine_container_s  *self;
 }room_t, *room_p;
 
 
@@ -314,7 +315,7 @@ typedef struct world_s
 
     uint32_t                    room_box_count;
     struct room_box_s          *room_boxes;
-    
+
     uint32_t                    flip_count;             // Number of flips
     uint8_t                    *flip_map;               // Flipped room activity array.
     uint8_t                    *flip_state;             // Flipped room state array.
@@ -326,7 +327,7 @@ typedef struct world_s
     uint32_t                    anim_sequences_count;   // Animated texture sequence count
     struct anim_seq_s          *anim_sequences;         // Animated textures
 
-    uint32_t                    meshes_count;            // Base meshes count
+    uint32_t                    meshes_count;           // Base meshes count
     struct base_mesh_s         *meshes;                 // Base meshes data
 
     uint32_t                    sprites_count;          // Base sprites count
@@ -342,9 +343,9 @@ typedef struct world_s
     struct RedBlackHeader_s    *items_tree;             // tree of world items
 
     uint32_t                    type;
-    
+
     uint32_t                    cameras_sinks_count;    // Amount of cameras and sinks.
-    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks. 
+    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks.
 
     uint32_t                    anim_commands_count;
     int16_t                    *anim_commands;
@@ -402,6 +403,7 @@ room_p Room_CheckFlip(room_p r);
 void Room_SwapPortals(room_p room, room_p dest_room); //Swap room portals of input room to destination room
 void Room_SwapItems(room_p room, room_p dest_room);   //Swap room items of input room to destination room
 void Room_BuildNearRoomsList(room_p room);
+void Room_BuildOverlappedRoomsList(room_p room);
 
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);

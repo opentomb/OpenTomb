@@ -60,6 +60,7 @@ void Render_InitGlobals()
 void Render_DoShaders()
 {
     renderer.shader_manager = new shader_manager();
+    renderer.vertex_array_manager = vertex_array_manager::createManager();
 }
 
 
@@ -133,7 +134,7 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
         GLfloat tint[] = { 1, 1, 1, 1 };
         glUniform4fvARB(shader->tint_mult, 1, tint);
 
-        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base, NULL, NULL);
+        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base);
         glDepthMask(GL_TRUE);
     }
 }
@@ -141,14 +142,14 @@ void Render_SkyBox(const btScalar modelViewProjectionMatrix[16])
 /**
  * Opaque meshes drawing
  */
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals)
+void Render_Mesh(struct base_mesh_s *mesh)
 {
-    if(mesh->num_animated_elements > 0)
+    if(mesh->num_animated_elements > 0 || mesh->num_alpha_animated_elements > 0)
     {
         // Respecify the tex coord buffer
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_texcoord_array);
         // Tell OpenGL to discard the old values
-        glBufferDataARB(GL_ARRAY_BUFFER, mesh->num_animated_elements * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        glBufferDataARB(GL_ARRAY_BUFFER, mesh->animated_vertex_count * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
         GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
@@ -169,58 +170,33 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
         }
         glUnmapBufferARB(GL_ARRAY_BUFFER);
 
-        // Setup altered buffer
-        glTexCoordPointer(2, GL_FLOAT, sizeof(GLfloat [2]), 0);
-        // Setup static data
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(GLfloat [10]), 0);
-        glColorPointer(4, GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [3]));
-        glNormalPointer(GL_FLOAT, sizeof(GLfloat [10]), (void *) sizeof(GLfloat [7]));
-
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
-        glDrawElements(GL_TRIANGLES, mesh->animated_index_array_length, GL_UNSIGNED_INT, 0);
-    }
-
-    if(mesh->vertex_count == 0)
-    {
-        return;
-    }
-
-    if(mesh->vbo_vertex_array)
-    {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
-        glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
-    }
-
-    // Bind overriden vertices if they exist
-    if (overrideVertices != NULL)
-    {
-        // Standard normals are always float. Overridden normals (from skinning)
-        // are btScalar.
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, 0, overrideVertices);
-        glNormalPointer(GL_BT_SCALAR, 0, overrideNormals);
-    }
-
-    const uint32_t *elementsbase = mesh->elements;
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, mesh->vbo_index_array);
-        elementsbase = NULL;
-
-    unsigned long offset = 0;
-    for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
-    {
-        if(mesh->element_count_per_texture[texture] == 0)
+        if (mesh->num_animated_elements > 0)
         {
-            continue;
-        }
+            mesh->animated_vertex_array->use();
 
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
-        glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
-        offset += mesh->element_count_per_texture[texture];
+            glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
+            glDrawElements(GL_TRIANGLES, mesh->num_animated_elements, GL_UNSIGNED_INT, 0);
+        }
+    }
+
+    if(mesh->vertex_count != 0)
+    {
+        mesh->main_vertex_array->use();
+
+        const uint32_t *elementsbase = NULL;
+
+        unsigned long offset = 0;
+        for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
+        {
+            if(mesh->element_count_per_texture[texture] == 0)
+            {
+                continue;
+            }
+
+            glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
+            glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
+            offset += mesh->element_count_per_texture[texture];
+        }
     }
 }
 
@@ -228,85 +204,57 @@ void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, con
 /**
  * draw transparency polygons
  */
-void Render_PolygonTransparency(struct polygon_s *p)
+void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *bsp_ref, const unlit_tinted_shader_description *shader)
 {
     // Blending mode switcher.
     // Note that modes above 2 aren't explicitly used in TR textures, only for
     // internal particle processing. Theoretically it's still possible to use
     // them if you will force type via TRTextur utility.
-    switch(p->transparency)
+    const struct transparent_polygon_reference_s *ref = bsp_ref->polygon;
+    const struct polygon_s *p = ref->polygon;
+    if (currentTransparency != p->transparency)
     {
-        case BM_MULTIPLY:                                    // Classic PC alpha
-            glBlendFunc(GL_ONE, GL_ONE);
-            break;
-
-        case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
-            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_INVERT_DEST:                                 // Inversion by dest
-            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_SCREEN:                                      // Screen (smoke, etc.)
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-            break;
-
-        case BM_ANIMATED_TEX:
-            glBlendFunc(GL_ONE, GL_ZERO);
-            break;
-
-        default:                                             // opaque animated textures case
-            break;
-    };
-
-    if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
-    {
-        anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
-        GLfloat *v, uv[2], *uv0 = (GLfloat*)GetTempbtScalar(2 * p->vertex_count);
-        uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
-        tex_frame_p tf = seq->frames + frame;
-        for(uint16_t i=0;i<p->vertex_count;i++)
+        currentTransparency = p->transparency;
+        switch(p->transparency)
         {
-            v = p->vertices[i].tex_coord;
-            uv0[2*i+0] = v[0];
-            uv0[2*i+1] = v[1];
-            uv[0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
-            uv[1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
-            v[0] = uv[0];
-            v[1] = uv[1];
-        }
+            case BM_MULTIPLY:                                    // Classic PC alpha
+                glBlendFunc(GL_ONE, GL_ONE);
+                break;
 
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[tf->tex_ind]);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
+            case BM_INVERT_SRC:                                  // Inversion by src (PS darkness) - SAME AS IN TR3-TR5
+                glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+                break;
 
-        for(uint16_t i=0;i<p->vertex_count;i++)
-        {
-            v = p->vertices[i].tex_coord;
-            v[0] = uv0[2*i+0];
-            v[1] = uv0[2*i+1];
-        }
-        ReturnTempbtScalar(2 * p->vertex_count);
+            case BM_INVERT_DEST:                                 // Inversion by dest
+                glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_COLOR);
+                break;
+
+            case BM_SCREEN:                                      // Screen (smoke, etc.)
+                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+                break;
+
+            case BM_ANIMATED_TEX:
+                glBlendFunc(GL_ONE, GL_ZERO);
+                break;
+
+            default:                                             // opaque animated textures case
+                break;
+        };
     }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
-    }
+
+    GLfloat mvp[16];
+    Mat4_Mat4_mul(mvp, renderer.cam->gl_view_proj_mat, bsp_ref->transform);
+
+    glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvp);
+
+    ref->used_vertex_array->use();
+    glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
+
+    glDrawElements(GL_TRIANGLES, ref->count, GL_UNSIGNED_INT, (GLvoid *) (sizeof(GLuint) * ref->firstIndex));
 }
 
 
-void Render_BSPFrontToBack(struct bsp_node_s *root)
+void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *root, const unlit_tinted_shader_description *shader)
 {
     btScalar d = vec3_plane_dist(root->plane, engine_camera.pos);
 
@@ -314,47 +262,47 @@ void Render_BSPFrontToBack(struct bsp_node_s *root)
     {
         if(root->front != NULL)
         {
-            Render_BSPFrontToBack(root->front);
+            Render_BSPFrontToBack(currentTransparency, root->front, shader);
         }
 
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
 
         if(root->back != NULL)
         {
-            Render_BSPFrontToBack(root->back);
+            Render_BSPFrontToBack(currentTransparency, root->back, shader);
         }
     }
     else
     {
         if(root->back != NULL)
         {
-            Render_BSPFrontToBack(root->back);
+            Render_BSPFrontToBack(currentTransparency, root->back, shader);
         }
 
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
 
         if(root->front != NULL)
         {
-            Render_BSPFrontToBack(root->front);
+            Render_BSPFrontToBack(currentTransparency, root->front, shader);
         }
     }
 }
 
-void Render_BSPBackToFront(struct bsp_node_s *root)
+void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *root, const unlit_tinted_shader_description *shader)
 {
     btScalar d = vec3_plane_dist(root->plane, engine_camera.pos);
 
@@ -362,42 +310,42 @@ void Render_BSPBackToFront(struct bsp_node_s *root)
     {
         if(root->back != NULL)
         {
-            Render_BSPBackToFront(root->back);
+            Render_BSPBackToFront(currentTransparency, root->back, shader);
         }
 
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
 
         if(root->front != NULL)
         {
-            Render_BSPBackToFront(root->front);
+            Render_BSPBackToFront(currentTransparency, root->front, shader);
         }
     }
     else
     {
         if(root->front != NULL)
         {
-            Render_BSPBackToFront(root->front);
+            Render_BSPBackToFront(currentTransparency, root->front, shader);
         }
 
-        for(polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
         {
-            Render_PolygonTransparency(p);
+            Render_PolygonTransparency(currentTransparency, p, shader);
         }
 
         if(root->back != NULL)
         {
-            Render_BSPBackToFront(root->back);
+            Render_BSPBackToFront(currentTransparency, root->back, shader);
         }
     }
 }
@@ -458,72 +406,10 @@ void Render_UpdateAnimTextures()                                                
     }
 }
 
-
-void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16])
-{
-    uint32_t i;
-    vertex_p v;
-    btScalar *p_vertex, *src_v, *dst_v, t;
-    GLfloat *p_normale, *src_n, *dst_n;
-    int8_t *ch = mesh->skin_map;
-
-    p_vertex  = (GLfloat*)GetTempbtScalar(3 * mesh->vertex_count);
-    p_normale = (GLfloat*)GetTempbtScalar(3 * mesh->vertex_count);
-    dst_v = p_vertex;
-    dst_n = p_normale;
-    v = mesh->vertices;
-    for(i=0; i<mesh->vertex_count; i++,v++)
-    {
-        src_v = v->position;
-        src_n = v->normal;
-        switch(*ch)
-        {
-        case 0:
-            dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
-            dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
-            dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
-
-            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
-            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
-            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
-
-            vec3_add(dst_v, dst_v, src_v);
-            dst_v[0] /= 2.0;
-            dst_v[1] /= 2.0;
-            dst_v[2] /= 2.0;
-            vec3_add(dst_n, dst_n, src_n);
-            vec3_norm(dst_n, t);
-            break;
-
-        case 2:
-            dst_v[0]  = transform[0] * src_v[0] + transform[1] * src_v[1] + transform[2]  * src_v[2];             // (M^-1 * src).x
-            dst_v[1]  = transform[4] * src_v[0] + transform[5] * src_v[1] + transform[6]  * src_v[2];             // (M^-1 * src).y
-            dst_v[2]  = transform[8] * src_v[0] + transform[9] * src_v[1] + transform[10] * src_v[2];             // (M^-1 * src).z
-
-            dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
-            dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
-            dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
-            //vec3_copy(dst_n, src_n);
-            break;
-
-        case 1:
-            vec3_copy(dst_v, src_v);
-            vec3_copy(dst_n, src_n);
-            break;
-        }
-        ch++;
-        dst_v += 3;
-        dst_n += 3;
-    }
-
-    Render_Mesh(mesh, p_vertex, p_normale);
-    ReturnTempbtScalar(6 * mesh->vertex_count);
-}
-
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16])
+void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16], const btScalar pMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -537,14 +423,38 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
         Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
 
-        Render_Mesh(btag->mesh_base, NULL, NULL);
+        Render_Mesh(btag->mesh_base);
         if(btag->mesh_slot)
         {
-            Render_Mesh(btag->mesh_slot, NULL, NULL);
+            Render_Mesh(btag->mesh_slot);
         }
+    }
+}
+
+void Render_SkeletalModelSkin(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16])
+{
+    ss_bone_tag_p btag = bframe->bone_tags;
+
+    glUniformMatrix4fvARB(shader->projection, 1, false, pMatrix);
+
+    for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+    {
+        btScalar mvTransforms[32];
+        Mat4_Mat4_mul(&mvTransforms[0], mvMatrix, btag->full_transform);
+        // btag->transform is the second matrix, relative to full transform
+        btScalar rotateOnlyTransform[16];
+        Mat4_Copy(rotateOnlyTransform, btag->transform);
+        rotateOnlyTransform[12] = 0;
+        rotateOnlyTransform[13] = 0;
+        rotateOnlyTransform[14] = 0;
+        rotateOnlyTransform[15] = 1;
+        Mat4_T(rotateOnlyTransform);
+        Mat4_Mat4_mul(&mvTransforms[16], &mvTransforms[0], rotateOnlyTransform);
+        glUniformMatrix4fvARB(shader->model_view, 2, false, mvTransforms);
+
         if(btag->mesh_skin)
         {
-            Render_SkinMesh(btag->mesh_skin, btag->transform);
+            Render_Mesh(btag->mesh_skin);
         }
     }
 }
@@ -553,7 +463,7 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const btScalar modelViewMatrix[16])
+const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const btScalar modelViewMatrix[16], bool skin)
 {
     // Calculate lighting
     const lit_shader_description *shader;
@@ -624,7 +534,7 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
             }
         }
 
-        shader = renderer.shader_manager->getEntityShader(current_light_number);
+        shader = renderer.shader_manager->getEntityShader(current_light_number, skin);
         glUseProgramObjectARB(shader->program);
         glUniform4fvARB(shader->light_ambient, 1, ambient_component);
         glUniform4fvARB(shader->light_color, current_light_number, colors);
@@ -632,13 +542,13 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
         glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
         glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
     } else {
-        shader = renderer.shader_manager->getEntityShader(0);
+        shader = renderer.shader_manager->getEntityShader(0, skin);
         glUseProgramObjectARB(shader->program);
     }
     return shader;
 }
 
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16])
 {
     if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
@@ -646,14 +556,14 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     }
 
     // Calculate lighting
-    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
+    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, false);
 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
         // base frame offset
         btScalar subModelView[16];
         btScalar subModelViewProjection[16];
-        if(entity->type_flags & ENTITY_TYPE_KINEMATIC)
+        if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
         {
             memcpy(subModelView, modelViewMatrix, sizeof(subModelView));
             memcpy(subModelViewProjection, modelViewProjectionMatrix, sizeof(subModelViewProjection));
@@ -664,7 +574,13 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
         }
 
-        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
+        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection, projection);
+
+        if (entity->bf.bone_tags[0].mesh_skin)
+        {
+            const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
+            Render_SkeletalModelSkin(skinShader, &entity->bf, subModelView, projection);
+        }
     }
 }
 
@@ -674,7 +590,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
         return;
 
     // Calculate lighting
-    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix);
+    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, false);
 
     for(int h=0; h<entity->character->hair_count; h++)
     {
@@ -692,7 +608,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
             glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
             glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
-            Render_Mesh(entity->character->hairs[h].elements[i].mesh, NULL, NULL);
+            Render_Mesh(entity->character->hairs[h].elements[i].mesh);
         }
     }
 }
@@ -700,12 +616,73 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 /**
  * drawing world models.
  */
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Room(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16])
 {
     engine_container_p cont;
     entity_p ent;
 
     const shader_description *lastShader = 0;
+
+    ////start test stencil test code
+    bool need_stencil = false;
+#if STENCIL_FRUSTUM
+    if(room->frustum != NULL)
+    {
+        for(uint16_t i=0;i<room->overlapped_room_list_size;i++)
+        {
+            if(room->overlapped_room_list[i]->is_in_r_list)
+            {
+                need_stencil = true;
+                break;
+            }
+        }
+
+        if(need_stencil)
+        {
+            const unlit_shader_description *shader = render->shader_manager->getStencilShader();
+            glUseProgramObjectARB(shader->program);
+            glUniformMatrix4fvARB(shader->model_view_projection, 1, false, engine_camera.gl_view_proj_mat);
+            glEnable(GL_STENCIL_TEST);
+            glClear(GL_STENCIL_BUFFER_BIT);
+            glStencilFunc(GL_NEVER, 1, 0x00);
+            glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
+
+            GLuint stencilVBO;
+            glGenBuffersARB(1, &stencilVBO);
+
+            vertex_array_attribute attribs[] = {
+                vertex_array_attribute(unlit_shader_description::position, 3, GL_FLOAT, false, stencilVBO, sizeof(GLfloat [3]), 0)
+            };
+
+            vertex_array *array = render->vertex_array_manager->createArray(0, 1, attribs);
+            array->use();
+
+            for(frustum_p f=room->frustum;f!=NULL;f=f->next)
+            {
+                glBindBufferARB(GL_ARRAY_BUFFER_ARB, stencilVBO);
+                glBufferDataARB(GL_ARRAY_BUFFER_ARB, f->vertex_count * sizeof(GLfloat [3]), NULL, GL_STREAM_DRAW_ARB);
+
+                GLfloat *v = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+
+                for(int16_t i=f->vertex_count-1;i>=0;i--)
+                {
+                    vec3_copy(v, f->vertex+3*i);
+                    v+=3;
+                }
+
+                glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+
+                glDrawArrays(GL_TRIANGLE_FAN, 0, f->vertex_count);
+            }
+            glStencilFunc(GL_EQUAL, 1, 0xFF);
+
+            render->vertex_array_manager->unbind();
+            delete array;
+            glDeleteBuffersARB(1, &stencilVBO);
+        }
+    }
+#endif
+
     if(!(renderer.style & R_SKIP_ROOM) && room->mesh)
     {
         btScalar modelViewProjectionTransform[16];
@@ -725,7 +702,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         glUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
         glUniform1iARB(shader->sampler, 0);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
-        Render_Mesh(room->mesh, NULL, NULL);
+        Render_Mesh(room->mesh);
     }
 
     if (room->static_mesh_count > 0)
@@ -757,7 +734,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                 Render_CalculateWaterTint(tint, 0);
             }
             glUniform4fvARB(render->shader_manager->getStaticMeshShader()->tint_mult, 1, tint);
-            Render_Mesh(mesh, NULL, NULL);
+            Render_Mesh(mesh);
             room->static_mesh[i].was_rendered = 1;
         }
     }
@@ -774,7 +751,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
                 {
                     if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
                     {
-                        Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix);
+                        Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
                     }
                     ent->was_rendered = 1;
                 }
@@ -782,6 +759,12 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             };
         }
     }
+#if STENCIL_FRUSTUM
+    if(need_stencil)
+    {
+        glDisable(GL_STENCIL_TEST);
+    }
+#endif
 }
 
 
@@ -795,24 +778,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projectionMatrix);
         glUniform1iARB(shader->sampler, 0);
 
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glDisableClientState(GL_NORMAL_ARRAY);
-        glDisableClientState(GL_COLOR_ARRAY);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, room->sprite_buffer->array_buffer);
-
-        glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
-        glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [0]));
-
-        glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
-        glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [3]));
-
-        glEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
-        glVertexAttribPointerARB(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [5]));
-
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, room->sprite_buffer->element_array_buffer);
+        room->sprite_buffer->data->use();
 
         unsigned long offset = 0;
         for(uint32_t texture = 0; texture < room->sprite_buffer->num_texture_pages; texture++)
@@ -827,10 +793,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
 
-        glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
-        glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
-        glDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
-        glPopClientAttrib();
+        render->vertex_array_manager->unbind();
     }
 }
 
@@ -913,13 +876,7 @@ void Render_CleanList()
 
         r->is_in_r_list = 0;
         r->active_frustums = 0;
-        frustum_p f = r->last_frustum = r->frustum;
-        for(; f; f=f->next)
-        {
-            f->active = 0;
-            f->parent = NULL;
-            f->parents_count = 0;
-        }
+        r->frustum = NULL;
     }
 
     renderer.style &= ~R_DRAW_SKYBOX;
@@ -955,11 +912,17 @@ void Render_DrawList()
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
 
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
     Render_SkyBox(renderer.cam->gl_view_proj_mat);
 
     if(renderer.world->Character)
     {
-        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat, renderer.cam->gl_proj_mat);
         Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
     }
 
@@ -968,16 +931,16 @@ void Render_DrawList()
      */
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat, renderer.cam->gl_proj_mat);
     }
 
     glDisable(GL_CULL_FACE);
-    glDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
+
+    ///@FIXME: reduce number of gl state changes
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
         Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
     }
-    glEnableClientState(GL_NORMAL_ARRAY);
 
     /*
      * NOW render transparency polygons
@@ -989,7 +952,7 @@ void Render_DrawList()
         room_p r = renderer.r_list[i].room;
         if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
         {
-            render_dBSP.addNewPolygonList(r->mesh->transparency_polygons, r->transform);
+            render_dBSP.addNewPolygonList(r->mesh->transparent_polygon_count, r->mesh->transparent_polygons, r->transform, r->frustum);
         }
     }
 
@@ -1001,7 +964,7 @@ void Render_DrawList()
         {
             if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
             {
-                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform);
+                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparent_polygon_count, r->static_mesh[j].mesh->transparent_polygons, r->static_mesh[j].transform, r->frustum);
             }
         }
 
@@ -1019,7 +982,7 @@ void Render_DrawList()
                         if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
                             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr);
+                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr, r->frustum);
                         }
                     }
                 }
@@ -1036,7 +999,7 @@ void Render_DrawList()
             if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr);
+                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr, NULL);
             }
         }
     }
@@ -1050,10 +1013,14 @@ void Render_DrawList()
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
-        Render_BSPBackToFront(render_dBSP.m_root);
+        uint16_t transparency = BM_OPAQUE;
+        Render_BSPBackToFront(transparency, render_dBSP.m_root, shader);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
+    renderer.vertex_array_manager->unbind();
+    glPopClientAttrib();
+
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
 }
@@ -1064,8 +1031,6 @@ void Render_DrawList_DebugLines()
     {
         return;
     }
-
-    debugDrawer.reset();
 
     if(renderer.world->Character)
     {
@@ -1137,7 +1102,7 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     {
         if((p->dest_room->active) && (p->dest_room != src_room))                // обратно идти даже не пытаемся
         {
-            gen_frus = Portal_FrustumIntersect(p, frus, &renderer);             // Главная ф-я портального рендерера. Тут и проверка
+            gen_frus = engine_frustumManager.portalFrustumIntersect(p, frus, &renderer);             // Главная ф-я портального рендерера. Тут и проверка
             if(NULL != gen_frus)                                                // на пересечение и генерация фрустума по порталу
             {
                 ret++;
@@ -1160,21 +1125,22 @@ void Render_GenWorldList()
     }
 
     Render_CleanList();                                                         // clear old render list
+    debugDrawer.reset();
+    engine_frustumManager.reset();
+    renderer.cam->frustum->next = NULL;
 
     room_p curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
 
     renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
     {
-        curr_room->frustum->parent = NULL;                                      // room with camera inside has no frustums!
-        curr_room->frustum->parents_count = 0;
-        curr_room->frustum->active = 0;
+        curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
         portal_p p = curr_room->portals;                                        // pointer to the portals array
-        for(uint32_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
+        for(uint16_t i=0; i<curr_room->portal_count; i++,p++)                   // go through all start room portals
         {
-            frustum_p last_frus = Portal_FrustumIntersect(p, renderer.cam->frustum, &renderer);
+            frustum_p last_frus = engine_frustumManager.portalFrustumIntersect(p, renderer.cam->frustum, &renderer);
             if(last_frus)
             {
                 Render_AddRoom(p->dest_room);                                   // portal destination room
@@ -1294,9 +1260,11 @@ void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour)
 render_DebugDrawer::render_DebugDrawer()
 :m_debugMode(0)
 {
-    m_buffer = (GLfloat*)malloc(2 * 3 * 2 * DEBUG_DRAWER_DEFAULT_BUFFER_SIZE * sizeof(GLfloat));
     m_max_lines = DEBUG_DRAWER_DEFAULT_BUFFER_SIZE;
+    m_buffer = (GLfloat*)malloc(2 * 6 * m_max_lines * sizeof(GLfloat));
+
     m_lines = 0;
+    m_need_realloc = false;
     vec3_set_zero(m_color);
     m_obb = OBB_Create();
 }
@@ -1307,6 +1275,22 @@ render_DebugDrawer::~render_DebugDrawer()
     m_buffer = NULL;
     OBB_Clear(m_obb);
     m_obb = NULL;
+}
+
+void render_DebugDrawer::reset()
+{
+    if(m_need_realloc)
+    {
+        uint32_t new_buffer_size = m_max_lines * 12 * 2;
+        GLfloat *new_buffer = (GLfloat*)realloc(m_buffer, new_buffer_size * sizeof(GLfloat));
+        if(new_buffer != NULL)
+        {
+            m_buffer = new_buffer;
+            m_max_lines *= 2;
+        }
+        m_need_realloc = false;
+    }
+    m_lines = 0;
 }
 
 void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
@@ -1325,6 +1309,10 @@ void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, co
         vec3_copy(v, to.m_floats);
         v += 3;
         vec3_copy(v, color.m_floats);
+    }
+    else
+    {
+        m_need_realloc = true;
     }
 }
 
@@ -1366,6 +1354,10 @@ void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVect
         //sprintf(buf," %d",lifeTime);
         //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),buf);
     }
+    else
+    {
+        m_need_realloc = true;
+    }
 }
 
 void render_DebugDrawer::render()
@@ -1374,7 +1366,7 @@ void render_DebugDrawer::render()
     {
         glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), m_buffer);
         glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]),  m_buffer + 3);
-        glDrawArrays(GL_LINES, 0, 4 * m_lines);
+        glDrawArrays(GL_LINES, 0, 2 * m_lines);
     }
 
     vec3_set_zero(m_color);
@@ -1387,6 +1379,7 @@ void render_DebugDrawer::drawAxis(btScalar r, btScalar transform[16])
 
     if(m_lines + 3 >= m_max_lines)
     {
+        m_need_realloc = true;
         return;
     }
 
@@ -1437,15 +1430,21 @@ void render_DebugDrawer::drawAxis(btScalar r, btScalar transform[16])
 
 void render_DebugDrawer::drawFrustum(struct frustum_s *f)
 {
-    if((f != NULL) && (m_lines + f->count < m_max_lines))
+    if(f != NULL)
     {
         GLfloat *v, *v0;
         btScalar *fv = f->vertex;
 
-        v = v0 = m_buffer + 3 * 4 * m_lines;
-        m_lines += f->count;
+        if(m_lines + f->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
 
-        for(uint16_t i=0;i<f->count-1;i++,fv += 3)
+        v = v0 = m_buffer + 3 * 4 * m_lines;
+        m_lines += f->vertex_count;
+
+        for(uint16_t i=0;i<f->vertex_count-1;i++,fv += 3)
         {
             vec3_copy(v, fv);
             v += 3;
@@ -1470,10 +1469,16 @@ void render_DebugDrawer::drawFrustum(struct frustum_s *f)
 
 void render_DebugDrawer::drawPortal(struct portal_s *p)
 {
-    if((p != NULL) && (m_lines + p->vertex_count < m_max_lines))
+    if(p != NULL)
     {
         GLfloat *v, *v0;
         btScalar *pv = p->vertex;
+
+        if(m_lines + p->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
 
         v = v0 = m_buffer + 3 * 4 * m_lines;
         m_lines += p->vertex_count;
@@ -1510,6 +1515,10 @@ void render_DebugDrawer::drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScal
         OBB_Transform(m_obb);
         drawOBB(m_obb);
     }
+    else
+    {
+        m_need_realloc = true;
+    }
 }
 
 void render_DebugDrawer::drawOBB(struct obb_s *obb)
@@ -1519,6 +1528,7 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
 
     if(m_lines + 12 >= m_max_lines)
     {
+        m_need_realloc = true;
         return;
     }
 
@@ -1591,10 +1601,16 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
 
 void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals)
 {
-    if((renderer.style & R_DRAW_NORMALS) && (m_lines + mesh->vertex_count < m_max_lines))
+    if((!m_need_realloc) && (renderer.style & R_DRAW_NORMALS))
     {
         GLfloat *v = m_buffer + 3 * 4 * m_lines;
         btScalar n[3];
+
+        if(m_lines + mesh->vertex_count >= m_max_lines)
+        {
+            m_need_realloc = true;
+            return;
+        }
 
         setColor(0.8, 0.0, 0.9);
         m_lines += mesh->vertex_count;
@@ -1634,7 +1650,7 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, btScalar t
 
 void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16])
 {
-    if(renderer.style & R_DRAW_NORMALS)
+    if((!m_need_realloc) && renderer.style & R_DRAW_NORMALS)
     {
         btScalar tr[16];
 
@@ -1649,7 +1665,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
 
 void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
 {
-    if(entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
+    if(m_need_realloc || entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
        !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
@@ -1685,6 +1701,10 @@ void render_DebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
 
         drawBBox(bb_min, bb_max, NULL);
     }
+    else
+    {
+        m_need_realloc = true;
+    }
 }
 
 
@@ -1694,6 +1714,11 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     frustum_p frus;
     engine_container_p cont;
     entity_p ent;
+
+    if(m_need_realloc)
+    {
+        return;
+    }
 
     flag = render->style & R_DRAW_ROOMBOXES;
     if(flag)
@@ -1720,7 +1745,7 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     if(flag)
     {
         debugDrawer.setColor(1.0, 0.0, 0.0);
-        for(frus=room->frustum; frus && frus->active; frus=frus->next)
+        for(frus=room->frustum; frus; frus=frus->next)
         {
             debugDrawer.drawFrustum(frus);
         }
@@ -1774,4 +1799,3 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
         };
     }
 }
-

@@ -20,6 +20,7 @@
 #include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 #include "bullet/LinearMath/btScalar.h"
+#include "vertex_array.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -31,6 +32,23 @@ struct engine_container_s;
 struct obb_s;
 struct vertex_s;
 struct entity_s;
+
+typedef struct transparent_polygon_reference_s {
+    const struct polygon_s *polygon;
+    vertex_array *used_vertex_array;
+    unsigned firstIndex;
+    unsigned count;
+    bool isAnimated;
+} transparent_polygon_reference_t, *transparent_polygon_reference_p;
+
+/*
+ * Animated version of vertex. Does not contain texture coordinate, because that is in a different VBO.
+ */
+typedef struct animated_vertex_s {
+    float position[3];
+    float color[4];
+    float normal[3];
+} animated_vertex_t, *animated_vertex_p;
 
 /*
  * base mesh, uses everywhere
@@ -49,9 +67,19 @@ typedef struct base_mesh_s
     uint32_t              num_texture_pages;                                    // face without structure wrapping
     uint32_t             *element_count_per_texture;                            //
     uint32_t             *elements;                                             //
+    uint32_t alpha_elements;
 
     uint32_t              vertex_count;                                         // number of mesh's vertices
     struct vertex_s      *vertices;
+    
+    uint32_t num_animated_elements;
+    uint32_t num_alpha_animated_elements;
+    uint32_t *animated_elements;
+    uint32_t animated_vertex_count;
+    struct animated_vertex_s *animated_vertices;
+    
+    uint32_t transparent_polygon_count;
+    struct transparent_polygon_reference_s *transparent_polygons;
 
     btScalar              centre[3];                                            // geometry centre of mesh
     btScalar              bb_min[3];                                            // AABB bounding volume
@@ -61,15 +89,16 @@ typedef struct base_mesh_s
 
     GLuint                vbo_vertex_array;
     GLuint                vbo_index_array;
+    GLuint                vbo_skin_array;
+    vertex_array *        main_vertex_array;
     
     // Buffers for animated polygons
     // The first contains position, normal and color.
     // The second contains the texture coordinates. It gets updated every frame.
-    size_t                num_animated_elements;
-    GLuint                animated_vertex_array;
-    GLuint                animated_texcoord_array;
-    GLuint                animated_index_array;
-    size_t                animated_index_array_length;
+    GLuint                animated_vbo_vertex_array;
+    GLuint                animated_vbo_texcoord_array;
+    GLuint                animated_vbo_index_array;
+    vertex_array *        animated_vertex_array;
 }base_mesh_t, *base_mesh_p;
 
 
@@ -94,9 +123,7 @@ typedef struct sprite_s
 typedef struct sprite_buffer_s
 {
     // Vertex data for the sprites
-    GLuint                array_buffer;
-    // Element data for the sprites
-    GLuint                element_array_buffer;
+    vertex_array *data;
     
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
     uint32_t              num_texture_pages;
@@ -214,8 +241,8 @@ typedef struct ss_bone_tag_s
     btScalar                offset[3];                                          // model position offset
 
     btScalar                qrotate[4];                                         // quaternion rotation
-    alignas(16) btScalar    transform[16];                                      // 4x4 OpenGL matrix for stack usage
-    alignas(16) btScalar    full_transform[16];                                 // 4x4 OpenGL matrix for global usage
+    btScalar                transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
+    btScalar                full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
 
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
@@ -256,6 +283,8 @@ typedef struct ss_bone_frame_s
     btScalar                    centre[3];                                      // bounding box centre
 
     struct ss_animation_s       animations;                                     // animations list
+    
+    bool hasSkin;                                       // whether any skinned meshes need rendering
 }ss_bone_frame_t, *ss_bone_frame_p;
 
 /*
@@ -365,7 +394,7 @@ typedef struct skeletal_model_s
 
 void BaseMesh_Clear(base_mesh_p mesh);
 void BaseMesh_FindBB(base_mesh_p mesh);
-void Mesh_GenVBO(struct base_mesh_s *mesh);
+void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh);
 
 void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletonModel_FillTransparency(skeletal_model_p model);

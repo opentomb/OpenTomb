@@ -66,6 +66,5 @@ void Portal_Move(portal_p p, btScalar mv[3]);
 int Portal_RayIntersect(portal_p p, btScalar dir[3], btScalar dot[3]);              // проверка на пересечение луча и портала
 
 void Portal_GenNormale(portal_p p);
-struct frustum_s* Portal_FrustumIntersect(portal_p portal, struct frustum_s *emitter, struct render_s *render);         // Основная функция для работы с порталами.
 
 #endif   // PORTAL_H

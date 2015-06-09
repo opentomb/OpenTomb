@@ -16,67 +16,367 @@
 #include "engine.h"
 #include "obb.h"
 
-frustum_p Frustum_Create()
+
+frustumManager engine_frustumManager(32768);
+
+frustumManager::frustumManager(uint32_t buffer_size)
 {
-    frustum_p frus;
-    frus = (frustum_p)malloc(sizeof(frustum_t));
-    frus->active = 0;
-    frus->count = 0;
-    frus->parents_count = 0;
-    frus->next = NULL;
-    frus->planes = NULL;
-    frus->vertex = NULL;
-    frus->cam_pos = NULL;
-    return frus;
+    m_buffer_size = buffer_size;
+    m_allocated = 0;
+    m_buffer = (uint8_t*)malloc(buffer_size * sizeof(uint8_t));
+    m_need_realloc = false;
 }
 
-void Frustum_Delete(frustum_p p)
+frustumManager::~frustumManager()
 {
-    if(p)
+    if(m_buffer != NULL)
     {
-        if(!renderer.cam || p != renderer.cam->frustum)
-        {
-            p->active = 0;
-            p->count = 0;
-            if(p->planes)
-            {
-                free(p->planes);
-                p->planes = NULL;
-            }
-
-            if(p->vertex)
-            {
-                free(p->vertex);
-                p->vertex = NULL;
-            }
-        }
-        if(p->next)
-        {
-            Frustum_Delete(p->next);
-            p->next = NULL;
-        }
-        if(!renderer.cam || p != renderer.cam->frustum)
-        {
-            free(p);
-        }
+        free(m_buffer);
+        m_buffer = NULL;
     }
 }
 
-void Frustum_Copy(frustum_p p, frustum_p src)
+void frustumManager::reset()
 {
-    p->cam_pos = src->cam_pos;
-    p->active = src->active;
-    p->count = src->count;
-    vec4_copy(p->norm, src->norm);
-    if(p->count)
+    m_allocated = 0;
+    if(m_need_realloc)
     {
-        p->planes = (btScalar*)realloc(p->planes, 4*p->count*sizeof(btScalar));
-        memcpy(p->planes, src->planes, 4*p->count*sizeof(btScalar));
-        p->vertex = (btScalar*)realloc(p->vertex, 3*p->count*sizeof(btScalar));
-        memcpy(p->vertex, src->vertex, 3*p->count*sizeof(btScalar));
+        uint32_t new_buffer_size = m_buffer_size * 1.5;
+        uint8_t *new_buffer = (uint8_t*)realloc(m_buffer, new_buffer_size * sizeof(uint8_t));
+        if(new_buffer != NULL)
+        {
+            m_buffer = new_buffer;
+            m_buffer_size = new_buffer_size;
+        }
+        m_need_realloc = false;
     }
 }
 
+frustum_p frustumManager::createFrustum()
+{
+    if((!m_need_realloc) && (m_allocated + sizeof(frustum_t) < m_buffer_size))
+    {
+        frustum_p ret = (frustum_p)(m_buffer + m_allocated);
+        m_allocated += sizeof(frustum_t);
+        ret->vertex_count = 0;
+        ret->parents_count = 0;
+        ret->next = NULL;
+        ret->parent = NULL;
+        ret->planes = NULL;
+        ret->vertex = NULL;
+        ret->cam_pos = NULL;
+        vec4_set_zero(ret->norm);
+        return ret;
+    }
+
+    m_need_realloc = true;
+    return NULL;
+}
+
+btScalar *frustumManager::alloc(uint32_t size)
+{
+    size *= sizeof(btScalar);
+    if((!m_need_realloc) && (m_allocated + size < m_buffer_size))
+    {
+        btScalar *ret = (btScalar*)(m_buffer + m_allocated);
+        m_allocated += size;
+        return ret;
+    }
+
+    m_need_realloc = true;
+    return NULL;
+}
+
+void frustumManager::splitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter)
+{
+    frustum->vertex_count = p->vertex_count;
+    frustum->vertex = this->alloc(3 * (p->vertex_count + emitter->vertex_count + 1));
+    if(frustum->vertex != NULL)
+    {
+        memcpy(frustum->vertex, p->vertex, 3 * p->vertex_count * sizeof(btScalar));
+        vec4_copy_inv(frustum->norm, p->norm);
+    }
+    else
+    {
+        frustum->vertex_count = 0;
+        m_need_realloc = true;
+    }
+    frustum->parent = NULL;
+}
+
+int frustumManager::split_by_plane(frustum_p p, btScalar n[4], btScalar *buf)
+{
+    if(!m_need_realloc)
+    {
+        btScalar *curr_v, *prev_v, *v, t, dir[3];
+        btScalar dist[2];
+        uint16_t added = 0;
+
+        curr_v = p->vertex;
+        prev_v = p->vertex + 3*(p->vertex_count-1);
+        dist[0] = vec3_plane_dist(n, prev_v);
+        v = buf;
+        for(uint16_t i=0;i<p->vertex_count;i++)
+        {
+            dist[1] = vec3_plane_dist(n, curr_v);
+
+            if(dist[1] > SPLIT_EPSILON)
+            {
+                if(dist[0] < -SPLIT_EPSILON)
+                {
+                    vec3_sub(dir, curr_v, prev_v)
+                    vec3_ray_plane_intersect(prev_v, dir, n, v, t)                  // ищем точку пересечения
+                    v += 3;                                                         // сдвигаем
+                    added++;
+                }
+                vec3_copy(v, curr_v);                                               // добавляем
+                v += 3;                                                             // инкрементируем указатель на буффер вершин
+                added++;                                                            // инкрементируем результат
+            }
+            else if(dist[1] < -SPLIT_EPSILON)
+            {
+                if(dist[0] > SPLIT_EPSILON)
+                {
+                    vec3_sub(dir, curr_v, prev_v)
+                    vec3_ray_plane_intersect(prev_v, dir, n, v, t)                  // ищем точку пересечения
+                    v += 3;                                                         // сдвигаем
+                    added++;
+                }
+            }
+            else
+            {
+                vec3_copy(v, curr_v);                                               // добавляем
+                v += 3;                                                             // инкрементируем указатель на буффер вершин
+                added++;                                                            // инкрементируем результат
+            }
+
+            prev_v = curr_v;
+            curr_v += 3;
+            dist[0] = dist[1];
+        }
+
+        if(added <= 2)                                                              // ничего не добавлено или вырождено
+        {
+            p->vertex_count = 0;
+            return SPLIT_EMPTY;
+        }
+
+    #if 0
+        p->vertex_count = added;
+        memcpy(p->vertex, buf, added*3*sizeof(btScalar));
+    #else       // filter repeating (too closest) points
+        curr_v = buf;
+        prev_v = buf + 3 * (added - 1);
+        v = p->vertex;
+        p->vertex_count = 0;
+        for(uint16_t i=0;i<added;i++)
+        {
+            if(vec3_dist_sq(prev_v, curr_v) > SPLIT_EPSILON * SPLIT_EPSILON)
+            {
+                vec3_copy(v, curr_v);
+                v += 3;
+                p->vertex_count++;
+            }
+            prev_v = curr_v;
+            curr_v += 3;
+        }
+
+        if(p->vertex_count <= 2)
+        {
+            p->vertex_count = 0;
+            return SPLIT_EMPTY;
+        }
+    #endif
+        return SPLIT_SUCCES;
+    }
+
+    return SPLIT_EMPTY;
+}
+
+void frustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
+{
+    if(m_allocated + p->vertex_count * 4 * sizeof(btScalar) >= m_buffer_size)
+    {
+        m_need_realloc = true;
+    }
+
+    if((!m_need_realloc) && (p->vertex_count > 0))
+    {
+        btScalar V1[3], V2[3], *prev_v, *curr_v, *next_v, *r;
+        p->planes = this->alloc(4 * p->vertex_count);
+
+        next_v = p->vertex;
+        curr_v = p->vertex + 3 * (p->vertex_count - 1);
+        prev_v = curr_v - 3;
+        r = p->planes;
+
+        //==========================================================================
+
+        for(uint16_t i=0;i<p->vertex_count;i++,r+=4)
+        {
+            btScalar t;
+            vec3_sub(V1, prev_v, cam->pos)                                      // вектор от наблюдателя до вершины полигона
+            vec3_sub(V2, curr_v, prev_v)                                        // вектор соединяющий соседние вершины полигона
+            vec3_norm(V1, t);
+            vec3_norm(V2, t);
+            vec3_cross(r, V1, V2)
+            vec3_norm(r, t);
+            r[3] = -vec3_dot(r, curr_v);
+            vec4_inv(r);
+
+            prev_v = curr_v;
+            curr_v = next_v;
+            next_v += 3;
+        }
+
+        p->cam_pos = cam->pos;
+    }
+}
+
+/*
+ * receiver - указатель на базовый фрустум рума, куда ведет портал - берется из портала!!!
+ * возвращает указатель на свежесгенеренный фрустум
+ */
+frustum_p frustumManager::portalFrustumIntersect(struct portal_s *portal, frustum_p emitter, struct render_s *render)
+{
+    if(!m_need_realloc)
+    {
+        if(vec3_plane_dist(portal->norm, render->cam->pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+        {
+            return NULL;
+        }
+
+        if((portal->dest_room->frustum != NULL) && Frustum_HaveParent(portal->dest_room->frustum, emitter))
+        {
+            return NULL;                                                        // abort infinite cycling!
+        }
+
+        int in_dist = 0, in_face = 0;
+        btScalar *n = render->cam->frustum->norm;
+        btScalar *v = portal->vertex;
+        for(uint16_t i=0;i<portal->vertex_count;i++,v+=3)
+        {
+            if((in_dist == 0) && (vec3_plane_dist(n, v) < render->cam->dist_far))
+            {
+                in_dist = 1;
+            }
+            if((in_face == 0) && (vec3_plane_dist(emitter->norm, v) > 0.0))
+            {
+                in_face = 1;
+            }
+        }
+
+        if((in_dist == 0) || (in_face == 0))
+        {
+            return NULL;
+        }
+
+        /*
+         * Search for the first free room's frustum
+         */
+        uint32_t original_allocated = m_allocated;
+        frustum_p prev = NULL, current_gen = NULL;
+        if(portal->dest_room->frustum == NULL)
+        {
+            current_gen = portal->dest_room->frustum = this->createFrustum();
+        }
+        else
+        {
+            prev = portal->dest_room->frustum;
+            while(prev->next)
+            {
+                prev = prev->next;
+            }
+            current_gen = prev->next = this->createFrustum();                   // generate new frustum.
+        }
+
+        if(m_need_realloc)
+        {
+            return NULL;
+        }
+
+        this->splitPrepare(current_gen, portal, emitter);                       // prepare to the clipping
+        if(m_need_realloc)
+        {
+            if(prev)
+            {
+                prev->next = NULL;
+            }
+            else
+            {
+                portal->dest_room->frustum = NULL;
+            }
+            return NULL;
+        }
+
+        int bz = 4 * (current_gen->vertex_count + emitter->vertex_count + 4);
+        btScalar *tmp = GetTempbtScalar(bz);
+        if(this->split_by_plane(current_gen, emitter->norm, tmp))               // splitting by main frustum clip plane
+        {
+            n = emitter->planes;
+            for(uint16_t i=0;i<emitter->vertex_count;i++,n+=4)
+            {
+                if(!this->split_by_plane(current_gen, n, tmp))
+                {
+                    if(prev)
+                    {
+                        prev->next = NULL;
+                    }
+                    else
+                    {
+                        portal->dest_room->frustum = NULL;
+                    }
+                    ReturnTempbtScalar(bz);
+                    m_allocated = original_allocated;
+                    return NULL;
+                }
+            }
+
+            this->genClipPlanes(current_gen, render->cam);                      // all is OK, let us generate clipplanes
+            if(m_need_realloc)
+            {
+                if(prev)
+                {
+                    prev->next = NULL;
+                }
+                else
+                {
+                    portal->dest_room->frustum = NULL;
+                }
+                ReturnTempbtScalar(bz);
+                m_allocated = original_allocated;
+                return NULL;
+            }
+
+            current_gen->parent = emitter;                                      // add parent pointer
+            current_gen->parents_count = emitter->parents_count + 1;
+            portal->dest_room->active_frustums++;
+            if(portal->dest_room->max_path < current_gen->parents_count)
+            {
+                portal->dest_room->max_path = current_gen->parents_count;       // maximum path to the room
+            }
+            ReturnTempbtScalar(bz);
+            return current_gen;
+        }
+
+        if(prev)
+        {
+            prev->next = NULL;
+        }
+        else
+        {
+            portal->dest_room->frustum = NULL;
+        }
+        m_allocated = original_allocated;
+        ReturnTempbtScalar(bz);
+    }
+
+    return NULL;
+}
+
+/*
+ ************************* END FRUSTUM MANAGER IMPLEMENTATION*******************
+ */
 
 int Frustum_GetFrustumsCount(struct frustum_s *f)
 {
@@ -94,139 +394,17 @@ int Frustum_GetFrustumsCount(struct frustum_s *f)
  */
 int Frustum_HaveParent(frustum_p parent, frustum_p frustum)
 {
-    frustum_p base_parent = parent;
-    while(frustum && frustum->active)
+    while(frustum)
     {
-        while(parent && parent->active)
+        if(parent == frustum)
         {
-            if(parent == frustum)
-            {
-                return 1;
-            }
-            parent = parent->next;
+            return 1;
         }
         frustum = frustum->parent;
-        parent = base_parent;
     }
     return 0;
 }
 
-void Frustum_SplitPrepare(frustum_p frustum, struct portal_s *p)
-{
-    frustum->count = p->vertex_count;
-    frustum->vertex = (btScalar*)realloc(frustum->vertex, 3*p->vertex_count*sizeof(btScalar));
-    memcpy(frustum->vertex, p->vertex, 3*p->vertex_count*sizeof(btScalar));
-    frustum->norm[0] = -p->norm[0];
-    frustum->norm[1] = -p->norm[1];
-    frustum->norm[2] = -p->norm[2];
-    frustum->norm[3] = -p->norm[3];
-    frustum->active = 0;
-}
-
-int Frustum_Split(frustum_p p, btScalar n[4], btScalar *buf)                    // отсечение части фрустума плоскостью
-{
-    btScalar *curr_v, *prev_v, *v, t, dir[3];
-    btScalar dist[2];
-
-    curr_v = p->vertex;
-    prev_v = p->vertex + 3*(p->count-1);
-    uint16_t added = 0;
-    dist[0] = vec3_plane_dist(n, prev_v);
-    v = buf;
-    for(uint16_t i=0;i<p->count;i++)
-    {
-        dist[1] = vec3_plane_dist(n, curr_v);
-
-        if(dist[1] > SPLIT_EPSILON)
-        {
-            if(dist[0] < -SPLIT_EPSILON)
-            {
-                vec3_sub(dir, curr_v, prev_v)
-                vec3_ray_plane_intersect(prev_v, dir, n, v, t)                  // ищем точку пересечения
-                v += 3;                                                         // сдвигаем
-                added++;
-            }
-            vec3_copy(v, curr_v);                                               // добавляем
-            v += 3;                                                             // инкрементируем указатель на буффер вершин
-            added++;                                                            // инкрементируем результат
-        }
-        else if(dist[1] < -SPLIT_EPSILON)
-        {
-            if(dist[0] > SPLIT_EPSILON)
-            {
-                vec3_sub(dir, curr_v, prev_v)
-                vec3_ray_plane_intersect(prev_v, dir, n, v, t)                  // ищем точку пересечения
-                v += 3;                                                         // сдвигаем
-                added++;
-            }
-        }
-        else
-        {
-            vec3_copy(v, curr_v);                                               // добавляем
-            v += 3;                                                             // инкрементируем указатель на буффер вершин
-            added++;                                                            // инкрементируем результат
-        }
-
-        prev_v = curr_v;
-        curr_v += 3;
-        dist[0] = dist[1];
-    }
-
-    if(added <= 2)                                                              // ничего не добавлено или вырождено
-    {
-        p->count = 0;
-        p->active = 0;
-        return SPLIT_EMPTY;
-    }
-
-    p->vertex = (btScalar*)realloc(p->vertex, added*3*sizeof(btScalar));
-    p->count = added;
-    memcpy(p->vertex, buf, added*3*sizeof(btScalar));
-    p->active = 1;
-
-    return SPLIT_SUCCES;
-}
-
-/**
- * Генерация плоскостей отсеченияпортала
- */
-void Frustum_GenClipPlanes(frustum_p p, struct camera_s *cam)
-{
-    btScalar V1[3], V2[3], *prev_v, *curr_v, *next_v, *r;
-
-    if(p->count)
-    {
-        p->planes = (btScalar*)realloc(p->planes, 4*p->count*sizeof(btScalar));
-
-        next_v = p->vertex;
-        curr_v = p->vertex + 3 * (p->count - 1);
-        prev_v = curr_v - 3;
-        r = p->planes;
-
-        //==========================================================================
-
-        for(uint16_t i=0;i<p->count;i++,r+=4)
-        {
-            vec3_sub(V1, prev_v, cam->pos)                                      // вектор от наблюдателя до вершины полигона
-            vec3_sub(V2, curr_v, prev_v)                                        // вектор соединяющий соседние вершины полигона
-
-            vec3_cross(r, V1, V2)
-            r[3] = vec3_abs(r);
-            vec3_norm_plane(r, prev_v, r[3])
-            if(vec3_plane_dist(r, next_v) < 0)
-            {
-                vec4_inv(r);
-            }
-
-            prev_v = curr_v;
-            curr_v = next_v;
-            next_v += 3;
-        }
-
-        p->cam_pos = cam->pos;
-        p->active = 1;
-    }
-}
 
 /**
  * Проверка полигона на видимость через портал.
@@ -251,10 +429,10 @@ int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
     }
 
     next_n = frustum->planes;                                                   // генерим очередь проверки
-    curr_n = frustum->planes + 4*(frustum->count-1);                            // 3 соседних плоскости отсечения
+    curr_n = frustum->planes + 4*(frustum->vertex_count-1);                     // 3 соседних плоскости отсечения
     prev_n = curr_n - 4;                                                        //
     ins = 1;                                                                    // на случай если нет пересечений
-    for(uint16_t i=0;i<frustum->count;i++)                                      // перебираем все плоскости текущего фрустума
+    for(uint16_t i=0;i<frustum->vertex_count;i++)                               // перебираем все плоскости текущего фрустума
     {
         curr_v = p->vertices;                                                   // генерим очередь вершин под проверку
         prev_v = p->vertices + p->vertex_count - 1;                             //
@@ -536,7 +714,7 @@ int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
     btScalar t;
 
     frustum = room->frustum;
-    if(frustum->active == 0)                                                    // В комнате нет активного фрустума, значит применяем фрустум камеры
+    if(frustum == NULL)                                                         // В комнате нет активного фрустума, значит применяем фрустум камеры
     {
         ins = 1;                                                                // считаем, что камера внутри OBB
         p = obb->polygons;
@@ -555,7 +733,7 @@ int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
         return ins;                                                             // если камера внутри OBB объекта, то объект виден
     }
 
-    for(;frustum && frustum->active;frustum=frustum->next)                      // Если хоть в одном активном фрустуме виден объект, то возвращаем 1
+    for(;frustum;frustum=frustum->next)                                         // Если хоть в одном активном фрустуме виден объект, то возвращаем 1
     {
         p = obb->polygons;
         for(int i=0;i<6;i++,p++)

@@ -66,6 +66,15 @@ sprite_shader_description::sprite_shader_description(const shader_stage &vertex,
 unlit_shader_description::unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment)
 : shader_description(vertex, fragment)
 {
+    glBindAttribLocationARB(program, vertex_attribs::position, "position");
+    glBindAttribLocationARB(program, vertex_attribs::color, "color");
+    glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
+    glBindAttribLocationARB(program, vertex_attribs::normal, "normal");
+    glBindAttribLocationARB(program, vertex_attribs::vertex_weight, "vertexWeight");
+    glLinkProgramARB(program);
+    
+    printInfoLog(program);
+    
     model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
 }
 
@@ -73,6 +82,7 @@ lit_shader_description::lit_shader_description(const shader_stage &vertex, const
 : unlit_shader_description(vertex, fragment)
 {
     model_view = glGetUniformLocationARB(program, "modelView");
+    projection = glGetUniformLocationARB(program, "projection");
     number_of_lights = glGetUniformLocationARB(program, "number_of_lights");
     light_position = glGetUniformLocationARB(program, "light_position");
     light_color = glGetUniformLocationARB(program, "light_color");

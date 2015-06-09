@@ -1833,6 +1833,8 @@
 		<Unit filename="src/polygon.h" />
 		<Unit filename="src/portal.cpp" />
 		<Unit filename="src/portal.h" />
+		<Unit filename="src/ragdoll.cpp" />
+		<Unit filename="src/ragdoll.h" />
 		<Unit filename="src/redblack.cpp" />
 		<Unit filename="src/redblack.h" />
 		<Unit filename="src/render.cpp" />
@@ -1849,6 +1851,8 @@
 		<Unit filename="src/string.h" />
 		<Unit filename="src/system.cpp" />
 		<Unit filename="src/system.h" />
+		<Unit filename="src/vertex_array.cpp" />
+		<Unit filename="src/vertex_array.h" />
 		<Unit filename="src/vmath.cpp" />
 		<Unit filename="src/vmath.h" />
 		<Unit filename="src/vt/glmath.h" />

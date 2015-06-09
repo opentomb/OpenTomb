@@ -466,10 +466,9 @@ void Game_ApplyControls(struct entity_s *ent)
 }
 
 
-bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform cameraFrom, btTransform cameraTo)
+bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo)
 {
     btSphereShape cameraSphere(16.0);
-    cameraSphere.setLocalScaling(btVector3(0.8, 0.8, 0.8));
     cb->m_closestHitFraction = 1.0;
     cb->m_hitCollisionObject = NULL;
     bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
@@ -480,12 +479,103 @@ bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform cameraFro
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz)
 {
     btTransform cameraFrom, cameraTo;
-    btVector3 cam_pos, cam_pos2;
+    btVector3 cam_pos(cam->pos[0], cam->pos[1], cam->pos[2]), cam_pos2;
     bt_engine_ClosestConvexResultCallback *cb;
 
     //Reset to initial
     cameraFrom.setIdentity();
     cameraTo.setIdentity();
+
+    if(ent->character)
+    {
+        cb = ent->character->convex_cb;
+    }
+    else
+    {
+        cb = new bt_engine_ClosestConvexResultCallback(ent->self);
+        cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    }
+
+    ///@INFO Basic camera override, completely placeholder until a system classic-like is created
+    if(control_states.mouse_look == 0)//If mouse look is off
+    {
+        float currentAngle = cam_angles[0] * (M_PI / 180.0);  //Current is the current cam angle
+        float targetAngle  = ent->angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself
+        float rotSpeed = 2.0; //Speed of rotation
+        bool bDynamicRot = false;//Testing - Constant collision checks will rot in an attempt to hopefully miss collision with walls but it looks ugly DO NOT USE
+
+        ///@FIXME
+        //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
+        if(ent->bf.animations.last_state == TR_STATE_LARA_REACH)
+        {
+            if(cam->target_dir == TR_CAM_TARG_BACK || bDynamicRot)
+            {
+                cam_pos2 = cam_pos;
+                cameraFrom.setOrigin(cam_pos2);
+                cam_pos2.m_floats[0] += sinf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                cam_pos2.m_floats[1] -= cosf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                cameraTo.setOrigin(cam_pos2);
+
+                //If collided we want to go right otherwise stay left
+                if(Cam_HasHit(cb, cameraFrom, cameraTo))
+                {
+                    cam_pos2 = cam_pos;
+                    cameraFrom.setOrigin(cam_pos2);
+                    cam_pos2.m_floats[0] += sinf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                    cam_pos2.m_floats[1] -= cosf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                    cameraTo.setOrigin(cam_pos2);
+
+                    //If collided we want to go to back else right
+                    Cam_HasHit(cb, cameraFrom, cameraTo) ? cam->target_dir = cam->target_dir = TR_CAM_TARG_BACK : cam->target_dir = TR_CAM_TARG_RIGHT;
+                }
+                else
+                {
+                    cam->target_dir = TR_CAM_TARG_LEFT;
+                }
+            }
+        }
+        else if(ent->bf.animations.last_state == TR_STATE_LARA_JUMP_BACK)
+        {
+            cam->target_dir = TR_CAM_TARG_FRONT;
+        }
+        else if(cam->target_dir != TR_CAM_TARG_BACK || bDynamicRot)
+        {
+            cam->target_dir = TR_CAM_TARG_BACK;//Reset to back
+        }
+
+        //If target mis-matches current we need to update the camera's angle to reach target!
+        if(currentAngle != targetAngle)
+        {
+            switch(cam->target_dir)
+            {
+            case TR_CAM_TARG_BACK:
+                targetAngle = (ent->angles[0]) * (M_PI / 180.0);
+                break;
+            case TR_CAM_TARG_FRONT:
+                targetAngle = (ent->angles[0] - 180.0) * (M_PI / 180.0);
+                break;
+            case TR_CAM_TARG_LEFT:
+                targetAngle = (ent->angles[0] - 75.0) * (M_PI / 180.0);
+                break;
+            case TR_CAM_TARG_RIGHT:
+                targetAngle = (ent->angles[0] + 75.0) * (M_PI / 180.0);
+                break;
+            default:
+                targetAngle = (ent->angles[0]) * (M_PI / 180.0);//Same as TR_CAM_TARG_BACK (default pos)
+                break;
+            }
+            float d_angle = cam_angles[0] - targetAngle;
+            if(d_angle > M_PI / 2.0)
+            {
+                d_angle -= M_PI;
+            }
+            if(d_angle < -M_PI / 2.0)
+            {
+                d_angle += M_PI;
+            }
+            cam_angles[0] = fmodf(cam_angles[0] + atan2f(sinf(currentAngle - d_angle), cosf(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), M_PI * 2.0); //Update camera's angle
+        }
+    }
 
     if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
     {
@@ -505,16 +595,6 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         cam_pos.m_floats[1] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
         cam_pos.m_floats[2] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
         renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time)-engine_frame_time;
-    }
-
-    if(ent->character)
-    {
-        cb = ent->character->convex_cb;
-    }
-    else
-    {
-        cb = new bt_engine_ClosestConvexResultCallback(ent->self);
-        cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     }
 
     cameraFrom.setOrigin(cam_pos);
@@ -547,78 +627,6 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         {
             cam_pos.setInterpolate3(cameraFrom.getOrigin(), cameraTo.getOrigin(), cb->m_closestHitFraction);
             cam_pos += cb->m_hitNormalWorld * 2.0;
-        }
-    }
-
-    ///@INFO Basic camera override, completely placeholder until a system classic-like is created
-    if(control_states.mouse_look == 0)//If mouse look is off
-    {
-        float currentAngle = cam_angles[0] * (M_PI/180); //Current is the current cam angle
-        float targetAngle =  ent->angles[0] * (M_PI/180); //Target is the target angle which is the entity's angle itself
-        float rotSpeed = 2.0; //Speed of rotation
-        bool bDynamicRot = false;//Testing - Constant collision checks will rot in an attempt to hopefully miss collision with walls but it looks ugly DO NOT USE
-
-        ///@FIXME
-        //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->bf.animations.last_state == TR_STATE_LARA_REACH)
-        {
-            if(cam->target_dir == TR_CAM_TARG_BACK || bDynamicRot)
-            {
-                cam_pos2 = cam_pos;
-                cameraFrom.setOrigin(cam_pos2);
-                cam_pos2.m_floats[0] += sinf((ent->angles[0] - 90.0) * (M_PI/180.0)) * control_states.cam_distance;
-                cam_pos2.m_floats[1] -= cosf((ent->angles[0] - 90.0) * (M_PI/180.0)) * control_states.cam_distance;
-                cameraTo.setOrigin(cam_pos2);
-
-                //If collided we want to go right otherwise stay left
-                if(Cam_HasHit(cb, cameraFrom, cameraTo))
-                {
-                    cam_pos2 = cam_pos;
-                    cameraFrom.setOrigin(cam_pos2);
-                    cam_pos2.m_floats[0] += sinf((ent->angles[0] + 90.0) * (M_PI/180.0)) * control_states.cam_distance;
-                    cam_pos2.m_floats[1] -= cosf((ent->angles[0] + 90.0) * (M_PI/180.0)) * control_states.cam_distance;
-                    cameraTo.setOrigin(cam_pos2);
-
-                    //If collided we want to go to back else right
-                    if(Cam_HasHit(cb, cameraFrom, cameraTo) ? cam->target_dir = cam->target_dir = TR_CAM_TARG_BACK : cam->target_dir = TR_CAM_TARG_RIGHT);
-                }
-                else
-                {
-                    cam->target_dir = TR_CAM_TARG_LEFT;
-                }
-            }
-        }
-        else if(ent->bf.animations.last_state == TR_STATE_LARA_JUMP_BACK)
-        {
-            cam->target_dir = TR_CAM_TARG_FRONT;
-        }
-        else if(cam->target_dir != TR_CAM_TARG_BACK || bDynamicRot)
-        {
-            cam->target_dir = TR_CAM_TARG_BACK;//Reset to back
-        }
-
-        //If target mis-matches current we need to update the camera's angle to reach target!
-        if(currentAngle != targetAngle)
-        {
-            switch(cam->target_dir)
-            {
-            case TR_CAM_TARG_BACK:
-                targetAngle = (ent->angles[0]) * (M_PI/180.0);
-                break;
-            case TR_CAM_TARG_FRONT:
-                targetAngle = (ent->angles[0] - 180.0) * (M_PI/180.0);
-                break;
-            case TR_CAM_TARG_LEFT:
-                targetAngle = (ent->angles[0] - 75.0) * (M_PI/180.0);
-                break;
-            case TR_CAM_TARG_RIGHT:
-                targetAngle = (ent->angles[0] + 75.0) * (M_PI/180.0);
-                break;
-            default:
-                targetAngle = (ent->angles[0]) * (M_PI/180.0);//Same as TR_CAM_TARG_BACK (default pos)
-                break;
-            }
-            cam_angles[0] = fmodf(cam_angles[0] + atan2f(sinf(currentAngle-(cam_angles[0] - targetAngle)), cosf(currentAngle+(cam_angles[0] - targetAngle))) * (engine_frame_time * rotSpeed), M_PI*2); //Update camera's angle
         }
     }
 
@@ -801,7 +809,7 @@ void Game_Frame(btScalar time)
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
-    bt_engine_dynamicsWorld->stepSimulation(time, 8);
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);                     /// strange, but no hair shake and smooth hair in slow motion;
 
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
@@ -838,6 +846,8 @@ void Game_Frame(btScalar time)
     Game_UpdateCharacters();
 
     if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
+
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
 
     Controls_RefreshStates();
     Render_UpdateAnimTextures();

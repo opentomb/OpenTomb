@@ -114,6 +114,9 @@
 #define SYSWARN_NO_HAIR_SETUP            32
 #define SYSWARN_CANT_CREATE_HAIR         33
 #define SYSWARN_CANT_RESET_HAIR          34
+#define SYSWARN_NO_RAGDOLL_SETUP         35
+#define SYSWARN_CANT_CREATE_RAGDOLL      36
+#define SYSWARN_CANT_REMOVE_RAGDOLL      37
 
 #define SYSNOTE_OGG_OPENED               1000
 #define SYSNOTE_READING_FILE             1001

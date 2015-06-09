@@ -25,7 +25,7 @@
 #define R_DRAW_SKYBOX           0x00002000      // Draw skybox
 #define R_DRAW_POINTS           0x00004000      // Points rendering
 
-#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (4096 * 1024)
+#define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
 #define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
 
 #ifdef BT_USE_DOUBLE_PRECISION
@@ -33,6 +33,8 @@
 #else
     #define GL_BT_SCALAR GL_FLOAT
 #endif
+
+#define STENCIL_FRUSTUM 1
 
 struct portal_s;
 struct frustum_s;
@@ -50,6 +52,7 @@ class render_DebugDrawer:public btIDebugDraw
     uint32_t m_debugMode;
     uint32_t m_max_lines;
     uint32_t m_lines;
+    bool     m_need_realloc;
 
     GLfloat m_color[3];
     GLfloat *m_buffer;
@@ -64,10 +67,7 @@ class render_DebugDrawer:public btIDebugDraw
         {
             return m_lines == 0;
         }
-        void reset()
-        {
-            m_lines = 0;
-        }
+        void reset();
         void render();
         void setColor(GLfloat r, GLfloat g, GLfloat b)
         {
@@ -152,6 +152,7 @@ typedef struct render_s
     struct camera_s            *cam;
     struct render_settings_s    settings;
     class shader_manager *shader_manager;
+    class vertex_array_manager *vertex_array_manager;
 
     uint32_t                    r_list_size;
     uint32_t                    r_list_active_count;
@@ -166,20 +167,20 @@ void Render_InitGlobals();
 void Render_Init();
 
 render_list_p Render_CreateRoomListArray(unsigned int count);
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);                                    // отрисовка одного фрейма скелетной анимации
-void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16]);
+void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);                                    // отрисовка одного фрейма скелетной анимации
+void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16], const btScalar pMatrix[16]);
+void Render_SkeletalModelSkin(const lit_shader_description *shader, struct entity_s *ent, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16]);
 void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
 void Render_SkyBox(const btScalar matrix[16]);
-void Render_Mesh(struct base_mesh_s *mesh, const btScalar *overrideVertices, const btScalar *overrideNormals);
-void Render_PolygonTransparency(struct polygon_s *p);
-void Render_BSPFrontToBack(struct bsp_node_s *root);
-void Render_BSPBackToFront(struct bsp_node_s *root);
-void Render_SkinMesh(struct base_mesh_s *mesh, btScalar transform[16]);
+void Render_Mesh(struct base_mesh_s *mesh);
+void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *p, const struct unlit_tinted_shader_description *shader);
+void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
+void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
 void Render_UpdateAnimTextures();
 void Render_CleanList();
 
 
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16]);
+void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
 void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16]);
 int Render_AddRoom(struct room_s *room);
 void Render_DrawList();

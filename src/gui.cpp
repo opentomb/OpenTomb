@@ -391,6 +391,7 @@ void Gui_Resize()
 
     /* let us update console too */
     Con_SetLineInterval(con_base.spacing);
+    Gui_FillCrosshairBuffer();
 }
 
 void Gui_Render()
@@ -520,8 +521,6 @@ void Gui_RenderStrings()
         glUniform2fvARB(shader->screenSize, 1, screenSize);
         glUniform1iARB(shader->sampler, 0);
 
-        glNormal3f(0, 0, 0);
-
         while(l)
         {
             Gui_RenderStringLine(l);
@@ -601,7 +600,13 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix)
 {
-    const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0);
+    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    
+    const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
     glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -630,17 +635,21 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         Mat4_Mat4_mul(scaledMvMatrix, mvMatrix, scaledMatrix);
         btScalar mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, scaledMvMatrix);
-
+        
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix);
+        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix, guiProjectionMatrix);
     }
     else
     {
         btScalar mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix);
+        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix, guiProjectionMatrix);
     }
+    
+    renderer.vertex_array_manager->unbind();
+    
+    glPopClientAttrib();
 }
 
 /*
@@ -1224,7 +1233,6 @@ void Gui_DrawInventory()
                  BM_OPAQUE);
 
     glDepthMask(GL_TRUE);
-    glPopClientAttrib();
     glPopAttrib();
 
     glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);

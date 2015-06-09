@@ -157,6 +157,11 @@
 		5252A5121B1B117500E8CE1D /* sprite.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5111B1B117500E8CE1D /* sprite.vsh */; };
 		5252A5141B1B591F00E8CE1D /* sprite.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5131B1B591F00E8CE1D /* sprite.fsh */; };
 		5252A5171B1B8B9500E8CE1D /* hair.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5151B1B8B9500E8CE1D /* hair.cpp */; };
+		5252A51B1B1CE01500E8CE1D /* vertex_array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5181B1BB21600E8CE1D /* vertex_array.cpp */; };
+		5252A51D1B1D70CF00E8CE1D /* entity_skin.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */; };
+		5252A5201B24DD4F00E8CE1D /* ragdoll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A51E1B24DD4F00E8CE1D /* ragdoll.cpp */; };
+		5252A5221B262CAA00E8CE1D /* stencil.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5211B262CAA00E8CE1D /* stencil.vsh */; };
+		5252A5241B262CB400E8CE1D /* stencil.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5231B262CB400E8CE1D /* stencil.fsh */; };
 		52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */; };
 		52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */; };
 		52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA91AED5ACA003B8288 /* RobotoCondensed-Regular.ttf */; };
@@ -754,6 +759,13 @@
 		5252A5131B1B591F00E8CE1D /* sprite.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = sprite.fsh; sourceTree = "<group>"; };
 		5252A5151B1B8B9500E8CE1D /* hair.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hair.cpp; sourceTree = "<group>"; };
 		5252A5161B1B8B9500E8CE1D /* hair.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hair.h; sourceTree = "<group>"; };
+		5252A5181B1BB21600E8CE1D /* vertex_array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertex_array.cpp; sourceTree = "<group>"; };
+		5252A5191B1BB21600E8CE1D /* vertex_array.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vertex_array.h; sourceTree = "<group>"; };
+		5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = entity_skin.vsh; sourceTree = "<group>"; };
+		5252A51E1B24DD4F00E8CE1D /* ragdoll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ragdoll.cpp; sourceTree = "<group>"; };
+		5252A51F1B24DD4F00E8CE1D /* ragdoll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ragdoll.h; sourceTree = "<group>"; };
+		5252A5211B262CAA00E8CE1D /* stencil.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = stencil.vsh; sourceTree = "<group>"; };
+		5252A5231B262CB400E8CE1D /* stencil.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = stencil.fsh; sourceTree = "<group>"; };
 		52B82D821AED5A45003B8288 /* OpenTomb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTomb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DroidSansMono.ttf; sourceTree = "<group>"; };
 		52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
@@ -2107,6 +2119,8 @@
 				52B832641AED5B05003B8288 /* portal.h */,
 				52B832651AED5B05003B8288 /* redblack.cpp */,
 				52B832661AED5B05003B8288 /* redblack.h */,
+				5252A51E1B24DD4F00E8CE1D /* ragdoll.cpp */,
+				5252A51F1B24DD4F00E8CE1D /* ragdoll.h */,
 				52B832671AED5B05003B8288 /* render.cpp */,
 				52B832681AED5B05003B8288 /* render.h */,
 				52B832691AED5B06003B8288 /* resource.cpp */,
@@ -2126,6 +2140,8 @@
 				52D5D5F81B08758700B99A38 /* shader_description.h */,
 				5252A50A1B1A530100E8CE1D /* shader_manager.cpp */,
 				5252A50B1B1A530100E8CE1D /* shader_manager.h */,
+				5252A5181B1BB21600E8CE1D /* vertex_array.cpp */,
+				5252A5191B1BB21600E8CE1D /* vertex_array.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -3166,6 +3182,7 @@
 			children = (
 				52D5D5EB1B07E5F500B99A38 /* entity.vsh */,
 				52D5D5ED1B07E5FF00B99A38 /* entity.fsh */,
+				5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */,
 				52D5D5E71B07A86000B99A38 /* room.fsh */,
 				52D5D5E31B079B8300B99A38 /* room.vsh */,
 				52DF7FF11B0769D700A7DE0E /* gui.vsh */,
@@ -3177,6 +3194,8 @@
 				5252A50F1B1AE24F00E8CE1D /* text.fsh */,
 				5252A5111B1B117500E8CE1D /* sprite.vsh */,
 				5252A5131B1B591F00E8CE1D /* sprite.fsh */,
+				5252A5211B262CAA00E8CE1D /* stencil.vsh */,
+				5252A5231B262CB400E8CE1D /* stencil.fsh */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -3246,6 +3265,7 @@
 				52B8335B1AED5B06003B8288 /* README in Resources */,
 				52B833551AED5B06003B8288 /* README in Resources */,
 				52DF7FF21B0769D700A7DE0E /* gui.vsh in Resources */,
+				5252A51D1B1D70CF00E8CE1D /* entity_skin.vsh in Resources */,
 				52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */,
 				52D5D5EE1B07E5FF00B99A38 /* entity.fsh in Resources */,
 				5252A5141B1B591F00E8CE1D /* sprite.fsh in Resources */,
@@ -3254,6 +3274,7 @@
 				52B833381AED5B06003B8288 /* afblue.cin in Resources */,
 				52B8333A1AED5B06003B8288 /* afblue.hin in Resources */,
 				52B833601AED5B06003B8288 /* README in Resources */,
+				5252A5221B262CAA00E8CE1D /* stencil.vsh in Resources */,
 				52B82DB61AED5ACA003B8288 /* Images.xcassets in Resources */,
 				52D5D5E81B07A86000B99A38 /* room.fsh in Resources */,
 				5252A5101B1AE24F00E8CE1D /* text.fsh in Resources */,
@@ -3261,6 +3282,7 @@
 				52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */,
 				52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */,
 				52D5D5EC1B07E5F500B99A38 /* entity.vsh in Resources */,
+				5252A5241B262CB400E8CE1D /* stencil.fsh in Resources */,
 				524E0F5D1AFF968A00F56FF6 /* premake4.lua in Resources */,
 				52B833391AED5B06003B8288 /* afblue.dat in Resources */,
 				52B82DB41AED5ACA003B8288 /* legal.png in Resources */,
@@ -3387,6 +3409,7 @@
 				524E0F1D1AFF968A00F56FF6 /* gim_box_set.cpp in Sources */,
 				524E0EDB1AFF968A00F56FF6 /* btBoxBoxDetector.cpp in Sources */,
 				52B833451AED5B06003B8288 /* ftglyph.c in Sources */,
+				5252A5201B24DD4F00E8CE1D /* ragdoll.cpp in Sources */,
 				524E0F411AFF968A00F56FF6 /* btMultiBody.cpp in Sources */,
 				524E0F171AFF968A00F56FF6 /* btGenericPoolAllocator.cpp in Sources */,
 				52B833471AED5B06003B8288 /* ftinit.c in Sources */,
@@ -3581,6 +3604,7 @@
 				524E0EE41AFF968A00F56FF6 /* btConvexConvexAlgorithm.cpp in Sources */,
 				52B833401AED5B06003B8288 /* ftbitmap.c in Sources */,
 				524E0EE31AFF968A00F56FF6 /* btConvexConcaveCollisionAlgorithm.cpp in Sources */,
+				5252A51B1B1CE01500E8CE1D /* vertex_array.cpp in Sources */,
 				52B832901AED5B06003B8288 /* chorus.c in Sources */,
 				52B833F01AED5B06003B8288 /* lvm.c in Sources */,
 				52B833EE1AED5B06003B8288 /* ltm.c in Sources */,

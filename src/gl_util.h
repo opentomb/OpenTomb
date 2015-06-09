@@ -129,6 +129,13 @@ extern PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB;
 extern PFNGLGETBUFFERPARAMETERIVARBPROC glGetBufferParameterivARB;
 extern PFNGLGETBUFFERPOINTERVARBPROC glGetBufferPointervARB;
 
+/* VAO ext
+ * Note: These functions do not have a ...ARB version, because they were first introduced in OpenGL 3 without suffix and then ported back as an extension.
+ */
+extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
+extern PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
+extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
+
 extern PFNGLGENERATEMIPMAPPROC glGenerateMipmap;
 #endif
 

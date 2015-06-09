@@ -39,6 +39,7 @@ extern "C" {
 #include "render.h"
 #include "redblack.h"
 #include "bsp_tree.h"
+#include "shader_description.h"
 
 lua_State *objects_flags_conf = NULL;
 lua_State *ent_ID_override = NULL;
@@ -1958,9 +1959,9 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     for(uint32_t i=0;i<world->meshes_count;i++)
     {
-        if(world->meshes[i].vertex_count)
+        if(world->meshes[i].vertex_count || world->meshes[i].animated_vertex_count)
         {
-            Mesh_GenVBO(world->meshes + i);
+            Mesh_GenVBO(&renderer, world->meshes + i);
         }
     }
 
@@ -1968,9 +1969,9 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     for(uint32_t i=0;i<world->room_count;i++)
     {
-        if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count))
+        if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count || world->rooms[i].mesh->animated_vertex_count))
         {
-            Mesh_GenVBO(world->rooms[i].mesh);
+            Mesh_GenVBO(&renderer, world->rooms[i].mesh);
         }
     }
 
@@ -2023,7 +2024,6 @@ void TR_GenRooms(struct world_s *world, class VT_Level *tr)
     for(uint32_t i=0;i<world->room_count;i++,r++)
     {
         TR_GenRoom(i, r, world, tr);
-        r->frustum = Frustum_Create();
     }
 }
 
@@ -2042,6 +2042,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
     room->id = room_index;
     room->active = 1;
+    room->frustum = NULL;
     room->flags = tr->rooms[room_index].flags;
     room->light_mode = tr->rooms[room_index].light_mode;
     room->reverb_info = tr->rooms[room_index].reverb_info;
@@ -2059,6 +2060,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->self->room = room;
     room->self->object = room;
     room->self->object_type = OBJECT_ROOM_BASE;
+    room->near_room_list_size = 0;
+    room->overlapped_room_list_size = 0;
 
     TR_GenRoomMesh(world, room_index, room, tr);
 
@@ -2475,32 +2478,6 @@ void TR_GenRoomCollision(struct world_s *world)
 {
     room_p r = world->rooms;
 
-#if TR_MESH_ROOM_COLLISION
-    for(uint32_t i=0;i<world->room_count;i++,r++)
-    {
-        r->bt_body = NULL;
-
-        if(r->mesh)
-        {
-            cshape = BT_CSfromMesh(r->mesh, true, true, COLLISION_TRIMESH);
-
-            if(cshape)
-            {
-                startTransform.setFromOpenGLMatrix(r->transform);
-                btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-                r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-                r->bt_body->setUserPointer(room->self);
-                r->self->collide_flag = COLLISION_TRIMESH;                   // meshtree
-                if(!r->active)
-                {
-                    Room_Disable(r);
-                }
-            }
-        }
-    }
-
-#else
     /*
     if(level_script != NULL)
     {
@@ -2556,8 +2533,6 @@ void TR_GenRoomCollision(struct world_s *world)
 
         delete[] room_tween;
     }
-
-#endif
 }
 
 
@@ -2580,6 +2555,8 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 
         // Generate links to the near rooms.
         Room_BuildNearRoomsList(r);
+        // Generate links to the overlapped rooms.
+        Room_BuildOverlappedRoomsList(r);
 
         // Basic sector calculations.
         TR_Sector_Calculate(world, tr, i);
@@ -2910,7 +2887,7 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
         {
             addPolygonCopyToList(p, mesh->transparency_polygons);
         }
-        else if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
+        if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
         {
             addPolygonCopyToList(p, mesh->animated_polygons);
         }
@@ -3388,15 +3365,24 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
     free(elements_for_texture);
 
     // Now load into OpenGL
-    glGenBuffersARB(1, &room->sprite_buffer->array_buffer);
-    glBindBufferARB(GL_ARRAY_BUFFER, room->sprite_buffer->array_buffer);
+    GLuint arrayBuffer, elementBuffer;
+    glGenBuffersARB(1, &arrayBuffer);
+    glBindBufferARB(GL_ARRAY_BUFFER, arrayBuffer);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
     free(spriteData);
 
-    glGenBuffersARB(1, &room->sprite_buffer->element_array_buffer);
-    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->sprite_buffer->element_array_buffer);
+    glGenBuffersARB(1, &elementBuffer);
+    glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
+
+    struct vertex_array_attribute attribs[3] = {
+        vertex_array_attribute(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
+        vertex_array_attribute(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
+        vertex_array_attribute(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
+    };
+
+    room->sprite_buffer->data = renderer.vertex_array_manager->createArray(elementBuffer, 3, attribs);
 }
 
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr)
