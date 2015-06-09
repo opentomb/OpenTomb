@@ -160,6 +160,8 @@
 		5252A51B1B1CE01500E8CE1D /* vertex_array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5181B1BB21600E8CE1D /* vertex_array.cpp */; };
 		5252A51D1B1D70CF00E8CE1D /* entity_skin.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */; };
 		5252A5201B24DD4F00E8CE1D /* ragdoll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A51E1B24DD4F00E8CE1D /* ragdoll.cpp */; };
+		5252A5221B262CAA00E8CE1D /* stencil.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5211B262CAA00E8CE1D /* stencil.vsh */; };
+		5252A5241B262CB400E8CE1D /* stencil.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5231B262CB400E8CE1D /* stencil.fsh */; };
 		52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */; };
 		52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */; };
 		52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA91AED5ACA003B8288 /* RobotoCondensed-Regular.ttf */; };
@@ -762,6 +764,8 @@
 		5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = entity_skin.vsh; sourceTree = "<group>"; };
 		5252A51E1B24DD4F00E8CE1D /* ragdoll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ragdoll.cpp; sourceTree = "<group>"; };
 		5252A51F1B24DD4F00E8CE1D /* ragdoll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ragdoll.h; sourceTree = "<group>"; };
+		5252A5211B262CAA00E8CE1D /* stencil.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = stencil.vsh; sourceTree = "<group>"; };
+		5252A5231B262CB400E8CE1D /* stencil.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = stencil.fsh; sourceTree = "<group>"; };
 		52B82D821AED5A45003B8288 /* OpenTomb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTomb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DroidSansMono.ttf; sourceTree = "<group>"; };
 		52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
@@ -3190,6 +3194,8 @@
 				5252A50F1B1AE24F00E8CE1D /* text.fsh */,
 				5252A5111B1B117500E8CE1D /* sprite.vsh */,
 				5252A5131B1B591F00E8CE1D /* sprite.fsh */,
+				5252A5211B262CAA00E8CE1D /* stencil.vsh */,
+				5252A5231B262CB400E8CE1D /* stencil.fsh */,
 			);
 			path = shaders;
 			sourceTree = "<group>";
@@ -3268,6 +3274,7 @@
 				52B833381AED5B06003B8288 /* afblue.cin in Resources */,
 				52B8333A1AED5B06003B8288 /* afblue.hin in Resources */,
 				52B833601AED5B06003B8288 /* README in Resources */,
+				5252A5221B262CAA00E8CE1D /* stencil.vsh in Resources */,
 				52B82DB61AED5ACA003B8288 /* Images.xcassets in Resources */,
 				52D5D5E81B07A86000B99A38 /* room.fsh in Resources */,
 				5252A5101B1AE24F00E8CE1D /* text.fsh in Resources */,
@@ -3275,6 +3282,7 @@
 				52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */,
 				52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */,
 				52D5D5EC1B07E5F500B99A38 /* entity.vsh in Resources */,
+				5252A5241B262CB400E8CE1D /* stencil.fsh in Resources */,
 				524E0F5D1AFF968A00F56FF6 /* premake4.lua in Resources */,
 				52B833391AED5B06003B8288 /* afblue.dat in Resources */,
 				52B82DB41AED5ACA003B8288 /* legal.png in Resources */,

@@ -809,7 +809,7 @@ void Game_Frame(btScalar time)
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
-    bt_engine_dynamicsWorld->stepSimulation(time, 8);
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);                     /// strange, but no hair shake and smooth hair in slow motion;
 
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
@@ -846,6 +846,8 @@ void Game_Frame(btScalar time)
     Game_UpdateCharacters();
 
     if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
+
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
 
     Controls_RefreshStates();
     Render_UpdateAnimTextures();

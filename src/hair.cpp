@@ -12,6 +12,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         (!(parent_entity->bt_body[setup->link_body]))           ) return false;
 
     skeletal_model_p model = World_GetModelByID(&engine_world, setup->model);
+    btScalar owner_body_transform[16];
 
     // No model to link to - bypass function.
 
@@ -31,7 +32,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
     // Setup initial position / angles.
 
-    Mat4_Mat4_mul(hair->owner_body_transform, parent_entity->transform, parent_entity->bf.bone_tags[hair->owner_body].full_transform);
+    Mat4_Mat4_mul(owner_body_transform, parent_entity->transform, parent_entity->bf.bone_tags[hair->owner_body].full_transform);
     // Number of elements (bodies) is equal to number of hair meshes.
 
     hair->element_count = model->mesh_count;
@@ -72,17 +73,12 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
         // Initialize motion state for body.
 
-        startTransform.setFromOpenGLMatrix(hair->owner_body_transform);
+        startTransform.setFromOpenGLMatrix(owner_body_transform);
         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
 
         // Make rigid body.
 
         hair->elements[i].body = new btRigidBody(current_weight, motionState, hair->elements[i].shape, localInertia);
-
-        // Set hair gravity.
-
-        btVector3 globalGravity = bt_engine_dynamicsWorld->getGravity();
-        hair->elements[i].body->setGravity(globalGravity * 0.1);    ///@FIXME: Script it!
 
         // Damping makes body stop in space by itself, to prevent it from continous movement.
 
@@ -114,7 +110,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
     // Joint count is calculated from overall body amount multiplied by per-body constraint
     // count.
 
-    hair->joint_count = hair->element_count * setup->joints_per_body;
+    hair->joint_count = hair->element_count;
     hair->joints      = (btGeneric6DofConstraint**)calloc(sizeof(btGeneric6DofConstraint*), hair->joint_count);
 
     // If multiple joints per body is specified, joints are placed in circular manner,
@@ -122,7 +118,6 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
     // circle-like figure.
 
     int curr_joint = 0;
-    btScalar step  = SIMD_2_PI / setup->joints_per_body;
 
     for(uint16_t i=0; i<hair->element_count; i++)
     {
@@ -131,99 +126,89 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
         // Each body width and height are used to calculate position of each joint.
 
-        btScalar body_width = fabs(hair->elements[i].mesh->bb_max[0] - hair->elements[i].mesh->bb_min[0]);
-        btScalar body_depth = fabs(hair->elements[i].mesh->bb_max[3] - hair->elements[i].mesh->bb_min[3]);
+        //btScalar body_width = fabs(hair->elements[i].mesh->bb_max[0] - hair->elements[i].mesh->bb_min[0]);
+        //btScalar body_depth = fabs(hair->elements[i].mesh->bb_max[3] - hair->elements[i].mesh->bb_min[3]);
 
         btTransform localA; localA.setIdentity();
         btTransform localB; localB.setIdentity();
 
-        btScalar d       = 0.0; // Current "circle" position.
         btScalar joint_x = 0.0;
         btScalar joint_y = 0.0;
 
-        for(int j=0; j<setup->joints_per_body; j++, d += step)
+        if(i == 0)  // First joint group
         {
-            if(setup->joints_per_body > 1)
-            {
-                joint_x = btCos(d) * ((body_depth*0.5) * setup->joint_radius);
-                joint_y = btSin(d) * ((body_width*0.5) * setup->joint_radius);
-            }
+            // Adjust pivot point A to parent body.
 
-            if(i == 0)  // First joint group
-            {
-                // Adjust pivot point A to parent body.
+            localA.setOrigin(setup->head_offset + btVector3(joint_x, 0.0, joint_y));
+            localA.getBasis().setEulerZYX(setup->root_angle[0], setup->root_angle[1], setup->root_angle[2]);
 
-                localA.setOrigin(setup->head_offset + btVector3(joint_x, 0.0, joint_y));
-                localA.getBasis().setEulerZYX(setup->root_angle[0], setup->root_angle[1], setup->root_angle[2]);
+            localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
+            localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
 
-                localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
-                localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
-
-                prev_body = parent_entity->bt_body[hair->owner_body];   // Previous body is parent body.
-            }
-            else
-            {
-                // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
-
-                body_length = fabs(hair->elements[i-1].mesh->bb_max[1] - hair->elements[i-1].mesh->bb_min[1]) * setup->joint_overlap;
-
-                localA.setOrigin(btVector3(joint_x, body_length, joint_y));
-                localA.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
-
-                // Pivot point B is automatically adjusted by Bullet.
-
-                localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
-                localB.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
-
-                prev_body = hair->elements[i-1].body;   // Previous body is preceiding hair mesh.
-            }
-
-            // Create 6DOF constraint.
-
-            hair->joints[curr_joint] = new btGeneric6DofConstraint(*prev_body, *(hair->elements[i].body), localA, localB, true);
-
-            // CFM and ERP parameters are critical for making joint "hard" and link
-            // to Lara's head. With wrong values, constraints may become "elastic".
-
-            for(int axis=0;axis<=5;axis++)
-            {
-                hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, axis);
-                hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, axis);
-            }
-
-            if(i == 0)
-            {
-                // First joint group should be more limited in motion, as it is connected
-                // right to the head. NB: Should we make it scriptable as well?
-
-                hair->joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
-                hair->joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
-                hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI,     0., -SIMD_HALF_PI*0.4));
-                hair->joints[curr_joint]->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0.,  SIMD_HALF_PI*0.4));
-
-                // Increased solver iterations make constraint even more stable.
-
-                hair->joints[curr_joint]->setOverrideNumSolverIterations(100);
-            }
-            else
-            {
-                // Normal joint with more movement freedom.
-
-                hair->joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
-                hair->joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
-                hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI*0.5, 0., -SIMD_HALF_PI*0.5));
-                hair->joints[curr_joint]->setAngularUpperLimit(btVector3( SIMD_HALF_PI*0.5, 0.,  SIMD_HALF_PI*0.5));
-
-            }
-
-            hair->joints[curr_joint]->setDbgDrawSize(btScalar(5.f));    // Draw constraint axes.
-
-            // Add constraint to the world.
-
-            bt_engine_dynamicsWorld->addConstraint(hair->joints[curr_joint], true);
-
-            curr_joint++;   // Point to the next joint.
+            prev_body = parent_entity->bt_body[hair->owner_body];   // Previous body is parent body.
         }
+        else
+        {
+            // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
+
+            body_length = fabs(hair->elements[i-1].mesh->bb_max[1] - hair->elements[i-1].mesh->bb_min[1]) * setup->joint_overlap;
+
+            localA.setOrigin(btVector3(joint_x, body_length, joint_y));
+            localA.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
+
+            // Pivot point B is automatically adjusted by Bullet.
+
+            localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
+            localB.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
+
+            prev_body = hair->elements[i-1].body;   // Previous body is preceiding hair mesh.
+        }
+
+        // Create 6DOF constraint.
+
+        hair->joints[curr_joint] = new btGeneric6DofConstraint(*prev_body, *(hair->elements[i].body), localA, localB, true);
+
+        // CFM and ERP parameters are critical for making joint "hard" and link
+        // to Lara's head. With wrong values, constraints may become "elastic".
+
+        for(int axis=0;axis<=5;axis++)
+        {
+            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, axis);
+            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, axis);
+        }
+
+        if(i == 0)
+        {
+            // First joint group should be more limited in motion, as it is connected
+            // right to the head. NB: Should we make it scriptable as well?
+
+            hair->joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
+            hair->joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
+            hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI,     0., -SIMD_HALF_PI*0.4));
+            hair->joints[curr_joint]->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0.,  SIMD_HALF_PI*0.4));
+
+            // Increased solver iterations make constraint even more stable.
+
+            hair->joints[curr_joint]->setOverrideNumSolverIterations(100);
+        }
+        else
+        {
+            // Normal joint with more movement freedom.
+
+            hair->joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
+            hair->joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
+            hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI*0.5, 0., -SIMD_HALF_PI*0.5));
+            hair->joints[curr_joint]->setAngularUpperLimit(btVector3( SIMD_HALF_PI*0.5, 0.,  SIMD_HALF_PI*0.5));
+
+        }
+
+        hair->joints[curr_joint]->setDbgDrawSize(btScalar(5.f));    // Draw constraint axes.
+
+        // Add constraint to the world.
+
+        bt_engine_dynamicsWorld->addConstraint(hair->joints[curr_joint], true);
+
+        curr_joint++;   // Point to the next joint.
     }
 
     return true;
@@ -283,7 +268,7 @@ void Hair_Update(entity_p entity)
     {
         if((!hair) || (hair->element_count < 1)) continue;
 
-        btScalar new_transform[16];//, sub_tr[16];
+        /*btScalar new_transform[16];
 
         Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
 
@@ -293,29 +278,34 @@ void Hair_Update(entity_p entity)
                           new_transform[12+2] - hair->owner_body_transform[12+2]);
         mix_vel *= 1.0 / engine_frame_time;
 
-        /*btVector3 mix_ang(0.0, 0.0, 0.0);
-        Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
-        mat4_getXYZ_anggles(mix_ang.m_floats, sub_tr);                          ///@FIXME: DOESN'T IMPLEMENTED!!!
-        mix_ang *= 1.0 / engine_frame_time;*/
+        if(0)
+        {
+            btScalar sub_tr[16];
+            btTransform ang_tr;
+            btVector3 mix_ang;
+            Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
+            ang_tr.setFromOpenGLMatrix(sub_tr);
+            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
+            mix_ang *= 1.0 / engine_frame_time;
 
-        Mat4_Copy(hair->owner_body_transform, new_transform);
+            // Looks like angular velocity breaks up constraints on VERY fast moves,
+            // like mid-air turn. Probably, I've messed up with multiplier value...
+
+            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
+            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+        }
+        Mat4_Copy(hair->owner_body_transform, new_transform);*/
 
         // Set mixed velocities to both parent body and first hair body.
 
-        hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
-        hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
+        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
+        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
 
-        mix_vel *= -40.0;                                                       ///@FIXME: magick speed coefficient (force air hair friction!);
-        for(int i=0;i<hair->element_count;i++)
+        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
+        for(int j=0;j<hair->element_count;j++)
         {
-            hair->elements[i].body->applyCentralForce(mix_vel);
-        }
-
-        // Looks like angular velocity breaks up constraints on VERY fast moves,
-        // like mid-air turn. Probably, I've messed up with multiplier value...
-
-        //hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-        //hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+            hair->elements[j].body->applyCentralForce(mix_vel);
+        }*/
 
         hair->container->room = hair->owner_char->self->room;
     }
@@ -350,7 +340,6 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
                     hair_setup->hair_restitution = lua_GetScalarField(engine_lua, "hair_bouncing");
                     hair_setup->joint_radius     = lua_GetScalarField(engine_lua, "joint_radius");
                     hair_setup->joint_overlap    = lua_GetScalarField(engine_lua, "joint_overlap");
-                    hair_setup->joints_per_body  = (uint8_t)lua_GetScalarField(engine_lua, "joints_per_body");
                     hair_setup->joint_cfm        = lua_GetScalarField(engine_lua, "joint_cfm");
                     hair_setup->joint_erp        = lua_GetScalarField(engine_lua, "joint_erp");
 

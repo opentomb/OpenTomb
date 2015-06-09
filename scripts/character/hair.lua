@@ -19,56 +19,56 @@ M_PI = 3.141592653;   -- Needed for hair alignment
 
 
 old_hair_props = {
-    
-    root_weight     = 1.0,
+
+    root_weight     = 20.0,
     tail_weight     = 10.0,
-    
-    hair_damping    = {0.15, 0.30},
+
+    hair_damping    = {0.15, 0.80},
     hair_inertia    = 120.0,
-    hair_friction   = 20.0,
+    hair_friction   = 25.0,
     hair_bouncing   = 0.0,
-    
-    joints_per_body = 3,
+
+    joints_per_body = 1,
     joint_radius    = 0.4,
     joint_cfm       = 0.1,
     joint_erp       = 1.0,
-    
-    joint_overlap   = 0.8,
-}                 
+
+    joint_overlap   = 0.9,
+}
 
 new_hair_old_props = {
-    
+
     root_weight     = 1.0,
     tail_weight     = 10.0,
-    
+
     hair_damping    = {0.15, 0.80},
-    hair_inertia    = 50.0,
+    hair_inertia    = 100.0,
     hair_friction   = 10.0,
     hair_bouncing   = 0.0,
-    
-    joints_per_body = 3,
+
+    joints_per_body = 1,
     joint_radius    = 0.4,
     joint_cfm       = 0.1,
     joint_erp       = 1.0,
-    
+
     joint_overlap   = 0.9
 }
 
 new_hair_kid_props = {
-    
+
     root_weight     = 1.0,
     tail_weight     = 8.0,
-    
+
     hair_damping    = {0.15, 0.80},
-    hair_inertia    = 80.0,
+    hair_inertia    = 120.0,
     hair_friction   = 10.0,
     hair_bouncing   = 0.0,
-    
-    joints_per_body = 3,
+
+    joints_per_body = 1,
     joint_radius    = 0.5,
     joint_cfm       = 0.1,
     joint_erp       = 1.0,
-    
+
     joint_overlap   = 0.8
 }
 

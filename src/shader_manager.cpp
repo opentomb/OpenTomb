@@ -41,6 +41,8 @@ shader_manager::shader_manager()
     
     text = new text_shader_description(shader_stage(GL_VERTEX_SHADER_ARB, "shaders/text.vsh"), shader_stage(GL_FRAGMENT_SHADER_ARB, "shaders/text.fsh"));
     sprites = new sprite_shader_description(shader_stage(GL_VERTEX_SHADER_ARB, "shaders/sprite.vsh"), shader_stage(GL_FRAGMENT_SHADER_ARB, "shaders/sprite.fsh"));
+    
+    stencil = new unlit_shader_description(shader_stage(GL_VERTEX_SHADER_ARB, "shaders/stencil.vsh"), shader_stage(GL_FRAGMENT_SHADER_ARB, "shaders/stencil.fsh"));
 }
 
 shader_manager::~shader_manager()
