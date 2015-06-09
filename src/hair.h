@@ -40,7 +40,7 @@ extern "C" {
 
 #define HAIR_VERTEX_MAP_LIMIT 8
 
-// Since we apply TR4 hair scheme to TR2-3 as well, we need to discard 
+// Since we apply TR4 hair scheme to TR2-3 as well, we need to discard
 // polygons which are unused. These are 0 and 5 in both TR2 and TR3.
 
 #define HAIR_DISCARD_ROOT_FACE 0
@@ -56,53 +56,53 @@ typedef struct hair_element_s
 typedef struct hair_s
 {
     engine_container_p        container;
-    
+
     entity_p                  owner_char;         // Entity who owns this hair.
     uint32_t                  owner_body;         // Owner entity's body ID.
-    btScalar                  owner_body_transform[16]; // contains real hair base position and orientation
+    //btScalar                  owner_body_transform[16]; // contains real hair base position and orientation
 
     uint8_t                   root_index;         // Index of "root" element.
     uint8_t                   tail_index;         // Index of "tail" element.
-    
+
     uint8_t                   element_count;      // Overall amount of elements.
     hair_element_s           *elements;           // Array of elements.
-    
+
     uint8_t                   joint_count;        // Overall amount of joints.
     btGeneric6DofConstraint **joints;             // Array of joints.
-    
+
     uint8_t                   vertex_map_count;
     uint32_t                 *hair_vertex_map;    // Hair vertex indices to link
     uint32_t                 *head_vertex_map;    // Head vertex indices to link
-    
+
 }hair_t, *hair_p;
 
 typedef struct hair_setup_s
 {
     uint32_t     model;              // Hair model ID
     uint32_t     link_body;          // Lara's head mesh index
-    
+
     btScalar     root_weight;        // Root and tail hair body weight. Intermediate body
     btScalar     tail_weight;        // weights are calculated from these two parameters
-    
+
     btScalar     hair_damping[2];    // Damping affects hair "plasticity"
     btScalar     hair_inertia;       // Inertia affects hair "responsiveness"
     btScalar     hair_restitution;   // "Bounciness" of the hair
     btScalar     hair_friction;      // How much other bodies will affect hair trajectory
-    
-    uint8_t      joints_per_body;    // Amount of joints for each body-body connection
+
+    //uint8_t      joints_per_body;    // Amount of joints for each body-body connection
     btScalar     joint_radius;       // Relative radius on which joints will be placed
     btScalar     joint_overlap;      // How much two hair bodies overlap each other
-    
+
     btScalar     joint_cfm;          // Constraint force mixing (joint softness)
     btScalar     joint_erp;          // Error reduction parameter (joint "inertia")
-    
+
     btVector3    head_offset;        // Linear offset to place hair to
     btScalar     root_angle[3];      // First constraint set angle (to align hair angle)
-    
+
     uint32_t     vertex_map_count;   // Amount of REAL vertices to link head and hair
     uint32_t     hair_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Hair vertex indices to link
     uint32_t     head_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Head vertex indices to link
-    
+
 }hair_setup_t, *hair_setup_p;
 
 // Gets scripted hair set-up to specified hair set-up structure.
