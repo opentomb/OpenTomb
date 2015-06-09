@@ -12,6 +12,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         (!(parent_entity->bt_body[setup->link_body]))           ) return false;
 
     skeletal_model_p model = World_GetModelByID(&engine_world, setup->model);
+    btScalar owner_body_transform[16];
 
     // No model to link to - bypass function.
 
@@ -31,7 +32,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
     // Setup initial position / angles.
 
-    Mat4_Mat4_mul(hair->owner_body_transform, parent_entity->transform, parent_entity->bf.bone_tags[hair->owner_body].full_transform);
+    Mat4_Mat4_mul(owner_body_transform, parent_entity->transform, parent_entity->bf.bone_tags[hair->owner_body].full_transform);
     // Number of elements (bodies) is equal to number of hair meshes.
 
     hair->element_count = model->mesh_count;
@@ -72,7 +73,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
         // Initialize motion state for body.
 
-        startTransform.setFromOpenGLMatrix(hair->owner_body_transform);
+        startTransform.setFromOpenGLMatrix(owner_body_transform);
         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
 
         // Make rigid body.
@@ -82,7 +83,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         // Set hair gravity.
 
         btVector3 globalGravity = bt_engine_dynamicsWorld->getGravity();
-        hair->elements[i].body->setGravity(globalGravity * 0.1);    ///@FIXME: Script it!
+        hair->elements[i].body->setGravity(globalGravity);    ///@FIXME: Script it!
 
         // Damping makes body stop in space by itself, to prevent it from continous movement.
 
@@ -114,7 +115,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
     // Joint count is calculated from overall body amount multiplied by per-body constraint
     // count.
 
-    hair->joint_count = hair->element_count * setup->joints_per_body;
+    hair->joint_count = hair->element_count;
     hair->joints      = (btGeneric6DofConstraint**)calloc(sizeof(btGeneric6DofConstraint*), hair->joint_count);
 
     // If multiple joints per body is specified, joints are placed in circular manner,
@@ -122,7 +123,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
     // circle-like figure.
 
     int curr_joint = 0;
-    btScalar step  = SIMD_2_PI / setup->joints_per_body;
+    btScalar step  = SIMD_2_PI;
 
     for(uint16_t i=0; i<hair->element_count; i++)
     {
@@ -141,14 +142,8 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
         btScalar joint_x = 0.0;
         btScalar joint_y = 0.0;
 
-        for(int j=0; j<setup->joints_per_body; j++, d += step)
+        //for(int j=0; j<1; j++, d += step)
         {
-            if(setup->joints_per_body > 1)
-            {
-                joint_x = btCos(d) * ((body_depth*0.5) * setup->joint_radius);
-                joint_y = btSin(d) * ((body_width*0.5) * setup->joint_radius);
-            }
-
             if(i == 0)  // First joint group
             {
                 // Adjust pivot point A to parent body.
@@ -283,7 +278,7 @@ void Hair_Update(entity_p entity)
     {
         if((!hair) || (hair->element_count < 1)) continue;
 
-        btScalar new_transform[16];
+        /*btScalar new_transform[16];
 
         Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
 
@@ -293,6 +288,7 @@ void Hair_Update(entity_p entity)
                           new_transform[12+2] - hair->owner_body_transform[12+2]);
         mix_vel *= 1.0 / engine_frame_time;
 
+        if(0)
         {
             btScalar sub_tr[16];
             btTransform ang_tr;
@@ -308,18 +304,18 @@ void Hair_Update(entity_p entity)
             hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
             hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
         }
-        Mat4_Copy(hair->owner_body_transform, new_transform);
+        Mat4_Copy(hair->owner_body_transform, new_transform);*/
 
         // Set mixed velocities to both parent body and first hair body.
 
-        hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
-        hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
+        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
+        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
 
-        mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
+        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
         for(int j=0;j<hair->element_count;j++)
         {
             hair->elements[j].body->applyCentralForce(mix_vel);
-        }
+        }*/
 
         hair->container->room = hair->owner_char->self->room;
     }
@@ -354,7 +350,7 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
                     hair_setup->hair_restitution = lua_GetScalarField(engine_lua, "hair_bouncing");
                     hair_setup->joint_radius     = lua_GetScalarField(engine_lua, "joint_radius");
                     hair_setup->joint_overlap    = lua_GetScalarField(engine_lua, "joint_overlap");
-                    hair_setup->joints_per_body  = (uint8_t)lua_GetScalarField(engine_lua, "joints_per_body");
+                    //hair_setup->joints_per_body  = (uint8_t)lua_GetScalarField(engine_lua, "joints_per_body");
                     hair_setup->joint_cfm        = lua_GetScalarField(engine_lua, "joint_cfm");
                     hair_setup->joint_erp        = lua_GetScalarField(engine_lua, "joint_erp");
 
