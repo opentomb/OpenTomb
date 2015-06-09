@@ -1759,7 +1759,10 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_HANDSTAND:
+            cmd->rot[0] = 0;
+            break;
         case TR_STATE_LARA_GRABBING:
+            break;
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
             ent->character->no_fix_all = 0x01;

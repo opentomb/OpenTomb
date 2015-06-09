@@ -502,13 +502,12 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         float currentAngle = cam_angles[0] * (M_PI / 180.0);  //Current is the current cam angle
         float targetAngle  = ent->angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0; //Speed of rotation
-        bool bDynamicRot = false;//Testing - Constant collision checks will rot in an attempt to hopefully miss collision with walls but it looks ugly DO NOT USE
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
         if(ent->bf.animations.last_state == TR_STATE_LARA_REACH)
         {
-            if(cam->target_dir == TR_CAM_TARG_BACK || bDynamicRot)
+            if(cam->target_dir == TR_CAM_TARG_BACK)
             {
                 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(cam_pos2);
@@ -538,7 +537,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
         {
             cam->target_dir = TR_CAM_TARG_FRONT;
         }
-        else if(cam->target_dir != TR_CAM_TARG_BACK || bDynamicRot)
+        else if(cam->target_dir != TR_CAM_TARG_BACK)
         {
             cam->target_dir = TR_CAM_TARG_BACK;//Reset to back
         }
@@ -564,14 +563,15 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
                 targetAngle = (ent->angles[0]) * (M_PI / 180.0);//Same as TR_CAM_TARG_BACK (default pos)
                 break;
             }
+
             float d_angle = cam_angles[0] - targetAngle;
             if(d_angle > M_PI / 2.0)
             {
-                d_angle -= M_PI;
+                d_angle -= M_PI/180.0;
             }
             if(d_angle < -M_PI / 2.0)
             {
-                d_angle += M_PI;
+                d_angle += M_PI/180.0;
             }
             cam_angles[0] = fmodf(cam_angles[0] + atan2f(sinf(currentAngle - d_angle), cosf(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), M_PI * 2.0); //Update camera's angle
         }
