@@ -23,8 +23,8 @@ old_hair_props = {
     root_weight     = 20.0,
     tail_weight     = 10.0,
 
-    hair_damping    = {0.15, 0.80},
-    hair_inertia    = 120.0,
+    hair_damping    = {0.15, 0.40},
+    hair_inertia    = 100.0,
     hair_friction   = 25.0,
     hair_bouncing   = 0.0,
 
@@ -41,7 +41,7 @@ new_hair_old_props = {
     root_weight     = 20.0,
     tail_weight     = 10.0,
 
-    hair_damping    = {0.15, 0.80},
+    hair_damping    = {0.15, 0.40},
     hair_inertia    = 100.0,
     hair_friction   = 10.0,
     hair_bouncing   = 0.0,
