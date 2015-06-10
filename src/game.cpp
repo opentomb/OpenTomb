@@ -676,7 +676,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
 
-    if(Entity_Frame(entity, engine_frame_time))
+    if(Entity_Frame(entity, engine_frame_time) && (entity->bt_joint_count == 0))
     {
         Entity_UpdateRigidBody(entity, 0);
     }
@@ -809,8 +809,6 @@ void Game_Frame(btScalar time)
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
-    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);                     /// strange, but no hair shake and smooth hair in slow motion;
-
     if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
     {
         btScalar dt = Game_Tick(&game_logic_time);
@@ -847,6 +845,7 @@ void Game_Frame(btScalar time)
 
     if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
 
+    bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
     bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
 
     Controls_RefreshStates();
