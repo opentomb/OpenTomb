@@ -689,7 +689,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_FREE_FALLING)
             {
-                Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+                ent->dir_flag = ENT_MOVE_FORWARD;
+                Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_BACK, 0);
             }
             else if(resp->horizontal_collide & 0x01)
             {
@@ -2049,6 +2050,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_SHIMMY_LEFT:
+            ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+            
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_LEFT;
             if(cmd->action == 0)
@@ -2108,6 +2111,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_SHIMMY_RIGHT:
+            ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+            
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_RIGHT;
             if(cmd->action == 0)
@@ -2173,6 +2178,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_FORWARD:
+        case TR_STATE_LARA_FALL_BACKWARD:
             ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
             Character_Lean(ent, cmd, 4.0);
 
@@ -2209,22 +2215,9 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_FREEFALL;                    // free falling
             }
-            else if(cmd->action == 1)
+            else if(cmd->action)
             {
-                if(ent->dir_flag == ENT_MOVE_BACKWARD)
-                {
-                    ent->speed.m_floats[0] = -ent->transform[4 + 0] * 64.0;
-                    ent->speed.m_floats[1] = -ent->transform[4 + 1] * 64.0;
-
-                    if(ss_anim->current_frame > 3 && ss_anim->current_animation == TR_ANIMATION_LARA_FREE_FALL_MIDDLE)///@FIXME This should stop the player from grabbing too early but sometimes it is not consistent? possibly the frame > 3
-                    {
-                        ss_anim->next_state = TR_STATE_LARA_REACH;
-                    }
-                }
-                else
-                {
-                    ss_anim->next_state = TR_STATE_LARA_REACH;
-                }
+                ss_anim->next_state = TR_STATE_LARA_REACH;
             }
             else if(cmd->shift == 1)
             {
@@ -2252,15 +2245,18 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_FREEFALL:
             Character_Lean(ent, cmd, 1.0);
-            //Reset these to zero so Lara is only falling downwards
-            ent->speed.m_floats[0] = 0.0;
-            ent->speed.m_floats[1] = 0.0;
 
             if( (int(ent->speed.m_floats[2]) <=  -FREE_FALL_SPEED_CRITICAL) &&
                 (int(ent->speed.m_floats[2]) >= (-FREE_FALL_SPEED_CRITICAL-100)) )
             {
-                Audio_Send(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->id);       // Scream
                 ent->speed.m_floats[2] = -FREE_FALL_SPEED_CRITICAL-101;
+                Audio_Send(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->id);       // Scream
+            }
+            else if(ent->speed.m_floats[2] <= -FREE_FALL_SPEED_MAXSAFE)
+            {
+                //Reset these to zero so Lara is only falling downwards
+                ent->speed.m_floats[0] = 0.0;
+                ent->speed.m_floats[1] = 0.0;
             }
 
             if(ent->move_type == MOVE_UNDERWATER)
@@ -2314,6 +2310,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
+                ent->dir_flag = ENT_MOVE_FORWARD;
                 ss_anim->next_state = TR_STATE_LARA_REACH;
             }
             break;
@@ -3003,13 +3000,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] != 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
-            }
-            break;
-
-        case TR_STATE_LARA_FALL_FORWARD:
-            if(ent->speed.m_floats[3] < -FREE_FALL_SPEED_2)
-            {
-                ent->current_speed *= 0.5;
             }
             break;
 
