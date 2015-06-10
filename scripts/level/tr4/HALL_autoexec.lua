@@ -1,1 +1,2 @@
-playStream(110)
+addCharacterHair(player, HAIR_TR4_OLD);
+playStream(110);
