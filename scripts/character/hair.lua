@@ -23,12 +23,12 @@ old_hair_props = {
     root_weight     = 20.0,
     tail_weight     = 10.0,
 
-    hair_damping    = {0.15, 0.40},
-    hair_inertia    = 100.0,
+    hair_damping    = {0.15, 0.80},
+    hair_inertia    = 120.0,
     hair_friction   = 25.0,
     hair_bouncing   = 0.0,
 
-    --joints_per_body = 1,
+    joints_per_body = 1,
     joint_radius    = 0.4,
     joint_cfm       = 0.1,
     joint_erp       = 1.0,
@@ -38,15 +38,15 @@ old_hair_props = {
 
 new_hair_old_props = {
 
-    root_weight     = 20.0,
+    root_weight     = 1.0,
     tail_weight     = 10.0,
 
-    hair_damping    = {0.15, 0.40},
+    hair_damping    = {0.15, 0.80},
     hair_inertia    = 100.0,
     hair_friction   = 10.0,
     hair_bouncing   = 0.0,
 
-    --joints_per_body = 1,
+    joints_per_body = 1,
     joint_radius    = 0.4,
     joint_cfm       = 0.1,
     joint_erp       = 1.0,
@@ -64,7 +64,7 @@ new_hair_kid_props = {
     hair_friction   = 10.0,
     hair_bouncing   = 0.0,
 
-    --joints_per_body = 1,
+    joints_per_body = 1,
     joint_radius    = 0.5,
     joint_cfm       = 0.1,
     joint_erp       = 1.0,

@@ -127,7 +127,7 @@ engine_container_p      last_cont = NULL;
 
 void SkeletalModelTestDraw()
 {
-    bone_frame_p bframe;
+ bone_frame_p bframe;
     static btScalar time = 0.0;
     skeletal_model_p smodel;
     animation_frame_p af;
@@ -145,7 +145,7 @@ void SkeletalModelTestDraw()
 
     if(frame < 0)
     {
-        frame = 0;
+frame = 0;
     }
 
     if((uint32_t)model > engine_world.skeletal_model_count)
@@ -701,8 +701,10 @@ void Engine_SecondaryMouseDown()
                 {
                     delete body->getCollisionShape();
                 }
-
-                body->setUserPointer(NULL);
+                if (body)
+                {
+                    body->setUserPointer(NULL);
+                }
                 c0->room = NULL;
                 free(c0);
 

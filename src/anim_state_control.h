@@ -136,7 +136,7 @@ struct character_command_s;
 #define TR_ANIMATION_LARA_RUN_BACK_END 90
 #define TR_ANIMATION_LARA_TRY_HANG_VERTICAL_BEGIN 91              // Native bug: glitchy intermediate animation.
 #define TR_ANIMATION_LARA_LANDING_FROM_RUN 92
-#define TR_ANIMATION_LARA_FREE_FALL_VERTICAL 93
+#define TR_ANIMATION_LARA_FREE_FALL_BACK 93
 #define TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG 94
 #define TR_ANIMATION_LARA_TRY_HANG_SOLID 95
 #define TR_ANIMATION_LARA_HANG_IDLE 96                            // Main climbing animation... triggers
@@ -582,7 +582,7 @@ struct character_command_s;
 #define TR_STATE_LARA_JUMP_LEFT 26
 #define TR_STATE_LARA_JUMP_RIGHT 27
 #define TR_STATE_LARA_JUMP_UP 28
-#define TR_STATE_LARA_FALL_FORWARD 29
+#define TR_STATE_LARA_FALL_BACKWARD 29
 #define TR_STATE_LARA_SHIMMY_LEFT 30
 #define TR_STATE_LARA_SHIMMY_RIGHT 31
 #define TR_STATE_LARA_SLIDE_BACK 32

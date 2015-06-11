@@ -217,6 +217,19 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
 void Hair_Clear(hair_p hair)
 {
+    for(int i=0; i<hair->joint_count; i++)
+    {
+        if(hair->joints[i])
+        {
+            bt_engine_dynamicsWorld->removeConstraint(hair->joints[i]);
+            delete hair->joints[i];
+            hair->joints[i] = NULL;
+        }
+    }
+    free(hair->joints);
+    hair->joints = NULL;
+    hair->joint_count = 0;
+
     for(int i=0; i<hair->element_count; i++)
     {
         if(hair->elements[i].body)
@@ -235,19 +248,6 @@ void Hair_Clear(hair_p hair)
     free(hair->elements);
     hair->elements = NULL;
     hair->element_count = 0;
-
-    for(int i=0; i<hair->joint_count; i++)
-    {
-        if(hair->joints[i])
-        {
-            bt_engine_dynamicsWorld->removeConstraint(hair->joints[i]);
-            delete hair->joints[i];
-            hair->joints[i] = NULL;
-        }
-    }
-    free(hair->joints);
-    hair->joints = NULL;
-    hair->joint_count = 0;
 
     free(hair->container);
     hair->container = NULL;
@@ -269,43 +269,11 @@ void Hair_Update(entity_p entity)
     {
         if((!hair) || (hair->element_count < 1)) continue;
 
-        /*btScalar new_transform[16];
-
-        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
-
-        // Calculate mixed velocities.
-        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
-                          new_transform[12+1] - hair->owner_body_transform[12+1],
-                          new_transform[12+2] - hair->owner_body_transform[12+2]);
-        mix_vel *= 1.0 / engine_frame_time;
-
-        if(0)
+        /*for(int j=0;j<hair->element_count;j++)
         {
-            btScalar sub_tr[16];
-            btTransform ang_tr;
-            btVector3 mix_ang;
-            Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
-            ang_tr.setFromOpenGLMatrix(sub_tr);
-            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
-            mix_ang *= 1.0 / engine_frame_time;
-
-            // Looks like angular velocity breaks up constraints on VERY fast moves,
-            // like mid-air turn. Probably, I've messed up with multiplier value...
-
-            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
-        }
-        Mat4_Copy(hair->owner_body_transform, new_transform);*/
-
-        // Set mixed velocities to both parent body and first hair body.
-
-        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
-        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
-
-        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
-        for(int j=0;j<hair->element_count;j++)
-        {
-            hair->elements[j].body->applyCentralForce(mix_vel);
+            btVector3 vel = hair->elements[j].body->getLinearVelocity();
+            vel *= -10.0;
+            hair->elements[j].body->applyCentralForce(vel);
         }*/
 
         hair->container->room = hair->owner_char->self->room;
