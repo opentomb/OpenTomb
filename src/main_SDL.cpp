@@ -699,7 +699,10 @@ void Engine_SecondaryMouseDown()
                     delete body->getCollisionShape();
                 }
 
-                body->setUserPointer(NULL);
+                if (body)
+                {
+                    body->setUserPointer(NULL);
+                }
                 c0->room = NULL;
                 free(c0);
 
