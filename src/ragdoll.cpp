@@ -22,64 +22,8 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     {
         result = Ragdoll_Delete(entity);
     }
-
-    entity->bt_joint_count = setup->joint_count;
-    entity->bt_joints = (btTypedConstraint**)calloc(entity->bt_joint_count, sizeof(btTypedConstraint*));
-
-    for(int i=0; i<entity->bt_joint_count; i++)
-    {
-        if( (setup->joint_setup[i].body1_index >= entity->bf.bone_tag_count) ||
-            (setup->joint_setup[i].body2_index >= entity->bf.bone_tag_count) ||
-            (entity->bt_body[setup->joint_setup[i].body1_index] == NULL)     ||
-            (entity->bt_body[setup->joint_setup[i].body2_index] == NULL)      )
-        {
-            result = false;
-            continue;       // If body 1 or body 2 are absent, return false and bypass this joint.
-        }
-
-        btTransform localA, localB;
-        //localA.setFromOpenGLMatrix(entity->bf.bone_tags[setup->joint_setup[i].body1_index].full_transform);
-        //localB.setFromOpenGLMatrix(entity->bf.bone_tags[setup->joint_setup[i].body2_index].full_transform);
-
-        localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
-        localA.setOrigin(setup->joint_setup[i].body1_offset);
-
-        localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
-        localB.setOrigin(setup->joint_setup[i].body2_offset);
-
-        switch(setup->joint_setup[i].joint_type)
-        {
-            case RD_CONSTRAINT_POINT:
-                {
-                    btPoint2PointConstraint* pointC = new btPoint2PointConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA.getOrigin(), localB.getOrigin());
-                    entity->bt_joints[i] = pointC;
-                }
-                break;
-
-            case RD_CONSTRAINT_HINGE:
-                {
-                    btHingeConstraint* hingeC = new btHingeConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA, localB);
-                    hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1]);
-                    entity->bt_joints[i] = hingeC;
-
-                }
-                break;
-
-            case RD_CONSTRAINT_CONE:
-                {
-                    btConeTwistConstraint* coneC = new btConeTwistConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA, localB);
-                    coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2]);
-                    entity->bt_joints[i] = coneC;
-                }
-                break;
-        }
-
-        entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_setup[i].joint_cfm);
-        entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_setup[i].joint_erp);
-
-        entity->bt_joints[i]->setDbgDrawSize(64.0);
-        bt_engine_dynamicsWorld->addConstraint(entity->bt_joints[i], true);
-    }
+    
+    // Setup bodies.
 
     for(int i=0; i<setup->body_count; i++)
     {
@@ -106,14 +50,78 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
                 entity->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
                 entity->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
                 entity->bt_body[i]->setFriction(setup->body_setup[i].friction);
-
+                   
             bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i]);
 
             entity->bt_body[i]->activate();
+            
+            entity->bt_body[i]->setLinearVelocity(entity->speed);
     }
 
     entity->type_flags |=  ENTITY_TYPE_DYNAMIC;
     Entity_UpdateRigidBody(entity, 1);
+
+    // Setup constraints.
+    
+    entity->bt_joint_count = setup->joint_count;
+    entity->bt_joints = (btTypedConstraint**)calloc(entity->bt_joint_count, sizeof(btTypedConstraint*));
+
+    for(int i=0; i<entity->bt_joint_count; i++)
+    {
+        if( (setup->joint_setup[i].body1_index >= entity->bf.bone_tag_count) ||
+            (setup->joint_setup[i].body2_index >= entity->bf.bone_tag_count) ||
+            (entity->bt_body[setup->joint_setup[i].body1_index] == NULL)     ||
+            (entity->bt_body[setup->joint_setup[i].body2_index] == NULL)      )
+        {
+            result = false;
+            continue;       // If body 1 or body 2 are absent, return false and bypass this joint.
+        }
+
+        btTransform localA, localB;
+        //localA.setFromOpenGLMatrix(entity->bf.bone_tags[setup->joint_setup[i].body1_index].full_transform);
+        //localB.setFromOpenGLMatrix(entity->bf.bone_tags[setup->joint_setup[i].body2_index].full_transform);
+
+        localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
+        localA.setOrigin(setup->joint_setup[i].body1_offset);
+
+        localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
+        localB.setOrigin(setup->joint_setup[i].body2_offset);
+        
+        switch(setup->joint_setup[i].joint_type)
+        {
+            case RD_CONSTRAINT_POINT:
+                {
+                    btPoint2PointConstraint* pointC = new btPoint2PointConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA.getOrigin(), localB.getOrigin());
+                    entity->bt_joints[i] = pointC;
+                }
+                break;
+
+            case RD_CONSTRAINT_HINGE:
+                {
+                    btHingeConstraint* hingeC = new btHingeConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA, localB);
+                    hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9f, 0.3f, 0.3f);
+                    entity->bt_joints[i] = hingeC;
+                }
+                break;
+
+            case RD_CONSTRAINT_CONE:
+                {
+                    btConeTwistConstraint* coneC = new btConeTwistConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA, localB);
+                    coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9f, 0.3f, 0.7f);
+                    entity->bt_joints[i] = coneC;
+                }
+                break;
+        }
+
+        for(int j=0; j<=5; j++)
+        {
+            entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, j);
+            entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, j);
+        }
+        
+        entity->bt_joints[i]->setDbgDrawSize(64.0);
+        bt_engine_dynamicsWorld->addConstraint(entity->bt_joints[i], true);
+    }
 
     if(result == false) Ragdoll_Delete(entity);  // PARANOID: Clean up the mess, if something went wrong.
     return result;
@@ -137,6 +145,8 @@ bool Ragdoll_Delete(entity_p entity)
     free(entity->bt_joints);
     entity->bt_joints = NULL;
     entity->bt_joint_count = 0;
+    
+    entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
 
     return true;
 
@@ -175,7 +185,10 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                 lua_pop(engine_lua, 1);
 
                 setup->joint_count = (uint32_t)lua_GetScalarField(engine_lua, "joint_count");
-                setup->body_count = (uint32_t)lua_GetScalarField(engine_lua, "body_count");
+                setup->body_count  = (uint32_t)lua_GetScalarField(engine_lua, "body_count");
+                
+                setup->joint_cfm   = lua_GetScalarField(engine_lua, "joint_cfm");
+                setup->joint_erp   = lua_GetScalarField(engine_lua, "joint_erp");
 
                 if(setup->body_count > 0)
                 {
@@ -227,8 +240,6 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                 setup->joint_setup[i].body2_index = (uint32_t)lua_GetScalarField(engine_lua, "body2_index");
 
                                 setup->joint_setup[i].joint_type  = (uint32_t)lua_GetScalarField(engine_lua, "joint_type");
-                                setup->joint_setup[i].joint_cfm   = lua_GetScalarField(engine_lua, "joint_cfm");
-                                setup->joint_setup[i].joint_erp   = lua_GetScalarField(engine_lua, "joint_erp");
 
                                 lua_getfield(engine_lua, -1, "body1_offset");
                                 if(lua_istable(engine_lua, -1))
@@ -268,7 +279,6 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                                     setup->joint_setup[i].body2_angle[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
-
                                 lua_pop(engine_lua, 1);
 
                                 lua_getfield(engine_lua, -1, "joint_limit");
