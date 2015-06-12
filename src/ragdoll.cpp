@@ -3,6 +3,7 @@
 #include "bullet/LinearMath/btScalar.h"
 #include "ragdoll.h"
 #include "vmath.h"
+#include "character_controller.h"
 
 btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
 {
@@ -34,6 +35,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
     // Setup bodies.
 
+    entity->bt_joint_count = 0;
     for(int i=0; i<setup->body_count; i++)
     {
         if( (i >= entity->bf.bone_tag_count) || (entity->bt_body[i] == NULL) )
@@ -41,6 +43,17 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
             result = false;
             continue;   // If body is absent, return false and bypass this body setup.
         }
+
+        if(entity->bf.bone_tags[i].parent != NULL)
+        {
+            entity->bt_joint_count++;
+        }
+
+        // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
+        Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
+        entity->character->no_fix_all = 0x00;
+        entity->character->no_fix_body_parts = 0x00000000;
+        Character_FixPenetrations(entity, NULL);
 
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
@@ -92,14 +105,30 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         }
 
         btTransform localA, localB;
-        //localA.setFromOpenGLMatrix(entity->bf.bone_tags[setup->joint_setup[i].body1_index].full_transform);
-        //localB.setFromOpenGLMatrix(entity->bf.bone_tags[setup->joint_setup[i].body2_index].full_transform);
+#if 1
+        ss_bone_tag_p btA = entity->bf.bone_tags + setup->joint_setup[i].body1_index;
+        ss_bone_tag_p btB = entity->bf.bone_tags + setup->joint_setup[i].body2_index;
+        if(btB->parent != btA)
+        {
+            ss_bone_tag_p tt;
+            SWAPT(btA, btB, tt);
+            uint32_t it;
+            SWAPT(setup->joint_setup[i].body1_index, setup->joint_setup[i].body2_index, it);
+        }
+        if(btB->parent != btA)
+        {
+            continue;
+        }
 
+        localA.setFromOpenGLMatrix(btB->transform);
+        localB.setIdentity();
+#else
         localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
         localA.setOrigin(setup->joint_setup[i].body1_offset);
 
         localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
         localB.setOrigin(setup->joint_setup[i].body2_offset);
+#endif
 
         switch(setup->joint_setup[i].joint_type)
         {
@@ -146,6 +175,11 @@ bool Ragdoll_Delete(entity_p entity)
 {
     if(entity->bt_joint_count == 0) return false;
 
+    for(int i=0;i<entity->bf.bone_tag_count;i++)
+    {
+        bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
+    }
+
     for(int i=0; i<entity->bt_joint_count; i++)
     {
         if(entity->bt_joints[i] != NULL)
@@ -154,6 +188,12 @@ bool Ragdoll_Delete(entity_p entity)
             delete entity->bt_joints[i];
             entity->bt_joints[i] = NULL;
         }
+    }
+
+    for(int i=0;i<entity->bf.bone_tag_count;i++)
+    {
+        entity->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
+        bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
     }
 
     free(entity->bt_joints);

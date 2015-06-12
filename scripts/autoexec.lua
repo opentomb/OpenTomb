@@ -43,8 +43,12 @@ function setDefaultModelAnimReplaceFlag(m_id)
     setModelAnimReplaceFlag(m_id, 13, 0x01);
 end
 
-function test(w, a)
-    setCharacterWeaponModel(player, w, a);
+function test()
+    addEntityRagdoll(player, 0);
+end
+
+function test1()
+    removeEntityRagdoll(player);
 end
 
 if (getLevelVersion() < TR_II) then
