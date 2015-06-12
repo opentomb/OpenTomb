@@ -1120,6 +1120,13 @@ void Character_GhostUpdate(struct entity_s *ent)
             ent->character->ghostObjects[i]->getWorldTransform().setOrigin(pos);
         }
     }
+    else
+    {
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            ent->character->ghostObjects[i]->setWorldTransform(ent->bt_body[i]->getWorldTransform());
+        }
+    }
 }
 
 
@@ -1854,6 +1861,28 @@ int Character_FreeFalling(struct entity_s *ent)
     ent->angles[1] = 0.0;
 
     Entity_UpdateRotation(ent);                                                 // apply rotations
+
+    /*btScalar t = ent->current_speed * bf-> ent->character->speed_mult;
+    if(ent->dir_flag & ENT_MOVE_FORWARD)
+    {
+        ent->speed.m_floats[0] = ent->transform[4 + 0] * t;
+        ent->speed.m_floats[1] = ent->transform[4 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
+    {
+        ent->speed.m_floats[0] =-ent->transform[4 + 0] * t;
+        ent->speed.m_floats[1] =-ent->transform[4 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_LEFT)
+    {
+        ent->speed.m_floats[0] =-ent->transform[0 + 0] * t;
+        ent->speed.m_floats[1] =-ent->transform[0 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_RIGHT)
+    {
+        ent->speed.m_floats[0] = ent->transform[0 + 0] * t;
+        ent->speed.m_floats[1] = ent->transform[0 + 1] * t;
+    }*/
 
     move = ent->speed + bt_engine_dynamicsWorld->getGravity() * engine_frame_time * 0.5;
     move *= engine_frame_time;

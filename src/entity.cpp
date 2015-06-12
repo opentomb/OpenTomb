@@ -93,7 +93,7 @@ void Entity_Clear(entity_p entity)
             free(entity->obb);
             entity->obb = NULL;
         }
-        
+
         if(entity->bt_joint_count)
         {
             Ragdoll_Delete(entity);

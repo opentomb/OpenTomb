@@ -39,6 +39,7 @@ extern "C" {
 #include "render.h"
 #include "redblack.h"
 #include "bsp_tree.h"
+#include "shader_description.h"
 
 lua_State *objects_flags_conf = NULL;
 lua_State *ent_ID_override = NULL;
@@ -2527,6 +2528,7 @@ void TR_GenRoomCollision(struct world_s *world)
             bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
             r->bt_body->setUserPointer(r->self);
             r->bt_body->setRestitution(1.0);
+            r->bt_body->setFriction(1.0);
             r->self->collide_flag = COLLISION_TRIMESH;                          // meshtree
         }
 
