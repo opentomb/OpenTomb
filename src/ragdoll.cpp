@@ -4,6 +4,15 @@
 #include "ragdoll.h"
 #include "vmath.h"
 
+btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
+{
+    btScalar r = bb_max[0] - bb_min[0];
+    btScalar t = bb_max[1] - bb_min[1];
+    r = (t > r)?(r):(t);
+    t = bb_max[2] - bb_min[2];
+    return (t > r)?(r):(t);
+}
+
 bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 {
     // No entity, setup or body count overflow - bypass function.
@@ -22,7 +31,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     {
         result = Ragdoll_Delete(entity);
     }
-    
+
     // Setup bodies.
 
     for(int i=0; i<setup->body_count; i++)
@@ -50,11 +59,16 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
                 entity->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
                 entity->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
                 entity->bt_body[i]->setFriction(setup->body_setup[i].friction);
-                   
+
+                entity->bf.bone_tags[i].mesh_base;
+                btScalar r = getInnerBBRadius(entity->bf.bone_tags[i].mesh_base->bb_min, entity->bf.bone_tags[i].mesh_base->bb_max);
+                entity->bt_body[i]->setCcdMotionThreshold(0.8 * r);
+                entity->bt_body[i]->setCcdSweptSphereRadius(r);
+
             bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i]);
 
             entity->bt_body[i]->activate();
-            
+
             entity->bt_body[i]->setLinearVelocity(entity->speed);
     }
 
@@ -62,7 +76,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     Entity_UpdateRigidBody(entity, 1);
 
     // Setup constraints.
-    
+
     entity->bt_joint_count = setup->joint_count;
     entity->bt_joints = (btTypedConstraint**)calloc(entity->bt_joint_count, sizeof(btTypedConstraint*));
 
@@ -86,7 +100,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
         localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
         localB.setOrigin(setup->joint_setup[i].body2_offset);
-        
+
         switch(setup->joint_setup[i].joint_type)
         {
             case RD_CONSTRAINT_POINT:
@@ -118,7 +132,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
             entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, j);
             entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, j);
         }
-        
+
         entity->bt_joints[i]->setDbgDrawSize(64.0);
         bt_engine_dynamicsWorld->addConstraint(entity->bt_joints[i], true);
     }
@@ -145,7 +159,7 @@ bool Ragdoll_Delete(entity_p entity)
     free(entity->bt_joints);
     entity->bt_joints = NULL;
     entity->bt_joint_count = 0;
-    
+
     entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
 
     return true;
@@ -186,7 +200,7 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
 
                 setup->joint_count = (uint32_t)lua_GetScalarField(engine_lua, "joint_count");
                 setup->body_count  = (uint32_t)lua_GetScalarField(engine_lua, "body_count");
-                
+
                 setup->joint_cfm   = lua_GetScalarField(engine_lua, "joint_cfm");
                 setup->joint_erp   = lua_GetScalarField(engine_lua, "joint_erp");
 
