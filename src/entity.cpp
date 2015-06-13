@@ -1171,7 +1171,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     state_change_p stc;
     ss_animation_p ss_anim;
 
-    if((entity == NULL) || !(entity->state_flags & ENTITY_STATE_ACTIVE)  || !(entity->state_flags & ENTITY_STATE_ENABLED) ||
+    if((entity == NULL) || (entity->bt_joint_count > 0) || !(entity->state_flags & ENTITY_STATE_ACTIVE)  || !(entity->state_flags & ENTITY_STATE_ENABLED) ||
        (entity->bf.animations.model == NULL) || ((entity->bf.animations.model->animation_count == 1) && (entity->bf.animations.model->animations->frames_count == 1)))
     {
         return 0;

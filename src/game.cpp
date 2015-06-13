@@ -838,15 +838,15 @@ void Game_Frame(btScalar time)
 
     if(is_character)
     {
+        if(engine_world.Character->bt_joint_count > 0)
+        {
+            Ragdoll_Update(engine_world.Character);
+        }
         if(!control_states.noclip && !control_states.free_look)
         {
             Character_ApplyCommands(engine_world.Character);
             Entity_Frame(engine_world.Character, engine_frame_time);
             Cam_FollowEntity(renderer.cam, engine_world.Character, 16.0, 128.0);
-        }
-        if(engine_world.Character->bt_joint_count > 0)
-        {
-            Ragdoll_Update(engine_world.Character);
         }
     }
 

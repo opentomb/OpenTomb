@@ -180,7 +180,7 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
     }
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);
-    
+
     // Now for animated polygons, if any
     mesh->num_animated_elements = 0;
     mesh->animated_index_array_length = 0;
@@ -195,12 +195,12 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
                 mesh->animated_index_array_length += 3*(p->vertex_count - 2);
             }
         }
-        
+
         // Prepare buffer data
         size_t stride = sizeof(GLfloat[3]) + sizeof(GLfloat [4]) + sizeof(GLfloat[3]);
         uint8_t *vertexData = new uint8_t[mesh->num_animated_elements * stride];
         uint32_t *elementData = new uint32_t[mesh->animated_index_array_length];
-        
+
         // Fill it.
         size_t offset = 0;
         size_t elementOffset = 0;
@@ -212,14 +212,14 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
                 memcpy(&vertexData[offset*stride + 0], p->vertices[i].position, sizeof(GLfloat [3]));
                 memcpy(&vertexData[offset*stride + 12], p->vertices[i].color, sizeof(GLfloat [4]));
                 memcpy(&vertexData[offset*stride + 28], p->vertices[i].normal, sizeof(GLfloat [3]));
-                
+
                 if (i >= 2)
                 {
                     elementData[elementOffset+0] = begin;
                     elementData[elementOffset+1] = offset-1;
                     elementData[elementOffset+2] = offset;
                     elementOffset += 3;
-                    
+
                     if (p->double_side)
                     {
                         elementData[elementOffset+0] = offset;
@@ -231,18 +231,18 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
                 offset++;
             }
         }
-        
+
         // And upload.
         glGenBuffersARB(1, &mesh->animated_vertex_array);
         glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vertex_array);
         glBufferDataARB(GL_ARRAY_BUFFER, stride * mesh->num_animated_elements, vertexData, GL_STATIC_DRAW);
         delete [] vertexData;
-        
+
         glGenBuffersARB(1, &mesh->animated_index_array);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_index_array);
         glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * mesh->animated_index_array_length, elementData, GL_STATIC_DRAW);
         delete [] elementData;
-        
+
         // Prepare empty buffer for tex coords
         glGenBuffersARB(1, &mesh->animated_texcoord_array);
         glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_texcoord_array);
@@ -254,7 +254,7 @@ void Mesh_GenVBO(struct base_mesh_s *mesh)
         mesh->animated_vertex_array = 0;
         mesh->animated_texcoord_array = 0;
     }
-    
+
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 }
@@ -349,6 +349,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->bone_tags[0].parent = NULL;                                             // root
     for(uint16_t i=0;i<bf->bone_tag_count;i++)
     {
+        bf->bone_tags[i].index = i;
         bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
         bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
         bf->bone_tags[i].mesh_slot = NULL;
