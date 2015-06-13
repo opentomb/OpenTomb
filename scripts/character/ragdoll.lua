@@ -23,7 +23,7 @@ RD_TYPE_TR2_BARRELS = 2;
 
 RD_TYPE_TR3_TIGER   = 3;
 
-RD_PARTS_LARA_PELVIS            = 0;
+RD_PARTS_LARA_PELVIS            = 0;          -- it is a root body
 RD_PARTS_LARA_LEFT_UPPER_LEG    = 1;
 RD_PARTS_LARA_LEFT_LOWER_LEG    = 2;
 RD_PARTS_LARA_LEFT_FOOT         = 3;
@@ -77,8 +77,7 @@ ragdoll[RD_TYPE_LARA] = {
   
               -- PELVIS-SPINE
   
-      [1] = { body1_index = RD_PARTS_LARA_PELVIS,
-              body2_index = RD_PARTS_LARA_SPINE,
+      [1] = { body_index = RD_PARTS_LARA_SPINE,
           
               body1_offset = {0.0, 0.0, 40.0},
               body2_offset = {0.0, 0.0, -10.0},
@@ -91,8 +90,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- SPINE-HEAD
               
-      [2] = { body1_index = RD_PARTS_LARA_SPINE,
-              body2_index = RD_PARTS_LARA_HEAD,
+      [2] = { body_index = RD_PARTS_LARA_HEAD,
           
               body1_offset = {0.0, 0.0, 172.0},
               body2_offset = {0.0, 0.0, -32.0},
@@ -105,8 +103,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT HIP
               
-      [3] = { body1_index = RD_PARTS_LARA_PELVIS,
-              body2_index = RD_PARTS_LARA_LEFT_UPPER_LEG,
+      [3] = { body_index = RD_PARTS_LARA_LEFT_UPPER_LEG,
           
               body1_offset = {-40.0, 0.0, -32.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -119,8 +116,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT KNEE
               
-      [4] = { body1_index = RD_PARTS_LARA_LEFT_UPPER_LEG,
-              body2_index = RD_PARTS_LARA_LEFT_LOWER_LEG,
+      [4] = { body_index = RD_PARTS_LARA_LEFT_LOWER_LEG,
           
               body1_offset = {8.0, -8.0, -192.0},
               body2_offset = {0.0, -8.0, 0.0},
@@ -133,8 +129,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT ANKLE
               
-      [5] = { body1_index = RD_PARTS_LARA_LEFT_LOWER_LEG,
-              body2_index = RD_PARTS_LARA_LEFT_FOOT,
+      [5] = { body_index = RD_PARTS_LARA_LEFT_FOOT,
           
               body1_offset = {0.0, -8.0, -192.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -147,8 +142,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT HIP
               
-      [6] = { body1_index = RD_PARTS_LARA_PELVIS,
-              body2_index = RD_PARTS_LARA_RIGHT_UPPER_LEG,
+      [6] = { body_index = RD_PARTS_LARA_RIGHT_UPPER_LEG,
           
               body1_offset = {40.0, 0.0, -32.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -161,8 +155,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT KNEE
               
-      [7] = { body1_index = RD_PARTS_LARA_RIGHT_UPPER_LEG,
-              body2_index = RD_PARTS_LARA_RIGHT_LOWER_LEG,
+      [7] = { body_index = RD_PARTS_LARA_RIGHT_LOWER_LEG,
           
               body1_offset = {-8.0, -8.0, -192.0},
               body2_offset = {0.0, -8.0, 0.0},
@@ -175,8 +168,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT ANKLE
               
-      [8] = { body1_index = RD_PARTS_LARA_RIGHT_LOWER_LEG,
-              body2_index = RD_PARTS_LARA_RIGHT_FOOT,
+      [8] = { body_index = RD_PARTS_LARA_RIGHT_FOOT,
           
               body1_offset = {0.0, -8.0, -192.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -189,8 +181,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT SHOULDER
               
-      [9] = { body1_index = RD_PARTS_LARA_SPINE,
-              body2_index = RD_PARTS_LARA_LEFT_UPPER_ARM,
+      [9] = { body_index = RD_PARTS_LARA_LEFT_UPPER_ARM,
           
               body1_offset = {-50.0, -16.0, 138.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -203,8 +194,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT ELBOW
               
-     [10] = { body1_index = RD_PARTS_LARA_LEFT_UPPER_ARM,
-              body2_index = RD_PARTS_LARA_LEFT_LOWER_ARM,
+     [10] = { body_index = RD_PARTS_LARA_LEFT_LOWER_ARM,
           
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {8.0, 0.0, 0.0},
@@ -217,8 +207,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT WRIST
               
-     [11] = { body1_index = RD_PARTS_LARA_LEFT_LOWER_ARM,
-              body2_index = RD_PARTS_LARA_LEFT_PALM,
+     [11] = { body_index = RD_PARTS_LARA_LEFT_PALM,
           
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -231,8 +220,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT SHOULDER
               
-     [12] = { body1_index = RD_PARTS_LARA_SPINE,
-              body2_index = RD_PARTS_LARA_RIGHT_UPPER_ARM,
+     [12] = { body_index = RD_PARTS_LARA_RIGHT_UPPER_ARM,
           
               body1_offset = {50.0, -16.0, 138.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -245,8 +233,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT ELBOW
               
-     [13] = { body1_index = RD_PARTS_LARA_RIGHT_UPPER_ARM,
-              body2_index = RD_PARTS_LARA_RIGHT_LOWER_ARM,
+     [13] = { body_index = RD_PARTS_LARA_RIGHT_LOWER_ARM,
           
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {-8.0, 0.0, 0.0},
@@ -259,8 +246,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT WRIST
               
-     [14] = { body1_index = RD_PARTS_LARA_RIGHT_LOWER_ARM,
-              body2_index = RD_PARTS_LARA_RIGHT_PALM,
+     [14] = { body_index = RD_PARTS_LARA_RIGHT_PALM,
           
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {0.0, 0.0, 0.0},

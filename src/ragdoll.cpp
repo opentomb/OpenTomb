@@ -1,9 +1,6 @@
 
 #include <math.h>
-
 #include "bullet/LinearMath/btScalar.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
-
 #include "ragdoll.h"
 #include "vmath.h"
 #include "character_controller.h"
@@ -60,7 +57,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
-            
+
             bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
 
                 entity->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
@@ -80,16 +77,17 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
                 btScalar r = getInnerBBRadius(entity->bf.bone_tags[i].mesh_base->bb_min, entity->bf.bone_tags[i].mesh_base->bb_max);
                 entity->bt_body[i]->setCcdMotionThreshold(0.8 * r);
                 entity->bt_body[i]->setCcdSweptSphereRadius(r);
-
-            bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i]);
-
-            entity->bt_body[i]->activate();
-
-            entity->bt_body[i]->setLinearVelocity(entity->speed);
     }
 
-    entity->type_flags |=  ENTITY_TYPE_DYNAMIC;
+    //entity->type_flags |=  ENTITY_TYPE_DYNAMIC;           // cause wrong behavior in render!
     Entity_UpdateRigidBody(entity, 1);
+
+    for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
+    {
+        bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i]);
+        entity->bt_body[i]->activate();
+        entity->bt_body[i]->setLinearVelocity(entity->speed);
+    }
 
     // Setup constraints.
 
@@ -98,31 +96,22 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
     for(int i=0; i<entity->bt_joint_count; i++)
     {
-        if( (setup->joint_setup[i].body1_index >= entity->bf.bone_tag_count) ||
-            (setup->joint_setup[i].body2_index >= entity->bf.bone_tag_count) ||
-            (entity->bt_body[setup->joint_setup[i].body1_index] == NULL)     ||
-            (entity->bt_body[setup->joint_setup[i].body2_index] == NULL)      )
+        if( (setup->joint_setup[i].body_index >= entity->bf.bone_tag_count) ||
+            (entity->bt_body[setup->joint_setup[i].body_index] == NULL) )
         {
             result = false;
-            continue;       // If body 1 or body 2 are absent, return false and bypass this joint.
+            break;       // If body 1 or body 2 are absent, return false and bypass this joint.
         }
 
         btTransform localA, localB;
+        ss_bone_tag_p btB = entity->bf.bone_tags + setup->joint_setup[i].body_index;
+        ss_bone_tag_p btA = btB->parent;
+        if(btA == NULL)
+        {
+            result = false;
+            break;
+        }
 #if 0
-        ss_bone_tag_p btA = entity->bf.bone_tags + setup->joint_setup[i].body1_index;
-        ss_bone_tag_p btB = entity->bf.bone_tags + setup->joint_setup[i].body2_index;
-        if(btB->parent != btA)
-        {
-            ss_bone_tag_p tt;
-            SWAPT(btA, btB, tt);
-            uint32_t it;
-            SWAPT(setup->joint_setup[i].body1_index, setup->joint_setup[i].body2_index, it);
-        }
-        if(btB->parent != btA)
-        {
-            continue;
-        }
-
         localA.setFromOpenGLMatrix(btB->transform);
         localB.setIdentity();
 #else
@@ -137,14 +126,14 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         {
             case RD_CONSTRAINT_POINT:
                 {
-                    btPoint2PointConstraint* pointC = new btPoint2PointConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA.getOrigin(), localB.getOrigin());
+                    btPoint2PointConstraint* pointC = new btPoint2PointConstraint(*entity->bt_body[btA->index], *entity->bt_body[btB->index], localA.getOrigin(), localB.getOrigin());
                     entity->bt_joints[i] = pointC;
                 }
                 break;
 
             case RD_CONSTRAINT_HINGE:
                 {
-                    btHingeConstraint* hingeC = new btHingeConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA, localB);
+                    btHingeConstraint* hingeC = new btHingeConstraint(*entity->bt_body[btA->index], *entity->bt_body[btB->index], localA, localB);
                     hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9f, 0.3f, 0.3f);
                     entity->bt_joints[i] = hingeC;
                 }
@@ -152,7 +141,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
             case RD_CONSTRAINT_CONE:
                 {
-                    btConeTwistConstraint* coneC = new btConeTwistConstraint(*entity->bt_body[setup->joint_setup[i].body1_index], *entity->bt_body[setup->joint_setup[i].body2_index], localA, localB);
+                    btConeTwistConstraint* coneC = new btConeTwistConstraint(*entity->bt_body[btA->index], *entity->bt_body[btB->index], localA, localB);
                     coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9f, 0.3f, 0.7f);
                     entity->bt_joints[i] = coneC;
                 }
@@ -178,6 +167,11 @@ bool Ragdoll_Delete(entity_p entity)
 {
     if(entity->bt_joint_count == 0) return false;
 
+    for(int i=0;i<entity->bf.bone_tag_count;i++)
+    {
+        bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
+    }
+
     for(int i=0; i<entity->bt_joint_count; i++)
     {
         if(entity->bt_joints[i] != NULL)
@@ -190,8 +184,7 @@ bool Ragdoll_Delete(entity_p entity)
 
     for(int i=0;i<entity->bf.bone_tag_count;i++)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
-        entity->bt_body[i]->setMassProps(0.0, btVector3(0.0, 0.0, 0.0));
+        entity->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
         bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
     }
 
@@ -205,6 +198,22 @@ bool Ragdoll_Delete(entity_p entity)
 
     // NB! Bodies remain in the same state!
     // To make them static again, additionally call setEntityBodyMass script function.
+}
+
+
+
+void Ragdoll_Update(entity_p entity)
+{
+
+    btScalar tr[16];
+    btVector3 pos = entity->bt_body[0]->getWorldTransform().getOrigin();
+    vec3_copy(entity->transform+12, pos.m_floats);
+    Entity_UpdateRoomPos(entity);
+    for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
+    {
+        entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+        Mat4_inv_Mat4_affine_mul(entity->bf.bone_tags[i].full_transform, entity->transform, tr);
+    }
 }
 
 
@@ -289,10 +298,8 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                             lua_rawgeti(engine_lua, -1, i+1);
                             if(lua_istable(engine_lua, -1))
                             {
-                                setup->joint_setup[i].body1_index = (uint32_t)lua_GetScalarField(engine_lua, "body1_index");
-                                setup->joint_setup[i].body2_index = (uint32_t)lua_GetScalarField(engine_lua, "body2_index");
-
-                                setup->joint_setup[i].joint_type  = (uint32_t)lua_GetScalarField(engine_lua, "joint_type");
+                                setup->joint_setup[i].body_index = (uint16_t)lua_GetScalarField(engine_lua, "body_index");
+                                setup->joint_setup[i].joint_type = (uint16_t)lua_GetScalarField(engine_lua, "joint_type");
 
                                 lua_getfield(engine_lua, -1, "body1_offset");
                                 if(lua_istable(engine_lua, -1))

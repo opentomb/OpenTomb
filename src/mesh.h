@@ -235,6 +235,7 @@ typedef struct static_mesh_s
 typedef struct ss_bone_tag_s
 {
     struct ss_bone_tag_s   *parent;
+    uint16_t                index;
     base_mesh_p             mesh_base;                                          // base mesh - pointer to the first mesh in array
     base_mesh_p             mesh_skin;                                          // base skinned mesh for ТР4+
     base_mesh_p             mesh_slot;

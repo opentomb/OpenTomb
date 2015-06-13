@@ -162,7 +162,7 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
     glGenBuffersARB(1, &mesh->vbo_vertex_array);
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
     glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
-    
+
     // Transform skinning information into bone weights and store it as well.
     if (mesh->skin_map)
     {
@@ -203,7 +203,7 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         elementsSize += sizeof(uint32_t) * mesh->element_count_per_texture[i];
     }
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, elementsSize, mesh->elements, GL_STATIC_DRAW_ARB);
-    
+
     // Prepare vertex array
     vertex_array_attribute attribs[] = {
         vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, mesh->vbo_vertex_array, sizeof(vertex_t), offsetof(vertex_t, position)),
@@ -215,7 +215,7 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
     };
     int numAttribs = mesh->skin_map ? 5 : 4;
     mesh->main_vertex_array = renderer->vertex_array_manager->createArray(mesh->vbo_index_array, numAttribs, attribs);
-    
+
     // Now for animated polygons, if any
     if (mesh->num_animated_elements != 0 || mesh->num_alpha_animated_elements != 0)
     {
@@ -223,22 +223,22 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         glGenBuffersARB(1, &mesh->animated_vbo_vertex_array);
         glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_vertex_array);
         glBufferDataARB(GL_ARRAY_BUFFER, sizeof(animated_vertex_t) * mesh->animated_vertex_count, mesh->animated_vertices, GL_STATIC_DRAW);
-        
+
         glGenBuffersARB(1, &mesh->animated_vbo_index_array);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, mesh->animated_vbo_index_array);
         glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * (mesh->num_animated_elements + mesh->num_alpha_animated_elements), mesh->animated_elements, GL_STATIC_DRAW);
-        
+
         // Prepare empty buffer for tex coords
         glGenBuffersARB(1, &mesh->animated_vbo_texcoord_array);
         glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_texcoord_array);
         glBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [2]) * mesh->animated_vertex_count, 0, GL_STREAM_DRAW);
-        
+
         // Create vertex array object.
         vertex_array_attribute attribs[] = {
             vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(animated_vertex_t), offsetof(animated_vertex_t, position)),
             vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(animated_vertex_t), offsetof(animated_vertex_t, color)),
             vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, mesh->animated_vbo_vertex_array, sizeof(animated_vertex_t), offsetof(animated_vertex_t, normal)),
-            
+
             vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, mesh->animated_vbo_texcoord_array, sizeof(GLfloat [2]), 0),
         };
         mesh->animated_vertex_array = renderer->vertex_array_manager->createArray(mesh->animated_vbo_index_array, 4, attribs);
@@ -250,7 +250,7 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         mesh->animated_vbo_texcoord_array = 0;
         mesh->animated_vertex_array = 0;
     }
-    
+
     // Update references for transparent polygons
     for (uint32_t i = 0; i < mesh->transparent_polygon_count; i++)
     {
@@ -349,6 +349,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->bone_tags[0].parent = NULL;                                             // root
     for(uint16_t i=0;i<bf->bone_tag_count;i++)
     {
+        bf->bone_tags[i].index = i;
         bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
         bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
         if (bf->bone_tags[i].mesh_skin)
@@ -649,26 +650,26 @@ uint32_t Mesh_AddAnimatedVertex(base_mesh_p mesh, struct vertex_s *vertex)
 {
     animated_vertex_p v = mesh->animated_vertices;
     uint32_t ind = 0;
-    
+
     // Skip search for equal vertex; tex coords may differ but aren't stored in
     // animated_vertex_s
-    
+
     ind = mesh->animated_vertex_count;                                                   // paranoid
     mesh->animated_vertex_count++;
     mesh->animated_vertices = (animated_vertex_p)realloc(mesh->animated_vertices, mesh->animated_vertex_count * sizeof(animated_vertex_t));
-    
+
     v = mesh->animated_vertices + ind;
     vec3_copy(v->position, vertex->position);
     vec3_copy(v->normal, vertex->normal);
     vec4_copy(v->color, vertex->color);
-    
+
     return ind;
 }
 
 void Mesh_GenFaces(base_mesh_p mesh)
 {
     mesh->element_count_per_texture = (uint32_t *)calloc(sizeof(uint32_t), mesh->num_texture_pages);
-    
+
     /*
      * Layout of the buffers:
      *
@@ -690,7 +691,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
      * - animated elements (opaque)
      * - animated elements (blended)
      */
-    
+
     // Do a first pass to find the numbers of everything
     mesh->alpha_elements = 0;
     size_t numNormalElements = 0;
@@ -701,10 +702,10 @@ void Mesh_GenFaces(base_mesh_p mesh)
     {
         if (Polygon_IsBroken(&mesh->polygons[i]))
             continue;
-        
+
         uint32_t elementCount = (mesh->polygons[i].vertex_count - 2) * 3;
         if (mesh->polygons[i].double_side) elementCount *= 2;
-        
+
         if (mesh->polygons[i].anim_id == 0)
         {
             if (mesh->polygons[i].transparency < 2)
@@ -729,7 +730,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
             }
         }
     }
-    
+
     mesh->elements = (uint32_t *) calloc(sizeof(uint32_t), numNormalElements + mesh->alpha_elements);
     uint32_t elementOffset = 0;
     uint32_t *startPerTexture = (uint32_t *) calloc(sizeof(uint32_t), mesh->num_texture_pages);
@@ -739,11 +740,11 @@ void Mesh_GenFaces(base_mesh_p mesh)
         elementOffset += mesh->element_count_per_texture[i];
     }
     uint32_t startTransparent = elementOffset;
-    
+
     mesh->animated_elements = (uint32_t *) calloc(sizeof(uint32_t), mesh->num_animated_elements + mesh->num_alpha_animated_elements);
     uint32_t animatedStart = 0;
     uint32_t animatedStartTransparent = mesh->num_animated_elements;
-    
+
     mesh->transparent_polygons = (transparent_polygon_reference_s *) calloc(sizeof(transparent_polygon_reference_t), mesh->transparent_polygon_count);
     uint32_t transparentPolygonStart = 0;
 
@@ -751,19 +752,19 @@ void Mesh_GenFaces(base_mesh_p mesh)
     for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
     {
         if (Polygon_IsBroken(p)) continue;
-        
+
         uint32_t elementCount = (p->vertex_count - 2) * 3;
         uint32_t backwardsStartOffset = elementCount;
         if (p->double_side)
         {
             elementCount *= 2;
         }
-        
+
         if(p->anim_id == 0)
         {
             // Not animated
             uint32_t texture = p->tex_index;
-            
+
             uint32_t oldStart;
             if (p->transparency < 2)
             {
@@ -825,33 +826,33 @@ void Mesh_GenFaces(base_mesh_p mesh)
                 transparentPolygonStart += 1;
             }
             uint32_t backwardsStart = oldStart + backwardsStartOffset;
-            
+
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
             uint32_t startElement = Mesh_AddAnimatedVertex(mesh, p->vertices);
             uint32_t previousElement = Mesh_AddAnimatedVertex(mesh, p->vertices + 1);
-            
+
             for(uint16_t j = 2; j < p->vertex_count; j++)
             {
                 uint32_t thisElement = Mesh_AddAnimatedVertex(mesh, p->vertices + j);
-                
+
                 mesh->animated_elements[oldStart + (j - 2)*3 + 0] = startElement;
                 mesh->animated_elements[oldStart + (j - 2)*3 + 1] = previousElement;
                 mesh->animated_elements[oldStart + (j - 2)*3 + 2] = thisElement;
-                
+
                 if (p->double_side)
                 {
                     mesh->animated_elements[backwardsStart + (j - 2)*3 + 0] = startElement;
                     mesh->animated_elements[backwardsStart + (j - 2)*3 + 1] = thisElement;
                     mesh->animated_elements[backwardsStart + (j - 2)*3 + 2] = previousElement;
                 }
-                
+
                 previousElement = thisElement;
             }
         }
     }
     free(startPerTexture);
-    
+
     // Now same for animated triangles
 }
 
