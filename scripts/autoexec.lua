@@ -43,10 +43,6 @@ function setDefaultModelAnimReplaceFlag(m_id)
     setModelAnimReplaceFlag(m_id, 13, 0x01);
 end
 
-function test(w, a)
-    setCharacterWeaponModel(player, w, a);
-end
-
 if (getLevelVersion() < TR_II) then
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
@@ -252,7 +248,7 @@ if(getLevelVersion() >= TR_II) then
     setAnimCommandTransform(0, 203, -2, 0x03);
 end
 
--- generate UV rotation texture animations for waterfalls in TR4+ versions
+-- Generate UV rotation texture animations for waterfalls in TR4+ versions
 
 if (getLevelVersion() == TR_IV) then
     for i=423, 426, 1 do
@@ -264,8 +260,12 @@ elseif (getLevelVersion() == TR_V) then
     end;
 end
 
+-- Add global level tasks
 
--- test TR_ITEMS
+addTask(checkPlayerRagdollConditions);    -- check ragdolls
+addTask(checkDebugKeys);
+
+-- Test TR_ITEMS
 
 addItem(player, ITEM_COMPASS, 1);
 addItem(player, ITEM_PASSPORT, 1);

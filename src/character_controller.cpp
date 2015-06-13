@@ -1106,16 +1106,19 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
 void Character_GhostUpdate(struct entity_s *ent)
 {
-    btScalar tr[16], *v;
-    btVector3 pos;
-
-    for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+    if(ent->bt_joint_count == 0)
     {
-        Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
-        v = ent->bf.animations.model->mesh_tree[i].mesh_base->centre;
-        ent->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
-        Mat4_vec3_mul_macro(pos.m_floats, tr, v);
-        ent->character->ghostObjects[i]->getWorldTransform().setOrigin(pos);
+        btScalar tr[16], *v;
+        btVector3 pos;
+
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
+            v = ent->bf.animations.model->mesh_tree[i].mesh_base->centre;
+            ent->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+            Mat4_vec3_mul_macro(pos.m_floats, tr, v);
+            ent->character->ghostObjects[i]->getWorldTransform().setOrigin(pos);
+        }
     }
 }
 
@@ -1283,7 +1286,7 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         resp->vertical_collide      = 0x00;
     }
 
-    if(ent->character && ent->character->no_fix_all)
+    if((ent->bt_joint_count > 0) || (ent->character && ent->character->no_fix_all))
     {
         Character_GhostUpdate(ent);
         return;
@@ -1851,6 +1854,28 @@ int Character_FreeFalling(struct entity_s *ent)
     ent->angles[1] = 0.0;
 
     Entity_UpdateRotation(ent);                                                 // apply rotations
+
+    /*btScalar t = ent->current_speed * bf-> ent->character->speed_mult;        ///@TODO: fix speed update in Entity_Frame function and other;
+    if(ent->dir_flag & ENT_MOVE_FORWARD)
+    {
+        ent->speed.m_floats[0] = ent->transform[4 + 0] * t;
+        ent->speed.m_floats[1] = ent->transform[4 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
+    {
+        ent->speed.m_floats[0] =-ent->transform[4 + 0] * t;
+        ent->speed.m_floats[1] =-ent->transform[4 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_LEFT)
+    {
+        ent->speed.m_floats[0] =-ent->transform[0 + 0] * t;
+        ent->speed.m_floats[1] =-ent->transform[0 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_RIGHT)
+    {
+        ent->speed.m_floats[0] = ent->transform[0 + 0] * t;
+        ent->speed.m_floats[1] = ent->transform[0 + 1] * t;
+    }*/
 
     move = ent->speed + bt_engine_dynamicsWorld->getGravity() * engine_frame_time * 0.5;
     move *= engine_frame_time;

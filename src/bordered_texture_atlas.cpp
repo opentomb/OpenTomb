@@ -234,7 +234,6 @@ void bordered_texture_atlas::addObjectTexture(const tr4_object_texture_t &textur
 
     // See whether it already exists
     long canonical_index = -1;
-    canonical_object_texture *canonical = nullptr;
     for (unsigned long i = 0; i < number_canonical_object_textures; i++)
     {
         canonical_object_texture *canonical_candidate = &(canonical_object_textures[i]);
@@ -246,7 +245,6 @@ void bordered_texture_atlas::addObjectTexture(const tr4_object_texture_t &textur
             && canonical_candidate->height == height)
         {
             canonical_index = i;
-            canonical = canonical_candidate;
             break;
         }
     }
@@ -257,12 +255,12 @@ void bordered_texture_atlas::addObjectTexture(const tr4_object_texture_t &textur
         canonical_index = number_canonical_object_textures;
         number_canonical_object_textures += 1;
 
-        canonical = canonical_object_textures + canonical_index;
-        canonical->width = width;
-        canonical->height = height;
-        canonical->original_page = texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4;
-        canonical->original_x = min[0];
-        canonical->original_y = min[1];
+        canonical_object_texture &canonical = canonical_object_textures[canonical_index];
+        canonical.width = width;
+        canonical.height = height;
+        canonical.original_page = texture.tile_and_flag & TR_TEXTURE_INDEX_MASK_TR4;
+        canonical.original_x = min[0];
+        canonical.original_y = min[1];
     }
 
     // Create file object texture.
@@ -299,7 +297,6 @@ void bordered_texture_atlas::addSpriteTexture(const tr_sprite_texture_t &texture
 
     // See whether it already exists
     long canonical_index = -1;
-    canonical_object_texture *canonical = NULL;
     for (unsigned long i = 0; i < number_canonical_object_textures; i++)
     {
         canonical_object_texture *canonical_candidate = &(canonical_object_textures[i]);
@@ -311,7 +308,6 @@ void bordered_texture_atlas::addSpriteTexture(const tr_sprite_texture_t &texture
             && canonical_candidate->height == height)
         {
             canonical_index = i;
-            canonical = canonical_candidate;
             break;
         }
     }
@@ -322,12 +318,12 @@ void bordered_texture_atlas::addSpriteTexture(const tr_sprite_texture_t &texture
         canonical_index = number_canonical_object_textures;
         number_canonical_object_textures += 1;
 
-        canonical = canonical_object_textures + canonical_index;
-        canonical->width = width;
-        canonical->height = height;
-        canonical->original_page = texture.tile & TR_TEXTURE_INDEX_MASK_TR4;
-        canonical->original_x = x;
-        canonical->original_y = y;
+        canonical_object_texture &canonical = canonical_object_textures[canonical_index];
+        canonical.width = width;
+        canonical.height = height;
+        canonical.original_page = texture.tile & TR_TEXTURE_INDEX_MASK_TR4;
+        canonical.original_x = x;
+        canonical.original_y = y;
     }
 
     // Create sprite texture assignmen.
@@ -537,8 +533,7 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames, GLuint additio
             int h = result_page_height[page] / 2;
             GLubyte *mip_data = (GLubyte *) malloc(4 * w * h);
 
-            w = (w==0)?1:w;                                                     ///@PARANOID: tex atlas size can't been less or equal 2 x 2
-            h = (h==0)?1:h;
+            assert(w > 0 && h > 0);
             for(int i=0;i<h;i++)
             {
                 for(int j=0;j<w;j++)

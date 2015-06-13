@@ -154,8 +154,13 @@ void Render_Mesh(struct base_mesh_s *mesh)
         GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
         size_t offset = 0;
-        for(polygon_p p=mesh->animated_polygons;p!=NULL;p=p->next)
+        for(uint32_t i=0;i<mesh->polygons_count;i++)
         {
+            const struct polygon_s *p = &mesh->polygons[i];
+            if (p->anim_id == 0)
+            {
+                continue;
+            }
             anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
             uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
             tex_frame_p tf = seq->frames + frame;

@@ -216,6 +216,19 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
 void Hair_Clear(hair_p hair)
 {
+    for(int i=0; i<hair->joint_count; i++)
+    {
+        if(hair->joints[i])
+        {
+            bt_engine_dynamicsWorld->removeConstraint(hair->joints[i]);
+            delete hair->joints[i];
+            hair->joints[i] = NULL;
+        }
+    }
+    free(hair->joints);
+    hair->joints = NULL;
+    hair->joint_count = 0;
+    
     for(int i=0; i<hair->element_count; i++)
     {
         if(hair->elements[i].body)
@@ -234,19 +247,6 @@ void Hair_Clear(hair_p hair)
     free(hair->elements);
     hair->elements = NULL;
     hair->element_count = 0;
-
-    for(int i=0; i<hair->joint_count; i++)
-    {
-        if(hair->joints[i])
-        {
-            bt_engine_dynamicsWorld->removeConstraint(hair->joints[i]);
-            delete hair->joints[i];
-            hair->joints[i] = NULL;
-        }
-    }
-    free(hair->joints);
-    hair->joints = NULL;
-    hair->joint_count = 0;
 
     free(hair->container);
     hair->container = NULL;
@@ -338,7 +338,6 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
                     hair_setup->hair_inertia     = lua_GetScalarField(engine_lua, "hair_inertia");
                     hair_setup->hair_friction    = lua_GetScalarField(engine_lua, "hair_friction");
                     hair_setup->hair_restitution = lua_GetScalarField(engine_lua, "hair_bouncing");
-                    hair_setup->joint_radius     = lua_GetScalarField(engine_lua, "joint_radius");
                     hair_setup->joint_overlap    = lua_GetScalarField(engine_lua, "joint_overlap");
                     hair_setup->joint_cfm        = lua_GetScalarField(engine_lua, "joint_cfm");
                     hair_setup->joint_erp        = lua_GetScalarField(engine_lua, "joint_erp");

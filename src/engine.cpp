@@ -99,6 +99,12 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 
     if(c1 && c1 == c0)
     {
+        if(((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->isStaticOrKinematicObject() ||
+           ((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->isStaticOrKinematicObject())
+        {
+            return;
+        }
+        dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
         return;                                                                 // No self interaction
     }
 
@@ -3484,6 +3490,7 @@ bool Engine_LuaInit()
 
         luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
+        luaL_dofile(engine_lua, "scripts/system/debug.lua");
         luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
         luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
         luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");
@@ -3505,10 +3512,7 @@ bool Engine_LuaInit()
 
 void Engine_LuaClearTasks()
 {
-    int top = lua_gettop(engine_lua);
-    lua_getglobal(engine_lua, "clearTasks");
-    lua_CallAndLog(engine_lua, 0, 0, 0);
-    lua_settop(engine_lua, top);
+    lua_CallVoidFunc(engine_lua, "clearTasks");
 }
 
 void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*))

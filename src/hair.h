@@ -89,8 +89,6 @@ typedef struct hair_setup_s
     btScalar     hair_restitution;   // "Bounciness" of the hair
     btScalar     hair_friction;      // How much other bodies will affect hair trajectory
 
-    //uint8_t      joints_per_body;    // Amount of joints for each body-body connection
-    btScalar     joint_radius;       // Relative radius on which joints will be placed
     btScalar     joint_overlap;      // How much two hair bodies overlap each other
 
     btScalar     joint_cfm;          // Constraint force mixing (joint softness)

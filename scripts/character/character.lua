@@ -15,6 +15,9 @@ PARAM_EXTRA2   = 5;
 PARAM_EXTRA3   = 6;
 PARAM_EXTRA4   = 7;
 
+PARAM_ABSOLUTE_MAX = -1;
+
+
 -------- Lara's model-------
 --           .=.
 --          | 14|
