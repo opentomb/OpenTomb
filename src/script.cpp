@@ -465,15 +465,49 @@ int lua_SetScalarField(lua_State *lua, const char *key, btScalar val)
 
 int lua_DoTasks(lua_State *lua, btScalar time)
 {
-    int top = lua_gettop(lua);
-
     lua_pushnumber(lua, time);
     lua_setglobal(lua, "frame_time");
-    lua_getglobal(lua, "doTasks");
-    lua_CallAndLog(lua, 0, 0, 0);
-
-    lua_settop(lua, top);
+    
+    lua_CallVoidFunc(lua, "doTasks");
+    lua_CallVoidFunc(lua, "clearKeys");
+    
     return 0;
+}
+
+void lua_AddKey(lua_State *lua, int keycode, int state)
+{
+    int top = lua_gettop(lua);
+    
+    lua_getglobal(lua, "addKey");
+    
+    if(!lua_isfunction(lua, -1))
+    {
+        lua_settop(lua, top);
+        return;
+    }
+    
+    lua_pushinteger(lua, keycode);
+    lua_pushinteger(lua, state);
+    lua_CallAndLog(lua, 2, 0, 0);
+    
+    lua_settop(lua, top);
+}
+
+bool lua_CallVoidFunc(lua_State *lua, const char* func_name)
+{
+    int top = lua_gettop(lua);
+    
+    lua_getglobal(lua, func_name);
+    
+    if(!lua_isfunction(lua, -1))
+    {
+        lua_settop(lua, top);
+        return false;
+    }
+    
+    lua_CallAndLog(lua, 0, 0, 0);
+    lua_settop(lua, top);
+    return true;
 }
 
 int lua_ExecEntity(lua_State *lua, int id_object, int id_activator, int id_callback)

@@ -1,26 +1,49 @@
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_keycode.h>
-#include <SDL2/SDL_scancode.h>
 #include <stdlib.h>
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_platform.h>
+#include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_haptic.h>
+
+#include "anim_state_control.h"
 #include "engine.h"
 #include "controls.h"
 #include "console.h"
 #include "common.h"
 #include "game.h"
 #include "main_SDL.h"
+#include "script.h"
+#include "vmath.h"
 
+extern int done;
+extern btScalar time_scale;
+
+extern SDL_Joystick         *sdl_joystick;
+extern SDL_GameController   *sdl_controller;
 extern SDL_Haptic           *sdl_haptic;
+extern SDL_Window           *sdl_window;
+
+extern engine_container_p last_cont;
+
+
+
 
 void Controls_Key(int32_t button, int state)
 {
-    for(int i = 0; i < ACT_LASTINDEX; i++)                                      // Compare ALL mapped buttons.
+    // Fill script-driven debug keyboard input.
+    
+    lua_AddKey(engine_lua, button, state);
+    
+    // Compare ALL mapped buttons.
+    
+    for(int i = 0; i < ACT_LASTINDEX; i++)
     {
         if((button == control_mapper.action_map[i].primary) ||
-           (button == control_mapper.action_map[i].secondary))                            // If button = mapped action...
+           (button == control_mapper.action_map[i].secondary))  // If button = mapped action...
         {
-            switch(i)                                                           // ...Choose corresponding action.
+            switch(i)                                           // ...Choose corresponding action.
             {
                 case ACT_UP:
                     control_states.move_forward = state;
@@ -434,4 +457,366 @@ void Controls_InitGlobals()
     control_mapper.action_map[ACT_CONSOLE].primary    = SDLK_BACKQUOTE;
     control_mapper.action_map[ACT_SAVEGAME].primary   = SDLK_F5;
     control_mapper.action_map[ACT_LOADGAME].primary   = SDLK_F6;
+}
+
+void Controls_PollSDLInput()
+{
+    SDL_Event event;
+    static int mouse_setup = 0;
+    
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_MOUSEMOTION:
+                if(!con_base.show && control_states.mouse_look != 0 &&
+                    ((event.motion.x != (screen_info.w/2)) ||
+                     (event.motion.y != (screen_info.h/2))))
+                {
+                    if(mouse_setup)                                             // it is not perfect way, but cursor
+                    {                                                           // every engine start is in one place
+                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
+                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
+                    }
+
+                    if((event.motion.x < ((screen_info.w/2)-(screen_info.w/4))) ||
+                       (event.motion.x > ((screen_info.w/2)+(screen_info.w/4))) ||
+                       (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
+                       (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
+                    {
+                        SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+                    }
+                }
+                mouse_setup = 1;
+                break;
+
+            case SDL_MOUSEBUTTONDOWN:
+                if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
+                {
+                    Controls_PrimaryMouseDown();
+                }
+                else if(event.button.button == 3)
+                {
+                    Controls_SecondaryMouseDown();
+                }
+                break;
+
+            // Controller events are only invoked when joystick is initialized as
+            // game controller, otherwise, generic joystick event will be used.
+            case SDL_CONTROLLERAXISMOTION:
+                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value);
+                break;
+
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state);
+                break;
+
+            // Joystick events are still invoked, even if joystick is initialized as game
+            // controller - that's why we need sdl_joystick checking - to filter out
+            // duplicate event calls.
+
+            case SDL_JOYAXISMOTION:
+                if(sdl_joystick)
+                    Controls_JoyAxis(event.jaxis.axis, event.jaxis.value);
+                break;
+
+            case SDL_JOYHATMOTION:
+                if(sdl_joystick)
+                    Controls_JoyHat(event.jhat.value);
+                break;
+
+            case SDL_JOYBUTTONDOWN:
+            case SDL_JOYBUTTONUP:
+                // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
+                if(sdl_joystick)
+                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
+                break;
+
+            case SDL_TEXTINPUT:
+            case SDL_TEXTEDITING:
+                if(con_base.show && event.key.state)
+                {
+                    Con_Filter(event.text.text);
+                    return;
+                }
+                break;
+
+            case SDL_KEYUP:
+            case SDL_KEYDOWN:
+                if( (event.key.keysym.sym == SDLK_F4) &&
+                    (event.key.state == SDL_PRESSED)  &&
+                    (event.key.keysym.mod & KMOD_ALT) )
+                {
+                    done = 1;
+                    break;
+                }
+
+                if(con_base.show && event.key.state)
+                {
+                    switch (event.key.keysym.sym)
+                    {
+                        case SDLK_RETURN:
+                        case SDLK_UP:
+                        case SDLK_DOWN:
+                        case SDLK_LEFT:
+                        case SDLK_RIGHT:
+                        case SDLK_HOME:
+                        case SDLK_END:
+                        case SDLK_BACKSPACE:
+                        case SDLK_DELETE:
+                            Con_Edit(event.key.keysym.sym);
+                            break;
+                        default:
+                            break;
+                    }
+                    return;
+                }
+                else
+                {
+                    Controls_Key(event.key.keysym.sym, event.key.state);
+                    // DEBUG KEYBOARD COMMANDS
+                    Controls_DebugKeys(event.key.keysym.sym, event.key.state);
+                }
+                break;
+
+            case SDL_QUIT:
+                done = 1;
+                break;
+
+            case SDL_WINDOWEVENT:
+                if(event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
+                }
+                break;
+
+            default:
+            break;
+        }
+    }
+}
+
+///@FIXME: Move to debug.lua script!!!
+
+void Controls_DebugKeys(int button, int state)
+{
+    if(state)
+    {
+        switch(button)
+        {
+            case SDLK_RETURN:
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_ACTIVATE);
+                }
+                break;
+
+            case SDLK_g:
+                if(time_scale == 1.0)
+                {
+                    time_scale = 0.033;
+                }
+                else
+                {
+                    time_scale = 1.0;
+                }
+                break;
+
+            case SDLK_UP:
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_UP);
+                }
+                break;
+
+            case SDLK_DOWN:
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_DOWN);
+                }
+                break;
+
+            case SDLK_LEFT:
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_LEFT);
+                }
+                break;
+
+            case SDLK_RIGHT:
+                if(main_inventory_manager)
+                {
+                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_RIGHT);
+                }
+                break;
+
+            case SDLK_1:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 1;
+                }
+                break;
+
+            case SDLK_2:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 2;
+                }
+                break;
+
+            case SDLK_3:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 3;
+                }
+                break;
+
+            case SDLK_4:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 4;
+                }
+                break;
+
+            case SDLK_5:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 5;
+                }
+                break;
+
+            case SDLK_6:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 6;
+                }
+                break;
+
+            case SDLK_7:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 7;
+                }
+                break;
+
+            case SDLK_8:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 8;
+                }
+                break;
+
+            case SDLK_9:
+                if(engine_world.Character != NULL)
+                {
+                    engine_world.Character->character->current_weapon = 9;
+                }
+                break;
+            
+            case SDLK_y:
+                screen_info.show_debuginfo = !screen_info.show_debuginfo;
+                break;
+
+            case SDLK_n:
+                control_states.noclip = !control_states.noclip;
+                break;
+
+            default:
+                //Con_Printf("key = %d", button);
+                break;
+        };
+    }
+}
+
+void Controls_PrimaryMouseDown()
+{
+    engine_container_p cont = Container_Create();
+    btScalar dbgR = 128.0;
+    btScalar *v = engine_camera.pos;
+    btScalar *dir = engine_camera.view_dir;
+    btScalar new_pos[3];
+    btVector3 localInertia(0, 0, 0);
+    btTransform startTransform;
+    btCollisionShape *cshape;
+    btRigidBody *body;
+
+    cshape = new btSphereShape(dbgR);
+    //cshape = new btCapsuleShapeZ(50.0, 100.0);
+    startTransform.setIdentity();
+    new_pos[0] = v[0];
+    new_pos[1] = v[1];
+    new_pos[2] = v[2];
+    startTransform.setOrigin(btVector3(new_pos[0], new_pos[1], new_pos[2]));
+    cshape->calculateLocalInertia(12.0, localInertia);
+    btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
+    body = new btRigidBody(12.0, motionState, cshape, localInertia);
+    bt_engine_dynamicsWorld->addRigidBody(body);
+    body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
+    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.current_room);
+    cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
+    body->setUserPointer(cont);
+    body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
+    body->setCcdSweptSphereRadius(dbgR);
+}
+
+
+void Controls_SecondaryMouseDown()
+{
+    engine_container_t *c0;
+    btVector3 from, to, place;
+    engine_container_t cam_cont;
+
+    vec3_copy(from.m_floats, engine_camera.pos);
+    to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;
+
+    cam_cont.next = NULL;
+    cam_cont.object = NULL;
+    cam_cont.object_type = 0;
+    cam_cont.room = engine_camera.current_room;
+
+    bt_engine_ClosestRayResultCallback cbc(&cam_cont);
+    //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    bt_engine_dynamicsWorld->rayTest(from, to, cbc);
+    if(cbc.hasHit())
+    {
+        extern GLfloat cast_ray[6];
+
+        place.setInterpolate3(from, to, cbc.m_closestHitFraction);
+        vec3_copy(cast_ray, place.m_floats);
+        cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld.m_floats[0];
+        cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld.m_floats[1];
+        cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld.m_floats[2];
+
+        if((c0 = (engine_container_p)cbc.m_collisionObject->getUserPointer()))
+        {
+            if(c0->object_type == OBJECT_BULLET_MISC)
+            {
+                btCollisionObject* obj = (btCollisionObject*)cbc.m_collisionObject;
+                btRigidBody* body = btRigidBody::upcast(obj);
+                if(body && body->getMotionState())
+                {
+                    delete body->getMotionState();
+                }
+                if(body && body->getCollisionShape())
+                {
+                    delete body->getCollisionShape();
+                }
+
+                if (body)
+                {
+                    body->setUserPointer(NULL);
+                }
+                c0->room = NULL;
+                free(c0);
+
+                bt_engine_dynamicsWorld->removeCollisionObject(obj);
+                delete obj;
+            }
+            else
+            {
+                last_cont = c0;
+            }
+        }
+    }
 }

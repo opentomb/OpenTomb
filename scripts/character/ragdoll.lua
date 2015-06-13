@@ -54,21 +54,21 @@ ragdoll[RD_TYPE_LARA] = {
   -- Body properties array.
   
   body = {
-            {mass = 15.0, restitution = 0.1, friction = 0.8, damping = {0.3, 0.6}},    -- 00 = Pelvis
-            {mass = 20.0, restitution = 0.2, friction = 0.4, damping = {0.2, 0.5}},    -- 01 = Left upper leg
-            {mass = 15.0, restitution = 0.2, friction = 0.4, damping = {0.1, 0.5}},    -- 02 = Left lower leg
-            {mass = 10.0, restitution = 0.3, friction = 0.2, damping = {0.1, 0.6}},    -- 03 = Left foot
-            {mass = 20.0, restitution = 0.2, friction = 0.4, damping = {0.2, 0.5}},    -- 04 = Right upper leg
-            {mass = 15.0, restitution = 0.2, friction = 0.4, damping = {0.1, 0.5}},    -- 05 = Right lower leg
-            {mass = 10.0, restitution = 0.3, friction = 0.2, damping = {0.1, 0.6}},    -- 06 = Right foot
-            {mass = 25.0, restitution = 0.3, friction = 1.0, damping = {0.3, 0.5}},    -- 07 = Spine
-            {mass = 20.0, restitution = 0.1, friction = 0.5, damping = {0.2, 0.5}},    -- 11 = Right upper arm
-            {mass = 15.0, restitution = 0.2, friction = 0.4, damping = {0.1, 0.5}},    -- 12 = Right lower arm
-            {mass = 10.0, restitution = 0.3, friction = 0.2, damping = {0.1, 0.6}},    -- 13 = Right palm
-            {mass = 20.0, restitution = 0.1, friction = 0.5, damping = {0.2, 0.5}},    -- 08 = Left upper arm
-            {mass = 15.0, restitution = 0.2, friction = 0.4, damping = {0.1, 0.5}},    -- 09 = Left lower arm
-            {mass = 10.0, restitution = 0.3, friction = 0.2, damping = {0.1, 0.6}},    -- 10 = Left palm
-            {mass = 20.0, restitution = 0.2, friction = 0.8, damping = {0.2, 0.9}}     -- 14 = Head
+            {mass = 15.0, restitution = 0.8, friction =  8.0, damping = {0.3, 0.6}},    -- 00 = Pelvis
+            {mass = 20.0, restitution = 0.2, friction =  4.0, damping = {0.2, 0.5}},    -- 01 = Left upper leg
+            {mass = 15.0, restitution = 0.2, friction =  2.0, damping = {0.1, 0.5}},    -- 02 = Left lower leg
+            {mass = 10.0, restitution = 0.3, friction =  5.0, damping = {0.1, 0.6}},    -- 03 = Left foot
+            {mass = 20.0, restitution = 0.2, friction =  8.0, damping = {0.2, 0.5}},    -- 04 = Right upper leg
+            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 05 = Right lower leg
+            {mass = 10.0, restitution = 0.3, friction =  2.0, damping = {0.1, 0.6}},    -- 06 = Right foot
+            {mass = 25.0, restitution = 0.5, friction = 10.0, damping = {0.3, 0.5}},    -- 07 = Spine
+            {mass = 20.0, restitution = 0.1, friction =  6.5, damping = {0.2, 0.5}},    -- 11 = Right upper arm
+            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 12 = Right lower arm
+            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.1, 0.6}},    -- 13 = Right palm
+            {mass = 20.0, restitution = 0.1, friction =  6.5, damping = {0.2, 0.5}},    -- 08 = Left upper arm
+            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 09 = Left lower arm
+            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.1, 0.6}},    -- 10 = Left palm
+            {mass = 20.0, restitution = 0.0, friction =  8.0, damping = {0.2, 0.9}}     -- 14 = Head
          },
   
   -- Actual joint array.

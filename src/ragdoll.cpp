@@ -1,6 +1,9 @@
 
 #include <math.h>
+
 #include "bullet/LinearMath/btScalar.h"
+#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+
 #include "ragdoll.h"
 #include "vmath.h"
 #include "character_controller.h"
@@ -57,7 +60,13 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
-
+        
+            if(entity->character)
+            {
+                if(entity->character->ghostObjects[i])
+                    bt_engine_dynamicsWorld->removeCollisionObject(entity->character->ghostObjects[i]);
+            }
+            
             bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
 
                 entity->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
@@ -105,7 +114,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         }
 
         btTransform localA, localB;
-#if 1
+#if 0
         ss_bone_tag_p btA = entity->bf.bone_tags + setup->joint_setup[i].body1_index;
         ss_bone_tag_p btB = entity->bf.bone_tags + setup->joint_setup[i].body2_index;
         if(btB->parent != btA)
@@ -175,11 +184,6 @@ bool Ragdoll_Delete(entity_p entity)
 {
     if(entity->bt_joint_count == 0) return false;
 
-    for(int i=0;i<entity->bf.bone_tag_count;i++)
-    {
-        bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
-    }
-
     for(int i=0; i<entity->bt_joint_count; i++)
     {
         if(entity->bt_joints[i] != NULL)
@@ -192,7 +196,18 @@ bool Ragdoll_Delete(entity_p entity)
 
     for(int i=0;i<entity->bf.bone_tag_count;i++)
     {
-        entity->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
+        bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
+    }
+
+    for(int i=0;i<entity->bf.bone_tag_count;i++)
+    {
+        if(entity->character)
+        {
+            if(entity->character->ghostObjects[i])
+                bt_engine_dynamicsWorld->addCollisionObject(entity->character->ghostObjects[i]);
+        }
+                
+        entity->bt_body[i]->setMassProps(0.0, btVector3(0.0, 0.0, 0.0));
         bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
     }
 

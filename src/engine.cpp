@@ -3490,6 +3490,7 @@ bool Engine_LuaInit()
 
         luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
+        luaL_dofile(engine_lua, "scripts/system/debug.lua");
         luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
         luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
         luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");
@@ -3511,10 +3512,7 @@ bool Engine_LuaInit()
 
 void Engine_LuaClearTasks()
 {
-    int top = lua_gettop(engine_lua);
-    lua_getglobal(engine_lua, "clearTasks");
-    lua_CallAndLog(engine_lua, 0, 0, 0);
-    lua_settop(engine_lua, top);
+    lua_CallVoidFunc(engine_lua, "clearTasks");
 }
 
 void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*))

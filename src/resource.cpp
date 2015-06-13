@@ -2481,10 +2481,7 @@ void TR_GenRoomCollision(struct world_s *world)
     /*
     if(level_script != NULL)
     {
-        int top = lua_gettop(level_script);
-        lua_getglobal(level_script, "doTuneSector");
-        lua_CallAndLog(level_script, 0, 0, 0);
-        lua_settop(level_script, top);
+        lua_CallVoidFunc(level_script, "doTuneSector");
     }
     */
 

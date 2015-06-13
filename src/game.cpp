@@ -774,8 +774,9 @@ void Game_Frame(btScalar time)
     bool is_entitytree = ((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL));
     bool is_character  = (engine_world.Character != NULL);
 
-    // GUI should be updated at all times!
-
+    // GUI and controls should be updated at all times!
+    
+    Controls_PollSDLInput();
     Gui_Update();
 
     ///@FIXME: I have no idea what's happening here! - Lwmte

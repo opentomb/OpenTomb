@@ -65,6 +65,39 @@ TICK_ACTIVE  = 2;
 
 frame_time = 1.0 / 60.0;
 
+
+-- Key query functions
+
+keys_pressed = {st = {}, ch = {}};
+
+function addKey(code, event)
+    if(event >= 1) then keys_pressed.st[code] = true else keys_pressed.st[code] = false end;
+end
+
+function checkKey(code, once)
+    if((keys_pressed.st[code] ~= nil) and (keys_pressed.st[code] == true)) then
+        if(once == true) then
+            if((keys_pressed.ch[code] ~= nil) and (keys_pressed.ch[code] == true)) then return false else return true end;
+        else
+            return true;
+        end;
+    else
+        return false;
+    end;
+end
+
+function clearKeys()
+    for k,v in pairs(keys_pressed.st) do
+        if(keys_pressed.st[k] == false) then
+            keys_pressed.st[k] = nil;
+            keys_pressed.ch[k] = nil;
+        else
+            keys_pressed.ch[k] = true;
+        end;
+    end;
+end
+
+
 -- Task manager functions
 
 engine_tasks = {};  -- task struct: {functions array}
@@ -100,19 +133,8 @@ function clearTasks()
     end
 end
 
--- timer test function
-function tt()
-    local t = 0.0;          -- we can store time only here
-    addTask(
-    function()
-        if(t < 8.0) then
-            t = t + frame_time;
-            print(t);
-            return true;
-        end
-        print("8 seconds complete!");
-    end);
-end
+
+-- System entity functions
 
 function execEntity(object_id, activator_id, callback_id)
     

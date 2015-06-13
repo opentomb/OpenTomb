@@ -12,6 +12,9 @@
 #include <string.h>
 
 void Engine_Display();
+void Engine_Frame(btScalar time);
+
+void Engine_Start();
 
 void Engine_InitGL();
 void Engine_InitSDLControls();
@@ -25,10 +28,8 @@ void Engine_InitAL();
 
 void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 
-void Engine_PollSDLInput();
 void Engine_PrimaryMouseDown();
 void Engine_SecondaryMouseDown();
-void DebugKeys(int button, int state);
 
 // Debug draw routines.
 
