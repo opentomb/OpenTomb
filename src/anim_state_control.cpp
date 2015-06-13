@@ -1760,8 +1760,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_HANDSTAND:
             cmd->rot[0] = 0;
+            ent->character->no_fix_all = 0x01;
+            ss_anim->onFrame = ent_set_on_floor_after_climb;
             break;
         case TR_STATE_LARA_GRABBING:
+            cmd->rot[0] = 0;
+            ent->character->no_fix_all = 0x01;
             break;
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
@@ -2050,7 +2054,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_SHIMMY_LEFT:
             ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
-            
+
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_LEFT;
             if(cmd->action == 0)
@@ -2111,7 +2115,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_SHIMMY_RIGHT:
             ent->character->no_fix_body_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
-            
+
             cmd->rot[0] = 0.0;
             ent->dir_flag = ENT_MOVE_RIGHT;
             if(cmd->action == 0)
