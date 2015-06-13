@@ -1,6 +1,7 @@
 
 #include <math.h>
 #include "bullet/LinearMath/btScalar.h"
+#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "ragdoll.h"
 #include "vmath.h"
 #include "character_controller.h"
@@ -204,7 +205,6 @@ bool Ragdoll_Delete(entity_p entity)
 
 void Ragdoll_Update(entity_p entity)
 {
-
     btScalar tr[16];
     btVector3 pos = entity->bt_body[0]->getWorldTransform().getOrigin();
     vec3_copy(entity->transform+12, pos.m_floats);
@@ -213,6 +213,17 @@ void Ragdoll_Update(entity_p entity)
     {
         entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
         Mat4_inv_Mat4_affine_mul(entity->bf.bone_tags[i].full_transform, entity->transform, tr);
+    }
+    if(entity->character && entity->character->ghostObjects)
+    {
+        btScalar v[3];
+        for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
+        {
+            entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+            Mat4_vec3_mul(v, tr, entity->bf.bone_tags[i].mesh_base->centre);
+            vec3_copy(tr+12, v);
+            entity->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+        }
     }
 }
 
