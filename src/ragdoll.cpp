@@ -60,12 +60,6 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
-        
-            if(entity->character)
-            {
-                if(entity->character->ghostObjects[i])
-                    bt_engine_dynamicsWorld->removeCollisionObject(entity->character->ghostObjects[i]);
-            }
             
             bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
 
@@ -197,16 +191,6 @@ bool Ragdoll_Delete(entity_p entity)
     for(int i=0;i<entity->bf.bone_tag_count;i++)
     {
         bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
-    }
-
-    for(int i=0;i<entity->bf.bone_tag_count;i++)
-    {
-        if(entity->character)
-        {
-            if(entity->character->ghostObjects[i])
-                bt_engine_dynamicsWorld->addCollisionObject(entity->character->ghostObjects[i]);
-        }
-                
         entity->bt_body[i]->setMassProps(0.0, btVector3(0.0, 0.0, 0.0));
         bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
     }
