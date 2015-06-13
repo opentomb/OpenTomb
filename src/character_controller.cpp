@@ -1855,6 +1855,28 @@ int Character_FreeFalling(struct entity_s *ent)
 
     Entity_UpdateRotation(ent);                                                 // apply rotations
 
+    /*btScalar t = ent->current_speed * bf-> ent->character->speed_mult;        ///@TODO: fix speed update in Entity_Frame function and other;
+    if(ent->dir_flag & ENT_MOVE_FORWARD)
+    {
+        ent->speed.m_floats[0] = ent->transform[4 + 0] * t;
+        ent->speed.m_floats[1] = ent->transform[4 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
+    {
+        ent->speed.m_floats[0] =-ent->transform[4 + 0] * t;
+        ent->speed.m_floats[1] =-ent->transform[4 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_LEFT)
+    {
+        ent->speed.m_floats[0] =-ent->transform[0 + 0] * t;
+        ent->speed.m_floats[1] =-ent->transform[0 + 1] * t;
+    }
+    else if(ent->dir_flag & ENT_MOVE_RIGHT)
+    {
+        ent->speed.m_floats[0] = ent->transform[0 + 0] * t;
+        ent->speed.m_floats[1] = ent->transform[0 + 1] * t;
+    }*/
+
     move = ent->speed + bt_engine_dynamicsWorld->getGravity() * engine_frame_time * 0.5;
     move *= engine_frame_time;
     ent->speed += bt_engine_dynamicsWorld->getGravity() * engine_frame_time;

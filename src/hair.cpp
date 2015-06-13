@@ -338,7 +338,6 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
                     hair_setup->hair_inertia     = lua_GetScalarField(engine_lua, "hair_inertia");
                     hair_setup->hair_friction    = lua_GetScalarField(engine_lua, "hair_friction");
                     hair_setup->hair_restitution = lua_GetScalarField(engine_lua, "hair_bouncing");
-                    hair_setup->joint_radius     = lua_GetScalarField(engine_lua, "joint_radius");
                     hair_setup->joint_overlap    = lua_GetScalarField(engine_lua, "joint_overlap");
                     hair_setup->joint_cfm        = lua_GetScalarField(engine_lua, "joint_cfm");
                     hair_setup->joint_erp        = lua_GetScalarField(engine_lua, "joint_erp");

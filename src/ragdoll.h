@@ -40,8 +40,6 @@ typedef struct rd_joint_setup_s
     uint32_t        joint_type;     // See above as RD_CONSTRAINT_* definitions.
     
     btScalar        joint_limit[3]; // Only first two are used for hinge constraint.
-    btScalar        joint_cfm;      // Constraint force mixing (joint softness)
-    btScalar        joint_erp;      // Error reduction parameter (joint "inertia")
         
 }rd_joint_setup_t, *rd_joint_setup_p;
 
@@ -66,6 +64,9 @@ typedef struct rd_setup_s
 {
     uint32_t            joint_count;
     uint32_t            body_count;
+    
+    btScalar            joint_cfm;      // Constraint force mixing (joint softness)
+    btScalar            joint_erp;      // Error reduction parameter (joint "inertia")
     
     rd_joint_setup_s   *joint_setup;
     rd_body_setup_s    *body_setup;
