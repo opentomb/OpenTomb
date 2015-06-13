@@ -72,11 +72,7 @@ keys_pressed = {};
 
 function addKey(code, event)
     if(event >= 1) then
-        if(keys_pressed[code] ~= nil) then
-            keys_pressed[code] = false; 
-        else
-            keys_pressed[code] = true;
-        end;
+        keys_pressed[code] = (keys_pressed[code] == nil);
     else
         keys_pressed[code] = nil;
     end;
