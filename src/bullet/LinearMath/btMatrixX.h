@@ -293,6 +293,7 @@ struct btMatrixX
 
 	void	printMatrix(const char* msg)
 	{
+#ifndef BT_NO_PROFILE
 		printf("%s ---------------------\n",msg);
 		for (int i=0;i<rows();i++)
 		{
@@ -303,7 +304,7 @@ struct btMatrixX
 			}
 		}
 		printf("\n---------------------\n");
-
+#endif
 	}
 
 

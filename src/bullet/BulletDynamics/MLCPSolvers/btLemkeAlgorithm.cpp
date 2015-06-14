@@ -4,8 +4,8 @@ Code was converted for the Bullet Continuous Collision Detection and Physics Lib
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
-Permission is granted to anyone to use this software for any purpose, 
-including commercial applications, and to alter it and redistribute it freely, 
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it freely,
 subject to the following restrictions:
 
 1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
@@ -47,10 +47,10 @@ btScalar btMachEps()
 }
 
 btScalar btEpsRoot() {
-	
+
 	static btScalar epsroot = 0.;
 	static bool alreadyCalculated = false;
-	
+
 	if (!alreadyCalculated) {
 		epsroot = btSqrt(btMachEps());
 		alreadyCalculated = true;
@@ -58,12 +58,12 @@ btScalar btEpsRoot() {
 	return epsroot;
 }
 
-	 
+
 
   btVectorXu btLemkeAlgorithm::solve(unsigned int maxloops /* = 0*/)
 {
-  
-    
+
+
     steps = 0;
 
     int dim = m_q.size();
@@ -75,7 +75,7 @@ btScalar btEpsRoot() {
 
 	btVectorXu solutionVector(2 * dim);
 	solutionVector.setZero();
-	  
+
 	  //, INIT, 0.);
 
 	btMatrixXu ident(dim, dim);
@@ -85,7 +85,7 @@ btScalar btEpsRoot() {
 #endif
 
 	btMatrixXu mNeg = m_M.negative();
-	  
+
     btMatrixXu A(dim, 2 * dim + 2);
 	//
 	A.setSubMatrix(0, 0, dim - 1, dim - 1,ident);
@@ -120,9 +120,9 @@ btScalar btEpsRoot() {
 		if (v<0)
 			greaterZero = false;
 	}
-	
 
-	
+
+
   //  int pivotRowIndex = q_.minIndex();//minIndex(q_);     // first row is that with lowest q-value
     int z0Row = pivotRowIndex;           // remember the col of z0 for ending algorithm afterwards
     int pivotColIndex = 2 * dim;         // first col is that of z0
@@ -225,7 +225,7 @@ btScalar btEpsRoot() {
 	  int RowIndex = 0;
 	  int dim = A.rows();
 	  btAlignedObjectArray<btVectorXu> Rows;
-	  for (int row = 0; row < dim; row++) 
+	  for (int row = 0; row < dim; row++)
 	  {
 
 		  btVectorXu vec(dim + 1);
@@ -242,16 +242,16 @@ btScalar btEpsRoot() {
 		//		if (DEBUGLEVEL) {
 			//	  cout << "Rows(" << row << ") = " << Rows[row] << endl;
 				// }
-#endif 
+#endif
 		  }
 	  }
 
-	  for (int i = 0; i < Rows.size(); i++) 
+	  for (int i = 0; i < Rows.size(); i++)
 	  {
 		  if (Rows[i].nrm2() > 0.) {
 
 			  int j = 0;
-			  for (; j < Rows.size(); j++) 
+			  for (; j < Rows.size(); j++)
 			  {
 				  if(i != j)
 				  {
@@ -270,7 +270,7 @@ btScalar btEpsRoot() {
 				  }
 			  }
 
-			  if (j == Rows.size()) 
+			  if (j == Rows.size())
 			  {
 				  RowIndex += i;
 				  break;
@@ -295,7 +295,7 @@ btScalar btEpsRoot() {
     return false;
   }
 
-void btLemkeAlgorithm::GaussJordanEliminationStep(btMatrixXu& A, int pivotRowIndex, int pivotColumnIndex, const btAlignedObjectArray<int>& basis) 
+void btLemkeAlgorithm::GaussJordanEliminationStep(btMatrixXu& A, int pivotRowIndex, int pivotColumnIndex, const btAlignedObjectArray<int>& basis)
 {
 
 	btScalar a = -1 / A(pivotRowIndex, pivotColumnIndex);
@@ -322,7 +322,7 @@ void btLemkeAlgorithm::GaussJordanEliminationStep(btMatrixXu& A, int pivotRowInd
 #ifdef BT_DEBUG_OSTREAM
 	cout << A << std::endl;
 #endif //BT_DEBUG_OSTREAM
-    for (int i = 0; i < A.cols(); i++) 
+    for (int i = 0; i < A.cols(); i++)
 	{
       A.mulElem(pivotRowIndex, i,-a);
     }
@@ -355,7 +355,7 @@ void btLemkeAlgorithm::GaussJordanEliminationStep(btMatrixXu& A, int pivotRowInd
     return isGreater;
   }
 
-  bool btLemkeAlgorithm::validBasis(const btAlignedObjectArray<int>& basis) 
+  bool btLemkeAlgorithm::validBasis(const btAlignedObjectArray<int>& basis)
   {
     bool isValid = true;
     for (int i = 0; i < basis.size(); i++) {

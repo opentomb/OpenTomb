@@ -707,9 +707,9 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 
     const shader_description *lastShader = 0;
 
+#if STENCIL_FRUSTUM
     ////start test stencil test code
     bool need_stencil = false;
-#if STENCIL_FRUSTUM
     if(room->frustum != NULL)
     {
         for(uint16_t i=0;i<room->overlapped_room_list_size;i++)

@@ -137,7 +137,7 @@ void Character_Create(struct entity_s *ent)
             ret->ghostObjects[i]->setCollisionFlags(ret->ghostObjects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
             ret->ghostObjects[i]->setUserPointer(ent->self);
             ret->ghostObjects[i]->setCollisionShape(ent->character->shapes[i]);
-            bt_engine_dynamicsWorld->addCollisionObject(ret->ghostObjects[i], btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::DefaultFilter);
+            bt_engine_dynamicsWorld->addCollisionObject(ret->ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
 
             ent->character->last_collisions[i].obj_count = 0;
         }
@@ -1867,7 +1867,7 @@ int Character_FreeFalling(struct entity_s *ent)
 
     Entity_UpdateRotation(ent);                                                 // apply rotations
 
-    /*btScalar t = ent->current_speed * bf-> ent->character->speed_mult;
+    /*btScalar t = ent->current_speed * bf-> ent->character->speed_mult;        ///@TODO: fix speed update in Entity_Frame function and other;
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
         ent->speed.m_floats[0] = ent->transform[4 + 0] * t;
