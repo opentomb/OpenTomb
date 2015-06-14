@@ -1069,17 +1069,17 @@ void Render_DrawList_DebugLines()
 
     if(!debugDrawer.IsEmpty())
     {
-        const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
+        const unlit_shader_description *shader = renderer.shader_manager->getDebugLineShader();
         glUseProgramObjectARB(shader->program);
         glUniform1iARB(shader->sampler, 0);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
         debugDrawer.render();
     }
+    
+    renderer.vertex_array_manager->unbind();
 }
 
 /**
@@ -1272,6 +1272,9 @@ render_DebugDrawer::render_DebugDrawer()
     m_need_realloc = false;
     vec3_set_zero(m_color);
     m_obb = OBB_Create();
+    
+    m_glbuffer = 0;
+    m_vertex_array = 0;
 }
 
 render_DebugDrawer::~render_DebugDrawer()
@@ -1298,27 +1301,34 @@ void render_DebugDrawer::reset()
     m_lines = 0;
 }
 
-void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+void render_DebugDrawer::addLine(const GLfloat start[3], const GLfloat end[3])
 {
-    GLfloat *v;
-
+    addLine(start, m_color, end, m_color);
+}
+void render_DebugDrawer::addLine(const GLfloat start[3], const GLfloat startColor[3], const GLfloat end[3], const GLfloat endColor[3])
+{
     if(m_lines < m_max_lines - 1)
     {
-        v = m_buffer + 3 * 4 * m_lines;
+        GLfloat *v = m_buffer + 3 * 4 * m_lines;
         m_lines++;
-
-        vec3_copy(v, from.m_floats);
+        
+        vec3_copy(v, start);
         v += 3;
-        vec3_copy(v, color.m_floats);
+        vec3_copy(v, startColor);
         v += 3;
-        vec3_copy(v, to.m_floats);
+        vec3_copy(v, end);
         v += 3;
-        vec3_copy(v, color.m_floats);
+        vec3_copy(v, endColor);
     }
     else
     {
         m_need_realloc = true;
     }
+}
+
+void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+{
+    addLine(from.m_floats, color.m_floats, to.m_floats, color.m_floats);
 }
 
 void render_DebugDrawer::setDebugMode(int debugMode)
@@ -1339,38 +1349,30 @@ void render_DebugDrawer::reportErrorWarning(const char* warningString)
 
 void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
 {
-    if(m_lines + 2 < m_max_lines)
-    {
-        GLfloat *v = m_buffer + 3 * 4 * m_lines;
-        m_lines += 2;
-        btVector3 to = pointOnB + normalOnB * distance;
-
-        vec3_copy(v, pointOnB.m_floats);
-        v += 3;
-        vec3_copy(v, color.m_floats);
-        v += 3;
-
-        vec3_copy(v, to.m_floats);
-        v += 3;
-        vec3_copy(v, color.m_floats);
-
-        //glRasterPos3f(from.x(),  from.y(),  from.z());
-        //char buf[12];
-        //sprintf(buf," %d",lifeTime);
-        //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),buf);
-    }
-    else
-    {
-        m_need_realloc = true;
-    }
+    drawLine(pointOnB, pointOnB + normalOnB * distance, color);
 }
 
 void render_DebugDrawer::render()
 {
     if(m_lines > 0)
     {
-        glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), m_buffer);
-        glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]),  m_buffer + 3);
+        if (m_glbuffer == 0) {
+            glGenBuffersARB(1, &m_glbuffer);
+            vertex_array_attribute attribs[] = {
+                vertex_array_attribute(unlit_shader_description::position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [0])),
+                vertex_array_attribute(unlit_shader_description::color, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
+            };
+            m_vertex_array = renderer.vertex_array_manager->createArray(0, 2, attribs);
+        }
+        
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_glbuffer);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_max_lines * 2 * sizeof(GLfloat [6]), 0, GL_STREAM_DRAW);
+        
+        void *data = glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY);
+        memcpy(data, m_buffer, m_max_lines * 2 * sizeof(GLfloat [6]));
+        glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+        
+        m_vertex_array->use();
         glDrawArrays(GL_LINES, 0, 2 * m_lines);
     }
 
@@ -1447,28 +1449,13 @@ void render_DebugDrawer::drawFrustum(struct frustum_s *f)
         }
 
         v = v0 = m_buffer + 3 * 4 * m_lines;
-        m_lines += f->vertex_count;
 
         for(uint16_t i=0;i<f->vertex_count-1;i++,fv += 3)
         {
-            vec3_copy(v, fv);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
-
-            vec3_copy(v, fv + 3);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
+            addLine(fv, fv + 3);
         }
-
-        vec3_copy(v, fv);
-        v += 3;
-        vec3_copy(v, m_color);
-        v += 3;
-        vec3_copy(v, v0);
-        v += 3;
-        vec3_copy(v, m_color);
+        
+        addLine(fv, v0);
     }
 }
 
@@ -1486,28 +1473,13 @@ void render_DebugDrawer::drawPortal(struct portal_s *p)
         }
 
         v = v0 = m_buffer + 3 * 4 * m_lines;
-        m_lines += p->vertex_count;
 
         for(uint16_t i=0;i<p->vertex_count-1;i++,pv += 3)
         {
-            vec3_copy(v, pv);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
-
-            vec3_copy(v, pv + 3);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
+            addLine(pv, pv + 3);
         }
-
-        vec3_copy(v, pv);
-        v += 3;
-        vec3_copy(v, m_color);
-        v += 3;
-        vec3_copy(v, v0);
-        v += 3;
-        vec3_copy(v, m_color);
+        
+        addLine(pv, v0);
     }
 }
 
@@ -1538,43 +1510,11 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
     }
 
     v = v0 = m_buffer + 3 * 4 * m_lines;
-    m_lines += 12;
-
-    vec3_copy(v, p->vertices[0].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-    vec3_copy(v, (p+1)->vertices[0].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-
-    vec3_copy(v, p->vertices[1].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-    vec3_copy(v, (p+1)->vertices[3].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-
-    vec3_copy(v, p->vertices[2].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-    vec3_copy(v, (p+1)->vertices[2].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-
-    vec3_copy(v, p->vertices[3].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-    vec3_copy(v, (p+1)->vertices[1].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
+    
+    addLine(p->vertices[0].position, (p+1)->vertices[0].position);
+    addLine(p->vertices[1].position, (p+1)->vertices[3].position);
+    addLine(p->vertices[2].position, (p+1)->vertices[2].position);
+    addLine(p->vertices[3].position, (p+1)->vertices[1].position);
 
     for(uint16_t i=0; i<2; i++,p++)
     {
@@ -1582,25 +1522,9 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
         v0 = v;
         for(uint16_t j=0;j<p->vertex_count-1;j++,pv++)
         {
-            vec3_copy(v, pv->position);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
-
-            vec3_copy(v, (pv+1)->position);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
+            addLine(pv->position, (pv+1)->position);
         }
-
-        vec3_copy(v, pv->position);
-        v += 3;
-        vec3_copy(v, m_color);
-        v += 3;
-        vec3_copy(v, v0);
-        v += 3;
-        vec3_copy(v, m_color);
-        v += 3;
+        addLine(pv->position, v0);
     }
 }
 

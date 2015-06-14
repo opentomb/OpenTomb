@@ -766,6 +766,8 @@
 		5252A51F1B24DD4F00E8CE1D /* ragdoll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ragdoll.h; sourceTree = "<group>"; };
 		5252A5211B262CAA00E8CE1D /* stencil.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = stencil.vsh; sourceTree = "<group>"; };
 		5252A5231B262CB400E8CE1D /* stencil.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = stencil.fsh; sourceTree = "<group>"; };
+		5252A5251B2D9E6300E8CE1D /* debuglines.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = debuglines.fsh; sourceTree = "<group>"; };
+		5252A5261B2D9E6300E8CE1D /* debuglines.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = debuglines.vsh; sourceTree = "<group>"; };
 		52B82D821AED5A45003B8288 /* OpenTomb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTomb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DroidSansMono.ttf; sourceTree = "<group>"; };
 		52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
@@ -3180,6 +3182,8 @@
 		52DF7FEE1B07683F00A7DE0E /* shaders */ = {
 			isa = PBXGroup;
 			children = (
+				5252A5251B2D9E6300E8CE1D /* debuglines.fsh */,
+				5252A5261B2D9E6300E8CE1D /* debuglines.vsh */,
 				52D5D5EB1B07E5F500B99A38 /* entity.vsh */,
 				52D5D5ED1B07E5FF00B99A38 /* entity.fsh */,
 				5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */,
