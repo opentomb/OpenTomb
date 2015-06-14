@@ -159,11 +159,8 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
                 break;
         }
 
-        for(int j=0; j<=5; j++)
-        {
-            entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, j);
-            entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, j);
-        }
+        entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
+        entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
         entity->bt_joints[i]->setDbgDrawSize(64.0);
         bt_engine_dynamicsWorld->addConstraint(entity->bt_joints[i], true);
