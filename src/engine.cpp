@@ -3490,6 +3490,7 @@ bool Engine_LuaInit()
 
         luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
         luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
+        luaL_dofile(engine_lua, "scripts/system/debug.lua");
         luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
         luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
         luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");

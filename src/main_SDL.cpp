@@ -6,9 +6,11 @@
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
+
 #if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
 #endif
+
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
@@ -60,7 +62,6 @@ extern "C" {
 #include "al/AL/alext.h"
 }
 
-#define SKELETAL_TEST   0
 #define NO_AUDIO        0
 
 SDL_Window             *sdl_window     = NULL;
@@ -71,18 +72,10 @@ SDL_GLContext           sdl_gl_context = 0;
 ALCdevice              *al_device      = NULL;
 ALCcontext             *al_context     = NULL;
 
-static int done = 0;
-GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
+int done = 0;
+btScalar time_scale = 1.0;
+
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-
-static int model =  0;
-static int mesh =   0;
-static int paused = 0;
-static int frame =  0;
-static int anim =   0;
-static int sprite = 0;
-
-static btScalar time_scale = 1.0;
 
 engine_container_p      last_cont = NULL;
 
@@ -125,157 +118,15 @@ engine_container_p      last_cont = NULL;
 // MAIN
 // =======================================================================
 
-void SkeletalModelTestDraw()
-{
- bone_frame_p bframe;
-    static btScalar time = 0.0;
-    skeletal_model_p smodel;
-    animation_frame_p af;
-    anim_dispatch_p adsp;
-    sprite_p bsprite;
-    bone_tag_p btag;
-    GLfloat tr[16];
-    mesh_tree_tag_p mt;
-    int i, j, y, stack;
-
-    if((engine_world.skeletal_models == NULL) || (engine_world.meshes == NULL))
-    {
-        return;
-    }
-
-    if(frame < 0)
-    {
-frame = 0;
-    }
-
-    if((uint32_t)model > engine_world.skeletal_model_count)
-    {
-        model = 0;
-    }
-    smodel = engine_world.skeletal_models + model;
-
-    if((uint16_t)anim + 1 > smodel->animation_count)
-    {
-        anim = 0;
-    }
-    af = smodel->animations + anim;
-
-    if(!paused)
-    {
-        time += engine_frame_time;
-        if(time < 0.0)
-        {
-            time = 0.0;
-        }
-        if(time > 0.05)
-        {
-            frame ++;
-            time = 0.0;
-        }
-    }
-
-    sprite %= engine_world.sprites_count;
-    bsprite = engine_world.sprites + sprite;
-
-    frame %= smodel->animations[anim].frames_count;
-    bframe = smodel->animations[anim].frames + frame;
-
-    Gui_OutTextXY(screen_info.w-632, 120, "sprite ID = %d;  mesh ID = %d", bsprite->id, mesh);
-    Gui_OutTextXY(screen_info.w-632, 96, "model ID = %d, anim = %d of %d, rate = %d, frame = %d of %d", smodel->id, anim, smodel->animation_count, smodel->animations[anim].original_frame_rate, frame, smodel->animations[anim].frames_count);
-    Gui_OutTextXY(screen_info.w-632, 72, "next anim = %d, next frame = %d, num_state_changes = %d", (af->next_anim)?(af->next_anim->id):-1, af->next_frame, af->state_change_count);
-    Gui_OutTextXY(screen_info.w-632, 48, "vx = %f, vy = %f, ax = %f, ay = %f", af->speed_x, af->speed_y, af->accel_x, af->accel_y);
-    Gui_OutTextXY(screen_info.w-632, 24, "bb_min(%d, %d, %d), bb_max(%d, %d, %d)", (int)bframe->bb_min[0], (int)bframe->bb_min[1], (int)bframe->bb_min[2], (int)bframe->bb_max[0], (int)bframe->bb_max[1], (int)bframe->bb_max[2]);
-    Gui_OutTextXY(screen_info.w-632, 4, "x0 = %d, y0 = %d, z0 = %d", (int)bframe->pos[0], (int)bframe->pos[1], (int)bframe->pos[2]);
-
-    y = screen_info.h - 24;
-    for(i=0;i<af->state_change_count;i++)
-    {
-        for(j=0;j<af->state_change[i].anim_dispatch_count;j++)
-        {
-            adsp = af->state_change[i].anim_dispatch + j;
-            Gui_OutTextXY(8, y, "[%d, %d], id = %d next anim = %d, next frame = %d, interval = [%d, %d]",
-                          i, j, af->state_change[i].id, adsp->next_anim, adsp->next_frame, adsp->frame_low, adsp->frame_high);
-            y -= 24;
-        }
-    }
-
-    /*
-     * RENDER MODEL
-     */
-    glPushMatrix();
-    btag = bframe->bone_tags;
-    mt = smodel->mesh_tree;
-
-    tr[15] = 1.0;
-    vec3_add(tr+12, mt->offset, bframe->pos);
-    Mat4_set_qrotation(tr, btag->qrotate);
-    //glEnable(GL_TEXTURE_2D);
-    glMultMatrixf(tr);
-    Render_Mesh(mt->mesh_base, NULL, NULL);
-    btag++;
-    mt++;
-    for(stack=0,i=1;i<bframe->bone_tag_count;i++,btag++,mt++)
-    {
-        tr[15] = 1.0;
-        vec3_copy(tr+12, mt->offset);
-        Mat4_set_qrotation(tr, btag->qrotate);
-        if(mt->flag & 0x01)
-        {
-            if(stack > 0)                                                       // PARANOID GL STACK CHECK
-            {
-                glPopMatrix();
-                stack--;
-            }
-        }
-        if(mt->flag & 0x02)
-        {
-            glPushMatrix();
-            stack++;
-        }
-        glMultMatrixf(tr);
-        Render_Mesh(mt->mesh_base, NULL, NULL);
-        //Render_BBox(tree_tag->mesh->bb_min, tree_tag->mesh->bb_max);
-        if(mt->mesh_skin)
-        {
-            Render_SkinMesh(mt->mesh_skin, tr);
-        }
-    }
-
-    for(i=0;i<stack;i++)                                                        // PARANOID: GL STACK CHECK AND CORRECTION
-    {
-        glPopMatrix();
-    }
-    stack = 0;
-    glPopMatrix();
-
-//    glPushAttrib(GL_ENABLE_BIT);
-//    glEnable(GL_ALPHA_TEST);
-//    glDisable(GL_CULL_FACE);
-//    Render_Sprite(bsprite, 1024.0, 0.0, 0.0);
-//    glPopAttrib();
-
-    glPushMatrix();
-    btScalar matrix[16];
-    Mat4_E_macro(matrix);
-    Mat4_Translate(matrix, -1024.0, 0.0, 0.0);
-    Render_Mesh(engine_world.meshes + mesh, NULL, NULL);
-    glPopMatrix();
-}
 
 void Engine_InitGL()
 {
     InitGLExtFuncs();
-#if SKELETAL_TEST
-    glClearColor(0.3, 0.3, 0.3, 1.0);
-#else
     glClearColor(0.0, 0.0, 0.0, 1.0);
-#endif
     glShadeModel(GL_SMOOTH);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glEnable(GL_COLOR_MATERIAL);
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 
     if(renderer.settings.antialias)
     {
@@ -490,6 +341,24 @@ int main(int argc, char **argv)
     btScalar time, newtime;
     static btScalar oldtime = 0.0;
 
+    Engine_Start();
+
+    // Entering main loop.
+    while(!done)
+    {
+        newtime = Sys_FloatTime();
+        time = newtime - oldtime;
+        oldtime = newtime;
+        Engine_Frame(time * time_scale);
+    }
+
+    // Main loop interrupted; shutting down.
+    Engine_Shutdown(EXIT_SUCCESS);
+    return(EXIT_SUCCESS);
+}
+
+void Engine_Start()
+{
 #if defined(__MACOSX__)
     FindConfigFile();
 #endif
@@ -534,23 +403,6 @@ int main(int argc, char **argv)
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_OUT);
 
     luaL_dofile(engine_lua, "autoexec.lua");
-
-#if SKELETAL_TEST
-    control_states.free_look = 1;
-#endif
-
-    // Entering main loop.
-    while(!done)
-    {
-        newtime = Sys_FloatTime();
-        time = newtime - oldtime;
-        oldtime = newtime;
-        Engine_Frame(time * time_scale);
-    }
-
-    // Main loop interrupted; shutting down.
-    Engine_Shutdown(EXIT_SUCCESS);
-    return(EXIT_SUCCESS);
 }
 
 
@@ -576,7 +428,6 @@ void Engine_Display()
 
         Render_GenWorldList();
         Render_DrawList();
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);
@@ -626,103 +477,9 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     glViewport(0, 0, pixelsW, pixelsH);
 }
 
-
-/*
- * MOUSE FUNCTIONS
- */
-void Engine_PrimaryMouseDown()
-{
-    engine_container_p cont = Container_Create();
-    btScalar dbgR = 128.0;
-    btScalar *v = engine_camera.pos;
-    btScalar *dir = engine_camera.view_dir;
-    btScalar new_pos[3];
-    btVector3 localInertia(0, 0, 0);
-    btTransform startTransform;
-    btCollisionShape *cshape;
-    btRigidBody *body;
-
-    cshape = new btSphereShape(dbgR);
-    //cshape = new btCapsuleShapeZ(50.0, 100.0);
-    startTransform.setIdentity();
-    new_pos[0] = v[0];
-    new_pos[1] = v[1];
-    new_pos[2] = v[2];
-    startTransform.setOrigin(btVector3(new_pos[0], new_pos[1], new_pos[2]));
-    cshape->calculateLocalInertia(12.0, localInertia);
-    btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-    body = new btRigidBody(12.0, motionState, cshape, localInertia);
-    bt_engine_dynamicsWorld->addRigidBody(body);
-    body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.current_room);
-    cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
-    body->setUserPointer(cont);
-    body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
-    body->setCcdSweptSphereRadius(dbgR);
-}
-
-
-void Engine_SecondaryMouseDown()
-{
-    engine_container_t *c0;
-    btVector3 from, to, place;
-    engine_container_t cam_cont;
-
-    vec3_copy(from.m_floats, engine_camera.pos);
-    to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;
-
-    cam_cont.next = NULL;
-    cam_cont.object = NULL;
-    cam_cont.object_type = 0;
-    cam_cont.room = engine_camera.current_room;
-
-    bt_engine_ClosestRayResultCallback cbc(&cam_cont);
-    //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    bt_engine_dynamicsWorld->rayTest(from, to, cbc);
-    if(cbc.hasHit())
-    {
-        place.setInterpolate3(from, to, cbc.m_closestHitFraction);
-        vec3_copy(cast_ray, place.m_floats);
-        cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld.m_floats[0];
-        cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld.m_floats[1];
-        cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld.m_floats[2];
-
-        if((c0 = (engine_container_p)cbc.m_collisionObject->getUserPointer()))
-        {
-            if(c0->object_type == OBJECT_BULLET_MISC)
-            {
-                btCollisionObject* obj = (btCollisionObject*)cbc.m_collisionObject;
-                btRigidBody* body = btRigidBody::upcast(obj);
-                if(body && body->getMotionState())
-                {
-                    delete body->getMotionState();
-                }
-                if(body && body->getCollisionShape())
-                {
-                    delete body->getCollisionShape();
-                }
-                if (body)
-                {
-                    body->setUserPointer(NULL);
-                }
-                c0->room = NULL;
-                free(c0);
-
-                bt_engine_dynamicsWorld->removeCollisionObject(obj);
-                delete obj;
-            }
-            else
-            {
-                last_cont = c0;
-            }
-        }
-    }
-}
-
-
 void Engine_Frame(btScalar time)
 {
-    static int  cycles = 0;
+    static int cycles = 0;
     static btScalar time_cycl = 0.0;
     extern gui_text_line_t system_fps;
     if(time > 0.1)
@@ -741,19 +498,12 @@ void Engine_Frame(btScalar time)
     {
         screen_info.fps = (20.0 / time_cycl);
         snprintf(system_fps.text, system_fps.text_size, "%.1f", screen_info.fps);
-        //Gui_StringAutoRect(&system_fps);
         cycles = 0;
         time_cycl = 0.0;
     }
 
-    Engine_PollSDLInput();
-
-#if SKELETAL_TEST
-    Game_ApplyControls(NULL);
-#else
     Game_Frame(time);
     Gameflow_Do();
-#endif
 
     Engine_Display();
 }
@@ -762,44 +512,14 @@ void Engine_Frame(btScalar time)
 void ShowDebugInfo()
 {
     entity_p ent;
-    btTransform trans;
-    GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
-
-    vec3_copy(light_position, engine_camera.pos);
+    /*GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
     glVertexPointer(3, GL_FLOAT, 0, cast_ray);
     glColorPointer(3, GL_FLOAT, 0, color_array);
-    glDrawArrays(GL_LINES, 0, 2);
-
-#if !SKELETAL_TEST
-
-    /*//color3f(0.0, 0.0, 0.0);
-    for(int j=bt_engine_dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
-    {
-        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[j];
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if (body && body->getMotionState())
-        {
-            engine_container_p cont = ((engine_container_p)body->getUserPointer());
-            if(!body->isStaticObject() && (!cont || (cont->object_type == OBJECT_BULLET_MISC && (!cont->room || cont->room->is_in_r_list))))
-            {
-                body->getMotionState()->getWorldTransform(trans);
-                glPushMatrix();
-                trans.getOpenGLMatrix(tr);
-                glMultMatrixf(tr);
-                //color3f(1.0, 1.0, 1.0);
-                //Render_DrawAxis();
-                glPopMatrix();
-            }
-        }
-    }*/
-
-#endif
-
-#if !SKELETAL_TEST
+    glDrawArrays(GL_LINES, 0, 2);*/
 
     ent = engine_world.Character;
     if(ent && ent->character)
@@ -842,412 +562,4 @@ void ShowDebugInfo()
         }
     }
     Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
-#endif
-}
-
-void Engine_PollSDLInput()
-{
-    SDL_Event   event;
-    static int mouse_setup = 0;
-
-    while(SDL_PollEvent(&event))
-    {
-        switch(event.type)
-        {
-            case SDL_MOUSEMOTION:
-                if(!con_base.show && control_states.mouse_look != 0 &&
-                    ((event.motion.x != (screen_info.w/2)) ||
-                     (event.motion.y != (screen_info.h/2))))
-                {
-                    if(mouse_setup)                                             // it is not perfect way, but cursor
-                    {                                                           // every engine start is in one place
-                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
-                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
-                    }
-
-                    if((event.motion.x < ((screen_info.w/2)-(screen_info.w/4))) ||
-                       (event.motion.x > ((screen_info.w/2)+(screen_info.w/4))) ||
-                       (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
-                       (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
-                    {
-                        SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
-                    }
-                }
-                mouse_setup = 1;
-                break;
-
-            case SDL_MOUSEBUTTONDOWN:
-                if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
-                {
-                    Engine_PrimaryMouseDown();
-                }
-                else if(event.button.button == 3)
-                {
-                    Engine_SecondaryMouseDown();
-                }
-                break;
-
-            // Controller events are only invoked when joystick is initialized as
-            // game controller, otherwise, generic joystick event will be used.
-            case SDL_CONTROLLERAXISMOTION:
-                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value);
-                break;
-
-            case SDL_CONTROLLERBUTTONDOWN:
-            case SDL_CONTROLLERBUTTONUP:
-                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state);
-                break;
-
-            // Joystick events are still invoked, even if joystick is initialized as game
-            // controller - that's why we need sdl_joystick checking - to filter out
-            // duplicate event calls.
-
-            case SDL_JOYAXISMOTION:
-                if(sdl_joystick)
-                    Controls_JoyAxis(event.jaxis.axis, event.jaxis.value);
-                break;
-
-            case SDL_JOYHATMOTION:
-                if(sdl_joystick)
-                    Controls_JoyHat(event.jhat.value);
-                break;
-
-            case SDL_JOYBUTTONDOWN:
-            case SDL_JOYBUTTONUP:
-                // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
-                if(sdl_joystick)
-                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
-                break;
-
-            case SDL_TEXTINPUT:
-            case SDL_TEXTEDITING:
-                if(con_base.show && event.key.state)
-                {
-                    Con_Filter(event.text.text);
-                    return;
-                }
-                break;
-
-            case SDL_KEYUP:
-            case SDL_KEYDOWN:
-                if( (event.key.keysym.sym == SDLK_F4) &&
-                    (event.key.state == SDL_PRESSED)  &&
-                    (event.key.keysym.mod & KMOD_ALT) )
-                {
-                    done = 1;
-                    break;
-                }
-
-                if(con_base.show && event.key.state)
-                {
-                    switch (event.key.keysym.sym)
-                    {
-                        case SDLK_RETURN:
-                        case SDLK_UP:
-                        case SDLK_DOWN:
-                        case SDLK_LEFT:
-                        case SDLK_RIGHT:
-                        case SDLK_HOME:
-                        case SDLK_END:
-                        case SDLK_BACKSPACE:
-                        case SDLK_DELETE:
-                            Con_Edit(event.key.keysym.sym);
-                            break;
-                        default:
-                            break;
-                    }
-                    return;
-                }
-                else
-                {
-                    Controls_Key(event.key.keysym.sym, event.key.state);
-                    // DEBUG KEYBOARD COMMANDS
-                    DebugKeys(event.key.keysym.sym, event.key.state);
-                }
-                break;
-
-            case SDL_QUIT:
-                done = 1;
-                break;
-
-            case SDL_WINDOWEVENT:
-                if(event.window.event == SDL_WINDOWEVENT_RESIZED)
-                {
-                    Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
-                }
-                break;
-
-            default:
-            break;
-        }
-    }
-}
-
-void DebugKeys(int button, int state)
-{
-    if(state)
-    {
-        switch(button)
-        {
-            case SDLK_RETURN:
-                if(main_inventory_manager)
-                {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_ACTIVATE);
-                }
-                break;
-
-            case SDLK_g:
-                if(time_scale == 1.0)
-                {
-                    time_scale = 0.033;
-                }
-                else
-                {
-                    time_scale = 1.0;
-                }
-                break;
-
-            case SDLK_UP:
-                if(main_inventory_manager)
-                {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_UP);
-                }
-                break;
-
-            case SDLK_DOWN:
-                if(main_inventory_manager)
-                {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_DOWN);
-                }
-                break;
-
-            case SDLK_LEFT:
-                if(main_inventory_manager)
-                {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_LEFT);
-                }
-                break;
-
-            case SDLK_RIGHT:
-                if(main_inventory_manager)
-                {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_RIGHT);
-                }
-                break;
-
-                /*models switching*/
-            case SDLK_p:
-                model++;
-                if((uint32_t)model + 1 > engine_world.skeletal_model_count)
-                {
-                    model = 0;
-                }
-                frame = 0;
-                anim = 0;
-                break;
-
-            case SDLK_o:
-                model--;
-                if(model < 0)
-                {
-                    model = engine_world.skeletal_model_count-1;
-                }
-                frame = 0;
-                anim = 0;
-                break;
-
-            case SDLK_1:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 1;
-                }
-                break;
-
-            case SDLK_2:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 2;
-                }
-                break;
-
-            case SDLK_3:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 3;
-                }
-                break;
-
-            case SDLK_4:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 4;
-                }
-                break;
-
-            case SDLK_5:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 5;
-                }
-                break;
-
-            case SDLK_6:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 6;
-                }
-                break;
-
-            case SDLK_7:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 7;
-                }
-                break;
-
-            case SDLK_8:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 8;
-                }
-                break;
-
-            case SDLK_9:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 9;
-                }
-                break;
-
-                /*rumble*/
-            case SDLK_f:
-                //Audio_Send(105);
-                //Gui_FadeStart(FADER_EFFECT, GUI_FADER_DIR_TIMED);
-                break;
-
-                /*full health*/
-            case SDLK_h:
-                if(Character_ChangeParam(engine_world.Character, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
-                    Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
-                break;
-
-                /*animations switching*/
-
-            case SDLK_u:
-                anim--;
-                if(anim < 0)
-                {
-                    anim = engine_world.skeletal_models[model].animation_count-1;
-                }
-                break;
-
-            case SDLK_i:
-                if(engine_world.skeletal_model_count > 0)
-                {
-                    anim++;
-                    if(anim > engine_world.skeletal_models[model].animation_count-1)
-                    {
-                        anim = 0;
-                    }
-                }
-                break;
-
-            case SDLK_t:
-                mesh--;
-                if(mesh < 0)
-                {
-                    mesh = engine_world.meshes_count-1;
-                }
-                break;
-
-            case SDLK_y:
-                screen_info.show_debuginfo = !screen_info.show_debuginfo;
-                mesh++;
-                if((uint32_t)mesh + 1 > engine_world.meshes_count)
-                {
-                    mesh = 0;
-                }
-                break;
-
-            case SDLK_z:
-                paused = !paused;
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->resp.kill = 0;
-
-                    if(engine_world.Character->move_type == MOVE_UNDERWATER)
-                    {
-                        Entity_SetAnimation(engine_world.Character, 103, 0, 0);
-                        Character_SetParam(engine_world.Character, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
-                        engine_world.Character->move_type = MOVE_ON_FLOOR;
-                    }
-                    else
-                    {
-                        Entity_SetAnimation(engine_world.Character, 108, 0, 0);
-                        Character_SetParam(engine_world.Character, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
-                        engine_world.Character->move_type = MOVE_UNDERWATER;
-                    }
-                    engine_world.Character->bf.animations.anim_flags = ANIM_NORMAL_CONTROL;
-                }
-                break;
-
-            case SDLK_v:
-                frame++;
-                break;
-
-            case SDLK_b:
-                frame--;
-                break;
-
-            case SDLK_n:
-                control_states.noclip = !control_states.noclip;
-                sprite--;
-                if(sprite < 0)
-                {
-                    sprite = engine_world.sprites_count - 1;
-                }
-                break;
-
-            case SDLK_m:
-                sprite++;
-                if((uint32_t)sprite >= engine_world.sprites_count)
-                {
-                    sprite = 0;
-                }
-                break;
-
-                /*
-                 * alternate rooms testing: be carefull, something is wrong and engine may crash!
-                 */
-            case SDLK_r:
-                if(!con_base.show)
-                {
-                    for(uint32_t i=0;i<engine_world.room_count;i++)
-                    {
-                        //if(engine_world.rooms[i].alternate_room != NULL)
-                        {
-                            Room_SwapToAlternate(engine_world.rooms + i);
-                        }
-                    }
-                }
-                break;
-
-            case SDLK_e:
-                if(!con_base.show)
-                {
-                    for(uint32_t i=0;i<engine_world.room_count;i++)
-                    {
-                        //if(engine_world.rooms[i].base_room != NULL)
-                        {
-                            Room_SwapToBase(engine_world.rooms + i);
-                        }
-                    }
-                }
-                break;
-
-            default:
-                //Con_Printf("key = %d", button);
-                break;
-        };
-    }
 }

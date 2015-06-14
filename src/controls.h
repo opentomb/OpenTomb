@@ -114,6 +114,12 @@ typedef struct control_settings_s
     control_action_s  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
 }control_settings_t, *control_settings_p;
 
+
+void Controls_PollSDLInput();
+void Controls_DebugKeys(int button, int state);
+void Controls_PrimaryMouseDown();
+void Controls_SecondaryMouseDown();
+
 void Controls_Key(int32_t button, int state);
 void Controls_WrapGameControllerKey(int button, int state);
 void Controls_WrapGameControllerAxis(int axis, Sint16 value);
