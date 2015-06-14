@@ -54,7 +54,7 @@ polygon_p Polygon_CreateArray(unsigned int pcount);
 
 void Polygon_Resize(polygon_p p, unsigned int count);
 void Polygon_Clear(polygon_p p);
-int  Polygon_IsBroken(polygon_p p);
+int  Polygon_IsBroken(const polygon_s *p);
 void Polygon_Copy(polygon_p dst, const polygon_t *src);
 
 void Polygon_MoveSelf(polygon_p p, btScalar move[3]);

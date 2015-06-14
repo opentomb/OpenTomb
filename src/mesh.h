@@ -62,7 +62,6 @@ typedef struct base_mesh_s
     struct polygon_s     *polygons;                                             // polygons data
 
     struct polygon_s     *transparency_polygons;                                // transparency mesh's polygons list
-    struct polygon_s     *animated_polygons;                                    // opaque animated mesh's polygons list
 
     uint32_t              num_texture_pages;                                    // face without structure wrapping
     uint32_t             *element_count_per_texture;                            //

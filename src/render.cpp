@@ -156,17 +156,22 @@ void Render_Mesh(struct base_mesh_s *mesh)
         size_t offset = 0;
         for(uint32_t i=0;i<mesh->polygons_count;i++)
         {
-            const struct polygon_s *p = &mesh->polygons[i];
-            if (p->anim_id == 0)
+            const struct polygon_s &p = mesh->polygons[i];
+            if (p.anim_id == 0 || Polygon_IsBroken(&p))
             {
                 continue;
             }
-            anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
-            uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
+            anim_seq_p seq = engine_world.anim_sequences + p.anim_id - 1;
+            
+            if (seq->uvrotate) {
+                printf("?");
+            }
+            
+            uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames_count;
             tex_frame_p tf = seq->frames + frame;
-            for(uint16_t i=0;i<p->vertex_count;i++)
+            for(uint16_t i=0;i<p.vertex_count;i++)
             {
-                const GLfloat *v = p->vertices[i].tex_coord;
+                const GLfloat *v = p.vertices[i].tex_coord;
                 data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
                 data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
 

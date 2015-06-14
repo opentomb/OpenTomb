@@ -59,22 +59,6 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->transparency_polygons = NULL;
     }
 
-    if(mesh->animated_polygons != NULL)
-    {
-        polygon_p p = mesh->animated_polygons;
-        for(polygon_p next=p->next;p!=NULL;)
-        {
-            Polygon_Clear(p);
-            free(p);
-            p = next;
-            if(p != NULL)
-            {
-                next = p->next;
-            }
-        }
-        mesh->animated_polygons = NULL;
-    }
-
     if(mesh->vertex_count)
     {
         free(mesh->vertices);
