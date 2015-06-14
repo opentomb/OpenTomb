@@ -70,7 +70,7 @@ unlit_shader_description::unlit_shader_description(const shader_stage &vertex, c
     glBindAttribLocationARB(program, vertex_attribs::color, "color");
     glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
     glBindAttribLocationARB(program, vertex_attribs::normal, "normal");
-    glBindAttribLocationARB(program, vertex_attribs::vertex_weight, "vertexWeight");
+    glBindAttribLocationARB(program, vertex_attribs::matrix_index, "matrixIndex");
     glLinkProgramARB(program);
     
     printInfoLog(program);

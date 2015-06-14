@@ -46,6 +46,7 @@ struct sprite_s;
 struct base_mesh_s;
 struct obb_s;
 struct lit_shader_description;
+class vertex_array;
 
 class render_DebugDrawer:public btIDebugDraw
 {
@@ -58,6 +59,12 @@ class render_DebugDrawer:public btIDebugDraw
     GLfloat *m_buffer;
     
     struct obb_s *m_obb;
+    
+    void addLine(const GLfloat start[3], const GLfloat end[3]);
+    void addLine(const GLfloat start[3], const GLfloat startColor[3], const GLfloat end[3], const GLfloat endColor[3]);
+    
+    vertex_array *m_vertex_array;
+    GLuint m_glbuffer;
 
     public:
         // engine debug function

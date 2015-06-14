@@ -43,6 +43,8 @@ shader_manager::shader_manager()
     sprites = new sprite_shader_description(shader_stage(GL_VERTEX_SHADER_ARB, "shaders/sprite.vsh"), shader_stage(GL_FRAGMENT_SHADER_ARB, "shaders/sprite.fsh"));
     
     stencil = new unlit_shader_description(shader_stage(GL_VERTEX_SHADER_ARB, "shaders/stencil.vsh"), shader_stage(GL_FRAGMENT_SHADER_ARB, "shaders/stencil.fsh"));
+    
+    debugline = new unlit_shader_description(shader_stage(GL_VERTEX_SHADER_ARB, "shaders/debuglines.vsh"), shader_stage(GL_FRAGMENT_SHADER_ARB, "shaders/debuglines.fsh"));
 }
 
 shader_manager::~shader_manager()

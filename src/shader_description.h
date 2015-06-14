@@ -79,7 +79,7 @@ struct unlit_shader_description : public shader_description
         color,
         tex_coord,
         normal,
-        vertex_weight
+        matrix_index
     };
     
     unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment);

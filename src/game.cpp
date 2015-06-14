@@ -33,6 +33,7 @@ extern "C" {
 #include "gui.h"
 #include "inventory.h"
 #include "hair.h"
+#include "ragdoll.h"
 
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
 extern lua_State *engine_lua;
@@ -676,9 +677,13 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
 
-    if(Entity_Frame(entity, engine_frame_time) && (entity->bt_joint_count == 0))
+    if((entity->bt_joint_count == 0) && Entity_Frame(entity, engine_frame_time))
     {
         Entity_UpdateRigidBody(entity, 0);
+    }
+    if(entity->bt_joint_count > 0)
+    {
+        Ragdoll_Update(entity);
     }
 
     if(x->left != NULL)
@@ -775,7 +780,7 @@ void Game_Frame(btScalar time)
     bool is_character  = (engine_world.Character != NULL);
 
     // GUI and controls should be updated at all times!
-    
+
     Controls_PollSDLInput();
     Gui_Update();
 
@@ -834,6 +839,10 @@ void Game_Frame(btScalar time)
 
     if(is_character)
     {
+        if(engine_world.Character->bt_joint_count > 0)
+        {
+            Ragdoll_Update(engine_world.Character);
+        }
         if(!control_states.noclip && !control_states.free_look)
         {
             Character_ApplyCommands(engine_world.Character);
