@@ -128,6 +128,7 @@ void Character_Create(struct entity_s *ent)
             ent->bf.bone_tags[i].mesh_base->R = (ent->bf.bone_tags[i].mesh_base->R < box.m_floats[2])?(ent->bf.bone_tags[i].mesh_base->R):(box.m_floats[2]);
 
             ret->ghostObjects[i] = new btPairCachingGhostObject();
+            ret->ghostObjects[i]->setIgnoreCollisionCheck(ent->bt_body[i], true);
             Mat4_Mat4_mul(gltr, ent->transform, ent->bf.bone_tags[i].full_transform);
             Mat4_vec3_mul(v, gltr, ent->bf.bone_tags[i].mesh_base->centre);
             vec3_copy(gltr+12, v);
@@ -136,7 +137,7 @@ void Character_Create(struct entity_s *ent)
             ret->ghostObjects[i]->setCollisionFlags(ret->ghostObjects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
             ret->ghostObjects[i]->setUserPointer(ent->self);
             ret->ghostObjects[i]->setCollisionShape(ent->character->shapes[i]);
-            bt_engine_dynamicsWorld->addCollisionObject(ret->ghostObjects[i], btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::DefaultFilter);
+            bt_engine_dynamicsWorld->addCollisionObject(ret->ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
 
             ent->character->last_collisions[i].obj_count = 0;
         }
@@ -1118,6 +1119,17 @@ void Character_GhostUpdate(struct entity_s *ent)
             ent->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
             Mat4_vec3_mul_macro(pos.m_floats, tr, v);
             ent->character->ghostObjects[i]->getWorldTransform().setOrigin(pos);
+        }
+    }
+    else
+    {
+        btScalar tr[16], v[3];
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            ent->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+            Mat4_vec3_mul(v, tr, ent->bf.bone_tags[i].mesh_base->centre);
+            vec3_copy(tr+12, v);
+            ent->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
         }
     }
 }
@@ -2573,6 +2585,11 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
  */
 void Character_ApplyCommands(struct entity_s *ent)
 {
+    if(ent->bt_joint_count > 0)
+    {
+        return;
+    }
+
     Character_UpdatePlatformPreStep(ent);
 
     if(ent->character->state_func)

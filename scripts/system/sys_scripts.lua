@@ -68,16 +68,20 @@ frame_time = 1.0 / 60.0;
 
 -- Key query functions
 
-keys_pressed = {st = {}, ch = {}};
+keys_pressed = {};
 
 function addKey(code, event)
-    if(event >= 1) then keys_pressed.st[code] = true else keys_pressed.st[code] = false end;
+    if(event >= 1) then
+        keys_pressed[code] = (keys_pressed[code] == nil);
+    else
+        keys_pressed[code] = nil;
+    end;
 end
 
 function checkKey(code, once)
-    if((keys_pressed.st[code] ~= nil) and (keys_pressed.st[code] == true)) then
-        if(once == true) then
-            if((keys_pressed.ch[code] ~= nil) and (keys_pressed.ch[code] == true)) then return false else return true end;
+    if(keys_pressed[code] ~= nil) then
+        if(once) then
+            return keys_pressed[code];
         else
             return true;
         end;
@@ -87,13 +91,8 @@ function checkKey(code, once)
 end
 
 function clearKeys()
-    for k,v in pairs(keys_pressed.st) do
-        if(keys_pressed.st[k] == false) then
-            keys_pressed.st[k] = nil;
-            keys_pressed.ch[k] = nil;
-        else
-            keys_pressed.ch[k] = true;
-        end;
+    for k,v in pairs(keys_pressed) do
+        keys_pressed[k] = nil;
     end;
 end
 

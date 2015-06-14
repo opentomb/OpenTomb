@@ -28,16 +28,14 @@ extern "C" {
 
 typedef struct rd_joint_setup_s
 {
-    uint32_t        body1_index;    // Primary body index
-    uint32_t        body2_index;    // Secondary body index
+    uint16_t        body_index;     // Primary body index
+    uint16_t        joint_type;     // See above as RD_CONSTRAINT_* definitions.
     
     btVector3       body1_offset;   // Primary pivot point offset
     btVector3       body2_offset;   // Secondary pivot point offset
     
     btScalar        body1_angle[3]; // Primary pivot point angle
     btScalar        body2_angle[3]; // Secondary pivot point angle
-    
-    uint32_t        joint_type;     // See above as RD_CONSTRAINT_* definitions.
     
     btScalar        joint_limit[3]; // Only first two are used for hinge constraint.
         
@@ -78,6 +76,7 @@ typedef struct rd_setup_s
 bool Ragdoll_Create(entity_p entity, rd_setup_p setup);
 bool Ragdoll_Delete(entity_p entity);
 
+void Ragdoll_Update(entity_p entity);
 bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup);
 void Ragdoll_ClearSetup(rd_setup_p setup);
 
