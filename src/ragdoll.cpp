@@ -88,6 +88,11 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i]);
         entity->bt_body[i]->activate();
         entity->bt_body[i]->setLinearVelocity(entity->speed);
+        if(entity->character && entity->character->ghostObjects[i])
+        {
+            bt_engine_dynamicsWorld->removeCollisionObject(entity->character->ghostObjects[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(entity->character->ghostObjects[i], COLLISION_NONE, COLLISION_NONE);
+        }
     }
 
     // Setup constraints.
@@ -168,11 +173,6 @@ bool Ragdoll_Delete(entity_p entity)
 {
     if(entity->bt_joint_count == 0) return false;
 
-    for(int i=0;i<entity->bf.bone_tag_count;i++)
-    {
-        bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
-    }
-
     for(int i=0; i<entity->bt_joint_count; i++)
     {
         if(entity->bt_joints[i] != NULL)
@@ -182,11 +182,17 @@ bool Ragdoll_Delete(entity_p entity)
             entity->bt_joints[i] = NULL;
         }
     }
-
+    
     for(int i=0;i<entity->bf.bone_tag_count;i++)
     {
+        bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
         entity->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
         bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        if(entity->character && entity->character->ghostObjects[i])
+        {
+            bt_engine_dynamicsWorld->removeCollisionObject(entity->character->ghostObjects[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(entity->character->ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+        }
     }
 
     free(entity->bt_joints);
