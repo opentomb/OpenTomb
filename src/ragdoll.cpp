@@ -83,7 +83,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
                 }
     }
 
-    //entity->type_flags |=  ENTITY_TYPE_DYNAMIC;           // cause wrong behavior in render!
+    entity->type_flags |=  ENTITY_TYPE_DYNAMIC;
     Entity_UpdateRigidBody(entity, 1);
 
     for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)

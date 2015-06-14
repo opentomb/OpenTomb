@@ -161,12 +161,12 @@ void Render_Mesh(struct base_mesh_s *mesh)
             {
                 continue;
             }
-            anim_seq_p seq = engine_world.anim_sequences + p.anim_id - 1;
-            
+             anim_seq_p seq = engine_world.anim_sequences + p.anim_id - 1;
+
             if (seq->uvrotate) {
                 printf("?");
             }
-            
+
             uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames_count;
             tex_frame_p tf = seq->frames + frame;
             for(uint16_t i=0;i<p.vertex_count;i++)
@@ -419,7 +419,7 @@ void Render_UpdateAnimTextures()                                                
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16], const btScalar pMatrix[16])
+void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -441,7 +441,7 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
     }
 }
 
-void Render_SkeletalModelSkin(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16])
+void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -571,25 +571,54 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
         // base frame offset
-        btScalar subModelView[16];
-        btScalar subModelViewProjection[16];
         if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
         {
-            memcpy(subModelView, modelViewMatrix, sizeof(subModelView));
-            memcpy(subModelViewProjection, modelViewProjectionMatrix, sizeof(subModelViewProjection));
+            Render_DynamicEntity(shader, entity, modelViewMatrix, modelViewProjectionMatrix);
+            ///@TODO: where I need to do bf skinning matrices update? this time ragdoll update function calculates these matrices;
+            if (entity->bf.bone_tags[0].mesh_skin)
+            {
+                btScalar subModelView[16];
+                const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
+                Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
+                Render_SkeletalModelSkin(skinShader, &entity->bf, subModelView, projection);
+            }
         }
         else
         {
+            btScalar subModelView[16];
+            btScalar subModelViewProjection[16];
             Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
+            Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
+            if (entity->bf.bone_tags[0].mesh_skin)
+            {
+                const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
+                Render_SkeletalModelSkin(skinShader, &entity->bf, subModelView, projection);
+            }
         }
+    }
+}
 
-        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection, projection);
+void Render_DynamicEntity(const struct lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+{
+    ss_bone_tag_p btag = entity->bf.bone_tags;
 
-        if (entity->bf.bone_tags[0].mesh_skin)
+    for(uint16_t i=0; i<entity->bf.bone_tag_count; i++,btag++)
+    {
+        btScalar mvTransform[16], tr[16];
+
+        entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+        Mat4_Mat4_mul(mvTransform, modelViewMatrix, tr);
+        glUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
+
+        btScalar mvpTransform[16];
+        Mat4_Mat4_mul(mvpTransform, modelViewProjectionMatrix, tr);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
+
+        Render_Mesh(btag->mesh_base);
+        if(btag->mesh_slot)
         {
-            const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
-            Render_SkeletalModelSkin(skinShader, &entity->bf, subModelView, projection);
+            Render_Mesh(btag->mesh_slot);
         }
     }
 }
@@ -1083,7 +1112,7 @@ void Render_DrawList_DebugLines()
         glLineWidth( 3.0f );
         debugDrawer.render();
     }
-    
+
     renderer.vertex_array_manager->unbind();
 }
 
@@ -1277,7 +1306,7 @@ render_DebugDrawer::render_DebugDrawer()
     m_need_realloc = false;
     vec3_set_zero(m_color);
     m_obb = OBB_Create();
-    
+
     m_glbuffer = 0;
     m_vertex_array = 0;
 }
@@ -1316,7 +1345,7 @@ void render_DebugDrawer::addLine(const GLfloat start[3], const GLfloat startColo
     {
         GLfloat *v = m_buffer + 3 * 4 * m_lines;
         m_lines++;
-        
+
         vec3_copy(v, start);
         v += 3;
         vec3_copy(v, startColor);
@@ -1369,14 +1398,14 @@ void render_DebugDrawer::render()
             };
             m_vertex_array = renderer.vertex_array_manager->createArray(0, 2, attribs);
         }
-        
+
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_glbuffer);
         glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_max_lines * 2 * sizeof(GLfloat [6]), 0, GL_STREAM_DRAW);
-        
+
         void *data = glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY);
         memcpy(data, m_buffer, m_max_lines * 2 * sizeof(GLfloat [6]));
         glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
-        
+
         m_vertex_array->use();
         glDrawArrays(GL_LINES, 0, 2 * m_lines);
     }
@@ -1459,7 +1488,7 @@ void render_DebugDrawer::drawFrustum(struct frustum_s *f)
         {
             addLine(fv, fv + 3);
         }
-        
+
         addLine(fv, v0);
     }
 }
@@ -1483,7 +1512,7 @@ void render_DebugDrawer::drawPortal(struct portal_s *p)
         {
             addLine(pv, pv + 3);
         }
-        
+
         addLine(pv, v0);
     }
 }
@@ -1515,7 +1544,7 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
     }
 
     v = v0 = m_buffer + 3 * 4 * m_lines;
-    
+
     addLine(p->vertices[0].position, (p+1)->vertices[0].position);
     addLine(p->vertices[1].position, (p+1)->vertices[3].position);
     addLine(p->vertices[2].position, (p+1)->vertices[2].position);
