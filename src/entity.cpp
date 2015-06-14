@@ -98,6 +98,11 @@ void Entity_Clear(entity_p entity)
         {
             Ragdoll_Delete(entity);
         }
+        
+        if(entity->character)
+        {
+            Character_Clean(entity);
+        }
 
         if(entity->bt_body)
         {
@@ -125,11 +130,6 @@ void Entity_Clear(entity_p entity)
             }
             free(entity->bt_body);
             entity->bt_body = NULL;
-        }
-
-        if(entity->character)
-        {
-            Character_Clean(entity);
         }
 
         if(entity->self)

@@ -254,7 +254,6 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
     
     // Copy information
     uint32_t *elementsStartPerTexture = (uint32_t *) calloc(sizeof(uint32_t), hair->mesh->num_texture_pages);
-    uint32_t matrixStart = 0;
     uint32_t verticesStart = 0;
     for (int i = 0; i < model->mesh_count; i++)
     {
