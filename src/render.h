@@ -177,7 +177,7 @@ render_list_p Render_CreateRoomListArray(unsigned int count);
 void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);                                    // отрисовка одного фрейма скелетной анимации
 void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16], const btScalar pMatrix[16]);
 void Render_SkeletalModelSkin(const lit_shader_description *shader, struct entity_s *ent, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16]);
-void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
+void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar projection[16]);
 void Render_SkyBox(const btScalar matrix[16]);
 void Render_Mesh(struct base_mesh_s *mesh);
 void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *p, const struct unlit_tinted_shader_description *shader);

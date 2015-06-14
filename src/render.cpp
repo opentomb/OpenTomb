@@ -594,32 +594,30 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     }
 }
 
-void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar projection[16])
 {
     if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
         return;
 
     // Calculate lighting
-    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, false);
+    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, true);
+    
 
     for(int h=0; h<entity->character->hair_count; h++)
     {
+        btScalar subModelViewMatrices[16 * 10];
         for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
         {
-            btScalar subModelView[16];
-            btScalar subModelViewProjection[16];
-
             btScalar transform[16];
             const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
             bt_tr.getOpenGLMatrix(transform);
 
-            Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
-            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
-
-            glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
-            glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
-            Render_Mesh(entity->character->hairs[h].elements[i].mesh);
+            Mat4_Mat4_mul(&subModelViewMatrices[i * 16], modelViewMatrix, transform);
         }
+        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count, GL_FALSE, subModelViewMatrices);
+        glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
+        
+        Render_Mesh(entity->character->hairs[h].mesh);
     }
 }
 
@@ -933,7 +931,7 @@ void Render_DrawList()
     if(renderer.world->Character)
     {
         Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat, renderer.cam->gl_proj_mat);
-        Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
     }
 
     /*
