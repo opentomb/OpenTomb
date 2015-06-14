@@ -74,10 +74,13 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
                 entity->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
                 entity->bt_body[i]->setFriction(setup->body_setup[i].friction);
 
-                entity->bf.bone_tags[i].mesh_base;
-                btScalar r = getInnerBBRadius(entity->bf.bone_tags[i].mesh_base->bb_min, entity->bf.bone_tags[i].mesh_base->bb_max);
-                entity->bt_body[i]->setCcdMotionThreshold(0.8 * r);
-                entity->bt_body[i]->setCcdSweptSphereRadius(r);
+                if(i == 0)
+                {
+                    entity->bf.bone_tags[i].mesh_base;
+                    btScalar r = getInnerBBRadius(entity->bf.bone_tags[i].mesh_base->bb_min, entity->bf.bone_tags[i].mesh_base->bb_max);
+                    entity->bt_body[i]->setCcdMotionThreshold(0.8 * r);
+                    entity->bt_body[i]->setCcdSweptSphereRadius(r);
+                }
     }
 
     //entity->type_flags |=  ENTITY_TYPE_DYNAMIC;           // cause wrong behavior in render!
@@ -122,10 +125,12 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         localB.setIdentity();
 #else
         localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
-        localA.setOrigin(setup->joint_setup[i].body1_offset);
+        //localA.setOrigin(setup->joint_setup[i].body1_offset);
+        localA.setOrigin(btVector3(btB->transform[12+0], btB->transform[12+1], btB->transform[12+2]));
 
         localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
-        localB.setOrigin(setup->joint_setup[i].body2_offset);
+        //localB.setOrigin(setup->joint_setup[i].body2_offset);
+        localB.setOrigin(btVector3(0.0, 0.0, 0.0));
 #endif
 
         switch(setup->joint_setup[i].joint_type)
@@ -182,7 +187,7 @@ bool Ragdoll_Delete(entity_p entity)
             entity->bt_joints[i] = NULL;
         }
     }
-    
+
     for(int i=0;i<entity->bf.bone_tag_count;i++)
     {
         bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
@@ -220,6 +225,19 @@ void Ragdoll_Update(entity_p entity)
         entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
         Mat4_inv_Mat4_affine_mul(entity->bf.bone_tags[i].full_transform, entity->transform, tr);
     }
+
+    for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
+    {
+        if(entity->bf.bone_tags[i].parent != NULL)
+        {
+            Mat4_inv_Mat4_affine_mul(entity->bf.bone_tags[i].transform, entity->bf.bone_tags[i].parent->full_transform, entity->bf.bone_tags[i].full_transform);
+        }
+        else
+        {
+            Mat4_Copy(entity->bf.bone_tags[i].transform, entity->bf.bone_tags[i].full_transform);
+        }
+    }
+
     if(entity->character && entity->character->ghostObjects)
     {
         btScalar v[3];
