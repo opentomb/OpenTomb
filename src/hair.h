@@ -74,6 +74,7 @@ typedef struct hair_s
     uint32_t                 *hair_vertex_map;    // Hair vertex indices to link
     uint32_t                 *head_vertex_map;    // Head vertex indices to link
 
+    struct base_mesh_s       *mesh;               // Mesh containing all vertices of all parts of this hair object.
 }hair_t, *hair_p;
 
 typedef struct hair_setup_s
