@@ -33,7 +33,7 @@ void Sys_StrRunSec(char *buf, size_t buf_size);
 btScalar Sys_FloatTime(void);
 void Sys_Printf(char *fmt, ...);
 void Sys_Init(void);
-void Sys_Error(const char *error, ...);
+void Sys_Error(const char *error, ...) __attribute__((noreturn));
 void Sys_Warn(const char *warning, ...);
 void Sys_DebugLog(const char *file, const char *fmt, ...);
 

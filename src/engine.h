@@ -233,7 +233,7 @@ void Engine_Init_Post();    // Finalizing init
 void Engine_InitDefaultGlobals();
 
 void Engine_Destroy();
-void Engine_Shutdown(int val);
+void Engine_Shutdown(int val) __attribute__((noreturn));
 
 void Engine_Frame(btScalar time);
 void Engine_Display();
