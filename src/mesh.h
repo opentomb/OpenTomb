@@ -84,7 +84,7 @@ typedef struct base_mesh_s
     btScalar              bb_min[3];                                            // AABB bounding volume
     btScalar              bb_max[3];                                            // AABB bounding volume
     btScalar              R;                                                    // radius of the bounding sphere
-    int8_t               *skin_map;                                             // vertices map for skin mesh
+    int8_t               *matrix_indices;                                       // vertices map for skin mesh
 
     GLuint                vbo_vertex_array;
     GLuint                vbo_index_array;

@@ -66,10 +66,10 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->vertex_count = 0;
     }
 
-    if(mesh->skin_map)
+    if(mesh->matrix_indices)
     {
-        free(mesh->skin_map);
-        mesh->skin_map = NULL;
+        free(mesh->matrix_indices);
+        mesh->matrix_indices = NULL;
     }
 
     if(mesh->element_count_per_texture)
@@ -147,34 +147,12 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
     glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
 
-    // Transform skinning information into bone weights and store it as well.
-    if (mesh->skin_map)
+    // Store additional skinning information
+    if (mesh->matrix_indices)
     {
-        uint8_t *skinData = (uint8_t *) malloc(mesh->vertex_count * 2);
-        for (int i = 0; i < mesh->vertex_count; i++)
-        {
-            switch (mesh->skin_map[i]) {
-                case 0:
-                    // Both
-                    skinData[i*2+0] = 0;
-                    skinData[i*2+1] = 1;
-                    break;
-                case 1:
-                    // First matrix only
-                    skinData[i*2+0] = 0;
-                    skinData[i*2+1] = 0;
-                    break;
-                case 2:
-                    // Second matrix only
-                    skinData[i*2+0] = 1;
-                    skinData[i*2+1] = 1;
-                    break;
-            }
-        }
         glGenBuffersARB(1, &mesh->vbo_skin_array);
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_skin_array);
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * 2, skinData, GL_STATIC_DRAW_ARB);
-        free(skinData);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * 2, mesh->matrix_indices, GL_STATIC_DRAW_ARB);
     }
 
     // Fill indexes vbo
@@ -197,7 +175,7 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         // Only used for skinned meshes
         vertex_array_attribute(lit_shader_description::vertex_attribs::matrix_index, 2, GL_UNSIGNED_BYTE, false, mesh->vbo_skin_array, 2, 0),
     };
-    int numAttribs = mesh->skin_map ? 5 : 4;
+    int numAttribs = mesh->matrix_indices ? 5 : 4;
     mesh->main_vertex_array = renderer->vertex_array_manager->createArray(mesh->vbo_index_array, numAttribs, attribs);
 
     // Now for animated polygons, if any
@@ -566,20 +544,22 @@ void FillSkinnedMeshMap(skeletal_model_p model)
             return;
         }
 
-        ch = mesh_skin->skin_map = (int8_t*)malloc(mesh_skin->vertex_count * sizeof(int8_t));
+        ch = mesh_skin->matrix_indices = (int8_t*)malloc(mesh_skin->vertex_count * sizeof(int8_t [2]));
         v = mesh_skin->vertices;
-        for(uint32_t k=0;k<mesh_skin->vertex_count;k++,v++,ch++)
+        for(uint32_t k=0;k<mesh_skin->vertex_count;k++,v++,ch += 2)
         {
             rv = FindVertexInMesh(mesh_base, v->position);
             if(rv != NULL)
             {
-                *ch = 1;
+                ch[0] = 0;
+                ch[1] = 0;
                 vec3_copy(v->position, rv->position);
                 vec3_copy(v->normal, rv->normal);
             }
             else
             {
-                *ch = 0;
+                ch[0] = 0;
+                ch[1] = 1;
                 vec3_add(tv, v->position, tree_tag->offset);
                 prev_tree_tag = model->mesh_tree;
                 for(uint16_t l=0;l<model->mesh_count;l++,prev_tree_tag++)
@@ -587,7 +567,8 @@ void FillSkinnedMeshMap(skeletal_model_p model)
                     rv = FindVertexInMesh(prev_tree_tag->mesh_base, tv);
                     if(rv != NULL)
                     {
-                        *ch = 2;
+                        ch[0] = 1;
+                        ch[1] = 1;
                         vec3_sub(v->position, rv->position, tree_tag->offset);
                         vec3_copy(v->normal, rv->normal);
                         break;
