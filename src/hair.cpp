@@ -289,7 +289,17 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
             hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = i;
             hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = std::min(i+1, model->mesh_count - 1);
             }
+            
+            // Fix up hair vertices: Set y-position to 0, actual position determined by skinning matrices
             hair->mesh->vertices[verticesStart+j].position[1] = 0;
+            
+            // If the normal isn't fully in y direction, cancel its y component
+            if (hair->mesh->vertices[verticesStart+j].normal[0] != 0 || hair->mesh->vertices[verticesStart+j].normal[2] != 0)
+            {
+                hair->mesh->vertices[verticesStart+j].normal[1] = 0;
+                btScalar temp;
+                vec3_norm(hair->mesh->vertices[verticesStart+j].normal, temp);
+            }
         }
         
         verticesStart += original->vertex_count;
