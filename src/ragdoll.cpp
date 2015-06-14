@@ -35,8 +35,16 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     }
 
     // Setup bodies.
-
     entity->bt_joint_count = 0;
+    // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
+    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
+    entity->character->no_fix_all = 0x00;
+    entity->character->no_fix_body_parts = 0x00000000;
+    int map_size = entity->bf.animations.model->collision_map_size;             // does not works, strange...
+    entity->bf.animations.model->collision_map_size = entity->bf.animations.model->mesh_count;
+    Character_FixPenetrations(entity, NULL);
+    entity->bf.animations.model->collision_map_size = map_size;
+
     for(int i=0; i<setup->body_count; i++)
     {
         if( (i >= entity->bf.bone_tag_count) || (entity->bt_body[i] == NULL) )
@@ -49,12 +57,6 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
         {
             entity->bt_joint_count++;
         }
-
-        // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-        Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-        entity->character->no_fix_all = 0x00;
-        entity->character->no_fix_body_parts = 0x00000000;
-        Character_FixPenetrations(entity, NULL);
 
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
