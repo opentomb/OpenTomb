@@ -155,19 +155,19 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         {
             switch (mesh->skin_map[i]) {
                 case 0:
-                    // Both. Apply random tiny bias so it adds up to 1.
-                    skinData[i*2+0] = 128;
-                    skinData[i*2+1] = 127;
+                    // Both
+                    skinData[i*2+0] = 0;
+                    skinData[i*2+1] = 1;
                     break;
                 case 1:
                     // First matrix only
-                    skinData[i*2+0] = 255;
+                    skinData[i*2+0] = 0;
                     skinData[i*2+1] = 0;
                     break;
                 case 2:
                     // Second matrix only
-                    skinData[i*2+0] = 0;
-                    skinData[i*2+1] = 255;
+                    skinData[i*2+0] = 1;
+                    skinData[i*2+1] = 1;
                     break;
             }
         }
@@ -195,7 +195,7 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
         vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, mesh->vbo_vertex_array, sizeof(vertex_t), offsetof(vertex_t, color)),
         vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, mesh->vbo_vertex_array, sizeof(vertex_t), offsetof(vertex_t, tex_coord)),
         // Only used for skinned meshes
-        vertex_array_attribute(lit_shader_description::vertex_attribs::vertex_weight, 2, GL_UNSIGNED_BYTE, true, mesh->vbo_skin_array, 2, 0),
+        vertex_array_attribute(lit_shader_description::vertex_attribs::matrix_index, 2, GL_UNSIGNED_BYTE, false, mesh->vbo_skin_array, 2, 0),
     };
     int numAttribs = mesh->skin_map ? 5 : 4;
     mesh->main_vertex_array = renderer->vertex_array_manager->createArray(mesh->vbo_index_array, numAttribs, attribs);

@@ -152,16 +152,9 @@
 		524E0F5C1AFF968A00F56FF6 /* btVector3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 524E0ECB1AFF968A00F56FF6 /* btVector3.cpp */; };
 		524E0F5D1AFF968A00F56FF6 /* premake4.lua in Resources */ = {isa = PBXBuildFile; fileRef = 524E0ECD1AFF968A00F56FF6 /* premake4.lua */; };
 		5252A50C1B1A530100E8CE1D /* shader_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A50A1B1A530100E8CE1D /* shader_manager.cpp */; };
-		5252A50E1B1AE24600E8CE1D /* text.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A50D1B1AE24600E8CE1D /* text.vsh */; };
-		5252A5101B1AE24F00E8CE1D /* text.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A50F1B1AE24F00E8CE1D /* text.fsh */; };
-		5252A5121B1B117500E8CE1D /* sprite.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5111B1B117500E8CE1D /* sprite.vsh */; };
-		5252A5141B1B591F00E8CE1D /* sprite.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5131B1B591F00E8CE1D /* sprite.fsh */; };
 		5252A5171B1B8B9500E8CE1D /* hair.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5151B1B8B9500E8CE1D /* hair.cpp */; };
 		5252A51B1B1CE01500E8CE1D /* vertex_array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5181B1BB21600E8CE1D /* vertex_array.cpp */; };
-		5252A51D1B1D70CF00E8CE1D /* entity_skin.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A51C1B1D70CF00E8CE1D /* entity_skin.vsh */; };
 		5252A5201B24DD4F00E8CE1D /* ragdoll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A51E1B24DD4F00E8CE1D /* ragdoll.cpp */; };
-		5252A5221B262CAA00E8CE1D /* stencil.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5211B262CAA00E8CE1D /* stencil.vsh */; };
-		5252A5241B262CB400E8CE1D /* stencil.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 5252A5231B262CB400E8CE1D /* stencil.fsh */; };
 		52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */; };
 		52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */; };
 		52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA91AED5ACA003B8288 /* RobotoCondensed-Regular.ttf */; };
@@ -358,15 +351,7 @@
 		52B8342D1AED5C23003B8288 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834251AED5B96003B8288 /* SDL2.framework */; };
 		52B8342E1AED5C23003B8288 /* SDL2.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834251AED5B96003B8288 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		52B834311AED7BCC003B8288 /* libreadline.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 52B834301AED7BCC003B8288 /* libreadline.dylib */; };
-		52D5D5E41B079B8300B99A38 /* room.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5E31B079B8300B99A38 /* room.vsh */; };
-		52D5D5E81B07A86000B99A38 /* room.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5E71B07A86000B99A38 /* room.fsh */; };
-		52D5D5EA1B07CCFF00B99A38 /* static_mesh.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5E91B07CCFF00B99A38 /* static_mesh.fsh */; };
-		52D5D5EC1B07E5F500B99A38 /* entity.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5EB1B07E5F500B99A38 /* entity.vsh */; };
-		52D5D5EE1B07E5FF00B99A38 /* entity.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52D5D5ED1B07E5FF00B99A38 /* entity.fsh */; };
 		52D5D5F91B08758700B99A38 /* shader_description.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 52D5D5F71B08758700B99A38 /* shader_description.cpp */; };
-		52DF7FF21B0769D700A7DE0E /* gui.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF11B0769D700A7DE0E /* gui.vsh */; };
-		52DF7FF41B076B1700A7DE0E /* gui.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF31B076B1700A7DE0E /* gui.fsh */; };
-		52DF7FF61B076BBA00A7DE0E /* gui_tex.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 52DF7FF51B076BBA00A7DE0E /* gui_tex.fsh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -3262,31 +3247,16 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5252A5121B1B117500E8CE1D /* sprite.vsh in Resources */,
-				52DF7FF61B076BBA00A7DE0E /* gui_tex.fsh in Resources */,
-				52D5D5E41B079B8300B99A38 /* room.vsh in Resources */,
-				5252A50E1B1AE24600E8CE1D /* text.vsh in Resources */,
 				52B8335B1AED5B06003B8288 /* README in Resources */,
 				52B833551AED5B06003B8288 /* README in Resources */,
-				52DF7FF21B0769D700A7DE0E /* gui.vsh in Resources */,
-				5252A51D1B1D70CF00E8CE1D /* entity_skin.vsh in Resources */,
 				52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */,
-				52D5D5EE1B07E5FF00B99A38 /* entity.fsh in Resources */,
-				5252A5141B1B591F00E8CE1D /* sprite.fsh in Resources */,
-				52D5D5EA1B07CCFF00B99A38 /* static_mesh.fsh in Resources */,
 				52B833F21AED5B06003B8288 /* README in Resources */,
 				52B833381AED5B06003B8288 /* afblue.cin in Resources */,
 				52B8333A1AED5B06003B8288 /* afblue.hin in Resources */,
 				52B833601AED5B06003B8288 /* README in Resources */,
-				5252A5221B262CAA00E8CE1D /* stencil.vsh in Resources */,
 				52B82DB61AED5ACA003B8288 /* Images.xcassets in Resources */,
-				52D5D5E81B07A86000B99A38 /* room.fsh in Resources */,
-				5252A5101B1AE24F00E8CE1D /* text.fsh in Resources */,
-				52DF7FF41B076B1700A7DE0E /* gui.fsh in Resources */,
 				52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */,
 				52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */,
-				52D5D5EC1B07E5F500B99A38 /* entity.vsh in Resources */,
-				5252A5241B262CB400E8CE1D /* stencil.fsh in Resources */,
 				524E0F5D1AFF968A00F56FF6 /* premake4.lua in Resources */,
 				52B833391AED5B06003B8288 /* afblue.dat in Resources */,
 				52B82DB41AED5ACA003B8288 /* legal.png in Resources */,
