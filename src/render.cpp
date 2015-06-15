@@ -527,6 +527,9 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
+    //mvMatrix = modelViewMatrix x entity->transform
+    //mvpMatrix = modelViewProjectionMatrix x entity->transform
+
     for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
     {
         btScalar mvTransform[16];
@@ -651,20 +654,46 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
         // base frame offset
-        btScalar subModelView[16];
-        btScalar subModelViewProjection[16];
         if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
         {
-            memcpy(subModelView, modelViewMatrix, sizeof(subModelView));
-            memcpy(subModelViewProjection, modelViewProjectionMatrix, sizeof(subModelViewProjection));
+            Render_DynamicEntity(shader, entity, modelViewMatrix, modelViewProjectionMatrix);
         }
         else
         {
+            btScalar subModelView[16];
+            btScalar subModelViewProjection[16];
             Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
+            Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
         }
+    }
+}
 
-        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
+void Render_DynamicEntity(const lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+{
+    ss_bone_tag_p btag = entity->bf.bone_tags;
+
+    for(uint16_t i=0; i<entity->bf.bone_tag_count; i++,btag++)
+    {
+        btScalar mvTransform[16], tr[16];
+
+        entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+        Mat4_Mat4_mul(mvTransform, modelViewMatrix, tr);
+        glUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
+
+        btScalar mvpTransform[16];
+        Mat4_Mat4_mul(mvpTransform, modelViewProjectionMatrix, tr);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
+
+        Render_Mesh(btag->mesh_base, NULL, NULL);
+        if(btag->mesh_slot)
+        {
+            Render_Mesh(btag->mesh_slot, NULL, NULL);
+        }
+        if(btag->mesh_skin)
+        {
+            Render_SkinMesh(btag->mesh_skin, btag->transform);
+        }
     }
 }
 

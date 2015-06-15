@@ -35,8 +35,16 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     }
 
     // Setup bodies.
-
     entity->bt_joint_count = 0;
+    // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
+    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
+    entity->character->no_fix_all = 0x00;
+    entity->character->no_fix_body_parts = 0x00000000;
+    int map_size = entity->bf.animations.model->collision_map_size;             // does not works, strange...
+    entity->bf.animations.model->collision_map_size = entity->bf.animations.model->mesh_count;
+    Character_FixPenetrations(entity, NULL);
+    entity->bf.animations.model->collision_map_size = map_size;
+
     for(int i=0; i<setup->body_count; i++)
     {
         if( (i >= entity->bf.bone_tag_count) || (entity->bt_body[i] == NULL) )
@@ -45,47 +53,34 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
             continue;   // If body is absent, return false and bypass this body setup.
         }
 
-        if(entity->bf.bone_tags[i].parent != NULL)
-        {
-            entity->bt_joint_count++;
-        }
-
-        // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-        Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-        entity->character->no_fix_all = 0x00;
-        entity->character->no_fix_body_parts = 0x00000000;
-        Character_FixPenetrations(entity, NULL);
-
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
 
             bt_engine_dynamicsWorld->removeRigidBody(entity->bt_body[i]);
 
-                entity->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-                entity->bt_body[i]->setMassProps(mass, inertia);
+            entity->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+            entity->bt_body[i]->setMassProps(mass, inertia);
 
-                entity->bt_body[i]->updateInertiaTensor();
-                entity->bt_body[i]->clearForces();
+            entity->bt_body[i]->updateInertiaTensor();
+            entity->bt_body[i]->clearForces();
 
-                entity->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
-                entity->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
+            entity->bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
+            entity->bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
 
-                entity->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
-                entity->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
-                entity->bt_body[i]->setFriction(setup->body_setup[i].friction);
+            entity->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
+            entity->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
+            entity->bt_body[i]->setFriction(setup->body_setup[i].friction);
 
-                if(i == 0)
-                {
-                    entity->bf.bone_tags[i].mesh_base;
-                    btScalar r = getInnerBBRadius(entity->bf.bone_tags[i].mesh_base->bb_min, entity->bf.bone_tags[i].mesh_base->bb_max);
-                    entity->bt_body[i]->setCcdMotionThreshold(0.8 * r);
-                    entity->bt_body[i]->setCcdSweptSphereRadius(r);
-                }
+            if(entity->bf.bone_tags[i].parent == NULL)
+            {
+                entity->bf.bone_tags[i].mesh_base;
+                btScalar r = getInnerBBRadius(entity->bf.bone_tags[i].mesh_base->bb_min, entity->bf.bone_tags[i].mesh_base->bb_max);
+                entity->bt_body[i]->setCcdMotionThreshold(0.8 * r);
+                entity->bt_body[i]->setCcdSweptSphereRadius(r);
+            }
     }
 
-    //entity->type_flags |=  ENTITY_TYPE_DYNAMIC;           // cause wrong behavior in render!
     Entity_UpdateRigidBody(entity, 1);
-
     for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
     {
         bt_engine_dynamicsWorld->addRigidBody(entity->bt_body[i]);
@@ -99,7 +94,6 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     }
 
     // Setup constraints.
-
     entity->bt_joint_count = setup->joint_count;
     entity->bt_joints = (btTypedConstraint**)calloc(entity->bt_joint_count, sizeof(btTypedConstraint*));
 
@@ -159,17 +153,21 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
                 break;
         }
 
-        for(int j=0; j<=5; j++)
-        {
-            entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, j);
-            entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, j);
-        }
+        entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
+        entity->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
         entity->bt_joints[i]->setDbgDrawSize(64.0);
         bt_engine_dynamicsWorld->addConstraint(entity->bt_joints[i], true);
     }
 
-    if(result == false) Ragdoll_Delete(entity);  // PARANOID: Clean up the mess, if something went wrong.
+    if(result == false)
+    {
+        Ragdoll_Delete(entity);  // PARANOID: Clean up the mess, if something went wrong.
+    }
+    else
+    {
+        entity->type_flags |=  ENTITY_TYPE_DYNAMIC;
+    }
     return result;
 }
 
@@ -210,45 +208,6 @@ bool Ragdoll_Delete(entity_p entity)
 
     // NB! Bodies remain in the same state!
     // To make them static again, additionally call setEntityBodyMass script function.
-}
-
-
-
-void Ragdoll_Update(entity_p entity)
-{
-    btScalar tr[16];
-    btVector3 pos = entity->bt_body[0]->getWorldTransform().getOrigin();
-    vec3_copy(entity->transform+12, pos.m_floats);
-    Entity_UpdateRoomPos(entity);
-    for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
-    {
-        entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
-        Mat4_inv_Mat4_affine_mul(entity->bf.bone_tags[i].full_transform, entity->transform, tr);
-    }
-
-    for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
-    {
-        if(entity->bf.bone_tags[i].parent != NULL)
-        {
-            Mat4_inv_Mat4_affine_mul(entity->bf.bone_tags[i].transform, entity->bf.bone_tags[i].parent->full_transform, entity->bf.bone_tags[i].full_transform);
-        }
-        else
-        {
-            Mat4_Copy(entity->bf.bone_tags[i].transform, entity->bf.bone_tags[i].full_transform);
-        }
-    }
-
-    if(entity->character && entity->character->ghostObjects)
-    {
-        btScalar v[3];
-        for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
-        {
-            entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
-            Mat4_vec3_mul(v, tr, entity->bf.bone_tags[i].mesh_base->centre);
-            vec3_copy(tr+12, v);
-            entity->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
-        }
-    }
 }
 
 
