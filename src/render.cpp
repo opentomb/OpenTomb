@@ -441,25 +441,28 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
     }
 }
 
-void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16])
+void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar mvMatrix[16], const btScalar pMatrix[16])
 {
-    ss_bone_tag_p btag = bframe->bone_tags;
+    ss_bone_tag_p btag = ent->bf.bone_tags;
 
     glUniformMatrix4fvARB(shader->projection, 1, false, pMatrix);
 
-    for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+    for(uint16_t i=0; i<ent->bf.bone_tag_count; i++,btag++)
     {
         btScalar mvTransforms[32];
         Mat4_Mat4_mul(&mvTransforms[0], mvMatrix, btag->full_transform);
-        // btag->transform is the second matrix, relative to full transform
-        btScalar rotateOnlyTransform[16];
-        Mat4_Copy(rotateOnlyTransform, btag->transform);
-        rotateOnlyTransform[12] = 0;
-        rotateOnlyTransform[13] = 0;
-        rotateOnlyTransform[14] = 0;
-        rotateOnlyTransform[15] = 1;
-        Mat4_T(rotateOnlyTransform);
-        Mat4_Mat4_mul(&mvTransforms[16], &mvTransforms[0], rotateOnlyTransform);
+
+        // Calculate parent transform
+        const btScalar *parentTransform = btag->parent ? btag->parent->full_transform : ent->transform;
+        
+        btScalar translate[16];
+        Mat4_E(translate);
+        Mat4_Translate(translate, btag->offset);
+        
+        btScalar secondTransform[16];
+        Mat4_Mat4_mul(secondTransform, parentTransform, translate);
+        
+        Mat4_Mat4_mul(&mvTransforms[16], mvMatrix, secondTransform);
         glUniformMatrix4fvARB(shader->model_view, 2, false, mvTransforms);
 
         if(btag->mesh_skin)
@@ -580,7 +583,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
                 btScalar subModelView[16];
                 const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
                 Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
-                Render_SkeletalModelSkin(skinShader, &entity->bf, subModelView, projection);
+                Render_SkeletalModelSkin(skinShader, entity, subModelView, projection);
             }
         }
         else
@@ -593,7 +596,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             if (entity->bf.bone_tags[0].mesh_skin)
             {
                 const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
-                Render_SkeletalModelSkin(skinShader, &entity->bf, subModelView, projection);
+                Render_SkeletalModelSkin(skinShader, entity, subModelView, projection);
             }
         }
     }
@@ -632,16 +635,14 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, true);
     
 
-    for(int h=0; h<entity->character->hair_count; h++)
-    {
-        btScalar subModelViewMatrices[16 * 10];
+    for(int h=0; h<entity->character->hair_count; h++)        btScalar subModelViewMatrices[16 * 10];
+dual hair pieces
         for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
         {
             btScalar transform[16];
             const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
-            bt_tr.getOpenGLMatrix(transform);
-
-            Mat4_Mat4_mul(&subModelViewMatrices[i * 16], modelViewMatrix, transform);
+            bt_tr.getOpenGLMatr            Mat4_Mat4_mul(&subModelViewMatrices[i * 16], modelViewMatrix, transform);
+rix, transform);
         }
         glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count, GL_FALSE, subModelViewMatrices);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
