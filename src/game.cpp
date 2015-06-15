@@ -677,13 +677,13 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
 
-    if((entity->bt_joint_count == 0) && Entity_Frame(entity, engine_frame_time))
+    if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
     {
         Entity_UpdateRigidBody(entity, 0);
     }
-    if(entity->bt_joint_count > 0)
+    else if(Entity_Frame(entity, engine_frame_time))
     {
-        Ragdoll_Update(entity);
+        Entity_UpdateRigidBody(entity, 0);
     }
 
     if(x->left != NULL)
@@ -839,9 +839,9 @@ void Game_Frame(btScalar time)
 
     if(is_character)
     {
-        if(engine_world.Character->bt_joint_count > 0)
+        if(engine_world.Character->type_flags & ENTITY_TYPE_DYNAMIC)
         {
-            Ragdoll_Update(engine_world.Character);
+            Entity_UpdateRigidBody(engine_world.Character, 0);
         }
         if(!control_states.noclip && !control_states.free_look)
         {

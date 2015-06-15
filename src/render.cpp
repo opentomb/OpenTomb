@@ -454,14 +454,14 @@ void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struc
 
         // Calculate parent transform
         const btScalar *parentTransform = btag->parent ? btag->parent->full_transform : ent->transform;
-        
+
         btScalar translate[16];
         Mat4_E(translate);
         Mat4_Translate(translate, btag->offset);
-        
+
         btScalar secondTransform[16];
         Mat4_Mat4_mul(secondTransform, parentTransform, translate);
-        
+
         Mat4_Mat4_mul(&mvTransforms[16], mvMatrix, secondTransform);
         glUniformMatrix4fvARB(shader->model_view, 2, false, mvTransforms);
 
@@ -626,6 +626,7 @@ void Render_DynamicEntity(const struct lit_shader_description *shader, struct en
     }
 }
 
+///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
 void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar projection[16])
 {
     if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
@@ -633,20 +634,20 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, true);
-    
-
-    for(int h=0; h<entity->character->hair_count; h++)        btScalar subModelViewMatrices[16 * 10];
-dual hair pieces
+    for(int h=0; h<entity->character->hair_count; h++)
+    {
+        btScalar subModelViewMatrices[16 * 10];
+        //dual hair pieces
         for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
         {
             btScalar transform[16];
             const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
-            bt_tr.getOpenGLMatr            Mat4_Mat4_mul(&subModelViewMatrices[i * 16], modelViewMatrix, transform);
-rix, transform);
+            bt_tr.getOpenGLMatrix(transform);
+            Mat4_Mat4_mul(&subModelViewMatrices[i * 16], modelViewMatrix, transform);
         }
         glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count, GL_FALSE, subModelViewMatrices);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
-        
+
         Render_Mesh(entity->character->hairs[h].mesh);
     }
 }
