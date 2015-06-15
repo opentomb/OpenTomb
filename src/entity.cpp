@@ -326,14 +326,12 @@ void Entity_UpdateRoomPos(entity_p ent)
 
 void Entity_UpdateRigidBody(entity_p ent, int force)
 {
-    btScalar tr[16];
-    btTransform bt_tr;
-
     if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
         btScalar tr[16];
-        btVector3 pos = ent->bt_body[0]->getWorldTransform().getOrigin();
-        vec3_copy(ent->transform+12, pos.m_floats);
+        //btVector3 pos = ent->bt_body[0]->getWorldTransform().getOrigin();
+        //vec3_copy(ent->transform+12, pos.m_floats);
+        ent->bt_body[0]->getWorldTransform().getOpenGLMatrix(ent->transform);
         Entity_UpdateRoomPos(ent);
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
@@ -341,6 +339,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
             Mat4_inv_Mat4_affine_mul(ent->bf.bone_tags[i].full_transform, ent->transform, tr);
         }
 
+        // that cycle is necessary only for skinning models;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             if(ent->bf.bone_tags[i].parent != NULL)
@@ -364,6 +363,55 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
                 ent->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
             }
         }
+
+        if(ent->bf.bone_tag_count == 1)
+        {
+            vec3_copy(ent->bf.bb_min, ent->bf.bone_tags[0].mesh_base->bb_min);
+            vec3_copy(ent->bf.bb_max, ent->bf.bone_tags[0].mesh_base->bb_max);
+        }
+        else
+        {
+            vec3_copy(ent->bf.bb_min, ent->bf.bone_tags[0].mesh_base->bb_min);
+            vec3_copy(ent->bf.bb_max, ent->bf.bone_tags[0].mesh_base->bb_max);
+            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+            {
+                btScalar *pos = ent->bf.bone_tags[i].full_transform + 12;
+                btScalar *bb_min = ent->bf.bone_tags[i].mesh_base->bb_min;
+                btScalar *bb_max = ent->bf.bone_tags[i].mesh_base->bb_max;
+                btScalar r = bb_max[0] - bb_min[0];
+                btScalar t = bb_max[1] - bb_min[1];
+                r = (t > r)?(t):(r);
+                t = bb_max[2] - bb_min[2];
+                r = (t > r)?(t):(r);
+                r *= 0.5;
+
+                if(ent->bf.bb_min[0] > pos[0] - r)
+                {
+                    ent->bf.bb_min[0] = pos[0] - r;
+                }
+                if(ent->bf.bb_min[1] > pos[1] - r)
+                {
+                    ent->bf.bb_min[1] = pos[1] - r;
+                }
+                if(ent->bf.bb_min[2] > pos[2] - r)
+                {
+                    ent->bf.bb_min[2] = pos[2] - r;
+                }
+
+                if(ent->bf.bb_max[0] < pos[0] + r)
+                {
+                    ent->bf.bb_max[0] = pos[0] + r;
+                }
+                if(ent->bf.bb_max[1] < pos[1] + r)
+                {
+                    ent->bf.bb_max[1] = pos[1] + r;
+                }
+                if(ent->bf.bb_max[2] < pos[2] + r)
+                {
+                    ent->bf.bb_max[2] = pos[2] + r;
+                }
+            }
+        }
     }
     else
     {
@@ -377,13 +425,13 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         Entity_UpdateRoomPos(ent);
         if(ent->self->collide_flag != 0x00)
         {
+            btScalar tr[16];
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
                 if(ent->bt_body[i])
                 {
                     Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
-                    bt_tr.setFromOpenGLMatrix(tr);
-                    ent->bt_body[i]->setWorldTransform(bt_tr);
+                    ent->bt_body[i]->getWorldTransform().setFromOpenGLMatrix(tr);
                 }
             }
         }

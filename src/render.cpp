@@ -1553,12 +1553,11 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
     for(uint16_t i=0; i<2; i++,p++)
     {
         vertex_p pv = p->vertices;
-        v0 = v;
         for(uint16_t j=0;j<p->vertex_count-1;j++,pv++)
         {
             addLine(pv->position, (pv+1)->position);
         }
-        addLine(pv->position, v0);
+        addLine(pv->position, p->vertices->position);
     }
 }
 
