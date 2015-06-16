@@ -149,6 +149,8 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
             localA.setOrigin(setup->head_offset + btVector3(joint_x, 0.0, joint_y));
             localA.getBasis().setEulerZYX(setup->root_angle[0], setup->root_angle[1], setup->root_angle[2]);
+            // Stealing this calculation because I need it for drawing
+            localA.getOpenGLMatrix(hair->owner_body_hair_root);
 
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
@@ -280,13 +282,13 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
         for (int j = 0; j < original->vertex_count; j++) {
             if (original->vertices[j].position[1] <= 0)
             {
-            hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = std::max(0, i-1);
-            hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = i;
+                hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = i;
+                hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = i+1;
             }
             else
             {
-            hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = i;
-            hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = std::min(i+1, model->mesh_count - 1);
+                hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = i+1;
+                hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = std::min((int8_t) (i+2), (int8_t) model->mesh_count);
             }
             
             // Fix up hair vertices: Set y-position to 0, actual position determined by skinning matrices
