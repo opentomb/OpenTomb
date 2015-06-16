@@ -21,6 +21,7 @@
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 
 
 entity_p Entity_Create()
@@ -98,7 +99,7 @@ void Entity_Clear(entity_p entity)
         {
             Ragdoll_Delete(entity);
         }
-        
+
         if(entity->character)
         {
             Character_Clean(entity);
@@ -325,10 +326,94 @@ void Entity_UpdateRoomPos(entity_p ent)
 
 void Entity_UpdateRigidBody(entity_p ent, int force)
 {
-    btScalar tr[16];
-    btTransform bt_tr;
+    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+    {
+        btScalar tr[16];
+        //btVector3 pos = ent->bt_body[0]->getWorldTransform().getOrigin();
+        //vec3_copy(ent->transform+12, pos.m_floats);
+        ent->bt_body[0]->getWorldTransform().getOpenGLMatrix(ent->transform);
+        Entity_UpdateRoomPos(ent);
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            ent->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+            Mat4_inv_Mat4_affine_mul(ent->bf.bone_tags[i].full_transform, ent->transform, tr);
+        }
 
-    if(!(ent->type_flags & ENTITY_TYPE_DYNAMIC))
+        // that cycle is necessary only for skinning models;
+        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        {
+            if(ent->bf.bone_tags[i].parent != NULL)
+            {
+                Mat4_inv_Mat4_affine_mul(ent->bf.bone_tags[i].transform, ent->bf.bone_tags[i].parent->full_transform, ent->bf.bone_tags[i].full_transform);
+            }
+            else
+            {
+                Mat4_Copy(ent->bf.bone_tags[i].transform, ent->bf.bone_tags[i].full_transform);
+            }
+        }
+
+        if(ent->character && ent->character->ghostObjects)
+        {
+            btScalar v[3];
+            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+            {
+                ent->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+                Mat4_vec3_mul(v, tr, ent->bf.bone_tags[i].mesh_base->centre);
+                vec3_copy(tr+12, v);
+                ent->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+            }
+        }
+
+        if(ent->bf.bone_tag_count == 1)
+        {
+            vec3_copy(ent->bf.bb_min, ent->bf.bone_tags[0].mesh_base->bb_min);
+            vec3_copy(ent->bf.bb_max, ent->bf.bone_tags[0].mesh_base->bb_max);
+        }
+        else
+        {
+            vec3_copy(ent->bf.bb_min, ent->bf.bone_tags[0].mesh_base->bb_min);
+            vec3_copy(ent->bf.bb_max, ent->bf.bone_tags[0].mesh_base->bb_max);
+            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+            {
+                btScalar *pos = ent->bf.bone_tags[i].full_transform + 12;
+                btScalar *bb_min = ent->bf.bone_tags[i].mesh_base->bb_min;
+                btScalar *bb_max = ent->bf.bone_tags[i].mesh_base->bb_max;
+                btScalar r = bb_max[0] - bb_min[0];
+                btScalar t = bb_max[1] - bb_min[1];
+                r = (t > r)?(t):(r);
+                t = bb_max[2] - bb_min[2];
+                r = (t > r)?(t):(r);
+                r *= 0.5;
+
+                if(ent->bf.bb_min[0] > pos[0] - r)
+                {
+                    ent->bf.bb_min[0] = pos[0] - r;
+                }
+                if(ent->bf.bb_min[1] > pos[1] - r)
+                {
+                    ent->bf.bb_min[1] = pos[1] - r;
+                }
+                if(ent->bf.bb_min[2] > pos[2] - r)
+                {
+                    ent->bf.bb_min[2] = pos[2] - r;
+                }
+
+                if(ent->bf.bb_max[0] < pos[0] + r)
+                {
+                    ent->bf.bb_max[0] = pos[0] + r;
+                }
+                if(ent->bf.bb_max[1] < pos[1] + r)
+                {
+                    ent->bf.bb_max[1] = pos[1] + r;
+                }
+                if(ent->bf.bb_max[2] < pos[2] + r)
+                {
+                    ent->bf.bb_max[2] = pos[2] + r;
+                }
+            }
+        }
+    }
+    else
     {
         if((ent->bf.animations.model == NULL) ||
            (ent->bt_body == NULL) ||
@@ -336,33 +421,21 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         {
             return;
         }
-    }
 
-    Entity_UpdateRoomPos(ent);
-
-    if(ent->self->collide_flag != 0x00)
-    {
-        for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
+        Entity_UpdateRoomPos(ent);
+        if(ent->self->collide_flag != 0x00)
         {
-            if(ent->bt_body[i])
+            btScalar tr[16];
+            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
-                if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
-                {
-                    ent->bt_body[i]->getMotionState()->getWorldTransform(bt_tr);
-
-                    if(i==0) bt_tr.getOpenGLMatrix(ent->transform);
-                             bt_tr.getOpenGLMatrix(ent->bf.bone_tags[i].full_transform);
-                }
-                else
+                if(ent->bt_body[i])
                 {
                     Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
-                    bt_tr.setFromOpenGLMatrix(tr);
-                    ent->bt_body[i]->setWorldTransform(bt_tr);
+                    ent->bt_body[i]->getWorldTransform().setFromOpenGLMatrix(tr);
                 }
             }
         }
     }
-
     Entity_RebuildBV(ent);
 }
 
@@ -1171,7 +1244,7 @@ int Entity_Frame(entity_p entity, btScalar time)
     state_change_p stc;
     ss_animation_p ss_anim;
 
-    if((entity == NULL) || (entity->bt_joint_count > 0) || !(entity->state_flags & ENTITY_STATE_ACTIVE)  || !(entity->state_flags & ENTITY_STATE_ENABLED) ||
+    if((entity == NULL) || (entity->type_flags & ENTITY_TYPE_DYNAMIC) || !(entity->state_flags & ENTITY_STATE_ACTIVE)  || !(entity->state_flags & ENTITY_STATE_ENABLED) ||
        (entity->bf.animations.model == NULL) || ((entity->bf.animations.model->animation_count == 1) && (entity->bf.animations.model->animations->frames_count == 1)))
     {
         return 0;

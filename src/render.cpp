@@ -665,6 +665,7 @@ void Render_DynamicEntity(const struct lit_shader_description *shader, struct en
     }
 }
 
+///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
 void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar projection[16])
 {
     if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
@@ -696,7 +697,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
         }
         glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count, GL_FALSE, subModelViewMatrices);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
-        
+
         Render_Mesh(entity->character->hairs[h].mesh);
     }
 }
@@ -1602,12 +1603,11 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
     for(uint16_t i=0; i<2; i++,p++)
     {
         vertex_p pv = p->vertices;
-        v0 = v;
         for(uint16_t j=0;j<p->vertex_count-1;j++,pv++)
         {
             addLine(pv->position, (pv+1)->position);
         }
-        addLine(pv->position, v0);
+        addLine(pv->position, p->vertices->position);
     }
 }
 
