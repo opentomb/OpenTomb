@@ -605,7 +605,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
-    
+
     const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
@@ -635,20 +635,20 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         Mat4_Mat4_mul(scaledMvMatrix, mvMatrix, scaledMatrix);
         btScalar mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, scaledMvMatrix);
-        
+
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix, guiProjectionMatrix);
+        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
         btScalar mvpMatrix[16];
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix, guiProjectionMatrix);
+        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
-    
+
     renderer.vertex_array_manager->unbind();
-    
+
     glPopClientAttrib();
 }
 

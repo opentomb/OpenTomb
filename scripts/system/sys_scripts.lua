@@ -29,7 +29,7 @@ ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR        = 0x0004;
 ENTITY_TYPE_PICKABLE                      = 0x0008;
 ENTITY_TYPE_TRAVERSE                      = 0x0010;
 ENTITY_TYPE_TRAVERSE_FLOOR                = 0x0020;
-ENTITY_TYPE_KINEMATIC                     = 0x0040;
+ENTITY_TYPE_DYNAMIC                       = 0x0040;
 ENTITY_TYPE_ACTOR                         = 0x0080;
 
 ENTITY_CALLBACK_NONE                      = 0x00000000;

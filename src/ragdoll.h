@@ -22,6 +22,7 @@ extern "C" {
 #define RD_CONSTRAINT_HINGE 1
 #define RD_CONSTRAINT_CONE  2
 
+#define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
 
 // Joint setup struct is used to parse joint script entry to
 // actual joint.
@@ -76,7 +77,6 @@ typedef struct rd_setup_s
 bool Ragdoll_Create(entity_p entity, rd_setup_p setup);
 bool Ragdoll_Delete(entity_p entity);
 
-void Ragdoll_Update(entity_p entity);
 bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup);
 void Ragdoll_ClearSetup(rd_setup_p setup);
 

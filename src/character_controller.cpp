@@ -1107,7 +1107,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
 void Character_GhostUpdate(struct entity_s *ent)
 {
-    if(ent->bt_joint_count == 0)
+    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
         btScalar tr[16], *v;
         btVector3 pos;
@@ -1298,7 +1298,12 @@ void Character_FixPenetrations(struct entity_s *ent, btScalar move[3])
         resp->vertical_collide      = 0x00;
     }
 
-    if((ent->bt_joint_count > 0) || (ent->character && ent->character->no_fix_all))
+    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+    {
+        return;
+    }
+
+    if(ent->character && ent->character->no_fix_all)
     {
         Character_GhostUpdate(ent);
         return;
@@ -2585,7 +2590,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
  */
 void Character_ApplyCommands(struct entity_s *ent)
 {
-    if(ent->bt_joint_count > 0)
+    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
         return;
     }

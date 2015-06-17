@@ -59,13 +59,13 @@ class render_DebugDrawer:public btIDebugDraw
     GLfloat *m_buffer;
     
     struct obb_s *m_obb;
-    
+
     void addLine(const GLfloat start[3], const GLfloat end[3]);
     void addLine(const GLfloat start[3], const GLfloat startColor[3], const GLfloat end[3], const GLfloat endColor[3]);
     
     vertex_array *m_vertex_array;
     GLuint m_glbuffer;
-
+    
     public:
         // engine debug function
         render_DebugDrawer();
@@ -174,9 +174,11 @@ void Render_InitGlobals();
 void Render_Init();
 
 render_list_p Render_CreateRoomListArray(unsigned int count);
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);                                    // отрисовка одного фрейма скелетной анимации
-void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16], const btScalar pMatrix[16]);
-void Render_SkeletalModelSkin(const lit_shader_description *shader, struct entity_s *ent, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16]);
+void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
+void Render_DynamicEntity(const struct lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
+void Render_DynamicEntitySkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar pMatrix[16]);
+void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16]);
+void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar mvMatrix[16], const btScalar pMatrix[16]);
 void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
 void Render_SkyBox(const btScalar matrix[16]);
 void Render_Mesh(struct base_mesh_s *mesh);
