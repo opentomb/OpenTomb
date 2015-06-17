@@ -677,25 +677,53 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
     for(int h=0; h<entity->character->hair_count; h++)
     {
-        btScalar subModelViewMatrices[16 * 10];
+        btScalar hairModelToGlobalMatrices[16 * 10];
         // First: Head attachment
         btScalar globalHead[16];
         Mat4_Mat4_mul(globalHead, entity->transform, entity->bf.bone_tags[entity->character->hairs[h].owner_body].full_transform);
         btScalar globalAttachment[16];
-        Mat4_Mat4_mul(globalHead, entity->transform, entity->bf.bone_tags[entity->character->hairs[h].owner_body].full_transform);
         Mat4_Mat4_mul(globalAttachment, globalHead, entity->character->hairs[h].owner_body_hair_root);
-        Mat4_Mat4_mul(subModelViewMatrices, modelViewMatrix, globalAttachment);
+        Mat4_Mat4_mul(hairModelToGlobalMatrices, modelViewMatrix, globalAttachment);
         
         // Then: Individual hair pieces
         for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
         {
-            btScalar transform[16];
+            /*
+             * Definitions: x_o - as in original file. x_h - as in hair model
+             * (translated)
+             * M_oh - translation matrix. x_g = global position (before modelview)
+             * M_og - global position
+             *
+             * We know:
+             * x_h = M_oh * x_o
+             * x_g = M_og * x_o
+             * We want:
+             * M_hg so that x_g = M_hg * x_m
+             * We have: M_oh, M_g
+             *
+             * x_m = M_oh * x_o => x_o = M_oh^-1 * x_m
+             * x_g = M_og * M_oh^-1 * x_m
+             */
+            
+            
+            btScalar invOriginToHairModel[16];
+            Mat4_E(invOriginToHairModel);
+            // Simplification: Always translation matrix, no invert needed
+            Mat4_Translate(invOriginToHairModel,
+                           -entity->character->hairs[h].elements[i].position[0],
+                           -entity->character->hairs[h].elements[i].position[1],
+                           -entity->character->hairs[h].elements[i].position[2]);
+            
+            btScalar originGlobal[16];
             const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
-            bt_tr.getOpenGLMatrix(transform);
+            bt_tr.getOpenGLMatrix(originGlobal);
 
-            Mat4_Mat4_mul(&subModelViewMatrices[(i+1) * 16], modelViewMatrix, transform);
+            btScalar modelGlobal[16];
+            Mat4_Mat4_mul(modelGlobal, originGlobal, invOriginToHairModel);
+            
+            Mat4_Mat4_mul(&hairModelToGlobalMatrices[(i+1) * 16], modelViewMatrix, modelGlobal);
         }
-        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, subModelViewMatrices);
+        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, hairModelToGlobalMatrices);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
 
         Render_Mesh(entity->character->hairs[h].mesh);

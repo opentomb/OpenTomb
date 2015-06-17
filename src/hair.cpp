@@ -278,7 +278,22 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
             }
         }
         
-        // And create matrix indices
+        /*
+         * Apply total offset from parent.
+         * The resulting mesh will have all the hair in default position
+         * (i.e. as one big rope). The shader and matrix then transform it
+         * correctly.
+         */
+        vec3_copy(hair->elements[i].position, model->mesh_tree[i].offset);
+        if (i > 0)
+        {
+            // TODO: This assumes the parent is always the preceding mesh.
+            // True for hair, obviously wrong for everything else. Can stay
+            // here, but must go when we start generalizing the whole thing.
+            vec3_add_to(hair->elements[i].position, hair->elements[i - 1].position);
+        }
+        
+        // And create vertex data (including matrix indices)
         for (int j = 0; j < original->vertex_count; j++) {
             if (original->vertices[j].position[1] <= 0)
             {
@@ -291,10 +306,11 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
                 hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = std::min((int8_t) (i+2), (int8_t) model->mesh_count);
             }
             
-            // Fix up hair vertices: Set y-position to 0, actual position determined by skinning matrices
-            hair->mesh->vertices[verticesStart+j].position[1] = 0;
+            // Now move all the hair vertices
+            vec3_add_to(hair->mesh->vertices[verticesStart+j].position, hair->elements[i].position);
             
             // If the normal isn't fully in y direction, cancel its y component
+            // This is perhaps a bit dubious.
             if (hair->mesh->vertices[verticesStart+j].normal[0] != 0 || hair->mesh->vertices[verticesStart+j].normal[2] != 0)
             {
                 hair->mesh->vertices[verticesStart+j].normal[1] = 0;
