@@ -225,8 +225,8 @@ ragdoll[RD_TYPE_LARA] = {
               body1_offset = {50.0, -16.0, 138.0},
               body2_offset = {0.0, 0.0, 0.0},
           
-              body1_angle  = {-M_PI*1.5, M_PI*0.25, 0.0},
-              body2_angle  = {-M_PI*1.5, M_PI*0.25, 0.0},
+              body1_angle  = {-M_PI*1.5, M_PI*0.5, 0.0},
+              body2_angle  = {-M_PI*1.5, M_PI*0.5, 0.0},
           
               joint_type   = RD_CONSTRAINT_CONE,
               joint_limit  = {M_PI*0.5, M_PI*0.25, M_PI*0.15} },
