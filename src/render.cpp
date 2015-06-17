@@ -695,7 +695,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
             Mat4_Mat4_mul(&subModelViewMatrices[(i+1) * 16], modelViewMatrix, transform);
         }
-        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count, GL_FALSE, subModelViewMatrices);
+        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, subModelViewMatrices);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
 
         Render_Mesh(entity->character->hairs[h].mesh);
