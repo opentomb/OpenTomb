@@ -70,6 +70,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
             entity->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
             entity->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
             entity->bt_body[i]->setFriction(setup->body_setup[i].friction);
+            entity->bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD;
 
             if(entity->bf.bone_tags[i].parent == NULL)
             {
@@ -139,7 +140,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
             case RD_CONSTRAINT_HINGE:
                 {
                     btHingeConstraint* hingeC = new btHingeConstraint(*entity->bt_body[btA->index], *entity->bt_body[btB->index], localA, localB);
-                    hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9f, 0.3f, 0.3f);
+                    hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9, 0.3, 0.3);
                     entity->bt_joints[i] = hingeC;
                 }
                 break;
@@ -147,7 +148,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
             case RD_CONSTRAINT_CONE:
                 {
                     btConeTwistConstraint* coneC = new btConeTwistConstraint(*entity->bt_body[btA->index], *entity->bt_body[btB->index], localA, localB);
-                    coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9f, 0.3f, 0.7f);
+                    coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9, 0.3, 0.7);
                     entity->bt_joints[i] = coneC;
                 }
                 break;
