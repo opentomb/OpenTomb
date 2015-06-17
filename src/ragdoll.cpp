@@ -70,7 +70,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
             entity->bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
             entity->bt_body[i]->setRestitution(setup->body_setup[i].restitution);
             entity->bt_body[i]->setFriction(setup->body_setup[i].friction);
-            entity->bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD;
+            entity->bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
 
             if(entity->bf.bone_tags[i].parent == NULL)
             {
