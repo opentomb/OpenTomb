@@ -48,27 +48,27 @@ ragdoll[RD_TYPE_LARA] = {
   body_count   = 15,        -- Bodies above body count won't be modified.
   joint_count  = 14,        -- Joints above joint count won't be added and won't be processed.
   
-  joint_cfm    = 0.0,
-  joint_erp    = 0.3,
+  joint_cfm    = 0.7,
+  joint_erp    = 0.1,
   
   -- Body properties array.
   
   body = {
-            {mass = 15.0, restitution = 0.8, friction =  8.0, damping = {0.3, 0.6}},    -- 00 = Pelvis
-            {mass = 20.0, restitution = 0.2, friction =  4.0, damping = {0.2, 0.5}},    -- 01 = Left upper leg
-            {mass = 15.0, restitution = 0.2, friction =  2.0, damping = {0.1, 0.5}},    -- 02 = Left lower leg
-            {mass = 10.0, restitution = 0.3, friction =  5.0, damping = {0.1, 0.6}},    -- 03 = Left foot
-            {mass = 20.0, restitution = 0.2, friction =  8.0, damping = {0.2, 0.5}},    -- 04 = Right upper leg
-            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 05 = Right lower leg
-            {mass = 10.0, restitution = 0.3, friction =  2.0, damping = {0.1, 0.6}},    -- 06 = Right foot
-            {mass = 25.0, restitution = 0.5, friction = 10.0, damping = {0.3, 0.5}},    -- 07 = Spine
-            {mass = 20.0, restitution = 0.1, friction =  6.5, damping = {0.2, 0.5}},    -- 11 = Right upper arm
-            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 12 = Right lower arm
-            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.1, 0.6}},    -- 13 = Right palm
-            {mass = 20.0, restitution = 0.1, friction =  6.5, damping = {0.2, 0.5}},    -- 08 = Left upper arm
-            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 09 = Left lower arm
-            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.1, 0.6}},    -- 10 = Left palm
-            {mass = 20.0, restitution = 0.0, friction =  8.0, damping = {0.2, 0.9}}     -- 14 = Head
+            {mass = 15.0, restitution = 0.8, friction =  8.0, damping = {0.2, 0.2}},    -- 00 = Pelvis
+            {mass = 20.0, restitution = 0.0, friction =  4.0, damping = {0.2, 0.2}},    -- 01 = Left upper leg
+            {mass = 15.0, restitution = 0.0, friction =  2.0, damping = {0.6, 0.6}},    -- 02 = Left lower leg
+            {mass = 10.0, restitution = 0.3, friction =  5.0, damping = {0.8, 0.8}},    -- 03 = Left foot
+            {mass = 20.0, restitution = 0.0, friction =  8.0, damping = {0.2, 0.2}},    -- 04 = Right upper leg
+            {mass = 15.0, restitution = 0.0, friction =  4.0, damping = {0.6, 0.6}},    -- 05 = Right lower leg
+            {mass = 10.0, restitution = 0.3, friction =  2.0, damping = {0.8, 0.8}},    -- 06 = Right foot
+            {mass = 25.0, restitution = 0.5, friction = 10.0, damping = {0.9, 0.9}},    -- 07 = Spine
+            {mass = 20.0, restitution = 0.0, friction =  6.5, damping = {0.3, 0.3}},    -- 11 = Right upper arm
+            {mass = 15.0, restitution = 0.0, friction =  4.0, damping = {0.6, 0.6}},    -- 12 = Right lower arm
+            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.8, 0.8}},    -- 13 = Right palm
+            {mass = 20.0, restitution = 0.0, friction =  6.5, damping = {0.2, 0.5}},    -- 08 = Left upper arm
+            {mass = 15.0, restitution = 0.0, friction =  4.0, damping = {0.6, 0.6}},    -- 09 = Left lower arm
+            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.8, 0.8}},    -- 10 = Left palm
+            {mass = 20.0, restitution = 0.0, friction =  8.0, damping = {0.8, 0.8}}     -- 14 = Head
          },
   
   -- Actual joint array.
@@ -190,7 +190,7 @@ ragdoll[RD_TYPE_LARA] = {
               body2_angle  = {-M_PI*1.5, M_PI*0.5, 0.0},
           
               joint_type   = RD_CONSTRAINT_CONE,
-              joint_limit  = {M_PI*0.5, M_PI*0.25, 0.0} },
+              joint_limit  = {M_PI*0.5, M_PI*0.25, M_PI*0.15} },
               
               -- LEFT ELBOW
               
@@ -203,7 +203,7 @@ ragdoll[RD_TYPE_LARA] = {
               body2_angle  = {0.0, M_PI*0.5, 0.0},
           
               joint_type   = RD_CONSTRAINT_HINGE,
-              joint_limit  = {-M_PI*0.25, M_PI*0.25} },
+              joint_limit  = {-M_PI*0.25, 0.0} },
               
               -- LEFT WRIST
               
@@ -212,11 +212,11 @@ ragdoll[RD_TYPE_LARA] = {
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {0.0, 0.0, 0.0},
           
-              body1_angle  = {0.0, M_PI*0.5, 0.0},
-              body2_angle  = {0.0, M_PI*0.5, 0.0},
+              body1_angle  = {0.0, M_PI*0.5, M_PI*0.5},
+              body2_angle  = {0.0, M_PI*0.5, M_PI*0.5},
           
               joint_type   = RD_CONSTRAINT_HINGE,
-              joint_limit  = {0.0, M_PI*0.25} },
+              joint_limit  = {-M_PI*0.25, M_PI*0.25} },
               
               -- RIGHT SHOULDER
               
@@ -225,11 +225,11 @@ ragdoll[RD_TYPE_LARA] = {
               body1_offset = {50.0, -16.0, 138.0},
               body2_offset = {0.0, 0.0, 0.0},
           
-              body1_angle  = {-M_PI*1.5, M_PI*0.5, 0.0},
-              body2_angle  = {-M_PI*1.5, M_PI*0.5, 0.0},
+              body1_angle  = {-M_PI*1.5, M_PI*0.25, 0.0},
+              body2_angle  = {-M_PI*1.5, M_PI*0.25, 0.0},
           
               joint_type   = RD_CONSTRAINT_CONE,
-              joint_limit  = {M_PI*0.5, M_PI*0.25, 0.0} },
+              joint_limit  = {M_PI*0.5, M_PI*0.25, M_PI*0.15} },
               
               -- RIGHT ELBOW
               
@@ -242,7 +242,7 @@ ragdoll[RD_TYPE_LARA] = {
               body2_angle  = {0.0, M_PI*0.5, 0.0},
           
               joint_type   = RD_CONSTRAINT_HINGE,
-              joint_limit  = {-M_PI*0.25, M_PI*0.25} },
+              joint_limit  = {-M_PI*0.25, 0.0} },
               
               -- RIGHT WRIST
               
@@ -251,11 +251,11 @@ ragdoll[RD_TYPE_LARA] = {
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {0.0, 0.0, 0.0},
           
-              body1_angle  = {0.0, M_PI*0.5, 0.0},
-              body2_angle  = {0.0, M_PI*0.5, 0.0},
+              body1_angle  = {0.0, M_PI*0.5, M_PI*0.5},
+              body2_angle  = {0.0, M_PI*0.5, M_PI*0.5},
           
               joint_type   = RD_CONSTRAINT_HINGE,
-              joint_limit  = {0.0, M_PI*0.25} }
+              joint_limit  = {-M_PI*0.25, M_PI*0.25} },
           }
 }
 
