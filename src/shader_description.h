@@ -37,6 +37,11 @@ struct gui_shader_description : public shader_description
     GLint offset;
     GLint factor;
     
+    enum vertex_attribs {
+        position = 0,
+        color
+    };
+    
     gui_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 

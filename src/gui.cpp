@@ -21,6 +21,7 @@
 #include "string.h"
 #include "shader_description.h"
 #include "shader_manager.h"
+#include "vertex_array.h"
 
 extern SDL_Window  *sdl_window;
 
@@ -36,6 +37,7 @@ gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 GLuint crosshairBuffer;
+vertex_array *crosshairArray;
 
 GLfloat guiProjectionMatrix[16];
 
@@ -1141,17 +1143,28 @@ void Gui_SwitchGLMode(char is_gui)
     }
 }
 
+struct gui_buffer_entry_s {
+    GLfloat position[2];
+    uint8_t color[4];
+};
+
 void Gui_FillCrosshairBuffer()
 {
-    GLfloat crosshair_buf[] = {
-        (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 1.0f, 0.0f, 0.0f
+    gui_buffer_entry_s crosshair_buf[] = {
+        (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 255, 0, 0, 255,
+        (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 255, 0, 0, 255,
+        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 255, 0, 0, 255,
+        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 255, 0, 0, 255
     };
 
     glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
+    
+    vertex_array_attribute attribs[] = {
+        vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
+        vertex_array_attribute(gui_shader_description::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
+    };
+    crosshairArray = renderer.vertex_array_manager->createArray(0, 2, attribs);
 }
 
 void Gui_DrawCrosshair()
@@ -1171,10 +1184,11 @@ void Gui_DrawCrosshair()
     GLfloat offset[2] = { -1.f, -1.f };
     glUniform2fvARB(shader->offset, 1, offset);
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
-    glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), 0);
-    glColorPointer(3, GL_FLOAT, 5 * sizeof(GLfloat), (void *) sizeof(GLfloat [2]));
+    crosshairArray->use();
+    
     glDrawArrays(GL_LINES, 0, 4);
+    
+    renderer.vertex_array_manager->unbind();
 
     glPopAttrib();
 }
