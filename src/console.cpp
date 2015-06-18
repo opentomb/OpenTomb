@@ -167,16 +167,12 @@ void Con_Draw()
     if(FontManager && con_base.inited && con_base.show)
     {
         int x, y;
-        glBindTexture(GL_TEXTURE_2D, 0);                                        // drop current texture
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         Con_DrawBackground();
         Con_DrawCursor();
 
         x = 8;
         y = con_base.cursor_y;
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
         const text_shader_description *shader = renderer.shader_manager->getTextShader();
         glUseProgramObjectARB(shader->program);
@@ -194,7 +190,6 @@ void Con_Draw()
             vec4_copy(con_base.font->gl_font_color, col);
             glf_render_str(con_base.font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
         }
-        glPopClientAttrib();
     }
 }
 

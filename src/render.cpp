@@ -793,7 +793,6 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
 
-            render->vertex_array_manager->unbind();
             delete array;
             glDeleteBuffersARB(1, &stencilVBO);
         }
@@ -909,8 +908,6 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
             glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
-
-        render->vertex_array_manager->unbind();
     }
 }
 
@@ -1029,12 +1026,6 @@ void Render_DrawList()
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
 
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
     Render_SkyBox(renderer.cam->gl_view_proj_mat);
 
     if(renderer.world->Character)
@@ -1135,9 +1126,7 @@ void Render_DrawList()
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
-    renderer.vertex_array_manager->unbind();
-    glPopClientAttrib();
-
+    
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
 }
@@ -1190,8 +1179,6 @@ void Render_DrawList_DebugLines()
         glLineWidth( 3.0f );
         debugDrawer.render();
     }
-
-    renderer.vertex_array_manager->unbind();
 }
 
 /**

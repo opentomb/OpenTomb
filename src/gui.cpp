@@ -400,7 +400,6 @@ void Gui_Render()
 {
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
     glPolygonMode(GL_FRONT, GL_FILL);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
@@ -411,7 +410,6 @@ void Gui_Render()
     glDisable(GL_DEPTH_TEST);
     glLineWidth(2.0);
     Gui_DrawCrosshair();
-    renderer.vertex_array_manager->unbind();
     
     Gui_DrawBars();
     Gui_DrawFaders();
@@ -597,12 +595,6 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix)
 {
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-
     const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
@@ -643,10 +635,6 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
         Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
-
-    renderer.vertex_array_manager->unbind();
-
-    glPopClientAttrib();
 }
 
 /*
@@ -1213,10 +1201,8 @@ void Gui_DrawInventory()
 
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    glPopClientAttrib();
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
     glPolygonMode(GL_FRONT, GL_FILL);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
@@ -1235,10 +1221,6 @@ void Gui_DrawInventory()
 
     glDepthMask(GL_TRUE);
     glPopAttrib();
-
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
     //GLfloat color[4] = {0,0,0,0.45};
     //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
@@ -1272,7 +1254,6 @@ void Gui_DrawLoadScreen(int value)
     Gui_SwitchGLMode(1);
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1282,13 +1263,10 @@ void Gui_DrawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     Fader[FADER_LOADSCREEN].Show();
     Bar[BAR_LOADING].Show(value);
 
     glDepthMask(GL_TRUE);
-    glPopClientAttrib();
     glPopAttrib();
 
     Gui_SwitchGLMode(0);
@@ -1756,7 +1734,6 @@ bool gui_Fader::DropTexture()
 {
     if(mTexture)
     {
-        glBindTexture(GL_TEXTURE_2D, 0);
         /// if mTexture is incorrect then maybe trouble
         if(glIsTexture(mTexture))
         {
