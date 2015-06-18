@@ -155,6 +155,8 @@
 		5252A5171B1B8B9500E8CE1D /* hair.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5151B1B8B9500E8CE1D /* hair.cpp */; };
 		5252A51B1B1CE01500E8CE1D /* vertex_array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5181B1BB21600E8CE1D /* vertex_array.cpp */; };
 		5252A5201B24DD4F00E8CE1D /* ragdoll.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A51E1B24DD4F00E8CE1D /* ragdoll.cpp */; };
+		5252A5351B33394500E8CE1D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5252A5341B33394500E8CE1D /* OpenGL.framework */; };
+		5252A5381B333E9A00E8CE1D /* font_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5252A5361B333E9A00E8CE1D /* font_buffer.cpp */; };
 		52B82DB11AED5ACA003B8288 /* DroidSansMono.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */; };
 		52B82DB21AED5ACA003B8288 /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */; };
 		52B82DB31AED5ACA003B8288 /* RobotoCondensed-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 52B82DA91AED5ACA003B8288 /* RobotoCondensed-Regular.ttf */; };
@@ -753,6 +755,9 @@
 		5252A5231B262CB400E8CE1D /* stencil.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = stencil.fsh; sourceTree = "<group>"; };
 		5252A5251B2D9E6300E8CE1D /* debuglines.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = debuglines.fsh; sourceTree = "<group>"; };
 		5252A5261B2D9E6300E8CE1D /* debuglines.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = debuglines.vsh; sourceTree = "<group>"; };
+		5252A5341B33394500E8CE1D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		5252A5361B333E9A00E8CE1D /* font_buffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = font_buffer.cpp; sourceTree = "<group>"; };
+		5252A5371B333E9A00E8CE1D /* font_buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = font_buffer.h; sourceTree = "<group>"; };
 		52B82D821AED5A45003B8288 /* OpenTomb.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenTomb.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B82DA71AED5ACA003B8288 /* DroidSansMono.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = DroidSansMono.ttf; sourceTree = "<group>"; };
 		52B82DA81AED5ACA003B8288 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
@@ -1487,6 +1492,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5252A5351B33394500E8CE1D /* OpenGL.framework in Frameworks */,
 				52B8342D1AED5C23003B8288 /* SDL2.framework in Frameworks */,
 				52B8342B1AED5BF7003B8288 /* libz.dylib in Frameworks */,
 				52B834311AED7BCC003B8288 /* libreadline.dylib in Frameworks */,
@@ -1993,6 +1999,7 @@
 		52B82D791AED5A43003B8288 = {
 			isa = PBXGroup;
 			children = (
+				5252A5341B33394500E8CE1D /* OpenGL.framework */,
 				52B834231AED5B7E003B8288 /* lib */,
 				52DF7FEE1B07683F00A7DE0E /* shaders */,
 				52B82DB81AED5B02003B8288 /* src */,
@@ -2129,6 +2136,8 @@
 				5252A50B1B1A530100E8CE1D /* shader_manager.h */,
 				5252A5181B1BB21600E8CE1D /* vertex_array.cpp */,
 				5252A5191B1BB21600E8CE1D /* vertex_array.h */,
+				5252A5361B333E9A00E8CE1D /* font_buffer.cpp */,
+				5252A5371B333E9A00E8CE1D /* font_buffer.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -3419,6 +3428,7 @@
 				524E0F151AFF968A00F56FF6 /* btUniformScalingShape.cpp in Sources */,
 				524E0EEB1AFF968A00F56FF6 /* btManifoldResult.cpp in Sources */,
 				52B8336B1AED5B06003B8288 /* winfnt.c in Sources */,
+				5252A5381B333E9A00E8CE1D /* font_buffer.cpp in Sources */,
 				52B832991AED5B06003B8288 /* helpers.c in Sources */,
 				524E0EEE1AFF968A00F56FF6 /* btSphereSphereCollisionAlgorithm.cpp in Sources */,
 				524E0F261AFF968A00F56FF6 /* btGjkPairDetector.cpp in Sources */,

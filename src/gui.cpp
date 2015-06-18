@@ -399,7 +399,6 @@ void Gui_Resize()
 void Gui_Render()
 {
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glPolygonMode(GL_FRONT, GL_FILL);
@@ -408,18 +407,18 @@ void Gui_Render()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
-
-    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
+    
+    glDisable(GL_DEPTH_TEST);
+    glLineWidth(2.0);
     Gui_DrawCrosshair();
+    renderer.vertex_array_manager->unbind();
+    
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();
     Con_Draw();
 
     glDepthMask(GL_TRUE);
-    glPopClientAttrib();
     glPopAttrib();
 }
 
@@ -509,9 +508,6 @@ void Gui_RenderStrings()
     {
         gui_text_line_p l = gui_base_lines;
 
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         const text_shader_description *shader = renderer.shader_manager->getTextShader();
@@ -539,7 +535,6 @@ void Gui_RenderStrings()
             }
         }
 
-        glPopClientAttrib();
         temp_lines_used = 0;
     }
 }
@@ -1171,10 +1166,6 @@ void Gui_DrawCrosshair()
 {
     const gui_shader_description *shader = renderer.shader_manager->getGuiShader(false);
 
-    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
-    glDisable(GL_DEPTH_TEST);
-    glLineWidth(2.0);
-
     glUseProgramObjectARB(shader->program);
     GLfloat factor[2] = {
         2.0f / screen_info.w,
@@ -1187,10 +1178,6 @@ void Gui_DrawCrosshair()
     crosshairArray->use();
     
     glDrawArrays(GL_LINES, 0, 4);
-    
-    renderer.vertex_array_manager->unbind();
-
-    glPopAttrib();
 }
 
 void Gui_DrawFaders()

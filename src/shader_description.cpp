@@ -52,6 +52,13 @@ gui_shader_description::gui_shader_description(const shader_stage &vertex, const
 text_shader_description::text_shader_description(const shader_stage &vertex, const shader_stage &fragment)
 : shader_description(vertex, fragment)
 {
+    glBindAttribLocationARB(program, vertex_attribs::position, "position");
+    glBindAttribLocationARB(program, vertex_attribs::color, "color");
+    glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
+    glLinkProgramARB(program);
+    
+    printInfoLog(program);
+
     screenSize = glGetUniformLocationARB(program, "screenSize");
 }
 
