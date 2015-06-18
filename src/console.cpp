@@ -208,17 +208,8 @@ void Con_DrawBackground()
     /*
      * Draw finalise line
      */
-    GLfloat lineCoords[4] = {
-        0.0f, 0.0,
-        1.0, 0.0
-    };
-    GLfloat lineColors[8] = {
-        1.0f, 1.0f, 1.0f, 0.7,
-        1.0f, 1.0f, 1.0f, 0.7
-    };
-    glVertexPointer(2, GL_FLOAT, 2 * sizeof(GLfloat), lineCoords);
-    glColorPointer(4, GL_FLOAT, 4 * sizeof(GLfloat), lineColors);
-    glDrawArrays(GL_LINES, 0, 2);
+    GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7 };
+    Gui_DrawRect(0.0, con_base.cursor_y + con_base.line_height - 8, screen_info.w, 2, white, white, white, white, BM_SCREEN);
 }
 
 void Con_DrawCursor()
@@ -237,21 +228,13 @@ void Con_DrawCursor()
 
     if(con_base.show_cursor)
     {
-        GLfloat *v, cursor_array[12];
-        v = cursor_array;
-        *v = (GLfloat)con_base.cursor_x;
-        *v /= (GLfloat)screen_info.w;                               v++;
-        *v = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
-        *v /= (GLfloat)screen_info.h;                               v++;
-        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
-        *v = (GLfloat)con_base.cursor_x;
-        *v /= (GLfloat)screen_info.w;                               v++;
-        *v = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
-        *v /= (GLfloat)screen_info.h;                               v++;
-        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;
-        glVertexPointer(2, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array);
-        glColorPointer(4, GL_FLOAT, 6 * sizeof(GLfloat), cursor_array + 2);
-        glDrawArrays(GL_LINES, 0, 2);
+        GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7 };
+        Gui_DrawRect(con_base.cursor_x,
+                     y + con_base.line_height * 0.9,
+                     1,
+                     con_base.line_height * 0.8,
+                     white, white, white, white,
+                     BM_SCREEN);
     }
 }
 
