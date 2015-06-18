@@ -1309,6 +1309,10 @@ void Gui_DrawLoadScreen(int value)
     SDL_GL_SwapWindow(sdl_window);
 }
 
+GLuint rectanglePositionBuffer = 0;
+GLuint rectangleColorBuffer = 0;
+vertex_array *rectangleArray = 0;
+
 /**
  * Draws simple colored rectangle with given parameters.
  */
@@ -1339,8 +1343,34 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     };
 
     glDisable(GL_DEPTH_TEST);
-
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    
+    if (rectanglePositionBuffer == 0)
+    {
+        glGenBuffersARB(1, &rectanglePositionBuffer);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectanglePositionBuffer);
+        GLfloat rectCoords[8] = { 0, 0,
+            1, 0,
+            1, 1,
+            0, 1 };
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
+        
+        glGenBuffers(1, &rectangleColorBuffer);
+        
+        vertex_array_attribute attribs[] = {
+            vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
+            vertex_array_attribute(gui_shader_description::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
+        };
+        rectangleArray = renderer.vertex_array_manager->createArray(0, 2, attribs);
+    }
+    
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectangleColorBuffer);
+    glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(GLfloat [4]) * 4, 0, GL_STREAM_DRAW);
+    GLfloat *rectColors = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+    memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
+    glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
 
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
@@ -1356,18 +1386,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glUniform2fvARB(shader->offset, 1, offset);
     glUniform2fvARB(shader->factor, 1, factor);
 
-    GLfloat rectCoords[8] = { 0, 0,
-        1, 0,
-        1, 1,
-        0, 1 };
-    glVertexPointer(2, GL_FLOAT, sizeof(GLfloat [2]), rectCoords);
-
-    GLfloat rectColors[16];
-    memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
-    glColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
+    rectangleArray->use();
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
