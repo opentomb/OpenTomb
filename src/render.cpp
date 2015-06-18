@@ -691,18 +691,19 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
             /*
              * Definitions: x_o - as in original file. x_h - as in hair model
              * (translated)
-             * M_oh - translation matrix. x_g = global position (before modelview)
-             * M_og - global position
+             * M_ho - translation matrix. x_g = global position (before modelview)
+             * M_go - global position
              *
              * We know:
-             * x_h = M_oh * x_o
-             * x_g = M_og * x_o
+             * x_h = M_ho * x_o
+             * x_g = M_go * x_o
              * We want:
-             * M_hg so that x_g = M_hg * x_m
+             * M_hg so that x_g = M_gh * x_m
              * We have: M_oh, M_g
              *
-             * x_m = M_oh * x_o => x_o = M_oh^-1 * x_m
-             * x_g = M_og * M_oh^-1 * x_m
+             * x_h = M_ho * x_o => x_o = M_oh^-1 * x_h
+             * x_g = M_go * M_ho^-1 * x_h
+             * (M_ho^-1 = M_oh so x_g = M_go * M_oh * x_h)
              */
             
             
@@ -714,14 +715,14 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
                            -entity->character->hairs[h].elements[i].position[1],
                            -entity->character->hairs[h].elements[i].position[2]);
             
-            btScalar originGlobal[16];
+            btScalar globalFromOrigin[16];
             const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
-            bt_tr.getOpenGLMatrix(originGlobal);
+            bt_tr.getOpenGLMatrix(globalFromOrigin);
 
-            btScalar modelGlobal[16];
-            Mat4_Mat4_mul(modelGlobal, originGlobal, invOriginToHairModel);
+            btScalar globalFromHair[16];
+            Mat4_Mat4_mul(globalFromHair, globalFromOrigin, invOriginToHairModel);
             
-            Mat4_Mat4_mul(&hairModelToGlobalMatrices[(i+1) * 16], modelViewMatrix, modelGlobal);
+            Mat4_Mat4_mul(&hairModelToGlobalMatrices[(i+1) * 16], modelViewMatrix, globalFromHair);
         }
         glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, hairModelToGlobalMatrices);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
