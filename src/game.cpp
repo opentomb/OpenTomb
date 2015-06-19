@@ -33,8 +33,11 @@ extern "C" {
 #include "gui.h"
 #include "inventory.h"
 #include "hair.h"
+#include "ragdoll.h"
 
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
+
+extern btScalar time_scale;
 extern lua_State *engine_lua;
 
 void Save_EntityTree(FILE **f, RedBlackNode_p n);
@@ -89,15 +92,69 @@ int lua_noclip(lua_State * lua)
     if(lua_gettop(lua) == 0)
     {
         control_states.noclip = !control_states.noclip;
-        Con_Printf("noclip = %d", control_states.noclip);
-        return 0;
+    }
+    else
+    {
+        control_states.noclip = lua_tointeger(lua, 1);
     }
 
-    control_states.noclip = lua_tointeger(lua, 1);
     Con_Printf("noclip = %d", control_states.noclip);
     return 0;
 }
 
+int lua_debuginfo(lua_State * lua)
+{
+    if(lua_gettop(lua) == 0)
+    {
+        screen_info.show_debuginfo = !screen_info.show_debuginfo;
+    }
+    else
+    {
+        screen_info.show_debuginfo = lua_tointeger(lua, 1);
+    }
+
+    Con_Printf("debug info = %d", screen_info.show_debuginfo);
+    return 0;
+}
+
+int lua_print(lua_State * lua)
+{
+     int top = lua_gettop(lua);
+
+     if(top == 0)
+     {
+        Con_AddLine("nil");
+     }
+
+     for(int i=1;i<=top;i++)
+     {
+         Con_AddLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
+     }
+
+     return 0;
+}
+
+int lua_timescale(lua_State * lua)
+{
+    if(lua_gettop(lua) == 0)
+    {
+        if(time_scale == 1.0)
+        {
+            time_scale = 0.033;
+        }
+        else
+        {
+            time_scale = 1.0;
+        }
+    }
+    else
+    {
+        time_scale = lua_tonumber(lua, 1);
+    }
+    
+    Con_Printf("time_scale = %.3f", time_scale);
+    return 0;
+}
 
 void Game_InitGlobals()
 {
@@ -112,10 +169,13 @@ void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
     {
+        lua_register(lua, "print", lua_print);
+        lua_register(lua, "debuginfo", lua_debuginfo);
         lua_register(lua, "mlook", lua_mlook);
         lua_register(lua, "freelook", lua_freelook);
         lua_register(lua, "noclip", lua_noclip);
         lua_register(lua, "cam_distance", lua_cam_distance);
+        lua_register(lua, "timescale", lua_timescale);
     }
 }
 
@@ -676,7 +736,11 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p entity = (entity_p)x->data;
 
-    if(Entity_Frame(entity, engine_frame_time) && (entity->bt_joint_count == 0))
+    if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
+    {
+        Entity_UpdateRigidBody(entity, 0);
+    }
+    else if(Entity_Frame(entity, engine_frame_time))
     {
         Entity_UpdateRigidBody(entity, 0);
     }
@@ -775,7 +839,7 @@ void Game_Frame(btScalar time)
     bool is_character  = (engine_world.Character != NULL);
 
     // GUI and controls should be updated at all times!
-    
+
     Controls_PollSDLInput();
     Gui_Update();
 
@@ -834,6 +898,10 @@ void Game_Frame(btScalar time)
 
     if(is_character)
     {
+        if(engine_world.Character->type_flags & ENTITY_TYPE_DYNAMIC)
+        {
+            Entity_UpdateRigidBody(engine_world.Character, 0);
+        }
         if(!control_states.noclip && !control_states.free_look)
         {
             Character_ApplyCommands(engine_world.Character);

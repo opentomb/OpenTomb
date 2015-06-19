@@ -19,8 +19,11 @@ polygon_p Polygon_CreateArray(unsigned int pcount)
 
 void Polygon_Resize(polygon_p p, unsigned int count)
 {
-    p->vertices = (vertex_p)realloc(p->vertices, count*sizeof(vertex_t));
-    p->vertex_count = count;
+    if (count != p->vertex_count)
+    {
+        p->vertices = (vertex_p)realloc(p->vertices, count*sizeof(vertex_t));
+        p->vertex_count = count;
+    }
 }
 
 void Polygon_Clear(polygon_p p)
@@ -37,7 +40,7 @@ void Polygon_Clear(polygon_p p)
 }
 
 
-int Polygon_IsBroken(polygon_p p)
+int Polygon_IsBroken(const polygon_s *p)
 {
     btScalar dif[3];
     vertex_p next_v, curr_v;

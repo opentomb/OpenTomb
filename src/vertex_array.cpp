@@ -14,7 +14,6 @@ class vao_vertex_array_manager : public vertex_array_manager {
 public:
     vao_vertex_array_manager();
     virtual vertex_array *createArray(GLuint element_vbo, size_t numAttributes, struct vertex_array_attribute *attributes);
-    virtual void unbind();
     
     friend class vao_vertex_array;
 };
@@ -43,7 +42,6 @@ class manual_vertex_array_manager : public vertex_array_manager {
 public:
     manual_vertex_array_manager();
     virtual vertex_array *createArray(GLuint element_vbo, size_t numAttributes, struct vertex_array_attribute *attributes);
-    virtual void unbind();
     
     friend class manual_vertex_array;
 };
@@ -84,12 +82,6 @@ vao_vertex_array_manager::vao_vertex_array_manager()
 vertex_array *vao_vertex_array_manager::createArray(GLuint element_vbo, size_t numAttributes, struct vertex_array_attribute *attributes)
 {
     return new vao_vertex_array(this, element_vbo, numAttributes, attributes);
-}
-
-void vao_vertex_array_manager::unbind()
-{
-    glBindVertexArray(0);
-    currentVertexArrayObject = 0;
 }
 
 vao_vertex_array::vao_vertex_array(vao_vertex_array_manager *manager, GLuint element_vbo, size_t numAttributes, struct vertex_array_attribute *attributes)
@@ -137,17 +129,6 @@ vertex_array *manual_vertex_array_manager::createArray(GLuint element_vbo, size_
     return new manual_vertex_array(this, element_vbo, numAttributes, attributes);
 }
 
-void manual_vertex_array_manager::unbind()
-{
-    for (int i = 0; i < 64; i++) {
-        if (activeAttribsBitset & (1 << i))
-            glDisableVertexAttribArrayARB(i);
-    }
-    activeArray = 0;
-    activeAttribsBitset = 0;
-    currentArrayBuffer = 0;
-}
-
 manual_vertex_array::manual_vertex_array(manual_vertex_array_manager *manager, GLuint element_vbo, size_t numAttributes, struct vertex_array_attribute *attributes)
 {
     this->manager = manager;
@@ -177,9 +158,10 @@ void manual_vertex_array::use()
                                  (const GLvoid *) attributes[i].offset);
     }
     
-    for (size_t i = 0; i < 64; i++) {
+    for (size_t i = 0; i < 64; i++)
+    {
         if (toDisable & (1 << i))
-            glDisableClientState(i);
+            glDisableVertexAttribArrayARB(i);
     }
     
     manager->activeArray = this;

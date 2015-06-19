@@ -138,13 +138,6 @@ void Engine_InitGL()
         glDisable(GL_MULTISAMPLE);
     }
 
-    // Default state: Vertex array and color array are enabled, all others disabled.. Drawable
-    // items can rely on Vertex array to be enabled (but pointer can be
-    // anything). They have to enable other arrays based on their need and then
-    // return to default state
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-
     // Default state for Alpha func: >= 0.5. That's what all users of alpha
     // function use anyway.
     glAlphaFunc(GL_GEQUAL, 0.5);
@@ -421,10 +414,6 @@ void Engine_Display()
             ShowDebugInfo();
         }
 
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT); ///@PUSH <- GL_VERTEX_ARRAY | GL_COLOR_ARRAY
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
         glFrontFace(GL_CW);
 
         Render_GenWorldList();
@@ -450,7 +439,6 @@ void Engine_Display()
                 Gui_DrawInventory();
             }
         }
-        glPopClientAttrib();        ///@POP -> GL_VERTEX_ARRAY | GL_COLOR_ARRAY
 
         Gui_Render();
         Gui_SwitchGLMode(0);

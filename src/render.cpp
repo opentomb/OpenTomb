@@ -156,17 +156,22 @@ void Render_Mesh(struct base_mesh_s *mesh)
         size_t offset = 0;
         for(uint32_t i=0;i<mesh->polygons_count;i++)
         {
-            const struct polygon_s *p = &mesh->polygons[i];
-            if (p->anim_id == 0)
+            const struct polygon_s &p = mesh->polygons[i];
+            if (p.anim_id == 0 || Polygon_IsBroken(&p))
             {
                 continue;
             }
-            anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
-            uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
+             anim_seq_p seq = engine_world.anim_sequences + p.anim_id - 1;
+
+            if (seq->uvrotate) {
+                printf("?");
+            }
+
+            uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames_count;
             tex_frame_p tf = seq->frames + frame;
-            for(uint16_t i=0;i<p->vertex_count;i++)
+            for(uint16_t i=0;i<p.vertex_count;i++)
             {
-                const GLfloat *v = p->vertices[i].tex_coord;
+                const GLfloat *v = p.vertices[i].tex_coord;
                 data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
                 data[offset + 1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
 
@@ -414,7 +419,7 @@ void Render_UpdateAnimTextures()                                                
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16], const btScalar pMatrix[16])
+void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
 
@@ -436,30 +441,74 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
     }
 }
 
-void Render_SkeletalModelSkin(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar pMatrix[16])
+void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar mvMatrix[16], const btScalar pMatrix[16])
 {
-    ss_bone_tag_p btag = bframe->bone_tags;
+    ss_bone_tag_p btag = ent->bf.bone_tags;
 
     glUniformMatrix4fvARB(shader->projection, 1, false, pMatrix);
 
-    for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+    for(uint16_t i=0; i<ent->bf.bone_tag_count; i++,btag++)
     {
         btScalar mvTransforms[32];
         Mat4_Mat4_mul(&mvTransforms[0], mvMatrix, btag->full_transform);
-        // btag->transform is the second matrix, relative to full transform
-        btScalar rotateOnlyTransform[16];
-        Mat4_Copy(rotateOnlyTransform, btag->transform);
-        rotateOnlyTransform[12] = 0;
-        rotateOnlyTransform[13] = 0;
-        rotateOnlyTransform[14] = 0;
-        rotateOnlyTransform[15] = 1;
-        Mat4_T(rotateOnlyTransform);
-        Mat4_Mat4_mul(&mvTransforms[16], &mvTransforms[0], rotateOnlyTransform);
+
+        // Calculate parent transform
+        const btScalar *parentTransform = btag->parent ? btag->parent->full_transform : ent->transform;
+
+        btScalar translate[16];
+        Mat4_E(translate);
+        Mat4_Translate(translate, btag->offset);
+
+        btScalar secondTransform[16];
+        Mat4_Mat4_mul(secondTransform, parentTransform, translate);
+
+        Mat4_Mat4_mul(&mvTransforms[16], mvMatrix, secondTransform);
         glUniformMatrix4fvARB(shader->model_view, 2, false, mvTransforms);
 
         if(btag->mesh_skin)
         {
             Render_Mesh(btag->mesh_skin);
+        }
+    }
+}
+
+void Render_DynamicEntitySkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar mvMatrix[16], const btScalar pMatrix[16])
+{
+    glUniformMatrix4fvARB(shader->projection, 1, false, pMatrix);
+
+    for(uint16_t i=0; i<ent->bf.bone_tag_count; i++)
+    {
+        btScalar mvTransforms[32], tr[32];
+        
+        ent->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+        Mat4_Mat4_mul(&mvTransforms[0], mvMatrix, tr);
+
+        // Calculate parent transform
+        struct ss_bone_tag_s &btag = ent->bf.bone_tags[i];
+        bool foundParentTransform = false;
+        for (int j = 0; j < ent->bf.bone_tag_count; j++) {
+            if (&(ent->bf.bone_tags[j]) == btag.parent) {
+                ent->bt_body[j]->getWorldTransform().getOpenGLMatrix(&tr[16]);
+                foundParentTransform = true;
+                break;
+            }
+        }
+        if (!foundParentTransform)
+            memcpy(&tr[16], ent->transform, sizeof(btScalar [16]));
+        
+        btScalar translate[16];
+        Mat4_E(translate);
+        Mat4_Translate(translate, btag.offset);
+        
+        btScalar secondTransform[16];
+        Mat4_Mat4_mul(secondTransform, &tr[16], translate);
+        
+        Mat4_Mat4_mul(&mvTransforms[16], mvMatrix, secondTransform);
+        glUniformMatrix4fvARB(shader->model_view, 2, false, mvTransforms);
+
+        if(btag.mesh_skin)
+        {
+            Render_Mesh(btag.mesh_skin);
         }
     }
 }
@@ -566,55 +615,119 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     if(entity->bf.animations.model && entity->bf.animations.model->animations)
     {
         // base frame offset
-        btScalar subModelView[16];
-        btScalar subModelViewProjection[16];
         if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
         {
-            memcpy(subModelView, modelViewMatrix, sizeof(subModelView));
-            memcpy(subModelViewProjection, modelViewProjectionMatrix, sizeof(subModelViewProjection));
+            Render_DynamicEntity(shader, entity, modelViewMatrix, modelViewProjectionMatrix);
+            ///@TODO: where I need to do bf skinning matrices update? this time ragdoll update function calculates these matrices;
+            if (entity->bf.bone_tags[0].mesh_skin)
+            {
+                const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
+                Render_DynamicEntitySkin(skinShader, entity, modelViewMatrix, projection);
+            }
         }
         else
         {
+            btScalar subModelView[16];
+            btScalar subModelViewProjection[16];
             Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
-        }
-
-        Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection, projection);
-
-        if (entity->bf.bone_tags[0].mesh_skin)
-        {
-            const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
-            Render_SkeletalModelSkin(skinShader, &entity->bf, subModelView, projection);
+            Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
+            if (entity->bf.bone_tags[0].mesh_skin)
+            {
+                const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
+                Render_SkeletalModelSkin(skinShader, entity, subModelView, projection);
+            }
         }
     }
 }
 
-void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_DynamicEntity(const struct lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+{
+    ss_bone_tag_p btag = entity->bf.bone_tags;
+
+    for(uint16_t i=0; i<entity->bf.bone_tag_count; i++,btag++)
+    {
+        btScalar mvTransform[16], tr[16];
+
+        entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+        Mat4_Mat4_mul(mvTransform, modelViewMatrix, tr);
+        glUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
+
+        btScalar mvpTransform[16];
+        Mat4_Mat4_mul(mvpTransform, modelViewProjectionMatrix, tr);
+        glUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
+
+        Render_Mesh(btag->mesh_base);
+        if(btag->mesh_slot)
+        {
+            Render_Mesh(btag->mesh_slot);
+        }
+    }
+}
+
+///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
+void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar projection[16])
 {
     if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
         return;
 
     // Calculate lighting
-    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, false);
+    const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, true);
+    
 
     for(int h=0; h<entity->character->hair_count; h++)
     {
+        btScalar hairModelToGlobalMatrices[16 * 10];
+        // First: Head attachment
+        btScalar globalHead[16];
+        Mat4_Mat4_mul(globalHead, entity->transform, entity->bf.bone_tags[entity->character->hairs[h].owner_body].full_transform);
+        btScalar globalAttachment[16];
+        Mat4_Mat4_mul(globalAttachment, globalHead, entity->character->hairs[h].owner_body_hair_root);
+        Mat4_Mat4_mul(hairModelToGlobalMatrices, modelViewMatrix, globalAttachment);
+        
+        // Then: Individual hair pieces
         for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
         {
-            btScalar subModelView[16];
-            btScalar subModelViewProjection[16];
-
-            btScalar transform[16];
+            /*
+             * Definitions: x_o - as in original file. x_h - as in hair model
+             * (translated)
+             * M_ho - translation matrix. x_g = global position (before modelview)
+             * M_go - global position
+             *
+             * We know:
+             * x_h = M_ho * x_o
+             * x_g = M_go * x_o
+             * We want:
+             * M_hg so that x_g = M_gh * x_m
+             * We have: M_oh, M_g
+             *
+             * x_h = M_ho * x_o => x_o = M_oh^-1 * x_h
+             * x_g = M_go * M_ho^-1 * x_h
+             * (M_ho^-1 = M_oh so x_g = M_go * M_oh * x_h)
+             */
+            
+            
+            btScalar invOriginToHairModel[16];
+            Mat4_E(invOriginToHairModel);
+            // Simplification: Always translation matrix, no invert needed
+            Mat4_Translate(invOriginToHairModel,
+                           -entity->character->hairs[h].elements[i].position[0],
+                           -entity->character->hairs[h].elements[i].position[1],
+                           -entity->character->hairs[h].elements[i].position[2]);
+            
+            btScalar globalFromOrigin[16];
             const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
-            bt_tr.getOpenGLMatrix(transform);
+            bt_tr.getOpenGLMatrix(globalFromOrigin);
 
-            Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
-            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, transform);
-
-            glUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, subModelView);
-            glUniformMatrix4fvARB(shader->model_view_projection, 1, GL_FALSE, subModelViewProjection);
-            Render_Mesh(entity->character->hairs[h].elements[i].mesh);
+            btScalar globalFromHair[16];
+            Mat4_Mat4_mul(globalFromHair, globalFromOrigin, invOriginToHairModel);
+            
+            Mat4_Mat4_mul(&hairModelToGlobalMatrices[(i+1) * 16], modelViewMatrix, globalFromHair);
         }
+        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, hairModelToGlobalMatrices);
+        glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
+
+        Render_Mesh(entity->character->hairs[h].mesh);
     }
 }
 
@@ -681,7 +794,6 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
 
-            render->vertex_array_manager->unbind();
             delete array;
             glDeleteBuffersARB(1, &stencilVBO);
         }
@@ -797,8 +909,6 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
             glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
-
-        render->vertex_array_manager->unbind();
     }
 }
 
@@ -917,18 +1027,12 @@ void Render_DrawList()
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
 
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
     Render_SkyBox(renderer.cam->gl_view_proj_mat);
 
     if(renderer.world->Character)
     {
         Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat, renderer.cam->gl_proj_mat);
-        Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat);
+        Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
     }
 
     /*
@@ -1023,9 +1127,7 @@ void Render_DrawList()
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
-    renderer.vertex_array_manager->unbind();
-    glPopClientAttrib();
-
+    
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
 }
@@ -1069,13 +1171,11 @@ void Render_DrawList_DebugLines()
 
     if(!debugDrawer.IsEmpty())
     {
-        const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
+        const unlit_shader_description *shader = renderer.shader_manager->getDebugLineShader();
         glUseProgramObjectARB(shader->program);
         glUniform1iARB(shader->sampler, 0);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, renderer.cam->gl_view_proj_mat);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
         debugDrawer.render();
@@ -1272,6 +1372,9 @@ render_DebugDrawer::render_DebugDrawer()
     m_need_realloc = false;
     vec3_set_zero(m_color);
     m_obb = OBB_Create();
+
+    m_glbuffer = 0;
+    m_vertex_array = 0;
 }
 
 render_DebugDrawer::~render_DebugDrawer()
@@ -1298,27 +1401,34 @@ void render_DebugDrawer::reset()
     m_lines = 0;
 }
 
-void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+void render_DebugDrawer::addLine(const GLfloat start[3], const GLfloat end[3])
 {
-    GLfloat *v;
-
+    addLine(start, m_color, end, m_color);
+}
+void render_DebugDrawer::addLine(const GLfloat start[3], const GLfloat startColor[3], const GLfloat end[3], const GLfloat endColor[3])
+{
     if(m_lines < m_max_lines - 1)
     {
-        v = m_buffer + 3 * 4 * m_lines;
+        GLfloat *v = m_buffer + 3 * 4 * m_lines;
         m_lines++;
 
-        vec3_copy(v, from.m_floats);
+        vec3_copy(v, start);
         v += 3;
-        vec3_copy(v, color.m_floats);
+        vec3_copy(v, startColor);
         v += 3;
-        vec3_copy(v, to.m_floats);
+        vec3_copy(v, end);
         v += 3;
-        vec3_copy(v, color.m_floats);
+        vec3_copy(v, endColor);
     }
     else
     {
         m_need_realloc = true;
     }
+}
+
+void render_DebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+{
+    addLine(from.m_floats, color.m_floats, to.m_floats, color.m_floats);
 }
 
 void render_DebugDrawer::setDebugMode(int debugMode)
@@ -1339,38 +1449,30 @@ void render_DebugDrawer::reportErrorWarning(const char* warningString)
 
 void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
 {
-    if(m_lines + 2 < m_max_lines)
-    {
-        GLfloat *v = m_buffer + 3 * 4 * m_lines;
-        m_lines += 2;
-        btVector3 to = pointOnB + normalOnB * distance;
-
-        vec3_copy(v, pointOnB.m_floats);
-        v += 3;
-        vec3_copy(v, color.m_floats);
-        v += 3;
-
-        vec3_copy(v, to.m_floats);
-        v += 3;
-        vec3_copy(v, color.m_floats);
-
-        //glRasterPos3f(from.x(),  from.y(),  from.z());
-        //char buf[12];
-        //sprintf(buf," %d",lifeTime);
-        //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),buf);
-    }
-    else
-    {
-        m_need_realloc = true;
-    }
+    drawLine(pointOnB, pointOnB + normalOnB * distance, color);
 }
 
 void render_DebugDrawer::render()
 {
     if(m_lines > 0)
     {
-        glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), m_buffer);
-        glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]),  m_buffer + 3);
+        if (m_glbuffer == 0) {
+            glGenBuffersARB(1, &m_glbuffer);
+            vertex_array_attribute attribs[] = {
+                vertex_array_attribute(unlit_shader_description::position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [0])),
+                vertex_array_attribute(unlit_shader_description::color, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
+            };
+            m_vertex_array = renderer.vertex_array_manager->createArray(0, 2, attribs);
+        }
+
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_glbuffer);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_max_lines * 2 * sizeof(GLfloat [6]), 0, GL_STREAM_DRAW);
+
+        void *data = glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY);
+        memcpy(data, m_buffer, m_max_lines * 2 * sizeof(GLfloat [6]));
+        glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
+
+        m_vertex_array->use();
         glDrawArrays(GL_LINES, 0, 2 * m_lines);
     }
 
@@ -1447,28 +1549,13 @@ void render_DebugDrawer::drawFrustum(struct frustum_s *f)
         }
 
         v = v0 = m_buffer + 3 * 4 * m_lines;
-        m_lines += f->vertex_count;
 
         for(uint16_t i=0;i<f->vertex_count-1;i++,fv += 3)
         {
-            vec3_copy(v, fv);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
-
-            vec3_copy(v, fv + 3);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
+            addLine(fv, fv + 3);
         }
 
-        vec3_copy(v, fv);
-        v += 3;
-        vec3_copy(v, m_color);
-        v += 3;
-        vec3_copy(v, v0);
-        v += 3;
-        vec3_copy(v, m_color);
+        addLine(fv, v0);
     }
 }
 
@@ -1486,28 +1573,13 @@ void render_DebugDrawer::drawPortal(struct portal_s *p)
         }
 
         v = v0 = m_buffer + 3 * 4 * m_lines;
-        m_lines += p->vertex_count;
 
         for(uint16_t i=0;i<p->vertex_count-1;i++,pv += 3)
         {
-            vec3_copy(v, pv);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
-
-            vec3_copy(v, pv + 3);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
+            addLine(pv, pv + 3);
         }
 
-        vec3_copy(v, pv);
-        v += 3;
-        vec3_copy(v, m_color);
-        v += 3;
-        vec3_copy(v, v0);
-        v += 3;
-        vec3_copy(v, m_color);
+        addLine(pv, v0);
     }
 }
 
@@ -1538,69 +1610,20 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
     }
 
     v = v0 = m_buffer + 3 * 4 * m_lines;
-    m_lines += 12;
 
-    vec3_copy(v, p->vertices[0].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-    vec3_copy(v, (p+1)->vertices[0].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-
-    vec3_copy(v, p->vertices[1].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-    vec3_copy(v, (p+1)->vertices[3].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-
-    vec3_copy(v, p->vertices[2].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-    vec3_copy(v, (p+1)->vertices[2].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-
-    vec3_copy(v, p->vertices[3].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
-    vec3_copy(v, (p+1)->vertices[1].position);
-    v += 3;
-    vec3_copy(v, m_color);
-    v += 3;
+    addLine(p->vertices[0].position, (p+1)->vertices[0].position);
+    addLine(p->vertices[1].position, (p+1)->vertices[3].position);
+    addLine(p->vertices[2].position, (p+1)->vertices[2].position);
+    addLine(p->vertices[3].position, (p+1)->vertices[1].position);
 
     for(uint16_t i=0; i<2; i++,p++)
     {
         vertex_p pv = p->vertices;
-        v0 = v;
         for(uint16_t j=0;j<p->vertex_count-1;j++,pv++)
         {
-            vec3_copy(v, pv->position);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
-
-            vec3_copy(v, (pv+1)->position);
-            v += 3;
-            vec3_copy(v, m_color);
-            v += 3;
+            addLine(pv->position, (pv+1)->position);
         }
-
-        vec3_copy(v, pv->position);
-        v += 3;
-        vec3_copy(v, m_color);
-        v += 3;
-        vec3_copy(v, v0);
-        v += 3;
-        vec3_copy(v, m_color);
-        v += 3;
+        addLine(pv->position, p->vertices->position);
     }
 }
 

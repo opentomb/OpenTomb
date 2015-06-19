@@ -51,6 +51,9 @@ typedef struct hair_element_s
     base_mesh_s        *mesh;           // Pointer to rendered mesh.
     btCollisionShape   *shape;          // Pointer to collision shape.
     btRigidBody        *body;           // Pointer to dynamic body.
+    btScalar           position[3];     // Position of this hair element
+    // relative to the model (NOT the parent!). Should be a matrix in theory,
+    // but since this never has a rotation part, we can save a few bytes here.
 }hair_element_t, *hair_element_p;
 
 typedef struct hair_s
@@ -59,7 +62,7 @@ typedef struct hair_s
 
     entity_p                  owner_char;         // Entity who owns this hair.
     uint32_t                  owner_body;         // Owner entity's body ID.
-    //btScalar                  owner_body_transform[16]; // contains real hair base position and orientation
+    btScalar                  owner_body_hair_root[16] __attribute__((aligned(16))); // transform from owner body to root of hair start
 
     uint8_t                   root_index;         // Index of "root" element.
     uint8_t                   tail_index;         // Index of "tail" element.
@@ -74,6 +77,7 @@ typedef struct hair_s
     uint32_t                 *hair_vertex_map;    // Hair vertex indices to link
     uint32_t                 *head_vertex_map;    // Head vertex indices to link
 
+    struct base_mesh_s       *mesh;               // Mesh containing all vertices of all parts of this hair object.
 }hair_t, *hair_p;
 
 typedef struct hair_setup_s

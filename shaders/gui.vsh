@@ -1,5 +1,8 @@
 // GLSL vertex program for drawing a screen-aligned square
 
+attribute vec2 position;
+attribute vec4 color;
+
 // Transformation matrix to get to the screen coordinates
 uniform vec2 factor;
 // Transformation matrix to get to the screen coordinates
@@ -13,7 +16,7 @@ varying vec4 varying_color;
 void main(void)
 {
     // Uses legacy built-in variables because changing that would require using a VBO.
-    varying_position = gl_Vertex.xy;
-    varying_color = gl_Color;
-    gl_Position = vec4(gl_Vertex.xy * factor + offset, 0, 1);
+    varying_position = position;
+    varying_color = color;
+    gl_Position = vec4(position * factor + offset, 0, 1);
 }

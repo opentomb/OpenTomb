@@ -18,12 +18,9 @@ RD_CONSTRAINT_HINGE = 1;
 RD_CONSTRAINT_CONE  = 2;
 
 RD_TYPE_LARA        = 0;
-RD_TYPE_TR2_BALLS   = 1;
-RD_TYPE_TR2_BARRELS = 2;
+RD_TYPE_T_REX       = 1;
 
-RD_TYPE_TR3_TIGER   = 3;
-
-RD_PARTS_LARA_PELVIS            = 0;
+RD_PARTS_LARA_PELVIS            = 0;          -- it is a root body
 RD_PARTS_LARA_LEFT_UPPER_LEG    = 1;
 RD_PARTS_LARA_LEFT_LOWER_LEG    = 2;
 RD_PARTS_LARA_LEFT_FOOT         = 3;
@@ -48,27 +45,27 @@ ragdoll[RD_TYPE_LARA] = {
   body_count   = 15,        -- Bodies above body count won't be modified.
   joint_count  = 14,        -- Joints above joint count won't be added and won't be processed.
   
-  joint_cfm    = 0.0,
-  joint_erp    = 0.3,
+  joint_cfm    = 0.7,
+  joint_erp    = 0.1,
   
   -- Body properties array.
   
   body = {
-            {mass = 15.0, restitution = 0.8, friction =  8.0, damping = {0.3, 0.6}},    -- 00 = Pelvis
-            {mass = 20.0, restitution = 0.2, friction =  4.0, damping = {0.2, 0.5}},    -- 01 = Left upper leg
-            {mass = 15.0, restitution = 0.2, friction =  2.0, damping = {0.1, 0.5}},    -- 02 = Left lower leg
-            {mass = 10.0, restitution = 0.3, friction =  5.0, damping = {0.1, 0.6}},    -- 03 = Left foot
-            {mass = 20.0, restitution = 0.2, friction =  8.0, damping = {0.2, 0.5}},    -- 04 = Right upper leg
-            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 05 = Right lower leg
-            {mass = 10.0, restitution = 0.3, friction =  2.0, damping = {0.1, 0.6}},    -- 06 = Right foot
-            {mass = 25.0, restitution = 0.5, friction = 10.0, damping = {0.3, 0.5}},    -- 07 = Spine
-            {mass = 20.0, restitution = 0.1, friction =  6.5, damping = {0.2, 0.5}},    -- 11 = Right upper arm
-            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 12 = Right lower arm
-            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.1, 0.6}},    -- 13 = Right palm
-            {mass = 20.0, restitution = 0.1, friction =  6.5, damping = {0.2, 0.5}},    -- 08 = Left upper arm
-            {mass = 15.0, restitution = 0.2, friction =  4.0, damping = {0.1, 0.5}},    -- 09 = Left lower arm
-            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.1, 0.6}},    -- 10 = Left palm
-            {mass = 20.0, restitution = 0.0, friction =  8.0, damping = {0.2, 0.9}}     -- 14 = Head
+            {mass = 15.0, restitution = 0.8, friction =  8.0, damping = {0.2, 0.2}},    -- 00 = Pelvis
+            {mass = 20.0, restitution = 0.0, friction =  4.0, damping = {0.2, 0.2}},    -- 01 = Left upper leg
+            {mass = 15.0, restitution = 0.0, friction =  2.0, damping = {0.6, 0.6}},    -- 02 = Left lower leg
+            {mass = 10.0, restitution = 0.3, friction =  5.0, damping = {0.8, 0.8}},    -- 03 = Left foot
+            {mass = 20.0, restitution = 0.0, friction =  8.0, damping = {0.2, 0.2}},    -- 04 = Right upper leg
+            {mass = 15.0, restitution = 0.0, friction =  4.0, damping = {0.6, 0.6}},    -- 05 = Right lower leg
+            {mass = 10.0, restitution = 0.3, friction =  2.0, damping = {0.8, 0.8}},    -- 06 = Right foot
+            {mass = 25.0, restitution = 0.5, friction = 10.0, damping = {0.9, 0.9}},    -- 07 = Spine
+            {mass = 20.0, restitution = 0.0, friction =  6.5, damping = {0.3, 0.3}},    -- 11 = Right upper arm
+            {mass = 15.0, restitution = 0.0, friction =  4.0, damping = {0.6, 0.6}},    -- 12 = Right lower arm
+            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.8, 0.8}},    -- 13 = Right palm
+            {mass = 20.0, restitution = 0.0, friction =  6.5, damping = {0.2, 0.5}},    -- 08 = Left upper arm
+            {mass = 15.0, restitution = 0.0, friction =  4.0, damping = {0.6, 0.6}},    -- 09 = Left lower arm
+            {mass = 10.0, restitution = 0.3, friction =  1.0, damping = {0.8, 0.8}},    -- 10 = Left palm
+            {mass = 20.0, restitution = 0.0, friction =  8.0, damping = {0.8, 0.8}}     -- 14 = Head
          },
   
   -- Actual joint array.
@@ -77,8 +74,7 @@ ragdoll[RD_TYPE_LARA] = {
   
               -- PELVIS-SPINE
   
-      [1] = { body1_index = RD_PARTS_LARA_PELVIS,
-              body2_index = RD_PARTS_LARA_SPINE,
+      [1] = { body_index = RD_PARTS_LARA_SPINE,
           
               body1_offset = {0.0, 0.0, 40.0},
               body2_offset = {0.0, 0.0, -10.0},
@@ -91,8 +87,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- SPINE-HEAD
               
-      [2] = { body1_index = RD_PARTS_LARA_SPINE,
-              body2_index = RD_PARTS_LARA_HEAD,
+      [2] = { body_index = RD_PARTS_LARA_HEAD,
           
               body1_offset = {0.0, 0.0, 172.0},
               body2_offset = {0.0, 0.0, -32.0},
@@ -105,8 +100,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT HIP
               
-      [3] = { body1_index = RD_PARTS_LARA_PELVIS,
-              body2_index = RD_PARTS_LARA_LEFT_UPPER_LEG,
+      [3] = { body_index = RD_PARTS_LARA_LEFT_UPPER_LEG,
           
               body1_offset = {-40.0, 0.0, -32.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -119,8 +113,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT KNEE
               
-      [4] = { body1_index = RD_PARTS_LARA_LEFT_UPPER_LEG,
-              body2_index = RD_PARTS_LARA_LEFT_LOWER_LEG,
+      [4] = { body_index = RD_PARTS_LARA_LEFT_LOWER_LEG,
           
               body1_offset = {8.0, -8.0, -192.0},
               body2_offset = {0.0, -8.0, 0.0},
@@ -133,8 +126,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT ANKLE
               
-      [5] = { body1_index = RD_PARTS_LARA_LEFT_LOWER_LEG,
-              body2_index = RD_PARTS_LARA_LEFT_FOOT,
+      [5] = { body_index = RD_PARTS_LARA_LEFT_FOOT,
           
               body1_offset = {0.0, -8.0, -192.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -147,8 +139,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT HIP
               
-      [6] = { body1_index = RD_PARTS_LARA_PELVIS,
-              body2_index = RD_PARTS_LARA_RIGHT_UPPER_LEG,
+      [6] = { body_index = RD_PARTS_LARA_RIGHT_UPPER_LEG,
           
               body1_offset = {40.0, 0.0, -32.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -161,8 +152,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT KNEE
               
-      [7] = { body1_index = RD_PARTS_LARA_RIGHT_UPPER_LEG,
-              body2_index = RD_PARTS_LARA_RIGHT_LOWER_LEG,
+      [7] = { body_index = RD_PARTS_LARA_RIGHT_LOWER_LEG,
           
               body1_offset = {-8.0, -8.0, -192.0},
               body2_offset = {0.0, -8.0, 0.0},
@@ -175,8 +165,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- RIGHT ANKLE
               
-      [8] = { body1_index = RD_PARTS_LARA_RIGHT_LOWER_LEG,
-              body2_index = RD_PARTS_LARA_RIGHT_FOOT,
+      [8] = { body_index = RD_PARTS_LARA_RIGHT_FOOT,
           
               body1_offset = {0.0, -8.0, -192.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -189,8 +178,7 @@ ragdoll[RD_TYPE_LARA] = {
               
               -- LEFT SHOULDER
               
-      [9] = { body1_index = RD_PARTS_LARA_SPINE,
-              body2_index = RD_PARTS_LARA_LEFT_UPPER_ARM,
+      [9] = { body_index = RD_PARTS_LARA_LEFT_UPPER_ARM,
           
               body1_offset = {-50.0, -16.0, 138.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -199,12 +187,11 @@ ragdoll[RD_TYPE_LARA] = {
               body2_angle  = {-M_PI*1.5, M_PI*0.5, 0.0},
           
               joint_type   = RD_CONSTRAINT_CONE,
-              joint_limit  = {M_PI*0.5, M_PI*0.25, 0.0} },
+              joint_limit  = {M_PI*0.5, M_PI*0.25, M_PI*0.15} },
               
               -- LEFT ELBOW
               
-     [10] = { body1_index = RD_PARTS_LARA_LEFT_UPPER_ARM,
-              body2_index = RD_PARTS_LARA_LEFT_LOWER_ARM,
+     [10] = { body_index = RD_PARTS_LARA_LEFT_LOWER_ARM,
           
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {8.0, 0.0, 0.0},
@@ -213,26 +200,24 @@ ragdoll[RD_TYPE_LARA] = {
               body2_angle  = {0.0, M_PI*0.5, 0.0},
           
               joint_type   = RD_CONSTRAINT_HINGE,
-              joint_limit  = {-M_PI*0.25, M_PI*0.25} },
+              joint_limit  = {-M_PI*0.25, 0.0} },
               
               -- LEFT WRIST
               
-     [11] = { body1_index = RD_PARTS_LARA_LEFT_LOWER_ARM,
-              body2_index = RD_PARTS_LARA_LEFT_PALM,
+     [11] = { body_index = RD_PARTS_LARA_LEFT_PALM,
           
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {0.0, 0.0, 0.0},
           
-              body1_angle  = {0.0, M_PI*0.5, 0.0},
-              body2_angle  = {0.0, M_PI*0.5, 0.0},
+              body1_angle  = {0.0, M_PI*0.5, M_PI*0.5},
+              body2_angle  = {0.0, M_PI*0.5, M_PI*0.5},
           
               joint_type   = RD_CONSTRAINT_HINGE,
-              joint_limit  = {0.0, M_PI*0.25} },
+              joint_limit  = {-M_PI*0.25, M_PI*0.25} },
               
               -- RIGHT SHOULDER
               
-     [12] = { body1_index = RD_PARTS_LARA_SPINE,
-              body2_index = RD_PARTS_LARA_RIGHT_UPPER_ARM,
+     [12] = { body_index = RD_PARTS_LARA_RIGHT_UPPER_ARM,
           
               body1_offset = {50.0, -16.0, 138.0},
               body2_offset = {0.0, 0.0, 0.0},
@@ -241,12 +226,11 @@ ragdoll[RD_TYPE_LARA] = {
               body2_angle  = {-M_PI*1.5, M_PI*0.5, 0.0},
           
               joint_type   = RD_CONSTRAINT_CONE,
-              joint_limit  = {M_PI*0.5, M_PI*0.25, 0.0} },
+              joint_limit  = {M_PI*0.5, M_PI*0.25, M_PI*0.15} },
               
               -- RIGHT ELBOW
               
-     [13] = { body1_index = RD_PARTS_LARA_RIGHT_UPPER_ARM,
-              body2_index = RD_PARTS_LARA_RIGHT_LOWER_ARM,
+     [13] = { body_index = RD_PARTS_LARA_RIGHT_LOWER_ARM,
           
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {-8.0, 0.0, 0.0},
@@ -255,21 +239,20 @@ ragdoll[RD_TYPE_LARA] = {
               body2_angle  = {0.0, M_PI*0.5, 0.0},
           
               joint_type   = RD_CONSTRAINT_HINGE,
-              joint_limit  = {-M_PI*0.25, M_PI*0.25} },
+              joint_limit  = {-M_PI*0.25, 0.0} },
               
               -- RIGHT WRIST
               
-     [14] = { body1_index = RD_PARTS_LARA_RIGHT_LOWER_ARM,
-              body2_index = RD_PARTS_LARA_RIGHT_PALM,
+     [14] = { body_index = RD_PARTS_LARA_RIGHT_PALM,
           
               body1_offset = {0.0, 0.0, -100.0},
               body2_offset = {0.0, 0.0, 0.0},
           
-              body1_angle  = {0.0, M_PI*0.5, 0.0},
-              body2_angle  = {0.0, M_PI*0.5, 0.0},
+              body1_angle  = {0.0, M_PI*0.5, M_PI*0.5},
+              body2_angle  = {0.0, M_PI*0.5, M_PI*0.5},
           
               joint_type   = RD_CONSTRAINT_HINGE,
-              joint_limit  = {0.0, M_PI*0.25} }
+              joint_limit  = {-M_PI*0.25, M_PI*0.25} },
           }
 }
 

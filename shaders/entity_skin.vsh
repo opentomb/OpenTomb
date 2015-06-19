@@ -4,9 +4,9 @@ attribute vec3 position;
 attribute vec4 color;
 attribute vec3 normal;
 attribute vec2 texCoord;
-attribute vec2 vertexWeight;
+attribute vec2 matrixIndex; // ivec2 sadly not allowed.
 
-uniform mat4 modelView[2];
+uniform mat4 modelView[10];
 uniform mat4 projection;
 
 varying vec4 varying_color;
@@ -22,7 +22,7 @@ void main()
     
     // Transform model-space position.
     // Interpolate between different skin matrices.
-    mat4 matrix = vertexWeight.x * modelView[0] + vertexWeight.y * modelView[1];
+    mat4 matrix = modelView[int(matrixIndex[0])] * 0.5 + modelView[int(matrixIndex[1])] * 0.5;
     vec4 pos = matrix * vec4(position, 1);
     varying_position = pos.xyz / pos.w;
     

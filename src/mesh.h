@@ -62,7 +62,6 @@ typedef struct base_mesh_s
     struct polygon_s     *polygons;                                             // polygons data
 
     struct polygon_s     *transparency_polygons;                                // transparency mesh's polygons list
-    struct polygon_s     *animated_polygons;                                    // opaque animated mesh's polygons list
 
     uint32_t              num_texture_pages;                                    // face without structure wrapping
     uint32_t             *element_count_per_texture;                            //
@@ -85,7 +84,7 @@ typedef struct base_mesh_s
     btScalar              bb_min[3];                                            // AABB bounding volume
     btScalar              bb_max[3];                                            // AABB bounding volume
     btScalar              R;                                                    // radius of the bounding sphere
-    int8_t               *skin_map;                                             // vertices map for skin mesh
+    int8_t               *matrix_indices;                                       // vertices map for skin mesh
 
     GLuint                vbo_vertex_array;
     GLuint                vbo_index_array;
@@ -235,6 +234,7 @@ typedef struct static_mesh_s
 typedef struct ss_bone_tag_s
 {
     struct ss_bone_tag_s   *parent;
+    uint16_t                index;
     base_mesh_p             mesh_base;                                          // base mesh - pointer to the first mesh in array
     base_mesh_p             mesh_skin;                                          // base skinned mesh for ТР4+
     base_mesh_p             mesh_slot;

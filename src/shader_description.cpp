@@ -43,11 +43,22 @@ gui_shader_description::gui_shader_description(const shader_stage &vertex, const
 {
     offset = glGetUniformLocationARB(program, "offset");
     factor = glGetUniformLocationARB(program, "factor");
+    glBindAttribLocationARB(program, vertex_attribs::position, "position");
+    glBindAttribLocationARB(program, vertex_attribs::color, "color");
+    glLinkProgramARB(program);
+    printInfoLog(program);
 }
 
 text_shader_description::text_shader_description(const shader_stage &vertex, const shader_stage &fragment)
 : shader_description(vertex, fragment)
 {
+    glBindAttribLocationARB(program, vertex_attribs::position, "position");
+    glBindAttribLocationARB(program, vertex_attribs::color, "color");
+    glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
+    glLinkProgramARB(program);
+    
+    printInfoLog(program);
+
     screenSize = glGetUniformLocationARB(program, "screenSize");
 }
 
@@ -70,7 +81,7 @@ unlit_shader_description::unlit_shader_description(const shader_stage &vertex, c
     glBindAttribLocationARB(program, vertex_attribs::color, "color");
     glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
     glBindAttribLocationARB(program, vertex_attribs::normal, "normal");
-    glBindAttribLocationARB(program, vertex_attribs::vertex_weight, "vertexWeight");
+    glBindAttribLocationARB(program, vertex_attribs::matrix_index, "matrixIndex");
     glLinkProgramARB(program);
     
     printInfoLog(program);

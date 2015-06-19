@@ -2749,6 +2749,8 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 
         if(i < num_uvrotates)
         {
+            seq->frame_lock        = false; // by default anim is playing
+
             seq->uvrotate = true;
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
@@ -2861,7 +2863,7 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
     return false;   // No such TexInfo found in animation textures lists.
 }
 
-static void addPolygonCopyToList(const polygon_p polygon, polygon_s *&list)
+static void addPolygonCopyToList(const polygon_s *polygon, polygon_s *&list)
 {
     polygon_p np = (polygon_p)calloc(1, sizeof(polygon_t));
     Polygon_Copy(np, polygon);
@@ -2884,10 +2886,6 @@ void SortPolygonsInMesh(struct base_mesh_s *mesh)
         if(p->transparency >= 2)
         {
             addPolygonCopyToList(p, mesh->transparency_polygons);
-        }
-        if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
-        {
-            addPolygonCopyToList(p, mesh->animated_polygons);
         }
     }
 }
