@@ -21,6 +21,7 @@
 #include "string.h"
 #include "shader_description.h"
 #include "shader_manager.h"
+#include "vertex_array.h"
 
 extern SDL_Window  *sdl_window;
 
@@ -36,6 +37,7 @@ gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 GLuint crosshairBuffer;
+vertex_array *crosshairArray;
 
 GLfloat guiProjectionMatrix[16];
 
@@ -397,27 +399,24 @@ void Gui_Resize()
 void Gui_Render()
 {
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
     glPolygonMode(GL_FRONT, GL_FILL);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_ALPHA_TEST);
     glDepthMask(GL_FALSE);
-
-    glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
+    
+    glDisable(GL_DEPTH_TEST);
+    glLineWidth(2.0);
     Gui_DrawCrosshair();
+    
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();
     Con_Draw();
 
     glDepthMask(GL_TRUE);
-    glPopClientAttrib();
     glPopAttrib();
 }
 
@@ -507,9 +506,6 @@ void Gui_RenderStrings()
     {
         gui_text_line_p l = gui_base_lines;
 
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         const text_shader_description *shader = renderer.shader_manager->getTextShader();
@@ -537,7 +533,6 @@ void Gui_RenderStrings()
             }
         }
 
-        glPopClientAttrib();
         temp_lines_used = 0;
     }
 }
@@ -600,12 +595,6 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  */
 void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix)
 {
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-
     const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
@@ -646,10 +635,6 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
         Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
-
-    renderer.vertex_array_manager->unbind();
-
-    glPopClientAttrib();
 }
 
 /*
@@ -1141,26 +1126,33 @@ void Gui_SwitchGLMode(char is_gui)
     }
 }
 
+struct gui_buffer_entry_s {
+    GLfloat position[2];
+    uint8_t color[4];
+};
+
 void Gui_FillCrosshairBuffer()
 {
-    GLfloat crosshair_buf[] = {
-        (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 1.0f, 0.0f, 0.0f,
-        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 1.0f, 0.0f, 0.0f
+    gui_buffer_entry_s crosshair_buf[] = {
+        (GLfloat) (screen_info.w/2.0f-5.f), ((GLfloat) screen_info.h/2.0f), 255, 0, 0, 255,
+        (GLfloat) (screen_info.w/2.0f+5.f), ((GLfloat) screen_info.h/2.0f), 255, 0, 0, 255,
+        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f-5.f), 255, 0, 0, 255,
+        (GLfloat) (screen_info.w/2.0f), ((GLfloat) screen_info.h/2.0f+5.f), 255, 0, 0, 255
     };
 
     glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
+    
+    vertex_array_attribute attribs[] = {
+        vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
+        vertex_array_attribute(gui_shader_description::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
+    };
+    crosshairArray = renderer.vertex_array_manager->createArray(0, 2, attribs);
 }
 
 void Gui_DrawCrosshair()
 {
     const gui_shader_description *shader = renderer.shader_manager->getGuiShader(false);
-
-    glPushAttrib(GL_ENABLE_BIT | GL_LINE_BIT);
-    glDisable(GL_DEPTH_TEST);
-    glLineWidth(2.0);
 
     glUseProgramObjectARB(shader->program);
     GLfloat factor[2] = {
@@ -1171,12 +1163,9 @@ void Gui_DrawCrosshair()
     GLfloat offset[2] = { -1.f, -1.f };
     glUniform2fvARB(shader->offset, 1, offset);
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
-    glVertexPointer(2, GL_FLOAT, 5 * sizeof(GLfloat), 0);
-    glColorPointer(3, GL_FLOAT, 5 * sizeof(GLfloat), (void *) sizeof(GLfloat [2]));
+    crosshairArray->use();
+    
     glDrawArrays(GL_LINES, 0, 4);
-
-    glPopAttrib();
 }
 
 void Gui_DrawFaders()
@@ -1212,10 +1201,8 @@ void Gui_DrawInventory()
 
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    glPopClientAttrib();
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
     glPolygonMode(GL_FRONT, GL_FILL);
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
@@ -1234,10 +1221,6 @@ void Gui_DrawInventory()
 
     glDepthMask(GL_TRUE);
     glPopAttrib();
-
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
     //GLfloat color[4] = {0,0,0,0.45};
     //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
@@ -1271,7 +1254,6 @@ void Gui_DrawLoadScreen(int value)
     Gui_SwitchGLMode(1);
 
     glPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
-    glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1281,19 +1263,20 @@ void Gui_DrawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-
     Fader[FADER_LOADSCREEN].Show();
     Bar[BAR_LOADING].Show(value);
 
     glDepthMask(GL_TRUE);
-    glPopClientAttrib();
     glPopAttrib();
 
     Gui_SwitchGLMode(0);
 
     SDL_GL_SwapWindow(sdl_window);
 }
+
+GLuint rectanglePositionBuffer = 0;
+GLuint rectangleColorBuffer = 0;
+vertex_array *rectangleArray = 0;
 
 /**
  * Draws simple colored rectangle with given parameters.
@@ -1325,8 +1308,34 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     };
 
     glDisable(GL_DEPTH_TEST);
-
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    
+    if (rectanglePositionBuffer == 0)
+    {
+        glGenBuffersARB(1, &rectanglePositionBuffer);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectanglePositionBuffer);
+        GLfloat rectCoords[8] = { 0, 0,
+            1, 0,
+            1, 1,
+            0, 1 };
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
+        
+        glGenBuffersARB(1, &rectangleColorBuffer);
+        
+        vertex_array_attribute attribs[] = {
+            vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
+            vertex_array_attribute(gui_shader_description::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
+        };
+        rectangleArray = renderer.vertex_array_manager->createArray(0, 2, attribs);
+    }
+    
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectangleColorBuffer);
+    glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(GLfloat [4]) * 4, 0, GL_STREAM_DRAW);
+    GLfloat *rectColors = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+    memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
+    memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
+    memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
+    glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
 
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
@@ -1342,18 +1351,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glUniform2fvARB(shader->offset, 1, offset);
     glUniform2fvARB(shader->factor, 1, factor);
 
-    GLfloat rectCoords[8] = { 0, 0,
-        1, 0,
-        1, 1,
-        0, 1 };
-    glVertexPointer(2, GL_FLOAT, sizeof(GLfloat [2]), rectCoords);
-
-    GLfloat rectColors[16];
-    memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
-    glColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
+    rectangleArray->use();
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
@@ -1736,7 +1734,6 @@ bool gui_Fader::DropTexture()
 {
     if(mTexture)
     {
-        glBindTexture(GL_TEXTURE_2D, 0);
         /// if mTexture is incorrect then maybe trouble
         if(glIsTexture(mTexture))
         {

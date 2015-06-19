@@ -51,6 +51,9 @@ typedef struct hair_element_s
     base_mesh_s        *mesh;           // Pointer to rendered mesh.
     btCollisionShape   *shape;          // Pointer to collision shape.
     btRigidBody        *body;           // Pointer to dynamic body.
+    btScalar           position[3];     // Position of this hair element
+    // relative to the model (NOT the parent!). Should be a matrix in theory,
+    // but since this never has a rotation part, we can save a few bytes here.
 }hair_element_t, *hair_element_p;
 
 typedef struct hair_s

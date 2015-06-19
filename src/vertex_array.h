@@ -55,12 +55,6 @@ public:
      * Creates a new vertex array object for the given elements and attributes.
      */
     virtual vertex_array *createArray(GLuint element_vbo, size_t numAttributes, struct vertex_array_attribute *attributes) = 0;
-    
-    /*!
-     * Unbinds the current vertex array object, if any, to prepare for non-VAO
-     * rendering. This should ultimately not be used anymore.
-     */
-    virtual void unbind() = 0;
 };
 
 /*!

@@ -677,25 +677,54 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
     for(int h=0; h<entity->character->hair_count; h++)
     {
-        btScalar subModelViewMatrices[16 * 10];
+        btScalar hairModelToGlobalMatrices[16 * 10];
         // First: Head attachment
         btScalar globalHead[16];
         Mat4_Mat4_mul(globalHead, entity->transform, entity->bf.bone_tags[entity->character->hairs[h].owner_body].full_transform);
         btScalar globalAttachment[16];
-        Mat4_Mat4_mul(globalHead, entity->transform, entity->bf.bone_tags[entity->character->hairs[h].owner_body].full_transform);
         Mat4_Mat4_mul(globalAttachment, globalHead, entity->character->hairs[h].owner_body_hair_root);
-        Mat4_Mat4_mul(subModelViewMatrices, modelViewMatrix, globalAttachment);
+        Mat4_Mat4_mul(hairModelToGlobalMatrices, modelViewMatrix, globalAttachment);
         
         // Then: Individual hair pieces
         for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
         {
-            btScalar transform[16];
+            /*
+             * Definitions: x_o - as in original file. x_h - as in hair model
+             * (translated)
+             * M_ho - translation matrix. x_g = global position (before modelview)
+             * M_go - global position
+             *
+             * We know:
+             * x_h = M_ho * x_o
+             * x_g = M_go * x_o
+             * We want:
+             * M_hg so that x_g = M_gh * x_m
+             * We have: M_oh, M_g
+             *
+             * x_h = M_ho * x_o => x_o = M_oh^-1 * x_h
+             * x_g = M_go * M_ho^-1 * x_h
+             * (M_ho^-1 = M_oh so x_g = M_go * M_oh * x_h)
+             */
+            
+            
+            btScalar invOriginToHairModel[16];
+            Mat4_E(invOriginToHairModel);
+            // Simplification: Always translation matrix, no invert needed
+            Mat4_Translate(invOriginToHairModel,
+                           -entity->character->hairs[h].elements[i].position[0],
+                           -entity->character->hairs[h].elements[i].position[1],
+                           -entity->character->hairs[h].elements[i].position[2]);
+            
+            btScalar globalFromOrigin[16];
             const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
-            bt_tr.getOpenGLMatrix(transform);
+            bt_tr.getOpenGLMatrix(globalFromOrigin);
 
-            Mat4_Mat4_mul(&subModelViewMatrices[(i+1) * 16], modelViewMatrix, transform);
+            btScalar globalFromHair[16];
+            Mat4_Mat4_mul(globalFromHair, globalFromOrigin, invOriginToHairModel);
+            
+            Mat4_Mat4_mul(&hairModelToGlobalMatrices[(i+1) * 16], modelViewMatrix, globalFromHair);
         }
-        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, subModelViewMatrices);
+        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, hairModelToGlobalMatrices);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
 
         Render_Mesh(entity->character->hairs[h].mesh);
@@ -765,7 +794,6 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
 
-            render->vertex_array_manager->unbind();
             delete array;
             glDeleteBuffersARB(1, &stencilVBO);
         }
@@ -881,8 +909,6 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
             glDrawElements(GL_TRIANGLES, room->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
             offset += room->sprite_buffer->element_count_per_texture[texture];
         }
-
-        render->vertex_array_manager->unbind();
     }
 }
 
@@ -1001,12 +1027,6 @@ void Render_DrawList()
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
 
-    glPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
     Render_SkyBox(renderer.cam->gl_view_proj_mat);
 
     if(renderer.world->Character)
@@ -1107,9 +1127,7 @@ void Render_DrawList()
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
-    renderer.vertex_array_manager->unbind();
-    glPopClientAttrib();
-
+    
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
 }
@@ -1162,8 +1180,6 @@ void Render_DrawList_DebugLines()
         glLineWidth( 3.0f );
         debugDrawer.render();
     }
-
-    renderer.vertex_array_manager->unbind();
 }
 
 /**

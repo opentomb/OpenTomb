@@ -2543,6 +2543,89 @@ int lua_SetEntityMoveType(lua_State * lua)
     return 0;
 }
 
+
+int lua_GetEntityResponse(lua_State * lua)
+{
+    if(lua_gettop(lua) < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(IsCharacter(ent))
+    {
+        switch(lua_tointeger(lua, 2))
+        {
+            case 0:
+                lua_pushinteger(lua, ent->character->resp.kill);
+                break;
+            case 1:
+                lua_pushinteger(lua, ent->character->resp.vertical_collide);
+                break;
+            case 2:
+                lua_pushinteger(lua, ent->character->resp.horizontal_collide);
+                break;
+            case 3:
+                lua_pushinteger(lua, ent->character->resp.slide);
+                break;
+            default:
+                lua_pushinteger(lua, 0);
+                break;
+        }
+        return 1;
+    }
+    else
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+}
+
+
+int lua_SetEntityResponse(lua_State * lua)
+{
+    if(lua_gettop(lua) < 3)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id, value]");
+        return 0;
+    }
+    
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+    
+    if(IsCharacter(ent))
+    {
+        int8_t value = (int8_t)lua_tointeger(lua, 3);
+        
+        switch(lua_tointeger(lua, 2))
+        {
+            case 0:
+                ent->character->resp.kill = value;
+                break;
+            case 1:
+                ent->character->resp.vertical_collide = value;
+                break;
+            case 2:
+                ent->character->resp.horizontal_collide = value;
+                break;
+            case 3:
+                ent->character->resp.slide = value;
+                break;
+            default:
+                break;
+        }
+    }
+    else
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+    }
+    
+    return 0;
+}
+
 int lua_GetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
@@ -3704,6 +3787,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
     lua_register(lua, "getEntityMoveType", lua_GetEntityMoveType);
     lua_register(lua, "setEntityMoveType", lua_SetEntityMoveType);
+    lua_register(lua, "getEntityResponse", lua_GetEntityResponse);
+    lua_register(lua, "setEntityResponse", lua_SetEntityResponse);
     lua_register(lua, "getEntityMeshCount", lua_GetEntityMeshCount);
     lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
     lua_register(lua, "setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);

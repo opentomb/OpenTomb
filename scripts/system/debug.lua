@@ -36,14 +36,13 @@ function checkDebugKeys()
     if(checkKey(KEY_Z, true)) then
         if(getEntityMoveType(player) == MOVE_UNDERWATER) then
             setEntityAnim(player, 103);
-            setEntityMoveType(player, MOVE_ON_FLOOR);
-            setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         else
             setEntityAnim(player, 108);
-            setEntityMoveType(player, MOVE_UNDERWATER);
-            setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         end;
         
+        setEntityMoveType(player, MOVE_FREE_FALLING);
+        setEntityResponse(player, RESP_KILL, 0);
+        setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         setEntityAnimFlag(player, ANIM_NORMAL_CONTROL);
     end;
     
