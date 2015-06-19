@@ -5,7 +5,7 @@
 //  Created by Torsten Kammer on 18.06.15.
 //
 
-#include "font_buffer.h"
+#include "gl_font_buffer.h"
 
 #include "gl_util.h"
 #include "render.h"
