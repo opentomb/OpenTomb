@@ -1319,7 +1319,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             0, 1 };
         glBufferDataARB(GL_ARRAY_BUFFER_ARB, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
         
-        glGenBuffers(1, &rectangleColorBuffer);
+        glGenBuffersARB(1, &rectangleColorBuffer);
         
         vertex_array_attribute attribs[] = {
             vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),

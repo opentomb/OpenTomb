@@ -18,10 +18,7 @@ RD_CONSTRAINT_HINGE = 1;
 RD_CONSTRAINT_CONE  = 2;
 
 RD_TYPE_LARA        = 0;
-RD_TYPE_TR2_BALLS   = 1;
-RD_TYPE_TR2_BARRELS = 2;
-
-RD_TYPE_TR3_TIGER   = 3;
+RD_TYPE_T_REX       = 1;
 
 RD_PARTS_LARA_PELVIS            = 0;          -- it is a root body
 RD_PARTS_LARA_LEFT_UPPER_LEG    = 1;
