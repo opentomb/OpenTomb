@@ -292,7 +292,7 @@ tr2_entity_tbl[81] = {coll = 0x02, func = "wallblade"};                     -- W
 tr2_entity_tbl[82] = {coll = 0x02};                     -- Statue with knife blade
 tr2_entity_tbl[83] = {coll = 0x01};                     -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = 0x02};                     -- Detachable icicles
-tr2_entity_tbl[85] = {coll = 0x02};                     -- Spiky movable wall
+tr2_entity_tbl[85] = {coll = 0x02, func = "spikewall"};                     -- Spiky movable wall
 tr2_entity_tbl[86] = {coll = 0x01};                     -- Bounce pad
 tr2_entity_tbl[87] = {coll = 0x02};                     -- Spiky ceiling segment
 tr2_entity_tbl[88] = {coll = 0x02};                     -- Tibetan bell

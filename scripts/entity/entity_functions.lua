@@ -635,7 +635,7 @@ function oldspike_init(id)  -- Teeth spikes (INVALID)
     end
 end
 
-function spikewall_init(id)      -- Ordinary animatings
+function spikewall_init(id)      -- Spike wall
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(object_id, 0);
