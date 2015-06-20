@@ -4141,7 +4141,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             BT_GenEntityRigidBody(entity);
             Character_Create(entity);
-            entity->character->Height = 780.0;
+            entity->character->Height = 768.0;
             entity->character->state_func = State_Control_Lara;
 
             continue;
