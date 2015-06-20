@@ -1387,6 +1387,33 @@ void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
     Character_CleanCollisionAllBodyParts(ent);
 }
 
+void Character_CheckCallbacks(struct entity_s *ent)
+{
+    ///collision callbacks place
+    btCollisionObject *cobj;
+    uint32_t curr_flag;
+    Character_UpdateCurrentCollisions(ent);
+    while((cobj = Character_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF, &curr_flag)) != NULL)
+    {
+        // do callbacks here:
+        int type = -1;
+        engine_container_p cont = (engine_container_p)cobj->getUserPointer();
+        if(cont != NULL)
+        {
+            type = cont->object_type;
+        }
+        
+        if(type == OBJECT_ENTITY)
+        {
+            // Activator and entity IDs are swapped in case of collision callback.
+            
+            entity_p activator = (entity_p)cont->object;
+            lua_ExecEntity(engine_lua, activator->id, ent->id, ENTITY_CALLBACK_COLLISION);
+            
+            Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
+        }
+    }
+}
 
 bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 {
@@ -2636,25 +2663,6 @@ void Character_ApplyCommands(struct entity_s *ent)
             ent->move_type = MOVE_ON_FLOOR;
             break;
     };
-
-    ///collision callbacks place
-    btCollisionObject *cobj;
-    uint32_t curr_flag;
-    Character_UpdateCurrentCollisions(ent);
-    while((cobj = Character_GetRemoveCollisionBodyParts(ent, 0xFFFFFFFF, &curr_flag)) != NULL)
-    {
-        // do callbacks here:
-        int type = -1;
-        engine_container_p cont = (engine_container_p)cobj->getUserPointer();
-        if(cont != NULL)
-        {
-            type = cont->object_type;
-        }
-        if(type == OBJECT_ENTITY)
-        {
-            Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
-        }
-    }
 
     Entity_UpdateRigidBody(ent, 1);
     Character_UpdatePlatformPostStep(ent);

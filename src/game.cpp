@@ -773,7 +773,7 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
 {
     entity_p ent = (entity_p)x->data;
 
-    if(ent && ent->character)
+    if(IsCharacter(ent))
     {
         if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
@@ -885,6 +885,7 @@ void Game_Frame(btScalar time)
         {
             Entity_ProcessSector(engine_world.Character);
             Character_UpdateParams(engine_world.Character);
+            Character_CheckCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
         }
 
         if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);

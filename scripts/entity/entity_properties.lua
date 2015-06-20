@@ -292,7 +292,7 @@ tr2_entity_tbl[81] = {coll = 0x02, func = "wallblade"};                     -- W
 tr2_entity_tbl[82] = {coll = 0x02};                     -- Statue with knife blade
 tr2_entity_tbl[83] = {coll = 0x01};                     -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = 0x02};                     -- Detachable icicles
-tr2_entity_tbl[85] = {coll = 0x02};                     -- Spiky movable wall
+tr2_entity_tbl[85] = {coll = 0x02, func = "spikewall"};                     -- Spiky movable wall
 tr2_entity_tbl[86] = {coll = 0x01};                     -- Bounce pad
 tr2_entity_tbl[87] = {coll = 0x02};                     -- Spiky ceiling segment
 tr2_entity_tbl[88] = {coll = 0x02};                     -- Tibetan bell
@@ -513,7 +513,7 @@ tr3_entity_tbl[108] = {coll = 0x01};                -- Rolling spindle
 tr3_entity_tbl[110] = {coll = 0x01};                -- Subway train
 tr3_entity_tbl[111] = {coll = 0x01, func = "wallblade"};                -- Wall-mounted knife blade / Knife disk
 tr3_entity_tbl[113] = {coll = 0x01};                -- Detachable stalactites
-tr3_entity_tbl[114] = {coll = 0x01};                -- Spiky movable wall
+tr3_entity_tbl[114] = {coll = 0x01, func = "spikewall"};                -- Spiky movable wall
 tr3_entity_tbl[116] = {coll = 0x01};                -- Spiky movable vertical wall / Tunnel borer
 tr3_entity_tbl[117] = {coll = 0x01};                -- Valve wheel / Pulley
 tr3_entity_tbl[118] = {coll = 0x01, func = "switch"};                -- Switch

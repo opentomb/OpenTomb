@@ -1714,12 +1714,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
             }
 
-            if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit))
-            {
-                ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
-                ss_anim->onFrame = ent_to_monkey_swing;
-            }
-
             if(((ent->move_type != MOVE_ON_FLOOR)) && (cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 64.0))
             {
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;

@@ -319,6 +319,10 @@ function swingblade_init(id)        -- Swinging blades (TR1)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
     
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        changeCharacterParam(activator_id, PARAM_HEALTH, -45);
+    end
+    
     prepareEntity(id);
 end
 
@@ -371,6 +375,10 @@ function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
     
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        changeCharacterParam(activator_id, PARAM_HEALTH, -50);
+    end
+    
     prepareEntity(id);
 end
 
@@ -394,6 +402,10 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
         elseif(anim_number == 1) then
             setEntityAnim(object_id, 0);
         end;
+    end
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        changeCharacterParam(activator_id, PARAM_HEALTH, -50);
     end
     
     prepareEntity(id);
@@ -618,19 +630,31 @@ function oldspike_init(id)  -- Teeth spikes (INVALID)
     local f1, f2, f3 = getEntityFlags(id);
     setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_GENERIC), bit32.bor(f3, ENTITY_CALLBACK_COLLISION));
     
-    entity_funcs[id].onCollision = function(object_id, activator_id)
-        if((object_id == nil) or (activator_id == nil)) then
-            return;
-        end;
-        
-        if(getModelID(activator_id) == 0) then  -- Lara
-        
-            local s1, s2, s3 = getEntitySpeed(activator_id);
-            -- check if Lara and remove her HP!!!!
-            print("speed: " .. s1 .. " " .. s2 .. " " .. s3);
-        
-        end;
-    end;
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        changeCharacterParam(activator_id, PARAM_HEALTH, -50);
+    end
+end
+
+function spikewall_init(id)      -- Spike wall
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(object_id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        -- put some movement code here
+    end
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        changeCharacterParam(activator_id, PARAM_HEALTH, -20);
+    end
 end
 
 function baddie_init(id)    -- INVALID!

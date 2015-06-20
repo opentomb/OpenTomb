@@ -928,7 +928,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
     }
 }
 
-
 room_sector_s* Entity_GetLowestSector(room_sector_s* sector)
 {
     room_sector_p lowest_sector = sector;
