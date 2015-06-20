@@ -319,14 +319,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->jump)
             {
-                if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point.m_floats[2] > ent->character->wade_depth))
-                {
-                    ss_anim->next_state = TR_STATE_LARA_STOP;
-                }
-                else
-                {
+                if(!curr_fc->quicksand))
                     ss_anim->next_state = TR_STATE_LARA_JUMP_PREPARE;       // jump sideways
-                }
             }
             else if(cmd->roll)
             {
