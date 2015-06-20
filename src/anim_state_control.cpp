@@ -319,7 +319,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->jump)
             {
-                if(!curr_fc->quicksand))
+                if(!curr_fc->quicksand)
                     ss_anim->next_state = TR_STATE_LARA_JUMP_PREPARE;       // jump sideways
             }
             else if(cmd->roll)
