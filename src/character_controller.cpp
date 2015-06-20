@@ -1938,7 +1938,7 @@ int Character_FreeFalling(struct entity_s *ent)
             ent->speed.m_floats[1] = 0.0;
         }
 
-        if(!ent->character->height_info.water || (pos[2] + ent->character->Height < ent->character->height_info.transition_level))
+        if(!ent->character->height_info.water || (ent->current_sector->floor + ent->character->Height <= ent->character->height_info.transition_level))
         {
             ent->move_type = MOVE_UNDERWATER;
             return 2;

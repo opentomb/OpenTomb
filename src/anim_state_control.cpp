@@ -563,8 +563,11 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
                 cmd->move[0] = 1;
             }
-
-            if(cmd->move[0] == 1)
+            if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit && (curr_fc->transition_level - curr_fc->floor_point.m_floats[2] > ent->character->wade_depth))
+            {
+                //Stay, directional jumps are not allowed whilst in wade depth
+            }
+            else if(cmd->move[0] == 1)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
