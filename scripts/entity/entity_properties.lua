@@ -513,7 +513,7 @@ tr3_entity_tbl[108] = {coll = 0x01};                -- Rolling spindle
 tr3_entity_tbl[110] = {coll = 0x01};                -- Subway train
 tr3_entity_tbl[111] = {coll = 0x01, func = "wallblade"};                -- Wall-mounted knife blade / Knife disk
 tr3_entity_tbl[113] = {coll = 0x01};                -- Detachable stalactites
-tr3_entity_tbl[114] = {coll = 0x01};                -- Spiky movable wall
+tr3_entity_tbl[114] = {coll = 0x01, func = "spikewall"};                -- Spiky movable wall
 tr3_entity_tbl[116] = {coll = 0x01};                -- Spiky movable vertical wall / Tunnel borer
 tr3_entity_tbl[117] = {coll = 0x01};                -- Valve wheel / Pulley
 tr3_entity_tbl[118] = {coll = 0x01, func = "switch"};                -- Switch

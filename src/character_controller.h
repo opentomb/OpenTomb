@@ -366,7 +366,7 @@ void Character_UpdateCurrentCollisions(struct entity_s *ent);
 int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
 void Character_FixPenetrations(struct entity_s *ent, btScalar move[3]);
 void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
-
+void Character_CheckCallbacks(struct entity_s *ent);
 bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
 void Character_CleanCollisionAllBodyParts(struct entity_s *ent);
 void Character_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
