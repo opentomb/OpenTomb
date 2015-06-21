@@ -1863,10 +1863,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->version = tr->game_version;
 
     Res_ScriptsOpen(world->version);   // Open configuration scripts.
-    Gui_DrawLoadScreen(200);
+    Gui_DrawLoadScreen(150);
 
     Res_GenRBTrees(world);               // Generate red-black trees
-    Gui_DrawLoadScreen(250);
+    Gui_DrawLoadScreen(200);
 
     TR_GenTextures(world, tr);          // Generate OGL textures
     Gui_DrawLoadScreen(300);
@@ -1940,12 +1940,12 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     // Process level autoexec loading.
 
     Res_AutoexecOpen(world->version);
-    Gui_DrawLoadScreen(970);
+    Gui_DrawLoadScreen(960);
     
     // Fix initial room states
 
     Res_FixRooms(world);
-    Gui_DrawLoadScreen(1000);
+    Gui_DrawLoadScreen(970);
 }
 
 
