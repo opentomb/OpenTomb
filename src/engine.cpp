@@ -4251,6 +4251,8 @@ int Engine_LoadMap(const char *name)
     World_Prepare(&engine_world);
 
     lua_Clean(engine_lua);
+    
+    Audio_Init();
 
     Gui_DrawLoadScreen(150);
 

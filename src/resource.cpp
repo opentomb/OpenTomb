@@ -46,7 +46,7 @@ lua_State *ent_ID_override = NULL;
 lua_State *level_script = NULL;
 
 
-void TR_SetEntityModelProperties(struct entity_s *ent)
+void Res_SetEntityModelProperties(struct entity_s *ent)
 {
     if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
     {
@@ -65,7 +65,7 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
 
                 if(!lua_isnil(objects_flags_conf, -1))
                 {
-                    CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id);
+                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id);
                 }
             }
         }
@@ -99,7 +99,7 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
                 if(!lua_isnil(level_script, -1))
                 {
                     size_t string_length;
-                    CreateEntityFunc(engine_lua, lua_tolstring(level_script, -1, &string_length), ent->id);
+                    Res_CreateEntityFunc(engine_lua, lua_tolstring(level_script, -1, &string_length), ent->id);
                 }
             }
         }
@@ -107,7 +107,7 @@ void TR_SetEntityModelProperties(struct entity_s *ent)
     }
 }
 
-bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
+bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
 {
     if(lua)
     {
@@ -139,7 +139,7 @@ bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     return false;
 }
 
-void TR_SetStaticMeshProperties(struct static_mesh_s *r_static)
+void Res_SetStaticMeshProperties(struct static_mesh_s *r_static)
 {
     if(level_script != NULL)
     {
@@ -179,7 +179,7 @@ void TR_SetStaticMeshProperties(struct static_mesh_s *r_static)
  */
 
 
-void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
+void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 {
     if(tween->floor_corners[0].m_floats[2] > tween->floor_corners[1].m_floats[2])
     {
@@ -211,7 +211,7 @@ void TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
     }
 }
 
-void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
+void Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
 {
     if(tween->ceiling_corners[0].m_floats[2] > tween->ceiling_corners[1].m_floats[2])
     {
@@ -243,7 +243,7 @@ void TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
     }
 }
 
-int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
+int Res_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 {
     if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
     {
@@ -263,7 +263,7 @@ int TR_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 }
 
 ///@TODO: resolve floor >> ceiling case
-void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
+void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 {
     for(uint16_t h = 0; h < room->sectors_y-1; h++)
     {
@@ -299,24 +299,24 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
             {
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))                                                           // Init X-plane tween [ | ]
                 {
-                    if(TR_Sector_IsWall(next_heightmap, current_heightmap))
+                    if(Res_Sector_IsWall(next_heightmap, current_heightmap))
                     {
                         room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
                         room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                        TR_Sector_SetTweenFloorConfig(room_tween);
+                        Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
                         joined_ceilings = 1;
                     }
-                    else if(TR_Sector_IsWall(current_heightmap, next_heightmap))
+                    else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
                     {
                         room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                         room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
-                        TR_Sector_SetTweenFloorConfig(room_tween);
+                        Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
                         joined_ceilings = 1;
@@ -336,7 +336,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                                     room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
                                     room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                                    TR_Sector_SetTweenFloorConfig(room_tween);
+                                    Res_Sector_SetTweenFloorConfig(room_tween);
                                     joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -345,7 +345,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                                     room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
                                     room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                                    TR_Sector_SetTweenCeilingConfig(room_tween);
+                                    Res_Sector_SetTweenCeilingConfig(room_tween);
                                     joined_ceilings = 1;
                                 }
                             }
@@ -398,7 +398,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                        TR_Sector_SetTweenFloorConfig(room_tween);
+                        Res_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
 
@@ -447,7 +447,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                         room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
                         room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                        TR_Sector_SetTweenCeilingConfig(room_tween);
+                        Res_Sector_SetTweenCeilingConfig(room_tween);
                     }
                 }
             }
@@ -485,24 +485,24 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                 if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                 {
                     // Init Y-plane tween  [ - ]
-                    if(TR_Sector_IsWall(next_heightmap, current_heightmap))
+                    if(Res_Sector_IsWall(next_heightmap, current_heightmap))
                     {
                         room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
                         room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
-                        TR_Sector_SetTweenFloorConfig(room_tween);
+                        Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
                         joined_ceilings = 1;
                     }
-                    else if(TR_Sector_IsWall(current_heightmap, next_heightmap))
+                    else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
                     {
                         room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
                         room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                        TR_Sector_SetTweenFloorConfig(room_tween);
+                        Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
                         joined_ceilings = 1;
@@ -522,7 +522,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
                                     room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                                     room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
-                                    TR_Sector_SetTweenFloorConfig(room_tween);
+                                    Res_Sector_SetTweenFloorConfig(room_tween);
                                     joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -531,7 +531,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                                     room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
                                     room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                                     room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
-                                    TR_Sector_SetTweenCeilingConfig(room_tween);
+                                    Res_Sector_SetTweenCeilingConfig(room_tween);
                                     joined_ceilings = 1;
                                 }
                             }
@@ -584,7 +584,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
                         room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
                         room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
-                        TR_Sector_SetTweenFloorConfig(room_tween);
+                        Res_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
 
@@ -633,7 +633,7 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
                         room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
                         room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
                         room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
-                        TR_Sector_SetTweenCeilingConfig(room_tween);
+                        Res_Sector_SetTweenCeilingConfig(room_tween);
                     }
                 }
             }
@@ -642,14 +642,14 @@ void TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
     }    ///END for
 }
 
-uint32_t TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
+uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4)
 {
     v1 = (v1 > v2)?(v1):(v2);
     v2 = (v3 > v4)?(v3):(v4);
     return (v1 > v2)?(v1):(v2);
 }
 
-bool IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
+bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
 {
     // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
     // entity #256 occurences in original games (primarily TR4-5).
@@ -985,7 +985,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                                     // This results in setting same activation mask twice, effectively blocking entity from activation.
                                     // To prevent this, a lookup table was implemented to know if entity already had its activation
                                     // command added.
-                                    if(!IsEntityProcessed(ent_lookup_table, operands))
+                                    if(!Res_IsEntityProcessed(ent_lookup_table, operands))
                                     {
                                         // Other item operands are simply parsed as activation functions. Switch case is special, because
                                         // function is fed with activation mask argument derived from activator mask filter (switch_mask),
@@ -1269,7 +1269,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
                     entry++;
 
-                    float overall_adjustment = (float)TR_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13) * TR_METERING_STEP;
+                    float overall_adjustment = (float)Res_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13) * TR_METERING_STEP;
 
                     if( (function == TR_FD_FUNC_FLOORTRIANGLE_NW)           ||
                         (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
@@ -1757,7 +1757,7 @@ int lua_SetSectorFlags(lua_State * lua)
     return 0;
 }
 
-void ConfScripts_Open(int engine_version)
+void Res_ScriptsOpen(int engine_version)
 {
     char temp_script_name[256];
     Engine_GetLevelScriptName(engine_version, temp_script_name);
@@ -1828,7 +1828,7 @@ void ConfScripts_Open(int engine_version)
     }
 }
 
-void ConfScripts_Close()
+void Res_ScriptsClose()
 {
     if(objects_flags_conf)
     {
@@ -1849,7 +1849,7 @@ void ConfScripts_Close()
     }
 }
 
-void Autoexec_Open(int engine_version)
+void Res_AutoexecOpen(int engine_version)
 {
     char temp_script_name[256];
     Engine_GetLevelScriptName(engine_version, temp_script_name, "_autoexec");
@@ -1862,10 +1862,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 {
     world->version = tr->game_version;
 
-    ConfScripts_Open(world->version);   // Open configuration scripts.
+    Res_ScriptsOpen(world->version);   // Open configuration scripts.
     Gui_DrawLoadScreen(200);
 
-    TR_GenRBTrees(world);               // Generate red-black trees
+    Res_GenRBTrees(world);               // Generate red-black trees
     Gui_DrawLoadScreen(250);
 
     TR_GenTextures(world, tr);          // Generate OGL textures
@@ -1892,7 +1892,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     TR_GenRooms(world, tr);             // Build all rooms
     Gui_DrawLoadScreen(500);
 
-    TR_GenRoomFlipMap(world);           // Generate room flipmaps
+    Res_GenRoomFlipMap(world);           // Generate room flipmaps
     Gui_DrawLoadScreen(520);
 
     // Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
@@ -1903,53 +1903,53 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     TR_GenEntities(world, tr);          // Build all moveables (entities)
     Gui_DrawLoadScreen(650);
     
-    TR_GenBaseItems(world);             // Generate inventory item entries.
+    Res_GenBaseItems(world);             // Generate inventory item entries.
     Gui_DrawLoadScreen(680);
 
     // Generate sprite buffers. Only now because entity generation adds new sprites
 
-    TR_GenSpritesBuffer(world);
+    Res_GenSpritesBuffer(world);
     Gui_DrawLoadScreen(700);
 
     TR_GenRoomProperties(world, tr);
     Gui_DrawLoadScreen(750);
 
-    TR_GenRoomCollision(world);
+    Res_GenRoomCollision(world);
     Gui_DrawLoadScreen(800);
 
     // Initialize audio.
 
-    Audio_Init(TR_AUDIO_MAX_CHANNELS, tr);
+    TR_GenSamples(TR_AUDIO_MAX_CHANNELS, tr);
     Gui_DrawLoadScreen(850);
 
     // Find and set skybox.
 
-    world->sky_box = TR_GetSkybox(world, world->version);
+    world->sky_box = Res_GetSkybox(world, world->version);
     Gui_DrawLoadScreen(860);
 
     // Load entity collision flags and ID overrides from script.
 
-    ConfScripts_Close();
+    Res_ScriptsClose();
     Gui_DrawLoadScreen(870);
     
     // Generate VBOs for meshes.
 
-    TR_GenVBOs(world);
+    Res_GenVBOs(world);
     Gui_DrawLoadScreen(950);
 
     // Process level autoexec loading.
 
-    Autoexec_Open(world->version);
+    Res_AutoexecOpen(world->version);
     Gui_DrawLoadScreen(970);
     
     // Fix initial room states
 
-    TR_FixRooms(world);
+    Res_FixRooms(world);
     Gui_DrawLoadScreen(1000);
 }
 
 
-void TR_GenRBTrees(struct world_s *world)
+void Res_GenRBTrees(struct world_s *world)
 {
     world->entity_tree = RB_Init();
     world->entity_tree->rb_compEQ = compEntityEQ;
@@ -2091,7 +2091,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
         // Set additional static mesh properties from level script override.
 
-        TR_SetStaticMeshProperties(r_static);
+        Res_SetStaticMeshProperties(r_static);
 
         // Set static mesh collision.
         if(r_static->self->collide_flag != COLLISION_NONE)
@@ -2420,7 +2420,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 }
 
 
-void TR_GenRoomCollision(struct world_s *world)
+void Res_GenRoomCollision(struct world_s *world)
 {
     room_p r = world->rooms;
 
@@ -2455,7 +2455,7 @@ void TR_GenRoomCollision(struct world_s *world)
 
         // Most difficult task with converting floordata collision to trimesh collision is
         // building inbetween polygons which will block out gaps between sector heights.
-        TR_Sector_GenTweens(r, room_tween);
+        Res_Sector_GenTweens(r, room_tween);
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
 
@@ -2508,7 +2508,7 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 }
 
 
-void TR_GenRoomFlipMap(struct world_s *world)
+void Res_GenRoomFlipMap(struct world_s *world)
 {
     // Flipmap count is hardcoded, as no original levels contain such info.
 
@@ -2600,10 +2600,10 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
     }
 }
 
-void TR_GenSpritesBuffer(struct world_s *world)
+void Res_GenSpritesBuffer(struct world_s *world)
 {
     for (uint32_t i = 0; i < world->room_count; i++)
-        TR_GenRoomSpritesBuffer(&world->rooms[i]);
+        Res_GenRoomSpritesBuffer(&world->rooms[i]);
 }
 
 void TR_GenTextures(struct world_s* world, class VT_Level *tr)
@@ -2863,7 +2863,7 @@ static void addPolygonCopyToList(const polygon_s *polygon, polygon_s *&list)
     list = np;
 }
 
-void SortPolygonsInMesh(struct base_mesh_s *mesh)
+void Res_Poly_SortInMesh(struct base_mesh_s *mesh)
 {
     polygon_p p = mesh->polygons;
     for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
@@ -3135,7 +3135,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         mesh->vertices = NULL;
     }
     Mesh_GenFaces(mesh);
-    SortPolygonsInMesh(mesh);
+    Res_Poly_SortInMesh(mesh);
 }
 
 void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_room_t *tr_room, base_mesh_p mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, polygon_p p)
@@ -3248,10 +3248,10 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         mesh->vertices = NULL;
     }
     Mesh_GenFaces(mesh);
-    SortPolygonsInMesh(mesh);
+    Res_Poly_SortInMesh(mesh);
 }
 
-void TR_GenRoomSpritesBuffer(struct room_s *room)
+void Res_GenRoomSpritesBuffer(struct room_s *room)
 {
     // Find the number of different texture pages used and the number of non-null sprites
     uint32_t highestTexturePageFound = 0;
@@ -3373,7 +3373,7 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
     room->sprite_buffer->data = renderer.vertex_array_manager->createArray(elementBuffer, 3, attribs);
 }
 
-void TR_GenVBOs(struct world_s *world)
+void Res_GenVBOs(struct world_s *world)
 {
     for(uint32_t i=0;i<world->meshes_count;i++)
     {
@@ -3392,17 +3392,17 @@ void TR_GenVBOs(struct world_s *world)
     }
 }
 
-void TR_GenBaseItems(struct world_s* world)
+void Res_GenBaseItems(struct world_s* world)
 {
     lua_CallVoidFunc(engine_lua, "genBaseItems");
     
     if((world->items_tree != NULL) && (world->items_tree->root != NULL))
     {
-        Items_CheckEntities(world->items_tree->root);
+        Res_EntityToItem(world->items_tree->root);
     }
 }
 
-void TR_FixRooms(struct world_s *world)
+void Res_FixRooms(struct world_s *world)
 {
     room_p r = world->rooms;
     for(uint32_t i=0;i<world->room_count;i++,r++)
@@ -3452,7 +3452,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
     return tr_animation->frame_offset;
 }
 
-struct skeletal_model_s* TR_GetSkybox(struct world_s *world, uint32_t engine_version)
+struct skeletal_model_s* Res_GetSkybox(struct world_s *world, uint32_t engine_version)
 {
     switch(engine_version)
     {
@@ -4204,7 +4204,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
 
-        TR_SetEntityModelProperties(entity);
+        Res_SetEntityModelProperties(entity);
         if(entity->self->collide_flag == 0x00)
         {
             Entity_DisableCollision(entity);
@@ -4213,7 +4213,270 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Items_CheckEntities(RedBlackNode_p n)
+void TR_GenSamples(int num_Sources, class VT_Level *tr)
+{
+    uint8_t      *pointer = tr->samples_data;
+    int8_t        flag;
+    uint32_t      ind1, ind2;
+    uint32_t      comp_size, uncomp_size;
+    uint32_t      i;
+
+    // Generate new buffer array.
+    engine_world.audio_buffers_count = tr->samples_count;
+    engine_world.audio_buffers = (ALuint*)malloc(engine_world.audio_buffers_count * sizeof(ALuint));
+    memset(engine_world.audio_buffers, 0, sizeof(ALuint) * engine_world.audio_buffers_count);
+    alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
+
+    // Generate new source array.
+    num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
+    engine_world.audio_sources_count = num_Sources;
+    engine_world.audio_sources = new AudioSource[num_Sources];
+
+    // Generate stream tracks array.
+    engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
+    engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
+
+    // Generate stream track map array.
+    // We use scripted amount of tracks to define map bounds.
+    // If script had no such parameter, we define map bounds by default.
+    engine_world.stream_track_map_count = lua_GetNumTracks(engine_lua);
+    if(engine_world.stream_track_map_count == 0) engine_world.stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
+    engine_world.stream_track_map = (uint8_t*)malloc(engine_world.stream_track_map_count * sizeof(uint8_t));
+    memset(engine_world.stream_track_map, 0, sizeof(uint8_t) * engine_world.stream_track_map_count);
+
+    // Generate new audio effects array.
+    engine_world.audio_effects_count = tr->sound_details_count;
+    engine_world.audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
+    memset(engine_world.audio_effects, 0xFF, sizeof(audio_effect_t) * tr->sound_details_count);
+
+    // Generate new audio emitters array.
+    engine_world.audio_emitters_count = tr->sound_sources_count;
+    engine_world.audio_emitters = (audio_emitter_t*)malloc(tr->sound_sources_count * sizeof(audio_emitter_t));
+    memset(engine_world.audio_emitters, 0, sizeof(audio_emitter_t) * tr->sound_sources_count);
+
+    // Copy sound map.
+    engine_world.audio_map = tr->soundmap;
+    tr->soundmap = NULL;                   /// without it VT destructor free(tr->soundmap)
+
+    // Cycle through raw samples block and parse them to OpenAL buffers.
+
+    // Different TR versions have different ways of storing samples.
+    // TR1:     sample block size, sample block, num samples, sample offsets.
+    // TR2/TR3: num samples, sample offsets. (Sample block is in MAIN.SFX.)
+    // TR4/TR5: num samples, (uncomp_size-comp_size-sample_data) chain.
+    //
+    // Hence, we specify certain parse method for each game version.
+
+    if(pointer)
+    {
+        switch(tr->game_version)
+        {
+            case TR_I:
+            case TR_I_DEMO:
+            case TR_I_UB:
+                engine_world.audio_map_count = TR_AUDIO_MAP_SIZE_TR1;
+
+                for(i = 0; i < engine_world.audio_buffers_count-1; i++)
+                {
+                    pointer = tr->samples_data + tr->sample_indices[i];
+                    uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
+                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, size);
+                }
+                i = engine_world.audio_buffers_count-1;
+                Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, (tr->samples_count - tr->sample_indices[i]));
+                break;
+
+            case TR_II:
+            case TR_II_DEMO:
+            case TR_III:
+                engine_world.audio_map_count = (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2);
+                ind1 = 0;
+                ind2 = 0;
+                flag = 0;
+                i = 0;
+                while(pointer < tr->samples_data + tr->samples_data_size - 4)
+                {
+                    pointer = tr->samples_data + ind2;
+                    if(0x46464952 == *((int32_t*)pointer))  // RIFF
+                    {
+                        if(flag == 0x00)
+                        {
+                            ind1 = ind2;
+                            flag = 0x01;
+                        }
+                        else
+                        {
+                            uncomp_size = ind2 - ind1;
+                            Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
+                            i++;
+                            if(i > engine_world.audio_buffers_count - 1)
+                            {
+                                break;
+                            }
+                            ind1 = ind2;
+                        }
+                    }
+                    ind2++;
+                }
+                uncomp_size = tr->samples_data_size - ind1;
+                pointer = tr->samples_data + ind1;
+                if(i < engine_world.audio_buffers_count)
+                {
+                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, uncomp_size);
+                }
+                break;
+
+            case TR_IV:
+            case TR_IV_DEMO:
+            case TR_V:
+                engine_world.audio_map_count = (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4);
+
+                for(i = 0; i < tr->samples_count; i++)
+                {
+                    // Parse sample sizes.
+                    // Always use comp_size as block length, as uncomp_size is used to cut raw sample data.
+                    uncomp_size = *((uint32_t*)pointer);
+                    pointer += 4;
+                    comp_size   = *((uint32_t*)pointer);
+                    pointer += 4;
+
+                    // Load WAV sample into OpenAL buffer.
+                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, comp_size, uncomp_size);
+
+                    // Now we can safely move pointer through current sample data.
+                    pointer += comp_size;
+                }
+                break;
+
+            default:
+                engine_world.audio_map_count = TR_AUDIO_MAP_SIZE_NONE;
+                free(tr->samples_data);
+                tr->samples_data = NULL;
+                tr->samples_data_size = 0;
+                return;
+        }
+
+        free(tr->samples_data);
+        tr->samples_data = NULL;
+        tr->samples_data_size = 0;
+    }
+
+    // Cycle through SoundDetails and parse them into native OpenTomb
+    // audio effects structure.
+    for(i = 0; i < engine_world.audio_effects_count; i++)
+    {
+        if(tr->game_version < TR_III)
+        {
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
+            engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
+        }
+        else if(tr->game_version > TR_III)
+        {
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
+            engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 255;
+        }
+        else
+        {
+            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
+            engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 127;
+        }
+
+        engine_world.audio_effects[i].rand_gain_var  = 50;
+        engine_world.audio_effects[i].rand_pitch_var = 50;
+
+        engine_world.audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127.0 + 1.0;
+        engine_world.audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0;
+
+        engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
+        engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
+
+        switch(tr->game_version)
+        {
+            case TR_I:
+            case TR_I_DEMO:
+            case TR_I_UB:
+                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
+                {
+                    case 0x02:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                        break;
+                    case 0x01:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        break;
+                    default:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+                }
+                break;
+
+            case TR_II:
+            case TR_II_DEMO:                
+                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
+                {
+                    case 0x02:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        break;
+                    case 0x01:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
+                        break;
+                    case 0x03:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                        break;
+                    default:
+                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+                }
+                break;
+
+            default:
+                engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
+                break;
+        }
+
+        engine_world.audio_effects[i].sample_index =  tr->sound_details[i].sample;
+        engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
+    }
+
+    // Try to override samples via script.
+    // If there is no script entry exist, we just leave default samples.
+    // NB! We need to override samples AFTER audio effects array is inited, as override
+    //     routine refers to existence of certain audio effect in level.
+
+    Audio_LoadOverridedSamples();
+
+    // Hardcoded version-specific fixes!
+
+    switch(engine_world.version)
+    {
+        case TR_I:
+        case TR_I_DEMO:
+        case TR_I_UB:
+            // Fix for underwater looped sound.
+            if ((engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER]) >= 0)
+            {
+                engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
+            }
+            break;
+        case TR_II:
+            // Fix for helicopter sound range.
+            engine_world.audio_effects[(engine_world.audio_map[297])].range *= 10.0;
+            break;
+    }
+
+    // Cycle through sound emitters and
+    // parse them to native OpenTomb sound emitters structure.
+
+    for(i = 0; i < engine_world.audio_emitters_count; i++)
+    {
+        engine_world.audio_emitters[i].emitter_index = i;
+        engine_world.audio_emitters[i].sound_index   =  tr->sound_sources[i].sound_id;
+        engine_world.audio_emitters[i].position[0]   =  tr->sound_sources[i].x;
+        engine_world.audio_emitters[i].position[1]   =  tr->sound_sources[i].z;
+        engine_world.audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
+        engine_world.audio_emitters[i].flags         =  tr->sound_sources[i].flags;
+    }
+}
+
+
+void Res_EntityToItem(RedBlackNode_p n)
 {
     base_item_p item = (base_item_p)n->data;
 
@@ -4240,11 +4503,11 @@ void Items_CheckEntities(RedBlackNode_p n)
 
     if(n->right)
     {
-        Items_CheckEntities(n->right);
+        Res_EntityToItem(n->right);
     }
 
     if(n->left)
     {
-        Items_CheckEntities(n->left);
+        Res_EntityToItem(n->left);
     }
 }

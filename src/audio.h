@@ -441,7 +441,7 @@ private:
 void Audio_InitGlobals();
 void Audio_InitFX();
 
-int  Audio_Init(const int num_Sources, class VT_Level *tr);
+void Audio_Init();
 int  Audio_DeInit();
 void Audio_Update();
 
