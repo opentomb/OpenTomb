@@ -479,8 +479,8 @@ void Render_DynamicEntitySkin(const struct lit_shader_description *shader, struc
     for(uint16_t i=0; i<ent->bf.bone_tag_count; i++)
     {
         btScalar mvTransforms[32], tr[32];
-        
-        ent->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+
+        ent->bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
         Mat4_Mat4_mul(&mvTransforms[0], mvMatrix, tr);
 
         // Calculate parent transform
@@ -488,21 +488,21 @@ void Render_DynamicEntitySkin(const struct lit_shader_description *shader, struc
         bool foundParentTransform = false;
         for (int j = 0; j < ent->bf.bone_tag_count; j++) {
             if (&(ent->bf.bone_tags[j]) == btag.parent) {
-                ent->bt_body[j]->getWorldTransform().getOpenGLMatrix(&tr[16]);
+                ent->bt.bt_body[j]->getWorldTransform().getOpenGLMatrix(&tr[16]);
                 foundParentTransform = true;
                 break;
             }
         }
         if (!foundParentTransform)
             memcpy(&tr[16], ent->transform, sizeof(btScalar [16]));
-        
+
         btScalar translate[16];
         Mat4_E(translate);
         Mat4_Translate(translate, btag.offset);
-        
+
         btScalar secondTransform[16];
         Mat4_Mat4_mul(secondTransform, &tr[16], translate);
-        
+
         Mat4_Mat4_mul(&mvTransforms[16], mvMatrix, secondTransform);
         glUniformMatrix4fvARB(shader->model_view, 2, false, mvTransforms);
 
@@ -649,7 +649,7 @@ void Render_DynamicEntity(const struct lit_shader_description *shader, struct en
     {
         btScalar mvTransform[16], tr[16];
 
-        entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+        entity->bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
         Mat4_Mat4_mul(mvTransform, modelViewMatrix, tr);
         glUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
 
@@ -673,7 +673,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, true);
-    
+
 
     for(int h=0; h<entity->character->hair_count; h++)
     {
@@ -684,7 +684,7 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
         btScalar globalAttachment[16];
         Mat4_Mat4_mul(globalAttachment, globalHead, entity->character->hairs[h].owner_body_hair_root);
         Mat4_Mat4_mul(hairModelToGlobalMatrices, modelViewMatrix, globalAttachment);
-        
+
         // Then: Individual hair pieces
         for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
         {
@@ -705,8 +705,8 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
              * x_g = M_go * M_ho^-1 * x_h
              * (M_ho^-1 = M_oh so x_g = M_go * M_oh * x_h)
              */
-            
-            
+
+
             btScalar invOriginToHairModel[16];
             Mat4_E(invOriginToHairModel);
             // Simplification: Always translation matrix, no invert needed
@@ -714,14 +714,14 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
                            -entity->character->hairs[h].elements[i].position[0],
                            -entity->character->hairs[h].elements[i].position[1],
                            -entity->character->hairs[h].elements[i].position[2]);
-            
+
             btScalar globalFromOrigin[16];
             const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
             bt_tr.getOpenGLMatrix(globalFromOrigin);
 
             btScalar globalFromHair[16];
             Mat4_Mat4_mul(globalFromHair, globalFromOrigin, invOriginToHairModel);
-            
+
             Mat4_Mat4_mul(&hairModelToGlobalMatrices[(i+1) * 16], modelViewMatrix, globalFromHair);
         }
         glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, hairModelToGlobalMatrices);
@@ -1127,7 +1127,7 @@ void Render_DrawList()
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
-    
+
     //Reset polygon draw mode
     glPolygonMode(GL_FRONT, GL_FILL);
 }
