@@ -46,9 +46,14 @@ entity_p Entity_Create()
     ret->self->collide_flag = 0;
     ret->obb = OBB_Create();
     ret->obb->transform = ret->transform;
-    ret->bt_body = NULL;
-    ret->bt_joints = NULL;
-    ret->bt_joint_count = 0;
+    ret->bt.bt_body = NULL;
+    ret->bt.bt_joints = NULL;
+    ret->bt.bt_joint_count = 0;
+    ret->bt.no_fix_all = 0x00;
+    ret->bt.no_fix_body_parts = 0x00000000;
+    ret->bt.manifoldArray = NULL;
+    ret->bt.shapes = NULL;
+    ret->bt.ghostObjects = NULL;
     ret->character = NULL;
     ret->current_sector = NULL;
     ret->bf.animations.model = NULL;
@@ -95,9 +100,39 @@ void Entity_Clear(entity_p entity)
             entity->obb = NULL;
         }
 
-        if(entity->bt_joint_count)
+        if(entity->bt.bt_joint_count)
         {
             Ragdoll_Delete(entity);
+        }
+
+        if(entity->bt.ghostObjects)
+        {
+            for(int i=0;i<entity->bf.bone_tag_count;i++)
+            {
+                entity->bt.ghostObjects[i]->setUserPointer(NULL);
+                bt_engine_dynamicsWorld->removeCollisionObject(entity->bt.ghostObjects[i]);
+                delete entity->bt.ghostObjects[i];
+                entity->bt.ghostObjects[i] = NULL;
+            }
+            free(entity->bt.ghostObjects);
+            entity->bt.ghostObjects = NULL;
+        }
+
+        if(entity->bt.shapes)
+        {
+            for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
+            {
+                delete entity->bt.shapes[i];
+            }
+            free(entity->bt.shapes);
+            entity->bt.shapes = NULL;
+        }
+
+        if(entity->bt.manifoldArray)
+        {
+            entity->bt.manifoldArray->clear();
+            delete entity->bt.manifoldArray;
+            entity->bt.manifoldArray = NULL;
         }
 
         if(entity->character)
@@ -105,11 +140,11 @@ void Entity_Clear(entity_p entity)
             Character_Clean(entity);
         }
 
-        if(entity->bt_body)
+        if(entity->bt.bt_body)
         {
             for(int i=0;i<entity->bf.bone_tag_count;i++)
             {
-                btRigidBody *body = entity->bt_body[i];
+                btRigidBody *body = entity->bt.bt_body[i];
                 if(body)
                 {
                     body->setUserPointer(NULL);
@@ -126,11 +161,11 @@ void Entity_Clear(entity_p entity)
 
                     bt_engine_dynamicsWorld->removeRigidBody(body);
                     delete body;
-                    entity->bt_body[i] = NULL;
+                    entity->bt.bt_body[i] = NULL;
                 }
             }
-            free(entity->bt_body);
-            entity->bt_body = NULL;
+            free(entity->bt.bt_body);
+            entity->bt.bt_body = NULL;
         }
 
         if(entity->self)
@@ -162,11 +197,11 @@ void Entity_Enable(entity_p ent)
 {
     if(!(ent->state_flags & ENTITY_STATE_ENABLED))
     {
-        if(ent->bt_body != NULL)
+        if(ent->bt.bt_body != NULL)
         {
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
-                btRigidBody *b = ent->bt_body[i];
+                btRigidBody *b = ent->bt.bt_body[i];
                 if((b != NULL) && !b->isInWorld())
                 {
                     bt_engine_dynamicsWorld->addRigidBody(b);
@@ -182,11 +217,11 @@ void Entity_Disable(entity_p ent)
 {
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
-        if(ent->bt_body != NULL)
+        if(ent->bt.bt_body != NULL)
         {
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
-                btRigidBody *b = ent->bt_body[i];
+                btRigidBody *b = ent->bt.bt_body[i];
                 if((b != NULL) && b->isInWorld())
                 {
                     bt_engine_dynamicsWorld->removeRigidBody(b);
@@ -204,12 +239,12 @@ void Entity_Disable(entity_p ent)
  */
 void Entity_EnableCollision(entity_p ent)
 {
-    if(ent->bt_body != NULL)
+    if(ent->bt.bt_body != NULL)
     {
         ent->self->collide_flag = 0x01;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            btRigidBody *b = ent->bt_body[i];
+            btRigidBody *b = ent->bt.bt_body[i];
             if((b != NULL) && !b->isInWorld())
             {
                 bt_engine_dynamicsWorld->addRigidBody(b);
@@ -226,12 +261,12 @@ void Entity_EnableCollision(entity_p ent)
 
 void Entity_DisableCollision(entity_p ent)
 {
-    if(ent->bt_body != NULL)
+    if(ent->bt.bt_body != NULL)
     {
         ent->self->collide_flag = 0x00;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            btRigidBody *b = ent->bt_body[i];
+            btRigidBody *b = ent->bt.bt_body[i];
             if((b != NULL) && b->isInWorld())
             {
                 bt_engine_dynamicsWorld->removeRigidBody(b);
@@ -252,13 +287,13 @@ void BT_GenEntityRigidBody(entity_p ent)
         return;
     }
 
-    ent->bt_body = (btRigidBody**)malloc(ent->bf.bone_tag_count * sizeof(btRigidBody*));
+    ent->bt.bt_body = (btRigidBody**)malloc(ent->bf.bone_tag_count * sizeof(btRigidBody*));
 
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         base_mesh_p mesh = ent->bf.animations.model->mesh_tree[i].mesh_base;
         btCollisionShape *cshape = BT_CSfromMesh(mesh, true, true, false);
-        ent->bt_body[i] = NULL;
+        ent->bt.bt_body[i] = NULL;
 
         if(cshape)
         {
@@ -267,11 +302,11 @@ void BT_GenEntityRigidBody(entity_p ent)
             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
             startTransform.setFromOpenGLMatrix(tr);
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-            ent->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
-            //ent->bt_body[i]->setCollisionFlags(ent->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-            bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-            ent->bt_body[i]->setUserPointer(ent->self);
-            ent->bt_body[i]->setUserIndex(i);
+            ent->bt.bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
+            //ent->bt.bt_body[i]->setCollisionFlags(ent->bt.bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+            bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+            ent->bt.bt_body[i]->setUserPointer(ent->self);
+            ent->bt.bt_body[i]->setUserIndex(i);
         }
     }
 }
@@ -329,13 +364,13 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
     if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
         btScalar tr[16];
-        //btVector3 pos = ent->bt_body[0]->getWorldTransform().getOrigin();
+        //btVector3 pos = ent->bt.bt_body[0]->getWorldTransform().getOrigin();
         //vec3_copy(ent->transform+12, pos.m_floats);
-        ent->bt_body[0]->getWorldTransform().getOpenGLMatrix(ent->transform);
+        ent->bt.bt_body[0]->getWorldTransform().getOpenGLMatrix(ent->transform);
         Entity_UpdateRoomPos(ent);
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
-            ent->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+            ent->bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
             Mat4_inv_Mat4_affine_mul(ent->bf.bone_tags[i].full_transform, ent->transform, tr);
         }
 
@@ -352,15 +387,15 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
             }
         }
 
-        if(ent->character && ent->character->ghostObjects)
+        if(ent->character && ent->bt.ghostObjects)
         {
             btScalar v[3];
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
-                ent->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+                ent->bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
                 Mat4_vec3_mul(v, tr, ent->bf.bone_tags[i].mesh_base->centre);
                 vec3_copy(tr+12, v);
-                ent->character->ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+                ent->bt.ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(tr);
             }
         }
 
@@ -416,7 +451,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
     else
     {
         if((ent->bf.animations.model == NULL) ||
-           (ent->bt_body == NULL) ||
+           (ent->bt.bt_body == NULL) ||
            ((force == 0) && (ent->bf.animations.model->animation_count == 1) && (ent->bf.animations.model->animations->frames_count == 1)))
         {
             return;
@@ -428,10 +463,10 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
             btScalar tr[16];
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
             {
-                if(ent->bt_body[i])
+                if(ent->bt.bt_body[i])
                 {
                     Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[i].full_transform);
-                    ent->bt_body[i]->getWorldTransform().setFromOpenGLMatrix(tr);
+                    ent->bt.bt_body[i]->getWorldTransform().setFromOpenGLMatrix(tr);
                 }
             }
         }
@@ -1022,11 +1057,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
     }
 
     animation = (animation < 0)?(0):(animation);
-
-    if(entity->character != NULL)
-    {
-        entity->character->no_fix_all = 0x00;
-    }
+    entity->bt.no_fix_all = 0x00;
 
     if(another_model >= 0)
     {

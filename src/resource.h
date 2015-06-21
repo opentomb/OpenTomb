@@ -68,7 +68,7 @@
 
 #define LOG_ANIM_DISPATCHES 0
 
-class VT_Level;
+class  VT_Level;
 struct base_mesh_s;
 struct world_s;
 struct room_s;
@@ -76,15 +76,59 @@ struct room_sector_s;
 struct sector_tween_s;
 struct bordered_texture_atlas_s;
 
+// NOTE: Functions which take native TR level structures as argument will have
+// additional _TR_ prefix. Functions which doesn't use specific TR structures
+// should NOT use such prefix!
+
+void Res_GenRBTrees(struct world_s *world);
+void Res_GenSpritesBuffer(struct world_s *world);
+void Res_GenRoomCollision(struct world_s *world);
+void Res_GenRoomFlipMap(struct world_s *world);
+void Res_GenBaseItems(struct world_s *world);
+void Res_GenRoomSpritesBuffer(struct room_s *room);
+void Res_GenVBOs(struct world_s *world);
+
+void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
+uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
+void     Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
+void     Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
+int      Res_Sector_IsWall(room_sector_p ws, room_sector_p ns);
+
+void     Res_Poly_SortInMesh(struct base_mesh_s *mesh);
+bool     Res_Poly_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world);
+
+void     Res_FixRooms(struct world_s *world);   // Fix start-up room states.
+
+struct   skeletal_model_s* Res_GetSkybox(struct world_s *world, uint32_t engine_version);
+
+// Create entity function from script, if exists.
+
+bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
+
+// Assign pickup functions to previously created base items.
+
+void Res_EntityToItem(RedBlackNode_p n);
+
 // Functions setting parameters from configuration scripts.
 
-void TR_SetEntityModelProperties(struct entity_s *ent);
-void TR_SetStaticMeshProperties(struct static_mesh_s *r_static);
+void Res_SetEntityModelProperties(struct entity_s *ent);
+void Res_SetStaticMeshProperties(struct static_mesh_s *r_static);
+
+// Check if entity index was already processed (needed to remove dublicated activation calls).
+// If entity is not processed, add its index into lookup table.
+
+bool Res_IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
+
+// Open/close scripts.
+
+void Res_ScriptsOpen(int engine_version);
+void Res_ScriptsClose();
+void Res_AutoexecOpen(int engine_version);
+
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 
 void TR_GenWorld(struct world_s *world, class VT_Level *tr);
-void TR_GenRBTrees(struct world_s *world);
 void TR_GenMeshes(struct world_s *world, class VT_Level *tr);
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr);
 void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr);
@@ -93,13 +137,14 @@ void TR_GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class 
 void TR_GenEntities(struct world_s *world, class VT_Level *tr);
 void TR_GenSprites(struct world_s *world, class VT_Level *tr);
 void TR_GenTextures(struct world_s *world, class VT_Level *tr);
+void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr);
 void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr);
 void TR_GenRooms(struct world_s *world, class VT_Level *tr);
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr);
-void TR_GenRoomCollision(struct world_s *world);
 void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
-void TR_GenRoomFlipMap(struct world_s *world);
-void TR_GenRoomSpritesBuffer(struct room_s *room);
+void TR_GenBoxes(struct world_s *world, class VT_Level *tr);
+void TR_GenCameras(struct world_s *world, class VT_Level *tr);
+void TR_GenSamples(int num_Sources, class VT_Level *tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
@@ -112,39 +157,11 @@ void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_
 int      TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
 int      TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr);
-struct   skeletal_model_s* TR_GetSkybox(struct world_s *world, uint32_t engine_version);
 
-
-// Main function which is used to translate legacy TR floor data
+// Main functions which are used to translate legacy TR floor data
 // to native OpenTomb structs.
 
 int      TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr);
-
-// All functions related to generating heightmap from sector floor data.
-
-void     TR_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
 void     TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index);
-uint32_t TR_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
-void     TR_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
-void     TR_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
-int      TR_Sector_IsWall(room_sector_p ws, room_sector_p ns);
-
-// Miscellaneous functions.
-
-void SortPolygonsInMesh(struct base_mesh_s *mesh);
-bool Polygon_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world);
-
-// Create entity function from script, if exists.
-
-bool CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
-
-// Assign pickup functions to previously created base items.
-
-void Items_CheckEntities(RedBlackNode_p n);
-
-// Check if entity index was already processed (needed to remove dublicated activation calls).
-// If entity is not processed, add its index into lookup table.
-
-bool IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
 
 #endif

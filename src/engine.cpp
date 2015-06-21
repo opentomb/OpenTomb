@@ -200,9 +200,13 @@ void Engine_Init_Pre()
 {
     /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
      * Rendering activation may be done later. */
+
     Gui_InitFontManager();
     Con_Init();
     Engine_LuaInit();
+
+    lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
+
     Gameflow_Init();
 
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUFFER_SIZE);
@@ -221,7 +225,8 @@ void Engine_Init_Pre()
 
 void Engine_Init_Post()
 {
-    luaL_dofile(engine_lua, "scripts/gui/fonts.lua");
+    lua_CallVoidFunc(engine_lua, "loadscript_post", true);
+
     Con_InitFonts();
 
     Gui_Init();
@@ -710,7 +715,7 @@ int lua_GetCharacterParam(lua_State * lua)
         Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
-    
+
     if(IsCharacter(ent))
     {
         lua_pushnumber(lua, Character_GetParam(ent, parameter));
@@ -743,7 +748,7 @@ int lua_SetCharacterParam(lua_State * lua)
         Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
-    
+
     if(!IsCharacter(ent))
     {
         Con_Warning(SYSWARN_NO_CHARACTER, id);
@@ -796,7 +801,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
         Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
-    
+
     if(IsCharacter(ent))
     {
         Character_ChangeParam(ent, parameter, value);
@@ -805,7 +810,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
     {
         Con_Warning(SYSWARN_NO_CHARACTER, id);
     }
-    
+
     return 0;
 }
 
@@ -940,7 +945,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 
         if(ent)
         {
-            if(ent->bt_joint_count)
+            if(ent->bt.bt_joint_count)
             {
                 Ragdoll_Delete(ent);
             }
@@ -1168,7 +1173,7 @@ int lua_AddItem(lua_State * lua)
     int item_id = lua_tointeger(lua, 2);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    
+
     if(ent)
     {
         lua_pushinteger(lua, Character_AddItem(ent, item_id, count));
@@ -1195,7 +1200,7 @@ int lua_RemoveItem(lua_State * lua)
     int count = lua_tointeger(lua, 3);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    
+
     if(ent)
     {
         lua_pushinteger(lua, Character_RemoveItem(ent, item_id, count));
@@ -1219,7 +1224,7 @@ int lua_RemoveAllItems(lua_State * lua)
 
     int entity_id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    
+
     if(ent)
     {
         Character_RemoveAllItems(ent);
@@ -1244,7 +1249,7 @@ int lua_GetItemsCount(lua_State * lua)
     int item_id = lua_tointeger(lua, 2);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    
+
     if(ent)
     {
         lua_pushinteger(lua, Character_GetItemsCount(ent, item_id));
@@ -2407,6 +2412,39 @@ int lua_GetEntityFlags(lua_State * lua)
     return 3;
 }
 
+int lua_SetEntityFlags(lua_State * lua)
+{
+    if(lua_gettop(lua) < 3)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    if(!lua_isnil(lua, 2))
+    {
+        ent->state_flags = lua_tointeger(lua, 2);
+    }
+    if(!lua_isnil(lua, 3))
+    {
+        ent->type_flags = lua_tointeger(lua, 3);
+    }
+    if(!lua_isnil(lua, 4))
+    {
+        ent->callback_flags = lua_tointeger(lua, 4);
+    }
+
+    return 0;
+}
+
 
 int lua_GetEntityTypeFlag(lua_State *lua)
 {
@@ -2447,39 +2485,6 @@ int lua_SetEntityTypeFlag(lua_State *lua)
     }
 
     ent->type_flags ^= (uint16_t)lua_tointeger(lua, 2);
-    return 0;
-}
-
-int lua_SetEntityFlags(lua_State * lua)
-{
-    if(lua_gettop(lua) < 3)
-    {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
-        return 0;
-    }
-
-    int id = lua_tointeger(lua, 1);
-    entity_p ent = World_GetEntityByID(&engine_world, id);
-
-    if(ent == NULL)
-    {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
-        return 0;
-    }
-
-    if(!lua_isnil(lua, 2))
-    {
-        ent->state_flags = lua_tointeger(lua, 2);
-    }
-    if(!lua_isnil(lua, 3))
-    {
-        ent->type_flags = lua_tointeger(lua, 3);
-    }
-    if(!lua_isnil(lua, 4))
-    {
-        ent->callback_flags = lua_tointeger(lua, 4);
-    }
-
     return 0;
 }
 
@@ -2592,14 +2597,14 @@ int lua_SetEntityResponse(lua_State * lua)
         Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id, value]");
         return 0;
     }
-    
+
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
-    
+
     if(IsCharacter(ent))
     {
         int8_t value = (int8_t)lua_tointeger(lua, 3);
-        
+
         switch(lua_tointeger(lua, 2))
         {
             case 0:
@@ -2622,7 +2627,7 @@ int lua_SetEntityResponse(lua_State * lua)
     {
         Con_Warning(SYSWARN_NO_ENTITY, id);
     }
-    
+
     return 0;
 }
 
@@ -2904,7 +2909,7 @@ int lua_PushEntityBody(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
+    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar h_force = lua_tonumber(lua, 3);
         btScalar v_force = lua_tonumber(lua, 4);
@@ -2917,10 +2922,10 @@ int lua_PushEntityBody(lua_State *lua)
         btVector3 angle (-ang1 * h_force, ang2 * h_force, v_force);
 
         if(lua_toboolean(lua, 5))
-            ent->bt_body[body_number]->clearForces();
+            ent->bt.bt_body[body_number]->clearForces();
 
-        ent->bt_body[body_number]->setLinearVelocity(angle);
-        ent->bt_body[body_number]->setAngularVelocity(angle / 1024.0);
+        ent->bt.bt_body[body_number]->setLinearVelocity(angle);
+        ent->bt.bt_body[body_number]->setAngularVelocity(angle / 1024.0);
     }
     else
     {
@@ -2960,31 +2965,31 @@ int lua_SetEntityBodyMass(lua_State *lua)
             if(top >= argn) mass = lua_tonumber(lua, argn);
             argn++;
 
-            if(ent->bt_body[i] != NULL)
+            if(ent->bt.bt_body[i] != NULL)
             {
-                bt_engine_dynamicsWorld->removeRigidBody(ent->bt_body[i]);
+                bt_engine_dynamicsWorld->removeRigidBody(ent->bt.bt_body[i]);
 
-                    ent->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+                    ent->bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
 
-                    ent->bt_body[i]->setMassProps(mass, inertia);
+                    ent->bt.bt_body[i]->setMassProps(mass, inertia);
 
-                    ent->bt_body[i]->updateInertiaTensor();
-                    ent->bt_body[i]->clearForces();
+                    ent->bt.bt_body[i]->updateInertiaTensor();
+                    ent->bt.bt_body[i]->clearForces();
 
-                    ent->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
+                    ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
 
                     btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
-                    ent->bt_body[i]->setLinearFactor (factor);
-                    ent->bt_body[i]->setAngularFactor(factor);
+                    ent->bt.bt_body[i]->setLinearFactor (factor);
+                    ent->bt.bt_body[i]->setAngularFactor(factor);
 
                     //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
 
                     //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
                     //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
 
-                bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i]);
+                bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i]);
 
-                ent->bt_body[i]->activate();
+                ent->bt.bt_body[i]->activate();
 
                 //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
                 //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
@@ -3030,7 +3035,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
+    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar t    = ent->angles[0] * M_PI / 180.0;
         btScalar ang1 = sinf(t);
@@ -3043,7 +3048,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
             ang3 = (ang3 > 1.0)?(1.0):(ang3);
         }
 
-        ent->bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
+        ent->bt.bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
     }
     else
     {
@@ -3063,7 +3068,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
 
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
-    
+
     if(IsCharacter(ent))
     {
         Character_SetWeaponModel(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
@@ -3109,7 +3114,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
-    
+
     if(IsCharacter(ent))
     {
         ent->character->current_weapon = lua_tointeger(lua, 2);
@@ -3638,22 +3643,9 @@ bool Engine_LuaInit()
         Engine_LuaRegisterFuncs(engine_lua);
         lua_atpanic(engine_lua, engine_LuaPanic);
 
-        // Load and run global engine scripts, except font script, which
-        // should be called AFTER OpenGL/SDL are initialized.
+        // Load script loading order (sic!)
 
-        luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
-        luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
-        luaL_dofile(engine_lua, "scripts/system/debug.lua");
-        luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
-        luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
-        luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");
-        luaL_dofile(engine_lua, "scripts/entity/entity_functions.lua");
-        luaL_dofile(engine_lua, "scripts/character/hair.lua");
-        luaL_dofile(engine_lua, "scripts/character/ragdoll.lua");
-        luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
-        luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
-        luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
-        luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
+        luaL_dofile(engine_lua, "scripts/loadscript.lua");
 
         return true;
     }
@@ -4019,8 +4011,15 @@ bool Engine_FileFound(const char *name, bool Write)
     }
 }
 
+int Engine_GetLevelFormat(const char *name)
+{
+    // PLACEHOLDER: Currently, only PC levels are supported.
+    
+    return LEVEL_FORMAT_PC;
+}
 
-int Engine_GetLevelVersion(const char *name)
+
+int Engine_GetPCLevelVersion(const char *name)
 {
     int ret = TR_UNKNOWN;
     int len = strlen(name);
@@ -4222,12 +4221,8 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
 
 int Engine_LoadMap(const char *name)
 {
-    int trv;
-    VT_Level tr_level;
     char buf[LEVEL_NAME_MAX_LEN] = {0x00};
     extern gui_Fader Fader[];
-
-    Gui_DrawLoadScreen(0);
 
     if(!Engine_FileFound(name))
     {
@@ -4235,47 +4230,73 @@ int Engine_LoadMap(const char *name)
         return 0;
     }
 
-    trv = Engine_GetLevelVersion(name);
-
-    if(trv == TR_UNKNOWN)
-    {
-        return 0;
-    }
-
+    Gui_DrawLoadScreen(0);
+    
     renderer.style &= ~R_DRAW_SKYBOX;
     renderer.r_list_active_count = 0;
     renderer.world = NULL;
 
     strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.
 
-    tr_level.read_level(name, trv);
-    tr_level.prepare_level();
-
-    //tr_level.dump_textures();
-
-    Gui_DrawLoadScreen(100);
+    Gui_DrawLoadScreen(50);
 
     World_Empty(&engine_world);
     World_Prepare(&engine_world);
 
     lua_Clean(engine_lua);
 
-    Gui_DrawLoadScreen(150);
+    Audio_Init();
 
-    TR_GenWorld(&engine_world, &tr_level);
+    Gui_DrawLoadScreen(100);
 
+    
+    // Here we can place different platform-specific level loading routines.
+    
+    switch(Engine_GetLevelFormat(name))
+    {
+        case LEVEL_FORMAT_PC:
+            {
+                VT_Level *tr_level = new VT_Level();
+                
+                int trv = Engine_GetPCLevelVersion(name);
+                if(trv == TR_UNKNOWN) return 0;
+                
+                tr_level->read_level(name, trv);
+                tr_level->prepare_level();
+                //tr_level.dump_textures();
+                
+                TR_GenWorld(&engine_world, tr_level);
+                
+                Engine_GetLevelName(buf, name);
+                Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
+                Con_Notify(SYSNOTE_NUM_ROOMS, engine_world.room_count);
+                
+                delete tr_level;
+            }
+            break;
+            
+        case LEVEL_FORMAT_PSX:
+            break;
+            
+        case LEVEL_FORMAT_DC:
+            break;
+            
+        case LEVEL_FORMAT_OPENTOMB:
+            break;
+            
+        default:
+            break;
+    }
+    
     engine_world.id   = 0;
     engine_world.name = 0;
     engine_world.type = 0;
 
-    Engine_GetLevelName(buf, name);
-    Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
-    Con_Notify(SYSNOTE_NUM_ROOMS, tr_level.rooms_count);
-    Con_Notify(SYSNOTE_NUM_TEXTURES, tr_level.textile32_count);
-
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
+    
+    Gui_DrawLoadScreen(1000);
 
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
     Gui_NotifierStop();

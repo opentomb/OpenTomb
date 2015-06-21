@@ -12,6 +12,7 @@
 #include "bullet/BulletCollision/CollisionShapes/btBoxShape.h"
 #include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 #include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
+#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "engine.h"
 
 
@@ -184,7 +185,6 @@ struct engine_container_s;
 struct entity_s;
 class bt_engine_ClosestConvexResultCallback;
 class bt_engine_ClosestRayResultCallback;
-class btPairCachingGhostObject;
 class btCollisionObject;
 class btConvexShape;
 
@@ -311,12 +311,9 @@ typedef struct character_s
     int                          weapon_current_state;
     
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
-    int16_t                      max_move_iterations;
+    //int16_t                      max_move_iterations;
     
-    int8_t                       no_fix_all;
     int8_t                       cam_follow_center;
-    uint32_t                     no_fix_body_parts;
-
     btScalar                     speed_mult;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
@@ -331,11 +328,8 @@ typedef struct character_s
     btScalar                     wade_depth;             // water depth that enable wade walk
     btScalar                     swim_depth;             // depth offset for starting to swim
     
-    btCollisionShape           **shapes;
     btSphereShape               *sphere;                 // needs to height calculation
     btSphereShape               *climb_sensor;
-    btPairCachingGhostObject   **ghostObjects;           // like Bullet character controller for penetration resolving.
-    btManifoldArray             *manifoldArray;          // keep track of the contact manifolds
 
     struct height_info_s         height_info;
     struct climb_info_s          climb;

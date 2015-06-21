@@ -17,7 +17,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
     if( (!parent_entity) || (!setup)                           ||
         (setup->link_body >= parent_entity->bf.bone_tag_count) ||
-        (!(parent_entity->bt_body[setup->link_body]))           ) return false;
+        (!(parent_entity->bt.bt_body[setup->link_body]))         ) return false;
 
     skeletal_model_p model = World_GetModelByID(&engine_world, setup->model);
     btScalar owner_body_transform[16];
@@ -155,7 +155,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
 
-            prev_body = parent_entity->bt_body[hair->owner_body];   // Previous body is parent body.
+            prev_body = parent_entity->bt.bt_body[hair->owner_body];   // Previous body is parent body.
         }
         else
         {
@@ -220,7 +220,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
         curr_joint++;   // Point to the next joint.
     }
-    
+
     hair_CreateHairMesh(hair, model);
 
     return true;
@@ -231,7 +231,7 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
     hair->mesh = (base_mesh_s *) calloc(sizeof(base_mesh_s), 1);
     hair->mesh->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), engine_world.tex_count);
     uint32_t totalElements = 0;
-    
+
     // Gather size information
     for (int i = 0; i < model->mesh_count; i++)
     {
@@ -239,31 +239,31 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
 
         hair->mesh->num_texture_pages = std::max(hair->mesh->num_texture_pages, original->num_texture_pages);
         hair->mesh->vertex_count += original->vertex_count;
-        
+
         for (int j = 0; j < original->num_texture_pages; j++)
         {
             hair->mesh->element_count_per_texture[j] += original->element_count_per_texture[j];
             totalElements += original->element_count_per_texture[j];
         }
     }
-    
+
     // Create arrays
     hair->mesh->elements = (uint32_t *) calloc(sizeof(uint32_t), totalElements);
     hair->mesh->vertices = (vertex_s *) calloc(sizeof(vertex_s), hair->mesh->vertex_count);
-    
+
     // - with matrix index information
     hair->mesh->matrix_indices = (int8_t *) calloc(sizeof(int8_t [2]), hair->mesh->vertex_count);
-    
+
     // Copy information
     uint32_t *elementsStartPerTexture = (uint32_t *) calloc(sizeof(uint32_t), hair->mesh->num_texture_pages);
     uint32_t verticesStart = 0;
     for (int i = 0; i < model->mesh_count; i++)
     {
         const base_mesh_s *original = model->mesh_tree[i].mesh_base;
-        
+
         // Copy vertices
         memcpy(&hair->mesh->vertices[verticesStart], original->vertices, sizeof(vertex_t) * original->vertex_count);
-        
+
         // Copy elements
         uint32_t originalElementsStart = 0;
         for (int page = 0; page < original->num_texture_pages; page++)
@@ -277,7 +277,7 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
                 elementsStartPerTexture[page] += 1;
             }
         }
-        
+
         /*
          * Apply total offset from parent.
          * The resulting mesh will have all the hair in default position
@@ -292,7 +292,7 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
             // here, but must go when we start generalizing the whole thing.
             vec3_add_to(hair->elements[i].position, hair->elements[i - 1].position);
         }
-        
+
         // And create vertex data (including matrix indices)
         for (int j = 0; j < original->vertex_count; j++) {
             if (original->vertices[j].position[1] <= 0)
@@ -305,10 +305,10 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
                 hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = i+1;
                 hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = std::min((int8_t) (i+2), (int8_t) model->mesh_count);
             }
-            
+
             // Now move all the hair vertices
             vec3_add_to(hair->mesh->vertices[verticesStart+j].position, hair->elements[i].position);
-            
+
             // If the normal isn't fully in y direction, cancel its y component
             // This is perhaps a bit dubious.
             if (hair->mesh->vertices[verticesStart+j].normal[0] != 0 || hair->mesh->vertices[verticesStart+j].normal[2] != 0)
@@ -318,11 +318,11 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
                 vec3_norm(hair->mesh->vertices[verticesStart+j].normal, temp);
             }
         }
-        
+
         verticesStart += original->vertex_count;
     }
     free(elementsStartPerTexture);
-    
+
     Mesh_GenVBO(&renderer, hair->mesh);
 }
 
@@ -340,7 +340,7 @@ void Hair_Clear(hair_p hair)
     free(hair->joints);
     hair->joints = NULL;
     hair->joint_count = 0;
-    
+
     for(int i=0; i<hair->element_count; i++)
     {
         if(hair->elements[i].body)

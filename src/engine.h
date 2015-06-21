@@ -13,6 +13,11 @@
 #define LEVEL_NAME_MAX_LEN                      (64)
 #define MAX_ENGINE_PATH                         (1024)
 
+#define LEVEL_FORMAT_PC         0
+#define LEVEL_FORMAT_PSX        1
+#define LEVEL_FORMAT_DC         2
+#define LEVEL_FORMAT_OPENTOMB   3   // Maybe some day...
+
 #define OBJECT_STATIC_MESH                      (0x0001)
 #define OBJECT_ROOM_BASE                        (0x0002)
 #define OBJECT_ENTITY                           (0x0003)
@@ -249,7 +254,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua);
 void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*));
 
 bool Engine_FileFound(const char *name, bool Write = false);
-int  Engine_GetLevelVersion(const char *name);
+int  Engine_GetLevelFormat(const char *name);
+int  Engine_GetPCLevelVersion(const char *name);
 void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix = NULL);
 int  Engine_LoadMap(const char *name);
