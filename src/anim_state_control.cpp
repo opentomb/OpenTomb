@@ -391,6 +391,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
                     vec3_mul_scalar(global_offset, ent->transform + 4, RUN_FORWARD_OFFSET);
                     global_offset[2] += ent->bf.bb_max[2];
+                    Character_CheckNextStep(ent, global_offset, &next_fc);
                     if(((Entity_CheckNextPenetration(ent, move) == 0) || (ent->character->resp.horizontal_collide == 0x00)) && (!Character_HasStopSlant(ent, &next_fc)))
                     {
                         ent->move_type = MOVE_ON_FLOOR;
