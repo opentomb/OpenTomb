@@ -4011,8 +4011,15 @@ bool Engine_FileFound(const char *name, bool Write)
     }
 }
 
+int Engine_GetLevelFormat(const char *name)
+{
+    // PLACEHOLDER: Currently, only PC levels are supported.
+    
+    return LEVEL_FORMAT_PC;
+}
 
-int Engine_GetLevelVersion(const char *name)
+
+int Engine_GetPCLevelVersion(const char *name)
 {
     int ret = TR_UNKNOWN;
     int len = strlen(name);
@@ -4214,12 +4221,8 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
 
 int Engine_LoadMap(const char *name)
 {
-    int trv;
-    VT_Level tr_level;
     char buf[LEVEL_NAME_MAX_LEN] = {0x00};
     extern gui_Fader Fader[];
-
-    Gui_DrawLoadScreen(0);
 
     if(!Engine_FileFound(name))
     {
@@ -4227,25 +4230,15 @@ int Engine_LoadMap(const char *name)
         return 0;
     }
 
-    trv = Engine_GetLevelVersion(name);
-
-    if(trv == TR_UNKNOWN)
-    {
-        return 0;
-    }
-
+    Gui_DrawLoadScreen(0);
+    
     renderer.style &= ~R_DRAW_SKYBOX;
     renderer.r_list_active_count = 0;
     renderer.world = NULL;
 
     strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.
 
-    tr_level.read_level(name, trv);
-    tr_level.prepare_level();
-
-    //tr_level.dump_textures();
-
-    Gui_DrawLoadScreen(100);
+    Gui_DrawLoadScreen(50);
 
     World_Empty(&engine_world);
     World_Prepare(&engine_world);
@@ -4254,22 +4247,56 @@ int Engine_LoadMap(const char *name)
 
     Audio_Init();
 
-    Gui_DrawLoadScreen(150);
+    Gui_DrawLoadScreen(100);
 
-    TR_GenWorld(&engine_world, &tr_level);
-
+    
+    // Here we can place different platform-specific level loading routines.
+    
+    switch(Engine_GetLevelFormat(name))
+    {
+        case LEVEL_FORMAT_PC:
+            {
+                VT_Level *tr_level = new VT_Level();
+                
+                int trv = Engine_GetPCLevelVersion(name);
+                if(trv == TR_UNKNOWN) return 0;
+                
+                tr_level->read_level(name, trv);
+                tr_level->prepare_level();
+                //tr_level.dump_textures();
+                
+                TR_GenWorld(&engine_world, tr_level);
+                
+                Engine_GetLevelName(buf, name);
+                Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
+                Con_Notify(SYSNOTE_NUM_ROOMS, engine_world.room_count);
+                
+                delete tr_level;
+            }
+            break;
+            
+        case LEVEL_FORMAT_PSX:
+            break;
+            
+        case LEVEL_FORMAT_DC:
+            break;
+            
+        case LEVEL_FORMAT_OPENTOMB:
+            break;
+            
+        default:
+            break;
+    }
+    
     engine_world.id   = 0;
     engine_world.name = 0;
     engine_world.type = 0;
 
-    Engine_GetLevelName(buf, name);
-    Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
-    Con_Notify(SYSNOTE_NUM_ROOMS, tr_level.rooms_count);
-    Con_Notify(SYSNOTE_NUM_TEXTURES, tr_level.textile32_count);
-
     Game_Prepare();
 
     Render_SetWorld(&engine_world);
+    
+    Gui_DrawLoadScreen(1000);
 
     Gui_FadeStart(FADER_LOADSCREEN, GUI_FADER_DIR_IN);
     Gui_NotifierStop();
