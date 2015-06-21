@@ -200,13 +200,13 @@ void Engine_Init_Pre()
 {
     /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
      * Rendering activation may be done later. */
-     
+
     Gui_InitFontManager();
     Con_Init();
     Engine_LuaInit();
-    
+
     lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
-    
+
     Gameflow_Init();
 
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUFFER_SIZE);
@@ -226,7 +226,7 @@ void Engine_Init_Pre()
 void Engine_Init_Post()
 {
     lua_CallVoidFunc(engine_lua, "loadscript_post", true);
-    
+
     Con_InitFonts();
 
     Gui_Init();
@@ -715,7 +715,7 @@ int lua_GetCharacterParam(lua_State * lua)
         Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
-    
+
     if(IsCharacter(ent))
     {
         lua_pushnumber(lua, Character_GetParam(ent, parameter));
@@ -748,7 +748,7 @@ int lua_SetCharacterParam(lua_State * lua)
         Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
-    
+
     if(!IsCharacter(ent))
     {
         Con_Warning(SYSWARN_NO_CHARACTER, id);
@@ -801,7 +801,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
         Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
         return 0;
     }
-    
+
     if(IsCharacter(ent))
     {
         Character_ChangeParam(ent, parameter, value);
@@ -810,7 +810,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
     {
         Con_Warning(SYSWARN_NO_CHARACTER, id);
     }
-    
+
     return 0;
 }
 
@@ -945,7 +945,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 
         if(ent)
         {
-            if(ent->bt_joint_count)
+            if(ent->bt.bt_joint_count)
             {
                 Ragdoll_Delete(ent);
             }
@@ -1173,7 +1173,7 @@ int lua_AddItem(lua_State * lua)
     int item_id = lua_tointeger(lua, 2);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    
+
     if(ent)
     {
         lua_pushinteger(lua, Character_AddItem(ent, item_id, count));
@@ -1200,7 +1200,7 @@ int lua_RemoveItem(lua_State * lua)
     int count = lua_tointeger(lua, 3);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    
+
     if(ent)
     {
         lua_pushinteger(lua, Character_RemoveItem(ent, item_id, count));
@@ -1224,7 +1224,7 @@ int lua_RemoveAllItems(lua_State * lua)
 
     int entity_id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    
+
     if(ent)
     {
         Character_RemoveAllItems(ent);
@@ -1249,7 +1249,7 @@ int lua_GetItemsCount(lua_State * lua)
     int item_id = lua_tointeger(lua, 2);
 
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    
+
     if(ent)
     {
         lua_pushinteger(lua, Character_GetItemsCount(ent, item_id));
@@ -2597,14 +2597,14 @@ int lua_SetEntityResponse(lua_State * lua)
         Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id, value]");
         return 0;
     }
-    
+
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
-    
+
     if(IsCharacter(ent))
     {
         int8_t value = (int8_t)lua_tointeger(lua, 3);
-        
+
         switch(lua_tointeger(lua, 2))
         {
             case 0:
@@ -2627,7 +2627,7 @@ int lua_SetEntityResponse(lua_State * lua)
     {
         Con_Warning(SYSWARN_NO_ENTITY, id);
     }
-    
+
     return 0;
 }
 
@@ -2909,7 +2909,7 @@ int lua_PushEntityBody(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
+    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar h_force = lua_tonumber(lua, 3);
         btScalar v_force = lua_tonumber(lua, 4);
@@ -2922,10 +2922,10 @@ int lua_PushEntityBody(lua_State *lua)
         btVector3 angle (-ang1 * h_force, ang2 * h_force, v_force);
 
         if(lua_toboolean(lua, 5))
-            ent->bt_body[body_number]->clearForces();
+            ent->bt.bt_body[body_number]->clearForces();
 
-        ent->bt_body[body_number]->setLinearVelocity(angle);
-        ent->bt_body[body_number]->setAngularVelocity(angle / 1024.0);
+        ent->bt.bt_body[body_number]->setLinearVelocity(angle);
+        ent->bt.bt_body[body_number]->setAngularVelocity(angle / 1024.0);
     }
     else
     {
@@ -2965,31 +2965,31 @@ int lua_SetEntityBodyMass(lua_State *lua)
             if(top >= argn) mass = lua_tonumber(lua, argn);
             argn++;
 
-            if(ent->bt_body[i] != NULL)
+            if(ent->bt.bt_body[i] != NULL)
             {
-                bt_engine_dynamicsWorld->removeRigidBody(ent->bt_body[i]);
+                bt_engine_dynamicsWorld->removeRigidBody(ent->bt.bt_body[i]);
 
-                    ent->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+                    ent->bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
 
-                    ent->bt_body[i]->setMassProps(mass, inertia);
+                    ent->bt.bt_body[i]->setMassProps(mass, inertia);
 
-                    ent->bt_body[i]->updateInertiaTensor();
-                    ent->bt_body[i]->clearForces();
+                    ent->bt.bt_body[i]->updateInertiaTensor();
+                    ent->bt.bt_body[i]->clearForces();
 
-                    ent->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
+                    ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
 
                     btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
-                    ent->bt_body[i]->setLinearFactor (factor);
-                    ent->bt_body[i]->setAngularFactor(factor);
+                    ent->bt.bt_body[i]->setLinearFactor (factor);
+                    ent->bt.bt_body[i]->setAngularFactor(factor);
 
                     //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
 
                     //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
                     //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
 
-                bt_engine_dynamicsWorld->addRigidBody(ent->bt_body[i]);
+                bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i]);
 
-                ent->bt_body[i]->activate();
+                ent->bt.bt_body[i]->activate();
 
                 //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
                 //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
@@ -3035,7 +3035,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
+    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar t    = ent->angles[0] * M_PI / 180.0;
         btScalar ang1 = sinf(t);
@@ -3048,7 +3048,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
             ang3 = (ang3 > 1.0)?(1.0):(ang3);
         }
 
-        ent->bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
+        ent->bt.bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
     }
     else
     {
@@ -3068,7 +3068,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
 
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
-    
+
     if(IsCharacter(ent))
     {
         Character_SetWeaponModel(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
@@ -3114,7 +3114,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
-    
+
     if(IsCharacter(ent))
     {
         ent->character->current_weapon = lua_tointeger(lua, 2);
@@ -3642,11 +3642,11 @@ bool Engine_LuaInit()
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
         lua_atpanic(engine_lua, engine_LuaPanic);
-        
+
         // Load script loading order (sic!)
-        
+
         luaL_dofile(engine_lua, "scripts/loadscript.lua");
-        
+
         return true;
     }
     else
@@ -4251,7 +4251,7 @@ int Engine_LoadMap(const char *name)
     World_Prepare(&engine_world);
 
     lua_Clean(engine_lua);
-    
+
     Audio_Init();
 
     Gui_DrawLoadScreen(150);
