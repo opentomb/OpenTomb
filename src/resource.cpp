@@ -4457,7 +4457,10 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
             break;
         case TR_II:
             // Fix for helicopter sound range.
-            engine_world.audio_effects[(engine_world.audio_map[297])].range *= 10.0;
+            if ((engine_world.audio_map[297]) >= 0)
+            {
+                engine_world.audio_effects[(engine_world.audio_map[297])].range *= 10.0;
+            }
             break;
     }
 
