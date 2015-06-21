@@ -54,6 +54,7 @@ class render_DebugDrawer:public btIDebugDraw
     uint32_t m_lines;
     bool     m_need_realloc;
 
+    GLuint  m_gl_vbo;
     GLfloat m_color[3];
     GLfloat *m_buffer;
     

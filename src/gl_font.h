@@ -48,6 +48,7 @@ typedef struct gl_tex_font_s
     uint16_t                 gl_tex_indexes_count;
     uint16_t                 gl_real_tex_indexes_count;
     GLuint                  *gl_tex_indexes;
+    GLuint                   gl_vbo;
     GLint                    gl_max_tex_width;
     GLint                    gl_tex_width;
     GLfloat                  gl_font_color[4];

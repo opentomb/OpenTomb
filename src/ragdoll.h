@@ -22,6 +22,7 @@ extern "C" {
 #define RD_CONSTRAINT_HINGE 1
 #define RD_CONSTRAINT_CONE  2
 
+#define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
 
 // Joint setup struct is used to parse joint script entry to
 // actual joint.

@@ -9,7 +9,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
 
     if( (!parent_entity) || (!setup)                           ||
         (setup->link_body >= parent_entity->bf.bone_tag_count) ||
-        (!(parent_entity->bt_body[setup->link_body]))           ) return false;
+        (!(parent_entity->bt.bt_body[setup->link_body]))           ) return false;
 
     skeletal_model_p model = World_GetModelByID(&engine_world, setup->model);
     btScalar owner_body_transform[16];
@@ -145,7 +145,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
 
-            prev_body = parent_entity->bt_body[hair->owner_body];   // Previous body is parent body.
+            prev_body = parent_entity->bt.bt_body[hair->owner_body];   // Previous body is parent body.
         }
         else
         {
@@ -228,7 +228,7 @@ void Hair_Clear(hair_p hair)
     free(hair->joints);
     hair->joints = NULL;
     hair->joint_count = 0;
-    
+
     for(int i=0; i<hair->element_count; i++)
     {
         if(hair->elements[i].body)

@@ -16,6 +16,7 @@
 #include <ftmodapi.h>
 
 #include "gl_font.h"
+#include "gl_util.h"
 
 #define vec4_copy(x, y) {(x)[0] = (y)[0]; (x)[1] = (y)[1]; (x)[2] = (y)[2]; (x)[3] = (y)[3];}
 
@@ -38,6 +39,7 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
         glf->gl_tex_width = glf->gl_max_tex_width;
         glf->gl_tex_indexes = NULL;
+        glf->gl_vbo = 0;
         glf->gl_tex_indexes_count = 0;
         glf->gl_real_tex_indexes_count = 0;
         glf->gl_font_color[0] = 0.0;
@@ -82,6 +84,7 @@ gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
         glf->gl_tex_width = glf->gl_max_tex_width;
         glf->gl_tex_indexes = NULL;
+        glf->gl_vbo = 0;
         glf->gl_tex_indexes_count = 0;
         glf->gl_real_tex_indexes_count = 0;
         glf_resize(glf, font_size);
@@ -110,7 +113,13 @@ void glf_free_font(gl_tex_font_p glf)
             glf->glyphs = NULL;
         }
         glf->glyphs_count = 0;
-
+       
+        if(glf->gl_vbo)
+        {
+            glDeleteBuffersARB(1, &glf->gl_vbo);
+            glf->gl_vbo = 0;
+        }
+        
         glf->gl_real_tex_indexes_count = 0;
         if(glf->gl_tex_indexes != NULL)
         {
@@ -200,6 +209,11 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         int x, y, xx, yy;
         int i, ii, i0 = 0;
 
+        if(glf->gl_vbo == 0)
+        {
+            glGenBuffersARB(1, &glf->gl_vbo);
+        }
+        
         // clear old atlas, if exists
         if(glf->gl_tex_indexes != NULL)
         {
@@ -454,13 +468,16 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
     if(glf->gl_real_tex_indexes_count == 1)
     {
-        GLfloat *p, buffer[48 * utf8_strlen(text)];
+        GLfloat *p;
         GLuint elements_count = 0;
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(p=buffer;*ch;)
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, glf->gl_vbo);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, 48 * utf8_strlen(text) * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
+        p = (GLfloat*)glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+        for(;*ch;)
         {
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
@@ -521,15 +538,17 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;
             y += (GLfloat)(kern.y + g->advance_y) / 64.0;
         }
+        glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
         ///RENDER
         if(elements_count != 0)
         {
             glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[0]);
-            glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer);
-            glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer + 2);
-            glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer + 4);
+            glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(0));
+            glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+            glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(4 * sizeof(GLfloat)));
             glDrawArrays(GL_TRIANGLES, 0, elements_count * 3);
         }
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     }
     else
     {

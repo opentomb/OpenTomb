@@ -7,6 +7,8 @@
 #include "bullet/LinearMath/btVector3.h"
 #include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
 #include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
+#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 #include "mesh.h"
 
 class btCollisionShape;
@@ -71,6 +73,19 @@ struct ss_bone_frame_s;
 
 // Specific in-game entity structure.
 
+typedef struct bt_entity_data_s
+{
+    int8_t                              no_fix_all;
+    uint32_t                            no_fix_body_parts;
+    btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
+    btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
+    
+    btCollisionShape                  **shapes;
+    btRigidBody                       **bt_body;
+    uint32_t                            bt_joint_count;         // Ragdoll joints
+    btTypedConstraint                 **bt_joints;              // Ragdoll joints
+}bt_entity_data_t, *bt_entity_data_p;
+
 typedef struct entity_s
 {
     uint32_t                            id;                 // Unique entity ID
@@ -95,6 +110,7 @@ typedef struct entity_s
     btScalar                            inertia_angular[2]; // angular inertia - X and Y axes
     
     struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
+    struct bt_entity_data_s             bt;
     btScalar                            angles[3];
     btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
 
@@ -106,11 +122,6 @@ typedef struct entity_s
     struct engine_container_s          *self;
 
     btScalar                            activation_offset[4];   // where we can activate object (dx, dy, dz, r)
-    
-    btRigidBody                       **bt_body;
-    
-    uint32_t                            bt_joint_count;         // Ragdoll joints
-    btTypedConstraint                 **bt_joints;              // Ragdoll joints
     
     struct character_s                 *character;
 }entity_t, *entity_p;

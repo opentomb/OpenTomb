@@ -677,7 +677,7 @@ void Render_DynamicEntity(const lit_shader_description *shader, struct entity_s 
     {
         btScalar mvTransform[16], tr[16];
 
-        entity->bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
+        entity->bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(tr);
         Mat4_Mat4_mul(mvTransform, modelViewMatrix, tr);
         glUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
 
@@ -1379,6 +1379,7 @@ render_DebugDrawer::render_DebugDrawer()
     m_buffer = (GLfloat*)malloc(2 * 6 * m_max_lines * sizeof(GLfloat));
 
     m_lines = 0;
+    m_gl_vbo = 0;
     m_need_realloc = false;
     vec3_set_zero(m_color);
     m_obb = OBB_Create();
@@ -1388,6 +1389,11 @@ render_DebugDrawer::~render_DebugDrawer()
 {
     free(m_buffer);
     m_buffer = NULL;
+    if(m_gl_vbo != 0)
+    {
+        glDeleteBuffersARB(1, &m_gl_vbo);
+        m_gl_vbo = 0;
+    }
     OBB_Clear(m_obb);
     m_obb = NULL;
 }
@@ -1404,6 +1410,10 @@ void render_DebugDrawer::reset()
             m_max_lines *= 2;
         }
         m_need_realloc = false;
+    }
+    if(m_gl_vbo == 0)
+    {
+        glGenBuffersARB(1, &m_gl_vbo);
     }
     m_lines = 0;
 }
@@ -1477,11 +1487,14 @@ void render_DebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVect
 
 void render_DebugDrawer::render()
 {
-    if(m_lines > 0)
+    if((m_lines > 0) && (m_gl_vbo != 0))
     {
-        glVertexPointer(3, GL_FLOAT, sizeof(GLfloat [6]), m_buffer);
-        glColorPointer(3, GL_FLOAT, sizeof(GLfloat [6]),  m_buffer + 3);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_gl_vbo);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_lines * 12 * sizeof(GLfloat), m_buffer, GL_STREAM_DRAW);
+        glVertexPointer(3, GL_FLOAT, 6 * sizeof(GLfloat), (void*)0);
+        glColorPointer(3, GL_FLOAT, 6 * sizeof(GLfloat),  (void*)(3 * sizeof(GLfloat)));
         glDrawArrays(GL_LINES, 0, 2 * m_lines);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     }
 
     vec3_set_zero(m_color);

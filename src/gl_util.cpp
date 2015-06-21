@@ -128,6 +128,11 @@ PFNGLUNMAPBUFFERARBPROC                 glUnmapBufferARB =                      
 PFNGLGETBUFFERPARAMETERIVARBPROC        glGetBufferParameterivARB =             NULL;
 PFNGLGETBUFFERPOINTERVARBPROC           glGetBufferPointervARB =                NULL;
 
+PFNGLBINDVERTEXARRAYPROC                glBindVertexArray =                     NULL;
+PFNGLDELETEVERTEXARRAYSPROC             glDeleteVertexArrays =                  NULL;
+PFNGLGENVERTEXARRAYSPROC                glGenVertexArrays =                     NULL;
+PFNGLISVERTEXARRAYPROC                  glIsVertexArray =                       NULL;
+
 PFNGLGENERATEMIPMAPEXTPROC              glGenerateMipmap =                      NULL;
 #endif
 
@@ -196,6 +201,11 @@ void InitGLExtFuncs()
         SAFE_GET_PROC(glMultiTexCoord4ivARB, PFNGLMULTITEXCOORD4IVARBPROC, "glMultiTexCoord4ivARB");
         SAFE_GET_PROC(glMultiTexCoord4sARB, PFNGLMULTITEXCOORD4SARBPROC, "glMultiTexCoord4sARB");
         SAFE_GET_PROC(glMultiTexCoord4svARB, PFNGLMULTITEXCOORD4SVARBPROC, "glMultiTexCoord4svARB");
+
+        SAFE_GET_PROC(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC, "glBindVertexArray");
+        SAFE_GET_PROC(glDeleteVertexArrays, PFNGLDELETEVERTEXARRAYSPROC, "glDeleteVertexArrays");
+        SAFE_GET_PROC(glGenVertexArrays, PFNGLGENVERTEXARRAYSPROC, "glGenVertexArrays");
+        SAFE_GET_PROC(glIsVertexArray, PFNGLISVERTEXARRAYPROC, "glIsVertexArray");
 
         SAFE_GET_PROC(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC, "glGenerateMipmap");
     }
