@@ -92,14 +92,25 @@ void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr);
 void TR_GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class VT_Level *tr);
 void TR_GenEntities(struct world_s *world, class VT_Level *tr);
 void TR_GenSprites(struct world_s *world, class VT_Level *tr);
+void TR_GenSpritesBuffer(struct world_s *world);
 void TR_GenTextures(struct world_s *world, class VT_Level *tr);
+void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr);
 void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr);
 void TR_GenRooms(struct world_s *world, class VT_Level *tr);
 void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr);
 void TR_GenRoomCollision(struct world_s *world);
 void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
 void TR_GenRoomFlipMap(struct world_s *world);
+void TR_GenBoxes(struct world_s *world, class VT_Level *tr);
+void TR_GenCameras(struct world_s *world, class VT_Level *tr);
+void TR_GenBaseItems(struct world_s *world);
+
 void TR_GenRoomSpritesBuffer(struct room_s *room);
+void TR_GenVBOs(struct world_s *world);
+
+// Fix start-up room states.
+
+void TR_FixRooms(struct world_s *world);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
@@ -146,5 +157,11 @@ void Items_CheckEntities(RedBlackNode_p n);
 // If entity is not processed, add its index into lookup table.
 
 bool IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
+
+// Open/close scripts.
+
+void ConfScripts_Open(int engine_version);
+void ConfScripts_Close();
+void Autoexec_Open(int engine_version);
 
 #endif

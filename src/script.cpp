@@ -493,7 +493,7 @@ void lua_AddKey(lua_State *lua, int keycode, int state)
     lua_settop(lua, top);
 }
 
-bool lua_CallVoidFunc(lua_State *lua, const char* func_name)
+bool lua_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call)
 {
     int top = lua_gettop(lua);
     
@@ -506,6 +506,13 @@ bool lua_CallVoidFunc(lua_State *lua, const char* func_name)
     }
     
     lua_CallAndLog(lua, 0, 0, 0);
+    
+    if(destroy_after_call)
+    {
+        lua_pushstring(engine_lua, "nil");
+        lua_setglobal(lua, func_name);
+    }
+        
     lua_settop(lua, top);
     return true;
 }

@@ -200,9 +200,13 @@ void Engine_Init_Pre()
 {
     /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
      * Rendering activation may be done later. */
+     
     Gui_InitFontManager();
     Con_Init();
     Engine_LuaInit();
+    
+    lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
+    
     Gameflow_Init();
 
     frame_vertex_buffer = (btScalar*)malloc(sizeof(btScalar) * INIT_FRAME_VERTEX_BUFFER_SIZE);
@@ -221,7 +225,8 @@ void Engine_Init_Pre()
 
 void Engine_Init_Post()
 {
-    luaL_dofile(engine_lua, "scripts/gui/fonts.lua");
+    lua_CallVoidFunc(engine_lua, "loadscript_post", true);
+    
     Con_InitFonts();
 
     Gui_Init();
@@ -2407,6 +2412,39 @@ int lua_GetEntityFlags(lua_State * lua)
     return 3;
 }
 
+int lua_SetEntityFlags(lua_State * lua)
+{
+    if(lua_gettop(lua) < 3)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    if(!lua_isnil(lua, 2))
+    {
+        ent->state_flags = lua_tointeger(lua, 2);
+    }
+    if(!lua_isnil(lua, 3))
+    {
+        ent->type_flags = lua_tointeger(lua, 3);
+    }
+    if(!lua_isnil(lua, 4))
+    {
+        ent->callback_flags = lua_tointeger(lua, 4);
+    }
+
+    return 0;
+}
+
 
 int lua_GetEntityTypeFlag(lua_State *lua)
 {
@@ -2447,39 +2485,6 @@ int lua_SetEntityTypeFlag(lua_State *lua)
     }
 
     ent->type_flags ^= (uint16_t)lua_tointeger(lua, 2);
-    return 0;
-}
-
-int lua_SetEntityFlags(lua_State * lua)
-{
-    if(lua_gettop(lua) < 3)
-    {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
-        return 0;
-    }
-
-    int id = lua_tointeger(lua, 1);
-    entity_p ent = World_GetEntityByID(&engine_world, id);
-
-    if(ent == NULL)
-    {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
-        return 0;
-    }
-
-    if(!lua_isnil(lua, 2))
-    {
-        ent->state_flags = lua_tointeger(lua, 2);
-    }
-    if(!lua_isnil(lua, 3))
-    {
-        ent->type_flags = lua_tointeger(lua, 3);
-    }
-    if(!lua_isnil(lua, 4))
-    {
-        ent->callback_flags = lua_tointeger(lua, 4);
-    }
-
     return 0;
 }
 
@@ -3637,24 +3642,11 @@ bool Engine_LuaInit()
         luaL_openlibs(engine_lua);
         Engine_LuaRegisterFuncs(engine_lua);
         lua_atpanic(engine_lua, engine_LuaPanic);
-
-        // Load and run global engine scripts, except font script, which
-        // should be called AFTER OpenGL/SDL are initialized.
-
-        luaL_dofile(engine_lua, "scripts/strings/getstring.lua");
-        luaL_dofile(engine_lua, "scripts/system/sys_scripts.lua");
-        luaL_dofile(engine_lua, "scripts/system/debug.lua");
-        luaL_dofile(engine_lua, "scripts/gameflow/gameflow.lua");
-        luaL_dofile(engine_lua, "scripts/trigger/trigger_functions.lua");
-        luaL_dofile(engine_lua, "scripts/trigger/helper_functions.lua");
-        luaL_dofile(engine_lua, "scripts/entity/entity_functions.lua");
-        luaL_dofile(engine_lua, "scripts/character/hair.lua");
-        luaL_dofile(engine_lua, "scripts/character/ragdoll.lua");
-        luaL_dofile(engine_lua, "scripts/config/control_constants.lua");
-        luaL_dofile(engine_lua, "scripts/audio/common_sounds.lua");
-        luaL_dofile(engine_lua, "scripts/audio/soundtrack.lua");
-        luaL_dofile(engine_lua, "scripts/audio/sample_override.lua");
-
+        
+        // Load script loading order (sic!)
+        
+        luaL_dofile(engine_lua, "scripts/loadscript.lua");
+        
         return true;
     }
     else

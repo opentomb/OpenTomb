@@ -1757,14 +1757,10 @@ int lua_SetSectorFlags(lua_State * lua)
     return 0;
 }
 
-void TR_GenWorld(struct world_s *world, class VT_Level *tr)
+void ConfScripts_Open(int engine_version)
 {
-    world->version = tr->game_version;
-
-    // Process configuration scripts.
-
     char temp_script_name[256];
-    Engine_GetLevelScriptName(tr->game_version, temp_script_name);
+    Engine_GetLevelScriptName(engine_version, temp_script_name);
 
     level_script = luaL_newstate();
     if(level_script != NULL)
@@ -1830,113 +1826,10 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
             ent_ID_override = NULL;
         }
     }
+}
 
-    // Begin generating world.
-
-    Gui_DrawLoadScreen(200);
-
-    TR_GenRBTrees(world);
-
-    Gui_DrawLoadScreen(250);
-
-    TR_GenTextures(world, tr);  // Generate OGL textures
-
-    Gui_DrawLoadScreen(300);
-
-    /*
-     * Copy anim commands
-     */
-    world->anim_commands_count = tr->anim_commands_count;
-    world->anim_commands = tr->anim_commands;
-    tr->anim_commands = NULL;
-    tr->anim_commands_count = 0;
-
-    TR_GenAnimTextures(world, tr);  // Generate animated textures
-
-    Gui_DrawLoadScreen(400);
-
-    TR_GenMeshes(world, tr);        // Generate all meshes
-
-    Gui_DrawLoadScreen(500);
-
-    TR_GenSprites(world, tr);       // Generate all sprites
-
-    Gui_DrawLoadScreen(550);
-
-    // Generate boxes.
-
-    world->room_boxes = NULL;
-    world->room_box_count = tr->boxes_count;
-    if(world->room_box_count)
-    {
-        world->room_boxes = (room_box_p)malloc(world->room_box_count * sizeof(room_box_t));
-        for(uint32_t i=0;i<world->room_box_count;i++)
-        {
-            world->room_boxes[i].overlap_index = tr->boxes[i].overlap_index;
-            world->room_boxes[i].true_floor =-tr->boxes[i].true_floor;
-            world->room_boxes[i].x_min = tr->boxes[i].xmin;
-            world->room_boxes[i].x_max = tr->boxes[i].xmax;
-            world->room_boxes[i].y_min =-tr->boxes[i].zmax;
-            world->room_boxes[i].y_max =-tr->boxes[i].zmin;
-        }
-    }
-
-    // Generate cameras & sinks.
-
-    world->cameras_sinks = NULL;
-    world->cameras_sinks_count = tr->cameras_count;
-    if(world->cameras_sinks_count)
-    {
-        world->cameras_sinks = (stat_camera_sink_p)malloc(world->cameras_sinks_count * sizeof(stat_camera_sink_t));
-        for(uint32_t i=0;i<world->cameras_sinks_count;i++)
-        {
-            world->cameras_sinks[i].x                   =  tr->cameras[i].x;
-            world->cameras_sinks[i].y                   =  tr->cameras[i].z;
-            world->cameras_sinks[i].z                   = -tr->cameras[i].y;
-            world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
-            world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
-        }
-    }
-
-    TR_GenRooms(world, tr);     // Build all rooms
-
-    TR_GenRoomFlipMap(world);
-
-    Gui_DrawLoadScreen(650);
-
-    // Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
-    TR_GenSkeletalModels(world, tr);
-
-    Gui_DrawLoadScreen(700);
-
-    TR_GenEntities(world, tr);  // Build all moveables (entities)
-
-    // Generate sprite buffers. Only now because entity generation adds new sprites
-    for (uint32_t i = 0; i < world->room_count; i++)
-        TR_GenRoomSpritesBuffer(&world->rooms[i]);
-
-    Gui_DrawLoadScreen(750);
-
-    TR_GenRoomProperties(world, tr);
-
-    Gui_DrawLoadScreen(800);
-
-    TR_GenRoomCollision(world);
-
-    Gui_DrawLoadScreen(900);
-
-    // Initialize audio.
-
-    Audio_Init(TR_AUDIO_MAX_CHANNELS, tr);
-
-    Gui_DrawLoadScreen(950);
-
-    // Find and set skybox.
-
-    world->sky_box = TR_GetSkybox(world, tr->game_version);
-
-    // Load entity collision flags and ID overrides from script.
-
+void ConfScripts_Close()
+{
     if(objects_flags_conf)
     {
         lua_close(objects_flags_conf);
@@ -1954,52 +1847,105 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
         lua_close(level_script);
         level_script = NULL;
     }
+}
 
-    // Generate VBOs for meshes.
-
-    for(uint32_t i=0;i<world->meshes_count;i++)
-    {
-        if(world->meshes[i].vertex_count || world->meshes[i].animated_vertex_count)
-        {
-            Mesh_GenVBO(&renderer, world->meshes + i);
-        }
-    }
-
-    Gui_DrawLoadScreen(1000);
-
-    for(uint32_t i=0;i<world->room_count;i++)
-    {
-        if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count || world->rooms[i].mesh->animated_vertex_count))
-        {
-            Mesh_GenVBO(&renderer, world->rooms[i].mesh);
-        }
-    }
-
-    // Process level autoexec loading.
-
-    Engine_GetLevelScriptName(tr->game_version, temp_script_name, "_autoexec");
+void Autoexec_Open(int engine_version)
+{
+    char temp_script_name[256];
+    Engine_GetLevelScriptName(engine_version, temp_script_name, "_autoexec");
 
     luaL_dofile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
     luaL_dofile(engine_lua, temp_script_name);          // do level-specific autoexec
+}
 
-    if((world->items_tree != NULL) && (world->items_tree->root != NULL))
-    {
-        Items_CheckEntities(world->items_tree->root);
-    }
+void TR_GenWorld(struct world_s *world, class VT_Level *tr)
+{
+    world->version = tr->game_version;
 
-    room_p r = world->rooms;
-    for(uint32_t i=0;i<world->room_count;i++,r++)
-    {
-        if(r->base_room != NULL)
-        {
-            Room_Disable(r);                             //Disable current room
-        }
+    ConfScripts_Open(world->version);   // Open configuration scripts.
+    Gui_DrawLoadScreen(200);
 
-        if((r->portal_count == 0) && (world->room_count > 1))
-        {
-            Room_Disable(r);
-        }
-    }
+    TR_GenRBTrees(world);               // Generate red-black trees
+    Gui_DrawLoadScreen(250);
+
+    TR_GenTextures(world, tr);          // Generate OGL textures
+    Gui_DrawLoadScreen(300);
+    
+    TR_GenAnimCommands(world, tr);      // Copy anim commands
+    Gui_DrawLoadScreen(310);
+
+    TR_GenAnimTextures(world, tr);      // Generate animated textures
+    Gui_DrawLoadScreen(320);
+
+    TR_GenMeshes(world, tr);            // Generate all meshes
+    Gui_DrawLoadScreen(400);
+
+    TR_GenSprites(world, tr);           // Generate all sprites
+    Gui_DrawLoadScreen(420);
+    
+    TR_GenBoxes(world, tr);             // Generate boxes.
+    Gui_DrawLoadScreen(440);
+    
+    TR_GenCameras(world, tr);           // Generate cameras & sinks.
+    Gui_DrawLoadScreen(460);
+    
+    TR_GenRooms(world, tr);             // Build all rooms
+    Gui_DrawLoadScreen(500);
+
+    TR_GenRoomFlipMap(world);           // Generate room flipmaps
+    Gui_DrawLoadScreen(520);
+
+    // Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
+    
+    TR_GenSkeletalModels(world, tr);
+    Gui_DrawLoadScreen(600);
+
+    TR_GenEntities(world, tr);          // Build all moveables (entities)
+    Gui_DrawLoadScreen(650);
+    
+    TR_GenBaseItems(world);             // Generate inventory item entries.
+    Gui_DrawLoadScreen(680);
+
+    // Generate sprite buffers. Only now because entity generation adds new sprites
+
+    TR_GenSpritesBuffer(world);
+    Gui_DrawLoadScreen(700);
+
+    TR_GenRoomProperties(world, tr);
+    Gui_DrawLoadScreen(750);
+
+    TR_GenRoomCollision(world);
+    Gui_DrawLoadScreen(800);
+
+    // Initialize audio.
+
+    Audio_Init(TR_AUDIO_MAX_CHANNELS, tr);
+    Gui_DrawLoadScreen(850);
+
+    // Find and set skybox.
+
+    world->sky_box = TR_GetSkybox(world, world->version);
+    Gui_DrawLoadScreen(860);
+
+    // Load entity collision flags and ID overrides from script.
+
+    ConfScripts_Close();
+    Gui_DrawLoadScreen(870);
+    
+    // Generate VBOs for meshes.
+
+    TR_GenVBOs(world);
+    Gui_DrawLoadScreen(950);
+
+    // Process level autoexec loading.
+
+    Autoexec_Open(world->version);
+    Gui_DrawLoadScreen(970);
+    
+    // Fix initial room states
+
+    TR_FixRooms(world);
+    Gui_DrawLoadScreen(1000);
 }
 
 
@@ -2575,6 +2521,46 @@ void TR_GenRoomFlipMap(struct world_s *world)
     memset(world->flip_state, 0, world->flip_count);
 }
 
+
+void TR_GenBoxes(struct world_s *world, class VT_Level *tr)
+{
+    world->room_boxes = NULL;
+    world->room_box_count = tr->boxes_count;
+    
+    if(world->room_box_count)
+    {
+        world->room_boxes = (room_box_p)malloc(world->room_box_count * sizeof(room_box_t));
+        for(uint32_t i=0;i<world->room_box_count;i++)
+        {
+            world->room_boxes[i].overlap_index = tr->boxes[i].overlap_index;
+            world->room_boxes[i].true_floor =-tr->boxes[i].true_floor;
+            world->room_boxes[i].x_min = tr->boxes[i].xmin;
+            world->room_boxes[i].x_max = tr->boxes[i].xmax;
+            world->room_boxes[i].y_min =-tr->boxes[i].zmax;
+            world->room_boxes[i].y_max =-tr->boxes[i].zmin;
+        }
+    }
+}
+
+void TR_GenCameras(struct world_s *world, class VT_Level *tr)
+{
+    world->cameras_sinks = NULL;
+    world->cameras_sinks_count = tr->cameras_count;
+    
+    if(world->cameras_sinks_count)
+    {
+        world->cameras_sinks = (stat_camera_sink_p)malloc(world->cameras_sinks_count * sizeof(stat_camera_sink_t));
+        for(uint32_t i=0;i<world->cameras_sinks_count;i++)
+        {
+            world->cameras_sinks[i].x                   =  tr->cameras[i].x;
+            world->cameras_sinks[i].y                   =  tr->cameras[i].z;
+            world->cameras_sinks[i].z                   = -tr->cameras[i].y;
+            world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
+            world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
+        }
+    }
+}
+
 /**
  * sprites loading, works correct in TR1 - TR5
  */
@@ -2612,6 +2598,12 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
             world->sprites[tr->sprite_sequences[i].offset].id = tr->sprite_sequences[i].object_id;
         }
     }
+}
+
+void TR_GenSpritesBuffer(struct world_s *world)
+{
+    for (uint32_t i = 0; i < world->room_count; i++)
+        TR_GenRoomSpritesBuffer(&world->rooms[i]);
 }
 
 void TR_GenTextures(struct world_s* world, class VT_Level *tr)
@@ -3381,6 +3373,57 @@ void TR_GenRoomSpritesBuffer(struct room_s *room)
     room->sprite_buffer->data = renderer.vertex_array_manager->createArray(elementBuffer, 3, attribs);
 }
 
+void TR_GenVBOs(struct world_s *world)
+{
+    for(uint32_t i=0;i<world->meshes_count;i++)
+    {
+        if(world->meshes[i].vertex_count || world->meshes[i].animated_vertex_count)
+        {
+            Mesh_GenVBO(&renderer, world->meshes + i);
+        }
+    }
+
+    for(uint32_t i=0;i<world->room_count;i++)
+    {
+        if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count || world->rooms[i].mesh->animated_vertex_count))
+        {
+            Mesh_GenVBO(&renderer, world->rooms[i].mesh);
+        }
+    }
+}
+
+void TR_GenBaseItems(struct world_s* world)
+{
+    lua_CallVoidFunc(engine_lua, "genBaseItems");
+    
+    if((world->items_tree != NULL) && (world->items_tree->root != NULL))
+    {
+        Items_CheckEntities(world->items_tree->root);
+    }
+}
+
+void TR_FixRooms(struct world_s *world)
+{
+    room_p r = world->rooms;
+    for(uint32_t i=0;i<world->room_count;i++,r++)
+    {
+        if(r->base_room != NULL)
+        {
+            Room_Disable(r);    // Disable current room
+        }
+
+        // Isolated rooms may be used for rolling ball trick (for ex., LEVEL4.PHD).
+        // Hence, this part is commented.
+        
+        /*
+        if((r->portal_count == 0) && (world->room_count > 1))
+        {
+            Room_Disable(r);
+        }
+        */
+    }
+}
+
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr)
 {
     tr_animation_t *tr_animation;
@@ -3432,6 +3475,13 @@ struct skeletal_model_s* TR_GetSkybox(struct world_s *world, uint32_t engine_ver
     }
 }
 
+void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr)
+{
+    world->anim_commands_count = tr->anim_commands_count;
+    world->anim_commands = tr->anim_commands;
+    tr->anim_commands = NULL;
+    tr->anim_commands_count = 0;
+}
 
 void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_model_s *model, class VT_Level *tr)
 {
