@@ -42,7 +42,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
     entity->bt.no_fix_body_parts = 0x00000000;
     int map_size = entity->bf.animations.model->collision_map_size;             // does not works, strange...
     entity->bf.animations.model->collision_map_size = entity->bf.animations.model->mesh_count;
-    Character_FixPenetrations(entity, NULL);
+    Entity_FixPenetrations(entity, NULL);
     entity->bf.animations.model->collision_map_size = map_size;
 
     for(int i=0; i<setup->body_count; i++)
