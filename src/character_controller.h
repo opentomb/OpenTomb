@@ -286,13 +286,6 @@ typedef struct inventory_node_s
     struct inventory_node_s    *next;
 }inventory_node_t, *inventory_node_p;
 
-#define MAX_OBJECTS_IN_COLLSION_NODE    (4)
-
-typedef struct character_collision_node_s
-{
-    uint16_t                    obj_count;
-    btCollisionObject          *obj[MAX_OBJECTS_IN_COLLSION_NODE];
-}character_collision_node_t, *character_collision_node_p;
 
 typedef struct character_s
 {
@@ -335,7 +328,6 @@ typedef struct character_s
 
     struct entity_s             *traversed_object;
     
-    struct character_collision_node_s                   *last_collisions;
     bt_engine_ClosestRayResultCallback                  *ray_cb;
     bt_engine_ClosestConvexResultCallback               *convex_cb;
 }character_t, *character_p;
@@ -353,17 +345,6 @@ int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct hei
 int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
 climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
-void Character_GhostUpdate(struct entity_s *ent);
-void Character_UpdateCurrentCollisions(struct entity_s *ent);
-int Character_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
-void Character_FixPenetrations(struct entity_s *ent, btScalar move[3]);
-void Character_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
-void Character_CheckCallbacks(struct entity_s *ent);
-bool Character_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-void Character_CleanCollisionAllBodyParts(struct entity_s *ent);
-void Character_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-btCollisionObject *Character_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag);
 
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);

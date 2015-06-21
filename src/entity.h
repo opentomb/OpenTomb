@@ -73,6 +73,14 @@ struct ss_bone_frame_s;
 
 // Specific in-game entity structure.
 
+#define MAX_OBJECTS_IN_COLLSION_NODE    (4)
+
+typedef struct entity_collision_node_s
+{
+    uint16_t                    obj_count;
+    btCollisionObject          *obj[MAX_OBJECTS_IN_COLLSION_NODE];
+}entity_collision_node_t, *entity_collision_node_p;
+
 typedef struct bt_entity_data_s
 {
     int8_t                              no_fix_all;
@@ -84,6 +92,8 @@ typedef struct bt_entity_data_s
     btRigidBody                       **bt_body;
     uint32_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
+    
+    struct entity_collision_node_s     *last_collisions;
 }bt_entity_data_t, *bt_entity_data_p;
 
 typedef struct entity_s
@@ -128,6 +138,7 @@ typedef struct entity_s
 
 
 entity_p Entity_Create();
+void Entity_CreateGhosts(entity_p entity);
 void Entity_Clear(entity_p entity);
 void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);
@@ -136,6 +147,17 @@ void Entity_DisableCollision(entity_p ent);
 
 // Bullet entity rigid body generating.
 void BT_GenEntityRigidBody(entity_p ent);
+int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
+void Entity_GhostUpdate(struct entity_s *ent);
+void Entity_UpdateCurrentCollisions(struct entity_s *ent);
+int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
+void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3]);
+int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
+void Entity_CheckCollisionCallbacks(struct entity_s *ent);
+bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
+void Entity_CleanCollisionAllBodyParts(struct entity_s *ent);
+void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
+btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag);
 
 void Entity_UpdateRoomPos(entity_p ent);
 void Entity_UpdateRigidBody(entity_p ent, int force);

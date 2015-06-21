@@ -1114,7 +1114,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 
 void Audio_UpdateSources()
 {
-    if(audio_blocked || (engine_world.audio_sources_count < 1))
+    if(engine_world.audio_sources_count < 1)
     {
         return;
     }
@@ -1209,9 +1209,12 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     audio_effect_p  effect = NULL;
     AudioSource    *source = NULL;
 
-    // If audio is blocked, don't process.
+    // If there are no audio buffers, don't process.
 
-    if(audio_blocked) return TR_AUDIO_SEND_IGNORED;
+    if(engine_world.audio_buffers_count < 1)
+    {
+        return TR_AUDIO_SEND_IGNORED;
+    }
 
     // Remap global engine effect ID to local effect ID.
 
@@ -1571,7 +1574,7 @@ int Audio_Init(int num_Sources, class VT_Level *tr)
                 break;
 
             case TR_II:
-            case TR_II_DEMO:                
+            case TR_II_DEMO:
                 switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
                 {
                     case 0x02:
