@@ -151,7 +151,7 @@ int lua_timescale(lua_State * lua)
     {
         time_scale = lua_tonumber(lua, 1);
     }
-    
+
     Con_Printf("time_scale = %.3f", time_scale);
     return 0;
 }
@@ -885,7 +885,7 @@ void Game_Frame(btScalar time)
         {
             Entity_ProcessSector(engine_world.Character);
             Character_UpdateParams(engine_world.Character);
-            Character_CheckCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
+            Entity_CheckCollisionCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
         }
 
         if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
