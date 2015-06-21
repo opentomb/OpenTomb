@@ -549,7 +549,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_PREPARE:
-            //ent->character->complex_collision = 0x01;
             cmd->rot[0] = 0;
             Character_Lean(ent, cmd, 0.0);
 
@@ -602,7 +601,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_BACK:
-            //ent->character->complex_collision = 0x01;
             cmd->rot[0] = 0.0;
             if(resp->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
             {
@@ -633,7 +631,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_LEFT:
-            //ent->character->complex_collision = 0x01;
             cmd->rot[0] = 0.0;
             if(resp->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
             {
@@ -660,7 +657,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_RIGHT:
-            //ent->character->complex_collision = 0x01;
             cmd->rot[0] = 0.0;
             if(resp->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
             {
@@ -1755,15 +1751,9 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             break;
 
+            /*other code here prevents to UGLY Lara's move in end of "climb on", do not loose ent_set_on_floor_after_climb callback here!*/
         case TR_STATE_LARA_HANDSTAND:
-            cmd->rot[0] = 0;
-            ent->bt.no_fix_all = 0x01;
-            ss_anim->onFrame = ent_set_on_floor_after_climb;
-            break;
         case TR_STATE_LARA_GRABBING:
-            cmd->rot[0] = 0;
-            ent->bt.no_fix_all = 0x01;
-            break;
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
             ent->bt.no_fix_all = 0x01;
@@ -3027,6 +3017,16 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     {
         case TR_ANIMATION_LARA_STAY_JUMP_SIDES:
             ent->bt.no_fix_body_parts |= BODY_PART_HEAD;
+            break;
+
+        case TR_ANIMATION_LARA_TRY_HANG_SOLID:
+        case TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG:
+            if((ent->move_type == MOVE_FREE_FALLING) && (ent->character->cmd.action) &&
+               (ent->speed.m_floats[0] * ent->transform[4+0] + ent->speed.m_floats[1] * ent->transform[4+1] < 0.0))
+            {
+                ent->speed.m_floats[0] = -ent->speed.m_floats[0];
+                ent->speed.m_floats[1] = -ent->speed.m_floats[1];
+            }
             break;
     };
 
