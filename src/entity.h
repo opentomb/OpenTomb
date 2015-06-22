@@ -90,7 +90,7 @@ typedef struct bt_entity_data_s
     
     btCollisionShape                  **shapes;
     btRigidBody                       **bt_body;
-    uint32_t                            bt_joint_count;         // Ragdoll joints
+    uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
     
     struct entity_collision_node_s     *last_collisions;

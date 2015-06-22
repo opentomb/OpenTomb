@@ -247,7 +247,7 @@ tr5_switches[264] = tr_anim_keyhole;
 tr5_switches[265] = tr_anim_keyhole;
 
 function switch_activate(object_id, actor_id)   -- actor ID is needed to activate animation response.
-    local m_id = getModelID(object_id);
+    local m_id = getEntityModelID(object_id);
     
     if(m_id == nil or m_id < 0) then
         return 0;

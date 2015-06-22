@@ -133,6 +133,10 @@
 #define SYSNOTE_LOADED_FADER             1012
 #define SYSNOTE_TRIGGERS_CLEANED         1013
 #define SYSNOTE_ENTFUNCS_CLEANED         1014
+#define SYSNOTE_LOADED_PC_LEVEL          1015
+#define SYSNOTE_LOADED_PSX_LEVEL         1016
+#define SYSNOTE_LOADED_DC_LEVEL          1017
+#define SYSNOTE_LOADED_OT_LEVEL          1018
 
 // String conversion preload size is used when decoding UTF-8 string
 // to UTF-32 string. To avoid reallocating memory zone each parsed

@@ -13,6 +13,11 @@
 #define LEVEL_NAME_MAX_LEN                      (64)
 #define MAX_ENGINE_PATH                         (1024)
 
+#define LEVEL_FORMAT_PC         0
+#define LEVEL_FORMAT_PSX        1
+#define LEVEL_FORMAT_DC         2
+#define LEVEL_FORMAT_OPENTOMB   3   // Maybe some day...
+
 #define OBJECT_STATIC_MESH                      (0x0001)
 #define OBJECT_ROOM_BASE                        (0x0002)
 #define OBJECT_ENTITY                           (0x0003)
@@ -233,7 +238,7 @@ void Engine_Init_Post();    // Finalizing init
 void Engine_InitDefaultGlobals();
 
 void Engine_Destroy();
-void Engine_Shutdown(int val);
+void Engine_Shutdown(int val) __attribute__((noreturn));
 
 void Engine_Frame(btScalar time);
 void Engine_Display();
@@ -248,8 +253,15 @@ void Engine_LuaRegisterFuncs(lua_State *lua);
 
 void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*));
 
+// PC-specific level loader routines.
+
+bool Engine_LoadPCLevel(const char *name);
+int  Engine_GetPCLevelVersion(const char *name);
+
+// General level loading routines.
+
 bool Engine_FileFound(const char *name, bool Write = false);
-int  Engine_GetLevelVersion(const char *name);
+int  Engine_GetLevelFormat(const char *name);
 void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix = NULL);
 int  Engine_LoadMap(const char *name);

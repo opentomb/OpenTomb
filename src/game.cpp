@@ -36,6 +36,8 @@ extern "C" {
 #include "ragdoll.h"
 
 btScalar cam_angles[3] = {0.0, 0.0, 0.0};
+
+extern btScalar time_scale;
 extern lua_State *engine_lua;
 
 void Save_EntityTree(FILE **f, RedBlackNode_p n);
@@ -90,15 +92,52 @@ int lua_noclip(lua_State * lua)
     if(lua_gettop(lua) == 0)
     {
         control_states.noclip = !control_states.noclip;
-        Con_Printf("noclip = %d", control_states.noclip);
-        return 0;
+    }
+    else
+    {
+        control_states.noclip = lua_tointeger(lua, 1);
     }
 
-    control_states.noclip = lua_tointeger(lua, 1);
     Con_Printf("noclip = %d", control_states.noclip);
     return 0;
 }
 
+int lua_debuginfo(lua_State * lua)
+{
+    if(lua_gettop(lua) == 0)
+    {
+        screen_info.show_debuginfo = !screen_info.show_debuginfo;
+    }
+    else
+    {
+        screen_info.show_debuginfo = lua_tointeger(lua, 1);
+    }
+
+    Con_Printf("debug info = %d", screen_info.show_debuginfo);
+    return 0;
+}
+
+int lua_timescale(lua_State * lua)
+{
+    if(lua_gettop(lua) == 0)
+    {
+        if(time_scale == 1.0)
+        {
+            time_scale = 0.033;
+        }
+        else
+        {
+            time_scale = 1.0;
+        }
+    }
+    else
+    {
+        time_scale = lua_tonumber(lua, 1);
+    }
+
+    Con_Printf("time_scale = %.3f", time_scale);
+    return 0;
+}
 
 void Game_InitGlobals()
 {
@@ -113,10 +152,12 @@ void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
     {
+        lua_register(lua, "debuginfo", lua_debuginfo);
         lua_register(lua, "mlook", lua_mlook);
         lua_register(lua, "freelook", lua_freelook);
         lua_register(lua, "noclip", lua_noclip);
         lua_register(lua, "cam_distance", lua_cam_distance);
+        lua_register(lua, "timescale", lua_timescale);
     }
 }
 
@@ -780,6 +821,7 @@ void Game_Frame(btScalar time)
     bool is_character  = (engine_world.Character != NULL);
 
     // GUI and controls should be updated at all times!
+
     Controls_PollSDLInput();
     Gui_Update();
 
@@ -825,6 +867,7 @@ void Game_Frame(btScalar time)
         {
             Entity_ProcessSector(engine_world.Character);
             Character_UpdateParams(engine_world.Character);
+            Entity_CheckCollisionCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
         }
 
         if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);

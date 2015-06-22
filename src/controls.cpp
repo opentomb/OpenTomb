@@ -18,7 +18,6 @@
 #include "vmath.h"
 
 extern int done;
-extern btScalar time_scale;
 
 extern SDL_Joystick         *sdl_joystick;
 extern SDL_GameController   *sdl_controller;
@@ -610,17 +609,6 @@ void Controls_DebugKeys(int button, int state)
                 }
                 break;
 
-            case SDLK_g:
-                if(time_scale == 1.0)
-                {
-                    time_scale = 0.033;
-                }
-                else
-                {
-                    time_scale = 1.0;
-                }
-                break;
-
             case SDLK_UP:
                 if(main_inventory_manager)
                 {
@@ -647,77 +635,6 @@ void Controls_DebugKeys(int button, int state)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_RIGHT);
                 }
-                break;
-
-            case SDLK_1:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 1;
-                }
-                break;
-
-            case SDLK_2:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 2;
-                }
-                break;
-
-            case SDLK_3:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 3;
-                }
-                break;
-
-            case SDLK_4:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 4;
-                }
-                break;
-
-            case SDLK_5:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 5;
-                }
-                break;
-
-            case SDLK_6:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 6;
-                }
-                break;
-
-            case SDLK_7:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 7;
-                }
-                break;
-
-            case SDLK_8:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 8;
-                }
-                break;
-
-            case SDLK_9:
-                if(engine_world.Character != NULL)
-                {
-                    engine_world.Character->character->current_weapon = 9;
-                }
-                break;
-
-            case SDLK_y:
-                screen_info.show_debuginfo = !screen_info.show_debuginfo;
-                break;
-
-            case SDLK_n:
-                control_states.noclip = !control_states.noclip;
                 break;
 
             default:

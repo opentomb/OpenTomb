@@ -1,8 +1,3 @@
-dofile("scripts/character/character.lua")
-dofile("scripts/inventory/item_list.lua")
-dofile("scripts/inventory/item_combine.lua")
-dofile("scripts/inventory/items.lua")
-
 -------- Lara's model-------
 --           .=.
 --          | 14|

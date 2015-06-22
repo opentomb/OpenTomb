@@ -387,7 +387,7 @@ void Mat4_T(btScalar mat[16])
  * OpenGL matrix inversing. Not an usual matrix inversing.
  * Works only with OpenGL transformation matrices!
  */
-void Mat4_inv(btScalar mat[16])
+void Mat4_affine_inv(btScalar mat[16])
 {
     btScalar v[3];
 

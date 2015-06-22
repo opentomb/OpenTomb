@@ -28,7 +28,6 @@ extern "C" {
 
 ALfloat                     listener_position[3];
 struct audio_fxmanager_s    fxManager;
-static uint8_t              audio_blocked = 1;
 
 bool                        StreamTrack::damp_active = false;
 
@@ -1211,10 +1210,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
 
     // If there are no audio buffers, don't process.
 
-    if(engine_world.audio_buffers_count < 1)
-    {
-        return TR_AUDIO_SEND_IGNORED;
-    }
+    if(engine_world.audio_buffers_count < 1) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
 
@@ -1371,284 +1367,7 @@ int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
 }
 
 
-int Audio_Init(int num_Sources, class VT_Level *tr)
-{
-    uint8_t      *pointer = tr->samples_data;
-    int8_t        flag;
-    uint32_t      ind1, ind2;
-    uint32_t      comp_size, uncomp_size;
-    uint32_t      i;
-
-    // FX should be inited first, as source constructor checks for FX slot to be created.
-
-    if(audio_settings.use_effects)
-    {
-        Audio_InitFX();
-    }
-
-    // Generate new buffer array.
-    engine_world.audio_buffers_count = tr->samples_count;
-    engine_world.audio_buffers = (ALuint*)malloc(engine_world.audio_buffers_count * sizeof(ALuint));
-    memset(engine_world.audio_buffers, 0, sizeof(ALuint) * engine_world.audio_buffers_count);
-    alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
-
-    // Generate new source array.
-    num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
-    engine_world.audio_sources_count = num_Sources;
-    engine_world.audio_sources = new AudioSource[num_Sources];
-
-    // Generate stream tracks array.
-    engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
-    engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
-
-    // Generate stream track map array.
-    // We use scripted amount of tracks to define map bounds.
-    // If script had no such parameter, we define map bounds by default.
-    engine_world.stream_track_map_count = lua_GetNumTracks(engine_lua);
-    if(engine_world.stream_track_map_count == 0) engine_world.stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
-    engine_world.stream_track_map = (uint8_t*)malloc(engine_world.stream_track_map_count * sizeof(uint8_t));
-    memset(engine_world.stream_track_map, 0, sizeof(uint8_t) * engine_world.stream_track_map_count);
-
-    // Generate new audio effects array.
-    engine_world.audio_effects_count = tr->sound_details_count;
-    engine_world.audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
-    memset(engine_world.audio_effects, 0xFF, sizeof(audio_effect_t) * tr->sound_details_count);
-
-    // Generate new audio emitters array.
-    engine_world.audio_emitters_count = tr->sound_sources_count;
-    engine_world.audio_emitters = (audio_emitter_t*)malloc(tr->sound_sources_count * sizeof(audio_emitter_t));
-    memset(engine_world.audio_emitters, 0, sizeof(audio_emitter_t) * tr->sound_sources_count);
-
-    // Copy sound map.
-    engine_world.audio_map = tr->soundmap;
-    tr->soundmap = NULL;                   /// without it VT destructor free(tr->soundmap)
-
-    // Cycle through raw samples block and parse them to OpenAL buffers.
-
-    // Different TR versions have different ways of storing samples.
-    // TR1:     sample block size, sample block, num samples, sample offsets.
-    // TR2/TR3: num samples, sample offsets. (Sample block is in MAIN.SFX.)
-    // TR4/TR5: num samples, (uncomp_size-comp_size-sample_data) chain.
-    //
-    // Hence, we specify certain parse method for each game version.
-
-    if(pointer)
-    {
-        switch(tr->game_version)
-        {
-            case TR_I:
-            case TR_I_DEMO:
-            case TR_I_UB:
-                engine_world.audio_map_count = TR_AUDIO_MAP_SIZE_TR1;
-
-                for(i = 0; i < engine_world.audio_buffers_count-1; i++)
-                {
-                    pointer = tr->samples_data + tr->sample_indices[i];
-                    uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
-                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, size);
-                }
-                i = engine_world.audio_buffers_count-1;
-                Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, (tr->samples_count - tr->sample_indices[i]));
-                break;
-
-            case TR_II:
-            case TR_II_DEMO:
-            case TR_III:
-                engine_world.audio_map_count = (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2);
-                ind1 = 0;
-                ind2 = 0;
-                flag = 0;
-                i = 0;
-                while(pointer < tr->samples_data + tr->samples_data_size - 4)
-                {
-                    pointer = tr->samples_data + ind2;
-                    if(0x46464952 == *((int32_t*)pointer))  // RIFF
-                    {
-                        if(flag == 0x00)
-                        {
-                            ind1 = ind2;
-                            flag = 0x01;
-                        }
-                        else
-                        {
-                            uncomp_size = ind2 - ind1;
-                            Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
-                            i++;
-                            if(i > engine_world.audio_buffers_count - 1)
-                            {
-                                break;
-                            }
-                            ind1 = ind2;
-                        }
-                    }
-                    ind2++;
-                }
-                uncomp_size = tr->samples_data_size - ind1;
-                pointer = tr->samples_data + ind1;
-                if(i < engine_world.audio_buffers_count)
-                {
-                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, uncomp_size);
-                }
-                break;
-
-            case TR_IV:
-            case TR_IV_DEMO:
-            case TR_V:
-                engine_world.audio_map_count = (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4);
-
-                for(i = 0; i < tr->samples_count; i++)
-                {
-                    // Parse sample sizes.
-                    // Always use comp_size as block length, as uncomp_size is used to cut raw sample data.
-                    uncomp_size = *((uint32_t*)pointer);
-                    pointer += 4;
-                    comp_size   = *((uint32_t*)pointer);
-                    pointer += 4;
-
-                    // Load WAV sample into OpenAL buffer.
-                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, comp_size, uncomp_size);
-
-                    // Now we can safely move pointer through current sample data.
-                    pointer += comp_size;
-                }
-                break;
-
-            default:
-                engine_world.audio_map_count = TR_AUDIO_MAP_SIZE_NONE;
-                free(tr->samples_data);
-                tr->samples_data = NULL;
-                tr->samples_data_size = 0;
-                return 0;
-        }
-
-        free(tr->samples_data);
-        tr->samples_data = NULL;
-        tr->samples_data_size = 0;
-    }
-
-    // Cycle through SoundDetails and parse them into native OpenTomb
-    // audio effects structure.
-    for(i = 0; i < engine_world.audio_effects_count; i++)
-    {
-        if(tr->game_version < TR_III)
-        {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
-            engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
-        }
-        else if(tr->game_version > TR_III)
-        {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
-            engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 255;
-        }
-        else
-        {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
-            engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 127;
-        }
-
-        engine_world.audio_effects[i].rand_gain_var  = 50;
-        engine_world.audio_effects[i].rand_pitch_var = 50;
-
-        engine_world.audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127.0 + 1.0;
-        engine_world.audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0;
-
-        engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
-        engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
-
-        switch(tr->game_version)
-        {
-            case TR_I:
-            case TR_I_DEMO:
-            case TR_I_UB:
-                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
-                {
-                    case 0x02:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
-                        break;
-                    case 0x01:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                        break;
-                    default:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
-                }
-                break;
-
-            case TR_II:
-            case TR_II_DEMO:
-                switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
-                {
-                    case 0x02:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
-                        break;
-                    case 0x01:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
-                        break;
-                    case 0x03:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
-                        break;
-                    default:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
-                }
-                break;
-
-            default:
-                engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
-                break;
-        }
-
-        engine_world.audio_effects[i].sample_index =  tr->sound_details[i].sample;
-        engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
-    }
-
-    // Try to override samples via script.
-    // If there is no script entry exist, we just leave default samples.
-    // NB! We need to override samples AFTER audio effects array is inited, as override
-    //     routine refers to existence of certain audio effect in level.
-
-    Audio_LoadOverridedSamples();
-
-    // Hardcoded version-specific fixes!
-
-    switch(engine_world.version)
-    {
-        case TR_I:
-        case TR_I_DEMO:
-        case TR_I_UB:
-            // Fix for underwater looped sound.
-            if ((engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER]) >= 0)
-            {
-                engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
-            }
-            break;
-        case TR_II:
-            // Fix for helicopter sound range.
-            engine_world.audio_effects[(engine_world.audio_map[297])].range *= 10.0;
-            break;
-    }
-
-    // Reset last room type used for assigning reverb.
-
-    fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;
-
-    // Cycle through sound emitters and
-    // parse them to native OpenTomb sound emitters structure.
-
-    for(i = 0; i < engine_world.audio_emitters_count; i++)
-    {
-        engine_world.audio_emitters[i].emitter_index = i;
-        engine_world.audio_emitters[i].sound_index   =  tr->sound_sources[i].sound_id;
-        engine_world.audio_emitters[i].position[0]   =  tr->sound_sources[i].x;
-        engine_world.audio_emitters[i].position[1]   =  tr->sound_sources[i].z;
-        engine_world.audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
-        engine_world.audio_emitters[i].flags         =  tr->sound_sources[i].flags;
-    }
-    audio_blocked = 0;
-
-    return 1;
-}
-
-
-void Audio_LoadOverridedSamples()
+void Audio_LoadOverridedSamples(struct world_s *world)
 {
     int  num_samples, num_sounds;
     int  sample_index, sample_count;
@@ -1659,9 +1378,9 @@ void Audio_LoadOverridedSamples()
     {
         int buffer_counter = 0;
 
-        for(uint32_t i = 0; i < engine_world.audio_map_count; i++)
+        for(uint32_t i = 0; i < world->audio_map_count; i++)
         {
-            if(engine_world.audio_map[i] != -1)
+            if(world->audio_map[i] != -1)
             {
                 if(lua_GetOverridedSample(engine_lua, i, &sample_index, &sample_count))
                 {
@@ -1670,13 +1389,13 @@ void Audio_LoadOverridedSamples()
                         sprintf(sample_name, sample_name_mask, (sample_index + j));
                         if(Engine_FileFound(sample_name))
                         {
-                            Audio_LoadALbufferFromWAV_File(engine_world.audio_buffers[buffer_counter], sample_name);
+                            Audio_LoadALbufferFromWAV_File(world->audio_buffers[buffer_counter], sample_name);
                         }
                     }
                 }
                 else
                 {
-                    buffer_counter += engine_world.audio_effects[(engine_world.audio_map[i])].sample_count;
+                    buffer_counter += world->audio_effects[(world->audio_map[i])].sample_count;
                 }
             }
         }
@@ -1759,9 +1478,30 @@ int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *r
     return 1;
 }
 
+void Audio_Init(uint32_t num_Sources)
+{
+    // FX should be inited first, as source constructor checks for FX slot to be created.
+
+    if(audio_settings.use_effects) Audio_InitFX();
+    
+    // Generate new source array.
+    
+    num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
+    engine_world.audio_sources_count = num_Sources;
+    engine_world.audio_sources = new AudioSource[num_Sources];
+
+    // Generate stream tracks array.
+    
+    engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
+    engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
+    
+    // Reset last room type used for assigning reverb.
+
+    fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;
+}
+
 int Audio_DeInit()
 {
-    audio_blocked = 1;
     Audio_StopAllSources();
     Audio_StopStreams();
 

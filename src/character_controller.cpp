@@ -1203,7 +1203,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             entity_p e = (entity_p)cont->object;
             if(e->callback_flags & ENTITY_CALLBACK_STAND)
             {
-                lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_STAND);
+                lua_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id, ent->id);
             }
         }
     }
@@ -1419,10 +1419,21 @@ int Character_FreeFalling(struct entity_s *ent)
             ent->speed.m_floats[1] = 0.0;
         }
 
-        if(!ent->character->height_info.water || (ent->current_sector->floor + ent->character->Height <= ent->character->height_info.transition_level))
+        if((engine_world.version < TR_II))//Lara cannot wade in < TRII so when floor < transition level she has to swim
         {
-            ent->move_type = MOVE_UNDERWATER;
-            return 2;
+            if(!ent->character->height_info.water || (ent->current_sector->floor <= ent->character->height_info.transition_level))
+            {
+                ent->move_type = MOVE_UNDERWATER;
+                return 2;
+            }
+        }
+        else
+        {
+            if(!ent->character->height_info.water || (ent->current_sector->floor + ent->character->Height <= ent->character->height_info.transition_level))
+            {
+                ent->move_type = MOVE_UNDERWATER;
+                return 2;
+            }
         }
     }
 

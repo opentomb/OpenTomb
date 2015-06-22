@@ -620,7 +620,7 @@ void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3])
     {
         btScalar t1, t2, reaction[3];
 
-        if((move != NULL) && (ent->character != NULL))
+        if(move != NULL)
         {
             ent->character->resp.horizontal_collide    = 0x00;
             ent->character->resp.vertical_collide      = 0x00;
@@ -713,7 +713,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
                 t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                 if(t1 < ent->character->critical_wall_component)
                 {
-                    resp->horizontal_collide |= 0x01;
+                    ent->character->resp.horizontal_collide |= 0x01;
                 }
             }
         }
@@ -745,12 +745,14 @@ void Entity_CheckCollisionCallbacks(struct entity_s *ent)
 
             if(type == OBJECT_ENTITY)
             {
-                // Activator and entity IDs are swapped in case of collision callback.
-
                 entity_p activator = (entity_p)cont->object;
-                lua_ExecEntity(engine_lua, activator->id, ent->id, ENTITY_CALLBACK_COLLISION);
 
-                Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
+                if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
+                {
+                    // Activator and entity IDs are swapped in case of collision callback.
+                    lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
+                    Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
+                }
             }
         }
     }
@@ -1910,7 +1912,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
                     if((e != ent) && (OBB_OBB_Test(e, ent) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
                     {
-                        lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
+                        lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }
                 }
                 else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
@@ -1919,7 +1921,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                     if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                                       (v[2] + 32.0 > ent->transform[12+2] + ent->bf.bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf.bb_max[2]))
                     {
-                        lua_ExecEntity(engine_lua, e->id, ent->id, ENTITY_CALLBACK_ACTIVATE);
+                        lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }
                 }
             }

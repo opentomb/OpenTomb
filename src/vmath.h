@@ -21,6 +21,7 @@
 #define vec3_copy(x, y) {(x)[0] = (y)[0]; (x)[1] = (y)[1]; (x)[2] = (y)[2];}
 #define vec3_copy_inv(x, y) {(x)[0] =-(y)[0]; (x)[1] =-(y)[1]; (x)[2] =-(y)[2];}
 #define vec3_add(r, x, y) {(r)[0] = (x)[0] + (y)[0]; (r)[1] = (x)[1] + (y)[1]; (r)[2] = (x)[2] + (y)[2];}
+#define vec3_add_to(r, x) {(r)[0] += (x)[0]; (r)[1] += (x)[1]; (r)[2] += (x)[2];}
 #define vec3_add_mul(r, x, y, k) {(r)[0] = (x)[0] + (y)[0] * (k); (r)[1] = (x)[1] + (y)[1] * (k); (r)[2] = (x)[2] + (y)[2] * (k);}
 #define vec3_sub(r, x, y) {(r)[0] = (x)[0] - (y)[0]; (r)[1] = (x)[1] - (y)[1]; (r)[2] = (x)[2] - (y)[2];}
 #define vec3_sub_mul(r, x, y, k) {(r)[0] = (x)[0] - (y)[0] * (k); (r)[1] = (x)[1] - (y)[1] * (k); (r)[2] = (x)[2] - (y)[2] * (k);}
@@ -203,6 +204,7 @@ void Mat4_RotateX(btScalar mat[16], btScalar ang);
 void Mat4_RotateY(btScalar mat[16], btScalar ang);
 void Mat4_RotateZ(btScalar mat[16], btScalar ang);
 void Mat4_T(btScalar mat[16]);
+void Mat4_affine_inv(btScalar mat[16]);
 void Mat4_Mat4_mul(btScalar result[16], const btScalar src1[16], const btScalar src2[16]);
 void Mat4_inv_Mat4_affine_mul(btScalar result[16], btScalar src1[16], btScalar src2[16]);
 void Mat4_vec3_mul(btScalar v[3], const btScalar mat[16], const btScalar src[3]);
