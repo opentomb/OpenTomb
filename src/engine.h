@@ -253,9 +253,15 @@ void Engine_LuaRegisterFuncs(lua_State *lua);
 
 void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*));
 
+// PC-specific level loader routines.
+
+bool Engine_LoadPCLevel(const char *name);
+int  Engine_GetPCLevelVersion(const char *name);
+
+// General level loading routines.
+
 bool Engine_FileFound(const char *name, bool Write = false);
 int  Engine_GetLevelFormat(const char *name);
-int  Engine_GetPCLevelVersion(const char *name);
 void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix = NULL);
 int  Engine_LoadMap(const char *name);

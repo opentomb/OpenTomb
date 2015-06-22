@@ -634,7 +634,7 @@ int lua_DropEntity(lua_State * lua)
 }
 
 
-int lua_GetModelID(lua_State * lua)
+int lua_GetEntityModelID(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No argument - return.
 
@@ -650,7 +650,7 @@ int lua_GetModelID(lua_State * lua)
 }
 
 
-int lua_GetActivationOffset(lua_State * lua)
+int lua_GetEntityActivationOffset(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No argument - return.
 
@@ -666,7 +666,7 @@ int lua_GetActivationOffset(lua_State * lua)
 }
 
 
-int lua_SetActivationOffset(lua_State * lua)
+int lua_SetEntityActivationOffset(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
@@ -1846,6 +1846,26 @@ int lua_GetEntitySpeed(lua_State * lua)
     return 3;
 }
 
+int lua_GetEntitySpeedLinear(lua_State * lua)
+{
+    if(lua_gettop(lua) != 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushnumber(lua, vec3_abs(ent->speed));
+    return 1;
+}
 
 int lua_SetEntitySpeed(lua_State * lua)
 {
@@ -2448,9 +2468,11 @@ int lua_SetEntityFlags(lua_State * lua)
 
 int lua_GetEntityTypeFlag(lua_State *lua)
 {
-    if(lua_gettop(lua) < 1)
+    int top = lua_gettop(lua);
+    
+    if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (type_flag)");
         return 0;
     }
 
@@ -2463,15 +2485,25 @@ int lua_GetEntityTypeFlag(lua_State *lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->type_flags);
+    if(top == 1)
+    {
+        lua_pushinteger(lua, ent->type_flags);
+    }
+    else
+    {
+        lua_pushinteger(lua, (ent->type_flags & (uint16_t)(lua_tointeger(lua, 2))));
+    }
+    
     return 1;
 }
 
 int lua_SetEntityTypeFlag(lua_State *lua)
 {
-    if(lua_gettop(lua) < 2)
+    int top = lua_gettop(lua);
+    
+    if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, type_flags]");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, type_flag], (value)");
         return 0;
     }
 
@@ -2484,7 +2516,162 @@ int lua_SetEntityTypeFlag(lua_State *lua)
         return 0;
     }
 
-    ent->type_flags ^= (uint16_t)lua_tointeger(lua, 2);
+    if(top == 2)
+    {
+        ent->type_flags ^= (uint16_t)lua_tointeger(lua, 2);
+    }
+    else
+    {
+        if(lua_tointeger(lua, 3) == 1)
+        {
+            ent->type_flags |=  (uint16_t)lua_tointeger(lua, 2);
+        }
+        else
+        {
+            ent->type_flags &= ~(uint16_t)lua_tointeger(lua, 2);
+        }
+    }
+    
+    return 0;
+}
+
+
+int lua_GetEntityStateFlag(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (state_flag)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    if(top == 1)
+    {
+        lua_pushinteger(lua, ent->state_flags);
+    }
+    else
+    {
+        lua_pushinteger(lua, (ent->state_flags & (uint16_t)(lua_tointeger(lua, 2))));
+    }
+    
+    return 1;
+}
+
+int lua_SetEntityStateFlag(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flag], (value)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    if(top == 2)
+    {
+        ent->state_flags ^= (uint16_t)lua_tointeger(lua, 2);
+    }
+    else
+    {
+        if(lua_tointeger(lua, 3) == 1)
+        {
+            ent->state_flags |=  (uint16_t)lua_tointeger(lua, 2);
+        }
+        else
+        {
+            ent->state_flags &= ~(uint16_t)lua_tointeger(lua, 2);
+        }
+    }
+    
+    return 0;
+}
+
+
+int lua_GetEntityCallbackFlag(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (callback_flag)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    if(top == 1)
+    {
+        lua_pushinteger(lua, ent->callback_flags);
+    }
+    else
+    {
+        lua_pushinteger(lua, (ent->callback_flags & (uint32_t)(lua_tointeger(lua, 2))));
+    }
+    
+    return 1;
+}
+
+int lua_SetEntityCallbackFlag(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    
+    if(top < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, callback_flag], (value)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    if(top == 2)
+    {
+        ent->callback_flags ^= (uint32_t)lua_tointeger(lua, 2);
+    }
+    else
+    {
+        if(lua_tointeger(lua, 3) == 1)
+        {
+            ent->callback_flags |=  (uint16_t)lua_tointeger(lua, 2);
+        }
+        else
+        {
+            ent->callback_flags &= ~(uint32_t)lua_tointeger(lua, 2);
+        }
+    }
+    
     return 0;
 }
 
@@ -3734,7 +3921,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
     lua_register(lua, "printItems", lua_PrintItems);
 
-    lua_register(lua, "getModelID", lua_GetModelID);
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
     lua_register(lua, "enableEntity", lua_EnableEntity);
@@ -3747,6 +3933,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "moveEntityToSink", lua_MoveEntityToSink);
     lua_register(lua, "moveEntityToEntity", lua_MoveEntityToEntity);
 
+    lua_register(lua, "getEntityModelID", lua_GetEntityModelID);
+    
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
     lua_register(lua, "getEntityDistance", lua_GetEntityDistance);
@@ -3754,6 +3942,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
+    lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
@@ -3774,6 +3963,10 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityFlags", lua_SetEntityFlags);
     lua_register(lua, "getEntityTypeFlag", lua_GetEntityTypeFlag);
     lua_register(lua, "setEntityTypeFlag", lua_SetEntityTypeFlag);
+    lua_register(lua, "getEntityStateFlag", lua_GetEntityStateFlag);
+    lua_register(lua, "setEntityStateFlag", lua_SetEntityStateFlag);
+    lua_register(lua, "getEntityCallbackFlag", lua_GetEntityCallbackFlag);
+    lua_register(lua, "setEntityCallbackFlag", lua_SetEntityCallbackFlag);
     lua_register(lua, "getEntityState", lua_GetEntityState);
     lua_register(lua, "setEntityState", lua_SetEntityState);
     lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
@@ -3802,8 +3995,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorStatus", lua_GetEntitySectorStatus);
     lua_register(lua, "setEntitySectorStatus", lua_SetEntitySectorStatus);
 
-    lua_register(lua, "getEntityActivationOffset", lua_GetActivationOffset);
-    lua_register(lua, "setEntityActivationOffset", lua_SetActivationOffset);
+    lua_register(lua, "getEntityActivationOffset", lua_GetEntityActivationOffset);
+    lua_register(lua, "setEntityActivationOffset", lua_SetEntityActivationOffset);
     lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
@@ -4219,9 +4412,33 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
     strcat(name, ".lua");
 }
 
+bool Engine_LoadPCLevel(const char *name)
+{
+    VT_Level *tr_level = new VT_Level();
+                
+    int trv = Engine_GetPCLevelVersion(name);
+    if(trv == TR_UNKNOWN) return false;
+    
+    tr_level->read_level(name, trv);
+    tr_level->prepare_level();
+    //tr_level->dump_textures();
+    
+    TR_GenWorld(&engine_world, tr_level);
+    
+    char buf[LEVEL_NAME_MAX_LEN] = {0x00};
+    Engine_GetLevelName(buf, name);
+    
+    Con_Notify(SYSNOTE_LOADED_PC_LEVEL);
+    Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
+    Con_Notify(SYSNOTE_NUM_ROOMS, engine_world.room_count);
+    
+    delete tr_level;
+    
+    return true;
+}
+
 int Engine_LoadMap(const char *name)
 {
-    char buf[LEVEL_NAME_MAX_LEN] = {0x00};
     extern gui_Fader Fader[];
 
     if(!Engine_FileFound(name))
@@ -4255,24 +4472,7 @@ int Engine_LoadMap(const char *name)
     switch(Engine_GetLevelFormat(name))
     {
         case LEVEL_FORMAT_PC:
-            {
-                VT_Level *tr_level = new VT_Level();
-                
-                int trv = Engine_GetPCLevelVersion(name);
-                if(trv == TR_UNKNOWN) return 0;
-                
-                tr_level->read_level(name, trv);
-                tr_level->prepare_level();
-                //tr_level.dump_textures();
-                
-                TR_GenWorld(&engine_world, tr_level);
-                
-                Engine_GetLevelName(buf, name);
-                Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
-                Con_Notify(SYSNOTE_NUM_ROOMS, engine_world.room_count);
-                
-                delete tr_level;
-            }
+            if(Engine_LoadPCLevel(name) == false) return 0;
             break;
             
         case LEVEL_FORMAT_PSX:
@@ -4303,7 +4503,6 @@ int Engine_LoadMap(const char *name)
 
     return 1;
 }
-
 
 int Engine_ExecCmd(char *ch)
 {

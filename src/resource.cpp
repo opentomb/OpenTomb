@@ -1919,7 +1919,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     // Initialize audio.
 
-    TR_GenSamples(TR_AUDIO_MAX_CHANNELS, tr);
+    TR_GenSamples(world, tr);
     Gui_DrawLoadScreen(850);
 
     // Find and set skybox.
@@ -4213,7 +4213,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 }
 
 
-void TR_GenSamples(int num_Sources, class VT_Level *tr)
+void TR_GenSamples(struct world_s *world, class VT_Level *tr)
 {
     uint8_t      *pointer = tr->samples_data;
     int8_t        flag;
@@ -4222,40 +4222,31 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
     uint32_t      i;
 
     // Generate new buffer array.
-    engine_world.audio_buffers_count = tr->samples_count;
-    engine_world.audio_buffers = (ALuint*)malloc(engine_world.audio_buffers_count * sizeof(ALuint));
-    memset(engine_world.audio_buffers, 0, sizeof(ALuint) * engine_world.audio_buffers_count);
-    alGenBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
-
-    // Generate new source array.
-    num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
-    engine_world.audio_sources_count = num_Sources;
-    engine_world.audio_sources = new AudioSource[num_Sources];
-
-    // Generate stream tracks array.
-    engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
-    engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
+    world->audio_buffers_count = tr->samples_count;
+    world->audio_buffers = (ALuint*)malloc(world->audio_buffers_count * sizeof(ALuint));
+    memset(world->audio_buffers, 0, sizeof(ALuint) * world->audio_buffers_count);
+    alGenBuffers(world->audio_buffers_count, world->audio_buffers);
 
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
     // If script had no such parameter, we define map bounds by default.
-    engine_world.stream_track_map_count = lua_GetNumTracks(engine_lua);
-    if(engine_world.stream_track_map_count == 0) engine_world.stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
-    engine_world.stream_track_map = (uint8_t*)malloc(engine_world.stream_track_map_count * sizeof(uint8_t));
-    memset(engine_world.stream_track_map, 0, sizeof(uint8_t) * engine_world.stream_track_map_count);
+    world->stream_track_map_count = lua_GetNumTracks(engine_lua);
+    if(world->stream_track_map_count == 0) world->stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
+    world->stream_track_map = (uint8_t*)malloc(world->stream_track_map_count * sizeof(uint8_t));
+    memset(world->stream_track_map, 0, sizeof(uint8_t) * world->stream_track_map_count);
 
     // Generate new audio effects array.
-    engine_world.audio_effects_count = tr->sound_details_count;
-    engine_world.audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
-    memset(engine_world.audio_effects, 0xFF, sizeof(audio_effect_t) * tr->sound_details_count);
+    world->audio_effects_count = tr->sound_details_count;
+    world->audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
+    memset(world->audio_effects, 0xFF, sizeof(audio_effect_t) * tr->sound_details_count);
 
     // Generate new audio emitters array.
-    engine_world.audio_emitters_count = tr->sound_sources_count;
-    engine_world.audio_emitters = (audio_emitter_t*)malloc(tr->sound_sources_count * sizeof(audio_emitter_t));
-    memset(engine_world.audio_emitters, 0, sizeof(audio_emitter_t) * tr->sound_sources_count);
+    world->audio_emitters_count = tr->sound_sources_count;
+    world->audio_emitters = (audio_emitter_t*)malloc(tr->sound_sources_count * sizeof(audio_emitter_t));
+    memset(world->audio_emitters, 0, sizeof(audio_emitter_t) * tr->sound_sources_count);
 
     // Copy sound map.
-    engine_world.audio_map = tr->soundmap;
+    world->audio_map = tr->soundmap;
     tr->soundmap = NULL;                   /// without it VT destructor free(tr->soundmap)
 
     // Cycle through raw samples block and parse them to OpenAL buffers.
@@ -4274,22 +4265,22 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
             case TR_I:
             case TR_I_DEMO:
             case TR_I_UB:
-                engine_world.audio_map_count = TR_AUDIO_MAP_SIZE_TR1;
+                world->audio_map_count = TR_AUDIO_MAP_SIZE_TR1;
 
-                for(i = 0; i < engine_world.audio_buffers_count-1; i++)
+                for(i = 0; i < world->audio_buffers_count-1; i++)
                 {
                     pointer = tr->samples_data + tr->sample_indices[i];
                     uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
-                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, size);
+                    Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, size);
                 }
-                i = engine_world.audio_buffers_count-1;
-                Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, (tr->samples_count - tr->sample_indices[i]));
+                i = world->audio_buffers_count-1;
+                Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, (tr->samples_count - tr->sample_indices[i]));
                 break;
 
             case TR_II:
             case TR_II_DEMO:
             case TR_III:
-                engine_world.audio_map_count = (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2);
+                world->audio_map_count = (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2);
                 ind1 = 0;
                 ind2 = 0;
                 flag = 0;
@@ -4307,9 +4298,9 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
                         else
                         {
                             uncomp_size = ind2 - ind1;
-                            Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], tr->samples_data + ind1, uncomp_size);
+                            Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], tr->samples_data + ind1, uncomp_size);
                             i++;
-                            if(i > engine_world.audio_buffers_count - 1)
+                            if(i > world->audio_buffers_count - 1)
                             {
                                 break;
                             }
@@ -4320,16 +4311,16 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
                 }
                 uncomp_size = tr->samples_data_size - ind1;
                 pointer = tr->samples_data + ind1;
-                if(i < engine_world.audio_buffers_count)
+                if(i < world->audio_buffers_count)
                 {
-                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, uncomp_size);
+                    Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, uncomp_size);
                 }
                 break;
 
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                engine_world.audio_map_count = (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4);
+                world->audio_map_count = (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4);
 
                 for(i = 0; i < tr->samples_count; i++)
                 {
@@ -4341,7 +4332,7 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
                     pointer += 4;
 
                     // Load WAV sample into OpenAL buffer.
-                    Audio_LoadALbufferFromWAV_Mem(engine_world.audio_buffers[i], pointer, comp_size, uncomp_size);
+                    Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, comp_size, uncomp_size);
 
                     // Now we can safely move pointer through current sample data.
                     pointer += comp_size;
@@ -4349,7 +4340,7 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
                 break;
 
             default:
-                engine_world.audio_map_count = TR_AUDIO_MAP_SIZE_NONE;
+                world->audio_map_count = TR_AUDIO_MAP_SIZE_NONE;
                 free(tr->samples_data);
                 tr->samples_data = NULL;
                 tr->samples_data_size = 0;
@@ -4363,32 +4354,32 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
 
     // Cycle through SoundDetails and parse them into native OpenTomb
     // audio effects structure.
-    for(i = 0; i < engine_world.audio_effects_count; i++)
+    for(i = 0; i < world->audio_effects_count; i++)
     {
         if(tr->game_version < TR_III)
         {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
-            engine_world.audio_effects[i].chance = tr->sound_details[i].chance;
+            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 32767.0; // Max. volume in TR1/TR2 is 32767.
+            world->audio_effects[i].chance = tr->sound_details[i].chance;
         }
         else if(tr->game_version > TR_III)
         {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
-            engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 255;
+            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
+            world->audio_effects[i].chance = tr->sound_details[i].chance * 255;
         }
         else
         {
-            engine_world.audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
-            engine_world.audio_effects[i].chance = tr->sound_details[i].chance * 127;
+            world->audio_effects[i].gain   = (float)(tr->sound_details[i].volume) / 255.0; // Max. volume in TR3 is 255.
+            world->audio_effects[i].chance = tr->sound_details[i].chance * 127;
         }
 
-        engine_world.audio_effects[i].rand_gain_var  = 50;
-        engine_world.audio_effects[i].rand_pitch_var = 50;
+        world->audio_effects[i].rand_gain_var  = 50;
+        world->audio_effects[i].rand_pitch_var = 50;
 
-        engine_world.audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127.0 + 1.0;
-        engine_world.audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0;
+        world->audio_effects[i].pitch = (float)(tr->sound_details[i].pitch) / 127.0 + 1.0;
+        world->audio_effects[i].range = (float)(tr->sound_details[i].sound_range) * 1024.0;
 
-        engine_world.audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
-        engine_world.audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
+        world->audio_effects[i].rand_pitch = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_PITCH);
+        world->audio_effects[i].rand_gain  = (tr->sound_details[i].flags_2 & TR_AUDIO_FLAG_RAND_VOLUME);
 
         switch(tr->game_version)
         {
@@ -4398,13 +4389,13 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
                 switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
                 {
                     case 0x02:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
                         break;
                     case 0x01:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
                         break;
                     default:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
                 }
                 break;
 
@@ -4413,26 +4404,26 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
                 switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
                 {
                     case 0x02:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_REWIND;
                         break;
                     case 0x01:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_WAIT;
                         break;
                     case 0x03:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_LOOPED;
                         break;
                     default:
-                        engine_world.audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
+                        world->audio_effects[i].loop = TR_AUDIO_LOOP_NONE;
                 }
                 break;
 
             default:
-                engine_world.audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
+                world->audio_effects[i].loop = (tr->sound_details[i].num_samples_and_flags_1 & TR_AUDIO_LOOP_LOOPED);
                 break;
         }
 
-        engine_world.audio_effects[i].sample_index =  tr->sound_details[i].sample;
-        engine_world.audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
+        world->audio_effects[i].sample_index =  tr->sound_details[i].sample;
+        world->audio_effects[i].sample_count = (tr->sound_details[i].num_samples_and_flags_1 >> 2) & TR_AUDIO_SAMPLE_NUMBER_MASK;
     }
 
     // Try to override samples via script.
@@ -4440,26 +4431,26 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
     // NB! We need to override samples AFTER audio effects array is inited, as override
     //     routine refers to existence of certain audio effect in level.
 
-    Audio_LoadOverridedSamples();
+    Audio_LoadOverridedSamples(world);
 
     // Hardcoded version-specific fixes!
 
-    switch(engine_world.version)
+    switch(world->version)
     {
         case TR_I:
         case TR_I_DEMO:
         case TR_I_UB:
             // Fix for underwater looped sound.
-            if ((engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER]) >= 0)
+            if ((world->audio_map[TR_AUDIO_SOUND_UNDERWATER]) >= 0)
             {
-                engine_world.audio_effects[(engine_world.audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
+                world->audio_effects[(world->audio_map[TR_AUDIO_SOUND_UNDERWATER])].loop = TR_AUDIO_LOOP_LOOPED;
             }
             break;
         case TR_II:
             // Fix for helicopter sound range.
-            if ((engine_world.audio_map[297]) >= 0)
+            if ((world->audio_map[297]) >= 0)
             {
-                engine_world.audio_effects[(engine_world.audio_map[297])].range *= 10.0;
+                world->audio_effects[(world->audio_map[297])].range *= 10.0;
             }
             break;
     }
@@ -4467,14 +4458,14 @@ void TR_GenSamples(int num_Sources, class VT_Level *tr)
     // Cycle through sound emitters and
     // parse them to native OpenTomb sound emitters structure.
 
-    for(i = 0; i < engine_world.audio_emitters_count; i++)
+    for(i = 0; i < world->audio_emitters_count; i++)
     {
-        engine_world.audio_emitters[i].emitter_index = i;
-        engine_world.audio_emitters[i].sound_index   =  tr->sound_sources[i].sound_id;
-        engine_world.audio_emitters[i].position[0]   =  tr->sound_sources[i].x;
-        engine_world.audio_emitters[i].position[1]   =  tr->sound_sources[i].z;
-        engine_world.audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
-        engine_world.audio_emitters[i].flags         =  tr->sound_sources[i].flags;
+        world->audio_emitters[i].emitter_index = i;
+        world->audio_emitters[i].sound_index   =  tr->sound_sources[i].sound_id;
+        world->audio_emitters[i].position[0]   =  tr->sound_sources[i].x;
+        world->audio_emitters[i].position[1]   =  tr->sound_sources[i].z;
+        world->audio_emitters[i].position[2]   = -tr->sound_sources[i].y;
+        world->audio_emitters[i].flags         =  tr->sound_sources[i].flags;
     }
 }
 

@@ -140,7 +140,7 @@ end
 
 -- System entity functions
 
-function execEntity(object_id, activator_id, callback_id)
+function execEntity(callback_id, object_id, activator_id)
     
     if((object_id == nil) or (callback_id == nil)) then -- Activator may be nil, in case of flyby camera heavy triggering!
         return;
@@ -189,4 +189,4 @@ function tickEntity(object_id)
     return TICK_ACTIVE;
 end
 
-print("system_scripts.lua loaded");
+print("System_scripts.lua loaded");

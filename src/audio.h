@@ -441,7 +441,7 @@ private:
 void Audio_InitGlobals();
 void Audio_InitFX();
 
-void Audio_Init();
+void Audio_Init(uint32_t num_Sources = TR_AUDIO_MAX_CHANNELS);
 int  Audio_DeInit();
 void Audio_Update();
 
@@ -464,7 +464,7 @@ void Audio_UpdateListenerByEntity(struct entity_s *ent);
 bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
-void Audio_LoadOverridedSamples();
+void Audio_LoadOverridedSamples(struct world_s *world);
 
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 

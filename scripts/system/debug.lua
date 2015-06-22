@@ -44,6 +44,7 @@ function checkDebugKeys()
         setEntityResponse(player, RESP_KILL, 0);
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         setEntityAnimFlag(player, ANIM_NORMAL_CONTROL);
+        setEntityCollision(player, 1);
     end;
     
     if(checkKey(KEY_1, true)) then setCharacterCurrentWeapon(player, 1) end;
@@ -68,6 +69,7 @@ function checkPlayerRagdollConditions()
         ((anim == 139) and (frame >= 17)) or
         ((anim == 133) and (frame >= 18)) or
         ((anim == 145) and (frame >= 67)) or
+        ((anim == 149) and (frame >= 18)) or
         ((anim == 301) and (frame >= 57)) or
         ((anim == 138) and (((frame >= 60) and (version >= TR_II)) or ((frame >= 8) and (version < TR_II)))) ) then
         if(bit32.band(getEntityTypeFlag(player), ENTITY_TYPE_DYNAMIC)) then
