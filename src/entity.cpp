@@ -746,7 +746,7 @@ void Entity_CheckCollisionCallbacks(struct entity_s *ent)
             if(type == OBJECT_ENTITY)
             {
                 entity_p activator = (entity_p)cont->object;
-                
+
                 if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
                 {
                     // Activator and entity IDs are swapped in case of collision callback.
@@ -1478,28 +1478,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
 }
 
 
-room_sector_s* Entity_GetLowestSector(room_sector_s* sector)
-{
-    room_sector_p lowest_sector = sector;
-
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_below)
-    { lowest_sector = rs; }
-
-    return lowest_sector;
-}
-
-
-room_sector_s* Entity_GetHighestSector(room_sector_s* sector)
-{
-    room_sector_p highest_sector = sector;
-
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_above)
-    { highest_sector = rs; }
-
-    return highest_sector;
-}
-
-
 void Entity_ProcessSector(struct entity_s *ent)
 {
     if(!ent->current_sector) return;
@@ -1510,8 +1488,8 @@ void Entity_ProcessSector(struct entity_s *ent)
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
-    room_sector_p highest_sector = Entity_GetHighestSector(ent->current_sector);
-    room_sector_p lowest_sector  = Entity_GetLowestSector(ent->current_sector);
+    room_sector_p highest_sector = Sector_GetHighest(ent->current_sector);
+    room_sector_p lowest_sector  = Sector_GetLowest(ent->current_sector);
 
     if(ent->character)
     {

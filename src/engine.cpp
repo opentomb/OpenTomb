@@ -1676,6 +1676,50 @@ int lua_SimilarSector(lua_State * lua)
     return 1;
 }
 
+int lua_GetSectorHeight(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, (ceiling), (dx, dy, dz)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    bool ceiling = false;
+    if(top > 1) ceiling = lua_toboolean(lua, 2);
+
+    btScalar offset[3];
+             offset[0] = ent->transform[12+0];
+             offset[1] = ent->transform[12+1];
+             offset[2] = ent->transform[12+2];
+
+    if(top > 2)
+    {
+        btScalar dx = lua_tonumber(lua, 2);
+        btScalar dy = lua_tonumber(lua, 3);
+        btScalar dz = lua_tonumber(lua, 4);
+
+        offset[0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
+        offset[1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
+        offset[2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
+    }
+
+    room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, offset);
+    btVector3 point = (ceiling)?(Sector_GetCeilingPoint(curr_sector)):(Sector_GetFloorPoint(curr_sector));
+
+    lua_pushnumber(lua, point.m_floats[2]);
+    return 1;
+}
 
 int lua_SetEntityPosition(lua_State * lua)
 {
@@ -3974,6 +4018,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "newSector", lua_NewSector);
     lua_register(lua, "similarSector", lua_SimilarSector);
+    lua_register(lua, "getSectorHeight", lua_GetSectorHeight);
 
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);

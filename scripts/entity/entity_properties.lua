@@ -10,7 +10,7 @@
 -- [ trav ] flag values:
 
 --   0x00    - Object is not pushable.
---   0x10    - Object is pushable, but can not been floor for other pushable
+--   0x10    - Object is pushable, but can't be floor for other pushable
 --   0x18    - Object is pushable, and can be floor for other pushable
 
 -- [ coll ] flag values:
@@ -294,7 +294,7 @@ tr2_entity_tbl[83] = {coll = 0x01};                     -- Multiple boulders / s
 tr2_entity_tbl[84] = {coll = 0x02};                     -- Detachable icicles
 tr2_entity_tbl[85] = {coll = 0x02, func = "spikewall"};                     -- Spiky movable wall
 tr2_entity_tbl[86] = {coll = 0x01};                     -- Bounce pad
-tr2_entity_tbl[87] = {coll = 0x02};                     -- Spiky ceiling segment
+tr2_entity_tbl[87] = {coll = 0x02, func = "spikeceiling"};                     -- Spiky ceiling segment
 tr2_entity_tbl[88] = {coll = 0x02};                     -- Tibetan bell
 tr2_entity_tbl[91] = {coll = 0x00};                     -- Lara and a snowmobile
 tr2_entity_tbl[92] = {coll = 0x00};                     -- Wheel knob
@@ -513,8 +513,8 @@ tr3_entity_tbl[108] = {coll = 0x01};                -- Rolling spindle
 tr3_entity_tbl[110] = {coll = 0x01};                -- Subway train
 tr3_entity_tbl[111] = {coll = 0x01, func = "wallblade"};                -- Wall-mounted knife blade / Knife disk
 tr3_entity_tbl[113] = {coll = 0x01};                -- Detachable stalactites
-tr3_entity_tbl[114] = {coll = 0x01, func = "spikewall"};                -- Spiky movable wall
-tr3_entity_tbl[116] = {coll = 0x01};                -- Spiky movable vertical wall / Tunnel borer
+tr3_entity_tbl[114] = {coll = 0x02, func = "spikewall"};                -- Spiky movable wall
+tr3_entity_tbl[116] = {coll = 0x02, func = "spikeceiling"};                -- Spiky movable vertical wall / Tunnel borer
 tr3_entity_tbl[117] = {coll = 0x01};                -- Valve wheel / Pulley
 tr3_entity_tbl[118] = {coll = 0x01, func = "switch"};                -- Switch
 tr3_entity_tbl[119] = {coll = 0x01};                -- Underwater propeller / Diver sitting on block / Underwater rotating knives / Meteorite

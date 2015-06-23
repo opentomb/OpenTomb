@@ -87,12 +87,12 @@ typedef struct bt_entity_data_s
     uint32_t                            no_fix_body_parts;
     btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
-    
+
     btCollisionShape                  **shapes;
     btRigidBody                       **bt_body;
     uint32_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
-    
+
     struct entity_collision_node_s     *last_collisions;
 }bt_entity_data_t, *bt_entity_data_p;
 
@@ -109,16 +109,16 @@ typedef struct entity_s
 
     uint8_t                             dir_flag;           // (move direction)
     uint16_t                            move_type;          // on floor / free fall / swim ....
-    
+
     uint8_t                             was_rendered;       // render once per frame trigger
     uint8_t                             was_rendered_lines; // same for debug lines
 
     btScalar                            current_speed;      // current linear speed from animation info
     btVector3                           speed;              // speed of the entity XYZ
-    
+
     btScalar                            inertia_linear;     // linear inertia
     btScalar                            inertia_angular[2]; // angular inertia - X and Y axes
-    
+
     struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
     struct bt_entity_data_s             bt;
     btScalar                            angles[3];
@@ -132,7 +132,7 @@ typedef struct entity_s
     struct engine_container_s          *self;
 
     btScalar                            activation_offset[4];   // where we can activate object (dx, dy, dz, r)
-    
+
     struct character_s                 *character;
 }entity_t, *entity_p;
 
@@ -187,8 +187,5 @@ void Entity_MoveVertical(struct entity_s *ent, btScalar dist);
 // Helper functions
 
 btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2);
-
-room_sector_s* Entity_GetLowestSector(room_sector_s* sector);
-room_sector_s* Entity_GetHighestSector(room_sector_s* sector);
 
 #endif
