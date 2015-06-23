@@ -382,8 +382,10 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
 
 bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
 {
-    if( ((!s1) || (!s2)) ||
-        (s1->floor != s2->floor) ||
+    if(!s1 || !s2) return false;
+    if( s1 ==  s2) return true;
+
+    if( (s1->floor != s2->floor) ||
         (s1->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (!ignore_doors && (s1->sector_below || s2->sector_below))     )
@@ -399,8 +401,10 @@ bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
 
 bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors)
 {
-    if( ((!s1) || (!s2)) ||
-        (s1->ceiling != s2->ceiling) ||
+    if(!s1 || !s2) return false;
+    if( s1 ==  s2) return true;
+
+    if( (s1->ceiling != s2->ceiling) ||
         (s1->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (!ignore_doors && (s1->sector_above || s2->sector_above))       )
