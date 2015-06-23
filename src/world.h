@@ -399,15 +399,15 @@ void Room_Disable(room_p room);
 void Room_SwapToAlternate(room_p room);
 void Room_SwapToBase(room_p room);
 room_p Room_CheckFlip(room_p r);
-void Room_SwapPortals(room_p room, room_p dest_room); //Swap room portals of input room to destination room
-void Room_SwapItems(room_p room, room_p dest_room);   //Swap room items of input room to destination room
+void Room_SwapPortals(room_p room, room_p dest_room); // Swap room portals of input room to destination room
+void Room_SwapItems(room_p room, room_p dest_room);   // Swap room items of input room to destination room
 void Room_BuildNearRoomsList(room_p room);
 void Room_BuildOverlappedRoomsList(room_p room);
 
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);
 int Room_IsInNearRoomsList(room_p room, room_p r);
-int Room_HasSector(room_p room, int x, int y);//If this room contains a sector
+int Room_HasSector(room_p room, int x, int y);        // If this room contains a sector
 
 room_sector_p Sector_CheckBaseRoom(room_sector_p rs);
 room_sector_p Sector_CheckAlternateRoom(room_sector_p rs);
@@ -431,7 +431,7 @@ int World_DeleteEntity(world_p world, struct entity_s *entity);
 int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
 int World_DeleteItem(world_p world, uint32_t item_id);
 struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world);
-struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id);           // binary search the model by ID
+struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id);    // Binary search the model by ID
 
 
 #endif
