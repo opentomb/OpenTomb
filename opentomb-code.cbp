@@ -49,6 +49,9 @@
 		<Unit filename="config.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="resource/icon/opentomb.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
 		<Unit filename="scripts/audio/common_sounds.lua" />
 		<Unit filename="scripts/audio/sample_override.lua" />
 		<Unit filename="scripts/audio/soundtrack.lua" />
@@ -205,6 +208,7 @@
 		<Unit filename="scripts/level/tr5/RICH2_autoexec.lua" />
 		<Unit filename="scripts/level/tr5/RICH3_autoexec.lua" />
 		<Unit filename="scripts/level/tr5/RICHCUT_autoexec.lua" />
+		<Unit filename="scripts/loadscript.lua" />
 		<Unit filename="scripts/staticmesh/staticmesh_script.lua" />
 		<Unit filename="scripts/strings/english/generic.lua" />
 		<Unit filename="scripts/strings/english/global_items.lua" />
