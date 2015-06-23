@@ -83,8 +83,8 @@ typedef struct entity_collision_node_s
 
 typedef struct bt_entity_data_s
 {
-    int8_t                              no_fix_all;
     uint32_t                            no_fix_body_parts;
+    int8_t                              no_fix_all;
     btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
     

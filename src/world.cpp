@@ -381,6 +381,46 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
 }
 
 
+bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
+{
+    if(!s1 || !s2) return false;
+    if( s1 ==  s2) return true;
+
+    if( (s1->floor != s2->floor) ||
+        (s1->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (!ignore_doors && (s1->sector_below || s2->sector_below))     )
+          return false;
+
+    for(int i = 0; i < 4; i++)
+    {
+        if(s1->floor_corners->m_floats[2] != s2->floor_corners->m_floats[2]) return false;
+    }
+
+    return true;
+}
+
+
+bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors)
+{
+    if(!s1 || !s2) return false;
+    if( s1 ==  s2) return true;
+
+    if( (s1->ceiling != s2->ceiling) ||
+        (s1->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (!ignore_doors && (s1->sector_above || s2->sector_above))       )
+          return false;
+
+    for(int i = 0; i < 4; i++)
+    {
+        if(s1->ceiling_corners->m_floats[2] != s2->ceiling_corners->m_floats[2]) return false;
+    }
+
+    return true;
+}
+
+
 int Room_IsOverlapped(room_p r0, room_p r1)
 {
     if((r0 == r1) || (r0 == r1->alternate_room) || (r0->alternate_room == r1))
@@ -818,10 +858,28 @@ room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room)
 
     if(room->active &&
        (new_pos[0] >= room->bb_min[0]) && (new_pos[0] < room->bb_max[0]) &&
-       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]) &&
-       (new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
+       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]))
     {
-        return room;
+        if((new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
+        {
+            return room;
+        }
+        else if(new_pos[2] >= room->bb_max[2])
+        {
+            room_sector_p orig_sector = Room_GetSectorRaw(room, new_pos);
+            if(orig_sector->sector_above != NULL)
+            {
+                return Room_CheckFlip(orig_sector->sector_above->owner_room);
+            }
+        }
+        else if(new_pos[2] < room->bb_min[2])
+        {
+            room_sector_p orig_sector = Room_GetSectorRaw(room, new_pos);
+            if(orig_sector->sector_below != NULL)
+            {
+                return Room_CheckFlip(orig_sector->sector_below->owner_room);
+            }
+        }
     }
 
     room_sector_p new_sector = Room_GetSectorRaw(room, new_pos);

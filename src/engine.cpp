@@ -289,7 +289,7 @@ void Engine_BTInit()
 
      return 0;
 }
- 
+
  int lua_DumpModel(lua_State * lua)
  {
      int id = 0;
@@ -1611,6 +1611,53 @@ int lua_GetEntityDirDot(lua_State * lua)
     }
 
     lua_pushnumber(lua, vec3_dot(e1->transform + 4, e2->transform + 4));
+    return 1;
+}
+
+
+int lua_SimilarSector(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 5)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz, ignore_doors, (ceiling)]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    btScalar dx = lua_tonumber(lua, 2);
+    btScalar dy = lua_tonumber(lua, 3);
+    btScalar dz = lua_tonumber(lua, 4);
+
+    btScalar next_pos[3];
+
+    next_pos[0] = ent->transform[12+0] + (dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0]);
+    next_pos[1] = ent->transform[12+1] + (dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1]);
+    next_pos[2] = ent->transform[12+2] + (dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2]);
+
+    room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12+0);
+    room_sector_p next_sector = Room_GetSectorRaw(ent->self->room, next_pos);
+
+    bool ignore_doors = lua_toboolean(lua, 5);
+
+    if((top >= 6) && (lua_toboolean(lua, 6) == true))
+    {
+        lua_pushboolean(lua, Sectors_SimilarCeiling(curr_sector, next_sector, ignore_doors));
+    }
+    else
+    {
+        lua_pushboolean(lua, Sectors_SimilarFloor(curr_sector, next_sector, ignore_doors));
+    }
+
     return 1;
 }
 
@@ -3949,6 +3996,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
+    lua_register(lua, "similarSector", lua_SimilarSector);
     lua_register(lua, "getEntityDistance", lua_GetEntityDistance);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
