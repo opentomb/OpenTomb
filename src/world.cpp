@@ -380,6 +380,39 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
     return 0;
 }
 
+bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
+{
+    if( ((!s1) || (!s2)) ||
+        (s1->floor != s2->floor) ||
+        (s1->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (!ignore_doors && (s1->sector_below || s2->sector_below))     )
+          return false;
+
+    for(int i = 0; i < 4; i++)
+    {
+        if(s1->floor_corners->m_floats[2] != s2->floor_corners->m_floats[2]) return false;
+    }
+
+    return true;
+}
+
+bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors)
+{
+    if( ((!s1) || (!s2)) ||
+        (s1->ceiling != s2->ceiling) ||
+        (s1->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (!ignore_doors && (s1->sector_above || s2->sector_above))       )
+          return false;
+
+    for(int i = 0; i < 4; i++)
+    {
+        if(s1->ceiling_corners->m_floats[2] != s2->ceiling_corners->m_floats[2]) return false;
+    }
+
+    return true;
+}
 
 int Room_IsOverlapped(room_p r0, room_p r1)
 {

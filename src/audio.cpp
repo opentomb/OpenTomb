@@ -1208,9 +1208,10 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     audio_effect_p  effect = NULL;
     AudioSource    *source = NULL;
 
-    // If there are no audio buffers, don't process.
+    // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(engine_world.audio_buffers_count < 1) return TR_AUDIO_SEND_IGNORED;
+    if((engine_world.audio_buffers_count < 1) ||
+       (effect_ID < 0)) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
 
@@ -1483,18 +1484,18 @@ void Audio_Init(uint32_t num_Sources)
     // FX should be inited first, as source constructor checks for FX slot to be created.
 
     if(audio_settings.use_effects) Audio_InitFX();
-    
+
     // Generate new source array.
-    
+
     num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
     engine_world.audio_sources_count = num_Sources;
     engine_world.audio_sources = new AudioSource[num_Sources];
 
     // Generate stream tracks array.
-    
+
     engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
     engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
-    
+
     // Reset last room type used for assigning reverb.
 
     fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;

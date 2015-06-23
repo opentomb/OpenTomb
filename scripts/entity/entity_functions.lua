@@ -656,7 +656,7 @@ function spikewall_init(id)      -- Spike wall
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    setEntityActivity(object_id, 0);
+    setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -664,14 +664,35 @@ function spikewall_init(id)      -- Spike wall
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, 0);
+        stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        -- put some movement code here
+        local ver = getLevelVersion();
+        local scan_distance = 32.0;
+        if(ver < TR_II) then scan_distance = 1536.0 end; -- TR1's lava mass has different floor scan distance.
+        
+        if(similarSector(object_id, 0.0, scan_distance, 0.0, false)) then
+            moveEntityLocal(object_id, 0.0, 8.0, 0.0);
+            playSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+        else
+            setEntityActivity(object_id, 0);    -- Stop
+            stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+        end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -20);
+        if(getEntityModelID(activator_id) == 0) then
+            if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
+                changeCharacterParam(activator_id, PARAM_HEALTH, -20);
+                playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
+            else
+                addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                playSound(SOUND_GEN_DEATH, activator_id);
+                setEntityActivity(object_id, 0);
+                stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+            end;
+        end;
     end
 end
 
