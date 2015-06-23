@@ -273,6 +273,24 @@ void Engine_BTInit()
      return 0;
  }
 
+ // print is a system function;
+ int lua_print(lua_State * lua)
+{
+     int top = lua_gettop(lua);
+
+     if(top == 0)
+     {
+        Con_AddLine("nil");
+     }
+
+     for(int i=1;i<=top;i++)
+     {
+         Con_AddLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
+     }
+
+     return 0;
+}
+
  int lua_DumpModel(lua_State * lua)
  {
      int id = 0;
@@ -777,10 +795,8 @@ int lua_GetCharacterCombatMode(lua_State * lua)
         lua_pushnumber(lua, ent->character->weapon_current_state);
         return 1;
     }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
 }
 
 int lua_ChangeCharacterParam(lua_State * lua)
@@ -1179,11 +1195,9 @@ int lua_AddItem(lua_State * lua)
         lua_pushinteger(lua, Character_AddItem(ent, item_id, count));
         return 1;
     }
-    else
-    {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
-        return 0;
-    }
+
+    Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+    return 0;
 }
 
 
@@ -1206,11 +1220,9 @@ int lua_RemoveItem(lua_State * lua)
         lua_pushinteger(lua, Character_RemoveItem(ent, item_id, count));
         return 1;
     }
-    else
-    {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
-        return 0;
-    }
+
+    Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+    return 0;
 }
 
 
@@ -3457,8 +3469,7 @@ int lua_PlaySound(lua_State *lua)
         return 0;
     }
 
-    int id = lua_tointeger(lua, 1); if(id < 0) return 0;
-
+    uint32_t id  = lua_tointeger(lua, 1);           // uint_t can't been less zero, reduce number of comparations
     if(id >= engine_world.audio_map_count)
     {
         Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map_count);
@@ -3477,11 +3488,11 @@ int lua_PlaySound(lua_State *lua)
 
     if(ent_id >= 0)
     {
-        result = Audio_Send((uint32_t)id, TR_AUDIO_EMITTER_ENTITY, ent_id);
+        result = Audio_Send(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
     }
     else
     {
-        result = Audio_Send((uint32_t)id, TR_AUDIO_EMITTER_GLOBAL);
+        result = Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL);
     }
 
     if(result < 0)
@@ -3662,7 +3673,7 @@ int lua_SetFlipState(lua_State *lua)
 
         if(engine_world.version > TR_III)
         {
-            for(unsigned i=0;i<engine_world.room_count;i++, current_room++)
+            for(uint32_t i=0;i<engine_world.room_count;i++, current_room++)
             {
                 if(current_room->alternate_group == group)    // Check if group is valid.
                 {
@@ -3681,7 +3692,7 @@ int lua_SetFlipState(lua_State *lua)
         }
         else
         {
-            for(unsigned i=0;i<engine_world.room_count;i++,current_room++)
+            for(uint32_t i=0;i<engine_world.room_count;i++,current_room++)
             {
                 if(state)
                 {
@@ -3896,7 +3907,7 @@ void Engine_LuaClearTasks()
 void lua_registerc(lua_State *lua, const char* func_name, int(*func)(lua_State*))
 {
     char uc[64] = {0}; char lc[64] = {0};
-    for(unsigned i=0; i < strlen(func_name); i++)
+    for(size_t i=0; i < strlen(func_name); i++)
     {
         lc[i]=tolower(func_name[i]);
         uc[i]=toupper(func_name[i]);
@@ -3921,6 +3932,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
     // Register script functions
 
+    lua_registerc(lua, "print", lua_print);
     lua_registerc(lua, "checkStack", lua_CheckStack);
     lua_registerc(lua, "dumpModel", lua_DumpModel);
     lua_registerc(lua, "dumpRoom", lua_DumpRoom);

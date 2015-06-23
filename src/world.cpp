@@ -380,6 +380,7 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
     return 0;
 }
 
+
 bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
 {
     if(!s1 || !s2) return false;
@@ -399,6 +400,7 @@ bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
     return true;
 }
 
+
 bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors)
 {
     if(!s1 || !s2) return false;
@@ -417,6 +419,7 @@ bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_door
 
     return true;
 }
+
 
 int Room_IsOverlapped(room_p r0, room_p r1)
 {
@@ -855,10 +858,28 @@ room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room)
 
     if(room->active &&
        (new_pos[0] >= room->bb_min[0]) && (new_pos[0] < room->bb_max[0]) &&
-       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]) &&
-       (new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
+       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]))
     {
-        return room;
+        if((new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
+        {
+            return room;
+        }
+        else if(new_pos[2] >= room->bb_max[2])
+        {
+            room_sector_p orig_sector = Room_GetSectorRaw(room, new_pos);
+            if(orig_sector->sector_above != NULL)
+            {
+                return Room_CheckFlip(orig_sector->sector_above->owner_room);
+            }
+        }
+        else if(new_pos[2] < room->bb_min[2])
+        {
+            room_sector_p orig_sector = Room_GetSectorRaw(room, new_pos);
+            if(orig_sector->sector_below != NULL)
+            {
+                return Room_CheckFlip(orig_sector->sector_below->owner_room);
+            }
+        }
     }
 
     room_sector_p new_sector = Room_GetSectorRaw(room, new_pos);

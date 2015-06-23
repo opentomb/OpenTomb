@@ -117,23 +117,6 @@ int lua_debuginfo(lua_State * lua)
     return 0;
 }
 
-int lua_print(lua_State * lua)
-{
-     int top = lua_gettop(lua);
-
-     if(top == 0)
-     {
-        Con_AddLine("nil");
-     }
-
-     for(int i=1;i<=top;i++)
-     {
-         Con_AddLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
-     }
-
-     return 0;
-}
-
 int lua_timescale(lua_State * lua)
 {
     if(lua_gettop(lua) == 0)
@@ -169,7 +152,6 @@ void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
     {
-        lua_register(lua, "print", lua_print);
         lua_register(lua, "debuginfo", lua_debuginfo);
         lua_register(lua, "mlook", lua_mlook);
         lua_register(lua, "freelook", lua_freelook);

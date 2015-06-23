@@ -746,7 +746,7 @@ void Entity_CheckCollisionCallbacks(struct entity_s *ent)
             if(type == OBJECT_ENTITY)
             {
                 entity_p activator = (entity_p)cont->object;
-                
+
                 if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
                 {
                     // Activator and entity IDs are swapped in case of collision callback.
@@ -828,15 +828,25 @@ btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint
 
 void Entity_UpdateRoomPos(entity_p ent)
 {
-    btScalar pos[3], v[3];
+    btScalar pos[3];
     room_p new_room;
     room_sector_p new_sector;
 
-    vec3_add(v, ent->bf.bb_min, ent->bf.bb_max);
-    v[0] /= 2.0;
-    v[1] /= 2.0;
-    v[2] /= 2.0;
-    Mat4_vec3_mul_macro(pos, ent->transform, v);
+    if(ent->character)
+    {
+        Mat4_vec3_mul(pos, ent->transform, ent->bf.bone_tags->full_transform+12);
+        pos[0] = ent->transform[12+0];
+        pos[1] = ent->transform[12+1];
+    }
+    else
+    {
+        btScalar v[3];
+        vec3_add(v, ent->bf.bb_min, ent->bf.bb_max);
+        v[0] /= 2.0;
+        v[1] /= 2.0;
+        v[2] /= 2.0;
+        Mat4_vec3_mul_macro(pos, ent->transform, v);
+    }
     new_room = Room_FindPosCogerrence(pos, ent->self->room);
     if(new_room)
     {

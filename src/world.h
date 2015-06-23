@@ -204,7 +204,7 @@ typedef struct room_sector_s
 {
     uint32_t                    trig_index; // Trigger function index.
     int32_t                     box_index;
-
+    
     uint32_t                    flags;      // Climbability, death etc.
     uint32_t                    material;   // Footstep sound and footsteps.
 
@@ -315,7 +315,7 @@ typedef struct world_s
 
     uint32_t                    room_box_count;
     struct room_box_s          *room_boxes;
-
+    
     uint32_t                    flip_count;             // Number of flips
     uint8_t                    *flip_map;               // Flipped room activity array.
     uint8_t                    *flip_state;             // Flipped room state array.
@@ -343,9 +343,9 @@ typedef struct world_s
     struct RedBlackHeader_s    *items_tree;             // tree of world items
 
     uint32_t                    type;
-
+    
     uint32_t                    cameras_sinks_count;    // Amount of cameras and sinks.
-    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks.
+    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks. 
 
     uint32_t                    anim_commands_count;
     int16_t                    *anim_commands;
@@ -413,10 +413,9 @@ room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs);
 room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs);
 room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs);
 room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs);
-
-int  Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
-bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors = false);
-bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors = false);
+int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
+bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors);
+bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
 int World_DeleteEntity(world_p world, struct entity_s *entity);
