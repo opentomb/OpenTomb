@@ -238,7 +238,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point.m_floats[2] - curr_fc->floor_point.m_floats[2] < ent->character->Height - LARA_HANG_VERTICAL_EPSILON));
     int8_t last_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count <= ss_anim->current_frame + 1;
 
-    if(resp->kill)   // Stop any music, if Lara is dead.
+    if(resp->kill == 1)   // Stop any music, if Lara is dead.
     {
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
@@ -286,7 +286,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_START_FREE_FALL, 0);
                 ent->dir_flag = ENT_STAY;
             }
-            else if(resp->kill)
+            else if(resp->kill == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_DEATH;
             }
@@ -1095,7 +1095,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 Entity_CheckNextPenetration(ent, move);
             }
 
-            if(resp->kill)
+            if(resp->kill == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
@@ -1812,7 +1812,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 break;
             }
 
-            if(cmd->action == 1)                                                // we have to update climb point every time so entity can move
+            if((resp->kill == 0) && (cmd->action == 1))                                                // we have to update climb point every time so entity can move
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
                 vec3_mul_scalar(global_offset, ent->transform + 4, t);
@@ -2483,7 +2483,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ss_anim->onFrame = ent_climb_out_of_water;
                 }
             }
-            else if(resp->kill)
+            else if(resp->kill == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
             }
