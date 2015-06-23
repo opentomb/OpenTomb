@@ -73,10 +73,10 @@ function activateEntity(object_id, activator_id, trigger_mask, trigger_op, trigg
     -- If mask is not full, entity won't activate - no exclusions.
     
     if((mask == 0x1F) and (event == 0)) then
-        execEntity(object_id, activator_id, ENTITY_CALLBACK_ACTIVATE);
+        execEntity(ENTITY_CALLBACK_ACTIVATE, object_id, activator_id);
         event = 1;
     elseif((mask ~= 0x1F) and (event == 1)) then
-        execEntity(object_id, activator_id, ENTITY_CALLBACK_DEACTIVATE);
+        execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
         event = 0;
     end;
     
@@ -101,7 +101,7 @@ function deactivateEntity(object_id, activator_id)
     
     -- Execute entity deactivation function, only if activation was previously set.
     if(event == 1) then
-        execEntity(object_id, activator_id, ENTITY_CALLBACK_DEACTIVATE);
+        execEntity(ENTITY_CALLBACK_DEACTIVATE, object_id, activator_id);
         
         -- Activation mask and timer are forced to zero when entity is deactivated.
         -- Activity lock is ignored, since it can't be raised by antitriggers.

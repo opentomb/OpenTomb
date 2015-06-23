@@ -1208,9 +1208,10 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     audio_effect_p  effect = NULL;
     AudioSource    *source = NULL;
 
-    // If there are no audio buffers, don't process.
+    // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(engine_world.audio_buffers_count < 1) return TR_AUDIO_SEND_IGNORED;
+    if((engine_world.audio_buffers_count < 1) ||
+       (effect_ID < 0)) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
 
@@ -1367,7 +1368,7 @@ int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
 }
 
 
-void Audio_LoadOverridedSamples()
+void Audio_LoadOverridedSamples(struct world_s *world)
 {
     int  num_samples, num_sounds;
     int  sample_index, sample_count;
@@ -1378,9 +1379,9 @@ void Audio_LoadOverridedSamples()
     {
         int buffer_counter = 0;
 
-        for(uint32_t i = 0; i < engine_world.audio_map_count; i++)
+        for(uint32_t i = 0; i < world->audio_map_count; i++)
         {
-            if(engine_world.audio_map[i] != -1)
+            if(world->audio_map[i] != -1)
             {
                 if(lua_GetOverridedSample(engine_lua, i, &sample_index, &sample_count))
                 {
@@ -1389,13 +1390,13 @@ void Audio_LoadOverridedSamples()
                         sprintf(sample_name, sample_name_mask, (sample_index + j));
                         if(Engine_FileFound(sample_name))
                         {
-                            Audio_LoadALbufferFromWAV_File(engine_world.audio_buffers[buffer_counter], sample_name);
+                            Audio_LoadALbufferFromWAV_File(world->audio_buffers[buffer_counter], sample_name);
                         }
                     }
                 }
                 else
                 {
-                    buffer_counter += engine_world.audio_effects[(engine_world.audio_map[i])].sample_count;
+                    buffer_counter += world->audio_effects[(world->audio_map[i])].sample_count;
                 }
             }
         }
@@ -1478,12 +1479,23 @@ int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *r
     return 1;
 }
 
-void Audio_Init()
+void Audio_Init(uint32_t num_Sources)
 {
     // FX should be inited first, as source constructor checks for FX slot to be created.
 
     if(audio_settings.use_effects) Audio_InitFX();
-    
+
+    // Generate new source array.
+
+    num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
+    engine_world.audio_sources_count = num_Sources;
+    engine_world.audio_sources = new AudioSource[num_Sources];
+
+    // Generate stream tracks array.
+
+    engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
+    engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
+
     // Reset last room type used for assigning reverb.
 
     fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;

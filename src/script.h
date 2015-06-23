@@ -46,7 +46,7 @@ btScalar lua_GetScalarField(lua_State *lua, const char *key);
 int lua_SetScalarField(lua_State *lua, const char *key, btScalar val);
 
 void lua_LoopEntity(lua_State *lua, int object_id);
-int  lua_ExecEntity(lua_State *lua, int id_object, int id_activator, int id_callback);
+int  lua_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator = -1);
 int  lua_DoTasks(lua_State *lua, btScalar time);
 bool lua_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call = false);
 

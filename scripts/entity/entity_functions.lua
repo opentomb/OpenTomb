@@ -18,13 +18,13 @@ dofile("scripts/entity/script_switch.lua");     -- Additional switch scripts.
 
 function efuncs_EraseEntity(index)
     if(entity_funcs[index] ~= nil) then
-        entity_funcs[index].onActivate      = nil;
-        entity_funcs[index].onDeactivate    = nil;
-        entity_funcs[index].onCollide       = nil;
-        entity_funcs[index].onStand         = nil;
-        entity_funcs[index].onHit           = nil;
-        entity_funcs[index].onLoop          = nil;
-        entity_funcs[index]                 = nil;
+        entity_funcs[index].onActivate       = nil;
+        entity_funcs[index].onDeactivate     = nil;
+        entity_funcs[index].onCollide        = nil;
+        entity_funcs[index].onStand          = nil;
+        entity_funcs[index].onHit            = nil;
+        entity_funcs[index].onLoop           = nil;
+        entity_funcs[index]                  = nil;
     end;
 end;
 
@@ -305,6 +305,7 @@ end
 function swingblade_init(id)        -- Swinging blades (TR1)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -361,6 +362,7 @@ end
 function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -385,6 +387,7 @@ end
 function wallblade_init(id)     -- Wall blade (TR1-TR3)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -516,8 +519,7 @@ end
 
 function fallblock_init(id)  -- Falling block (TR1-3)
 
-    local f1, f2, f3 = getEntityFlags(id);  -- f1 - state flags, f2 - type flags, f3 - callback flags
-    setEntityFlags(id, nil, nil, bit32.bor(f3, ENTITY_CALLBACK_STAND));
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_STAND, 1);
     setEntitySpeed(id, 0.0, 0.0, 0.0);
 
     entity_funcs[id].onStand = function(object_id, activator_id)
@@ -624,21 +626,37 @@ function midastouch_init(id)    -- Midas gold touch
     prepareEntity(id);
 end
 
-function oldspike_init(id)  -- Teeth spikes (INVALID)
+function oldspike_init(id)  -- Teeth spikes
 
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 1);
-    local f1, f2, f3 = getEntityFlags(id);
-    setEntityFlags(id, nil, bit32.bor(f2, ENTITY_TYPE_GENERIC), bit32.bor(f3, ENTITY_CALLBACK_COLLISION));
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -50);
+        if((getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
+            
+            local px,py,pz = getEntityPos(object_id);
+            local lx,ly,lz = getEntityPos(activator_id);
+            local ls = getEntitySpeedLinear(activator_id);
+                
+            if(lz > (pz + 256.0)) then
+                setEntityCollision(object_id, 0);   -- Temporary, must use ghost collision instead.
+                setEntityPos(activator_id, lx, ly, pz);
+                setEntityAnim(activator_id, 149, 0);
+                setCharacterParam(activator_id, PARAM_HEALTH, 0);
+            elseif(ls > 512.0) then
+                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 256.0));
+            end;
+        end;
     end
+    
 end
 
 function spikewall_init(id)      -- Spike wall
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityActivity(object_id, 0);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
@@ -646,14 +664,35 @@ function spikewall_init(id)      -- Spike wall
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, 0);
+        stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        -- put some movement code here
+        local ver = getLevelVersion();
+        local scan_distance = 32.0;
+        if(ver < TR_II) then scan_distance = 1536.0 end; -- TR1's lava mass has different floor scan distance.
+        
+        if(similarSector(object_id, 0.0, scan_distance, 0.0, false)) then
+            moveEntityLocal(object_id, 0.0, 8.0, 0.0);
+            playSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+        else
+            setEntityActivity(object_id, 0);    -- Stop
+            stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+        end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -20);
+        if(getEntityModelID(activator_id) == 0) then
+            if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
+                changeCharacterParam(activator_id, PARAM_HEALTH, -20);
+                playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
+            else
+                addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                playSound(SOUND_GEN_DEATH, activator_id);
+                setEntityActivity(object_id, 0);
+                stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+            end;
+        end;
     end
 end
 

@@ -82,10 +82,10 @@ struct bordered_texture_atlas_s;
 
 void Res_GenRBTrees(struct world_s *world);
 void Res_GenSpritesBuffer(struct world_s *world);
+void Res_GenRoomSpritesBuffer(struct room_s *room);
 void Res_GenRoomCollision(struct world_s *world);
 void Res_GenRoomFlipMap(struct world_s *world);
 void Res_GenBaseItems(struct world_s *world);
-void Res_GenRoomSpritesBuffer(struct room_s *room);
 void Res_GenVBOs(struct world_s *world);
 
 void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
@@ -144,7 +144,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
 void TR_GenBoxes(struct world_s *world, class VT_Level *tr);
 void TR_GenCameras(struct world_s *world, class VT_Level *tr);
-void TR_GenSamples(int num_Sources, class VT_Level *tr);
+void TR_GenSamples(struct world_s *world, class VT_Level *tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 

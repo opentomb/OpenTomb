@@ -202,7 +202,7 @@ tr1_entity_tbl[173] = {coll = 0x01};                     -- Mutant grenade
 tr1_entity_tbl[177] = {coll = 0x00, hide = 0x01};        -- Lava particle emitter
 
 tr1_entity_tbl[179] = {coll = 0x00, hide = 0x01};        -- Flame emitter
-tr1_entity_tbl[180] = {coll = 0x00};                     -- Moving lava mass
+tr1_entity_tbl[180] = {coll = 0x01, func = "spikewall"};                     -- Moving lava mass
 tr1_entity_tbl[181] = {coll = 0x01};                     -- Mutant egg (big)
 tr1_entity_tbl[182] = {coll = 0x01};                     -- Motorboat
 

@@ -517,7 +517,7 @@ bool lua_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_
     return true;
 }
 
-int lua_ExecEntity(lua_State *lua, int id_object, int id_activator, int id_callback)
+int lua_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)
 {
     int top = lua_gettop(lua);
 
@@ -529,10 +529,18 @@ int lua_ExecEntity(lua_State *lua, int id_object, int id_activator, int id_callb
         return -1;
     }
 
-    lua_pushinteger(lua, id_object);
-    lua_pushinteger(lua, id_activator);
-    lua_pushinteger(lua, id_callback);
-    lua_CallAndLog(lua, 3, 0, 0);
+    int argn = 0;
+    
+    lua_pushinteger(lua, id_callback);  argn++;
+    lua_pushinteger(lua, id_object);    argn++;
+    
+    if(id_activator >= 0)
+    {
+        lua_pushinteger(lua, id_activator);
+        argn++;
+    }
+    
+    lua_CallAndLog(lua, argn, 0, 0);
 
     lua_settop(lua, top);
     return 1;

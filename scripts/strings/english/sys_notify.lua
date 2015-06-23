@@ -59,3 +59,7 @@ sys_notify[1011]    = "Activate object %d by %d";
 sys_notify[1012]    = "Loaded fader picture: %s";
 sys_notify[1013]    = "Trigger array cleaned up successfully!";
 sys_notify[1014]    = "Entity function array cleaned up successfully!";
+sys_notify[1015]    = "Loaded PC-specific level file (VT loader used).";
+sys_notify[1016]    = "Loaded PSX-specific level file.";
+sys_notify[1017]    = "Loaded Dreamcast-specific level file.";
+sys_notify[1018]    = "Loaded OpenTomb level file.";

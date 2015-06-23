@@ -413,7 +413,10 @@ room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs);
 room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs);
 room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs);
 room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs);
-int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
+
+int  Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
+bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors = false);
+bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors = false);
 
 int World_AddEntity(world_p world, struct entity_s *entity);
 int World_DeleteEntity(world_p world, struct entity_s *entity);
