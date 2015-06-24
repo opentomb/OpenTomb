@@ -1041,7 +1041,7 @@ room_sector_p Sector_GetLowest(room_sector_p sector)
     for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_below)
     { lowest_sector = rs; }
 
-    return lowest_sector;
+    return Sector_CheckFlip(lowest_sector);
 }
 
 
@@ -1052,7 +1052,7 @@ room_sector_p Sector_GetHighest(room_sector_p sector)
     for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_above)
     { highest_sector = rs; }
 
-    return highest_sector;
+    return Sector_CheckFlip(highest_sector);
 }
 
 
