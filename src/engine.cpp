@@ -1671,12 +1671,15 @@ int lua_SimilarSector(lua_State * lua)
     next_pos[1] = ent->transform[12+1] + (dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1]);
     next_pos[2] = ent->transform[12+2] + (dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2]);
 
-    room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12+0);
+    room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
     room_sector_p next_sector = Room_GetSectorRaw(ent->self->room, next_pos);
+
+    curr_sector = Sector_CheckPortalPointer(curr_sector);
+    next_sector = Sector_CheckPortalPointer(next_sector);
 
     bool ignore_doors = lua_toboolean(lua, 5);
 
-    if((top >= 6) && (lua_toboolean(lua, 6) == true))
+    if((top >= 6) && lua_toboolean(lua, 6))
     {
         lua_pushboolean(lua, Sectors_SimilarCeiling(curr_sector, next_sector, ignore_doors));
     }
@@ -1710,10 +1713,8 @@ int lua_GetSectorHeight(lua_State * lua)
     bool ceiling = false;
     if(top > 1) ceiling = lua_toboolean(lua, 2);
 
-    btScalar offset[3];
-             offset[0] = ent->transform[12+0];
-             offset[1] = ent->transform[12+1];
-             offset[2] = ent->transform[12+2];
+    btScalar pos[3];
+    vec3_copy(pos, ent->transform+12);
 
     if(top > 2)
     {
@@ -1721,12 +1722,13 @@ int lua_GetSectorHeight(lua_State * lua)
         btScalar dy = lua_tonumber(lua, 3);
         btScalar dz = lua_tonumber(lua, 4);
 
-        offset[0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
-        offset[1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
-        offset[2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
+        pos[0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
+        pos[1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
+        pos[2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
     }
 
-    room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, offset);
+    room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
+    curr_sector = Sector_CheckPortalPointer(curr_sector);
     btVector3 point = (ceiling)?(Sector_GetCeilingPoint(curr_sector)):(Sector_GetFloorPoint(curr_sector));
 
     lua_pushnumber(lua, point.m_floats[2]);
