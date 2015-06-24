@@ -8,10 +8,11 @@
 #define SPLIT_EMPTY 0x00
 #define SPLIT_SUCCES 0x01
 
-#include <stdint.h>
+#include <cstdint>
+#include <memory>
 
 struct camera_s;
-struct room_s;
+struct Room;
 struct polygon_s;
 struct render_s;
 struct frustum_s;
@@ -27,8 +28,8 @@ typedef struct portal_s
     btScalar *vertex;                                                           // Оригинальные вершины портала
     btScalar norm[4];                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
     btScalar centre[3];                                                         // центр портала
-    struct room_s *dest_room;                                                   // куда ведет портал
-    struct room_s *current_room;                                                // комната, где нааходится портал
+    std::shared_ptr<Room> dest_room;                                                   // куда ведет портал
+    std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
     unsigned int flag;                                                          // хз, мб потом понадобится
 }portal_t, *portal_p;
 

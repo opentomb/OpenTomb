@@ -19,7 +19,7 @@
 #include "console.h"
 #include "string.h"
 
-void Character_Create(struct entity_s *ent)
+void Character_Create(std::shared_ptr<Entity> ent)
 {
     character_p ret;
 
@@ -28,7 +28,7 @@ void Character_Create(struct entity_s *ent)
         return;
     }
 
-    ret = (character_p)malloc(sizeof(character_t));
+    ret = new character_s();
     //ret->platform = NULL;
     ret->state_func = NULL;
     ret->inventory = NULL;
@@ -36,8 +36,7 @@ void Character_Create(struct entity_s *ent)
     ent->character = ret;
     ent->dir_flag = ENT_STAY;
 
-    ret->hair_count = 0;
-    ret->hairs = NULL;
+    ret->hairs.clear();
 
     ret->weapon_current_state = 0x00;
     ret->current_weapon = 0;
@@ -103,7 +102,7 @@ void Character_Create(struct entity_s *ent)
     Entity_CreateGhosts(ent);
 }
 
-void Character_Clean(struct entity_s *ent)
+void Character_Clean(std::shared_ptr<Entity> ent)
 {
     character_p actor = ent->character;
 
@@ -123,16 +122,7 @@ void Character_Clean(struct entity_s *ent)
         free(rn);
     }
 
-    if(actor->hairs)
-    {
-        for(int i=0;i<actor->hair_count;i++)
-        {
-            Hair_Clear(actor->hairs+i);
-        }
-        free(actor->hairs);
-        actor->hairs = NULL;
-        actor->hair_count = 0;
-    }
+    actor->hairs.clear();
 
     if(actor->climb_sensor)
     {
@@ -174,7 +164,7 @@ void Character_Clean(struct entity_s *ent)
 }
 
 
-int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
+int32_t Character_AddItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
     //Con_Notify(SYSNOTE_GIVING_ITEM, item_id, count, ent);
     if(ent->character == NULL)
@@ -184,8 +174,9 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
 
     Gui_NotifierStart(item_id);
 
-    base_item_p item = World_GetBaseItemByID(&engine_world, item_id);
-    if(item == NULL) return 0;
+    auto item = World_GetBaseItemByID(&engine_world, item_id);
+    if(!item)
+        return 0;
 
     inventory_node_p last, i  = ent->character->inventory;
 
@@ -219,7 +210,7 @@ int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count)
 }
 
 
-int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count) // returns items count after in the function's end
+int32_t Character_RemoveItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count) // returns items count after in the function's end
 {
     if((ent->character == NULL) || (ent->character->inventory == NULL))
     {
@@ -276,7 +267,7 @@ int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t cou
 }
 
 
-int32_t Character_RemoveAllItems(struct entity_s *ent)
+int32_t Character_RemoveAllItems(std::shared_ptr<Entity> ent)
 {
     if((ent->character == NULL) || (ent->character->inventory == NULL))
     {
@@ -299,7 +290,7 @@ int32_t Character_RemoveAllItems(struct entity_s *ent)
 }
 
 
-int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         // returns items count
+int32_t Character_GetItemsCount(std::shared_ptr<Entity> ent, uint32_t item_id)         // returns items count
 {
     if(ent->character == NULL)
     {
@@ -323,7 +314,7 @@ int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id)         
  * Calculates next height info and information about next step
  * @param ent
  */
-void Character_UpdateCurrentHeight(struct entity_s *ent)
+void Character_UpdateCurrentHeight(std::shared_ptr<Entity> ent)
 {
     btScalar pos[3], t[3];
     t[0] = 0.0;
@@ -336,7 +327,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
 /*
  * Move character to the point where to platfom mowes
  */
-void Character_UpdatePlatformPreStep(struct entity_s *ent)
+void Character_UpdatePlatformPreStep(std::shared_ptr<Entity> ent)
 {
 #if 0
     if(ent->character->platform)
@@ -361,7 +352,7 @@ void Character_UpdatePlatformPreStep(struct entity_s *ent)
 /*
  * Get local character transform relative platfom
  */
-void Character_UpdatePlatformPostStep(struct entity_s *ent)
+void Character_UpdatePlatformPostStep(std::shared_ptr<Entity> ent)
 {
 #if 0
     switch(ent->move_type)
@@ -411,7 +402,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
 {
     btVector3 from, to;
     bt_engine_ClosestRayResultCallback *cb = fc->cb;
-    room_p r = (cb->m_cont)?(cb->m_cont->room):(NULL);
+    std::shared_ptr<Room> r = (cb->m_cont)?(cb->m_cont->room):(NULL);
     room_sector_p rs;
 
     fc->floor_hit = 0x00;
@@ -524,7 +515,7 @@ void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar
  * @function calculates next floor info + fantom filter + returns step info.
  * Current height info must be calculated!
  */
-int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc)
+int Character_CheckNextStep(std::shared_ptr<Entity> ent, btScalar offset[3], struct height_info_s *nfc)
 {
     btScalar pos[3], delta;
     height_info_p fc = &ent->character->height_info;
@@ -627,7 +618,7 @@ int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct hei
  * @param next_fc - next step floor / ceiling information
  * @return 1 if character can't run / walk next; in other cases returns 0
  */
-int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
+int Character_HasStopSlant(std::shared_ptr<Entity> ent, height_info_p next_fc)
 {
     btScalar *pos = ent->transform + 12, *v1 = ent->transform + 4, *v2 = (btScalar*)next_fc->floor_normale.m_floats;
 
@@ -641,7 +632,7 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
  * @param offset - offset, when we check height
  * @param nfc - height info (floor / ceiling)
  */
-climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height)
+climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height)
 {
     climb_info_t ret;
     btVector3 from, to, tmp;
@@ -844,7 +835,7 @@ climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3
 }
 
 
-climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
+climb_info_t Character_CheckWallsClimbability(std::shared_ptr<Entity> ent)
 {
     climb_info_t ret;
     btVector3 from, to;
@@ -963,7 +954,7 @@ climb_info_t Character_CheckWallsClimbability(struct entity_s *ent)
 }
 
 
-void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal)
+void Character_SetToJump(std::shared_ptr<Entity> ent, btScalar v_vertical, btScalar v_horizontal)
 {
     btScalar t;
     btVector3 spd(0.0, 0.0, 0.0);
@@ -1011,7 +1002,7 @@ void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_h
 }
 
 
-void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean)
+void Character_Lean(std::shared_ptr<Entity> ent, character_command_p cmd, btScalar max_lean)
 {
     btScalar neg_lean   = 360.0 - max_lean;
     btScalar lean_coeff = (max_lean == 0.0)?(48.0):(max_lean * 3);
@@ -1085,7 +1076,7 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_
  * Linear inertia is absolutely needed for in-water states, and also it gives
  * more organic feel to land animations.
  */
-btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command)
+btScalar Character_InertiaLinear(std::shared_ptr<Entity> ent, btScalar max_speed, btScalar accel, int8_t command)
 {
     if((!ent) || (!ent->character)) return 0.0;
 
@@ -1126,7 +1117,7 @@ btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btSca
 /*
  * Angular inertia is used on keyboard-driven (non-analog) rotational controls.
  */
-btScalar Character_InertiaAngular(struct entity_s *ent, btScalar max_angle, btScalar accel, uint8_t axis)
+btScalar Character_InertiaAngular(std::shared_ptr<Entity> ent, btScalar max_angle, btScalar accel, uint8_t axis)
 {
     if((!ent) || (!ent->character) || (axis > 1)) return 0.0;
 
@@ -1175,7 +1166,7 @@ btScalar Character_InertiaAngular(struct entity_s *ent, btScalar max_angle, btSc
 /*
  * MOVE IN DIFFERENCE CONDITIONS
  */
-int Character_MoveOnFloor(struct entity_s *ent)
+int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
 {
     btVector3 tv, norm_move_xy, move, spd(0.0, 0.0, 0.0);
     btScalar norm_move_xy_len, t, ang, *pos = ent->transform + 12;
@@ -1200,7 +1191,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         engine_container_p cont = (engine_container_p)ent->character->height_info.floor_obj->getUserPointer();
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
         {
-            entity_p e = (entity_p)cont->object;
+            std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
             if(e->callback_flags & ENTITY_CALLBACK_STAND)
             {
                 lua_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id, ent->id);
@@ -1356,7 +1347,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
 }
 
 
-int Character_FreeFalling(struct entity_s *ent)
+int Character_FreeFalling(std::shared_ptr<Entity> ent)
 {
     btVector3 move;
     btScalar *pos = ent->transform + 12;
@@ -1496,7 +1487,7 @@ int Character_FreeFalling(struct entity_s *ent)
 /*
  * Monkey CLIMBING - MOVE NO Z LANDING
  */
-int Character_MonkeyClimbing(struct entity_s *ent)
+int Character_MonkeyClimbing(std::shared_ptr<Entity> ent)
 {
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
@@ -1564,7 +1555,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
 /*
  * WALLS CLIMBING - MOVE IN ZT plane
  */
-int Character_WallsClimbing(struct entity_s *ent)
+int Character_WallsClimbing(std::shared_ptr<Entity> ent)
 {
     climb_info_t *climb = &ent->character->climb;
     btVector3 spd, move;
@@ -1630,7 +1621,7 @@ int Character_WallsClimbing(struct entity_s *ent)
 /*
  * CLIMBING - MOVE NO Z LANDING
  */
-int Character_Climbing(struct entity_s *ent)
+int Character_Climbing(std::shared_ptr<Entity> ent)
 {
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar t, *pos = ent->transform + 12;
@@ -1690,7 +1681,7 @@ int Character_Climbing(struct entity_s *ent)
  * I add some sticks to make it work for testing.
  * I thought to make export anim information to LUA script...
  */
-int Character_MoveUnderWater(struct entity_s *ent)
+int Character_MoveUnderWater(std::shared_ptr<Entity> ent)
 {
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar *pos = ent->transform + 12;
@@ -1757,7 +1748,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
 }
 
 
-int Character_MoveOnWater(struct entity_s *ent)
+int Character_MoveOnWater(std::shared_ptr<Entity> ent)
 {
     btVector3 move, spd(0.0, 0.0, 0.0);
     btScalar *pos = ent->transform + 12;
@@ -1831,7 +1822,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     return 1;
 }
 
-int Character_FindTraverse(struct entity_s *ch)
+int Character_FindTraverse(std::shared_ptr<Entity> ch)
 {
     room_sector_p ch_s, obj_s = NULL;
     ch_s = Room_GetSectorRaw(ch->self->room, ch->transform + 12);
@@ -1873,7 +1864,7 @@ int Character_FindTraverse(struct entity_s *ch)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
-                entity_p e = (entity_p)cont->object;
+                std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
                 if((e->type_flags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(e, ch) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1)))
                 {
                     int oz = (ch->angles[0] + 45.0) / 90.0;
@@ -1923,7 +1914,7 @@ int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine
         if(fabs(v.m_floats[2] - floor) < 1.1)
         {
             engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
-            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && (((entity_p)cont->object)->type_flags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((std::static_pointer_cast<Entity>(cont->object))->type_flags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
@@ -1939,7 +1930,7 @@ int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine
  * @param obj: traversed object pointer
  * @return: 0x01 if can traverse forvard; 0x02 if can traverse backvard; 0x03 can traverse in both directions; 0x00 - can't traverse
  */
-int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
+int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> obj)
 {
     room_sector_p ch_s, obj_s;
 
@@ -1993,7 +1984,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     if(cb.hasHit())
     {
         engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
-        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && (((entity_p)cont->object)->type_flags & ENTITY_TYPE_TRAVERSE))
+        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((std::static_pointer_cast<Entity>(cont->object))->type_flags & ENTITY_TYPE_TRAVERSE))
         {
             return 0x00;
         }
@@ -2107,7 +2098,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
 /**
  * Main character frame function
  */
-void Character_ApplyCommands(struct entity_s *ent)
+void Character_ApplyCommands(std::shared_ptr<Entity> ent)
 {
     if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
@@ -2160,7 +2151,7 @@ void Character_ApplyCommands(struct entity_s *ent)
     Character_UpdatePlatformPostStep(ent);
 }
 
-void Character_UpdateParams(struct entity_s *ent)
+void Character_UpdateParams(std::shared_ptr<Entity> ent)
 {
     switch(ent->move_type)
     {
@@ -2216,12 +2207,12 @@ void Character_UpdateParams(struct entity_s *ent)
     }
 }
 
-bool IsCharacter(struct entity_s *ent)
+bool IsCharacter(std::shared_ptr<Entity> ent)
 {
     return (ent != NULL) && (ent->character != NULL);
 }
 
-int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value)
+int Character_SetParamMaximum(std::shared_ptr<Entity> ent, int parameter, float max_value)
 {
     if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
         return 0;
@@ -2231,7 +2222,7 @@ int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_val
     return 1;
 }
 
-int Character_SetParam(struct entity_s *ent, int parameter, float value)
+int Character_SetParam(std::shared_ptr<Entity> ent, int parameter, float value)
 {
     if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
         return 0;
@@ -2245,7 +2236,7 @@ int Character_SetParam(struct entity_s *ent, int parameter, float value)
     return 1;
 }
 
-float Character_GetParam(struct entity_s *ent, int parameter)
+float Character_GetParam(std::shared_ptr<Entity> ent, int parameter)
 {
     if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
         return 0;
@@ -2253,7 +2244,7 @@ float Character_GetParam(struct entity_s *ent, int parameter)
     return ent->character->parameters.param[parameter];
 }
 
-int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
+int Character_ChangeParam(std::shared_ptr<Entity> ent, int parameter, float value)
 {
     if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
         return 0;
@@ -2289,7 +2280,7 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
 // overrided == 0x03: overriding mesh in disarmed state;
 // overrided == 0x04: add mesh to slot in disarmed state;
 ///@TODO: separate mesh replacing control and animation disabling / enabling
-int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
+int Character_SetWeaponModel(std::shared_ptr<Entity> ent, int weapon_model, int armed)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, weapon_model);
 

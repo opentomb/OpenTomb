@@ -441,7 +441,7 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
     }
 }
 
-void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar mvMatrix[16], const btScalar pMatrix[16])
+void Render_SkeletalModelSkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btScalar mvMatrix[16], const btScalar pMatrix[16])
 {
     ss_bone_tag_p btag = ent->bf.bone_tags;
 
@@ -472,7 +472,7 @@ void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struc
     }
 }
 
-void Render_DynamicEntitySkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar mvMatrix[16], const btScalar pMatrix[16])
+void Render_DynamicEntitySkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btScalar mvMatrix[16], const btScalar pMatrix[16])
 {
     glUniformMatrix4fvARB(shader->projection, 1, false, pMatrix);
 
@@ -517,12 +517,12 @@ void Render_DynamicEntitySkin(const struct lit_shader_description *shader, struc
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-const lit_shader_description *render_setupEntityLight(struct entity_s *entity, const btScalar modelViewMatrix[16], bool skin)
+const lit_shader_description *render_setupEntityLight(std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], bool skin)
 {
     // Calculate lighting
     const lit_shader_description *shader;
 
-    room_s *room = entity->self->room;
+    std::shared_ptr<Room> room = entity->self->room;
     if(room != NULL)
     {
         GLfloat ambient_component[4];
@@ -602,7 +602,7 @@ const lit_shader_description *render_setupEntityLight(struct entity_s *entity, c
     return shader;
 }
 
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16])
+void Render_Entity(std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16])
 {
     if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
@@ -641,7 +641,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
     }
 }
 
-void Render_DynamicEntity(const struct lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
+void Render_DynamicEntity(const struct lit_shader_description *shader, std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16])
 {
     ss_bone_tag_p btag = entity->bf.bone_tags;
 
@@ -666,27 +666,27 @@ void Render_DynamicEntity(const struct lit_shader_description *shader, struct en
 }
 
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
-void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar projection[16])
+void Render_Hair(std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar projection[16])
 {
-    if((!entity) || !(entity->character) || (entity->character->hair_count == 0) || !(entity->character->hairs))
+    if(!entity || !entity->character || entity->character->hairs.empty())
         return;
 
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, true);
 
 
-    for(int h=0; h<entity->character->hair_count; h++)
+    for(size_t h=0; h<entity->character->hairs.size(); h++)
     {
         btScalar hairModelToGlobalMatrices[16 * 10];
         // First: Head attachment
         btScalar globalHead[16];
-        Mat4_Mat4_mul(globalHead, entity->transform, entity->bf.bone_tags[entity->character->hairs[h].owner_body].full_transform);
+        Mat4_Mat4_mul(globalHead, entity->transform, entity->bf.bone_tags[entity->character->hairs[h]->owner_body].full_transform);
         btScalar globalAttachment[16];
-        Mat4_Mat4_mul(globalAttachment, globalHead, entity->character->hairs[h].owner_body_hair_root);
+        Mat4_Mat4_mul(globalAttachment, globalHead, entity->character->hairs[h]->owner_body_hair_root);
         Mat4_Mat4_mul(hairModelToGlobalMatrices, modelViewMatrix, globalAttachment);
 
         // Then: Individual hair pieces
-        for(uint16_t i=0; i<entity->character->hairs[h].element_count; i++)
+        for(uint16_t i=0; i<entity->character->hairs[h]->element_count; i++)
         {
             /*
              * Definitions: x_o - as in original file. x_h - as in hair model
@@ -711,12 +711,12 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
             Mat4_E(invOriginToHairModel);
             // Simplification: Always translation matrix, no invert needed
             Mat4_Translate(invOriginToHairModel,
-                           -entity->character->hairs[h].elements[i].position[0],
-                           -entity->character->hairs[h].elements[i].position[1],
-                           -entity->character->hairs[h].elements[i].position[2]);
+                           -entity->character->hairs[h]->elements[i].position[0],
+                           -entity->character->hairs[h]->elements[i].position[1],
+                           -entity->character->hairs[h]->elements[i].position[2]);
 
             btScalar globalFromOrigin[16];
-            const btTransform &bt_tr = entity->character->hairs[h].elements[i].body->getWorldTransform();
+            const btTransform &bt_tr = entity->character->hairs[h]->elements[i].body->getWorldTransform();
             bt_tr.getOpenGLMatrix(globalFromOrigin);
 
             btScalar globalFromHair[16];
@@ -724,20 +724,19 @@ void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], co
 
             Mat4_Mat4_mul(&hairModelToGlobalMatrices[(i+1) * 16], modelViewMatrix, globalFromHair);
         }
-        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h].element_count+1, GL_FALSE, hairModelToGlobalMatrices);
+        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h]->element_count+1, GL_FALSE, hairModelToGlobalMatrices);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projection);
 
-        Render_Mesh(entity->character->hairs[h].mesh);
+        Render_Mesh(entity->character->hairs[h]->mesh);
     }
 }
 
 /**
  * drawing world models.
  */
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16])
+void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16])
 {
     engine_container_p cont;
-    entity_p ent;
 
     const shader_description *lastShader = 0;
 
@@ -822,28 +821,28 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
         Render_Mesh(room->mesh);
     }
 
-    if (room->static_mesh_count > 0)
+    if (!room->static_mesh.empty())
     {
         glUseProgramObjectARB(render->shader_manager->getStaticMeshShader()->program);
-        for(uint32_t i=0; i<room->static_mesh_count; i++)
+        for(auto sm : room->static_mesh)
         {
-            if(room->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room))
+            if(sm->was_rendered || !Frustum_IsOBBVisibleInRoom(sm->obb, room))
             {
                 continue;
             }
 
-            if((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS))
+            if((sm->hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS))
             {
                 continue;
             }
 
             btScalar transform[16];
-            Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->static_mesh[i].transform);
+            Mat4_Mat4_mul(transform, modelViewProjectionMatrix, sm->transform);
             glUniformMatrix4fvARB(render->shader_manager->getStaticMeshShader()->model_view_projection, 1, false, transform);
-            base_mesh_s *mesh = room->static_mesh[i].mesh;
+            base_mesh_s *mesh = sm->mesh;
             GLfloat tint[4];
 
-            vec4_copy(tint, room->static_mesh[i].tint);
+            vec4_copy(tint, sm->tint);
 
             //If this static mesh is in a water room
             if(room->flags & TR_ROOM_FLAG_WATER)
@@ -852,7 +851,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             }
             glUniform4fvARB(render->shader_manager->getStaticMeshShader()->tint_mult, 1, tint);
             Render_Mesh(mesh);
-            room->static_mesh[i].was_rendered = 1;
+            sm->was_rendered = 1;
         }
     }
 
@@ -863,7 +862,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
             switch(cont->object_type)
             {
             case OBJECT_ENTITY:
-                ent = (entity_p)cont->object;
+                std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
                 if(ent->was_rendered == 0)
                 {
                     if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
@@ -885,7 +884,7 @@ void Render_Room(struct room_s *room, struct render_s *render, const btScalar mo
 }
 
 
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16])
+void Render_Room_Sprites(std::shared_ptr<Room> room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16])
 {
     if (room->sprites_count > 0 && room->sprite_buffer)
     {
@@ -918,7 +917,7 @@ void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btS
  * Если комната уже есть в списке - возвращается ноль и комната повторно не добавляется.
  * Если список полон, то ничего не добавляется
  */
-int Render_AddRoom(struct room_s *room)
+int Render_AddRoom(std::shared_ptr<Room> room)
 {
     int ret = 0;
     engine_container_p cont;
@@ -946,10 +945,10 @@ int Render_AddRoom(struct room_s *room)
             renderer.style |= R_DRAW_SKYBOX;
     }
 
-    for(uint32_t i=0; i<room->static_mesh_count; i++)
+    for(auto sm : room->static_mesh)
     {
-        room->static_mesh[i].was_rendered = 0;
-        room->static_mesh[i].was_rendered_lines = 0;
+        sm->was_rendered = 0;
+        sm->was_rendered_lines = 0;
     }
 
     for(cont=room->containers; cont; cont=cont->next)
@@ -957,8 +956,8 @@ int Render_AddRoom(struct room_s *room)
         switch(cont->object_type)
         {
         case OBJECT_ENTITY:
-            ((entity_p)cont->object)->was_rendered = 0;
-            ((entity_p)cont->object)->was_rendered_lines = 0;
+            std::static_pointer_cast<Entity>(cont->object)->was_rendered = 0;
+            std::static_pointer_cast<Entity>(cont->object)->was_rendered_lines = 0;
             break;
         };
     }
@@ -986,7 +985,7 @@ void Render_CleanList()
     {
         renderer.r_list[i].active = 0;
         renderer.r_list[i].dist = 0.0;
-        room_p r = renderer.r_list[i].room;
+        std::shared_ptr<Room> r = renderer.r_list[i].room;
         renderer.r_list[i].room = NULL;
 
         r->is_in_r_list = 0;
@@ -1058,7 +1057,7 @@ void Render_DrawList()
     /*First generate BSP from base room mesh - it has good for start splitter polygons*/
     for(uint32_t i=0;i<renderer.r_list_active_count;i++)
     {
-        room_p r = renderer.r_list[i].room;
+        std::shared_ptr<Room> r = renderer.r_list[i].room;
         if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
         {
             render_dBSP.addNewPolygonList(r->mesh->transparent_polygon_count, r->mesh->transparent_polygons, r->transform, r->frustum);
@@ -1067,13 +1066,13 @@ void Render_DrawList()
 
     for(uint32_t i=0;i<renderer.r_list_active_count;i++)
     {
-        room_p r = renderer.r_list[i].room;
+        std::shared_ptr<Room> r = renderer.r_list[i].room;
         // Add transparency polygons from static meshes (if they exists)
-        for(uint16_t j=0;j<r->static_mesh_count;j++)
+        for(auto sm : r->static_mesh)
         {
-            if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
+            if((sm->mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(sm->obb, r))
             {
-                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparent_polygon_count, r->static_mesh[j].mesh->transparent_polygons, r->static_mesh[j].transform, r->frustum);
+                render_dBSP.addNewPolygonList(sm->mesh->transparent_polygon_count, sm->mesh->transparent_polygons, sm->transform, r->frustum);
             }
         }
 
@@ -1082,7 +1081,7 @@ void Render_DrawList()
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
-                entity_p ent = (entity_p)cont->object;
+                std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
                 if((ent->bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb, r)))
                 {
                     btScalar tr[16];
@@ -1102,7 +1101,7 @@ void Render_DrawList()
     if((engine_world.Character != NULL) && (engine_world.Character->bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
         btScalar tr[16];
-        entity_p ent = engine_world.Character;
+        std::shared_ptr<Entity> ent = engine_world.Character;
         for(uint16_t j=0;j<ent->bf.bone_tag_count;j++)
         {
             if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
@@ -1191,8 +1190,8 @@ void Render_DrawList_DebugLines()
 int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 {
     int ret = 0;
-    room_p room = portal->dest_room;                                            // куда ведет портал
-    room_p src_room = portal->current_room;                                     // откуда ведет портал
+    std::shared_ptr<Room> room = portal->dest_room;                                            // куда ведет портал
+    std::shared_ptr<Room> src_room = portal->current_room;                                     // откуда ведет портал
     portal_p p;                                                                 // указатель на массив порталов входной ф-ии
     frustum_p gen_frus;                                                         // новый генерируемый фрустум
 
@@ -1234,7 +1233,7 @@ void Render_GenWorldList()
     engine_frustumManager.reset();
     renderer.cam->frustum->next = NULL;
 
-    room_p curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
+    std::shared_ptr<Room> curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
 
     renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
@@ -1256,12 +1255,11 @@ void Render_GenWorldList()
     }
     else                                                                        // camera is out of all rooms
     {
-        curr_room = renderer.world->rooms;                                      // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
-        for(uint32_t i=0; i<renderer.world->room_count; i++,curr_room++)
+        for(auto r : renderer.world->rooms)
         {
-            if(Frustum_IsAABBVisible(curr_room->bb_min, curr_room->bb_max, renderer.cam->frustum))
+            if(Frustum_IsAABBVisible(r->bb_min, r->bb_max, renderer.cam->frustum))
             {
-                Render_AddRoom(curr_room);
+                Render_AddRoom(r);
             }
         }
     }
@@ -1272,7 +1270,7 @@ void Render_GenWorldList()
  */
 void Render_SetWorld(struct world_s *world)
 {
-    uint32_t list_size = world->room_count + 128;                               // magick 128 was added for debug and testing
+    uint32_t list_size = world->rooms.size() + 128;                               // magick 128 was added for debug and testing
 
     if(renderer.world)
     {
@@ -1301,9 +1299,9 @@ void Render_SetWorld(struct world_s *world)
     engine_camera.frustum->next = NULL;
     engine_camera.current_room = NULL;
 
-    for(uint32_t i=0; i<world->room_count; i++)
+    for(auto r : world->rooms)
     {
-        world->rooms[i].is_in_r_list = 0;
+        r->is_in_r_list = 0;
     }
 }
 
@@ -1691,7 +1689,7 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
     }
 }
 
-void render_DebugDrawer::drawEntityDebugLines(struct entity_s *entity)
+void render_DebugDrawer::drawEntityDebugLines(std::shared_ptr<Entity> entity)
 {
     if(m_need_realloc || entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
        !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
@@ -1736,12 +1734,11 @@ void render_DebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
 }
 
 
-void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s *render)
+void render_DebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, struct render_s *render)
 {
     uint32_t flag;
     frustum_p frus;
     engine_container_p cont;
-    entity_p ent;
 
     if(m_need_realloc)
     {
@@ -1785,10 +1782,10 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
     }
 
     flag = render->style & R_DRAW_BOXES;
-    for(uint32_t i=0; i<room->static_mesh_count; i++)
+    for(auto sm : room->static_mesh)
     {
-        if(room->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInRoom(room->static_mesh[i].obb, room) ||
-          ((room->static_mesh[i].hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS)))
+        if(sm->was_rendered_lines || !Frustum_IsOBBVisibleInRoom(sm->obb, room) ||
+          ((sm->hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS)))
         {
             continue;
         }
@@ -1796,34 +1793,35 @@ void render_DebugDrawer::drawRoomDebugLines(struct room_s *room, struct render_s
         if(flag)
         {
             debugDrawer.setColor(0.0, 1.0, 0.1);
-            debugDrawer.drawOBB(room->static_mesh[i].obb);
+            debugDrawer.drawOBB(sm->obb);
         }
 
         if(render->style & R_DRAW_AXIS)
         {
-            debugDrawer.drawAxis(1000.0, room->static_mesh[i].transform);
+            debugDrawer.drawAxis(1000.0, sm->transform);
         }
 
-        debugDrawer.drawMeshDebugLines(room->static_mesh[i].mesh, room->static_mesh[i].transform, NULL, NULL);
+        debugDrawer.drawMeshDebugLines(sm->mesh, sm->transform, NULL, NULL);
 
-        room->static_mesh[i].was_rendered_lines = 1;
+        sm->was_rendered_lines = 1;
     }
 
     for(cont=room->containers; cont; cont=cont->next)
     {
         switch(cont->object_type)
         {
-        case OBJECT_ENTITY:
-            ent = (entity_p)cont->object;
-            if(ent->was_rendered_lines == 0)
-            {
-                if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
+            case OBJECT_ENTITY: {
+                std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
+                if(ent->was_rendered_lines == 0)
                 {
-                    debugDrawer.drawEntityDebugLines(ent);
+                    if(Frustum_IsOBBVisibleInRoom(ent->obb, room))
+                    {
+                        debugDrawer.drawEntityDebugLines(ent);
+                    }
+                    ent->was_rendered_lines = 1;
                 }
-                ent->was_rendered_lines = 1;
+                break;
             }
-            break;
         };
     }
 }

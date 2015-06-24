@@ -317,14 +317,11 @@ void AudioSource::SetUnderwater()
 void AudioSource::LinkEmitter()
 {
     ALfloat  vec[3];
-    entity_p ent;
 
     switch(emitter_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            ent = World_GetEntityByID(&engine_world, emitter_ID);
-            if(ent)
-            {
+            if(std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, emitter_ID)) {
                 vec3_copy(vec, ent->transform + 12);
                 SetPosition(vec);
                 vec3_copy(vec, ent->speed.m_floats);
@@ -1072,17 +1069,16 @@ bool Audio_EndStreams(int stream_type)
 bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 {
     ALfloat  vec[3] = {0.0, 0.0, 0.0}, dist;
-    entity_p ent;
 
     switch(entity_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            ent = World_GetEntityByID(&engine_world, entity_ID);
-            if(!ent)
-            {
+            if(std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, entity_ID)) {
+                vec3_copy(vec, ent->transform + 12);
+            }
+            else {
                 return false;
             }
-            vec3_copy(vec, ent->transform + 12);
             break;
 
         case TR_AUDIO_EMITTER_SOUNDSOURCE:
@@ -1823,7 +1819,7 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
     }
 }
 
-void Audio_UpdateListenerByEntity(struct entity_s *ent)
+void Audio_UpdateListenerByEntity(struct Entity *ent)
 {
     ///@FIXME: Add entity listener updater here.
 }

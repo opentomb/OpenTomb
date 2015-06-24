@@ -24,70 +24,7 @@
 #include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 
 
-entity_p Entity_Create()
-{
-    entity_p ret = (entity_p)calloc(1, sizeof(entity_t));
-
-    ret->move_type = MOVE_ON_FLOOR;
-    Mat4_E(ret->transform);
-    ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
-    ret->type_flags = ENTITY_TYPE_GENERIC;
-    ret->callback_flags = 0x00000000;               // no callbacks by default
-
-    ret->OCB = 0;
-    ret->trigger_layout = 0x00;
-    ret->timer = 0.0;
-
-    ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
-    ret->self->next = NULL;
-    ret->self->object = ret;
-    ret->self->object_type = OBJECT_ENTITY;
-    ret->self->room = NULL;
-    ret->self->collide_flag = 0;
-    ret->obb = OBB_Create();
-    ret->obb->transform = ret->transform;
-    ret->bt.bt_body = NULL;
-    ret->bt.bt_joints = NULL;
-    ret->bt.bt_joint_count = 0;
-    ret->bt.no_fix_all = 0x00;
-    ret->bt.no_fix_body_parts = 0x00000000;
-    ret->bt.manifoldArray = NULL;
-    ret->bt.shapes = NULL;
-    ret->bt.ghostObjects = NULL;
-    ret->bt.last_collisions = NULL;
-
-    ret->character = NULL;
-    ret->current_sector = NULL;
-
-    ret->bf.animations.model = NULL;
-    ret->bf.animations.onFrame = NULL;
-    ret->bf.animations.frame_time = 0.0;
-    ret->bf.animations.last_state = 0;
-    ret->bf.animations.next_state = 0;
-    ret->bf.animations.lerp = 0.0;
-    ret->bf.animations.current_animation = 0;
-    ret->bf.animations.current_frame = 0;
-    ret->bf.animations.next_animation = 0;
-    ret->bf.animations.next_frame = 0;
-    ret->bf.animations.next = NULL;
-    ret->bf.bone_tag_count = 0;
-    ret->bf.bone_tags = 0;
-    vec3_set_zero(ret->bf.bb_max);
-    vec3_set_zero(ret->bf.bb_min);
-    vec3_set_zero(ret->bf.centre);
-    vec3_set_zero(ret->bf.pos);
-    vec4_set_zero(ret->speed.m_floats);
-
-    ret->activation_offset[0] = 0.0;
-    ret->activation_offset[1] = 256.0;
-    ret->activation_offset[2] = 0.0;
-    ret->activation_offset[3] = 128.0;
-
-    return ret;
-}
-
-
-void Entity_CreateGhosts(entity_p entity)
+void Entity_CreateGhosts(std::shared_ptr<Entity> entity)
 {
     if(entity->bf.animations.model->mesh_count > 0)
     {
@@ -126,122 +63,7 @@ void Entity_CreateGhosts(entity_p entity)
 }
 
 
-void Entity_Clear(entity_p entity)
-{
-    if(entity)
-    {
-        if((entity->self->room != NULL) && (entity != engine_world.Character))
-        {
-            Room_RemoveEntity(entity->self->room, entity);
-        }
-
-        if(entity->obb)
-        {
-            OBB_Clear(entity->obb);
-            free(entity->obb);
-            entity->obb = NULL;
-        }
-
-        if(entity->bt.last_collisions)
-        {
-            free(entity->bt.last_collisions);
-            entity->bt.last_collisions = NULL;
-        }
-
-        if(entity->bt.bt_joint_count)
-        {
-            Ragdoll_Delete(entity);
-        }
-
-        if(entity->bt.ghostObjects)
-        {
-            for(int i=0;i<entity->bf.bone_tag_count;i++)
-            {
-                entity->bt.ghostObjects[i]->setUserPointer(NULL);
-                bt_engine_dynamicsWorld->removeCollisionObject(entity->bt.ghostObjects[i]);
-                delete entity->bt.ghostObjects[i];
-                entity->bt.ghostObjects[i] = NULL;
-            }
-            free(entity->bt.ghostObjects);
-            entity->bt.ghostObjects = NULL;
-        }
-
-        if(entity->bt.shapes)
-        {
-            for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
-            {
-                delete entity->bt.shapes[i];
-            }
-            free(entity->bt.shapes);
-            entity->bt.shapes = NULL;
-        }
-
-        if(entity->bt.manifoldArray)
-        {
-            entity->bt.manifoldArray->clear();
-            delete entity->bt.manifoldArray;
-            entity->bt.manifoldArray = NULL;
-        }
-
-        if(entity->character)
-        {
-            Character_Clean(entity);
-        }
-
-        if(entity->bt.bt_body)
-        {
-            for(int i=0;i<entity->bf.bone_tag_count;i++)
-            {
-                btRigidBody *body = entity->bt.bt_body[i];
-                if(body)
-                {
-                    body->setUserPointer(NULL);
-                    if(body->getMotionState())
-                    {
-                        delete body->getMotionState();
-                        body->setMotionState(NULL);
-                    }
-                    if(body->getCollisionShape())
-                    {
-                        delete body->getCollisionShape();
-                        body->setCollisionShape(NULL);
-                    }
-
-                    bt_engine_dynamicsWorld->removeRigidBody(body);
-                    delete body;
-                    entity->bt.bt_body[i] = NULL;
-                }
-            }
-            free(entity->bt.bt_body);
-            entity->bt.bt_body = NULL;
-        }
-
-        if(entity->self)
-        {
-            free(entity->self);
-            entity->self = NULL;
-        }
-
-        if(entity->bf.bone_tag_count)
-        {
-            free(entity->bf.bone_tags);
-            entity->bf.bone_tags = NULL;
-            entity->bf.bone_tag_count = 0;
-        }
-
-        for(ss_animation_p ss_anim=entity->bf.animations.next;ss_anim!=NULL;)
-        {
-            ss_animation_p ss_anim_next = ss_anim->next;
-            ss_anim->next = NULL;
-            free(ss_anim);
-            ss_anim = ss_anim_next;
-        }
-        entity->bf.animations.next = NULL;
-    }
-}
-
-
-void Entity_Enable(entity_p ent)
+void Entity_Enable(std::shared_ptr<Entity> ent)
 {
     if(!(ent->state_flags & ENTITY_STATE_ENABLED))
     {
@@ -261,7 +83,7 @@ void Entity_Enable(entity_p ent)
 }
 
 
-void Entity_Disable(entity_p ent)
+void Entity_Disable(std::shared_ptr<Entity> ent)
 {
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
@@ -285,7 +107,7 @@ void Entity_Disable(entity_p ent)
  * If collision models does not exists, function will create them;
  * @param ent - pointer to the entity.
  */
-void Entity_EnableCollision(entity_p ent)
+void Entity_EnableCollision(std::shared_ptr<Entity> ent)
 {
     if(ent->bt.bt_body != NULL)
     {
@@ -307,7 +129,7 @@ void Entity_EnableCollision(entity_p ent)
 }
 
 
-void Entity_DisableCollision(entity_p ent)
+void Entity_DisableCollision(std::shared_ptr<Entity> ent)
 {
     if(ent->bt.bt_body != NULL)
     {
@@ -324,7 +146,7 @@ void Entity_DisableCollision(entity_p ent)
 }
 
 
-void BT_GenEntityRigidBody(entity_p ent)
+void BT_GenEntityRigidBody(std::shared_ptr<Entity> ent)
 {
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
@@ -426,7 +248,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 }
 
 
-void Entity_GhostUpdate(struct entity_s *ent)
+void Entity_GhostUpdate(std::shared_ptr<Entity> ent)
 {
     if(ent->bt.ghostObjects != NULL)
     {
@@ -459,7 +281,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
 }
 
 
-void Entity_UpdateCurrentCollisions(struct entity_s *ent)
+void Entity_UpdateCurrentCollisions(std::shared_ptr<Entity> ent)
 {
     if(ent->bt.ghostObjects != NULL)
     {
@@ -532,7 +354,7 @@ void Entity_UpdateCurrentCollisions(struct entity_s *ent)
 
 
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3])
+int Entity_GetPenetrationFixVector(std::shared_ptr<Entity> ent, btScalar reaction[3], btScalar move_global[3])
 {
     int ret = 0;
 
@@ -614,7 +436,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], b
 }
 
 
-void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3])
+void Entity_FixPenetrations(std::shared_ptr<Entity> ent, btScalar move[3])
 {
     if(ent->bt.ghostObjects != NULL)
     {
@@ -691,7 +513,7 @@ void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3])
  * @param cmd - here we fill cmd->horizontal_collide field
  * @param move - absolute 3d move vector
  */
-int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
+int Entity_CheckNextPenetration(std::shared_ptr<Entity> ent, btScalar move[3])
 {
     int ret = 0;
     if(ent->bt.ghostObjects != NULL)
@@ -726,7 +548,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3])
 }
 
 
-void Entity_CheckCollisionCallbacks(struct entity_s *ent)
+void Entity_CheckCollisionCallbacks(std::shared_ptr<Entity> ent)
 {
     if(ent->bt.ghostObjects != NULL)
     {
@@ -745,7 +567,7 @@ void Entity_CheckCollisionCallbacks(struct entity_s *ent)
 
             if(type == OBJECT_ENTITY)
             {
-                entity_p activator = (entity_p)cont->object;
+                std::shared_ptr<Entity> activator = std::static_pointer_cast<Entity>(cont->object);
                 
                 if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
                 {
@@ -759,7 +581,7 @@ void Entity_CheckCollisionCallbacks(struct entity_s *ent)
 }
 
 
-bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
+bool Entity_WasCollisionBodyParts(std::shared_ptr<Entity> ent, uint32_t parts_flags)
 {
     if(ent->bt.last_collisions != NULL)
     {
@@ -776,7 +598,7 @@ bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 }
 
 
-void Entity_CleanCollisionAllBodyParts(struct entity_s *ent)
+void Entity_CleanCollisionAllBodyParts(std::shared_ptr<Entity> ent)
 {
     if(ent->bt.last_collisions != NULL)
     {
@@ -788,7 +610,7 @@ void Entity_CleanCollisionAllBodyParts(struct entity_s *ent)
 }
 
 
-void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
+void Entity_CleanCollisionBodyParts(std::shared_ptr<Entity> ent, uint32_t parts_flags)
 {
     if(ent->bt.last_collisions != NULL)
     {
@@ -803,7 +625,7 @@ void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags)
 }
 
 
-btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag)
+btCollisionObject *Entity_GetRemoveCollisionBodyParts(std::shared_ptr<Entity> ent, uint32_t parts_flags, uint32_t *curr_flag)
 {
     *curr_flag = 0x00;
     if(ent->bt.last_collisions != NULL)
@@ -826,10 +648,9 @@ btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint
 }
 
 
-void Entity_UpdateRoomPos(entity_p ent)
+void Entity_UpdateRoomPos(std::shared_ptr<Entity> ent)
 {
     btScalar pos[3], v[3];
-    room_p new_room;
     room_sector_p new_sector;
 
     vec3_add(v, ent->bf.bb_min, ent->bf.bb_max);
@@ -837,7 +658,7 @@ void Entity_UpdateRoomPos(entity_p ent)
     v[1] /= 2.0;
     v[2] /= 2.0;
     Mat4_vec3_mul_macro(pos, ent->transform, v);
-    new_room = Room_FindPosCogerrence(pos, ent->self->room);
+    std::shared_ptr<Room> new_room = Room_FindPosCogerrence(pos, ent->self->room);
     if(new_room)
     {
         new_sector = Room_GetSectorXYZ(new_room, pos);
@@ -873,7 +694,7 @@ void Entity_UpdateRoomPos(entity_p ent)
 }
 
 
-void Entity_UpdateRigidBody(entity_p ent, int force)
+void Entity_UpdateRigidBody(std::shared_ptr<Entity> ent, int force)
 {
     if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
@@ -989,7 +810,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
 }
 
 
-void Entity_UpdateRotation(entity_p entity)
+void Entity_UpdateRotation(std::shared_ptr<Entity> entity)
 {
     btScalar R[4], Rt[4], temp[4];
     btScalar sin_t2, cos_t2, t;
@@ -1082,7 +903,7 @@ void Entity_UpdateRotation(entity_p entity)
 }
 
 
-void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
+void Entity_UpdateCurrentSpeed(std::shared_ptr<Entity> entity, int zeroVz)
 {
     btScalar t  = entity->current_speed * entity->character->speed_mult;
     btScalar vz = (zeroVz)?(0.0):(entity->speed.m_floats[2]);
@@ -1112,7 +933,7 @@ void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
 }
 
 
-void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
+void Entity_AddOverrideAnim(std::shared_ptr<Entity> ent, int model_id)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, model_id);
 
@@ -1216,7 +1037,7 @@ void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16])
 }
 
 
-int  Entity_GetSubstanceState(entity_p entity)
+int  Entity_GetSubstanceState(std::shared_ptr<Entity> entity)
 {
     if((!entity) || (!entity->character))
     {
@@ -1255,7 +1076,7 @@ int  Entity_GetSubstanceState(entity_p entity)
     }
 }
 
-btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2)
+btScalar Entity_FindDistance(std::shared_ptr<Entity> entity_1, std::shared_ptr<Entity> entity_2)
 {
     btScalar *v1 = entity_1->transform + 12;
     btScalar *v2 = entity_2->transform + 12;
@@ -1263,7 +1084,7 @@ btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2)
     return vec3_dist(v1, v2);
 }
 
-void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing)
+void Entity_DoAnimCommands(std::shared_ptr<Entity> entity, struct ss_animation_s *ss_anim, int changing)
 {
     if((engine_world.anim_commands_count == 0) || (ss_anim->model == NULL))
     {
@@ -1500,7 +1321,7 @@ room_sector_s* Entity_GetHighestSector(room_sector_s* sector)
 }
 
 
-void Entity_ProcessSector(struct entity_s *ent)
+void Entity_ProcessSector(std::shared_ptr<Entity> ent)
 {
     if(!ent->current_sector) return;
 
@@ -1564,7 +1385,7 @@ void Entity_ProcessSector(struct entity_s *ent)
 }
 
 
-void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_model)
+void Entity_SetAnimation(std::shared_ptr<Entity> entity, int animation, int frame, int another_model)
 {
     if(!entity || !entity->bf.animations.model || (animation >= entity->bf.animations.model->animation_count))
     {
@@ -1642,7 +1463,7 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 }
 
 
-int Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id)
+int Entity_GetAnimDispatchCase(std::shared_ptr<Entity> entity, uint32_t id)
 {
     animation_frame_p anim = entity->bf.animations.model->animations + entity->bf.animations.current_animation;
     state_change_p stc = anim->state_change;
@@ -1733,7 +1554,7 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
 }
 
 
-void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
+void Entity_DoAnimMove(std::shared_ptr<Entity> entity, int16_t *anim, int16_t *frame)
 {
     if(entity->bf.animations.model != NULL)
     {
@@ -1774,13 +1595,13 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
     }
 }
 
-void Character_DoWeaponFrame(struct entity_s *entity, btScalar time);
+void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time);
 
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
 ///@TODO: rewrite as a cycle through all bf.animations list
-int Entity_Frame(entity_p entity, btScalar time)
+int Entity_Frame(std::shared_ptr<Entity> entity, btScalar time)
 {
     int16_t frame, anim, ret = 0x00;
     long int t;
@@ -1877,7 +1698,7 @@ int Entity_Frame(entity_p entity, btScalar time)
 /**
  * The function rebuild / renew entity's BV
  */
-void Entity_RebuildBV(entity_p ent)
+void Entity_RebuildBV(std::shared_ptr<Entity> ent)
 {
     if((ent != NULL) && (ent->bf.animations.model != NULL))
     {
@@ -1890,7 +1711,7 @@ void Entity_RebuildBV(entity_p ent)
 }
 
 
-void Entity_CheckActivators(struct entity_s *ent)
+void Entity_CheckActivators(std::shared_ptr<Entity> ent)
 {
     if((ent != NULL) && (ent->self->room != NULL))
     {
@@ -1904,7 +1725,7 @@ void Entity_CheckActivators(struct entity_s *ent)
         {
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {
-                entity_p e = (entity_p)cont->object;
+                std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
                 btScalar r = e->activation_offset[3];
                 r *= r;
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
@@ -1930,7 +1751,7 @@ void Entity_CheckActivators(struct entity_s *ent)
 }
 
 
-void Entity_MoveForward(struct entity_s *ent, btScalar dist)
+void Entity_MoveForward(std::shared_ptr<Entity> ent, btScalar dist)
 {
     ent->transform[12] += ent->transform[4] * dist;
     ent->transform[13] += ent->transform[5] * dist;
@@ -1938,7 +1759,7 @@ void Entity_MoveForward(struct entity_s *ent, btScalar dist)
 }
 
 
-void Entity_MoveStrafe(struct entity_s *ent, btScalar dist)
+void Entity_MoveStrafe(std::shared_ptr<Entity> ent, btScalar dist)
 {
     ent->transform[12] += ent->transform[0] * dist;
     ent->transform[13] += ent->transform[1] * dist;
@@ -1946,7 +1767,7 @@ void Entity_MoveStrafe(struct entity_s *ent, btScalar dist)
 }
 
 
-void Entity_MoveVertical(struct entity_s *ent, btScalar dist)
+void Entity_MoveVertical(std::shared_ptr<Entity> ent, btScalar dist)
 {
     ent->transform[12] += ent->transform[8] * dist;
     ent->transform[13] += ent->transform[9] * dist;
@@ -1957,7 +1778,7 @@ void Entity_MoveVertical(struct entity_s *ent, btScalar dist)
 /* There are stick code for multianimation (weapon mode) testing
  * Model replacing will be upgraded too, I have to add override
  * flags to model manually in the script*/
-void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
+void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
 {
     if(entity->character != NULL)
     {
@@ -2353,4 +2174,164 @@ void Character_DoWeaponFrame(struct entity_s *entity, btScalar time)
             Entity_DoAnimCommands(entity, ss_anim, 0);
         }
     }
+}
+
+
+Entity::Entity()
+    : id(0)
+    , move_type(MOVE_ON_FLOOR)
+    , state_flags( ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE )
+    , type_flags( ENTITY_TYPE_GENERIC )
+    , callback_flags( 0 ) // no callbacks by default
+    , OCB( 0 )
+    , trigger_layout( 0x00 )
+    , timer( 0.0 )
+    , self( new engine_container_t )
+    , obb( OBB_Create() )
+    , character( NULL )
+    , current_sector( NULL )
+    , activation_offset{ 0.0, 256.0, 0.0, 128.0 }
+{
+    Mat4_E(transform);
+    self->next = NULL;
+    self->object = shared_from_this();
+    self->object_type = OBJECT_ENTITY;
+    self->room = NULL;
+    self->collide_flag = 0;
+    obb->transform = transform;
+    bt.bt_body = NULL;
+    bt.bt_joints = NULL;
+    bt.bt_joint_count = 0;
+    bt.no_fix_all = 0x00;
+    bt.no_fix_body_parts = 0x00000000;
+    bt.manifoldArray = NULL;
+    bt.shapes = NULL;
+    bt.ghostObjects = NULL;
+    bt.last_collisions = NULL;
+
+    bf.animations.model = NULL;
+    bf.animations.onFrame = NULL;
+    bf.animations.frame_time = 0.0;
+    bf.animations.last_state = 0;
+    bf.animations.next_state = 0;
+    bf.animations.lerp = 0.0;
+    bf.animations.current_animation = 0;
+    bf.animations.current_frame = 0;
+    bf.animations.next_animation = 0;
+    bf.animations.next_frame = 0;
+    bf.animations.next = NULL;
+    bf.bone_tag_count = 0;
+    bf.bone_tags = 0;
+    vec3_set_zero(bf.bb_max);
+    vec3_set_zero(bf.bb_min);
+    vec3_set_zero(bf.centre);
+    vec3_set_zero(bf.pos);
+    vec4_set_zero(speed.m_floats);
+}
+
+Entity::~Entity() {
+    if((self->room != NULL) && (this != engine_world.Character.get()))
+    {
+        Room_RemoveEntity(self->room, std::static_pointer_cast<Entity>(shared_from_this()));
+    }
+
+    if(obb)
+    {
+        OBB_Clear(obb);
+        free(obb);
+        obb = NULL;
+    }
+
+    if(bt.last_collisions)
+    {
+        free(bt.last_collisions);
+        bt.last_collisions = NULL;
+    }
+
+    if(bt.bt_joint_count)
+    {
+        Ragdoll_Delete(std::static_pointer_cast<Entity>(shared_from_this()));
+    }
+
+    if(bt.ghostObjects)
+    {
+        for(int i=0;i<bf.bone_tag_count;i++)
+        {
+            bt.ghostObjects[i]->setUserPointer(NULL);
+            bt_engine_dynamicsWorld->removeCollisionObject(bt.ghostObjects[i]);
+            delete bt.ghostObjects[i];
+            bt.ghostObjects[i] = NULL;
+        }
+        free(bt.ghostObjects);
+        bt.ghostObjects = NULL;
+    }
+
+    if(bt.shapes)
+    {
+        for(uint16_t i=0;i<bf.bone_tag_count;i++)
+        {
+            delete bt.shapes[i];
+        }
+        free(bt.shapes);
+        bt.shapes = NULL;
+    }
+
+    if(bt.manifoldArray)
+    {
+        bt.manifoldArray->clear();
+        delete bt.manifoldArray;
+        bt.manifoldArray = NULL;
+    }
+
+    if(character)
+    {
+        Character_Clean(std::static_pointer_cast<Entity>(shared_from_this()));
+    }
+
+    if(bt.bt_body)
+    {
+        for(int i=0;i<bf.bone_tag_count;i++)
+        {
+            btRigidBody *body = bt.bt_body[i];
+            if(body)
+            {
+                body->setUserPointer(NULL);
+                if(body->getMotionState())
+                {
+                    delete body->getMotionState();
+                    body->setMotionState(NULL);
+                }
+                if(body->getCollisionShape())
+                {
+                    delete body->getCollisionShape();
+                    body->setCollisionShape(NULL);
+                }
+
+                bt_engine_dynamicsWorld->removeRigidBody(body);
+                delete body;
+                bt.bt_body[i] = NULL;
+            }
+        }
+        free(bt.bt_body);
+        bt.bt_body = NULL;
+    }
+
+    delete self;
+    self = NULL;
+
+    if(bf.bone_tag_count)
+    {
+        free(bf.bone_tags);
+        bf.bone_tags = NULL;
+        bf.bone_tag_count = 0;
+    }
+
+    for(ss_animation_p ss_anim=bf.animations.next;ss_anim!=NULL;)
+    {
+        ss_animation_p ss_anim_next = ss_anim->next;
+        ss_anim->next = NULL;
+        free(ss_anim);
+        ss_anim = ss_anim_next;
+    }
+    bf.animations.next = NULL;
 }

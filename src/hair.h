@@ -56,11 +56,11 @@ typedef struct hair_element_s
     // but since this never has a rotation part, we can save a few bytes here.
 }hair_element_t, *hair_element_p;
 
-typedef struct hair_s
+struct Hair : public Object
 {
     engine_container_p        container;
 
-    entity_p                  owner_char;         // Entity who owns this hair.
+    std::shared_ptr<Entity> owner_char;         // Entity who owns this hair.
     uint32_t                  owner_body;         // Owner entity's body ID.
     btScalar                  owner_body_hair_root[16] __attribute__((aligned(16))); // transform from owner body to root of hair start
 
@@ -78,7 +78,9 @@ typedef struct hair_s
     uint32_t                 *head_vertex_map;    // Head vertex indices to link
 
     struct base_mesh_s       *mesh;               // Mesh containing all vertices of all parts of this hair object.
-}hair_t, *hair_p;
+
+    ~Hair();
+};
 
 typedef struct hair_setup_s
 {
@@ -114,14 +116,10 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup);
 // Creates hair into allocated hair structure, using previously defined setup and
 // entity index.
 
-bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity);
-
-// Removes specified hair from entity and clears it from memory.
-
-void Hair_Clear(hair_p hair);
+bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr<Entity> parent_entity);
 
 // Constantly updates some specific parameters to keep hair aligned to entity.
 
-void Hair_Update(entity_p entity);
+void Hair_Update(std::shared_ptr<Entity> entity);
 
 #endif  // HAIR_H

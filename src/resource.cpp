@@ -37,7 +37,6 @@ extern "C" {
 #include "engine.h"
 #include "bordered_texture_atlas.h"
 #include "render.h"
-#include "redblack.h"
 #include "bsp_tree.h"
 #include "shader_description.h"
 
@@ -46,7 +45,7 @@ lua_State *ent_ID_override = NULL;
 lua_State *level_script = NULL;
 
 
-void Res_SetEntityModelProperties(struct entity_s *ent)
+void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
     if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
     {
@@ -139,7 +138,7 @@ bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     return false;
 }
 
-void Res_SetStaticMeshProperties(struct static_mesh_s *r_static)
+void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
     if(level_script != NULL)
     {
@@ -263,7 +262,7 @@ int Res_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 }
 
 ///@TODO: resolve floor >> ceiling case
-void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
+void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *room_tween)
 {
     for(uint16_t h = 0; h < room->sectors_y-1; h++)
     {
@@ -707,7 +706,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
-                    if((*entry >= 0) && (*entry < engine_world.room_count))
+                    if((*entry >= 0) && (*entry < engine_world.rooms.size()))
                     {
                         sector->portal_to_room = *entry;
                         sector->floor_penetration_config   = TR_PENETRATION_CONFIG_GHOST;
@@ -1530,7 +1529,7 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
 void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index)
 {
     room_sector_p sector;
-    room_p room = world->rooms + room_index;
+    std::shared_ptr<Room> room = world->rooms[room_index];
     tr5_room_t *tr_room = &tr->rooms[room_index];
 
     /*
@@ -1546,15 +1545,15 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
 
         uint8_t rp = tr_room->sector_list[i].room_below;
         sector->sector_below = NULL;
-        if(rp >= 0 && rp < world->room_count && rp != 255)
+        if(rp >= 0 && rp < world->rooms.size() && rp != 255)
         {
-            sector->sector_below = Room_GetSectorRaw(world->rooms + rp, sector->pos);
+            sector->sector_below = Room_GetSectorRaw(world->rooms[rp], sector->pos);
         }
         rp = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
-        if(rp >= 0 && rp < world->room_count && rp != 255)
+        if(rp >= 0 && rp < world->rooms.size() && rp != 255)
         {
-            sector->sector_above = Room_GetSectorRaw(world->rooms + rp, sector->pos);
+            sector->sector_above = Room_GetSectorRaw(world->rooms[rp], sector->pos);
         }
 
         room_sector_p near_sector = NULL;
@@ -1586,7 +1585,7 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
                 if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
                 {
                     room_sector_p dst = Room_GetSectorRaw(p->dest_room, sector->pos);
-                    room_sector_p orig_dst = Room_GetSectorRaw(engine_world.rooms + sector->portal_to_room, sector->pos);
+                    room_sector_p orig_dst = Room_GetSectorRaw(engine_world.rooms[sector->portal_to_room], sector->pos);
                     if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p->dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
                         sector->portal_to_room = p->dest_room->id;
@@ -1615,13 +1614,12 @@ void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c)
 
 room_sector_p TR_GetRoomSector(uint32_t room_id, int sx, int sy)
 {
-    room_p room;
-    if(room_id >= engine_world.room_count)
+    if(room_id >= engine_world.rooms.size())
     {
         return NULL;
     }
 
-    room = engine_world.rooms + room_id;
+    auto room = engine_world.rooms[room_id];
     if((sx < 0) || (sx >= room->sectors_x) || (sy < 0) || (sy >= room->sectors_y))
     {
         return NULL;
@@ -1719,7 +1717,7 @@ int lua_SetSectorPortal(lua_State * lua)
     }
 
     uint32_t p = lua_tointeger(lua, 4);
-    if(p < engine_world.room_count)
+    if(p < engine_world.rooms.size())
     {
         rs->portal_to_room = p;
     }
@@ -1951,35 +1949,25 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
 void Res_GenRBTrees(struct world_s *world)
 {
-    world->entity_tree = RB_Init();
-    world->entity_tree->rb_compEQ = compEntityEQ;
-    world->entity_tree->rb_compLT = compEntityLT;
-    world->entity_tree->rb_free_data = RBEntityFree;
-
-    world->items_tree = RB_Init();
-    world->items_tree->rb_compEQ = compEntityEQ;
-    world->items_tree->rb_compLT = compEntityLT;
-    world->items_tree->rb_free_data = RBItemFree;
+    world->entity_tree.clear();
+    world->items_tree.clear();
 }
 
 
 void TR_GenRooms(struct world_s *world, class VT_Level *tr)
 {
-    world->room_count = tr->rooms_count;
-    room_p r = world->rooms = (room_p)calloc(world->room_count, sizeof(room_t));
-    for(uint32_t i=0;i<world->room_count;i++,r++)
+    world->rooms.resize(tr->rooms_count);
+    for(uint32_t i=0; i<world->rooms.size(); i++)
     {
-        TR_GenRoom(i, r, world, tr);
+        TR_GenRoom(i, world->rooms[i], world, tr);
     }
 }
 
-void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr)
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *world, class VT_Level *tr)
 {
     portal_p p;
-    room_p r_dest;
     tr5_room_t *tr_room = &tr->rooms[room_index];
     tr_staticmesh_t *tr_static;
-    static_mesh_p r_static;
     tr_room_portal_t *tr_portal;
     room_sector_p sector;
     btVector3 localInertia(0, 0, 0);
@@ -2015,25 +2003,20 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     /*
      *  let us load static room meshes
      */
-    room->static_mesh_count = tr_room->num_static_meshes;
-    room->static_mesh = NULL;
-    if(room->static_mesh_count)
-    {
-        room->static_mesh = (static_mesh_p)calloc(room->static_mesh_count, sizeof(static_mesh_t));
-    }
+    room->static_mesh.clear();
 
-    r_static = room->static_mesh;
     for(uint16_t i=0;i<tr_room->num_static_meshes;i++)
     {
         tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
         if(tr_static == NULL)
         {
-            room->static_mesh_count--;
             continue;
         }
+        room->static_mesh.emplace_back( std::make_shared<StaticMesh>() );
+        auto r_static = room->static_mesh.back();
         r_static->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
         r_static->self->room = room;
-        r_static->self->object = room->static_mesh + i;
+        r_static->self->object = room->static_mesh[i];
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = world->meshes + tr->mesh_indices[tr_static->mesh];
@@ -2063,8 +2046,8 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
 
-        r_static->obb->transform = room->static_mesh[i].transform;
-        r_static->obb->r = room->static_mesh[i].mesh->R;
+        r_static->obb->transform = room->static_mesh[i]->transform;
+        r_static->obb->r = room->static_mesh[i]->mesh->R;
         Mat4_E(r_static->transform);
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
@@ -2124,7 +2107,6 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
                 r_static->bt_body->setUserPointer(r_static->self);
             }
         }
-        r_static++;
     }
 
     /*
@@ -2349,7 +2331,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     tr_portal = tr_room->portals;
     for(uint16_t i=0;i<room->portal_count;i++,p++,tr_portal++)
     {
-        r_dest = world->rooms + tr_portal->adjoining_room;
+        std::shared_ptr<Room> r_dest = world->rooms[tr_portal->adjoining_room];
         p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
         p->vertex = (btScalar*)malloc(3*p->vertex_count*sizeof(btScalar));
         p->flag = 0;
@@ -2415,15 +2397,13 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
     if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
     {
-        room->alternate_room = world->rooms + tr_room->alternate_room;
+        room->alternate_room = world->rooms[ tr_room->alternate_room ];
     }
 }
 
 
 void Res_GenRoomCollision(struct world_s *world)
 {
-    room_p r = world->rooms;
-
     /*
     if(level_script != NULL)
     {
@@ -2431,8 +2411,9 @@ void Res_GenRoomCollision(struct world_s *world)
     }
     */
 
-    for(uint32_t i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0; i<world->rooms.size(); i++)
     {
+        auto r = world->rooms[i];
         // Inbetween polygons array is later filled by loop which scans adjacent
         // sector heightmaps and fills the gaps between them, thus creating inbetween
         // polygon. Inbetweens can be either quad (if all four corner heights are
@@ -2482,10 +2463,9 @@ void Res_GenRoomCollision(struct world_s *world)
 
 void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 {
-    room_p r = world->rooms;
-
-    for(uint32_t i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->rooms.size();i++)
     {
+        auto r = world->rooms[i];
         if(r->alternate_room != NULL)
         {
             r->alternate_room->base_room = r;   // Refill base room pointer.
@@ -2602,8 +2582,8 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
 
 void Res_GenSpritesBuffer(struct world_s *world)
 {
-    for (uint32_t i = 0; i < world->room_count; i++)
-        Res_GenRoomSpritesBuffer(&world->rooms[i]);
+    for (uint32_t i = 0; i < world->rooms.size(); i++)
+        Res_GenRoomSpritesBuffer(world->rooms[i]);
 }
 
 void TR_GenTextures(struct world_s* world, class VT_Level *tr)
@@ -3163,7 +3143,7 @@ void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_r
 
 }
 
-void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr)
+void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr)
 {
     tr5_room_t *tr_room;
     polygon_p p;
@@ -3251,7 +3231,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
     Res_Poly_SortInMesh(mesh);
 }
 
-void Res_GenRoomSpritesBuffer(struct room_s *room)
+void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
 {
     // Find the number of different texture pages used and the number of non-null sprites
     uint32_t highestTexturePageFound = 0;
@@ -3383,11 +3363,11 @@ void Res_GenVBOs(struct world_s *world)
         }
     }
 
-    for(uint32_t i=0;i<world->room_count;i++)
+    for(uint32_t i=0;i<world->rooms.size();i++)
     {
-        if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count || world->rooms[i].mesh->animated_vertex_count))
+        if((world->rooms[i]->mesh) && (world->rooms[i]->mesh->vertex_count || world->rooms[i]->mesh->animated_vertex_count))
         {
-            Mesh_GenVBO(&renderer, world->rooms[i].mesh);
+            Mesh_GenVBO(&renderer, world->rooms[i]->mesh);
         }
     }
 }
@@ -3396,17 +3376,17 @@ void Res_GenBaseItems(struct world_s* world)
 {
     lua_CallVoidFunc(engine_lua, "genBaseItems");
     
-    if((world->items_tree != NULL) && (world->items_tree->root != NULL))
+    if(!world->items_tree.empty())
     {
-        Res_EntityToItem(world->items_tree->root);
+        Res_EntityToItem(world->items_tree);
     }
 }
 
 void Res_FixRooms(struct world_s *world)
 {
-    room_p r = world->rooms;
-    for(uint32_t i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->rooms.size();i++)
     {
+        auto r = world->rooms[i];
         if(r->base_room != NULL)
         {
             Room_Disable(r);    // Disable current room
@@ -4019,12 +3999,11 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
     int top;
 
     tr2_item_t *tr_item;
-    entity_p entity;
 
     for(uint32_t i=0;i<tr->items_count;i++)
     {
         tr_item = &tr->items[i];
-        entity = Entity_Create();
+        std::shared_ptr<Entity> entity = std::make_shared<Entity>();
         entity->id = i;
         entity->transform[12] = tr_item->pos.x;
         entity->transform[13] =-tr_item->pos.z;
@@ -4033,9 +4012,9 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->angles[1] = 0.0;
         entity->angles[2] = 0.0;
         Entity_UpdateRotation(entity);
-        if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->room_count))
+        if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms.size()))
         {
-            entity->self->room = world->rooms + tr_item->room;
+            entity->self->room = world->rooms[ tr_item->room ];
         }
         else
         {
@@ -4107,15 +4086,12 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 rsp->was_rendered = 0;
             }
 
-            Entity_Clear(entity);
-            free(entity);
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
         }
 
         if(tr->game_version < TR_II && tr_item->object_id == 83)                ///@FIXME: brutal magick hardcode! ;-)
         {
-            Entity_Clear(entity);                                               // skip PSX save model
-            free(entity);
+            // skip PSX save model
             continue;
         }
 
@@ -4470,38 +4446,33 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Res_EntityToItem(RedBlackNode_p n)
+void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<base_item_s> >& map)
 {
-    base_item_p item = (base_item_p)n->data;
-
-    for(uint32_t i=0;i<engine_world.room_count;i++)
+    for(std::map<uint32_t, std::shared_ptr<base_item_s> >::iterator it = map.begin();
+        it != map.end();
+        ++it)
     {
-        engine_container_p cont = engine_world.rooms[i].containers;
-        for(;cont;cont=cont->next)
+        std::shared_ptr<base_item_s> item = it->second;
+
+        for(uint32_t i=0;i<engine_world.rooms.size();i++)
         {
-            if(cont->object_type == OBJECT_ENTITY)
+            engine_container_p cont = engine_world.rooms[i]->containers;
+            for(;cont;cont=cont->next)
             {
-                entity_p ent = (entity_p)cont->object;
-                if(ent->bf.animations.model->id == item->world_model_id)
+                if(cont->object_type == OBJECT_ENTITY)
                 {
-                    char buf[64] = {0};
-                    snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id, ent->id);
-                    luaL_dostring(engine_lua, buf);
-                    snprintf(buf, 32, "pickup_init(%d, %d);", ent->id, item->id);
-                    luaL_dostring(engine_lua, buf);
-                    Entity_DisableCollision(ent);
+                    std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
+                    if(ent->bf.animations.model->id == item->world_model_id)
+                    {
+                        char buf[64] = {0};
+                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id, ent->id);
+                        luaL_dostring(engine_lua, buf);
+                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->id, item->id);
+                        luaL_dostring(engine_lua, buf);
+                        Entity_DisableCollision(ent);
+                    }
                 }
             }
         }
-    }
-
-    if(n->right)
-    {
-        Res_EntityToItem(n->right);
-    }
-
-    if(n->left)
-    {
-        Res_EntityToItem(n->left);
     }
 }

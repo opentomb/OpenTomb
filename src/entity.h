@@ -9,12 +9,15 @@
 #include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
 #include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+#include "object.h"
 #include "mesh.h"
+
+#include <memory>
 
 class btCollisionShape;
 class btRigidBody;
 
-struct room_s;
+struct Room;
 struct room_sector_s;
 struct obb_s;
 struct character_s;
@@ -96,7 +99,7 @@ typedef struct bt_entity_data_s
     struct entity_collision_node_s     *last_collisions;
 }bt_entity_data_t, *bt_entity_data_p;
 
-typedef struct entity_s
+struct Entity : public Object
 {
     uint32_t                            id;                 // Unique entity ID
     int32_t                             OCB;                // Object code bit (since TR4)
@@ -134,59 +137,61 @@ typedef struct entity_s
     btScalar                            activation_offset[4];   // where we can activate object (dx, dy, dz, r)
     
     struct character_s                 *character;
-}entity_t, *entity_p;
+
+    Entity();
+
+    ~Entity();
+};
 
 
-entity_p Entity_Create();
-void Entity_CreateGhosts(entity_p entity);
-void Entity_Clear(entity_p entity);
-void Entity_Enable(entity_p ent);
-void Entity_Disable(entity_p ent);
-void Entity_EnableCollision(entity_p ent);
-void Entity_DisableCollision(entity_p ent);
+void Entity_CreateGhosts(std::shared_ptr<Entity> entity);
+void Entity_Enable(std::shared_ptr<Entity> ent);
+void Entity_Disable(std::shared_ptr<Entity> ent);
+void Entity_EnableCollision(std::shared_ptr<Entity> ent);
+void Entity_DisableCollision(std::shared_ptr<Entity> ent);
 
 // Bullet entity rigid body generating.
-void BT_GenEntityRigidBody(entity_p ent);
+void BT_GenEntityRigidBody(std::shared_ptr<Entity> ent);
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
-void Entity_GhostUpdate(struct entity_s *ent);
-void Entity_UpdateCurrentCollisions(struct entity_s *ent);
-int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
-void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3]);
-int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
-void Entity_CheckCollisionCallbacks(struct entity_s *ent);
-bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-void Entity_CleanCollisionAllBodyParts(struct entity_s *ent);
-void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag);
+void Entity_GhostUpdate(std::shared_ptr<Entity> ent);
+void Entity_UpdateCurrentCollisions(std::shared_ptr<Entity> ent);
+int Entity_GetPenetrationFixVector(std::shared_ptr<Entity> ent, btScalar reaction[3], btScalar move_global[3]);
+void Entity_FixPenetrations(std::shared_ptr<Entity> ent, btScalar move[3]);
+int Entity_CheckNextPenetration(std::shared_ptr<Entity> ent, btScalar move[3]);
+void Entity_CheckCollisionCallbacks(std::shared_ptr<Entity> ent);
+bool Entity_WasCollisionBodyParts(std::shared_ptr<Entity> ent, uint32_t parts_flags);
+void Entity_CleanCollisionAllBodyParts(std::shared_ptr<Entity> ent);
+void Entity_CleanCollisionBodyParts(std::shared_ptr<Entity> ent, uint32_t parts_flags);
+btCollisionObject *Entity_GetRemoveCollisionBodyParts(std::shared_ptr<Entity> ent, uint32_t parts_flags, uint32_t *curr_flag);
 
-void Entity_UpdateRoomPos(entity_p ent);
-void Entity_UpdateRigidBody(entity_p ent, int force);
+void Entity_UpdateRoomPos(std::shared_ptr<Entity> ent);
+void Entity_UpdateRigidBody(std::shared_ptr<Entity> ent, int force);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
-int  Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id);
+int  Entity_GetAnimDispatchCase(std::shared_ptr<Entity> entity, uint32_t id);
 void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-int  Entity_Frame(entity_p entity, btScalar time);  // process frame + trying to change state
+int  Entity_Frame(std::shared_ptr<Entity> entity, btScalar time);  // process frame + trying to change state
 
-void Entity_RebuildBV(entity_p ent);
-void Entity_UpdateRotation(entity_p entity);
-void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz = 0);
-void Entity_AddOverrideAnim(struct entity_s *ent, int model_id);
-void Entity_CheckActivators(struct entity_s *ent);
+void Entity_RebuildBV(std::shared_ptr<Entity> ent);
+void Entity_UpdateRotation(std::shared_ptr<Entity> entity);
+void Entity_UpdateCurrentSpeed(std::shared_ptr<Entity> entity, int zeroVz = 0);
+void Entity_AddOverrideAnim(std::shared_ptr<Entity> ent, int model_id);
+void Entity_CheckActivators(std::shared_ptr<Entity> ent);
 
-int  Entity_GetSubstanceState(entity_p entity);
+int  Entity_GetSubstanceState(std::shared_ptr<Entity> entity);
 
 void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
-void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing);
-void Entity_ProcessSector(struct entity_s *ent);
-void Entity_SetAnimation(entity_p entity, int animation, int frame = 0, int another_model = -1);
-void Entity_MoveForward(struct entity_s *ent, btScalar dist);
-void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);
-void Entity_MoveVertical(struct entity_s *ent, btScalar dist);
+void Entity_DoAnimCommands(std::shared_ptr<Entity> entity, struct ss_animation_s *ss_anim, int changing);
+void Entity_ProcessSector(std::shared_ptr<Entity> ent);
+void Entity_SetAnimation(std::shared_ptr<Entity> entity, int animation, int frame = 0, int another_model = -1);
+void Entity_MoveForward(std::shared_ptr<Entity> ent, btScalar dist);
+void Entity_MoveStrafe(std::shared_ptr<Entity> ent, btScalar dist);
+void Entity_MoveVertical(std::shared_ptr<Entity> ent, btScalar dist);
 
 // Helper functions
 
-btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2);
+btScalar Entity_FindDistance(std::shared_ptr<Entity> entity_1, std::shared_ptr<Entity> entity_2);
 
 room_sector_s* Entity_GetLowestSector(room_sector_s* sector);
 room_sector_s* Entity_GetHighestSector(room_sector_s* sector);

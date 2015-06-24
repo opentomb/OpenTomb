@@ -1,8 +1,8 @@
-
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-#include "redblack.h"
+#include <map>
+#include <memory>
 
 // Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way
@@ -71,7 +71,7 @@
 class  VT_Level;
 struct base_mesh_s;
 struct world_s;
-struct room_s;
+struct Room;
 struct room_sector_s;
 struct sector_tween_s;
 struct bordered_texture_atlas_s;
@@ -82,13 +82,13 @@ struct bordered_texture_atlas_s;
 
 void Res_GenRBTrees(struct world_s *world);
 void Res_GenSpritesBuffer(struct world_s *world);
-void Res_GenRoomSpritesBuffer(struct room_s *room);
+void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room);
 void Res_GenRoomCollision(struct world_s *world);
 void Res_GenRoomFlipMap(struct world_s *world);
 void Res_GenBaseItems(struct world_s *world);
 void Res_GenVBOs(struct world_s *world);
 
-void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
+void     Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *room_tween);
 uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
 void     Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
@@ -107,12 +107,12 @@ bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
 
 // Assign pickup functions to previously created base items.
 
-void Res_EntityToItem(RedBlackNode_p n);
+void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<base_item_s> > &map);
 
 // Functions setting parameters from configuration scripts.
 
-void Res_SetEntityModelProperties(struct entity_s *ent);
-void Res_SetStaticMeshProperties(struct static_mesh_s *r_static);
+void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent);
+void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static);
 
 // Check if entity index was already processed (needed to remove dublicated activation calls).
 // If entity is not processed, add its index into lookup table.
@@ -131,7 +131,7 @@ void Res_AutoexecOpen(int engine_version);
 void TR_GenWorld(struct world_s *world, class VT_Level *tr);
 void TR_GenMeshes(struct world_s *world, class VT_Level *tr);
 void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr);
-void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr);
+void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr);
 void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr);
 void TR_GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class VT_Level *tr);
 void TR_GenEntities(struct world_s *world, class VT_Level *tr);
@@ -140,7 +140,7 @@ void TR_GenTextures(struct world_s *world, class VT_Level *tr);
 void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr);
 void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr);
 void TR_GenRooms(struct world_s *world, class VT_Level *tr);
-void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr);
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *world, class VT_Level *tr);
 void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
 void TR_GenBoxes(struct world_s *world, class VT_Level *tr);
 void TR_GenCameras(struct world_s *world, class VT_Level *tr);

@@ -500,8 +500,6 @@ void Engine_Frame(btScalar time)
 
 void ShowDebugInfo()
 {
-    entity_p ent;
-    btTransform trans;
     GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
     vec3_copy(light_position, engine_camera.pos);
@@ -513,7 +511,7 @@ void ShowDebugInfo()
     glColorPointer(3, GL_FLOAT, 0, color_array);
     glDrawArrays(GL_LINES, 0, 2);
 
-    ent = engine_world.Character;
+    std::shared_ptr<Entity> ent = engine_world.Character;
     if(ent && ent->character)
     {
         /*height_info_p fc = &ent->character->height_info
@@ -530,15 +528,15 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.animations.model->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", std::static_pointer_cast<Entity>(last_cont->object)->id, std::static_pointer_cast<Entity>(last_cont->object)->bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
-                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", std::static_pointer_cast<StaticMesh>(last_cont->object)->object_id);
                 break;
 
             case OBJECT_ROOM_BASE:
-                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", std::static_pointer_cast<Room>(last_cont->object)->id);
                 break;
         }
 

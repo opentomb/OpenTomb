@@ -918,7 +918,7 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
 btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
-    room_p r = heightmap->owner_room;
+    std::shared_ptr<Room> r = heightmap->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
 

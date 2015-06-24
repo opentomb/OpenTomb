@@ -8,6 +8,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(OpenTomb)
 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
+
 IF(NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "No build type selected. Default to Release")
     SET(CMAKE_BUILD_TYPE "Release")

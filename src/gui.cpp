@@ -707,8 +707,8 @@ int gui_InventoryManager::getItemsTypeCount(int type)
     int ret = 0;
     for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
     {
-        base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
-        if((bi != NULL) && (bi->type == type))
+        auto bi = World_GetBaseItemByID(&engine_world, i->id);
+        if(bi && bi->type == type)
         {
             ret++;
         }
@@ -782,8 +782,7 @@ int gui_InventoryManager::setItemsType(int type)
     {
         for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
         {
-            base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
-            if(bi != NULL)
+            if(auto bi = World_GetBaseItemByID(&engine_world, i->id))
             {
                 type = bi->type;
                 count = this->getItemsTypeCount(mCurrentItemsType);
@@ -1055,8 +1054,8 @@ void gui_InventoryManager::render()
         int num = 0;
         for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
         {
-            base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
-            if((bi == NULL) || (bi->type != mCurrentItemsType))
+            auto bi = World_GetBaseItemByID(&engine_world, i->id);
+            if(!bi || bi->type != mCurrentItemsType)
             {
                 continue;
             }
@@ -2532,32 +2531,32 @@ void gui_ItemNotifier::Reset()
 
 void gui_ItemNotifier::Draw()
 {
-    if(mActive)
-    {
-        base_item_p item = World_GetBaseItemByID(&engine_world, mItem);
-        if(item)
-        {
-            int anim = item->bf->animations.current_animation;
-            int frame = item->bf->animations.current_frame;
-            btScalar time = item->bf->animations.frame_time;
+    if(!mActive)
+        return;
 
-            item->bf->animations.current_animation = 0;
-            item->bf->animations.current_frame = 0;
-            item->bf->animations.frame_time = 0.0;
+    auto item = World_GetBaseItemByID(&engine_world, mItem);
+    if(!item)
+        return;
 
-            Item_Frame(item->bf, 0.0);
-            btScalar matrix[16];
-            Mat4_E_macro(matrix);
-            Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
-            Mat4_RotateY(matrix, mCurrRotX + mRotX);
-            Mat4_RotateX(matrix, mCurrRotY + mRotY);
-            Gui_RenderItem(item->bf, mSize, matrix);
+    int anim = item->bf->animations.current_animation;
+    int frame = item->bf->animations.current_frame;
+    btScalar time = item->bf->animations.frame_time;
 
-            item->bf->animations.current_animation = anim;
-            item->bf->animations.current_frame = frame;
-            item->bf->animations.frame_time = time;
-        }
-    }
+    item->bf->animations.current_animation = 0;
+    item->bf->animations.current_frame = 0;
+    item->bf->animations.frame_time = 0.0;
+
+    Item_Frame(item->bf, 0.0);
+    btScalar matrix[16];
+    Mat4_E_macro(matrix);
+    Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
+    Mat4_RotateY(matrix, mCurrRotX + mRotX);
+    Mat4_RotateX(matrix, mCurrRotY + mRotY);
+    Gui_RenderItem(item->bf, mSize, matrix);
+
+    item->bf->animations.current_animation = anim;
+    item->bf->animations.current_frame = frame;
+    item->bf->animations.frame_time = time;
 }
 
 void gui_ItemNotifier::SetPos(float X, float Y)

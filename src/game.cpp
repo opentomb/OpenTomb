@@ -28,7 +28,6 @@ extern "C" {
 #include "anim_state_control.h"
 #include "obb.h"
 #include "character_controller.h"
-#include "redblack.h"
 #include "gameflow.h"
 #include "gui.h"
 #include "inventory.h"
@@ -40,8 +39,8 @@ btScalar cam_angles[3] = {0.0, 0.0, 0.0};
 extern btScalar time_scale;
 extern lua_State *engine_lua;
 
-void Save_EntityTree(FILE **f, RedBlackNode_p n);
-void Save_Entity(FILE **f, entity_p ent);
+void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> > &map);
+void Save_Entity(FILE **f, std::shared_ptr<Entity> ent);
 
 int lua_mlook(lua_State * lua)
 {
@@ -229,23 +228,19 @@ int Game_Load(const char* name)
 }
 
 
-void Save_EntityTree(FILE **f, RedBlackNode_p n)
+void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<Entity> >& map)
 {
-    if(n->left != NULL)
-    {
-        Save_EntityTree(f, n->left);
-    }
-    Save_Entity(f, (entity_p)n->data);
-    if(n->right != NULL)
-    {
-        Save_EntityTree(f, n->right);
+    for(std::map<uint32_t, std::shared_ptr<Entity> >::const_iterator it = map.begin();
+        it != map.end();
+        ++it) {
+        Save_Entity(f, it->second);
     }
 }
 
 /**
  * Entity save function, based on engine lua scripts;
  */
-void Save_Entity(FILE **f, entity_p ent)
+void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
 {
     if(ent == NULL)
     {
@@ -355,16 +350,16 @@ int Game_Save(const char* name)
 
     Save_Entity(&f, engine_world.Character);    // Save Lara.
 
-    if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
+    if(!engine_world.entity_tree.empty())
     {
-        Save_EntityTree(&f, engine_world.entity_tree->root);
+        Save_EntityTree(&f, engine_world.entity_tree);
     }
     fclose(f);
 
     return 1;
 }
 
-void Game_ApplyControls(struct entity_s *ent)
+void Game_ApplyControls(std::shared_ptr<Entity> ent)
 {
     int8_t move_logic[3];
     int8_t look_logic[3];
@@ -536,7 +531,7 @@ bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform &cameraFr
 }
 
 
-void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz)
+void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScalar dx, btScalar dz)
 {
     btTransform cameraFrom, cameraTo;
     btVector3 cam_pos(cam->pos[0], cam->pos[1], cam->pos[2]), cam_pos2;
@@ -710,97 +705,74 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, b
 }
 
 
-void Game_LoopEntities(struct RedBlackNode_s *x)
+void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
-    entity_p entity = (entity_p)x->data;
-
-    if(entity->state_flags & ENTITY_STATE_ENABLED)
-    {
-        Entity_ProcessSector(entity);
-        lua_LoopEntity(engine_lua, entity->id);
-    }
-
-
-    if(x->left != NULL)
-    {
-        Game_LoopEntities(x->left);
-    }
-    if(x->right != NULL)
-    {
-        Game_LoopEntities(x->right);
+    for(std::map<uint32_t, std::shared_ptr<Entity> >::iterator it = entities.begin();
+        it != entities.end();
+        ++it) {
+        std::shared_ptr<Entity> entity = it->second;
+        if(entity->state_flags & ENTITY_STATE_ENABLED)
+        {
+            Entity_ProcessSector(entity);
+            lua_LoopEntity(engine_lua, entity->id);
+        }
     }
 }
 
 
-void Game_UpdateAllEntities(struct RedBlackNode_s *x)
+void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
-    entity_p entity = (entity_p)x->data;
-
-    if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
-    {
-        Entity_UpdateRigidBody(entity, 0);
-    }
-    else if(Entity_Frame(entity, engine_frame_time))
-    {
-        Entity_UpdateRigidBody(entity, 0);
-    }
-
-    if(x->left != NULL)
-    {
-        Game_UpdateAllEntities(x->left);
-    }
-    if(x->right != NULL)
-    {
-        Game_UpdateAllEntities(x->right);
+    for(std::map<uint32_t, std::shared_ptr<Entity> >::iterator it = entities.begin();
+        it != entities.end();
+        ++it) {
+        std::shared_ptr<Entity> entity = it->second;
+        if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
+        {
+            Entity_UpdateRigidBody(entity, 0);
+        }
+        else if(Entity_Frame(entity, engine_frame_time))
+        {
+            Entity_UpdateRigidBody(entity, 0);
+        }
     }
 }
 
 
 void Game_UpdateAI()
 {
-    entity_p ent = NULL;
     //for(ALL CHARACTERS, EXCEPT PLAYER)
     {
-        if(ent)
-        {
             // UPDATE AI commands
-        }
     }
 }
 
 
-void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
+void Game_UpdateCharactersTree(std::map<uint32_t, std::shared_ptr<Entity> >& entities)
 {
-    entity_p ent = (entity_p)x->data;
-
-    if(IsCharacter(ent))
-    {
-        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+    for(std::map<uint32_t, std::shared_ptr<Entity> >::iterator it = entities.begin();
+        it != entities.end();
+        ++it) {
+        std::shared_ptr<Entity> ent = it->second;
+        if(IsCharacter(ent))
         {
-            Entity_CheckActivators(ent);
+            if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+            {
+                Entity_CheckActivators(ent);
+            }
+            if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
+            {
+                ent->character->resp.kill = 1;                                      // Kill, if no HP.
+            }
+            Character_ApplyCommands(ent);
+            Hair_Update(ent);
         }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
-        {
-            ent->character->resp.kill = 1;                                      // Kill, if no HP.
-        }
-        Character_ApplyCommands(ent);
-        Hair_Update(ent);
-    }
-
-    if(x->left != NULL)
-    {
-        Game_UpdateCharactersTree(x->left);
-    }
-    if(x->right != NULL)
-    {
-        Game_UpdateCharactersTree(x->right);
     }
 }
 
 
 void Game_UpdateCharacters()
 {
-    entity_p ent = engine_world.Character;
+    std::shared_ptr<Entity> ent = engine_world.Character;
 
     if(ent && ent->character)
     {
@@ -815,9 +787,9 @@ void Game_UpdateCharacters()
         Hair_Update(ent);
     }
 
-    if(engine_world.entity_tree && engine_world.entity_tree->root)
+    if(!engine_world.entity_tree.empty())
     {
-        Game_UpdateCharactersTree(engine_world.entity_tree->root);
+        Game_UpdateCharactersTree(engine_world.entity_tree);
     }
 }
 
@@ -835,8 +807,8 @@ void Game_Frame(btScalar time)
     static btScalar game_logic_time  = 0.0;
                     game_logic_time += time;
 
-    bool is_entitytree = ((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL));
-    bool is_character  = (engine_world.Character != NULL);
+    const bool is_entitytree = !engine_world.entity_tree.empty();
+    const bool is_character  = (engine_world.Character != NULL);
 
     // GUI and controls should be updated at all times!
 
@@ -888,7 +860,8 @@ void Game_Frame(btScalar time)
             Entity_CheckCollisionCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
         }
 
-        if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
+        if(is_entitytree)
+            Game_LoopEntities(engine_world.entity_tree);
     }
 
 
@@ -913,7 +886,8 @@ void Game_Frame(btScalar time)
 
     Game_UpdateCharacters();
 
-    if(is_entitytree) Game_UpdateAllEntities(engine_world.entity_tree->root);
+    if(is_entitytree)
+        Game_UpdateAllEntities(engine_world.entity_tree);
 
     bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
     bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
@@ -949,14 +923,14 @@ void Game_Prepare()
         engine_world.Character->character->statistics.secrets_game   = 0;
         engine_world.Character->character->statistics.secrets_level  = 0;
     }
-    else if(engine_world.room_count > 0)
+    else if(!engine_world.rooms.empty())
     {
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        engine_camera.pos[0] = engine_world.rooms[0].bb_max[0];
-        engine_camera.pos[1] = engine_world.rooms[0].bb_max[1];
-        engine_camera.pos[2] = engine_world.rooms[0].bb_max[2];
+        engine_camera.pos[0] = engine_world.rooms[0]->bb_max[0];
+        engine_camera.pos[1] = engine_world.rooms[0]->bb_max[1];
+        engine_camera.pos[2] = engine_world.rooms[0]->bb_max[2];
     }
 
     // Set gameflow parameters to default.

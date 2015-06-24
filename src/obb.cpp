@@ -214,7 +214,7 @@ void OBB_Transform(obb_p obb)
 /*
  * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
  */
-int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
+int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2)
 {
     //translation, in parent frame
     btScalar v[3], T[3];

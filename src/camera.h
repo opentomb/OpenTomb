@@ -2,12 +2,14 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-struct room_s;
+struct Room;
 struct polygon_s;
 struct frustum_s;
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+
+#include <memory>
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0
 #define TR_CAM_DEFAULT_SHAKE_POWER  100.0
@@ -64,7 +66,7 @@ typedef struct camera_s
 
     int8_t                      target_dir;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
-    struct room_s               *current_room;
+    std::shared_ptr<Room> current_room;
 }camera_t, *camera_p;
 
 // Static camera / sink structure.

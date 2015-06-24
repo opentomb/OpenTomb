@@ -13,11 +13,13 @@
 #include "polygon.h"
 #include "bullet/LinearMath/btScalar.h"
 
+#include <memory>
+
 /*
  * In base_edges we safe the initial shape polygons
  */
 
-struct entity_s;
+struct Entity;
 
 typedef struct obb_s
 {
@@ -36,7 +38,7 @@ void OBB_Clear(obb_p bv);
 
 void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3]);
 void OBB_Transform(obb_p obb);
-int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2);
+int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2);
 
 #endif /* OBB_H */
 

@@ -15,7 +15,7 @@ btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
     return (t > r)?(r):(t);
 }
 
-bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
+bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup)
 {
     // No entity, setup or body count overflow - bypass function.
 
@@ -173,7 +173,7 @@ bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
 }
 
 
-bool Ragdoll_Delete(entity_p entity)
+bool Ragdoll_Delete(std::shared_ptr<Entity> entity)
 {
     if(entity->bt.bt_joint_count == 0) return false;
 

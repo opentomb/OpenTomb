@@ -74,8 +74,8 @@ typedef struct rd_setup_s
 }rd_setup_t, *rd_setup_p;
 
 
-bool Ragdoll_Create(entity_p entity, rd_setup_p setup);
-bool Ragdoll_Delete(entity_p entity);
+bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup);
+bool Ragdoll_Delete(std::shared_ptr<Entity> entity);
 
 bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup);
 void Ragdoll_ClearSetup(rd_setup_p setup);

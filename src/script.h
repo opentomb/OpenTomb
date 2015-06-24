@@ -4,7 +4,7 @@
 
 struct screen_info_s;
 struct console_info_s;
-struct entity_s;
+struct Entity;
 struct lua_State;
 
 #define CVAR_NAME_SIZE 32

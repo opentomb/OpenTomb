@@ -2,14 +2,16 @@
 #ifndef ANIM_STATE_CONTROL_H
 #define ANIM_STATE_CONTROL_H
 
+#include <memory>
+
 class VT_Level;
 struct polygon_s;
 struct base_mesh_s;
-struct room_s;
+struct Room;
 struct world_s;
 struct camera_s;
 struct ss_animation_s;
-struct entity_s;
+struct Entity;
 struct room_sector_s;
 struct character_command_s;
 
@@ -751,7 +753,7 @@ struct character_command_s;
 #define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
 
-int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim);
+int State_Control_Lara(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_anim);
 
 #endif
 

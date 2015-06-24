@@ -9,6 +9,8 @@
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/LinearMath/btIDebugDraw.h"
 
+#include <memory>
+
 #define R_DRAW_WIRE             0x00000001      // Wireframe rendering
 #define R_DRAW_ROOMBOXES        0x00000002      // Show room bounds
 #define R_DRAW_BOXES            0x00000004      // Show boxes
@@ -39,9 +41,9 @@
 struct portal_s;
 struct frustum_s;
 struct world_s;
-struct room_s;
+struct Room;
 struct camera_s;
-struct entity_s;
+struct Entity;
 struct sprite_s;
 struct base_mesh_s;
 struct obb_s;
@@ -89,9 +91,9 @@ class render_DebugDrawer:public btIDebugDraw
         void drawOBB(struct obb_s *obb);
         void drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals);
         void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16]);
-        void drawEntityDebugLines(struct entity_s *entity);
+        void drawEntityDebugLines(std::shared_ptr<Entity> entity);
         void drawSectorDebugLines(struct room_sector_s *rs);
-        void drawRoomDebugLines(struct room_s *room, struct render_s *render);
+        void drawRoomDebugLines(std::shared_ptr<Room> room, struct render_s *render);
         
         // bullet's debug interface
         virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
@@ -131,7 +133,7 @@ enum BlendingMode
 typedef struct render_list_s
 {
     char               active;
-    struct room_s     *room;
+    std::shared_ptr<Room> room;
     btScalar           dist;
 }render_list_t, *render_list_p;
 
@@ -174,12 +176,12 @@ void Render_InitGlobals();
 void Render_Init();
 
 render_list_p Render_CreateRoomListArray(unsigned int count);
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
-void Render_DynamicEntity(const struct lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
-void Render_DynamicEntitySkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar pMatrix[16]);
+void Render_Entity(std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
+void Render_DynamicEntity(const struct lit_shader_description *shader, std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
+void Render_DynamicEntitySkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btScalar pMatrix[16]);
 void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16]);
-void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar mvMatrix[16], const btScalar pMatrix[16]);
-void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
+void Render_SkeletalModelSkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btScalar mvMatrix[16], const btScalar pMatrix[16]);
+void Render_Hair(std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
 void Render_SkyBox(const btScalar matrix[16]);
 void Render_Mesh(struct base_mesh_s *mesh);
 void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *p, const struct unlit_tinted_shader_description *shader);
@@ -189,13 +191,13 @@ void Render_UpdateAnimTextures();
 void Render_CleanList();
 
 
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16]);
-int Render_AddRoom(struct room_s *room);
+void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
+void Render_Room_Sprites(std::shared_ptr<Room> room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16]);
+int Render_AddRoom(std::shared_ptr<Room> room);
 void Render_DrawList();
 void Render_DrawList_DebugLines();
 
-int Render_HaveFrustumParent(struct room_s *room, struct frustum_s *frus);
+int Render_HaveFrustumParent(struct Room *room, struct frustum_s *frus);
 int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus);
 void Render_GenWorldList();
 

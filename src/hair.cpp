@@ -9,9 +9,9 @@
 // Creates a single mesh out of all the parts of the given model.
 // This assumes that Mesh_GenFaces was already called on the parts of model.
 // @TODO: Should this be in this file or somewhere else? Where would it make sense?
-void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model);
+void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *model);
 
-bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
+bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr<Entity> parent_entity)
 {
     // No setup or parent to link to - bypass function.
 
@@ -226,7 +226,7 @@ bool Hair_Create(hair_p hair, hair_setup_p setup, entity_p parent_entity)
     return true;
 }
 
-void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
+void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *model)
 {
     hair->mesh = (base_mesh_s *) calloc(sizeof(base_mesh_s), 1);
     hair->mesh->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), engine_world.tex_count);
@@ -326,103 +326,6 @@ void hair_CreateHairMesh(hair_p hair, const skeletal_model_s *model)
     Mesh_GenVBO(&renderer, hair->mesh);
 }
 
-void Hair_Clear(hair_p hair)
-{
-    for(int i=0; i<hair->joint_count; i++)
-    {
-        if(hair->joints[i])
-        {
-            bt_engine_dynamicsWorld->removeConstraint(hair->joints[i]);
-            delete hair->joints[i];
-            hair->joints[i] = NULL;
-        }
-    }
-    free(hair->joints);
-    hair->joints = NULL;
-    hair->joint_count = 0;
-
-    for(int i=0; i<hair->element_count; i++)
-    {
-        if(hair->elements[i].body)
-        {
-            hair->elements[i].body->setUserPointer(NULL);
-            bt_engine_dynamicsWorld->removeRigidBody(hair->elements[i].body);
-            delete hair->elements[i].body;
-            hair->elements[i].body = NULL;
-        }
-        if(hair->elements[i].shape)
-        {
-            delete hair->elements[i].shape;
-            hair->elements[i].shape = NULL;
-        }
-    }
-    free(hair->elements);
-    hair->elements = NULL;
-    hair->element_count = 0;
-
-    free(hair->container);
-    hair->container = NULL;
-
-    hair->owner_char = NULL;
-    hair->owner_body = 0;
-
-    hair->root_index = 0;
-    hair->tail_index = 0;
-}
-
-void Hair_Update(entity_p entity)
-{
-    if((!IsCharacter(entity)) || (entity->character->hair_count == 0)) return;
-
-    hair_p hair = entity->character->hairs;
-
-    for(int i=0; i<entity->character->hair_count; i++, hair++)
-    {
-        if((!hair) || (hair->element_count < 1)) continue;
-
-        /*btScalar new_transform[16];
-
-        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
-
-        // Calculate mixed velocities.
-        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
-                          new_transform[12+1] - hair->owner_body_transform[12+1],
-                          new_transform[12+2] - hair->owner_body_transform[12+2]);
-        mix_vel *= 1.0 / engine_frame_time;
-
-        if(0)
-        {
-            btScalar sub_tr[16];
-            btTransform ang_tr;
-            btVector3 mix_ang;
-            Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
-            ang_tr.setFromOpenGLMatrix(sub_tr);
-            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
-            mix_ang *= 1.0 / engine_frame_time;
-
-            // Looks like angular velocity breaks up constraints on VERY fast moves,
-            // like mid-air turn. Probably, I've messed up with multiplier value...
-
-            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
-        }
-        Mat4_Copy(hair->owner_body_transform, new_transform);*/
-
-        // Set mixed velocities to both parent body and first hair body.
-
-        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
-        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
-
-        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
-        for(int j=0;j<hair->element_count;j++)
-        {
-            hair->elements[j].body->applyCentralForce(mix_vel);
-        }*/
-
-        hair->container->room = hair->owner_char->self->room;
-    }
-}
-
 bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
 {
     bool result = true;
@@ -504,4 +407,102 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
 
     lua_settop(engine_lua, top);
     return result;
+}
+
+
+Hair::~Hair()
+{
+    for(int i=0; i<joint_count; i++)
+    {
+        if(joints[i])
+        {
+            bt_engine_dynamicsWorld->removeConstraint(joints[i]);
+            delete joints[i];
+            joints[i] = NULL;
+        }
+    }
+    free(joints);
+    joints = NULL;
+    joint_count = 0;
+
+    for(int i=0; i<element_count; i++)
+    {
+        if(elements[i].body)
+        {
+            elements[i].body->setUserPointer(NULL);
+            bt_engine_dynamicsWorld->removeRigidBody(elements[i].body);
+            delete elements[i].body;
+            elements[i].body = NULL;
+        }
+        if(elements[i].shape)
+        {
+            delete elements[i].shape;
+            elements[i].shape = NULL;
+        }
+    }
+    free(elements);
+    elements = NULL;
+    element_count = 0;
+
+    free(container);
+    container = NULL;
+
+    owner_char = NULL;
+    owner_body = 0;
+
+    root_index = 0;
+    tail_index = 0;
+}
+
+void Hair_Update(std::shared_ptr<Entity> entity)
+{
+    if((!IsCharacter(entity)) || entity->character->hairs.empty())
+        return;
+
+    for(size_t i=0; i<entity->character->hairs.size(); ++i)
+    {
+        std::shared_ptr<Hair> hair = entity->character->hairs[i];
+        if((!hair) || (hair->element_count < 1)) continue;
+
+        /*btScalar new_transform[16];
+
+        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
+
+        // Calculate mixed velocities.
+        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
+                          new_transform[12+1] - hair->owner_body_transform[12+1],
+                          new_transform[12+2] - hair->owner_body_transform[12+2]);
+        mix_vel *= 1.0 / engine_frame_time;
+
+        if(0)
+        {
+            btScalar sub_tr[16];
+            btTransform ang_tr;
+            btVector3 mix_ang;
+            Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
+            ang_tr.setFromOpenGLMatrix(sub_tr);
+            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
+            mix_ang *= 1.0 / engine_frame_time;
+
+            // Looks like angular velocity breaks up constraints on VERY fast moves,
+            // like mid-air turn. Probably, I've messed up with multiplier value...
+
+            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
+            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+        }
+        Mat4_Copy(hair->owner_body_transform, new_transform);*/
+
+        // Set mixed velocities to both parent body and first hair body.
+
+        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
+        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
+
+        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
+        for(int j=0;j<hair->element_count;j++)
+        {
+            hair->elements[j].body->applyCentralForce(mix_vel);
+        }*/
+
+        hair->container->room = hair->owner_char->self->room;
+    }
 }

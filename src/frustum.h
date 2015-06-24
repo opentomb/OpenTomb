@@ -2,10 +2,11 @@
 #ifndef FRUSTUM_H
 #define FRUSTUM_H
 
-#include <stdint.h>
+#include <cstdint>
+#include <memory>
 #include "bullet/LinearMath/btScalar.h"
 
-struct room_s;
+struct Room;
 struct portal_s;
 struct render_s;
 struct obb_s;
@@ -77,6 +78,6 @@ int Frustum_HaveParent(frustum_p parent, frustum_p frustum);
 int Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum);
 int Frustum_IsAABBVisible(btScalar bbmin[3], btScalar bbmax[3], struct frustum_s *frustum);
 int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum);
-int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room);
+int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, std::shared_ptr<Room> room);
 
 #endif

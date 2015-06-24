@@ -21,17 +21,19 @@
 #include <stdint.h>
 #include "bullet/LinearMath/btScalar.h"
 #include "vertex_array.h"
+#include "object.h"
+#include <memory>
 
 class btCollisionShape;
 class btRigidBody;
 class btCollisionShape;
 
 struct polygon_s;
-struct room_s;
+struct Room;
 struct engine_container_s;
 struct obb_s;
 struct vertex_s;
-struct entity_s;
+struct Entity;
 
 typedef struct transparent_polygon_reference_s {
     const struct polygon_s *polygon;
@@ -198,7 +200,7 @@ typedef struct anim_seq_s
 /*
  * room static mesh.
  */
-typedef struct static_mesh_s
+struct StaticMesh : public Object
 {
     uint32_t                    object_id;                                      //
     uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
@@ -219,7 +221,7 @@ typedef struct static_mesh_s
 
     struct base_mesh_s         *mesh;                                           // base model
     btRigidBody                *bt_body;
-}static_mesh_t, *static_mesh_p;
+};
 
 /*
  * Animated skeletal model. Taken from openraider.
@@ -264,7 +266,7 @@ typedef struct ss_animation_s
     btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
 
-    void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
+    void                      (*onFrame)(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_anim, int state);
 
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;

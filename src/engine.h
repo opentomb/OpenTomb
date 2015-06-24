@@ -9,6 +9,7 @@
 #include "world.h"
 #include "script.h"
 #include "controls.h"
+#include "object.h"
 
 #define LEVEL_NAME_MAX_LEN                      (64)
 #define MAX_ENGINE_PATH                         (1024)
@@ -47,8 +48,8 @@ typedef struct engine_container_s
 {
     uint16_t                     object_type;
     uint32_t                     collide_flag;
-    void                        *object;
-    struct room_s               *room;
+    std::shared_ptr<Object>      object;
+    std::shared_ptr<Room>      room;
     struct engine_container_s   *next;
 }engine_container_t, *engine_container_p;
 
@@ -138,12 +139,11 @@ public:
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
     {
-        room_p r0 = NULL, r1 = NULL;
         engine_container_p c1;
 
-        r0 = (m_cont)?(m_cont->room):(NULL);
+        std::shared_ptr<Room> r0 = m_cont ? m_cont->room : NULL;
         c1 = (engine_container_p)rayResult.m_collisionObject->getUserPointer();
-        r1 = (c1)?(c1->room):(NULL);
+        std::shared_ptr<Room> r1 = c1 ? c1->room : NULL;
 
         if(c1 && c1 == m_cont)
         {
@@ -184,12 +184,11 @@ public:
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult,bool normalInWorldSpace)
     {
-        room_p r0 = NULL, r1 = NULL;
         engine_container_p c1;
 
-        r0 = (m_cont)?(m_cont->room):(NULL);
+        std::shared_ptr<Room> r0 = (m_cont)?(m_cont->room):(NULL);
         c1 = (engine_container_p)convexResult.m_hitCollisionObject->getUserPointer();
-        r1 = (c1)?(c1->room):(NULL);
+        std::shared_ptr<Room> r1 = (c1)?(c1->room):(NULL);
 
         if(c1 && c1 == m_cont)
         {

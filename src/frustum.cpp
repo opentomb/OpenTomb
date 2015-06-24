@@ -706,7 +706,7 @@ int Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
     return ins;
 }
 
-int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, struct room_s *room)
+int Frustum_IsOBBVisibleInRoom(struct obb_s *obb, std::shared_ptr<Room> room)
 {
     int ins;
     polygon_p p;
