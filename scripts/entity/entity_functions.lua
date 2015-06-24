@@ -772,6 +772,35 @@ function spikeceiling_init(id)
     end
 end
 
+function cleaner_init(id)      -- Thames Wharf machine
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].rotating = 0;
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(similarSector(object_id, 1024.0, 0.0, 0.0, false)) then
+        
+        else
+        
+        end;
+    end
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+    
+    end
+end
+
 function baddie_init(id)    -- INVALID!
 
     setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);

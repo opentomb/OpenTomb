@@ -1925,6 +1925,39 @@ int lua_MoveEntityToEntity(lua_State * lua)
     return 0;
 }
 
+int lua_RotateEntity(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+
+    if((top > 4) || (top < 2))
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[ent_id, rot_x], (rot_y, rot_z)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+    }
+    else
+    {
+        ent->angles[0] += lua_tonumber(lua, 2);
+
+        if(top == 4)
+        {
+             ent->angles[1] += lua_tonumber(lua, 3);
+             ent->angles[2] += lua_tonumber(lua, 4);
+        }
+
+        Entity_UpdateRotation(ent);
+    }
+
+    return 0;
+}
+
 int lua_GetEntitySpeed(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
@@ -4036,6 +4069,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
     lua_register(lua, "moveEntityToSink", lua_MoveEntityToSink);
     lua_register(lua, "moveEntityToEntity", lua_MoveEntityToEntity);
+    lua_register(lua, "rotateEntity", lua_RotateEntity);
 
     lua_register(lua, "getEntityModelID", lua_GetEntityModelID);
 
