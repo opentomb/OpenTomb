@@ -1868,7 +1868,7 @@ int Character_FindTraverse(struct entity_s *ch)
 
     if(obj_s != NULL)
     {
-        obj_s = TR_Sector_CheckPortalPointer(obj_s);
+        obj_s = Sector_CheckPortalPointer(obj_s);
         for(engine_container_p cont = obj_s->owner_room->containers;cont!=NULL;cont=cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
@@ -1969,7 +1969,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
             btScalar pos[] = {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0};
             ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
         }
-        ch_s = TR_Sector_CheckPortalPointer(ch_s);
+        ch_s = Sector_CheckPortalPointer(ch_s);
     }
 
     if((ch_s == NULL) || (obj_s == NULL))
@@ -2028,7 +2028,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         next_s = Room_GetSectorRaw(obj_s->owner_room, pos);
     }
 
-    next_s = TR_Sector_CheckPortalPointer(next_s);
+    next_s = Sector_CheckPortalPointer(next_s);
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01))
     {
         bt_engine_ClosestConvexResultCallback ccb(obj->self);
@@ -2078,7 +2078,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         next_s = Room_GetSectorRaw(ch_s->owner_room, pos);
     }
 
-    next_s = TR_Sector_CheckPortalPointer(next_s);
+    next_s = Sector_CheckPortalPointer(next_s);
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01))
     {
         bt_engine_ClosestConvexResultCallback ccb(ch->self);

@@ -264,7 +264,7 @@ int Room_HasSector(room_p room, int x, int y)
 }
 
 
-room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs)
+room_sector_p Sector_CheckPortalPointerRaw(room_sector_p rs)
 {
     if((rs != NULL) && (rs->portal_to_room >= 0))
     {
@@ -281,7 +281,7 @@ room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs)
 }
 
 
-room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs)
+room_sector_p Sector_CheckPortalPointer(room_sector_p rs)
 {
     if((rs != NULL) && (rs->portal_to_room >= 0))
     {
@@ -306,7 +306,7 @@ room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs)
 }
 
 
-room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs)
+room_sector_p Sector_CheckBaseRoom(room_sector_p rs)
 {
     if((rs != NULL) && (rs->owner_room->base_room != NULL))
     {
@@ -323,7 +323,7 @@ room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs)
 }
 
 
-room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs)
+room_sector_p Sector_CheckAlternateRoom(room_sector_p rs)
 {
     if((rs != NULL) && (rs->owner_room->alternate_room != NULL))
     {
@@ -342,8 +342,8 @@ room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs)
 
 int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
 {
-    s1 = TR_Sector_CheckPortalPointer(s1);
-    s2 = TR_Sector_CheckPortalPointer(s2);
+    s1 = Sector_CheckPortalPointer(s1);
+    s2 = Sector_CheckPortalPointer(s2);
 
     if(s1->owner_room == s2->owner_room)
     {
@@ -356,7 +356,7 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
     // 2 next conditions are the stick for TR_V door-roll-wall
     if(s1p->portal_to_room < 0)
     {
-        s1p = TR_Sector_CheckAlternateRoom(s1p);
+        s1p = Sector_CheckAlternateRoom(s1p);
         if(s1p->portal_to_room < 0)
         {
             return 0;
@@ -364,15 +364,15 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
     }
     if(s2p->portal_to_room < 0)
     {
-        s2p = TR_Sector_CheckAlternateRoom(s2p);
+        s2p = Sector_CheckAlternateRoom(s2p);
         if(s2p->portal_to_room < 0)
         {
             return 0;
         }
     }
 
-    if((TR_Sector_CheckPortalPointer(s1p) == TR_Sector_CheckBaseRoom(s1)) && (TR_Sector_CheckPortalPointer(s2p) == TR_Sector_CheckBaseRoom(s2)) ||
-       (TR_Sector_CheckPortalPointer(s1p) == TR_Sector_CheckAlternateRoom(s1)) && (TR_Sector_CheckPortalPointer(s2p) == TR_Sector_CheckAlternateRoom(s2)))
+    if((Sector_CheckPortalPointer(s1p) == Sector_CheckBaseRoom(s1)) && (Sector_CheckPortalPointer(s2p) == Sector_CheckBaseRoom(s2)) ||
+       (Sector_CheckPortalPointer(s1p) == Sector_CheckAlternateRoom(s1)) && (Sector_CheckPortalPointer(s2p) == Sector_CheckAlternateRoom(s2)))
     {
         return 1;
     }
@@ -418,6 +418,36 @@ bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_door
     }
 
     return true;
+}
+
+
+btVector3 Sector_HighestFloorCorner(room_sector_p rs)
+{
+    btVector3 r1 = (rs->floor_corners[0].m_floats[2] > rs->floor_corners[1].m_floats[2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
+    btVector3 r2 = (rs->floor_corners[2].m_floats[2] > rs->floor_corners[3].m_floats[2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
+
+    return (r1.m_floats[2] > r2.m_floats[2])?(r1):(r2);
+}
+
+
+btVector3 Sector_LowestCeilingCorner(room_sector_p rs)
+{
+    btVector3 r1 = (rs->ceiling_corners[0].m_floats[2] > rs->ceiling_corners[1].m_floats[2])?(rs->ceiling_corners[1]):(rs->ceiling_corners[0]);
+    btVector3 r2 = (rs->ceiling_corners[2].m_floats[2] > rs->ceiling_corners[3].m_floats[2])?(rs->ceiling_corners[3]):(rs->ceiling_corners[2]);
+
+    return (r1.m_floats[2] > r2.m_floats[2])?(r2):(r1);
+}
+
+
+btVector3 Sector_GetFloorPoint(room_sector_p rs)
+{
+    return Sector_HighestFloorCorner(Sector_GetLowest(rs));
+}
+
+
+btVector3 Sector_GetCeilingPoint(room_sector_p rs)
+{
+    return Sector_LowestCeilingCorner(Sector_GetHighest(rs));
 }
 
 
@@ -1004,6 +1034,22 @@ room_sector_p Sector_CheckFlip(room_sector_p rs)
     }
 
     return rs;
+}
+
+
+room_sector_p Sector_GetLowest(room_sector_p sector)
+{
+    for(sector=Sector_CheckFlip(sector);sector->sector_below!=NULL;sector=Sector_CheckFlip(sector->sector_below));
+
+    return Sector_CheckFlip(sector);
+}
+
+
+room_sector_p Sector_GetHighest(room_sector_p sector)
+{
+    for(sector=Sector_CheckFlip(sector);sector->sector_above!=NULL;sector=Sector_CheckFlip(sector->sector_above));
+
+    return sector;
 }
 
 

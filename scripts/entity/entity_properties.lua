@@ -10,7 +10,7 @@
 -- [ trav ] flag values:
 
 --   0x00    - Object is not pushable.
---   0x10    - Object is pushable, but can not been floor for other pushable
+--   0x10    - Object is pushable, but can't be floor for other pushable
 --   0x18    - Object is pushable, and can be floor for other pushable
 
 -- [ coll ] flag values:
@@ -79,7 +79,7 @@ tr1_entity_tbl[39] = {coll = 0x01};                      -- Dart
 tr1_entity_tbl[40] = {coll = 0x01};                      -- Dartgun
 tr1_entity_tbl[41] = {coll = 0x01};                      -- Lifting door
 tr1_entity_tbl[42] = {coll = 0x01, func = "slamdoor"};   -- Slamming sawtooth doors
-tr1_entity_tbl[43] = {coll = 0x01};                      -- Sword of Damocles
+tr1_entity_tbl[43] = {coll = 0x01, func = "damocles"};                      -- Sword of Damocles
 tr1_entity_tbl[44] = {coll = 0x01};                      -- Thor's hammer (handle)
 tr1_entity_tbl[45] = {coll = 0x01};                      -- Thor's hammer (block)
 tr1_entity_tbl[46] = {coll = 0x01, hide = 0x01};                      -- Thor's lightning ball
@@ -294,7 +294,7 @@ tr2_entity_tbl[83] = {coll = 0x01};                     -- Multiple boulders / s
 tr2_entity_tbl[84] = {coll = 0x02};                     -- Detachable icicles
 tr2_entity_tbl[85] = {coll = 0x02, func = "spikewall"};                     -- Spiky movable wall
 tr2_entity_tbl[86] = {coll = 0x01};                     -- Bounce pad
-tr2_entity_tbl[87] = {coll = 0x02};                     -- Spiky ceiling segment
+tr2_entity_tbl[87] = {coll = 0x02, func = "spikeceiling"};                     -- Spiky ceiling segment
 tr2_entity_tbl[88] = {coll = 0x02};                     -- Tibetan bell
 tr2_entity_tbl[91] = {coll = 0x00};                     -- Lara and a snowmobile
 tr2_entity_tbl[92] = {coll = 0x00};                     -- Wheel knob
@@ -499,7 +499,7 @@ tr3_entity_tbl[83] = {coll = 0x01, func = "fallblock"};                 -- Colla
 tr3_entity_tbl[86] = {coll = 0x01};                 -- Swinging thing
 tr3_entity_tbl[87] = {coll = 0x01, func = "oldspike"};                 -- Spikes / Barbed wire
 tr3_entity_tbl[88] = {coll = 0x01, func = "boulder"};                 -- Boulder / Barrel
-tr3_entity_tbl[89] = {coll = 0x01};                 -- Giant boulder (Temple of Puna)
+tr3_entity_tbl[89] = {coll = 0x01, func = "boulder"};                 -- Giant boulder (Temple of Puna)
 tr3_entity_tbl[90] = {coll = 0x01};                 -- Disk (like dart)
 tr3_entity_tbl[91] = {coll = 0x01, hide = 0x01};                 -- Dart shooter
 tr3_entity_tbl[94] = {coll = 0x01, func = "slamdoor"};                 -- Spiked impaled skeleton / Slamming door
@@ -513,8 +513,8 @@ tr3_entity_tbl[108] = {coll = 0x01};                -- Rolling spindle
 tr3_entity_tbl[110] = {coll = 0x01};                -- Subway train
 tr3_entity_tbl[111] = {coll = 0x01, func = "wallblade"};                -- Wall-mounted knife blade / Knife disk
 tr3_entity_tbl[113] = {coll = 0x01};                -- Detachable stalactites
-tr3_entity_tbl[114] = {coll = 0x01, func = "spikewall"};                -- Spiky movable wall
-tr3_entity_tbl[116] = {coll = 0x01};                -- Spiky movable vertical wall / Tunnel borer
+tr3_entity_tbl[114] = {coll = 0x02, func = "spikewall"};                -- Spiky movable wall
+tr3_entity_tbl[116] = {coll = 0x02, func = "spikeceiling"};                -- Spiky movable vertical wall / Tunnel borer
 tr3_entity_tbl[117] = {coll = 0x01};                -- Valve wheel / Pulley
 tr3_entity_tbl[118] = {coll = 0x01, func = "switch"};                -- Switch
 tr3_entity_tbl[119] = {coll = 0x01};                -- Underwater propeller / Diver sitting on block / Underwater rotating knives / Meteorite

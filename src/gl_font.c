@@ -212,6 +212,12 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         if(glf->gl_vbo == 0)
         {
             glGenBuffersARB(1, &glf->gl_vbo);
+            /*glBindBufferARB(GL_ARRAY_BUFFER_ARB, glf->gl_vbo);
+            glBufferDataARB(GL_ARRAY_BUFFER_ARB, 0, NULL, GL_STREAM_DRAW);
+            glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(0));
+            glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+            glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(4 * sizeof(GLfloat)));
+            glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);*/
         }
         
         // clear old atlas, if exists
@@ -557,6 +563,10 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         uint32_t curr_utf32, next_utf32;
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, glf->gl_vbo);
+        glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(0));
+        glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+        glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void*)(4 * sizeof(GLfloat)));
         for(;*ch;)
         {
             char_info_p g;
@@ -608,14 +618,13 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                 *p = g->tex_y1;     p++;
                 vec4_copy(p, glf->gl_font_color);
 
-                glVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer);
-                glTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer + 2);
-                glColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer + 4);
+                glBufferDataARB(GL_ARRAY_BUFFER_ARB, 32 * sizeof(GLfloat), buffer, GL_STREAM_DRAW);
                 glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             }
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;
             y += (GLfloat)(kern.y + g->advance_y) / 64.0;
         }
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     }
 }
 

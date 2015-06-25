@@ -260,49 +260,13 @@ void Render_PolygonTransparency(struct polygon_s *p)
             break;
     };
 
-    if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
-    {
-        anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
-        GLfloat *v, uv[2], *uv0 = (GLfloat*)GetTempbtScalar(2 * p->vertex_count);
-        uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
-        tex_frame_p tf = seq->frames + frame;
-        for(uint16_t i=0;i<p->vertex_count;i++)
-        {
-            v = p->vertices[i].tex_coord;
-            uv0[2*i+0] = v[0];
-            uv0[2*i+1] = v[1];
-            uv[0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
-            uv[1] = tf->mat[1+0*2] * v[0] + tf->mat[1+1*2] * v[1] + tf->move[1];
-            v[0] = uv[0];
-            v[1] = uv[1];
-        }
-
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[tf->tex_ind]);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
-
-        for(uint16_t i=0;i<p->vertex_count;i++)
-        {
-            v = p->vertices[i].tex_coord;
-            v[0] = uv0[2*i+0];
-            v[1] = uv0[2*i+1];
-        }
-        ReturnTempbtScalar(2 * p->vertex_count);
-    }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
-        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
-        glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
-        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
-    }
+    glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
+    //glBufferDataARB(GL_ARRAY_BUFFER_ARB, p->vertex_count * sizeof(vertex_t), p->vertices, GL_STREAM_DRAW);
+    glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
+    glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
+    glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);
+    glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), p->vertices->tex_coord);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, p->vertex_count);
 }
 
 
@@ -1070,7 +1034,7 @@ void Render_DrawList()
         room_p r = renderer.r_list[i].room;
         if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
         {
-            render_dBSP.addNewPolygonList(r->mesh->transparency_polygons, r->transform, r->frustum);
+            render_dBSP.addNewPolygonList(r->mesh->transparency_polygons, r->transform, renderer.cam->frustum);
         }
     }
 
@@ -1082,7 +1046,7 @@ void Render_DrawList()
         {
             if((r->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(r->static_mesh[j].obb, r))
             {
-                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform, r->frustum);
+                render_dBSP.addNewPolygonList(r->static_mesh[j].mesh->transparency_polygons, r->static_mesh[j].transform, renderer.cam->frustum);
             }
         }
 
@@ -1100,7 +1064,7 @@ void Render_DrawList()
                         if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
                             Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr, r->frustum);
+                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr, renderer.cam->frustum);
                         }
                     }
                 }
@@ -1117,12 +1081,12 @@ void Render_DrawList()
             if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
                 Mat4_Mat4_mul(tr, ent->transform, ent->bf.bone_tags[j].full_transform);
-                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr, NULL);
+                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparency_polygons, tr, renderer.cam->frustum);
             }
         }
     }
 
-    if(render_dBSP.m_root->polygons_front != NULL)
+    if((render_dBSP.m_root->polygons_front != NULL) && (render_dBSP.m_vbo != 0))
     {
         const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
         glUseProgramObjectARB(shader->program);
@@ -1131,7 +1095,13 @@ void Render_DrawList()
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0/*render_dBSP.m_vbo*/);
+        /*glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+        glColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
+        glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
+        glTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));*/
         Render_BSPBackToFront(render_dBSP.m_root);
+        //glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
@@ -1240,7 +1210,7 @@ void Render_GenWorldList()
 
     Render_CleanList();                                                         // clear old render list
     debugDrawer.reset();
-    render_dBSP.reset();
+    render_dBSP.reset(engine_world.anim_sequences);
     engine_frustumManager.reset();
     renderer.cam->frustum->next = NULL;
 

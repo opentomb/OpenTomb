@@ -18,12 +18,18 @@ dofile("scripts/entity/script_switch.lua");     -- Additional switch scripts.
 
 function efuncs_EraseEntity(index)
     if(entity_funcs[index] ~= nil) then
+        if(entity_funcs[index].onDelete ~= nil) then    -- Entity-specific clean-up.
+            entity_funcs[index].onDelete(index);
+            entity_funcs[index].onDelete = nil;
+        end;
         entity_funcs[index].onActivate       = nil;
         entity_funcs[index].onDeactivate     = nil;
         entity_funcs[index].onCollide        = nil;
         entity_funcs[index].onStand          = nil;
         entity_funcs[index].onHit            = nil;
         entity_funcs[index].onLoop           = nil;
+        entity_funcs[index].onSave           = nil;
+        entity_funcs[index].onLoad           = nil;
         entity_funcs[index]                  = nil;
     end;
 end;
@@ -248,10 +254,10 @@ end
 function heli_TR2_init(id)    -- Helicopter (TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    
-    entity_funcs[id].distance_passed = 0;
     setEntityActivity(id, 0);
     setEntityVisibility(id, 0);
+    
+    entity_funcs[id].distance_passed = 0;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(getEntityActivity(object_id) == 0) then
@@ -272,6 +278,10 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
             stopSound(297, object_id);
             disableEntity(object_id);
         end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].distance_passed = nil;
     end
     
     prepareEntity(id);
@@ -330,9 +340,9 @@ end
 function tallblock_init(id)    -- Tall moving block (TR1)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, 0);
     
     entity_funcs[id].distance_passed = 0;
-    setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(getEntityActivity(object_id) == 0) then
@@ -354,6 +364,10 @@ function tallblock_init(id)    -- Tall moving block (TR1)
             setEntityActivity(object_id, 0);
             entity_funcs[object_id].distance_passed = 0;
         end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].distance_passed = nil;
     end
     
     prepareEntity(id);
@@ -555,6 +569,7 @@ end
 function fallceiling_init(id)  -- Falling ceiling (TR1-3)
 
     setEntitySpeed(id, 0.0, 0.0, 0.0);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     
     local level_version = getLevelVersion();
     if((level_version < TR_II) or (level_version >= TR_III)) then setEntityVisibility(id, 0) end;
@@ -564,7 +579,6 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
             return;
         end
         
-
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
             setEntityAnim(object_id, 1);
@@ -581,6 +595,11 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
         end;
     end;
     
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if((getEntityAnim(object_id) == 1) and (getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
+            setCharacterParam(activator_id, PARAM_HEALTH, 0);
+        end;
+    end
 end
 
 function pushdoor_init(id)   -- Pushdoors (TR4)
@@ -683,16 +702,172 @@ function spikewall_init(id)      -- Spike wall
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityModelID(activator_id) == 0) then
+            local curr_st = getEntityMoveType(activator_id);
+            if((curr_st == MOVE_CLIMBING) or (curr_st == MOVE_MONKEYSWING)) then
+                setEntityMoveType(activator_id, MOVE_FREE_FALLING);
+                setEntityAnim(activator_id, 28, 0);
+            elseif(curr_st == MOVE_WALLS_CLIMB) then
+                setEntityMoveType(activator_id, MOVE_FREE_FALLING);
+                setEntityAnim(activator_id, 30, 0);
+            end;
+            
             if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
                 changeCharacterParam(activator_id, PARAM_HEALTH, -20);
                 playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
-            else
-                addEntityRagdoll(activator_id, RD_TYPE_LARA);
-                playSound(SOUND_GEN_DEATH, activator_id);
-                setEntityActivity(object_id, 0);
-                stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+                if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
+                    addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                    playSound(SOUND_GEN_DEATH, activator_id);
+                    setEntityActivity(object_id, 0);
+                    stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+                end;
             end;
         end;
+    end
+end
+
+function spikeceiling_init(id)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+        stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        local px, py, pz = getEntityPos(object_id);
+
+        if(pz > (getSectorHeight(object_id) + 512.0)) then
+            moveEntityLocal(object_id, 0.0, 0.0, -4.0);
+            playSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+        else
+            setEntityActivity(object_id, 0);    -- Stop
+            stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+        end;
+    end
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(getEntityModelID(activator_id) == 0) then
+            local curr_st = getEntityMoveType(activator_id);
+            if((curr_st == MOVE_CLIMBING) or (curr_st == MOVE_MONKEYSWING)) then
+                setEntityMoveType(activator_id, MOVE_FREE_FALLING);
+                setEntityAnim(activator_id, 28, 0);
+            elseif(curr_st == MOVE_WALLS_CLIMB) then
+                setEntityMoveType(activator_id, MOVE_FREE_FALLING);
+                setEntityAnim(activator_id, 30, 0);
+            end;
+        
+            local px,py,pz = getEntityPos(object_id);
+            local lx,ly,lz = getEntityPos(activator_id);
+                
+            if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
+                if(lz > (pz - 256.0)) then
+                    addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                    setCharacterParam(activator_id, PARAM_HEALTH, 0);
+                    playSound(SOUND_IMPALE, activator_id);
+                else
+                    changeCharacterParam(activator_id, PARAM_HEALTH, -20);
+                    playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
+                    if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
+                        addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                        playSound(SOUND_GEN_DEATH, activator_id);
+                        setEntityActivity(object_id, 0);
+                        stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
+                    end;
+                end;
+            end;
+        end;
+    end
+end
+
+function cleaner_init(id)      -- Thames Wharf machine
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].rotating = 0;
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(similarSector(object_id, 1024.0, 0.0, 0.0, false)) then
+        
+        else
+        
+        end;
+    end
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+    
+    end
+end
+
+function damocles_init(id)      -- Sword of Damocles
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+        entity_funcs[id].rot_speed = ((math.random(20) - 10) / 5) + 1;
+        entity_funcs[id].falling = false;
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 0);
+        entity_funcs[id].rot_speed = 0.0;
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        rotateEntity(object_id, entity_funcs[object_id].rot_speed);
+        
+        if(sameRoom(player, object_id)) then
+            local dx,dy,dz = getEntityVector(player, object_id);
+            if((math.abs(dx) < 1024.0) and (math.abs(dy) < 1024.0) and (entity_funcs[object_id].falling == false)) then
+                entity_funcs[object_id].falling = true;
+                addTask(
+                function()
+                    moveEntityToEntity(object_id, player, 24.0, true);
+                    if(dropEntity(object_id, frame_time, true)) then
+                        playSound(103, object_id);
+                        setEntityActivity(object_id, 0);
+                        entity_funcs[object_id].falling = false;
+                        return false;
+                    end;
+                    return true;
+                end);
+            end;
+        end
+    end    
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if((entity_funcs[object_id].falling == true) and (getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
+            setCharacterParam(activator_id, PARAM_HEALTH, 0);
+            playSound(SOUND_GEN_DEATH, activator_id);
+            playSound(103, object_id);
+            addEntityRagdoll(activator_id, RD_TYPE_LARA);
+            setEntityActivity(object_id, 0);
+            setEntityBodyMass(object_id, 1, 15.0);
+        end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].rot_speed = nil;
+        entity_funcs[object_id].falling = nil;
     end
 end
 
