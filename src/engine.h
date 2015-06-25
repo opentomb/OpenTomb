@@ -24,7 +24,20 @@
 #define OBJECT_HAIR                             (0x0004)
 #define OBJECT_BULLET_MISC                      (0x7FFF)
 
-#define COLLISION_MASK_NONE                     (0x0000)
+#define COLLISION_SHAPE_BOX                     1
+#define COLLISION_SHAPE_BOX_BASE                2
+#define COLLISION_SHAPE_SPHERE                  3
+#define COLLISION_SHAPE_TRIMESH                 4
+#define COLLISION_SHAPE_TRIMESH_CONVEX          5
+
+#define COLLISION_TYPE_STATIC                   0x01     // static object - never moved
+#define COLLISION_TYPE_KINEMATIC                0x03     // doors and other moveable statics
+#define COLLISION_TYPE_DYNAMIC                  0x05     // hellow full physics interaction
+#define COLLISION_TYPE_ACTOR                    0x07     // actor, enemies, NPC, animals
+#define COLLISION_TYPE_VEHICLE                  0x09     // car, moto, bike
+#define COLLISION_TYPE_GHOST                    0x00     // no one collisions
+
+#define COLLISION_NONE                          (0x0000)
 #define COLLISION_MASK_ALL                      (0x7FFF)        // bullet uses signed short int for these flags!
 
 #define COLLISION_GROUP_ALL                     (0x7FFF)
@@ -46,7 +59,8 @@ struct lua_State;
 typedef struct engine_container_s
 {
     uint16_t                     object_type;
-    uint32_t                     collide_flag;
+    uint16_t                     collision_type;
+    uint16_t                     collision_shape;
     void                        *object;
     struct room_s               *room;
     struct engine_container_s   *next;

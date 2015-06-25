@@ -195,7 +195,7 @@ bool Ragdoll_Delete(entity_p entity)
         if(entity->bt.ghostObjects[i])
         {
             bt_engine_dynamicsWorld->removeCollisionObject(entity->bt.ghostObjects[i]);
-            bt_engine_dynamicsWorld->addCollisionObject(entity->bt.ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+            bt_engine_dynamicsWorld->addCollisionObject(entity->bt.ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_MASK_ALL);
         }
     }
 

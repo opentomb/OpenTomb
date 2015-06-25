@@ -261,7 +261,6 @@ void Render_PolygonTransparency(struct polygon_s *p)
     };
 
     glBindTexture(GL_TEXTURE_2D, renderer.world->textures[p->tex_index]);
-    //glBufferDataARB(GL_ARRAY_BUFFER_ARB, p->vertex_count * sizeof(vertex_t), p->vertices, GL_STREAM_DRAW);
     glVertexPointer(3, GL_BT_SCALAR, sizeof(vertex_t), p->vertices->position);
     glColorPointer(4, GL_FLOAT, sizeof(vertex_t), p->vertices->color);
     glNormalPointer(GL_BT_SCALAR, sizeof(vertex_t), p->vertices->normal);

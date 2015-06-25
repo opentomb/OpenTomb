@@ -43,7 +43,8 @@ entity_p Entity_Create()
     ret->self->object = ret;
     ret->self->object_type = OBJECT_ENTITY;
     ret->self->room = NULL;
-    ret->self->collide_flag = 0;
+    ret->self->collision_type = COLLISION_TYPE_KINEMATIC;
+    ret->self->collision_shape = COLLISION_SHAPE_TRIMESH;
     ret->obb = OBB_Create();
     ret->obb->transform = ret->transform;
     ret->bt.bt_body = NULL;
@@ -289,7 +290,7 @@ void Entity_EnableCollision(entity_p ent)
 {
     if(ent->bt.bt_body != NULL)
     {
-        ent->self->collide_flag = 0x01;
+        ent->self->collision_type |= 0x0001;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt.bt_body[i];
@@ -301,7 +302,7 @@ void Entity_EnableCollision(entity_p ent)
     }
     else
     {
-        ent->self->collide_flag = COLLISION_TRIMESH;                            ///@TODO: order collision shape and entity collision type flags! it is a different things!
+        ent->self->collision_type = COLLISION_TYPE_KINEMATIC;                   ///@TODO: order collision shape and entity collision type flags! it is a different things!
         BT_GenEntityRigidBody(ent);
     }
 }
@@ -311,7 +312,7 @@ void Entity_DisableCollision(entity_p ent)
 {
     if(ent->bt.bt_body != NULL)
     {
-        ent->self->collide_flag = 0x00;
+        ent->self->collision_type &= ~0x0001;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt.bt_body[i];
@@ -340,7 +341,7 @@ void BT_GenEntityRigidBody(entity_p ent)
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         base_mesh_p mesh = ent->bf.animations.model->mesh_tree[i].mesh_base;
-        btCollisionShape *cshape = BT_CSfromMesh(mesh, true, true, false);
+        btCollisionShape *cshape = BT_CSfromMesh(mesh, true, true, !(ent->self->collision_shape & COLLISION_SHAPE_TRIMESH_CONVEX));
         ent->bt.bt_body[i] = NULL;
 
         if(cshape)
@@ -982,7 +983,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         }
 
         Entity_UpdateRoomPos(ent);
-        if(ent->self->collide_flag != 0x00)
+        if(ent->self->collision_type & 0x0001)
         {
             btScalar tr[16];
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
