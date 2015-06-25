@@ -539,6 +539,33 @@ int lua_GetEntitySectorMaterial(lua_State *lua)
     return 0;
 }
 
+int lua_SameRoom(lua_State *lua)
+{
+    if(lua_gettop(lua) != 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[ent_id1, ent_id2]");
+        return 0;
+    }
+
+    entity_p ent1 = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    entity_p ent2 = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+
+    if((ent1 != NULL) && (ent2 != NULL))
+    {
+        if(ent1->self->room == ent2->self->room)
+        {
+            lua_pushboolean(lua, true);
+        }
+        else
+        {
+            lua_pushboolean(lua, false);
+        }
+        return 1;
+    }
+
+    return 0;
+}
+
 int lua_NewSector(lua_State *lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No argument specified - return.
@@ -609,9 +636,11 @@ int lua_SetGravity(lua_State * lua)                                             
 
 int lua_DropEntity(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    int top = lua_gettop(lua);
+
+    if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [time]");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [time], (only_room)");
         return 0;
     }
 
@@ -624,6 +653,7 @@ int lua_DropEntity(lua_State * lua)
     }
 
     btScalar time = lua_tonumber(lua, 2);
+
     btVector3 g = bt_engine_dynamicsWorld->getGravity();
     btVector3 move = ent->speed * time;;
     move += g * 0.5 * time * time;
@@ -636,17 +666,28 @@ int lua_DropEntity(lua_State * lua)
     to = from + move;
     to.m_floats[2] -= (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
     bt_engine_dynamicsWorld->rayTest(from, to, cb);
+
     if(cb.hasHit())
     {
-        move.setInterpolate3(from ,to, cb.m_closestHitFraction);
-        ent->transform[12+2] = move.m_floats[2];
-        lua_pushboolean(lua, 1);
-        return 1;
+        bool only_room = (top > 2)?(lua_toboolean(lua, 3)):(false);
+        engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
+
+        if((!only_room) || ((only_room) && (cont->object_type == OBJECT_ROOM_BASE)))
+        {
+            move.setInterpolate3(from ,to, cb.m_closestHitFraction);
+            ent->transform[12+2] = move.m_floats[2];
+
+            lua_pushboolean(lua, 1);
+            return 1;
+        }
     }
 
     ent->transform[12+0] += move.m_floats[0];
     ent->transform[12+1] += move.m_floats[1];
     ent->transform[12+2] += move.m_floats[2];
+
+    Entity_UpdateRigidBody(ent, 1);
+
     lua_pushboolean(lua, 0);
     return 1;
 }
@@ -1896,9 +1937,11 @@ int lua_MoveEntityToSink(lua_State * lua)
 
 int lua_MoveEntityToEntity(lua_State * lua)
 {
-    if(lua_gettop(lua) < 3)
+    int top = lua_gettop(lua);
+
+    if(top < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_to_move_id, entity_id, speed]");
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_to_move_id, entity_id, speed], (ignore_z)");
         return 0;
     }
 
@@ -1921,7 +1964,10 @@ int lua_MoveEntityToEntity(lua_State * lua)
 
     ent1->transform[12+0] += speed.m_floats[0];
     ent1->transform[12+1] += speed.m_floats[1];
-    ent1->transform[12+2] += speed.m_floats[2];
+
+    bool ignore_z = (top > 3)?(lua_toboolean(lua, 4)):(false);
+    if(!ignore_z) ent1->transform[12+2] += speed.m_floats[2];
+
     if(ent1->character) Character_UpdatePlatformPreStep(ent1);
     Entity_UpdateRigidBody(ent1, 1);
 
@@ -1956,6 +2002,7 @@ int lua_RotateEntity(lua_State *lua)
         }
 
         Entity_UpdateRotation(ent);
+        Entity_UpdateRigidBody(ent, 1);
     }
 
     return 0;
@@ -4064,6 +4111,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "enableEntity", lua_EnableEntity);
     lua_register(lua, "disableEntity", lua_DisableEntity);
 
+    lua_register(lua, "sameRoom", lua_SameRoom);
     lua_register(lua, "newSector", lua_NewSector);
     lua_register(lua, "similarSector", lua_SimilarSector);
     lua_register(lua, "getSectorHeight", lua_GetSectorHeight);

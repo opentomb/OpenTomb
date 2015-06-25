@@ -79,7 +79,7 @@ tr1_entity_tbl[39] = {coll = 0x01};                      -- Dart
 tr1_entity_tbl[40] = {coll = 0x01};                      -- Dartgun
 tr1_entity_tbl[41] = {coll = 0x01};                      -- Lifting door
 tr1_entity_tbl[42] = {coll = 0x01, func = "slamdoor"};   -- Slamming sawtooth doors
-tr1_entity_tbl[43] = {coll = 0x01};                      -- Sword of Damocles
+tr1_entity_tbl[43] = {coll = 0x01, func = "damocles"};                      -- Sword of Damocles
 tr1_entity_tbl[44] = {coll = 0x01};                      -- Thor's hammer (handle)
 tr1_entity_tbl[45] = {coll = 0x01};                      -- Thor's hammer (block)
 tr1_entity_tbl[46] = {coll = 0x01, hide = 0x01};                      -- Thor's lightning ball
@@ -499,7 +499,7 @@ tr3_entity_tbl[83] = {coll = 0x01, func = "fallblock"};                 -- Colla
 tr3_entity_tbl[86] = {coll = 0x01};                 -- Swinging thing
 tr3_entity_tbl[87] = {coll = 0x01, func = "oldspike"};                 -- Spikes / Barbed wire
 tr3_entity_tbl[88] = {coll = 0x01, func = "boulder"};                 -- Boulder / Barrel
-tr3_entity_tbl[89] = {coll = 0x01};                 -- Giant boulder (Temple of Puna)
+tr3_entity_tbl[89] = {coll = 0x01, func = "boulder"};                 -- Giant boulder (Temple of Puna)
 tr3_entity_tbl[90] = {coll = 0x01};                 -- Disk (like dart)
 tr3_entity_tbl[91] = {coll = 0x01, hide = 0x01};                 -- Dart shooter
 tr3_entity_tbl[94] = {coll = 0x01, func = "slamdoor"};                 -- Spiked impaled skeleton / Slamming door
