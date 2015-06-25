@@ -1869,15 +1869,16 @@ int lua_MoveEntityToSink(lua_State * lua)
 
     btVector3 sink_pos; sink_pos.m_floats[0] = sink->x;
                         sink_pos.m_floats[1] = sink->y;
-
-                    if(engine_world.version < TR_II)
-                    {
-                        sink_pos.m_floats[2] = ent_pos.m_floats[2];
-                    }
-                    else
-                    {
                         sink_pos.m_floats[2] = sink->z + 256.0; // Prevents digging into the floor.
-                    }
+
+    room_sector_p ls = Sector_GetLowest(ent->current_sector);
+    room_sector_p hs = Sector_GetHighest(ent->current_sector);
+
+    if((sink_pos.m_floats[2] > hs->ceiling) ||
+       (sink_pos.m_floats[2] < ls->floor) )
+    {
+        sink_pos.m_floats[2] = ent_pos.m_floats[2];
+    }
 
     btScalar dist = btDistance(ent_pos, sink_pos);
     if(dist == 0.0) dist = 1.0; // Prevents division by zero.
