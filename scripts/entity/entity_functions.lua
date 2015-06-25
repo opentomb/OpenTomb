@@ -823,7 +823,7 @@ function damocles_init(id)      -- Sword of Damocles
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, 1);
-        entity_funcs[id].rot_speed = (math.random(20) + 1) / 10;
+        entity_funcs[id].rot_speed = ((math.random(20) - 10) / 5) + 1;
         entity_funcs[id].falling = false;
     end    
     
