@@ -392,7 +392,6 @@ room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room);
 room_p Room_GetByID(world_p w, unsigned int ID);
 room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3]);
 room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3]);
-room_sector_p Sector_CheckFlip(room_sector_p rs);
 room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3]);
 
 void Room_Enable(room_p room);
@@ -400,19 +399,28 @@ void Room_Disable(room_p room);
 void Room_SwapToAlternate(room_p room);
 void Room_SwapToBase(room_p room);
 room_p Room_CheckFlip(room_p r);
-void Room_SwapPortals(room_p room, room_p dest_room); //Swap room portals of input room to destination room
-void Room_SwapItems(room_p room, room_p dest_room);   //Swap room items of input room to destination room
+void Room_SwapPortals(room_p room, room_p dest_room); // Swap room portals of input room to destination room
+void Room_SwapItems(room_p room, room_p dest_room);   // Swap room items of input room to destination room
 void Room_BuildNearRoomsList(room_p room);
 void Room_BuildOverlappedRoomsList(room_p room);
 
 int Room_IsJoined(room_p r1, room_p r2);
 int Room_IsOverlapped(room_p r0, room_p r1);
 int Room_IsInNearRoomsList(room_p room, room_p r);
-int Room_HasSector(room_p room, int x, int y);//If this room contains a sector
-room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs);
-room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs);
-room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs);
-room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs);
+int Room_HasSector(room_p room, int x, int y);        // If this room contains a sector
+
+room_sector_p Sector_CheckBaseRoom(room_sector_p rs);
+room_sector_p Sector_CheckAlternateRoom(room_sector_p rs);
+room_sector_p Sector_CheckPortalPointerRaw(room_sector_p rs);
+room_sector_p Sector_CheckPortalPointer(room_sector_p rs);
+room_sector_p Sector_CheckFlip(room_sector_p rs);
+room_sector_p Sector_GetLowest(room_sector_p rs);
+room_sector_p Sector_GetHighest(room_sector_p rs);
+
+btVector3 Sector_GetFloorPoint(room_sector_p rs);
+btVector3 Sector_GetCeilingPoint(room_sector_p rs);
+btVector3 Sector_HighestFloorCorner(room_sector_p rs);
+btVector3 Sector_LowestCeilingCorner(room_sector_p rs);
 
 int  Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
 bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors = false);
@@ -423,7 +431,7 @@ int World_DeleteEntity(world_p world, struct entity_s *entity);
 int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
 int World_DeleteItem(world_p world, uint32_t item_id);
 struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world);
-struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id);           // binary search the model by ID
+struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id);    // Binary search the model by ID
 
 
 #endif
