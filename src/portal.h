@@ -14,7 +14,7 @@
 
 #include "vmath.h"
 
-struct camera_s;
+struct Camera;
 struct Room;
 struct polygon_s;
 struct render_s;

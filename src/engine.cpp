@@ -60,7 +60,7 @@ struct control_settings_s               control_mapper = {0};
 struct AudioSettings                 audio_settings = {0};
 btScalar                                engine_frame_time = 0.0;
 
-struct camera_s                         engine_camera;
+struct Camera                         engine_camera;
 struct world_s                          engine_world;
 
 static btScalar                        *frame_vertex_buffer = NULL;
@@ -174,7 +174,7 @@ void Engine_Init_Pre()
 
     Com_Init();
     Render_Init();
-    Cam_Init(&engine_camera);
+    engine_camera = Camera();
     renderer.cam = &engine_camera;
 
     Engine_BTInit();
@@ -261,7 +261,7 @@ int lua_DumpRoom(lua_State * lua)
 
     if(lua_gettop(lua) == 0)
     {
-        r = engine_camera.current_room;
+        r = engine_camera.m_currentRoom;
     }
     else
     {
@@ -1709,8 +1709,9 @@ int lua_MoveEntityToSink(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     uint32_t sink_index = lua_tointeger(lua, 2);
 
-    if(sink_index > engine_world.cameras_sinks_count) return 0;
-    stat_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
+    if(sink_index > engine_world.cameras_sinks.size())
+        return 0;
+    StatCameraSink* sink = &engine_world.cameras_sinks[sink_index];
 
     btVector3 ent_pos;  ent_pos[0] = ent->transform.getOrigin()[0];
                         ent_pos[1] = ent->transform.getOrigin()[1];
@@ -3276,7 +3277,7 @@ int lua_CamShake(lua_State *lua)
 
     float power = lua_tonumber(lua, 1);
     float time  = lua_tonumber(lua, 2);
-    Cam_Shake(renderer.cam, power, time);
+    renderer.cam->shake(power, time);
 
     return 0;
 }
@@ -4491,9 +4492,9 @@ int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "goto"))
         {
             control_states.free_look = 1;
-            renderer.cam->pos[0] = SC_ParseFloat(&ch);
-            renderer.cam->pos[1] = SC_ParseFloat(&ch);
-            renderer.cam->pos[2] = SC_ParseFloat(&ch);
+            renderer.cam->m_pos[0] = SC_ParseFloat(&ch);
+            renderer.cam->m_pos[1] = SC_ParseFloat(&ch);
+            renderer.cam->m_pos[2] = SC_ParseFloat(&ch);
             return 1;
         }
         else if(!strcmp(token, "save"))
@@ -4620,9 +4621,9 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "room_info"))
         {
-            if(std::shared_ptr<Room> r = renderer.cam->current_room)
+            if(std::shared_ptr<Room> r = renderer.cam->m_currentRoom)
             {
-                sect = Room_GetSectorXYZ(r, renderer.cam->pos);
+                sect = Room_GetSectorXYZ(r, renderer.cam->m_pos);
                 Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {

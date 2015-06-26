@@ -122,7 +122,7 @@ int frustumManager::split_by_plane(frustum_p frustum, const btVector3 &n, std::v
     return SPLIT_SUCCES;
 }
 
-void frustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
+void frustumManager::genClipPlanes(frustum_p p, Camera *cam)
 {
     if(p->vertices.empty())
         return;
@@ -137,7 +137,7 @@ void frustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
 
     for(uint16_t i=0; i<p->vertices.size(); i++)
     {
-        auto V1 = *prev_v - cam->pos;                                      // вектор от наблюдателя до вершины полигона
+        auto V1 = *prev_v - cam->m_pos;                                      // вектор от наблюдателя до вершины полигона
         auto V2 = *curr_v - *prev_v;                                        // вектор соединяющий соседние вершины полигона
         V1.normalize();
         V2.normalize();
@@ -151,7 +151,7 @@ void frustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
         ++next_v;
     }
 
-    *p->cam_pos = cam->pos;
+    *p->cam_pos = cam->m_pos;
 }
 
 /*
@@ -160,7 +160,7 @@ void frustumManager::genClipPlanes(frustum_p p, struct camera_s *cam)
  */
 frustum_p frustumManager::portalFrustumIntersect(portal_s *portal, frustum_p emitter, struct render_s *render)
 {
-    if(planeDist(portal->norm, render->cam->pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+    if(planeDist(portal->norm, render->cam->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
     {
         return NULL;
     }
@@ -173,7 +173,7 @@ frustum_p frustumManager::portalFrustumIntersect(portal_s *portal, frustum_p emi
     bool in_dist = false, in_face = false;
     for(const btVector3& v : portal->vertices)
     {
-        if(!in_dist && (planeDist(render->cam->frustum->norm, v) < render->cam->dist_far))
+        if(!in_dist && (planeDist(render->cam->frustum->norm, v) < render->cam->m_distFar))
         {
             in_dist = true;
         }
@@ -586,7 +586,7 @@ bool Frustum_IsOBBVisibleInRoom(struct obb_s *obb, std::shared_ptr<Room> room)
         auto p = obb->polygons;
         for(int i=0;i<6;i++,p++)
         {
-            auto t = planeDist(p->plane, engine_camera.pos);
+            auto t = planeDist(p->plane, engine_camera.m_pos);
             if((t > 0.0) && Frustum_IsPolyVisible(p, engine_camera.frustum))
             {
                 return true;

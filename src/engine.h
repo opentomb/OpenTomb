@@ -41,7 +41,7 @@ class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 
-struct camera_s;
+struct Camera;
 struct lua_State;
 
 typedef struct engine_container_s
@@ -117,7 +117,7 @@ extern struct control_settings_s                control_mapper;
 extern struct AudioSettings                  audio_settings;
 
 extern btScalar                                 engine_frame_time;
-extern struct camera_s                          engine_camera;
+extern struct Camera                          engine_camera;
 extern struct world_s                           engine_world;
 
 

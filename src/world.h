@@ -172,7 +172,7 @@ class btRigidBody;
 
 struct Room;
 struct polygon_s;
-struct camera_s;
+struct Camera;
 struct portal_s;
 struct render_s;
 struct frustum_s;
@@ -347,8 +347,7 @@ typedef struct world_s
 
     uint32_t                    type;
 
-    uint32_t                    cameras_sinks_count;    // Amount of cameras and sinks.
-    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks.
+    std::vector<StatCameraSink> cameras_sinks;          // Cameras and sinks.
 
     uint32_t                    anim_commands_count;
     int16_t                    *anim_commands;

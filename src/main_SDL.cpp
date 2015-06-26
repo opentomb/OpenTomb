@@ -399,8 +399,8 @@ void Engine_Display()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
-        Cam_Apply(&engine_camera);
-        Cam_RecalcClipPlanes(&engine_camera);
+        engine_camera.apply();
+        engine_camera.recalcClipPlanes();
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
         if(screen_info.show_debuginfo)
         {
@@ -453,8 +453,8 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
     Gui_Resize();
 
-    Cam_SetFovAspect(&engine_camera, screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
-    Cam_RecalcClipPlanes(&engine_camera);
+    engine_camera.setFovAspect(screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
+    engine_camera.recalcClipPlanes();
 
     glViewport(0, 0, pixelsW, pixelsH);
 }
@@ -494,7 +494,7 @@ void ShowDebugInfo()
 {
     GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
-    light_position = engine_camera.pos;
+    light_position = engine_camera.m_pos;
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -534,14 +534,14 @@ void ShowDebugInfo()
 
     }
 
-    if(engine_camera.current_room != NULL)
+    if(engine_camera.m_currentRoom != NULL)
     {
-        room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
+        room_sector_p rs = Room_GetSectorRaw(engine_camera.m_currentRoom, engine_camera.m_pos);
         if(rs != NULL)
         {
-            Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
+            Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
             Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
         }
     }
-    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.m_pos[0], engine_camera.m_pos[1], engine_camera.m_pos[2]);
 }

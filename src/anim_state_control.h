@@ -9,7 +9,7 @@ struct polygon_s;
 struct base_mesh_s;
 struct Room;
 struct world_s;
-struct camera_s;
+struct Camera;
 struct ss_animation_s;
 struct Entity;
 struct room_sector_s;

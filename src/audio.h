@@ -251,7 +251,7 @@ enum TR_AUDIO_STREAM_TYPE
 
 
 
-struct camera_s;
+struct Camera;
 struct Entity;
 
 // Audio settings structure.
@@ -453,7 +453,7 @@ void Audio_PauseAllSources();    // Used to pause all effects currently playing.
 void Audio_StopAllSources();     // Used in audio deinit.
 void Audio_ResumeAllSources();   // Used to resume all effects currently paused.
 void Audio_UpdateSources();      // Main sound loop.
-void Audio_UpdateListenerByCamera(camera_s *cam);
+void Audio_UpdateListenerByCamera(Camera *cam);
 void Audio_UpdateListenerByEntity(Entity *ent);
 
 bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);

@@ -400,11 +400,11 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             control_states.look_axis_y = 0.0;
         }
 
-        Cam_SetRotation(renderer.cam, cam_angles);
+        renderer.cam->setRotation(cam_angles);
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
-        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
-        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
+        renderer.cam->moveAlong(dist * move_logic[0]);
+        renderer.cam->moveStrafe(dist * move_logic[1]);
+        renderer.cam->moveVertical(dist * move_logic[2]);
 
         return;
     }
@@ -432,26 +432,26 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     if((control_states.free_look != 0) || !IsCharacter(ent))
     {
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        Cam_SetRotation(renderer.cam, cam_angles);
-        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
-        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
-        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
-        renderer.cam->current_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);
+        renderer.cam->setRotation(cam_angles);
+        renderer.cam->moveAlong(dist * move_logic[0]);
+        renderer.cam->moveStrafe(dist * move_logic[1]);
+        renderer.cam->moveVertical(dist * move_logic[2]);
+        renderer.cam->m_currentRoom = Room_FindPosCogerrence(renderer.cam->m_pos, renderer.cam->m_currentRoom);
     }
     else if(control_states.noclip != 0)
     {
         btVector3 pos;
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        Cam_SetRotation(renderer.cam, cam_angles);
-        Cam_MoveAlong(renderer.cam, dist * move_logic[0]);
-        Cam_MoveStrafe(renderer.cam, dist * move_logic[1]);
-        Cam_MoveVertical(renderer.cam, dist * move_logic[2]);
-        renderer.cam->current_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);
+        renderer.cam->setRotation(cam_angles);
+        renderer.cam->moveAlong(dist * move_logic[0]);
+        renderer.cam->moveStrafe(dist * move_logic[1]);
+        renderer.cam->moveVertical(dist * move_logic[2]);
+        renderer.cam->m_currentRoom = Room_FindPosCogerrence(renderer.cam->m_pos, renderer.cam->m_currentRoom);
 
         ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
-        pos[0] = renderer.cam->pos[0] + renderer.cam->view_dir[0] * control_states.cam_distance;
-        pos[1] = renderer.cam->pos[1] + renderer.cam->view_dir[1] * control_states.cam_distance;
-        pos[2] = renderer.cam->pos[2] + renderer.cam->view_dir[2] * control_states.cam_distance - 512.0;
+        pos[0] = renderer.cam->m_pos[0] + renderer.cam->m_viewDir[0] * control_states.cam_distance;
+        pos[1] = renderer.cam->m_pos[1] + renderer.cam->m_viewDir[1] * control_states.cam_distance;
+        pos[2] = renderer.cam->m_pos[2] + renderer.cam->m_viewDir[2] * control_states.cam_distance - 512.0;
         ent->transform.getOrigin() = pos;
         Entity_UpdateRotation(ent);
     }
@@ -526,10 +526,10 @@ bool Cam_HasHit(std::shared_ptr<bt_engine_ClosestConvexResultCallback> cb, btTra
 }
 
 
-void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScalar dx, btScalar dz)
+void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar dx, btScalar dz)
 {
     btTransform cameraFrom, cameraTo;
-    btVector3 cam_pos(cam->pos[0], cam->pos[1], cam->pos[2]), cam_pos2;
+    btVector3 cam_pos(cam->m_pos[0], cam->m_pos[1], cam->m_pos[2]), cam_pos2;
 
     //Reset to initial
     cameraFrom.setIdentity();
@@ -557,7 +557,7 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
         if(ent->bf.animations.last_state == TR_STATE_LARA_REACH)
         {
-            if(cam->target_dir == TR_CAM_TARG_BACK)
+            if(cam->m_targetDir == TR_CAM_TARG_BACK)
             {
                 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(cam_pos2);
@@ -575,27 +575,27 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
                     cameraTo.setOrigin(cam_pos2);
 
                     //If collided we want to go to back else right
-                    Cam_HasHit(cb, cameraFrom, cameraTo) ? cam->target_dir = cam->target_dir = TR_CAM_TARG_BACK : cam->target_dir = TR_CAM_TARG_RIGHT;
+                    Cam_HasHit(cb, cameraFrom, cameraTo) ? cam->m_targetDir = cam->m_targetDir = TR_CAM_TARG_BACK : cam->m_targetDir = TR_CAM_TARG_RIGHT;
                 }
                 else
                 {
-                    cam->target_dir = TR_CAM_TARG_LEFT;
+                    cam->m_targetDir = TR_CAM_TARG_LEFT;
                 }
             }
         }
         else if(ent->bf.animations.last_state == TR_STATE_LARA_JUMP_BACK)
         {
-            cam->target_dir = TR_CAM_TARG_FRONT;
+            cam->m_targetDir = TR_CAM_TARG_FRONT;
         }
-        else if(cam->target_dir != TR_CAM_TARG_BACK)
+        else if(cam->m_targetDir != TR_CAM_TARG_BACK)
         {
-            cam->target_dir = TR_CAM_TARG_BACK;//Reset to back
+            cam->m_targetDir = TR_CAM_TARG_BACK;//Reset to back
         }
 
         //If target mis-matches current we need to update the camera's angle to reach target!
         if(currentAngle != targetAngle)
         {
-            switch(cam->target_dir)
+            switch(cam->m_targetDir)
             {
             case TR_CAM_TARG_BACK:
                 targetAngle = (ent->angles[0]) * (M_PI / 180.0);
@@ -639,12 +639,12 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
     }
 
     //Code to manage screen shaking effects
-    if((renderer.cam->shake_time > 0.0) && (renderer.cam->shake_value > 0.0))
+    if((renderer.cam->m_shakeTime > 0.0) && (renderer.cam->m_shakeValue > 0.0))
     {
-        cam_pos[0] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
-        cam_pos[1] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
-        cam_pos[2] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
-        renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time)-engine_frame_time;
+        cam_pos[0] += ((rand() % abs(renderer.cam->m_shakeValue)) - (renderer.cam->m_shakeValue / 2)) * renderer.cam->m_shakeTime;;
+        cam_pos[1] += ((rand() % abs(renderer.cam->m_shakeValue)) - (renderer.cam->m_shakeValue / 2)) * renderer.cam->m_shakeTime;;
+        cam_pos[2] += ((rand() % abs(renderer.cam->m_shakeValue)) - (renderer.cam->m_shakeValue / 2)) * renderer.cam->m_shakeTime;;
+        renderer.cam->m_shakeTime  = (renderer.cam->m_shakeTime < 0.0)?(0.0):(renderer.cam->m_shakeTime)-engine_frame_time;
     }
 
     cameraFrom.setOrigin(cam_pos);
@@ -659,9 +659,9 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
     if (dx != 0.0)
     {
         cameraFrom.setOrigin(cam_pos);
-        cam_pos[0] += dx * cam->right_dir[0];
-        cam_pos[1] += dx * cam->right_dir[1];
-        cam_pos[2] += dx * cam->right_dir[2];
+        cam_pos[0] += dx * cam->m_rightDir[0];
+        cam_pos[1] += dx * cam->m_rightDir[1];
+        cam_pos[2] += dx * cam->m_rightDir[2];
         cameraTo.setOrigin(cam_pos);
         if(Cam_HasHit(cb, cameraFrom, cameraTo))
         {
@@ -681,19 +681,19 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
     }
 
     //Update cam pos
-    cam->pos = cam_pos;
+    cam->m_pos = cam_pos;
 
     //Modify cam pos for quicksand rooms
-    cam->pos[2] -= 128.0;
-    cam->current_room = Room_FindPosCogerrence(cam->pos, cam->current_room);
-    cam->pos[2] += 128.0;
-    if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
+    cam->m_pos[2] -= 128.0;
+    cam->m_currentRoom = Room_FindPosCogerrence(cam->m_pos, cam->m_currentRoom);
+    cam->m_pos[2] += 128.0;
+    if((cam->m_currentRoom != NULL) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
     {
-        cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
+        cam->m_pos[2] = cam->m_currentRoom->bb_max[2] + 2.0 * 64.0;
     }
 
-    Cam_SetRotation(cam, cam_angles);
-    cam->current_room = Room_FindPosCogerrence(cam->pos, cam->current_room);
+    cam->setRotation(cam_angles);
+    cam->m_currentRoom = Room_FindPosCogerrence(cam->m_pos, cam->m_currentRoom);
 }
 
 
@@ -916,9 +916,9 @@ void Game_Prepare()
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        engine_camera.pos[0] = engine_world.rooms[0]->bb_max[0];
-        engine_camera.pos[1] = engine_world.rooms[0]->bb_max[1];
-        engine_camera.pos[2] = engine_world.rooms[0]->bb_max[2];
+        engine_camera.m_pos[0] = engine_world.rooms[0]->bb_max[0];
+        engine_camera.m_pos[1] = engine_world.rooms[0]->bb_max[1];
+        engine_camera.m_pos[2] = engine_world.rooms[0]->bb_max[2];
     }
 
     // Set gameflow parameters to default.

@@ -25,6 +25,7 @@ typedef struct frustum_s
     struct frustum_s   *next;                                                   // next frustum in list
 }frustum_t, *frustum_p;
 
+struct Camera;
 
 class frustumManager
 {
@@ -34,7 +35,7 @@ public:
 
 private:
     void splitPrepare(frustum_p frustum, struct portal_s *p, frustum_p emitter);// подготовка фрустума к сплиту
-    void genClipPlanes(frustum_p p, struct camera_s *cam);                      // генерация плоскостей отсечения
+    void genClipPlanes(frustum_p p, Camera* cam);                      // генерация плоскостей отсечения
     int split_by_plane(frustum_p p, const btVector3 &n, std::vector<btVector3> *buf);              // отсечение части портала плоскостью
 };
 

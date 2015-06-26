@@ -648,8 +648,8 @@ void Controls_PrimaryMouseDown()
 {
     engine_container_p cont = Container_Create();
     btScalar dbgR = 128.0;
-    btVector3 v = engine_camera.pos;
-    btVector3 dir = engine_camera.view_dir;
+    btVector3 v = engine_camera.m_pos;
+    btVector3 dir = engine_camera.m_viewDir;
     btVector3 new_pos;
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
@@ -666,7 +666,7 @@ void Controls_PrimaryMouseDown()
     body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.current_room);
+    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom);
     cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
@@ -680,13 +680,13 @@ void Controls_SecondaryMouseDown()
     btVector3 from, to, place;
     engine_container_t cam_cont;
 
-    from = engine_camera.pos;
-    to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;
+    from = engine_camera.m_pos;
+    to = from + btVector3(engine_camera.m_viewDir[0], engine_camera.m_viewDir[1], engine_camera.m_viewDir[2]) * 32768.0;
 
     cam_cont.next = NULL;
     cam_cont.object = NULL;
     cam_cont.object_type = 0;
-    cam_cont.room = engine_camera.current_room;
+    cam_cont.room = engine_camera.m_currentRoom;
 
     bt_engine_ClosestRayResultCallback cbc(&cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;

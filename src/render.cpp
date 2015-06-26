@@ -118,7 +118,7 @@ void Render_SkyBox(const btTransform& modelViewProjectionMatrix)
         glDepthMask(GL_FALSE);
         btTransform tr;
         tr.setIdentity();
-        tr.getOrigin() = renderer.cam->pos + renderer.world->sky_box->animations->frames->bone_tags->offset;
+        tr.getOrigin() = renderer.cam->m_pos + renderer.world->sky_box->animations->frames->bone_tags->offset;
         tr.getOrigin().setW(1);
         tr.setRotation( renderer.world->sky_box->animations->frames->bone_tags->qrotate );
         btTransform fullView = modelViewProjectionMatrix * tr;
@@ -249,7 +249,7 @@ void Render_PolygonTransparency(uint16_t &currentTransparency, const struct BSPF
         };
     }
 
-    btTransform mvp = renderer.cam->gl_view_proj_mat * bsp_ref->transform;
+    btTransform mvp = renderer.cam->m_glViewProjMat * bsp_ref->transform;
     btScalar glMvp[16];
     mvp.getOpenGLMatrix(glMvp);
 
@@ -264,7 +264,7 @@ void Render_PolygonTransparency(uint16_t &currentTransparency, const struct BSPF
 
 void Render_BSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const unlit_tinted_shader_description *shader)
 {
-    btScalar d = planeDist(root->plane, engine_camera.pos);
+    btScalar d = planeDist(root->plane, engine_camera.m_pos);
 
     if(d >= 0)
     {
@@ -312,7 +312,7 @@ void Render_BSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<
 
 void Render_BSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const unlit_tinted_shader_description *shader)
 {
-    btScalar d = planeDist(root->plane, engine_camera.pos);
+    btScalar d = planeDist(root->plane, engine_camera.m_pos);
 
     if(d >= 0)
     {
@@ -762,7 +762,7 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
         {
             const unlit_shader_description *shader = render->shader_manager->getStencilShader();
             glUseProgramObjectARB(shader->program);
-            engine_camera.gl_view_proj_mat.getOpenGLMatrix(glMat);
+            engine_camera.m_glViewProjMat.getOpenGLMatrix(glMat);
             glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
             glEnable(GL_STENCIL_TEST);
             glClear(GL_STENCIL_BUFFER_BIT);
@@ -936,7 +936,7 @@ int Render_AddRoom(std::shared_ptr<Room> room)
     }
 
     btVector3 centre = (room->bb_min + room->bb_max) / 2;
-    auto dist = (renderer.cam->pos - centre).length();
+    auto dist = (renderer.cam->m_pos - centre).length();
 
     if(renderer.r_list_active_count < renderer.r_list_size)
     {
@@ -1031,12 +1031,12 @@ void Render_DrawList()
     glDisable(GL_BLEND);
     glEnable(GL_ALPHA_TEST);
 
-    Render_SkyBox(renderer.cam->gl_view_proj_mat);
+    Render_SkyBox(renderer.cam->m_glViewProjMat);
 
     if(renderer.world->Character)
     {
-        Render_Entity(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat, renderer.cam->gl_proj_mat);
-        Render_Hair(renderer.world->Character, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
+        Render_Entity(renderer.world->Character, renderer.cam->m_glViewMat, renderer.cam->m_glViewProjMat, renderer.cam->m_glProjMat);
+        Render_Hair(renderer.world->Character, renderer.cam->m_glViewMat, renderer.cam->m_glProjMat);
     }
 
     /*
@@ -1044,7 +1044,7 @@ void Render_DrawList()
      */
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_view_proj_mat, renderer.cam->gl_proj_mat);
+        Render_Room(renderer.r_list[i].room, &renderer, renderer.cam->m_glViewMat, renderer.cam->m_glViewProjMat, renderer.cam->m_glProjMat);
     }
 
     glDisable(GL_CULL_FACE);
@@ -1052,7 +1052,7 @@ void Render_DrawList()
     ///@FIXME: reduce number of gl state changes
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
     {
-        Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->gl_view_mat, renderer.cam->gl_proj_mat);
+        Render_Room_Sprites(renderer.r_list[i].room, &renderer, renderer.cam->m_glViewMat, renderer.cam->m_glProjMat);
     }
 
     /*
@@ -1121,7 +1121,7 @@ void Render_DrawList()
         glUseProgramObjectARB(shader->program);
         glUniform1iARB(shader->sampler, 0);
         btScalar glMat[16];
-        renderer.cam->gl_view_proj_mat.getOpenGLMatrix(glMat);
+        renderer.cam->m_glViewProjMat.getOpenGLMatrix(glMat);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
@@ -1155,7 +1155,7 @@ void Render_DrawList_DebugLines()
     {
         btTransform tr;
         tr.setIdentity();
-        tr.getOrigin() = renderer.cam->pos + renderer.world->sky_box->animations->frames->bone_tags->offset;
+        tr.getOrigin() = renderer.cam->m_pos + renderer.world->sky_box->animations->frames->bone_tags->offset;
         tr.setRotation(renderer.world->sky_box->animations->frames->bone_tags->qrotate);
         debugDrawer.drawMeshDebugLines(renderer.world->sky_box->mesh_tree->mesh_base, tr, {}, {});
     }
@@ -1176,7 +1176,7 @@ void Render_DrawList_DebugLines()
         glUseProgramObjectARB(shader->program);
         glUniform1iARB(shader->sampler, 0);
         btScalar glMat[16];
-        renderer.cam->gl_view_proj_mat.getOpenGLMatrix(glMat);
+        renderer.cam->m_glViewProjMat.getOpenGLMatrix(glMat);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
         glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
         glPointSize( 6.0f );
@@ -1233,9 +1233,9 @@ void Render_GenWorldList()
     debugDrawer.reset();
     renderer.cam->frustum->next = NULL;
 
-    std::shared_ptr<Room> curr_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);                // find room that contains camera
+    std::shared_ptr<Room> curr_room = Room_FindPosCogerrence(renderer.cam->m_pos, renderer.cam->m_currentRoom);                // find room that contains camera
 
-    renderer.cam->current_room = curr_room;                                     // set camera's cuttent room pointer
+    renderer.cam->m_currentRoom = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
     {
         curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
@@ -1296,7 +1296,7 @@ void Render_SetWorld(struct world_s *world)
 
     renderer.cam = &engine_camera;
     engine_camera.frustum->next = NULL;
-    engine_camera.current_room = NULL;
+    engine_camera.m_currentRoom = NULL;
 
     for(auto r : world->rooms)
     {

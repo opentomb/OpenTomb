@@ -43,7 +43,7 @@ struct portal_s;
 struct frustum_s;
 struct world_s;
 struct Room;
-struct camera_s;
+struct Camera;
 struct Entity;
 struct sprite_s;
 struct base_mesh_s;
@@ -157,7 +157,7 @@ typedef struct render_s
     int8_t                      blocked;
     uint32_t                    style;                                          //
     struct world_s             *world;
-    struct camera_s            *cam;
+    struct Camera            *cam;
     struct render_settings_s    settings;
     class shader_manager *shader_manager;
     class vertex_array_manager *vertex_array_manager;

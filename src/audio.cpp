@@ -1732,37 +1732,37 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
  * that function have to be called every game frame.
  * @param cam - pointer to the camera structure.
  */
-void Audio_UpdateListenerByCamera(struct camera_s *cam)
+void Audio_UpdateListenerByCamera(struct Camera *cam)
 {
     ALfloat v[6] = {
-        cam->view_dir[0], cam->view_dir[1], cam->view_dir[2],
-        cam->up_dir[0], cam->up_dir[1], cam->up_dir[2]
+        cam->m_viewDir[0], cam->m_viewDir[1], cam->m_viewDir[2],
+        cam->m_upDir[0], cam->m_upDir[1], cam->m_upDir[2]
     };
 
     alListenerfv(AL_ORIENTATION, v);
 
-    alListenerfv(AL_POSITION, cam->pos.m_floats);
+    alListenerfv(AL_POSITION, cam->m_pos.m_floats);
 
-    btVector3 v2 = cam->pos - cam->prev_pos;
+    btVector3 v2 = cam->m_pos - cam->m_prevPos;
     v2[3] = 1.0 / engine_frame_time;
     v2 *= v2[3];
     alListenerfv(AL_VELOCITY, v2.m_floats);
-    cam->prev_pos = cam->pos;
+    cam->m_prevPos = cam->m_pos;
 
-    if(cam->current_room)
+    if(cam->m_currentRoom)
     {
-        if(cam->current_room->flags & TR_ROOM_FLAG_WATER)
+        if(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER)
         {
             fxManager.current_room_type = TR_AUDIO_FX_WATER;
         }
         else
         {
-            fxManager.current_room_type = cam->current_room->reverb_info;
+            fxManager.current_room_type = cam->m_currentRoom->reverb_info;
         }
 
-        if(fxManager.water_state != (int8_t)(cam->current_room->flags & TR_ROOM_FLAG_WATER))
+        if(fxManager.water_state != (int8_t)(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
         {
-            fxManager.water_state = cam->current_room->flags & TR_ROOM_FLAG_WATER;
+            fxManager.water_state = cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER;
 
             if(fxManager.water_state)
             {

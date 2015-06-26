@@ -2504,20 +2504,15 @@ void TR_GenBoxes(struct world_s *world, class VT_Level *tr)
 
 void TR_GenCameras(struct world_s *world, class VT_Level *tr)
 {
-    world->cameras_sinks = NULL;
-    world->cameras_sinks_count = tr->cameras_count;
+    world->cameras_sinks.clear();
     
-    if(world->cameras_sinks_count)
-    {
-        world->cameras_sinks = (stat_camera_sink_p)malloc(world->cameras_sinks_count * sizeof(stat_camera_sink_t));
-        for(uint32_t i=0;i<world->cameras_sinks_count;i++)
-        {
-            world->cameras_sinks[i].x                   =  tr->cameras[i].x;
-            world->cameras_sinks[i].y                   =  tr->cameras[i].z;
-            world->cameras_sinks[i].z                   = -tr->cameras[i].y;
-            world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
-            world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
-        }
+    for(uint32_t i=0; i<tr->cameras_count; i++) {
+        world->cameras_sinks.emplace_back();
+        world->cameras_sinks[i].x                   =  tr->cameras[i].x;
+        world->cameras_sinks[i].y                   =  tr->cameras[i].z;
+        world->cameras_sinks[i].z                   = -tr->cameras[i].y;
+        world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
+        world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
     }
 }
 

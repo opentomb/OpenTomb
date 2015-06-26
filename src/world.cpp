@@ -415,8 +415,7 @@ void World_Prepare(world_p world)
     world->textures = 0;
     world->room_boxes = NULL;
     world->room_box_count = 0;
-    world->cameras_sinks = NULL;
-    world->cameras_sinks_count = 0;
+    world->cameras_sinks.clear();
     world->skeletal_models = NULL;
     world->skeletal_model_count = 0;
     world->sky_box = NULL;
@@ -504,12 +503,7 @@ void World_Empty(world_p world)
         world->room_box_count = 0;
     }
 
-    if(world->cameras_sinks_count)
-    {
-        free(world->cameras_sinks);
-        world->cameras_sinks = NULL;
-        world->cameras_sinks_count = 0;
-    }
+    world->cameras_sinks.clear();
 
     /*sprite empty*/
     if(world->sprites_count)
