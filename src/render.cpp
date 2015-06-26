@@ -27,7 +27,7 @@
 #include "shader_manager.h"
 
 render_t renderer;
-class dynamicBSP render_dBSP(16 * 1024 * 1024);
+DynamicBSP render_dBSP;
 extern render_DebugDrawer debugDrawer;
 
 /*GLhandleARB main_vsh, main_fsh, main_program;
@@ -211,7 +211,7 @@ void Render_Mesh(struct base_mesh_s *mesh)
 /**
  * draw transparency polygons
  */
-void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *bsp_ref, const unlit_tinted_shader_description *shader)
+void Render_PolygonTransparency(uint16_t &currentTransparency, const struct BSPFaceRef *bsp_ref, const unlit_tinted_shader_description *shader)
 {
     // Blending mode switcher.
     // Note that modes above 2 aren't explicitly used in TR textures, only for
@@ -262,7 +262,7 @@ void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_
 }
 
 
-void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *root, const unlit_tinted_shader_description *shader)
+void Render_BSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const unlit_tinted_shader_description *shader)
 {
     btScalar d = planeDist(root->plane, engine_camera.pos);
 
@@ -273,11 +273,11 @@ void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *roo
             Render_BSPFrontToBack(currentTransparency, root->front, shader);
         }
 
-        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
+        for(const BSPFaceRef *p=root->polygons_front;p!=NULL;p=p->next)
         {
             Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
+        for(const BSPFaceRef *p=root->polygons_back;p!=NULL;p=p->next)
         {
             Render_PolygonTransparency(currentTransparency, p, shader);
         }
@@ -294,11 +294,11 @@ void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *roo
             Render_BSPFrontToBack(currentTransparency, root->back, shader);
         }
 
-        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
+        for(const BSPFaceRef *p=root->polygons_back;p!=NULL;p=p->next)
         {
             Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
+        for(const BSPFaceRef *p=root->polygons_front;p!=NULL;p=p->next)
         {
             Render_PolygonTransparency(currentTransparency, p, shader);
         }
@@ -310,7 +310,7 @@ void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *roo
     }
 }
 
-void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *root, const unlit_tinted_shader_description *shader)
+void Render_BSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode>& root, const unlit_tinted_shader_description *shader)
 {
     btScalar d = planeDist(root->plane, engine_camera.pos);
 
@@ -321,11 +321,11 @@ void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *roo
             Render_BSPBackToFront(currentTransparency, root->back, shader);
         }
 
-        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
+        for(const BSPFaceRef *p=root->polygons_back;p!=NULL;p=p->next)
         {
             Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
+        for(const BSPFaceRef *p=root->polygons_front;p!=NULL;p=p->next)
         {
             Render_PolygonTransparency(currentTransparency, p, shader);
         }
@@ -342,11 +342,11 @@ void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *roo
             Render_BSPBackToFront(currentTransparency, root->front, shader);
         }
 
-        for(const bsp_face_ref_s *p=root->polygons_front;p!=NULL;p=p->next)
+        for(const BSPFaceRef *p=root->polygons_front;p!=NULL;p=p->next)
         {
             Render_PolygonTransparency(currentTransparency, p, shader);
         }
-        for(const bsp_face_ref_s *p=root->polygons_back;p!=NULL;p=p->next)
+        for(const BSPFaceRef *p=root->polygons_back;p!=NULL;p=p->next)
         {
             Render_PolygonTransparency(currentTransparency, p, shader);
         }
@@ -1115,7 +1115,7 @@ void Render_DrawList()
         }
     }
 
-    if(render_dBSP.m_root->polygons_front != NULL)
+    if(render_dBSP.root()->polygons_front != NULL)
     {
         const unlit_tinted_shader_description *shader = renderer.shader_manager->getRoomShader(false, false);
         glUseProgramObjectARB(shader->program);
@@ -1127,7 +1127,7 @@ void Render_DrawList()
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
         uint16_t transparency = BM_OPAQUE;
-        Render_BSPBackToFront(transparency, render_dBSP.m_root, shader);
+        Render_BSPBackToFront(transparency, render_dBSP.root(), shader);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }

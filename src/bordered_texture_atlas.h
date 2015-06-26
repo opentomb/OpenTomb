@@ -73,8 +73,8 @@ class BorderedTextureAtlas
         
         // New origin
         size_t new_page;
-        uint32_t new_x_with_border; // Where the adjusted data starts. The start of the actual data is this plus the atlas's border size.
-        uint32_t new_y_with_border; // See above.
+        size_t new_x_with_border; // Where the adjusted data starts. The start of the actual data is this plus the atlas's border size.
+        size_t new_y_with_border; // See above.
     };
     
     // How much border to add.

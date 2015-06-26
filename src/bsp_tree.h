@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <cstdint>
+#include <memory>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include <bullet/LinearMath/btScalar.h>
@@ -11,55 +12,52 @@
 
 struct polygon_s;
 struct frustum_s;
+struct transparent_polygon_reference_s;
 
-typedef struct bsp_face_ref_s {
-    struct bsp_face_ref_s *next;
+struct BSPFaceRef {
+    BSPFaceRef *next = nullptr;
     btTransform transform;
-    const struct transparent_polygon_reference_s *const polygon;
+    const transparent_polygon_reference_s *const polygon;
     
-    bsp_face_ref_s(const btTransform& matrix, const struct transparent_polygon_reference_s *polygon)
-        : next(nullptr)
-        , transform(matrix)
+    BSPFaceRef(const btTransform& matrix, const struct transparent_polygon_reference_s *polygon)
+        : transform(matrix)
         , polygon(polygon)
     {
     }
-} bsp_face_ref_t, *bsp_face_ref_p;
+};
 
-typedef struct bsp_node_s
+struct BSPNode
 {
-    btVector3 plane;
+    btVector3 plane{0,0,0};
     
-    struct bsp_face_ref_s   *polygons_front;
-    struct bsp_face_ref_s   *polygons_back;
+    BSPFaceRef *polygons_front = nullptr;
+    BSPFaceRef *polygons_back = nullptr;
     
-    struct bsp_node_s  *front;
-    struct bsp_node_s  *back;
-} bsp_node_t, *bsp_node_p;
+    std::unique_ptr<BSPNode> front = nullptr;
+    std::unique_ptr<BSPNode> back = nullptr;
+};
 
 /**
  * Warning! that class has too primitive and rough (but fast) memory allocation space check! Maybe I will fix it in future; 
  */
-class dynamicBSP
+class DynamicBSP
 {
-    void                *m_data;
-    uint32_t             m_data_size;
-    uint32_t             m_allocated;
-    
-    struct bsp_node_s *createBSPNode();
-    struct bsp_face_ref_s *createFace(const btTransform &transform, const struct transparent_polygon_reference_s *polygon);
-    struct polygon_s  *createPolygon(uint16_t vertex_count);
-    void addPolygon(struct bsp_node_s *root, struct bsp_face_ref_s *const p, struct polygon_s *transformed);
+private:
+    std::unique_ptr<BSPNode> m_root{ new BSPNode() };
+
+    void addPolygon(const std::unique_ptr<BSPNode> &root, BSPFaceRef *const p, polygon_s *transformed);
     
 public:
-    struct bsp_node_s   *m_root;
-    
-    dynamicBSP(uint32_t size);
-   ~dynamicBSP();
-    void addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btTransform &transform, struct frustum_s *f);
+    void addNewPolygonList(size_t count, const transparent_polygon_reference_s *p, const btTransform &transform, struct frustum_s *f);
+
+    const std::unique_ptr<BSPNode>& root() const
+    {
+        return m_root;
+    }
+
     void reset()
     {
-        m_allocated = 0;
-        m_root = this->createBSPNode();
+        m_root.reset(new BSPNode());
     }
 };
 

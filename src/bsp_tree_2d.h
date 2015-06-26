@@ -1,51 +1,111 @@
-#ifndef BSP_TREE_2D_H
-#define BSP_TREE_2D_H
+#pragma once
 
-/*!
- * @header bsp_tree_2d
- * @abstract Manage the fill state of a 2D rectangle where new rectangles may be added at any time.
- * @discussion This class is used internally by the bordered texture atlas. It is used for laying out texture tiles in the big texture atlas. The external interface is deliberately small and hopefully easy to understand.
- *
- * Internally, this uses a 2D BSP tree, as outlined in <TODO: Find that website>, which also inspires the name. This is not a requirement for proper working of the bordered texture atlas. All that it requires is an interface pretty much like this one, which observes the contract of FindSpaceFor, the key method.
- * @see bordered_textured_atlas_t
- */
+#include <cstdint>
+#include <memory>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    
-/*!
- * The struct that defines this type. Its contents are not relevant for or accessible to clients.
- */
-typedef struct bsp_tree_2d_s *bsp_tree_2d_p;
+struct BSPTree2DNode {
+    std::unique_ptr<BSPTree2DNode> left;
+    std::unique_ptr<BSPTree2DNode> right;
 
-/*!
- * Creates a new tree with the given dimensions.
- */
-bsp_tree_2d_p BSPTree2D_Create(unsigned width, unsigned height);
-    
-/*!
- * Destroys a tree and releases all allocated resources. Note: Do not use free() on a tree; that would cause leaks.
- */
-void BSPTree2D_Destroy(bsp_tree_2d_p tree);
+    bool isFilled = false;
+    size_t x = 0;
+    size_t y = 0;
+    size_t width = 0;
+    size_t height = 0;
 
-/*!
- * @abstract Find space for a given rectangle within the tree's area.
- * @discussion Produces the start of an area that has the passed in size, and does not overlap any area returned by previous calls to this method. If no such area can be found, it returns 0 and leaves the internal state untouched.
- *
- * This is the main and only interesting method of this class.
- *
- * @param tree The tree.
- * @param width The width of the area.
- * @param height The height of the area.
- * @param x On return, the x coordinate of an area with the given size. The value on return is undefined if no such area was not found. Must never bebe NULL.
- * @param x On return, the y coordinate of an area with the given size. The value on return is undefined if no such area was not found. Must never bebe NULL.
- * @result 1 if such an area was found, or 0 if no area was found.
- */
-int BSPTree2D_FindSpaceFor(bsp_tree_2d_p tree, unsigned width, unsigned height, unsigned *x, unsigned *y);
-    
-#ifdef __cplusplus
-}
-#endif
+    BSPTree2DNode() = default;
+    BSPTree2DNode(size_t x_, size_t y_, size_t w, size_t h)
+        : x(x_)
+        , y(y_)
+        , width(w)
+        , height(h)
+    {
+    }
 
-#endif /* BSP_TREE_2D_H */
+    bool isEmpty() const {
+        return !left && !right;
+    }
+
+    bool hasChildren() const {
+        return left && right;
+    }
+
+    void splitHorizontally(size_t splitLocation) {
+        left.reset( new BSPTree2DNode(x, y, splitLocation, height) );
+        right.reset( new BSPTree2DNode(x + splitLocation, y, width - splitLocation, height) );
+    }
+
+    void splitVertically(size_t splitLocation) {
+        left.reset(new BSPTree2DNode(x, y, width, splitLocation));
+        right.reset(new BSPTree2DNode(x, y + splitLocation, width, height-splitLocation));
+    }
+
+    bool findSpaceFor(size_t needleWidth, size_t needleHeight, size_t *destX, size_t *destY) {
+        // Could this possibly fit?
+        if (width < needleWidth || height < needleHeight)
+            return false;
+
+        if (isFilled)
+        {
+            // Already occupied
+            return false;
+        }
+        else if (hasChildren())
+        {
+            // Recurse!
+            bool found = false;
+            if (needleWidth <= left->width && needleHeight <= left->height)
+            {
+                found = left->findSpaceFor(needleWidth, needleHeight, destX, destY);
+            }
+            if (!found && needleWidth <= right->width && needleHeight <= right->height)
+            {
+                found = right->findSpaceFor(needleWidth, needleHeight, destX, destY);
+            }
+
+            // If both children are filled, mark this as filled and discard the
+            // children.
+            if (left->isFilled && right->isFilled)
+            {
+                isFilled = true;
+                left->isFilled = false;
+                right->isFilled;
+            }
+
+            return found;
+        }
+        else if (isEmpty())
+        {
+            if (height == needleHeight && width == needleWidth)
+            {
+                // Perfect match
+                isFilled = true;
+                *destX = x;
+                *destY = y;
+                return true;
+            }
+            else if (height == needleHeight)
+            {
+                // Split horizontally
+                splitHorizontally(needleWidth);
+
+                // height already fits, width fits too now, so this is the result
+                isFilled = true;
+                *destX = left->x;
+                *destY = left->y;
+                return true;
+            }
+            else
+            {
+                // In case of doubt do a vertical split
+                splitVertically(needleHeight);
+
+                // Recurse, because the width may not match
+                return left->findSpaceFor(needleWidth, needleHeight, destX, destY);
+            }
+        }
+
+        // Can't ever reach this
+        return false;
+    }
+};

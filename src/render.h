@@ -169,6 +169,9 @@ typedef struct render_s
 
 extern render_t renderer;
 
+struct BSPNode;
+struct unlit_tinted_shader_description;
+
 void Render_DoShaders();
 void Render_Empty(render_p render);
 void Render_InitGlobals();
@@ -184,8 +187,8 @@ void Render_Hair(std::shared_ptr<Entity> entity, const btTransform& modelViewMat
 void Render_SkyBox(const btTransform &matrix);
 void Render_Mesh(struct base_mesh_s *mesh);
 void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *p, const struct unlit_tinted_shader_description *shader);
-void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
-void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
+void Render_BSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const unlit_tinted_shader_description *shader);
+void Render_BSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const unlit_tinted_shader_description *shader);
 void Render_UpdateAnimTextures();
 void Render_CleanList();
 

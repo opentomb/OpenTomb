@@ -101,7 +101,7 @@ void BorderedTextureAtlas::layOutTextures()
     std::sort(sorted_indices.begin(), sorted_indices.end(), TextureSizeComparator(this));
 
     // Find positions for the canonical textures
-    std::vector<bsp_tree_2d_p> result_pages;
+    std::vector<BSPTree2DNode> result_pages;
     m_resultPageHeights.clear();
 
     for (size_t texture = 0; texture < m_canonicalObjectTextures.size(); texture++)
@@ -112,11 +112,10 @@ void BorderedTextureAtlas::layOutTextures()
         bool found_place = 0;
         for (unsigned long page = 0; page < m_resultPageHeights.size(); page++)
         {
-            found_place = BSPTree2D_FindSpaceFor(result_pages[page],
-                                                 canonical.width + 2*m_borderWidth,
-                                                 canonical.height + 2*m_borderWidth,
-                                                 &(canonical.new_x_with_border),
-                                                 &(canonical.new_y_with_border));
+            found_place = result_pages[page].findSpaceFor(canonical.width + 2*m_borderWidth,
+                                                         canonical.height + 2*m_borderWidth,
+                                                         &canonical.new_x_with_border,
+                                                         &canonical.new_y_with_border);
             if (found_place)
             {
                 canonical.new_page = page;
@@ -132,10 +131,10 @@ void BorderedTextureAtlas::layOutTextures()
         // No existing page has enough remaining space so open new one.
         if (!found_place)
         {
-            result_pages.emplace_back(BSPTree2D_Create(m_resultPageWidth, m_resultPageWidth));
+            result_pages.emplace_back(0, 0, m_resultPageWidth, m_resultPageWidth);
             m_resultPageHeights.resize(result_pages.size());
 
-            BSPTree2D_FindSpaceFor(result_pages.back(),
+            result_pages.back().findSpaceFor(
                                    canonical.width + 2*m_borderWidth,
                                    canonical.height + 2*m_borderWidth,
                                    &(canonical.new_x_with_border),
@@ -152,10 +151,6 @@ void BorderedTextureAtlas::layOutTextures()
     {
         m_resultPageHeights[page] = NextPowerOf2(m_resultPageHeights[page]);
     }
-
-    // Cleanup
-    for (size_t i = 0; i < m_resultPageHeights.size(); i++)
-        BSPTree2D_Destroy(result_pages[i]);
 }
 
 BorderedTextureAtlas::BorderedTextureAtlas(int border,
@@ -385,7 +380,7 @@ void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, uint32_t 
 
     outPage = canonical.new_page;
 
-    unsigned pixel_coordinates[8] = {
+    size_t pixel_coordinates[8] = {
         // top right
         canonical.new_x_with_border + m_borderWidth + canonical.width,
         canonical.new_y_with_border + m_borderWidth + canonical.height,
