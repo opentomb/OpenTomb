@@ -442,20 +442,20 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
 
 void Render_SkeletalModelSkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix)
 {
-    ss_bone_tag_p btag = ent->bf.bone_tags;
+    ss_bone_tag_p btag = ent->m_bf.bone_tags;
 
     btScalar glMatrix[16+16];
     pMatrix.getOpenGLMatrix(glMatrix);
 
     glUniformMatrix4fvARB(shader->projection, 1, false, glMatrix);
 
-    for(uint16_t i=0; i<ent->bf.bone_tag_count; i++,btag++)
+    for(uint16_t i=0; i<ent->m_bf.bone_tag_count; i++,btag++)
     {
         btTransform mvTransforms = mvMatrix * btag->full_transform;
         mvTransforms.getOpenGLMatrix(glMatrix+0);
 
         // Calculate parent transform
-        const btTransform* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->transform;
+        const btTransform* parentTransform = btag->parent ? &btag->parent->full_transform : &ent->m_transform;
 
         btTransform translate;
         translate.setIdentity();
@@ -480,27 +480,27 @@ void Render_DynamicEntitySkin(const struct lit_shader_description *shader, std::
     pMatrix.getOpenGLMatrix(glMatrix);
     glUniformMatrix4fvARB(shader->projection, 1, false, glMatrix);
 
-    for(uint16_t i=0; i<ent->bf.bone_tag_count; i++)
+    for(uint16_t i=0; i<ent->m_bf.bone_tag_count; i++)
     {
         btTransform mvTransforms[2];
 
-        btTransform tr0 = ent->bt.bt_body[i]->getWorldTransform();
+        btTransform tr0 = ent->m_bt.bt_body[i]->getWorldTransform();
         btTransform tr1;
 
         mvTransforms[0] = mvMatrix * tr0;
 
         // Calculate parent transform
-        struct ss_bone_tag_s &btag = ent->bf.bone_tags[i];
+        struct ss_bone_tag_s &btag = ent->m_bf.bone_tags[i];
         bool foundParentTransform = false;
-        for (int j = 0; j < ent->bf.bone_tag_count; j++) {
-            if (&(ent->bf.bone_tags[j]) == btag.parent) {
-                tr1 = ent->bt.bt_body[j]->getWorldTransform();
+        for (int j = 0; j < ent->m_bf.bone_tag_count; j++) {
+            if (&(ent->m_bf.bone_tags[j]) == btag.parent) {
+                tr1 = ent->m_bt.bt_body[j]->getWorldTransform();
                 foundParentTransform = true;
                 break;
             }
         }
         if (!foundParentTransform)
-            tr1 = ent->transform;
+            tr1 = ent->m_transform;
 
         btTransform translate;
         translate.setIdentity();
@@ -530,7 +530,7 @@ const lit_shader_description *render_setupEntityLight(std::shared_ptr<Entity> en
     // Calculate lighting
     const lit_shader_description *shader;
 
-    std::shared_ptr<Room> room = entity->self->room;
+    std::shared_ptr<Room> room = entity->m_self->room;
     if(room != NULL)
     {
         std::array<GLfloat,4> ambient_component;
@@ -560,7 +560,7 @@ const lit_shader_description *render_setupEntityLight(std::shared_ptr<Entity> en
         {
             current_light = &room->lights[i];
 
-            btVector3 xyz = entity->transform.getOrigin() - current_light->pos;
+            btVector3 xyz = entity->m_transform.getOrigin() - current_light->pos;
             btScalar distance = xyz.length();
 
             // Find color
@@ -609,7 +609,7 @@ const lit_shader_description *render_setupEntityLight(std::shared_ptr<Entity> en
 
 void Render_Entity(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection)
 {
-    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if(entity->m_wasRendered || !(entity->m_stateFlags & ENTITY_STATE_VISIBLE) || (entity->m_bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -617,14 +617,14 @@ void Render_Entity(std::shared_ptr<Entity> entity, const btTransform& modelViewM
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, false);
 
-    if(entity->bf.animations.model && entity->bf.animations.model->animations)
+    if(entity->m_bf.animations.model && entity->m_bf.animations.model->animations)
     {
         // base frame offset
-        if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
+        if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
             Render_DynamicEntity(shader, entity, modelViewMatrix, modelViewProjectionMatrix);
             ///@TODO: where I need to do bf skinning matrices update? this time ragdoll update function calculates these matrices;
-            if (entity->bf.bone_tags[0].mesh_skin)
+            if (entity->m_bf.bone_tags[0].mesh_skin)
             {
                 const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
                 Render_DynamicEntitySkin(skinShader, entity, modelViewMatrix, projection);
@@ -632,10 +632,10 @@ void Render_Entity(std::shared_ptr<Entity> entity, const btTransform& modelViewM
         }
         else
         {
-            btTransform subModelView = modelViewMatrix * entity->transform;
-            btTransform subModelViewProjection = modelViewProjectionMatrix * entity->transform;
-            Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
-            if (entity->bf.bone_tags[0].mesh_skin)
+            btTransform subModelView = modelViewMatrix * entity->m_transform;
+            btTransform subModelViewProjection = modelViewProjectionMatrix * entity->m_transform;
+            Render_SkeletalModel(shader, &entity->m_bf, subModelView, subModelViewProjection);
+            if (entity->m_bf.bone_tags[0].mesh_skin)
             {
                 const lit_shader_description *skinShader = render_setupEntityLight(entity, modelViewMatrix, true);
                 Render_SkeletalModelSkin(skinShader, entity, subModelView, projection);
@@ -646,11 +646,11 @@ void Render_Entity(std::shared_ptr<Entity> entity, const btTransform& modelViewM
 
 void Render_DynamicEntity(const struct lit_shader_description *shader, std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix)
 {
-    ss_bone_tag_p btag = entity->bf.bone_tags;
+    ss_bone_tag_p btag = entity->m_bf.bone_tags;
 
-    for(uint16_t i=0; i<entity->bf.bone_tag_count; i++,btag++)
+    for(uint16_t i=0; i<entity->m_bf.bone_tag_count; i++,btag++)
     {
-        btTransform tr = entity->bt.bt_body[i]->getWorldTransform();
+        btTransform tr = entity->m_bt.bt_body[i]->getWorldTransform();
         btTransform mvTransform = modelViewMatrix * tr;
 
         btScalar glMatrix[16];
@@ -673,18 +673,18 @@ void Render_DynamicEntity(const struct lit_shader_description *shader, std::shar
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
 void Render_Hair(std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &projection)
 {
-    if(!entity || !entity->character || entity->character->m_hairs.empty())
+    if(!entity || !entity->m_character || entity->m_character->m_hairs.empty())
         return;
 
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, true);
 
 
-    for(size_t h=0; h<entity->character->m_hairs.size(); h++)
+    for(size_t h=0; h<entity->m_character->m_hairs.size(); h++)
     {
         // First: Head attachment
-        btTransform globalHead = entity->transform * entity->bf.bone_tags[entity->character->m_hairs[h]->owner_body].full_transform;
-        btTransform globalAttachment = globalHead * entity->character->m_hairs[h]->owner_body_hair_root;
+        btTransform globalHead = entity->m_transform * entity->m_bf.bone_tags[entity->m_character->m_hairs[h]->owner_body].full_transform;
+        btTransform globalAttachment = globalHead * entity->m_character->m_hairs[h]->owner_body_hair_root;
 
         static constexpr int MatrixCount = 10;
 
@@ -692,7 +692,7 @@ void Render_Hair(std::shared_ptr<Entity> entity, const btTransform &modelViewMat
         (modelViewMatrix * globalAttachment).getOpenGLMatrix(hairModelToGlobalMatrices[0]);
 
         // Then: Individual hair pieces
-        for(uint16_t i=0; i<entity->character->m_hairs[h]->element_count; i++)
+        for(uint16_t i=0; i<entity->m_character->m_hairs[h]->element_count; i++)
         {
             /*
              * Definitions: x_o - as in original file. x_h - as in hair model
@@ -716,21 +716,21 @@ void Render_Hair(std::shared_ptr<Entity> entity, const btTransform &modelViewMat
             btTransform invOriginToHairModel;
             invOriginToHairModel.setIdentity();
             // Simplification: Always translation matrix, no invert needed
-            Mat4_Translate(invOriginToHairModel, -entity->character->m_hairs[h]->elements[i].position);
+            Mat4_Translate(invOriginToHairModel, -entity->m_character->m_hairs[h]->elements[i].position);
 
-            const btTransform &bt_tr = entity->character->m_hairs[h]->elements[i].body->getWorldTransform();
+            const btTransform &bt_tr = entity->m_character->m_hairs[h]->elements[i].body->getWorldTransform();
 
             btTransform globalFromHair = bt_tr * invOriginToHairModel;
 
             (modelViewMatrix * globalFromHair).getOpenGLMatrix(hairModelToGlobalMatrices[i+1]);
         }
 
-        glUniformMatrix4fvARB(shader->model_view, entity->character->m_hairs[h]->element_count+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
+        glUniformMatrix4fvARB(shader->model_view, entity->m_character->m_hairs[h]->element_count+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
 
         projection.getOpenGLMatrix(hairModelToGlobalMatrices[0]);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, hairModelToGlobalMatrices[0]);
 
-        Render_Mesh(entity->character->m_hairs[h]->mesh);
+        Render_Mesh(entity->m_character->m_hairs[h]->mesh);
     }
 }
 
@@ -867,13 +867,13 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
             {
             case OBJECT_ENTITY:
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
-                if(ent->was_rendered == 0)
+                if(ent->m_wasRendered == 0)
                 {
-                    if(Frustum_IsOBBVisibleInRoom(ent->obb.get(), room))
+                    if(Frustum_IsOBBVisibleInRoom(ent->m_obb.get(), room))
                     {
                         Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
                     }
-                    ent->was_rendered = 1;
+                    ent->m_wasRendered = 1;
                 }
                 break;
             };
@@ -959,8 +959,8 @@ int Render_AddRoom(std::shared_ptr<Room> room)
         switch(cont->object_type)
         {
         case OBJECT_ENTITY:
-            std::static_pointer_cast<Entity>(cont->object)->was_rendered = 0;
-            std::static_pointer_cast<Entity>(cont->object)->was_rendered_lines = 0;
+            std::static_pointer_cast<Entity>(cont->object)->m_wasRendered = 0;
+            std::static_pointer_cast<Entity>(cont->object)->m_wasRenderedLines = 0;
             break;
         };
     }
@@ -980,8 +980,8 @@ void Render_CleanList()
 {
     if(renderer.world->Character)
     {
-        renderer.world->Character->was_rendered = 0;
-        renderer.world->Character->was_rendered_lines = 0;
+        renderer.world->Character->m_wasRendered = 0;
+        renderer.world->Character->m_wasRenderedLines = 0;
     }
 
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
@@ -1085,14 +1085,14 @@ void Render_DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
-                if((ent->bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->obb.get(), r)))
+                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->m_stateFlags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->m_obb.get(), r)))
                 {
-                    for(uint16_t j=0;j<ent->bf.bone_tag_count;j++)
+                    for(uint16_t j=0;j<ent->m_bf.bone_tag_count;j++)
                     {
-                        if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
+                        if(ent->m_bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
-                            btTransform tr = ent->transform * ent->bf.bone_tags[j].full_transform;
-                            render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr, r->frustum);
+                            btTransform tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
+                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->m_bf.bone_tags[j].mesh_base->transparent_polygons, tr, r->frustum);
                         }
                     }
                 }
@@ -1100,15 +1100,15 @@ void Render_DrawList()
         }
     }
 
-    if((engine_world.Character != NULL) && (engine_world.Character->bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
+    if((engine_world.Character != NULL) && (engine_world.Character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
         std::shared_ptr<Entity> ent = engine_world.Character;
-        for(uint16_t j=0;j<ent->bf.bone_tag_count;j++)
+        for(uint16_t j=0;j<ent->m_bf.bone_tag_count;j++)
         {
-            if(ent->bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
+            if(ent->m_bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
-                btTransform tr = ent->transform * ent->bf.bone_tags[j].full_transform;
-                render_dBSP.addNewPolygonList(ent->bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->bf.bone_tags[j].mesh_base->transparent_polygons, tr, NULL);
+                btTransform tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
+                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->m_bf.bone_tags[j].mesh_base->transparent_polygons, tr, NULL);
             }
         }
     }
@@ -1567,8 +1567,8 @@ void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
 
 void render_DebugDrawer::drawEntityDebugLines(std::shared_ptr<Entity> entity)
 {
-    if(entity->was_rendered_lines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
-       !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
+    if(entity->m_wasRenderedLines || !(renderer.style & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
+       !(entity->m_stateFlags & ENTITY_STATE_VISIBLE) || (entity->m_bf.animations.model->hide && !(renderer.style & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -1576,21 +1576,21 @@ void render_DebugDrawer::drawEntityDebugLines(std::shared_ptr<Entity> entity)
     if(renderer.style & R_DRAW_BOXES)
     {
         debugDrawer.setColor(0.0, 0.0, 1.0);
-        debugDrawer.drawOBB(entity->obb.get());
+        debugDrawer.drawOBB(entity->m_obb.get());
     }
 
     if(renderer.style & R_DRAW_AXIS)
     {
         // If this happens, the lines after this will get drawn with random colors. I don't care.
-        debugDrawer.drawAxis(1000.0, entity->transform);
+        debugDrawer.drawAxis(1000.0, entity->m_transform);
     }
 
-    if(entity->bf.animations.model && entity->bf.animations.model->animations)
+    if(entity->m_bf.animations.model && entity->m_bf.animations.model->animations)
     {
-        debugDrawer.drawSkeletalModelDebugLines(&entity->bf, entity->transform);
+        debugDrawer.drawSkeletalModelDebugLines(&entity->m_bf, entity->m_transform);
     }
 
-    entity->was_rendered_lines = 1;
+    entity->m_wasRenderedLines = 1;
 }
 
 
@@ -1675,13 +1675,13 @@ void render_DebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, struct r
         {
             case OBJECT_ENTITY: {
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
-                if(ent->was_rendered_lines == 0)
+                if(ent->m_wasRenderedLines == 0)
                 {
-                    if(Frustum_IsOBBVisibleInRoom(ent->obb.get(), room))
+                    if(Frustum_IsOBBVisibleInRoom(ent->m_obb.get(), room))
                     {
                         debugDrawer.drawEntityDebugLines(ent);
                     }
-                    ent->was_rendered_lines = 1;
+                    ent->m_wasRenderedLines = 1;
                 }
                 break;
             }

@@ -427,7 +427,7 @@ void Engine_Display()
             glEnable(GL_ALPHA_TEST);
 
             Gui_DrawNotifier();
-            if(engine_world.Character && engine_world.Character->character && main_inventory_manager)
+            if(engine_world.Character && engine_world.Character->m_character && main_inventory_manager)
             {
                 Gui_DrawInventory();
             }
@@ -504,13 +504,13 @@ void ShowDebugInfo()
     glDrawArrays(GL_LINES, 0, 2);
 
     std::shared_ptr<Entity> ent = engine_world.Character;
-    if(ent && ent->character)
+    if(ent && ent->m_character)
     {
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         */
 
-        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.animations.last_animation, ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.last_state, ent->bf.animations.next_state);
+        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->m_bf.animations.last_animation, ent->m_bf.animations.current_animation, ent->m_bf.animations.next_animation, ent->m_bf.animations.last_state, ent->m_bf.animations.next_state);
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
         //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
@@ -520,7 +520,7 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", std::static_pointer_cast<Entity>(last_cont->object)->id, std::static_pointer_cast<Entity>(last_cont->object)->bf.animations.model->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", std::static_pointer_cast<Entity>(last_cont->object)->m_id, std::static_pointer_cast<Entity>(last_cont->object)->m_bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:

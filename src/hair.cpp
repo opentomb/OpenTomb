@@ -16,8 +16,8 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
     // No setup or parent to link to - bypass function.
 
     if( (!parent_entity) || (!setup)                           ||
-        (setup->link_body >= parent_entity->bf.bone_tag_count) ||
-        (!(parent_entity->bt.bt_body[setup->link_body]))         ) return false;
+        (setup->link_body >= parent_entity->m_bf.bone_tag_count) ||
+        (!(parent_entity->m_bt.bt_body[setup->link_body]))         ) return false;
 
     skeletal_model_p model = World_GetModelByID(&engine_world, setup->model);
 
@@ -28,7 +28,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
     hair->container = new EngineContainer();
-    hair->container->room = parent_entity->self->room;
+    hair->container->room = parent_entity->m_self->room;
     hair->container->object_type = OBJECT_HAIR;
     hair->container->object = hair;
 
@@ -39,7 +39,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
     // Setup initial position / angles.
 
-    btTransform owner_body_transform = parent_entity->transform * parent_entity->bf.bone_tags[hair->owner_body].full_transform;
+    btTransform owner_body_transform = parent_entity->m_transform * parent_entity->m_bf.bone_tags[hair->owner_body].full_transform;
     // Number of elements (bodies) is equal to number of hair meshes.
 
     hair->element_count = model->mesh_count;
@@ -85,7 +85,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
         // Make rigid body.
 
-        hair->elements[i].body = new btRigidBody(current_weight, motionState, hair->elements[i].shape, localInertia);
+        hair->elements[i].body.reset( new btRigidBody(current_weight, motionState, hair->elements[i].shape, localInertia) );
 
         // Damping makes body stop in space by itself, to prevent it from continous movement.
 
@@ -106,7 +106,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
         // collide with hair!
 
         hair->elements[i].body->setUserPointer(hair->container);
-        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
+        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
 
         hair->elements[i].body->activate();
     }
@@ -128,7 +128,6 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
     for(uint16_t i=0; i<hair->element_count; i++)
     {
-        btRigidBody* prev_body;
         btScalar     body_length;
 
         // Each body width and height are used to calculate position of each joint.
@@ -142,6 +141,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
         btScalar joint_x = 0.0;
         btScalar joint_y = 0.0;
 
+        std::shared_ptr<btRigidBody> prev_body;
         if(i == 0)  // First joint group
         {
             // Adjust pivot point A to parent body.
@@ -154,7 +154,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
 
-            prev_body = parent_entity->bt.bt_body[hair->owner_body];   // Previous body is parent body.
+            prev_body = parent_entity->m_bt.bt_body[hair->owner_body];   // Previous body is parent body.
         }
         else
         {
@@ -424,10 +424,9 @@ Hair::~Hair()
     {
         if(elements[i].body)
         {
-            elements[i].body->setUserPointer(NULL);
-            bt_engine_dynamicsWorld->removeRigidBody(elements[i].body);
-            delete elements[i].body;
-            elements[i].body = NULL;
+            elements[i].body->setUserPointer(nullptr);
+            bt_engine_dynamicsWorld->removeRigidBody(elements[i].body.get());
+            elements[i].body.reset();
         }
         if(elements[i].shape)
         {
@@ -451,12 +450,12 @@ Hair::~Hair()
 
 void Hair_Update(std::shared_ptr<Entity> entity)
 {
-    if((!IsCharacter(entity)) || entity->character->m_hairs.empty())
+    if((!IsCharacter(entity)) || entity->m_character->m_hairs.empty())
         return;
 
-    for(size_t i=0; i<entity->character->m_hairs.size(); ++i)
+    for(size_t i=0; i<entity->m_character->m_hairs.size(); ++i)
     {
-        std::shared_ptr<Hair> hair = entity->character->m_hairs[i];
+        std::shared_ptr<Hair> hair = entity->m_character->m_hairs[i];
         if((!hair) || (hair->element_count < 1)) continue;
 
         /*btScalar new_transform[16];
@@ -498,6 +497,6 @@ void Hair_Update(std::shared_ptr<Entity> entity)
             hair->elements[j].body->applyCentralForce(mix_vel);
         }*/
 
-        hair->container->room = hair->owner_char->self->room;
+        hair->container->room = hair->owner_char->m_self->room;
     }
 }

@@ -242,59 +242,59 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
         return;
     }
 
-    if(ent->type_flags & ENTITY_TYPE_SPAWNED)
+    if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
-        uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
-        fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf.animations.model->id, room_id,
-                ent->transform.getOrigin()[0], ent->transform.getOrigin()[1], ent->transform.getOrigin()[2],
-                ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
+        uint32_t room_id = (ent->m_self->room)?(ent->m_self->room->id):(0xFFFFFFFF);
+        fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->m_bf.animations.model->id, room_id,
+                ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
+                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2], ent->m_id);
     }
     else
     {
-        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
-                ent->transform.getOrigin()[0], ent->transform.getOrigin()[1], ent->transform.getOrigin()[2],
-                ent->angles[0], ent->angles[1], ent->angles[2]);
+        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->m_id,
+                ent->m_transform.getOrigin()[0], ent->m_transform.getOrigin()[1], ent->m_transform.getOrigin()[2],
+                ent->m_angles[0], ent->m_angles[1], ent->m_angles[2]);
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.animations.current_animation, ent->bf.animations.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.animations.next_state, ent->bf.animations.last_state);
-    fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->id, ent->self->collide_flag);
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->m_id, ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->m_id, ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->m_id, ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
+    fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->m_id, ent->m_self->collide_flag);
 
-    if(ent->state_flags & ENTITY_STATE_ENABLED)
+    if(ent->m_stateFlags & ENTITY_STATE_ENABLED)
     {
-        fprintf(*f, "\nenableEntity(%d);", ent->id);
+        fprintf(*f, "\nenableEntity(%d);", ent->m_id);
     }
     else
     {
-        fprintf(*f, "\ndisableEntity(%d);", ent->id);
+        fprintf(*f, "\ndisableEntity(%d);", ent->m_id);
     }
 
-    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
+    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->m_id, ent->m_stateFlags, ent->m_typeFlags, ent->m_callbackFlags);
 
-    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
+    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->m_id, ent->m_triggerLayout);
     //setEntityMeshswap()
 
-    if(ent->self->room != NULL)
+    if(ent->m_self->room != NULL)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->m_id, ent->m_self->room->id, ent->m_moveType, ent->m_dirFlag);
     }
     else
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
+        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->m_id, ent->m_moveType, ent->m_dirFlag);
     }
 
-    if(ent->character != NULL)
+    if(ent->m_character != NULL)
     {
-        fprintf(*f, "\nremoveAllItems(%d);", ent->id);
-        for(const InventoryNode& i : ent->character->m_inventory)
+        fprintf(*f, "\nremoveAllItems(%d);", ent->m_id);
+        for(const InventoryNode& i : ent->m_character->m_inventory)
         {
-            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i.id, i.count);
+            fprintf(*f, "\naddItem(%d, %d, %d);", ent->m_id, i.id, i.count);
         }
 
         for(int i=0;i<PARAM_SENTINEL;i++)
         {
-            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->m_parameters.param[i], ent->character->m_parameters.maximum[i]);
+            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->m_id, i, ent->m_character->m_parameters.param[i], ent->m_character->m_parameters.maximum[i]);
         }
     }
 }
@@ -448,26 +448,26 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.cam->moveVertical(dist * move_logic[2]);
         renderer.cam->m_currentRoom = Room_FindPosCogerrence(renderer.cam->m_pos, renderer.cam->m_currentRoom);
 
-        ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
+        ent->m_angles[0] = 180.0 * cam_angles[0] / M_PI;
         pos[0] = renderer.cam->m_pos[0] + renderer.cam->m_viewDir[0] * control_states.cam_distance;
         pos[1] = renderer.cam->m_pos[1] + renderer.cam->m_viewDir[1] * control_states.cam_distance;
         pos[2] = renderer.cam->m_pos[2] + renderer.cam->m_viewDir[2] * control_states.cam_distance - 512.0;
-        ent->transform.getOrigin() = pos;
-        Entity_UpdateRotation(ent);
+        ent->m_transform.getOrigin() = pos;
+        ent->updateRotation();
     }
     else
     {
         // Apply controls to Lara
-        ent->character->m_command.action = control_states.state_action;
-        ent->character->m_command.ready_weapon = control_states.do_draw_weapon;
-        ent->character->m_command.jump = control_states.do_jump;
-        ent->character->m_command.shift = control_states.state_walk;
+        ent->m_character->m_command.action = control_states.state_action;
+        ent->m_character->m_command.ready_weapon = control_states.do_draw_weapon;
+        ent->m_character->m_command.jump = control_states.do_jump;
+        ent->m_character->m_command.shift = control_states.state_walk;
 
-        ent->character->m_command.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);
+        ent->m_character->m_command.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);
 
         // New commands only for TR3 and above
-        ent->character->m_command.sprint = control_states.state_sprint;
-        ent->character->m_command.crouch = control_states.state_crouch;
+        ent->m_character->m_command.sprint = control_states.state_sprint;
+        ent->m_character->m_command.crouch = control_states.state_crouch;
 
         if(control_states.use_small_medi)
         {
@@ -495,23 +495,23 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ))
         {
-            ent->character->m_command.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
+            ent->m_character->m_command.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
         }
         else
         {
-            ent->character->m_command.rot[0] = -360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
+            ent->m_character->m_command.rot[0] = -360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
         }
 
         if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
         {
-            ent->character->m_command.rot[1] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_y;
+            ent->m_character->m_command.rot[1] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_y;
         }
         else
         {
-            ent->character->m_command.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
+            ent->m_character->m_command.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
         }
 
-        ent->character->m_command.move = move_logic;
+        ent->m_character->m_command.move = move_logic;
     }
 }
 
@@ -536,13 +536,13 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
     cameraTo.setIdentity();
 
     std::shared_ptr<BtEngineClosestConvexResultCallback> cb;
-    if(ent->character)
+    if(ent->m_character)
     {
-        cb = ent->character->m_convexCb;
+        cb = ent->m_character->m_convexCb;
     }
     else
     {
-        cb = std::make_shared<BtEngineClosestConvexResultCallback>(ent->self.get());
+        cb = std::make_shared<BtEngineClosestConvexResultCallback>(ent->m_self.get());
         cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     }
 
@@ -550,19 +550,19 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
     if(control_states.mouse_look == 0)//If mouse look is off
     {
         float currentAngle = cam_angles[0] * (M_PI / 180.0);  //Current is the current cam angle
-        float targetAngle  = ent->angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself
+        float targetAngle  = ent->m_angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0; //Speed of rotation
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->bf.animations.last_state == TR_STATE_LARA_REACH)
+        if(ent->m_bf.animations.last_state == TR_STATE_LARA_REACH)
         {
             if(cam->m_targetDir == TR_CAM_TARG_BACK)
             {
                 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(cam_pos2);
-                cam_pos2[0] += sinf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                cam_pos2[1] -= cosf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                cam_pos2[0] += sinf((ent->m_angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                cam_pos2[1] -= cosf((ent->m_angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
                 cameraTo.setOrigin(cam_pos2);
 
                 //If collided we want to go right otherwise stay left
@@ -570,8 +570,8 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
                 {
                     cam_pos2 = cam_pos;
                     cameraFrom.setOrigin(cam_pos2);
-                    cam_pos2[0] += sinf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                    cam_pos2[1] -= cosf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                    cam_pos2[0] += sinf((ent->m_angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                    cam_pos2[1] -= cosf((ent->m_angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
                     cameraTo.setOrigin(cam_pos2);
 
                     //If collided we want to go to back else right
@@ -583,7 +583,7 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
                 }
             }
         }
-        else if(ent->bf.animations.last_state == TR_STATE_LARA_JUMP_BACK)
+        else if(ent->m_bf.animations.last_state == TR_STATE_LARA_JUMP_BACK)
         {
             cam->m_targetDir = TR_CAM_TARG_FRONT;
         }
@@ -598,19 +598,19 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
             switch(cam->m_targetDir)
             {
             case TR_CAM_TARG_BACK:
-                targetAngle = (ent->angles[0]) * (M_PI / 180.0);
+                targetAngle = (ent->m_angles[0]) * (M_PI / 180.0);
                 break;
             case TR_CAM_TARG_FRONT:
-                targetAngle = (ent->angles[0] - 180.0) * (M_PI / 180.0);
+                targetAngle = (ent->m_angles[0] - 180.0) * (M_PI / 180.0);
                 break;
             case TR_CAM_TARG_LEFT:
-                targetAngle = (ent->angles[0] - 75.0) * (M_PI / 180.0);
+                targetAngle = (ent->m_angles[0] - 75.0) * (M_PI / 180.0);
                 break;
             case TR_CAM_TARG_RIGHT:
-                targetAngle = (ent->angles[0] + 75.0) * (M_PI / 180.0);
+                targetAngle = (ent->m_angles[0] + 75.0) * (M_PI / 180.0);
                 break;
             default:
-                targetAngle = (ent->angles[0]) * (M_PI / 180.0);//Same as TR_CAM_TARG_BACK (default pos)
+                targetAngle = (ent->m_angles[0]) * (M_PI / 180.0);//Same as TR_CAM_TARG_BACK (default pos)
                 break;
             }
 
@@ -627,14 +627,14 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
         }
     }
 
-    if((ent->character != NULL) && (ent->character->m_camFollowCenter > 0))
+    if((ent->m_character != NULL) && (ent->m_character->m_camFollowCenter > 0))
     {
-        cam_pos = ent->obb->centre;
-        ent->character->m_camFollowCenter--;
+        cam_pos = ent->m_obb->centre;
+        ent->m_character->m_camFollowCenter--;
     }
     else
     {
-        cam_pos = ent->transform * ent->bf.bone_tags->full_transform.getOrigin();
+        cam_pos = ent->m_transform * ent->m_bf.bone_tags->full_transform.getOrigin();
         cam_pos[2] += dz;
     }
 
@@ -701,10 +701,10 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
     for(auto entityPair : entities) {
         std::shared_ptr<Entity> entity = entityPair.second;
-        if(entity->state_flags & ENTITY_STATE_ENABLED)
+        if(entity->m_stateFlags & ENTITY_STATE_ENABLED)
         {
-            Entity_ProcessSector(entity);
-            lua_LoopEntity(engine_lua, entity->id);
+            entity->processSector();
+            lua_LoopEntity(engine_lua, entity->m_id);
         }
     }
 }
@@ -714,13 +714,13 @@ void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entiti
 {
     for(auto entityPair : entities) {
         std::shared_ptr<Entity> entity = entityPair.second;
-        if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
+        if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
-            Entity_UpdateRigidBody(entity, 0);
+            entity->updateRigidBody(false);
         }
-        else if(Entity_Frame(entity, engine_frame_time))
+        else if(entity->frame(engine_frame_time))
         {
-            Entity_UpdateRigidBody(entity, 0);
+            entity->updateRigidBody(false);
         }
     }
 }
@@ -743,13 +743,13 @@ void Game_UpdateCharactersTree(std::map<uint32_t, std::shared_ptr<Entity> >& ent
         std::shared_ptr<Entity> ent = it->second;
         if(IsCharacter(ent))
         {
-            if(ent->character->m_command.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+            if(ent->m_character->m_command.action && (ent->m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
             {
-                Entity_CheckActivators(ent);
+                ent->checkActivators();
             }
             if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
             {
-                ent->character->m_response.kill = 1;                                      // Kill, if no HP.
+                ent->m_character->m_response.kill = 1;                                      // Kill, if no HP.
             }
             Character_ApplyCommands(ent);
             Hair_Update(ent);
@@ -762,15 +762,15 @@ void Game_UpdateCharacters()
 {
     std::shared_ptr<Entity> ent = engine_world.Character;
 
-    if(ent && ent->character)
+    if(ent && ent->m_character)
     {
-        if(ent->character->m_command.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+        if(ent->m_character->m_command.action && (ent->m_typeFlags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
-            Entity_CheckActivators(ent);
+            ent->checkActivators();
         }
         if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
-            ent->character->m_response.kill = 1;   // Kill, if no HP.
+            ent->m_character->m_response.kill = 1;   // Kill, if no HP.
         }
         Hair_Update(ent);
     }
@@ -810,7 +810,7 @@ void Game_Frame(btScalar time)
         if((is_character) &&
            (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
         {
-            main_inventory_manager->setInventory(&engine_world.Character->character->m_inventory);
+            main_inventory_manager->setInventory(&engine_world.Character->m_character->m_inventory);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
         }
         if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
@@ -843,9 +843,9 @@ void Game_Frame(btScalar time)
 
         if(is_character)
         {
-            Entity_ProcessSector(engine_world.Character);
+            engine_world.Character->processSector();
             Character_UpdateParams(engine_world.Character);
-            Entity_CheckCollisionCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
+            engine_world.Character->checkCollisionCallbacks();   ///@FIXME: Must do it for ALL interactive entities!
         }
 
         if(is_entitytree)
@@ -860,14 +860,14 @@ void Game_Frame(btScalar time)
 
     if(is_character)
     {
-        if(engine_world.Character->type_flags & ENTITY_TYPE_DYNAMIC)
+        if(engine_world.Character->m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
-            Entity_UpdateRigidBody(engine_world.Character, 0);
+            engine_world.Character->updateRigidBody(false);
         }
         if(!control_states.noclip && !control_states.free_look)
         {
             Character_ApplyCommands(engine_world.Character);
-            Entity_Frame(engine_world.Character, engine_frame_time);
+            engine_world.Character->frame(engine_frame_time);
             Cam_FollowEntity(renderer.cam, engine_world.Character, 16.0, 128.0);
         }
     }
@@ -902,14 +902,14 @@ void Game_Prepare()
 
         // Set character statistics to default.
 
-        engine_world.Character->character->m_statistics.distance       = 0.0;
-        engine_world.Character->character->m_statistics.ammo_used      = 0;
-        engine_world.Character->character->m_statistics.hits           = 0;
-        engine_world.Character->character->m_statistics.kills          = 0;
-        engine_world.Character->character->m_statistics.medipacks_used = 0;
-        engine_world.Character->character->m_statistics.saves_used     = 0;
-        engine_world.Character->character->m_statistics.secrets_game   = 0;
-        engine_world.Character->character->m_statistics.secrets_level  = 0;
+        engine_world.Character->m_character->m_statistics.distance       = 0.0;
+        engine_world.Character->m_character->m_statistics.ammo_used      = 0;
+        engine_world.Character->m_character->m_statistics.hits           = 0;
+        engine_world.Character->m_character->m_statistics.kills          = 0;
+        engine_world.Character->m_character->m_statistics.medipacks_used = 0;
+        engine_world.Character->m_character->m_statistics.saves_used     = 0;
+        engine_world.Character->m_character->m_statistics.secrets_game   = 0;
+        engine_world.Character->m_character->m_statistics.secrets_level  = 0;
     }
     else if(!engine_world.rooms.empty())
     {

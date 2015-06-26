@@ -551,7 +551,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
 
     bf->animations.lerp = 0.0;
     stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
-    Entity_GetNextFrame(bf, time, stc, &frame, &anim, 0x00);
+    Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
         bf->animations.last_animation = bf->animations.current_animation;
@@ -581,8 +581,8 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
     dt = bf->animations.frame_time - (btScalar)t * bf->animations.period;
     bf->animations.frame_time = (btScalar)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
-    Entity_GetNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    Entity_UpdateCurrentBoneFrame(bf, nullptr);
+    Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
+    Entity::updateCurrentBoneFrame(bf, nullptr);
 }
 
 
@@ -1171,9 +1171,9 @@ void Gui_DrawFaders()
 
 void Gui_DrawBars()
 {
-    if(engine_world.Character && engine_world.Character->character)
+    if(engine_world.Character && engine_world.Character->m_character)
     {
-        if(engine_world.Character->character->m_weaponCurrentState > WEAPON_STATE_HIDE_TO_READY)
+        if(engine_world.Character->m_character->m_weaponCurrentState > WEAPON_STATE_HIDE_TO_READY)
             Bar[BAR_HEALTH].Forced = true;
 
         Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));

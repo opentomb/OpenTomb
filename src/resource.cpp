@@ -43,7 +43,7 @@ lua_State *level_script = NULL;
 
 void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
-    if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
+    if((objects_flags_conf != NULL) && (ent->m_bf.animations.model != NULL))
     {
         int top = lua_gettop(objects_flags_conf);
         assert(top >= 0);
@@ -51,23 +51,23 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
+            lua_pushinteger(objects_flags_conf, ent->m_bf.animations.model->id);      // entity model id
             if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
-                ent->self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
-                ent->bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3); // get info about model visibility
-                ent->type_flags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
+                ent->m_self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
+                ent->m_bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3); // get info about model visibility
+                ent->m_typeFlags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
 
                 if(!lua_isnil(objects_flags_conf, -1))
                 {
-                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id);
+                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->m_id);
                 }
             }
         }
         lua_settop(objects_flags_conf, top);
     }
 
-    if((level_script != NULL) && (ent->bf.animations.model != NULL))
+    if((level_script != NULL) && (ent->m_bf.animations.model != NULL))
     {
         int top = lua_gettop(level_script);
         assert(top >= 0);
@@ -75,26 +75,26 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->bf.animations.model->id);        // entity model id
+            lua_pushinteger(level_script, ent->m_bf.animations.model->id);        // entity model id
             if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
                 {
-                    ent->self->collide_flag = 0xff & lua_tointeger(level_script, -4);   // get collision flag
+                    ent->m_self->collide_flag = 0xff & lua_tointeger(level_script, -4);   // get collision flag
                 }
                 if(!lua_isnil(level_script, -3))
                 {
-                    ent->bf.animations.model->hide = lua_tointeger(level_script, -3);   // get info about model visibility
+                    ent->m_bf.animations.model->hide = lua_tointeger(level_script, -3);   // get info about model visibility
                 }
                 if(!lua_isnil(level_script, -2))
                 {
-                    ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-                    ent->type_flags |= lua_tointeger(level_script, -2);                 // get traverse information
+                    ent->m_typeFlags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
+                    ent->m_typeFlags |= lua_tointeger(level_script, -2);                 // get traverse information
                 }
                 if(!lua_isnil(level_script, -1))
                 {
                     size_t string_length;
-                    Res_CreateEntityFunc(engine_lua, lua_tolstring(level_script, -1, &string_length), ent->id);
+                    Res_CreateEntityFunc(engine_lua, lua_tolstring(level_script, -1, &string_length), ent->m_id);
                 }
             }
         }
@@ -3941,39 +3941,39 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
     {
         tr_item = &tr->items[i];
         std::shared_ptr<Entity> entity = std::make_shared<Entity>();
-        entity->id = i;
-        entity->transform.getOrigin()[0] = tr_item->pos.x;
-        entity->transform.getOrigin()[1] =-tr_item->pos.z;
-        entity->transform.getOrigin()[2] = tr_item->pos.y;
-        entity->angles[0] = tr_item->rotation;
-        entity->angles[1] = 0.0;
-        entity->angles[2] = 0.0;
-        Entity_UpdateRotation(entity);
+        entity->m_id = i;
+        entity->m_transform.getOrigin()[0] = tr_item->pos.x;
+        entity->m_transform.getOrigin()[1] =-tr_item->pos.z;
+        entity->m_transform.getOrigin()[2] = tr_item->pos.y;
+        entity->m_angles[0] = tr_item->rotation;
+        entity->m_angles[1] = 0.0;
+        entity->m_angles[2] = 0.0;
+        entity->updateRotation();
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms.size()))
         {
-            entity->self->room = world->rooms[ tr_item->room ];
+            entity->m_self->room = world->rooms[ tr_item->room ];
         }
         else
         {
-            entity->self->room = NULL;
+            entity->m_self->room = NULL;
         }
 
-        entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
-        entity->OCB             = tr_item->ocb;
-        entity->timer           = 0.0;
+        entity->m_triggerLayout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
+        entity->m_OCB             = tr_item->ocb;
+        entity->m_timer           = 0.0;
 
-        entity->self->collide_flag = 0x00;
-        entity->move_type          = 0x0000;
-        entity->inertia_linear     = 0.0;
-        entity->inertia_angular[0] = 0.0;
-        entity->inertia_angular[1] = 0.0;
-        entity->move_type          = 0;
+        entity->m_self->collide_flag = 0x00;
+        entity->m_moveType          = 0x0000;
+        entity->m_inertiaLinear     = 0.0;
+        entity->m_inertiaAngular[0] = 0.0;
+        entity->m_inertiaAngular[1] = 0.0;
+        entity->m_moveType          = 0;
 
-        entity->bf.animations.model = World_GetModelByID(world, tr_item->object_id);
+        entity->m_bf.animations.model = World_GetModelByID(world, tr_item->object_id);
 
         if(ent_ID_override != NULL)
         {
-            if(entity->bf.animations.model == NULL)
+            if(entity->m_bf.animations.model == NULL)
             {
                 top = lua_gettop(ent_ID_override);                              // save LUA stack
                 lua_getglobal(ent_ID_override, "getOverridedID");               // add to the up of stack LUA's function
@@ -3981,7 +3981,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 lua_pushinteger(ent_ID_override, tr_item->object_id);           // add to stack second argument
                 if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                   // call that function
                 {
-                    entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
+                    entity->m_bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
                 }
                 lua_settop(ent_ID_override, top);                               // restore LUA stack
             }
@@ -3996,26 +3996,26 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 if(replace_anim_id > 0)
                 {
                     skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
-                    std::swap(entity->bf.animations.model->animations, replace_anim_model->animations);
-                    std::swap(entity->bf.animations.model->animation_count, replace_anim_model->animation_count);
+                    std::swap(entity->m_bf.animations.model->animations, replace_anim_model->animations);
+                    std::swap(entity->m_bf.animations.model->animation_count, replace_anim_model->animation_count);
                 }
             }
             lua_settop(ent_ID_override, top);                                      // restore LUA stack
 
         }
 
-        if(entity->bf.animations.model == NULL)
+        if(entity->m_bf.animations.model == NULL)
         {
             // SPRITE LOADING
             sprite_p sp = World_GetSpriteByID(tr_item->object_id, world);
-            if(sp && entity->self->room)
+            if(sp && entity->m_self->room)
             {
                 room_sprite_p rsp;
-                int sz = ++entity->self->room->sprites_count;
-                entity->self->room->sprites = (room_sprite_p)realloc(entity->self->room->sprites, sz * sizeof(room_sprite_t));
-                rsp = entity->self->room->sprites + sz - 1;
+                int sz = ++entity->m_self->room->sprites_count;
+                entity->m_self->room->sprites = (room_sprite_p)realloc(entity->m_self->room->sprites, sz * sizeof(room_sprite_t));
+                rsp = entity->m_self->room->sprites + sz - 1;
                 rsp->sprite = sp;
-                rsp->pos = entity->transform.getOrigin();
+                rsp->pos = entity->m_transform.getOrigin();
                 rsp->was_rendered = 0;
             }
 
@@ -4028,21 +4028,21 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             continue;
         }
 
-        SSBoneFrame_CreateFromModel(&entity->bf, entity->bf.animations.model);
+        SSBoneFrame_CreateFromModel(&entity->m_bf, entity->m_bf.animations.model);
 
         if(0 == tr_item->object_id)                                             // Lara is unical model
         {
             skeletal_model_p tmp, LM;                                           // LM - Lara Model
 
-            entity->move_type = MOVE_ON_FLOOR;
+            entity->m_moveType = MOVE_ON_FLOOR;
             world->Character = entity;
-            entity->self->collide_flag = ENTITY_COLLISION_ACTOR;
-            entity->bf.animations.model->hide = 0;
-            entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            LM = (skeletal_model_p)entity->bf.animations.model;
+            entity->m_self->collide_flag = ENTITY_COLLISION_ACTOR;
+            entity->m_bf.animations.model->hide = 0;
+            entity->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
+            LM = (skeletal_model_p)entity->m_bf.animations.model;
 
             top = lua_gettop(engine_lua);
-            lua_pushinteger(engine_lua, entity->id);
+            lua_pushinteger(engine_lua, entity->m_id);
             lua_setglobal(engine_lua, "player");
             lua_settop(engine_lua, top);
 
@@ -4091,34 +4091,32 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                     break;
             };
 
-            for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
+            for(uint16_t j=0;j<entity->m_bf.bone_tag_count;j++)
             {
-                entity->bf.bone_tags[j].mesh_base = entity->bf.animations.model->mesh_tree[j].mesh_base;
-                entity->bf.bone_tags[j].mesh_skin = entity->bf.animations.model->mesh_tree[j].mesh_skin;
-                entity->bf.bone_tags[j].mesh_slot = NULL;
+                entity->m_bf.bone_tags[j].mesh_base = entity->m_bf.animations.model->mesh_tree[j].mesh_base;
+                entity->m_bf.bone_tags[j].mesh_skin = entity->m_bf.animations.model->mesh_tree[j].mesh_skin;
+                entity->m_bf.bone_tags[j].mesh_slot = NULL;
             }
-            Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
-            BT_GenEntityRigidBody(entity);
-            if(!entity->character)
-                entity->character = std::make_shared<Character>(entity);
-            entity->character->m_height = 768.0;
-            entity->character->state_func = State_Control_Lara;
+            world->Character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+            entity->genEntityRigidBody();
+            if(!entity->m_character)
+                entity->m_character = std::make_shared<Character>(entity);
+            entity->m_character->m_height = 768.0;
+            entity->m_character->state_func = State_Control_Lara;
 
             continue;
         }
 
-        Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
-        BT_GenEntityRigidBody(entity);
+        entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
+        entity->genEntityRigidBody();
 
-        Entity_RebuildBV(entity);
-        Room_AddEntity(entity->self->room, entity);
+        entity->rebuildBV();
+        Room_AddEntity(entity->m_self->room, entity);
         World_AddEntity(world, entity);
 
         Res_SetEntityModelProperties(entity);
-        if(entity->self->collide_flag == 0x00)
-        {
-            Entity_DisableCollision(entity);
-        }
+        if(entity->m_self->collide_flag == 0x00)
+            entity->disableCollision();
     }
 }
 
@@ -4384,14 +4382,14 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<base_item_s> >& map)
                 if(cont->object_type == OBJECT_ENTITY)
                 {
                     std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
-                    if(ent->bf.animations.model->id == item->world_model_id)
+                    if(ent->m_bf.animations.model->id == item->world_model_id)
                     {
                         char buf[64] = {0};
-                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id, ent->id);
+                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->m_id, ent->m_id);
                         luaL_dostring(engine_lua, buf);
-                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->id, item->id);
+                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->m_id, item->id);
                         luaL_dostring(engine_lua, buf);
-                        Entity_DisableCollision(ent);
+                        ent->disableCollision();
                     }
                 }
             }

@@ -316,8 +316,8 @@ void AudioSource::LinkEmitter()
     {
         case TR_AUDIO_EMITTER_ENTITY:
             if(std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, emitter_ID)) {
-                SetPosition(ent->transform.getOrigin());
-                SetVelocity(ent->speed.m_floats);
+                SetPosition(ent->m_transform.getOrigin());
+                SetVelocity(ent->m_speed.m_floats);
             }
             return;
 
@@ -1066,7 +1066,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
     {
         case TR_AUDIO_EMITTER_ENTITY:
             if(std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, entity_ID)) {
-                vec = ent->transform.getOrigin();
+                vec = ent->m_transform.getOrigin();
             }
             else {
                 return false;

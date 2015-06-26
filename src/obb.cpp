@@ -179,14 +179,14 @@ int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2)
 {
     //translation, in parent frame
     btScalar T[3];
-    auto v = e2->obb->centre - e1->obb->centre;
+    auto v = e2->m_obb->centre - e1->m_obb->centre;
     //translation, in A's frame
-    T[0] = v.dot(e1->transform.getBasis()[0]);
-    T[1] = v.dot(e1->transform.getBasis()[1]);
-    T[2] = v.dot(e1->transform.getBasis()[2]);
+    T[0] = v.dot(e1->m_transform.getBasis()[0]);
+    T[1] = v.dot(e1->m_transform.getBasis()[1]);
+    T[2] = v.dot(e1->m_transform.getBasis()[2]);
 
-    btScalar *a = e1->obb->extent;
-    btScalar *b = e2->obb->extent;
+    btScalar *a = e1->m_obb->extent;
+    btScalar *b = e2->m_obb->extent;
 
     //B's basis with respect to A's local frame
     btScalar R[3][3];
@@ -198,8 +198,8 @@ int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2)
     {
         for(k=0 ; k<3 ; k++)
         {
-            btVector3& e1b = e1->transform.getBasis()[i];
-            btVector3& e2b = e2->transform.getBasis()[k];
+            btVector3& e1b = e1->m_transform.getBasis()[i];
+            btVector3& e2b = e2->m_transform.getBasis()[k];
             R[i][k] = e1b.dot(e2b);
         }
     }

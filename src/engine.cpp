@@ -94,7 +94,7 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
     if(c1 && c1 == c0)
     {
         if(((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->isStaticOrKinematicObject() ||
-           ((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->isStaticOrKinematicObject())
+                ((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->isStaticOrKinematicObject())
         {
             return;                                                             // No self interaction
         }
@@ -226,34 +226,34 @@ void Engine_BTInit()
  * debug functions
  */
 
- int lua_CheckStack(lua_State *lua)
- {
-     ConsoleInfo::instance().printf("Current Lua stack index: %d", lua_gettop(lua));
-     return 0;
- }
+int lua_CheckStack(lua_State *lua)
+{
+    ConsoleInfo::instance().printf("Current Lua stack index: %d", lua_gettop(lua));
+    return 0;
+}
 
- int lua_DumpModel(lua_State * lua)
- {
-     int id = 0;
-     if(lua_gettop(lua) > 0)
-     {
-         id = lua_tointeger(lua, 1);
-     }
+int lua_DumpModel(lua_State * lua)
+{
+    int id = 0;
+    if(lua_gettop(lua) > 0)
+    {
+        id = lua_tointeger(lua, 1);
+    }
 
-     skeletal_model_p sm = World_GetModelByID(&engine_world, id);
-     if(sm == NULL)
-     {
+    skeletal_model_p sm = World_GetModelByID(&engine_world, id);
+    if(sm == NULL)
+    {
         ConsoleInfo::instance().printf("wrong model id = %d", id);
         return 0;
-     }
+    }
 
-     for(int i=0;i<sm->mesh_count;i++)
-     {
-         ConsoleInfo::instance().printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->id);
-     }
+    for(int i=0;i<sm->mesh_count;i++)
+    {
+        ConsoleInfo::instance().printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->id);
+    }
 
-     return 0;
- }
+    return 0;
+}
 
 int lua_DumpRoom(lua_State * lua)
 {
@@ -292,7 +292,7 @@ int lua_DumpRoom(lua_State * lua)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
-                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->id, ent->bf.animations.model->id);
+                Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->m_id, ent->m_bf.animations.model->id);
             }
         }
     }
@@ -377,7 +377,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
     int arg = lua_tointeger(lua, 2);
     int val = lua_tointeger(lua, 3);
     if((arg >= 0) && (arg < model->mesh_count) &&
-       (val >= 0) && (val < model->mesh_count))
+            (val >= 0) && (val < model->mesh_count))
     {
         model->collision_map[arg] = val;
     }
@@ -396,7 +396,7 @@ int lua_EnableEntity(lua_State * lua)
 
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent)
-        Entity_Enable(ent);
+        ent->enable();
 
     return 0;
 }
@@ -411,7 +411,8 @@ int lua_DisableEntity(lua_State * lua)
     }
 
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-    if(ent != NULL) Entity_Disable(ent);
+    if(ent)
+        ent->disable();
 
     return 0;
 }
@@ -426,16 +427,11 @@ int lua_SetEntityCollision(lua_State * lua)
     }
 
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
-    if(ent != NULL)
-    {
+    if(ent) {
         if(lua_tointeger(lua, 2) != 0)
-        {
-            Entity_EnableCollision(ent);
-        }
+            ent->enableCollision();
         else
-        {
-            Entity_DisableCollision(ent);
-        }
+            ent->disableCollision();
     }
 
     return 0;
@@ -447,9 +443,9 @@ int lua_GetEntitySectorFlags(lua_State *lua)
     if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
 
-    if((ent != NULL) && (ent->current_sector))
+    if((ent != NULL) && (ent->m_currentSector))
     {
-        lua_pushinteger(lua, ent->current_sector->flags);
+        lua_pushinteger(lua, ent->m_currentSector->flags);
         return 1;
     }
     return 0;
@@ -460,9 +456,9 @@ int lua_GetEntitySectorIndex(lua_State *lua)
     if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
 
-    if((ent != NULL) && (ent->current_sector))
+    if((ent != NULL) && (ent->m_currentSector))
     {
-        lua_pushinteger(lua, ent->current_sector->trig_index);
+        lua_pushinteger(lua, ent->m_currentSector->trig_index);
         return 1;
     }
     return 0;
@@ -473,9 +469,9 @@ int lua_GetEntitySectorMaterial(lua_State *lua)
     if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
 
-    if((ent != NULL) && (ent->current_sector))
+    if((ent != NULL) && (ent->m_currentSector))
     {
-        lua_pushinteger(lua, ent->current_sector->material);
+        lua_pushinteger(lua, ent->m_currentSector->material);
         return 1;
     }
     return 0;
@@ -488,7 +484,7 @@ int lua_NewSector(lua_State *lua)
 
     if(ent != NULL)
     {
-        if(ent->current_sector == ent->last_sector)
+        if(ent->m_currentSector == ent->m_lastSector)
         {
             lua_pushinteger(lua, 1);
         }
@@ -519,30 +515,30 @@ int lua_SetGravity(lua_State * lua)                                             
 
     switch(lua_gettop(lua))
     {
-        case 0:                                                                 // get value
-            g = bt_engine_dynamicsWorld->getGravity();
-            ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
-            break;
+    case 0:                                                                 // get value
+        g = bt_engine_dynamicsWorld->getGravity();
+        ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
+        break;
 
-        case 1:                                                                 // set z only value
-            g[0] = 0.0;
-            g[1] = 0.0;
-            g[2] = lua_tonumber(lua, 1);
-            bt_engine_dynamicsWorld->setGravity(g);
-            ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
-            break;
+    case 1:                                                                 // set z only value
+        g[0] = 0.0;
+        g[1] = 0.0;
+        g[2] = lua_tonumber(lua, 1);
+        bt_engine_dynamicsWorld->setGravity(g);
+        ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
+        break;
 
-        case 3:                                                                 // set xyz value
-            g[0] = lua_tonumber(lua, 1);
-            g[1] = lua_tonumber(lua, 2);
-            g[2] = lua_tonumber(lua, 3);
-            bt_engine_dynamicsWorld->setGravity(g);
-            ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
-            break;
+    case 3:                                                                 // set xyz value
+        g[0] = lua_tonumber(lua, 1);
+        g[1] = lua_tonumber(lua, 2);
+        g[2] = lua_tonumber(lua, 3);
+        bt_engine_dynamicsWorld->setGravity(g);
+        ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
+        break;
 
-        default:
-            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS_COUNT, "0, 1 or 3");
-            break;
+    default:
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS_COUNT, "0, 1 or 3");
+        break;
     };
 
     return 0;
@@ -567,28 +563,28 @@ int lua_DropEntity(lua_State * lua)
 
     btScalar time = lua_tonumber(lua, 2);
     btVector3 g = bt_engine_dynamicsWorld->getGravity();
-    btVector3 move = ent->speed * time;;
+    btVector3 move = ent->m_speed * time;;
     move += g * 0.5 * time * time;
-    ent->speed += g * time;
+    ent->m_speed += g * time;
 
-    BtEngineClosestRayResultCallback cb(ent->self.get());
+    BtEngineClosestRayResultCallback cb(ent->m_self.get());
     btVector3 from, to;
-    from = ent->transform * ent->bf.centre;
-    from[2] = ent->transform.getOrigin()[2];
+    from = ent->m_transform * ent->m_bf.centre;
+    from[2] = ent->m_transform.getOrigin()[2];
     to = from + move;
-    to[2] -= (ent->bf.bb_max[2] - ent->bf.bb_min[2]);
+    to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
     bt_engine_dynamicsWorld->rayTest(from, to, cb);
     if(cb.hasHit())
     {
         move.setInterpolate3(from ,to, cb.m_closestHitFraction);
-        ent->transform.getOrigin()[2] = move[2];
+        ent->m_transform.getOrigin()[2] = move[2];
         lua_pushboolean(lua, 1);
         return 1;
     }
 
-    ent->transform.getOrigin()[0] += move[0];
-    ent->transform.getOrigin()[1] += move[1];
-    ent->transform.getOrigin()[2] += move[2];
+    ent->m_transform.getOrigin()[0] += move[0];
+    ent->m_transform.getOrigin()[1] += move[1];
+    ent->m_transform.getOrigin()[2] += move[2];
     lua_pushboolean(lua, 0);
     return 1;
 }
@@ -601,9 +597,9 @@ int lua_GetEntityModelID(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent == NULL) return 0;
 
-    if(ent->bf.animations.model)
+    if(ent->m_bf.animations.model)
     {
-        lua_pushinteger(lua, ent->bf.animations.model->id);
+        lua_pushinteger(lua, ent->m_bf.animations.model->id);
         return 1;
     }
     return 0;
@@ -617,10 +613,10 @@ int lua_GetEntityActivationOffset(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent == NULL) return 0;
 
-    lua_pushnumber(lua, ent->activation_offset[0]);
-    lua_pushnumber(lua, ent->activation_offset[1]);
-    lua_pushnumber(lua, ent->activation_offset[2]);
-    lua_pushnumber(lua, ent->activation_radius);
+    lua_pushnumber(lua, ent->m_activationOffset[0]);
+    lua_pushnumber(lua, ent->m_activationOffset[1]);
+    lua_pushnumber(lua, ent->m_activationOffset[2]);
+    lua_pushnumber(lua, ent->m_activationRadius);
 
     return 4;
 }
@@ -646,13 +642,13 @@ int lua_SetEntityActivationOffset(lua_State * lua)
 
     if(top >= 4)
     {
-        ent->activation_offset[0] = lua_tonumber(lua, 2);
-        ent->activation_offset[1] = lua_tonumber(lua, 3);
-        ent->activation_offset[2] = lua_tonumber(lua, 4);
+        ent->m_activationOffset[0] = lua_tonumber(lua, 2);
+        ent->m_activationOffset[1] = lua_tonumber(lua, 3);
+        ent->m_activationOffset[2] = lua_tonumber(lua, 4);
     }
     if(top >= 5)
     {
-        ent->activation_radius = lua_tonumber(lua, 5);
+        ent->m_activationRadius = lua_tonumber(lua, 5);
     }
 
     return 0;
@@ -720,8 +716,8 @@ int lua_SetCharacterParam(lua_State * lua)
     }
     else
     {
-        ent->character->m_parameters.param[parameter] = lua_tonumber(lua, 3);
-        ent->character->m_parameters.maximum[parameter] = lua_tonumber(lua, 4);
+        ent->m_character->m_parameters.param[parameter] = lua_tonumber(lua, 3);
+        ent->m_character->m_parameters.maximum[parameter] = lua_tonumber(lua, 4);
     }
 
     return 0;
@@ -734,7 +730,7 @@ int lua_GetCharacterCombatMode(lua_State * lua)
 
     if(IsCharacter(ent))
     {
-        lua_pushnumber(lua, ent->character->m_weaponCurrentState);
+        lua_pushnumber(lua, ent->m_character->m_weaponCurrentState);
         return 1;
     }
     else
@@ -799,9 +795,9 @@ int lua_AddCharacterHair(lua_State *lua)
             }
             else
             {
-                ent->character->m_hairs.emplace_back();
+                ent->m_character->m_hairs.emplace_back();
 
-                if(!Hair_Create(ent->character->m_hairs.back(), &hair_setup, ent))
+                if(!Hair_Create(ent->m_character->m_hairs.back(), &hair_setup, ent))
                 {
                     ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
                 }
@@ -829,9 +825,9 @@ int lua_ResetCharacterHair(lua_State *lua)
 
         if(IsCharacter(ent))
         {
-            if(!ent->character->m_hairs.empty())
+            if(!ent->m_character->m_hairs.empty())
             {
-                ent->character->m_hairs.clear();
+                ent->m_character->m_hairs.clear();
             }
             else
             {
@@ -898,7 +894,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 
         if(ent)
         {
-            if(ent->bt.bt_joint_count)
+            if(ent->m_bt.bt_joint_count)
             {
                 Ragdoll_Delete(ent);
             }
@@ -1023,8 +1019,8 @@ int lua_AddFont(lua_State *lua)
     }
 
     if(!FontManager->AddFont((font_Type)lua_tointeger(lua, 1),
-                            (uint32_t) lua_tointeger(lua, 3),
-                                       lua_tostring(lua, 2)))
+                             (uint32_t) lua_tointeger(lua, 3),
+                             lua_tostring(lua, 2)))
     {
         ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
 
@@ -1267,9 +1263,9 @@ int lua_PrintItems(lua_State * lua)
         return 0;
     }
 
-    if(ent->character)
+    if(ent->m_character)
     {
-        for(const InventoryNode& i : ent->character->m_inventory)
+        for(const InventoryNode& i : ent->m_character->m_inventory)
         {
             ConsoleInfo::instance().printf("item[id = %d]: count = %d, type = %d", i.id, i.count);
         }
@@ -1494,9 +1490,9 @@ int lua_GetEntityVector(lua_State * lua)
         return 0;
     }
 
-    lua_pushnumber(lua, e2->transform.getOrigin()[0] - e1->transform.getOrigin()[0]);
-    lua_pushnumber(lua, e2->transform.getOrigin()[1] - e1->transform.getOrigin()[1]);
-    lua_pushnumber(lua, e2->transform.getOrigin()[2] - e1->transform.getOrigin()[2]);
+    lua_pushnumber(lua, e2->m_transform.getOrigin()[0] - e1->m_transform.getOrigin()[0]);
+    lua_pushnumber(lua, e2->m_transform.getOrigin()[1] - e1->m_transform.getOrigin()[1]);
+    lua_pushnumber(lua, e2->m_transform.getOrigin()[2] - e1->m_transform.getOrigin()[2]);
     return 3;
 }
 
@@ -1523,7 +1519,7 @@ int lua_GetEntityDistance(lua_State * lua)
         return 0;
     }
 
-    lua_pushnumber(lua, Entity_FindDistance(e1, e2));
+    lua_pushnumber(lua, e1->findDistance(*e2));
     return 1;
 }
 
@@ -1551,7 +1547,7 @@ int lua_GetEntityDirDot(lua_State * lua)
         return 0;
     }
 
-    lua_pushnumber(lua, e1->transform.getBasis()[1].dot(e2->transform.getBasis()[1]));
+    lua_pushnumber(lua, e1->m_transform.getBasis()[1].dot(e2->m_transform.getBasis()[1]));
     return 1;
 }
 
@@ -1572,12 +1568,12 @@ int lua_GetEntityPosition(lua_State * lua)
         return 0;
     }
 
-    lua_pushnumber(lua, ent->transform.getOrigin()[0]);
-    lua_pushnumber(lua, ent->transform.getOrigin()[1]);
-    lua_pushnumber(lua, ent->transform.getOrigin()[2]);
-    lua_pushnumber(lua, ent->angles[0]);
-    lua_pushnumber(lua, ent->angles[1]);
-    lua_pushnumber(lua, ent->angles[2]);
+    lua_pushnumber(lua, ent->m_transform.getOrigin()[0]);
+    lua_pushnumber(lua, ent->m_transform.getOrigin()[1]);
+    lua_pushnumber(lua, ent->m_transform.getOrigin()[2]);
+    lua_pushnumber(lua, ent->m_angles[0]);
+    lua_pushnumber(lua, ent->m_angles[1]);
+    lua_pushnumber(lua, ent->m_angles[2]);
 
     return 6;
 }
@@ -1587,51 +1583,51 @@ int lua_SetEntityPosition(lua_State * lua)
 {
     switch(lua_gettop(lua))
     {
-        case 4:
-            {
-                int id = lua_tointeger(lua, 1);
-                std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
-                if(ent == NULL)
-                {
-                    ConsoleInfo::instance().printf("can not find entity with id = %d", id);
-                    return 0;
-                }
-                ent->transform.getOrigin()[0] = lua_tonumber(lua, 2);
-                ent->transform.getOrigin()[1] = lua_tonumber(lua, 3);
-                ent->transform.getOrigin()[2] = lua_tonumber(lua, 4);
-                if(ent->character)
-                {
-                    Character_UpdatePlatformPreStep(ent);
-                }
-            }
+    case 4:
+    {
+        int id = lua_tointeger(lua, 1);
+        std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
+        if(ent == NULL)
+        {
+            ConsoleInfo::instance().printf("can not find entity with id = %d", id);
             return 0;
+        }
+        ent->m_transform.getOrigin()[0] = lua_tonumber(lua, 2);
+        ent->m_transform.getOrigin()[1] = lua_tonumber(lua, 3);
+        ent->m_transform.getOrigin()[2] = lua_tonumber(lua, 4);
+        if(ent->m_character)
+        {
+            Character_UpdatePlatformPreStep(ent);
+        }
+    }
+        return 0;
 
-        case 7:
-            {
-                int id = lua_tointeger(lua, 1);
-                std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
-                if(ent == NULL)
-                {
-                    ConsoleInfo::instance().printf("can not find entity with id = %d", id);
-                    return 0;
-                }
-                ent->transform.getOrigin()[0] = lua_tonumber(lua, 2);
-                ent->transform.getOrigin()[1] = lua_tonumber(lua, 3);
-                ent->transform.getOrigin()[2] = lua_tonumber(lua, 4);
-                ent->angles[0] = lua_tonumber(lua, 5);
-                ent->angles[1] = lua_tonumber(lua, 6);
-                ent->angles[2] = lua_tonumber(lua, 7);
-                Entity_UpdateRotation(ent);
-                if(ent->character)
-                {
-                    Character_UpdatePlatformPreStep(ent);
-                }
-            }
+    case 7:
+    {
+        int id = lua_tointeger(lua, 1);
+        std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
+        if(ent == NULL)
+        {
+            ConsoleInfo::instance().printf("can not find entity with id = %d", id);
             return 0;
+        }
+        ent->m_transform.getOrigin()[0] = lua_tonumber(lua, 2);
+        ent->m_transform.getOrigin()[1] = lua_tonumber(lua, 3);
+        ent->m_transform.getOrigin()[2] = lua_tonumber(lua, 4);
+        ent->m_angles[0] = lua_tonumber(lua, 5);
+        ent->m_angles[1] = lua_tonumber(lua, 6);
+        ent->m_angles[2] = lua_tonumber(lua, 7);
+        ent->updateRotation();
+        if(ent->m_character)
+        {
+            Character_UpdatePlatformPreStep(ent);
+        }
+    }
+        return 0;
 
-        default:
-            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, x, y, z] or [id, x, y, z, fi_x, fi_y, fi_z]");
-            return 0;
+    default:
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, x, y, z] or [id, x, y, z, fi_x, fi_y, fi_z]");
+        return 0;
     }
 
     return 0;
@@ -1642,25 +1638,25 @@ int lua_MoveEntityGlobal(lua_State * lua)
 {
     switch(lua_gettop(lua))
     {
-        case 4:
-            {
-                int id = lua_tointeger(lua, 1);
-                std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
-                if(ent == NULL)
-                {
-                    ConsoleInfo::instance().printf("can not find entity with id = %d", id);
-                    return 0;
-                }
-                ent->transform.getOrigin()[0] += lua_tonumber(lua, 2);
-                ent->transform.getOrigin()[1] += lua_tonumber(lua, 3);
-                ent->transform.getOrigin()[2] += lua_tonumber(lua, 4);
-                Entity_UpdateRigidBody(ent, 1);
-            }
+    case 4:
+    {
+        int id = lua_tointeger(lua, 1);
+        std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
+        if(ent == NULL)
+        {
+            ConsoleInfo::instance().printf("can not find entity with id = %d", id);
             return 0;
+        }
+        ent->m_transform.getOrigin()[0] += lua_tonumber(lua, 2);
+        ent->m_transform.getOrigin()[1] += lua_tonumber(lua, 3);
+        ent->m_transform.getOrigin()[2] += lua_tonumber(lua, 4);
+        ent->updateRigidBody(true);
+    }
+        return 0;
 
-        default:
-            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, x, y, z]");
-            return 0;
+    default:
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, x, y, z]");
+        return 0;
     }
 
     return 0;
@@ -1688,11 +1684,11 @@ int lua_MoveEntityLocal(lua_State * lua)
     btScalar dy = lua_tonumber(lua, 3);
     btScalar dz = lua_tonumber(lua, 4);
 
-    ent->transform.getOrigin()[0] += dx * ent->transform.getBasis()[0][0] + dy * ent->transform.getBasis()[1][0] + dz * ent->transform.getBasis()[2][0];
-    ent->transform.getOrigin()[1] += dx * ent->transform.getBasis()[0][1] + dy * ent->transform.getBasis()[1][1] + dz * ent->transform.getBasis()[2][1];
-    ent->transform.getOrigin()[2] += dx * ent->transform.getBasis()[0][2] + dy * ent->transform.getBasis()[1][2] + dz * ent->transform.getBasis()[2][2];
+    ent->m_transform.getOrigin()[0] += dx * ent->m_transform.getBasis()[0][0] + dy * ent->m_transform.getBasis()[1][0] + dz * ent->m_transform.getBasis()[2][0];
+    ent->m_transform.getOrigin()[1] += dx * ent->m_transform.getBasis()[0][1] + dy * ent->m_transform.getBasis()[1][1] + dz * ent->m_transform.getBasis()[2][1];
+    ent->m_transform.getOrigin()[2] += dx * ent->m_transform.getBasis()[0][2] + dy * ent->m_transform.getBasis()[1][2] + dz * ent->m_transform.getBasis()[2][2];
 
-    Entity_UpdateRigidBody(ent, 1);
+    ent->updateRigidBody(true);
 
     return 0;
 }
@@ -1712,32 +1708,32 @@ int lua_MoveEntityToSink(lua_State * lua)
         return 0;
     StatCameraSink* sink = &engine_world.cameras_sinks[sink_index];
 
-    btVector3 ent_pos;  ent_pos[0] = ent->transform.getOrigin()[0];
-                        ent_pos[1] = ent->transform.getOrigin()[1];
-                        ent_pos[2] = ent->transform.getOrigin()[2];
+    btVector3 ent_pos;  ent_pos[0] = ent->m_transform.getOrigin()[0];
+    ent_pos[1] = ent->m_transform.getOrigin()[1];
+    ent_pos[2] = ent->m_transform.getOrigin()[2];
 
     btVector3 sink_pos; sink_pos[0] = sink->x;
-                        sink_pos[1] = sink->y;
+    sink_pos[1] = sink->y;
 
-                    if(engine_world.version < TR_II)
-                    {
-                        sink_pos[2] = ent_pos[2];
-                    }
-                    else
-                    {
-                        sink_pos[2] = sink->z + 256.0; // Prevents digging into the floor.
-                    }
+    if(engine_world.version < TR_II)
+    {
+        sink_pos[2] = ent_pos[2];
+    }
+    else
+    {
+        sink_pos[2] = sink->z + 256.0; // Prevents digging into the floor.
+    }
 
     btScalar dist = btDistance(ent_pos, sink_pos);
     if(dist == 0.0) dist = 1.0; // Prevents division by zero.
 
     btVector3 speed = ((sink_pos - ent_pos) / dist) * ((btScalar)(sink->room_or_strength) * 1.5);
 
-    ent->transform.getOrigin()[0] += speed[0];
-    ent->transform.getOrigin()[1] += speed[1];
-    ent->transform.getOrigin()[2] += speed[2] * 16.0;
+    ent->m_transform.getOrigin()[0] += speed[0];
+    ent->m_transform.getOrigin()[1] += speed[1];
+    ent->m_transform.getOrigin()[2] += speed[2] * 16.0;
 
-    Entity_UpdateRigidBody(ent, 1);
+    ent->updateRigidBody(true);
 
     return 0;
 }
@@ -1754,24 +1750,24 @@ int lua_MoveEntityToEntity(lua_State * lua)
     std::shared_ptr<Entity> ent2 = World_GetEntityByID(&engine_world, lua_tointeger(lua, 2));
     btScalar speed_mult = lua_tonumber(lua, 3);
 
-    btVector3 ent1_pos; ent1_pos[0] = ent1->transform.getOrigin()[0];
-                        ent1_pos[1] = ent1->transform.getOrigin()[1];
-                        ent1_pos[2] = ent1->transform.getOrigin()[2];
+    btVector3 ent1_pos; ent1_pos[0] = ent1->m_transform.getOrigin()[0];
+    ent1_pos[1] = ent1->m_transform.getOrigin()[1];
+    ent1_pos[2] = ent1->m_transform.getOrigin()[2];
 
-    btVector3 ent2_pos; ent2_pos[0] = ent2->transform.getOrigin()[0];
-                        ent2_pos[1] = ent2->transform.getOrigin()[1];
-                        ent2_pos[2] = ent2->transform.getOrigin()[2];
+    btVector3 ent2_pos; ent2_pos[0] = ent2->m_transform.getOrigin()[0];
+    ent2_pos[1] = ent2->m_transform.getOrigin()[1];
+    ent2_pos[2] = ent2->m_transform.getOrigin()[2];
 
     btScalar dist = btDistance(ent1_pos, ent2_pos);
     if(dist == 0.0) dist = 1.0; // Prevents division by zero.
 
     btVector3 speed = ((ent2_pos - ent1_pos) / dist) * speed_mult; // FIXME!
 
-    ent1->transform.getOrigin()[0] += speed[0];
-    ent1->transform.getOrigin()[1] += speed[1];
-    ent1->transform.getOrigin()[2] += speed[2];
-    if(ent1->character) Character_UpdatePlatformPreStep(ent1);
-    Entity_UpdateRigidBody(ent1, 1);
+    ent1->m_transform.getOrigin()[0] += speed[0];
+    ent1->m_transform.getOrigin()[1] += speed[1];
+    ent1->m_transform.getOrigin()[2] += speed[2];
+    if(ent1->m_character) Character_UpdatePlatformPreStep(ent1);
+    ent1->updateRigidBody(true);
 
     return 0;
 }
@@ -1793,9 +1789,9 @@ int lua_GetEntitySpeed(lua_State * lua)
         return 0;
     }
 
-    lua_pushnumber(lua, ent->speed[0]);
-    lua_pushnumber(lua, ent->speed[1]);
-    lua_pushnumber(lua, ent->speed[2]);
+    lua_pushnumber(lua, ent->m_speed[0]);
+    lua_pushnumber(lua, ent->m_speed[1]);
+    lua_pushnumber(lua, ent->m_speed[2]);
     return 3;
 }
 
@@ -1816,7 +1812,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
         return 0;
     }
 
-    lua_pushnumber(lua, ent->speed.length());
+    lua_pushnumber(lua, ent->m_speed.length());
     return 1;
 }
 
@@ -1833,15 +1829,15 @@ int lua_SetEntitySpeed(lua_State * lua)
 
     switch(lua_gettop(lua))
     {
-        case 4:
-            ent->speed[0] = lua_tonumber(lua, 2);
-            ent->speed[1] = lua_tonumber(lua, 3);
-            ent->speed[2] = lua_tonumber(lua, 4);
-            break;
+    case 4:
+        ent->m_speed[0] = lua_tonumber(lua, 2);
+        ent->m_speed[1] = lua_tonumber(lua, 3);
+        ent->m_speed[2] = lua_tonumber(lua, 4);
+        break;
 
-        default:
-            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, Vx, Vy, Vz]");
-            break;
+    default:
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, Vx, Vy, Vz]");
+        break;
     }
 
     return 0;
@@ -1869,16 +1865,16 @@ int lua_SetEntityAnim(lua_State * lua)
 
     switch(top)
     {
-        case 2:
-        default:
-            Entity_SetAnimation(ent, lua_tointeger(lua, 2));
-            break;
-        case 3:
-            Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
-            break;
-        case 4:
-            Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3), lua_tointeger(lua, 4));
-            break;
+    case 2:
+    default:
+        ent->setAnimation(lua_tointeger(lua, 2));
+        break;
+    case 3:
+        ent->setAnimation(lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+        break;
+    case 4:
+        ent->setAnimation(lua_tointeger(lua, 2), lua_tointeger(lua, 3), lua_tointeger(lua, 4));
+        break;
     }
 
     return 0;
@@ -1903,7 +1899,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
         return 0;
     }
 
-    ent->bf.animations.anim_flags = lua_tointeger(lua,2);
+    ent->m_bf.animations.anim_flags = lua_tointeger(lua,2);
 
     return 0;
 }
@@ -1928,13 +1924,13 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
     }
 
     int bone_id = lua_tointeger(lua, 2);
-    if((bone_id < 0) || (bone_id >= ent->bf.bone_tag_count))
+    if((bone_id < 0) || (bone_id >= ent->m_bf.bone_tag_count))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return 0;
     }
 
-    ent->bf.bone_tags[bone_id].body_part = lua_tointeger(lua, 3);
+    ent->m_bf.bone_tags[bone_id].body_part = lua_tointeger(lua, 3);
 
     return 0;
 }
@@ -1989,9 +1985,9 @@ int lua_GetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->bf.animations.current_animation);
-    lua_pushinteger(lua, ent->bf.animations.current_frame);
-    lua_pushinteger(lua, ent->bf.animations.model->animations[ent->bf.animations.current_animation].frames_count);
+    lua_pushinteger(lua, ent->m_bf.animations.current_animation);
+    lua_pushinteger(lua, ent->m_bf.animations.current_frame);
+    lua_pushinteger(lua, ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames_count);
 
     return 3;
 }
@@ -2010,7 +2006,7 @@ int lua_CanTriggerEntity(lua_State * lua)
 
     id = lua_tointeger(lua, 1);
     std::shared_ptr<Entity> e1 = World_GetEntityByID(&engine_world, id);
-    if(e1 == NULL || !e1->character || !e1->character->m_command.action)
+    if(e1 == NULL || !e1->m_character || !e1->m_character->m_command.action)
     {
         lua_pushinteger(lua, 0);
         return 1;
@@ -2024,13 +2020,13 @@ int lua_CanTriggerEntity(lua_State * lua)
         return 1;
     }
 
-    auto r = e2->activation_radius;
+    auto r = e2->m_activationRadius;
     if(top >= 3)
     {
         r = lua_tonumber(lua, 3);
     }
     r *= r;
-    auto offset = e2->activation_offset;
+    auto offset = e2->m_activationOffset;
     if(top >= 4)
     {
         offset[0] = lua_tonumber(lua, 4);
@@ -2038,9 +2034,9 @@ int lua_CanTriggerEntity(lua_State * lua)
         offset[2] = lua_tonumber(lua, 6);
     }
 
-    auto pos = e2->transform * offset;
-    if((e1->transform.getBasis()[1].dot(e2->transform.getBasis()[1]) > 0.75) &&
-       ((e1->transform.getOrigin() - pos).length2() < r))
+    auto pos = e2->m_transform * offset;
+    if((e1->m_transform.getBasis()[1].dot(e2->m_transform.getBasis()[1]) > 0.75) &&
+            ((e1->m_transform.getOrigin() - pos).length2() < r))
     {
         lua_pushinteger(lua, 1);
         return 1;
@@ -2068,7 +2064,7 @@ int lua_GetEntityVisibility(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_VISIBLE) != 0);
+    lua_pushinteger(lua, (ent->m_stateFlags & ENTITY_STATE_VISIBLE) != 0);
 
     return 1;
 }
@@ -2092,11 +2088,11 @@ int lua_SetEntityVisibility(lua_State * lua)
 
     if(lua_tointeger(lua, 2) != 0)
     {
-        ent->state_flags |= ENTITY_STATE_VISIBLE;
+        ent->m_stateFlags |= ENTITY_STATE_VISIBLE;
     }
     else
     {
-        ent->state_flags &= ~ENTITY_STATE_VISIBLE;
+        ent->m_stateFlags &= ~ENTITY_STATE_VISIBLE;
     }
 
     return 0;
@@ -2120,7 +2116,7 @@ int lua_GetEntityEnability(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_ENABLED) != 0);
+    lua_pushinteger(lua, (ent->m_stateFlags & ENTITY_STATE_ENABLED) != 0);
 
     return 1;
 }
@@ -2143,7 +2139,7 @@ int lua_GetEntityActivity(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_ACTIVE) != 0);
+    lua_pushinteger(lua, (ent->m_stateFlags & ENTITY_STATE_ACTIVE) != 0);
 
     return 1;
 }
@@ -2168,11 +2164,11 @@ int lua_SetEntityActivity(lua_State * lua)
 
     if(lua_tointeger(lua, 2) != 0)
     {
-        ent->state_flags |= ENTITY_STATE_ACTIVE;
+        ent->m_stateFlags |= ENTITY_STATE_ACTIVE;
     }
     else
     {
-        ent->state_flags &= ~ENTITY_STATE_ACTIVE;
+        ent->m_stateFlags &= ~ENTITY_STATE_ACTIVE;
     }
 
     return 0;
@@ -2186,9 +2182,9 @@ int lua_GetEntityTriggerLayout(lua_State *lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent == NULL) return 0;   // No entity found - return.
 
-    lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_MASK));          // mask
-    lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5);    // event
-    lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6);     // lock
+    lua_pushinteger(lua, (ent->m_triggerLayout & ENTITY_TLAYOUT_MASK));          // mask
+    lua_pushinteger(lua, (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) >> 5);    // event
+    lua_pushinteger(lua, (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK) >> 6);     // lock
 
     return 3;
 }
@@ -2214,15 +2210,15 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
 
     if(top == 2)
     {
-        ent->trigger_layout = (uint8_t)lua_tointeger(lua, 2);
+        ent->m_triggerLayout = (uint8_t)lua_tointeger(lua, 2);
     }
     else if(top == 4)
     {
-        uint8_t trigger_layout = ent->trigger_layout;
+        uint8_t trigger_layout = ent->m_triggerLayout;
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);          // mask  - 00011111
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= ((uint8_t)lua_tointeger(lua, 3)) << 5;   // event - 00100000
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)lua_tointeger(lua, 4)) << 6;   // lock  - 01000000
-        ent->trigger_layout = trigger_layout;
+        ent->m_triggerLayout = trigger_layout;
     }
 
     return 0;
@@ -2235,9 +2231,9 @@ int lua_SetEntityLock(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent != NULL)
     {
-        uint8_t trigger_layout = ent->trigger_layout;
+        uint8_t trigger_layout = ent->m_triggerLayout;
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 6;   // lock  - 01000000
-        ent->trigger_layout = trigger_layout;
+        ent->m_triggerLayout = trigger_layout;
     }
     return 0;
 }
@@ -2249,7 +2245,7 @@ int lua_GetEntityLock(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent != NULL)
     {
-        lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6));      // lock
+        lua_pushinteger(lua, ((ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK) >> 6));      // lock
         return 1;
     }
     return 0;
@@ -2262,9 +2258,9 @@ int lua_SetEntityEvent(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent != NULL)
     {
-        uint8_t trigger_layout = ent->trigger_layout;
+        uint8_t trigger_layout = ent->m_triggerLayout;
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 5;   // event - 00100000
-        ent->trigger_layout = trigger_layout;
+        ent->m_triggerLayout = trigger_layout;
     }
     return 0;
 }
@@ -2276,7 +2272,7 @@ int lua_GetEntityEvent(lua_State *lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent != NULL)
     {
-        lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5));    // event
+        lua_pushinteger(lua, ((ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) >> 5));    // event
         return 1;
     }
     return 0;
@@ -2289,7 +2285,7 @@ int lua_GetEntityMask(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent != NULL)
     {
-        lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_MASK));          // mask
+        lua_pushinteger(lua, (ent->m_triggerLayout & ENTITY_TLAYOUT_MASK));          // mask
         return 1;
     }
     return 0;
@@ -2302,9 +2298,9 @@ int lua_SetEntityMask(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent != NULL)
     {
-        uint8_t trigger_layout = ent->trigger_layout;
+        uint8_t trigger_layout = ent->m_triggerLayout;
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);   // mask  - 00011111
-        ent->trigger_layout = trigger_layout;
+        ent->m_triggerLayout = trigger_layout;
     }
     return 0;
 }
@@ -2316,7 +2312,7 @@ int lua_GetEntitySectorStatus(lua_State *lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent != NULL)
     {
-        lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7));
+        lua_pushinteger(lua, ((ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7));
         return 1;
     }
     return 0;
@@ -2329,10 +2325,10 @@ int lua_SetEntitySectorStatus(lua_State *lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent != NULL)
     {
-        uint8_t trigger_layout = ent->trigger_layout;
+        uint8_t trigger_layout = ent->m_triggerLayout;
         trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_SSTATUS);
         trigger_layout ^=  ((uint8_t)lua_tointeger(lua, 2)) << 7;   // sector_status  - 10000000
-        ent->trigger_layout = trigger_layout;
+        ent->m_triggerLayout = trigger_layout;
     }
     return 0;
 }
@@ -2344,7 +2340,7 @@ int lua_GetEntityOCB(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent == NULL) return 0;   // No entity found - return.
 
-    lua_pushinteger(lua, ent->OCB);
+    lua_pushinteger(lua, ent->m_OCB);
     return 1;
 }
 
@@ -2356,7 +2352,7 @@ int lua_SetEntityOCB(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent == NULL) return 0;   // No entity found - return.
 
-    ent->OCB = lua_tointeger(lua, 2);
+    ent->m_OCB = lua_tointeger(lua, 2);
     return 0;
 }
 
@@ -2377,9 +2373,9 @@ int lua_GetEntityFlags(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->state_flags);
-    lua_pushinteger(lua, ent->type_flags);
-    lua_pushinteger(lua, ent->callback_flags);
+    lua_pushinteger(lua, ent->m_stateFlags);
+    lua_pushinteger(lua, ent->m_typeFlags);
+    lua_pushinteger(lua, ent->m_callbackFlags);
 
     return 3;
 }
@@ -2403,15 +2399,15 @@ int lua_SetEntityFlags(lua_State * lua)
 
     if(!lua_isnil(lua, 2))
     {
-        ent->state_flags = lua_tointeger(lua, 2);
+        ent->m_stateFlags = lua_tointeger(lua, 2);
     }
     if(!lua_isnil(lua, 3))
     {
-        ent->type_flags = lua_tointeger(lua, 3);
+        ent->m_typeFlags = lua_tointeger(lua, 3);
     }
     if(!lua_isnil(lua, 4))
     {
-        ent->callback_flags = lua_tointeger(lua, 4);
+        ent->m_callbackFlags = lua_tointeger(lua, 4);
     }
 
     return 0;
@@ -2439,11 +2435,11 @@ int lua_GetEntityTypeFlag(lua_State *lua)
 
     if(top == 1)
     {
-        lua_pushinteger(lua, ent->type_flags);
+        lua_pushinteger(lua, ent->m_typeFlags);
     }
     else
     {
-        lua_pushinteger(lua, (ent->type_flags & (uint16_t)(lua_tointeger(lua, 2))));
+        lua_pushinteger(lua, (ent->m_typeFlags & (uint16_t)(lua_tointeger(lua, 2))));
     }
     
     return 1;
@@ -2470,17 +2466,17 @@ int lua_SetEntityTypeFlag(lua_State *lua)
 
     if(top == 2)
     {
-        ent->type_flags ^= (uint16_t)lua_tointeger(lua, 2);
+        ent->m_typeFlags ^= (uint16_t)lua_tointeger(lua, 2);
     }
     else
     {
         if(lua_tointeger(lua, 3) == 1)
         {
-            ent->type_flags |=  (uint16_t)lua_tointeger(lua, 2);
+            ent->m_typeFlags |=  (uint16_t)lua_tointeger(lua, 2);
         }
         else
         {
-            ent->type_flags &= ~(uint16_t)lua_tointeger(lua, 2);
+            ent->m_typeFlags &= ~(uint16_t)lua_tointeger(lua, 2);
         }
     }
     
@@ -2509,11 +2505,11 @@ int lua_GetEntityStateFlag(lua_State *lua)
 
     if(top == 1)
     {
-        lua_pushinteger(lua, ent->state_flags);
+        lua_pushinteger(lua, ent->m_stateFlags);
     }
     else
     {
-        lua_pushinteger(lua, (ent->state_flags & (uint16_t)(lua_tointeger(lua, 2))));
+        lua_pushinteger(lua, (ent->m_stateFlags & (uint16_t)(lua_tointeger(lua, 2))));
     }
     
     return 1;
@@ -2540,17 +2536,17 @@ int lua_SetEntityStateFlag(lua_State *lua)
 
     if(top == 2)
     {
-        ent->state_flags ^= (uint16_t)lua_tointeger(lua, 2);
+        ent->m_stateFlags ^= (uint16_t)lua_tointeger(lua, 2);
     }
     else
     {
         if(lua_tointeger(lua, 3) == 1)
         {
-            ent->state_flags |=  (uint16_t)lua_tointeger(lua, 2);
+            ent->m_stateFlags |=  (uint16_t)lua_tointeger(lua, 2);
         }
         else
         {
-            ent->state_flags &= ~(uint16_t)lua_tointeger(lua, 2);
+            ent->m_stateFlags &= ~(uint16_t)lua_tointeger(lua, 2);
         }
     }
     
@@ -2579,11 +2575,11 @@ int lua_GetEntityCallbackFlag(lua_State *lua)
 
     if(top == 1)
     {
-        lua_pushinteger(lua, ent->callback_flags);
+        lua_pushinteger(lua, ent->m_callbackFlags);
     }
     else
     {
-        lua_pushinteger(lua, (ent->callback_flags & (uint32_t)(lua_tointeger(lua, 2))));
+        lua_pushinteger(lua, (ent->m_callbackFlags & (uint32_t)(lua_tointeger(lua, 2))));
     }
     
     return 1;
@@ -2610,17 +2606,17 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
 
     if(top == 2)
     {
-        ent->callback_flags ^= (uint32_t)lua_tointeger(lua, 2);
+        ent->m_callbackFlags ^= (uint32_t)lua_tointeger(lua, 2);
     }
     else
     {
         if(lua_tointeger(lua, 3) == 1)
         {
-            ent->callback_flags |=  (uint16_t)lua_tointeger(lua, 2);
+            ent->m_callbackFlags |=  (uint16_t)lua_tointeger(lua, 2);
         }
         else
         {
-            ent->callback_flags &= ~(uint32_t)lua_tointeger(lua, 2);
+            ent->m_callbackFlags &= ~(uint32_t)lua_tointeger(lua, 2);
         }
     }
     
@@ -2634,7 +2630,7 @@ int lua_GetEntityTimer(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent == NULL) return 0;   // No entity found - return.
 
-    lua_pushnumber(lua, ent->timer);
+    lua_pushnumber(lua, ent->m_timer);
     return 1;
 }
 
@@ -2645,7 +2641,7 @@ int lua_SetEntityTimer(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     if(ent == NULL) return 0;   // No entity found - return.
 
-    ent->timer = lua_tonumber(lua, 2);
+    ent->m_timer = lua_tonumber(lua, 2);
     return 0;
 }
 
@@ -2666,7 +2662,7 @@ int lua_GetEntityMoveType(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->move_type);
+    lua_pushinteger(lua, ent->m_moveType);
 
     return 1;
 }
@@ -2682,7 +2678,7 @@ int lua_SetEntityMoveType(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
 
     if(ent == NULL) return 0;
-    ent->move_type = lua_tointeger(lua, 2);
+    ent->m_moveType = lua_tointeger(lua, 2);
 
     return 0;
 }
@@ -2703,21 +2699,21 @@ int lua_GetEntityResponse(lua_State * lua)
     {
         switch(lua_tointeger(lua, 2))
         {
-            case 0:
-                lua_pushinteger(lua, ent->character->m_response.kill);
-                break;
-            case 1:
-                lua_pushinteger(lua, ent->character->m_response.vertical_collide);
-                break;
-            case 2:
-                lua_pushinteger(lua, ent->character->m_response.horizontal_collide);
-                break;
-            case 3:
-                lua_pushinteger(lua, ent->character->m_response.slide);
-                break;
-            default:
-                lua_pushinteger(lua, 0);
-                break;
+        case 0:
+            lua_pushinteger(lua, ent->m_character->m_response.kill);
+            break;
+        case 1:
+            lua_pushinteger(lua, ent->m_character->m_response.vertical_collide);
+            break;
+        case 2:
+            lua_pushinteger(lua, ent->m_character->m_response.horizontal_collide);
+            break;
+        case 3:
+            lua_pushinteger(lua, ent->m_character->m_response.slide);
+            break;
+        default:
+            lua_pushinteger(lua, 0);
+            break;
         }
         return 1;
     }
@@ -2746,20 +2742,20 @@ int lua_SetEntityResponse(lua_State * lua)
 
         switch(lua_tointeger(lua, 2))
         {
-            case 0:
-                ent->character->m_response.kill = value;
-                break;
-            case 1:
-                ent->character->m_response.vertical_collide = value;
-                break;
-            case 2:
-                ent->character->m_response.horizontal_collide = value;
-                break;
-            case 3:
-                ent->character->m_response.slide = value;
-                break;
-            default:
-                break;
+        case 0:
+            ent->m_character->m_response.kill = value;
+            break;
+        case 1:
+            ent->m_character->m_response.vertical_collide = value;
+            break;
+        case 2:
+            ent->m_character->m_response.horizontal_collide = value;
+            break;
+        case 3:
+            ent->m_character->m_response.slide = value;
+            break;
+        default:
+            break;
         }
     }
     else
@@ -2787,7 +2783,7 @@ int lua_GetEntityState(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->bf.animations.last_state);
+    lua_pushinteger(lua, ent->m_bf.animations.last_state);
 
     return 1;
 }
@@ -2809,7 +2805,7 @@ int lua_GetEntityModel(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->bf.animations.model->id);
+    lua_pushinteger(lua, ent->m_bf.animations.model->id);
 
     return 1;
 }
@@ -2831,10 +2827,10 @@ int lua_SetEntityState(lua_State * lua)
         return 0;
     }
 
-    ent->bf.animations.next_state = lua_tointeger(lua, 2);
+    ent->m_bf.animations.next_state = lua_tointeger(lua, 2);
     if(!lua_isnil(lua, 3))
     {
-        ent->bf.animations.last_state = lua_tointeger(lua, 3);
+        ent->m_bf.animations.last_state = lua_tointeger(lua, 3);
     }
 
     return 0;
@@ -2862,26 +2858,26 @@ int lua_SetEntityRoomMove(lua_State * lua)
         std::shared_ptr<Room> r = engine_world.rooms[room];
         if(ent == engine_world.Character)
         {
-            ent->self->room = r;
+            ent->m_self->room = r;
         }
-        else if(ent->self->room != r)
+        else if(ent->m_self->room != r)
         {
-            if(ent->self->room != NULL)
+            if(ent->m_self->room != NULL)
             {
-                Room_RemoveEntity(ent->self->room, ent);
+                Room_RemoveEntity(ent->m_self->room, ent);
             }
             Room_AddEntity(r, ent);
         }
     }
-    Entity_UpdateRoomPos(ent);
+    ent->updateRoomPos();
 
     if(!lua_isnil(lua, 3))
     {
-        ent->move_type = lua_tointeger(lua, 3);
+        ent->m_moveType = lua_tointeger(lua, 3);
     }
     if(!lua_isnil(lua, 4))
     {
-        ent->dir_flag = lua_tointeger(lua, 4);
+        ent->m_dirFlag = lua_tointeger(lua, 4);
     }
 
     return 0;
@@ -2905,7 +2901,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->bf.bone_tag_count);
+    lua_pushinteger(lua, ent->m_bf.bone_tag_count);
     return 1;
 }
 
@@ -2926,12 +2922,12 @@ int lua_SetEntityMeshswap(lua_State * lua)
     ent_dest   = World_GetEntityByID(&engine_world, id_dest);
     model_src  = World_GetModelByID(&engine_world, id_src);
 
-    int meshes_to_copy = (ent_dest->bf.bone_tag_count > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->bf.bone_tag_count);
+    int meshes_to_copy = (ent_dest->m_bf.bone_tag_count > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->m_bf.bone_tag_count);
 
     for(int i = 0; i < meshes_to_copy; i++)
     {
-        ent_dest->bf.bone_tags[i].mesh_base = model_src->mesh_tree[i].mesh_base;
-        ent_dest->bf.bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh_skin;
+        ent_dest->m_bf.bone_tags[i].mesh_base = model_src->mesh_tree[i].mesh_base;
+        ent_dest->m_bf.bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh_skin;
     }
 
     return 0;
@@ -3048,12 +3044,12 @@ int lua_PushEntityBody(lua_State *lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
+    if((ent != NULL) && (body_number < ent->m_bf.bone_tag_count) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar h_force = lua_tonumber(lua, 3);
         btScalar v_force = lua_tonumber(lua, 4);
 
-        btScalar t    = ent->angles[0] * M_PI / 180.0;
+        btScalar t    = ent->m_angles[0] * M_PI / 180.0;
 
         btScalar ang1 = sinf(t);
         btScalar ang2 = cosf(t);
@@ -3061,10 +3057,10 @@ int lua_PushEntityBody(lua_State *lua)
         btVector3 angle (-ang1 * h_force, ang2 * h_force, v_force);
 
         if(lua_toboolean(lua, 5))
-            ent->bt.bt_body[body_number]->clearForces();
+            ent->m_bt.bt_body[body_number]->clearForces();
 
-        ent->bt.bt_body[body_number]->setLinearVelocity(angle);
-        ent->bt.bt_body[body_number]->setAngularVelocity(angle / 1024.0);
+        ent->m_bt.bt_body[body_number]->setLinearVelocity(angle);
+        ent->m_bt.bt_body[body_number]->setAngularVelocity(angle / 1024.0);
     }
     else
     {
@@ -3095,7 +3091,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
     btScalar mass;
 
-    if((ent != NULL) && (ent->bf.bone_tag_count >= body_number))
+    if((ent != NULL) && (ent->m_bf.bone_tag_count >= body_number))
     {
         for(int i=0; i<body_number; i++)
         {
@@ -3104,31 +3100,31 @@ int lua_SetEntityBodyMass(lua_State *lua)
             if(top >= argn) mass = lua_tonumber(lua, argn);
             argn++;
 
-            if(ent->bt.bt_body[i] != NULL)
+            if(ent->m_bt.bt_body[i])
             {
-                bt_engine_dynamicsWorld->removeRigidBody(ent->bt.bt_body[i]);
+                bt_engine_dynamicsWorld->removeRigidBody(ent->m_bt.bt_body[i].get());
 
-                    ent->bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+                ent->m_bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
 
-                    ent->bt.bt_body[i]->setMassProps(mass, inertia);
+                ent->m_bt.bt_body[i]->setMassProps(mass, inertia);
 
-                    ent->bt.bt_body[i]->updateInertiaTensor();
-                    ent->bt.bt_body[i]->clearForces();
+                ent->m_bt.bt_body[i]->updateInertiaTensor();
+                ent->m_bt.bt_body[i]->clearForces();
 
-                    ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
+                ent->m_bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
 
-                    btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
-                    ent->bt.bt_body[i]->setLinearFactor (factor);
-                    ent->bt.bt_body[i]->setAngularFactor(factor);
+                btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
+                ent->m_bt.bt_body[i]->setLinearFactor (factor);
+                ent->m_bt.bt_body[i]->setAngularFactor(factor);
 
-                    //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
+                //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
 
-                    //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
-                    //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
+                //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
+                //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
 
-                bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i]);
+                bt_engine_dynamicsWorld->addRigidBody(ent->m_bt.bt_body[i].get());
 
-                ent->bt.bt_body[i]->activate();
+                ent->m_bt.bt_body[i]->activate();
 
                 //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
                 //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
@@ -3141,15 +3137,15 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
         }
 
-        Entity_UpdateRigidBody(ent, 1);
+        ent->updateRigidBody(true);
 
         if(dynamic)
         {
-            ent->type_flags |=  ENTITY_TYPE_DYNAMIC;
+            ent->m_typeFlags |=  ENTITY_TYPE_DYNAMIC;
         }
         else
         {
-            ent->type_flags &= ~ENTITY_TYPE_DYNAMIC;
+            ent->m_typeFlags &= ~ENTITY_TYPE_DYNAMIC;
         }
     }
     else
@@ -3174,9 +3170,9 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->bf.bone_tag_count) && (ent->bt.bt_body[body_number] != NULL) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
+    if((ent != NULL) && (body_number < ent->m_bf.bone_tag_count) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
-        btScalar t    = ent->angles[0] * M_PI / 180.0;
+        btScalar t    = ent->m_angles[0] * M_PI / 180.0;
         btScalar ang1 = sinf(t);
         btScalar ang2 = cosf(t);
         btScalar ang3 = 1.0;
@@ -3187,7 +3183,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
             ang3 = (ang3 > 1.0)?(1.0):(ang3);
         }
 
-        ent->bt.bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
+        ent->m_bt.bt_body[body_number]->setLinearFactor(btVector3(abs(ang1), abs(ang2), ang3));
     }
     else
     {
@@ -3233,7 +3229,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
 
     if(IsCharacter(ent))
     {
-        lua_pushinteger(lua, ent->character->m_currentWeapon);
+        lua_pushinteger(lua, ent->m_character->m_currentWeapon);
         return 1;
     }
     else
@@ -3256,7 +3252,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 
     if(IsCharacter(ent))
     {
-        ent->character->m_currentWeapon = lua_tointeger(lua, 2);
+        ent->m_character->m_currentWeapon = lua_tointeger(lua, 2);
     }
     else
     {
@@ -3394,13 +3390,13 @@ int lua_PlaySound(lua_State *lua)
     {
         switch(result)
         {
-            case TR_AUDIO_SEND_NOCHANNEL:
-                ConsoleInfo::instance().warning(SYSWARN_AS_NOCHANNEL);
-                break;
+        case TR_AUDIO_SEND_NOCHANNEL:
+            ConsoleInfo::instance().warning(SYSWARN_AS_NOCHANNEL);
+            break;
 
-            case TR_AUDIO_SEND_NOSAMPLE:
-                ConsoleInfo::instance().warning(SYSWARN_AS_NOSAMPLE);
-                break;
+        case TR_AUDIO_SEND_NOSAMPLE:
+            ConsoleInfo::instance().warning(SYSWARN_AS_NOSAMPLE);
+            break;
         }
     }
 
@@ -3554,7 +3550,7 @@ int lua_SetFlipState(lua_State *lua)
 
     uint32_t group = (uint32_t)lua_tointeger(lua, 1);
     uint32_t state = (uint32_t)lua_tointeger(lua, 2);
-             state = (state > 1)?(1):(state);       // State is always boolean.
+    state = (state > 1)?(1):(state);       // State is always boolean.
 
     if(group >= engine_world.flip_count)
     {
@@ -3617,7 +3613,7 @@ int lua_SetFlipMap(lua_State *lua)
     uint32_t group = (uint32_t)lua_tointeger(lua, 1);
     uint8_t  mask  = (uint8_t)lua_tointeger(lua, 2);
     uint8_t  op    = (uint8_t)lua_tointeger(lua, 3);
-             op    = (mask > AMASK_OP_XOR)?(AMASK_OP_XOR):(AMASK_OP_OR);
+    op    = (mask > AMASK_OP_XOR)?(AMASK_OP_XOR):(AMASK_OP_OR);
 
     if(group >= engine_world.flip_count)
     {
@@ -4179,9 +4175,9 @@ int Engine_GetPCLevelVersion(const char *name)
         if(!strncmp(ext, ".PHD", 4))                                            //
         {
             if(check[0] == 0x20 &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
+                    check[1] == 0x00 &&
+                    check[2] == 0x00 &&
+                    check[3] == 0x00)
             {
                 ret = TR_I;                                                     // TR_I ? OR TR_I_DEMO
             }
@@ -4193,9 +4189,9 @@ int Engine_GetPCLevelVersion(const char *name)
         else if(!strncmp(ext, ".TUB", 4))
         {
             if(check[0] == 0x20 &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
+                    check[1] == 0x00 &&
+                    check[2] == 0x00 &&
+                    check[3] == 0x00)
             {
                 ret = TR_I_UB;                                                  // TR_I_UB
             }
@@ -4207,9 +4203,9 @@ int Engine_GetPCLevelVersion(const char *name)
         else if(!strncmp(ext, ".TR2", 4))
         {
             if(check[0] == 0x2D &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
+                    check[1] == 0x00 &&
+                    check[2] == 0x00 &&
+                    check[3] == 0x00)
             {
                 ret = TR_II;                                                    // TR_II
             }
@@ -4228,9 +4224,9 @@ int Engine_GetPCLevelVersion(const char *name)
         else if(!strncmp(ext, ".TR4", 4))
         {
             if(check[0] == 0x54 &&                                              // T
-               check[1] == 0x52 &&                                              // R
-               check[2] == 0x34 &&                                              // 4
-               check[3] == 0x00)
+                    check[1] == 0x52 &&                                              // R
+                    check[2] == 0x34 &&                                              // 4
+                    check[3] == 0x00)
             {
                 ret = TR_IV;                                                    // OR TR TR_IV_DEMO
             }
@@ -4256,9 +4252,9 @@ int Engine_GetPCLevelVersion(const char *name)
         else if(!strncmp(ext, ".TRC", 4))
         {
             if(check[0] == 0x54 &&                                              // T
-               check[1] == 0x52 &&                                              // R
-               check[2] == 0x34 &&                                              // 4
-               check[3] == 0x00)
+                    check[1] == 0x52 &&                                              // R
+                    check[2] == 0x34 &&                                              // 4
+                    check[3] == 0x00)
             {
                 ret = TR_V;                                                     // TR_V
             }
@@ -4355,7 +4351,7 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
 bool Engine_LoadPCLevel(const char *name)
 {
     VT_Level *tr_level = new VT_Level();
-                
+
     int trv = Engine_GetPCLevelVersion(name);
     if(trv == TR_UNKNOWN) return false;
     
@@ -4411,21 +4407,21 @@ int Engine_LoadMap(const char *name)
     
     switch(Engine_GetLevelFormat(name))
     {
-        case LEVEL_FORMAT_PC:
-            if(Engine_LoadPCLevel(name) == false) return 0;
-            break;
-            
-        case LEVEL_FORMAT_PSX:
-            break;
-            
-        case LEVEL_FORMAT_DC:
-            break;
-            
-        case LEVEL_FORMAT_OPENTOMB:
-            break;
-            
-        default:
-            break;
+    case LEVEL_FORMAT_PC:
+        if(Engine_LoadPCLevel(name) == false) return 0;
+        break;
+
+    case LEVEL_FORMAT_PSX:
+        break;
+
+    case LEVEL_FORMAT_DC:
+        break;
+
+    case LEVEL_FORMAT_OPENTOMB:
+        break;
+
+    default:
+        break;
     }
     
     engine_world.id   = 0;
@@ -4615,7 +4611,7 @@ int Engine_ExecCmd(const char *ch)
                 if(sect)
                 {
                     ConsoleInfo::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
-                               (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
+                                                   (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
                     for(uint32_t i=0;i<sect->owner_room->static_mesh.size();i++)
                     {
                         ConsoleInfo::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
@@ -4625,7 +4621,7 @@ int Engine_ExecCmd(const char *ch)
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
-                            ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform.getOrigin()[0], (int)e->transform.getOrigin()[1], (int)e->transform.getOrigin()[2], e->id);
+                            ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->m_transform.getOrigin()[0], (int)e->m_transform.getOrigin()[1], (int)e->m_transform.getOrigin()[2], e->m_id);
                         }
                     }
                 }

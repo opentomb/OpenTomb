@@ -46,7 +46,7 @@ typedef struct hair_element_s
 {
     base_mesh_s        *mesh;           // Pointer to rendered mesh.
     btCollisionShape   *shape;          // Pointer to collision shape.
-    btRigidBody        *body;           // Pointer to dynamic body.
+    std::shared_ptr<btRigidBody> body;           // Pointer to dynamic body.
     btVector3 position;     // Position of this hair element
     // relative to the model (NOT the parent!). Should be a matrix in theory,
     // but since this never has a rotation part, we can save a few bytes here.

@@ -146,14 +146,14 @@ void Room_AddEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity)
 {
     for(const std::shared_ptr<EngineContainer>& curr : room->containers)
     {
-        if(curr == entity->self)
+        if(curr == entity->m_self)
         {
             return;
         }
     }
 
-    entity->self->room = room;
-    room->containers.insert(room->containers.begin(), entity->self);
+    entity->m_self->room = room;
+    room->containers.insert(room->containers.begin(), entity->m_self);
 }
 
 
@@ -162,17 +162,17 @@ bool Room_RemoveEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entit
     if(!entity || room->containers.empty())
         return false;
 
-    auto it = std::find( room->containers.begin(), room->containers.end(), entity->self );
+    auto it = std::find( room->containers.begin(), room->containers.end(), entity->m_self );
     if(it != room->containers.end()) {
         room->containers.erase(it);
-        entity->self->room.reset();
+        entity->m_self->room.reset();
         return true;
     }
 
-    if(room->containers.front() == entity->self)
+    if(room->containers.front() == entity->m_self)
     {
         room->containers.erase(room->containers.begin());
-        entity->self->room.reset();
+        entity->m_self->room.reset();
         return 1;
     }
 
@@ -428,8 +428,8 @@ void World_Empty(world_p world)
 
     if(world->Character != NULL)
     {
-        world->Character->self->room.reset();
-        world->Character->current_sector = nullptr;
+        world->Character->m_self->room.reset();
+        world->Character->m_currentSector = nullptr;
     }
 
     /* entity empty must be done before rooms destroy */
@@ -587,82 +587,82 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3*
             {
                 if(pos != NULL)
                 {
-                    ent->transform.getOrigin() = *pos;
+                    ent->m_transform.getOrigin() = *pos;
                 }
                 if(ang != NULL)
                 {
-                    ent->angles = *ang;
-                    Entity_UpdateRotation(ent);
+                    ent->m_angles = *ang;
+                    ent->updateRotation();
                 }
                 if(room_id < engine_world.rooms.size())
                 {
-                    ent->self->room = engine_world.rooms[ room_id ];
-                    ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform.getOrigin());
+                    ent->m_self->room = engine_world.rooms[ room_id ];
+                    ent->m_currentSector = Room_GetSectorRaw(ent->m_self->room, ent->m_transform.getOrigin());
                 }
                 else
                 {
-                    ent->self->room = NULL;
+                    ent->m_self->room = NULL;
                 }
 
-                return ent->id;
+                return ent->m_id;
             }
 
             ent = std::make_shared<Entity>();
 
             if(id < 0)
             {
-                ent->id = engine_world.entity_tree.size();
+                ent->m_id = engine_world.entity_tree.size();
                 engine_world.entity_tree[id] = ent;
             }
             else
             {
-                ent->id = id;
+                ent->m_id = id;
             }
 
             if(pos != NULL)
             {
-                ent->transform.getOrigin() = *pos;
+                ent->m_transform.getOrigin() = *pos;
             }
             if(ang != NULL)
             {
-                ent->angles = *ang;
-                Entity_UpdateRotation(ent);
+                ent->m_angles = *ang;
+                ent->updateRotation();
             }
             if(room_id < engine_world.rooms.size())
             {
-                ent->self->room = engine_world.rooms[ room_id ];
-                ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform.getOrigin());
+                ent->m_self->room = engine_world.rooms[ room_id ];
+                ent->m_currentSector = Room_GetSectorRaw(ent->m_self->room, ent->m_transform.getOrigin());
             }
             else
             {
-                ent->self->room = NULL;
+                ent->m_self->room = NULL;
             }
 
-            ent->type_flags     = ENTITY_TYPE_SPAWNED;
-            ent->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
-            ent->trigger_layout = 0x00;
-            ent->OCB            = 0x00;
-            ent->timer          = 0.0;
+            ent->m_typeFlags     = ENTITY_TYPE_SPAWNED;
+            ent->m_stateFlags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
+            ent->m_triggerLayout = 0x00;
+            ent->m_OCB            = 0x00;
+            ent->m_timer          = 0.0;
 
-            ent->self->collide_flag = 0x00;
-            ent->move_type          = 0x0000;
-            ent->inertia_linear     = 0.0;
-            ent->inertia_angular[0] = 0.0;
-            ent->inertia_angular[1] = 0.0;
-            ent->move_type          = 0;
+            ent->m_self->collide_flag = 0x00;
+            ent->m_moveType          = 0x0000;
+            ent->m_inertiaLinear     = 0.0;
+            ent->m_inertiaAngular[0] = 0.0;
+            ent->m_inertiaAngular[1] = 0.0;
+            ent->m_moveType          = 0;
 
-            SSBoneFrame_CreateFromModel(&ent->bf, model);
-            Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
-            BT_GenEntityRigidBody(ent);
+            SSBoneFrame_CreateFromModel(&ent->m_bf, model);
+            ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
+            ent->genEntityRigidBody();
 
-            Entity_RebuildBV(ent);
-            if(ent->self->room != NULL)
+            ent->rebuildBV();
+            if(ent->m_self->room != NULL)
             {
-                Room_AddEntity(ent->self->room, ent);
+                Room_AddEntity(ent->m_self->room, ent);
             }
             World_AddEntity(&engine_world, ent);
 
-            return ent->id;
+            return ent->m_id;
         }
     }
 
@@ -925,7 +925,7 @@ void Room_Enable(std::shared_ptr<Room> room)
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                Entity_Enable(std::static_pointer_cast<Entity>(cont->object));
+                std::static_pointer_cast<Entity>(cont->object)->enable();
                 break;
         }
     }
@@ -959,7 +959,7 @@ void Room_Disable(std::shared_ptr<Room> room)
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                Entity_Disable(std::static_pointer_cast<Entity>(cont->object));
+                std::static_pointer_cast<Entity>(cont->object)->disable();
                 break;
         }
     }
@@ -1044,9 +1044,9 @@ void Room_SwapItems(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_room)
 
 int World_AddEntity(world_p world, std::shared_ptr<Entity> entity)
 {
-    if(world->entity_tree.find(entity->id) != world->entity_tree.end())
+    if(world->entity_tree.find(entity->m_id) != world->entity_tree.end())
         return 1;
-    world->entity_tree[entity->id] = entity;
+    world->entity_tree[entity->m_id] = entity;
     return 1;
 }
 
