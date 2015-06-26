@@ -403,18 +403,13 @@ void World_Prepare(world_p world)
     world->items_tree.clear();
     world->Character = NULL;
 
-    world->audio_sources = NULL;
-    world->audio_sources_count = 0;
-    world->audio_buffers = NULL;
-    world->audio_buffers_count = 0;
-    world->audio_effects = NULL;
-    world->audio_effects_count = 0;
+    world->audio_sources.clear();
+    world->audio_buffers.clear();
+    world->audio_effects.clear();
     world->anim_sequences = NULL;
     world->anim_sequences_count = 0;
-    world->stream_tracks = NULL;
-    world->stream_tracks_count = 0;
-    world->stream_track_map = NULL;
-    world->stream_track_map_count = 0;
+    world->stream_tracks.clear();
+    world->stream_track_map.clear();
 
     world->tex_count = 0;
     world->textures = 0;

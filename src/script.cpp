@@ -656,7 +656,7 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
     return -1;
 }
 
-int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
+int lua_ParseAudio(lua_State *lua, struct AudioSettings *as)
 {
     if(lua)
     {

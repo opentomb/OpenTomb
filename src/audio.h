@@ -256,19 +256,19 @@ struct Entity;
 
 // Audio settings structure.
 
-typedef struct audio_settings_s
+struct AudioSettings
 {
     ALfloat     music_volume;
     ALfloat     sound_volume;
     ALboolean   use_effects;
     ALboolean   listener_is_player; // RESERVED FOR FUTURE USE
     int         stream_buffer_size;
-}audio_settings_t, *audio_settings_p;
+};
 
 // FX manager structure.
 // It contains all necessary info to process sample FX (reverb and echo).
 
-typedef struct audio_fxmanager_s
+struct AudioFxManager
 {
     ALuint      al_filter;
     ALuint      al_effect[TR_AUDIO_FX_LASTINDEX];
@@ -277,47 +277,47 @@ typedef struct audio_fxmanager_s
     ALuint      current_room_type;
     ALuint      last_room_type;
     int8_t      water_state;    // If listener is underwater, all samples will damp.
-}audio_fxmanager_t, *audio_fxmanager_p;
+};
 
 // Effect structure.
 // Contains all global effect parameters.
 
-typedef struct audio_effect_s
+struct AudioEffect
 {    
     // General sound source parameters (similar to TR sound info).
     
-    ALfloat     pitch;          // [PIT in TR] Global pitch shift.
-    ALfloat     gain;           // [VOL in TR] Global gain (volume).
-    ALfloat     range;          // [RAD in TR] Range (radius).
-    ALuint      chance;         // [CH  in TR] Chance to play.
-    ALuint      loop;           // 0 = none, 1 = W, 2 = R, 3 = L.
-    ALboolean   rand_pitch;     // Similar to flag 0x200000 (P) in native TRs.
-    ALboolean   rand_gain;      // Similar to flag 0x400000 (V) in native TRs.
+    ALfloat     pitch = 0;          // [PIT in TR] Global pitch shift.
+    ALfloat     gain = 0;           // [VOL in TR] Global gain (volume).
+    ALfloat     range = 0;          // [RAD in TR] Range (radius).
+    ALuint      chance = 0;         // [CH  in TR] Chance to play.
+    ALuint      loop = 0;           // 0 = none, 1 = W, 2 = R, 3 = L.
+    ALboolean   rand_pitch = false;     // Similar to flag 0x200000 (P) in native TRs.
+    ALboolean   rand_gain = false;      // Similar to flag 0x400000 (V) in native TRs.
     
     // Additional sound source parameters.
     // These are not natively in TR engines, but can be later assigned by
     // external script.
     
-    ALboolean   rand_freq;          // Slightly randomize frequency.
-    ALuint      rand_pitch_var;     // Pitch randomizer bounds.
-    ALuint      rand_gain_var;      // Gain  randomizer bounds.
-    ALuint      rand_freq_var;      // Frequency randomizer bounds.
+    ALboolean   rand_freq = false;          // Slightly randomize frequency.
+    ALuint      rand_pitch_var = 0;     // Pitch randomizer bounds.
+    ALuint      rand_gain_var = 0;      // Gain  randomizer bounds.
+    ALuint      rand_freq_var = 0;      // Frequency randomizer bounds.
 
     // Sample reference parameters.
     
-    ALuint      sample_index;       // First (or only) sample (buffer) index.
-    ALuint      sample_count;       // Sample amount to randomly select from.
-}audio_effect_t, *audio_effect_p;
+    ALuint      sample_index = 0;       // First (or only) sample (buffer) index.
+    ALuint      sample_count = 0;       // Sample amount to randomly select from.
+};
 
 // Audio emitter (aka SoundSource) structure.
 
-typedef struct audio_emitter_s
+struct AudioEmitter
 {
     ALuint      emitter_index;  // Unique emitter index.
     ALuint      sound_index;    // Sound index.
     btVector3   position;    // Vector coordinate.
     uint16_t    flags;          // Flags - MEANING UNKNOWN!!!
-}audio_emitter_t, *audio_emitter_p;
+};
 
 
 // Main audio source class.
