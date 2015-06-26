@@ -323,7 +323,7 @@ typedef struct world_s
     uint8_t                    *flip_map;               // Flipped room activity array.
     uint8_t                    *flip_state;             // Flipped room state array.
 
-    bordered_texture_atlas     *tex_atlas;
+    BorderedTextureAtlas     *tex_atlas;
     uint32_t                    tex_count;              // Number of textures
     GLuint                     *textures;               // OpenGL textures indexes
 

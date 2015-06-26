@@ -453,13 +453,13 @@ void Audio_PauseAllSources();    // Used to pause all effects currently playing.
 void Audio_StopAllSources();     // Used in audio deinit.
 void Audio_ResumeAllSources();   // Used to resume all effects currently paused.
 void Audio_UpdateSources();      // Main sound loop.
-void Audio_UpdateListenerByCamera(struct camera_s *cam);
-void Audio_UpdateListenerByEntity(struct Entity *ent);
+void Audio_UpdateListenerByCamera(camera_s *cam);
+void Audio_UpdateListenerByEntity(Entity *ent);
 
 bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
-void Audio_LoadOverridedSamples(struct world_s *world);
+void Audio_LoadOverridedSamples(world_s *world);
 
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 

@@ -2571,7 +2571,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     int border_size = renderer.settings.texture_border;
     border_size = (border_size < 0)?(0):(border_size);
     border_size = (border_size > 128)?(128):(border_size);
-    world->tex_atlas = new bordered_texture_atlas(border_size,
+    world->tex_atlas = new BorderedTextureAtlas(border_size,
                                                   tr->textile32_count,
                                                   tr->textile32,
                                                   tr->object_textures_count,
