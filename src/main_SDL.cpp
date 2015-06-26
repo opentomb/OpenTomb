@@ -15,12 +15,7 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
-}
+#include <lua.hpp>
 
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>

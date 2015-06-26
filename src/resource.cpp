@@ -7,11 +7,7 @@
 #include <SDL2/SDL.h>
 #include "gl_util.h"
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-}
+#include <lua.hpp>
 
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>

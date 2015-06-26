@@ -14,14 +14,10 @@
 #include <bullet/btBulletDynamicsCommon.h>
 #include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
+#include <lua.hpp>
+
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
-}
 
 #include "vt/vt_level.h"
 

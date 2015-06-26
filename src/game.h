@@ -6,13 +6,8 @@
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>
 
-#include <stdint.h>
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
-}
+#include <cstdint>
+#include <lua.hpp>
 
 #include <map>
 #include <memory>

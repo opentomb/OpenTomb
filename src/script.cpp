@@ -1,7 +1,7 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "script.h"
 #include "system.h"
@@ -19,11 +19,7 @@
 #include "audio.h"
 #include "string.h"
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-}
+#include <lua.hpp>
 
 /*
  * MISK

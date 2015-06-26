@@ -4,11 +4,7 @@
 #include <cassert>
 #include <cstdint>
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-}
+#include <lua.hpp>
 
 #include <bullet/LinearMath/btScalar.h>
 #include <bullet/LinearMath/btVector3.h>
