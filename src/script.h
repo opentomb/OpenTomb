@@ -7,7 +7,7 @@ struct ConsoleInfo;
 struct Entity;
 struct lua_State;
 struct AudioSettings;
-struct control_settings_s;
+struct ControlSettings;
 struct render_settings_s;
 
 #define CVAR_NAME_SIZE 32
@@ -31,7 +31,7 @@ int lua_ParseScreen(lua_State *lua, screen_info_s *sc);
 int lua_ParseRender(lua_State *lua, render_settings_s *rs);
 int lua_ParseAudio(lua_State *lua, AudioSettings *as);
 int lua_ParseConsole(lua_State *lua, ConsoleInfo *cn);
-int lua_ParseControls(lua_State *lua, control_settings_s *cs);
+int lua_ParseControls(lua_State *lua, ControlSettings *cs);
 
 bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask);
 bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_number, int *samples_count);

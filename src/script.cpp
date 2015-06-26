@@ -561,7 +561,7 @@ void lua_LoopEntity(lua_State *lua, int object_id)
 /*
  * Game structures parse
  */
-int lua_ParseControls(lua_State *lua, struct control_settings_s *cs)
+int lua_ParseControls(lua_State *lua, struct ControlSettings *cs)
 {
     if(lua)
     {

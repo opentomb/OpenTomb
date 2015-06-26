@@ -112,7 +112,7 @@ typedef struct engine_control_state_s
 
 
 extern struct engine_control_state_s            control_states;
-extern struct control_settings_s                control_mapper;
+extern struct ControlSettings                control_mapper;
 
 extern struct AudioSettings                  audio_settings;
 

@@ -56,7 +56,7 @@ extern ALCdevice              *al_device;
 extern ALCcontext             *al_context;
 
 struct engine_control_state_s           control_states = {0};
-struct control_settings_s               control_mapper = {0};
+struct ControlSettings               control_mapper = {0};
 struct AudioSettings                 audio_settings = {0};
 btScalar                                engine_frame_time = 0.0;
 
