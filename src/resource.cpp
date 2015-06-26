@@ -4215,11 +4215,10 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         }
 
         Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
-        Res_SetEntityModelProperties(entity);
         Entity_RebuildBV(entity);
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
-
+        Res_SetEntityModelProperties(entity);
         BT_GenEntityRigidBody(entity);
 
         if((entity->self->collision_type & 0x0001) == 0)
