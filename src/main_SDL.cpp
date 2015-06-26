@@ -215,7 +215,7 @@ void Engine_InitSDLControls()
     }
     else
     {
-        SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_AUDIO);
+        SDL_Init(init_flags);
     }
 }
 
@@ -248,6 +248,7 @@ void Engine_InitSDLVideo()
 
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        maxSamples = (maxSamples > 16)?(16):(maxSamples);   // Fix for faulty GL max. sample number.
 
         if(renderer.settings.antialias_samples > maxSamples)
         {
