@@ -254,6 +254,7 @@ typedef struct room_sprite_s
     int8_t                      was_rendered;
 }room_sprite_t, *room_sprite_p;
 
+struct EngineContainer;
 
 struct Room : public Object
 {
@@ -275,7 +276,7 @@ struct Room : public Object
     uint32_t                    sprites_count;
     struct room_sprite_s       *sprites;
 
-    struct engine_container_s  *containers;                                     // engine containers with moveables objects
+    std::vector<std::shared_ptr<EngineContainer>> containers;                                     // engine containers with moveables objects
 
     btVector3 bb_min;                                      // room's bounding box
     btVector3 bb_max;                                      // room's bounding box
@@ -304,7 +305,7 @@ struct Room : public Object
     std::shared_ptr<Room> overlapped_room_list[32];
     btRigidBody                *bt_body;
 
-    struct engine_container_s  *self;
+    EngineContainer* self;
 };
 
 
@@ -372,7 +373,7 @@ std::shared_ptr<base_item_s> World_GetBaseItemByID(world_p world, uint32_t id);
 
 void Room_Empty(std::shared_ptr<Room> room);
 void Room_AddEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity);
-int Room_RemoveEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity);
+bool Room_RemoveEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity);
 
 void Room_AddToNearRoomsList(std::shared_ptr<Room> room, std::shared_ptr<Room> r);
 int Room_IsPointIn(std::shared_ptr<Room> room, btScalar dot[3]);

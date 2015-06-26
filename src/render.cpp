@@ -35,7 +35,7 @@ GLint       main_model_mat_pos, main_proj_mat_pos, main_model_proj_mat_pos, main
 */
 /*bool btCollisionObjectIsVisible(btCollisionObject *colObj)
 {
-    engine_container_p cont = (engine_container_p)colObj->getUserPointer();
+    EngineContainer* cont = (EngineContainer*)colObj->getUserPointer();
     return (cont == NULL) || (cont->room == NULL) || (cont->room->is_in_r_list && cont->room->active);
 }*/
 
@@ -739,7 +739,6 @@ void Render_Hair(std::shared_ptr<Entity> entity, const btTransform &modelViewMat
  */
 void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection)
 {
-    engine_container_p cont;
     btScalar glMat[16];
 
     const shader_description *lastShader = 0;
@@ -860,9 +859,9 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
         }
     }
 
-    if (room->containers)
+    if (!room->containers.empty())
     {
-        for(cont=room->containers; cont; cont=cont->next)
+        for(const std::shared_ptr<EngineContainer>& cont : room->containers)
         {
             switch(cont->object_type)
             {
@@ -928,7 +927,6 @@ void Render_Room_Sprites(std::shared_ptr<Room> room, struct render_s *render, co
 int Render_AddRoom(std::shared_ptr<Room> room)
 {
     int ret = 0;
-    engine_container_p cont;
 
     if(room->is_in_r_list || !room->active)
     {
@@ -956,7 +954,7 @@ int Render_AddRoom(std::shared_ptr<Room> room)
         sm->was_rendered_lines = 0;
     }
 
-    for(cont=room->containers; cont; cont=cont->next)
+    for(const std::shared_ptr<EngineContainer>& cont : room->containers)
     {
         switch(cont->object_type)
         {
@@ -1082,7 +1080,7 @@ void Render_DrawList()
         }
 
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
+        for(const std::shared_ptr<EngineContainer>& cont : r->containers)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
@@ -1609,7 +1607,6 @@ void render_DebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, struct r
 {
     uint32_t flag;
     frustum_p frus;
-    engine_container_p cont;
 
     flag = render->style & R_DRAW_ROOMBOXES;
     if(flag)
@@ -1672,7 +1669,7 @@ void render_DebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, struct r
         sm->was_rendered_lines = 1;
     }
 
-    for(cont=room->containers; cont; cont=cont->next)
+    for(const std::shared_ptr<EngineContainer>& cont : room->containers)
     {
         switch(cont->object_type)
         {

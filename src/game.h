@@ -27,7 +27,7 @@ struct Camera;
 struct Entity;
 struct room_sector_s;
 
-class bt_engine_ClosestConvexResultCallback;
+class BtEngineClosestConvexResultCallback;
 
 extern btVector3 cam_angles;
 
@@ -50,7 +50,7 @@ void Game_UpdateAI();
 void Game_UpdateCharacters();
 
 void Cam_FollowEntity(struct Camera *cam, struct Entity *ent, btScalar dx, btScalar dz);
-bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
+bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
 
 #endif
 

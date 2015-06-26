@@ -21,8 +21,8 @@
 
 Character::Character(std::shared_ptr<Entity> ent)
     : m_climbSensor(new btSphereShape(ent->character->m_climbR))
-    , m_rayCb(std::make_shared<bt_engine_ClosestRayResultCallback>(ent->self))
-    , m_convexCb(std::make_shared<bt_engine_ClosestConvexResultCallback>(ent->self))
+    , m_rayCb(std::make_shared<BtEngineClosestRayResultCallback>(ent->self.get()))
+    , m_convexCb(std::make_shared<BtEngineClosestConvexResultCallback>(ent->self.get()))
 {
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
@@ -164,7 +164,7 @@ void Character_UpdatePlatformPreStep(std::shared_ptr<Entity> ent)
 #if 0
     if(ent->character->platform)
     {
-        engine_container_p cont = (engine_container_p)ent->character->platform->getUserPointer();
+        EngineContainer* cont = (EngineContainer*)ent->character->platform->getUserPointer();
         if(cont && (cont->object_type == OBJECT_ENTITY/* || cont->object_type == OBJECT_BULLET_MISC*/))
         {
             btScalar trpl[16];
@@ -210,7 +210,7 @@ void Character_UpdatePlatformPostStep(std::shared_ptr<Entity> ent)
 
     if(ent->character->platform)
     {
-        engine_container_p cont = (engine_container_p)ent->character->platform->getUserPointer();
+        EngineContainer* cont = (EngineContainer*)ent->character->platform->getUserPointer();
         if(cont && (cont->object_type == OBJECT_ENTITY/* || cont->object_type == OBJECT_BULLET_MISC*/))
         {
             btScalar trpl[16];
@@ -234,7 +234,7 @@ void Character_GetHeightInfo(const btVector3& pos, struct HeightInfo *fc, btScal
 {
     btVector3 from, to;
     auto cb = fc->cb;
-    std::shared_ptr<Room> r = (cb->m_cont)?(cb->m_cont->room):(NULL);
+    std::shared_ptr<Room> r = (cb->m_container)?(cb->m_container->room):(NULL);
     room_sector_p rs;
 
     fc->floor_hit = 0x00;
@@ -1023,7 +1023,7 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
     Character_UpdateCurrentHeight(ent);
     if(ent->character->m_heightInfo.floor_hit && (ent->character->m_heightInfo.floor_point[2] + 1.0 >= ent->transform.getOrigin()[2] + ent->bf.bb_min[2]))
     {
-        engine_container_p cont = (engine_container_p)ent->character->m_heightInfo.floor_obj->getUserPointer();
+        EngineContainer* cont = (EngineContainer*)ent->character->m_heightInfo.floor_obj->getUserPointer();
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
         {
             std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
@@ -1694,7 +1694,7 @@ int Character_FindTraverse(std::shared_ptr<Entity> ch)
     if(obj_s != NULL)
     {
         obj_s = TR_Sector_CheckPortalPointer(obj_s);
-        for(engine_container_p cont = obj_s->owner_room->containers;cont!=NULL;cont=cont->next)
+        for(std::shared_ptr<EngineContainer>& cont : obj_s->owner_room->containers)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
@@ -1720,7 +1720,7 @@ int Character_FindTraverse(std::shared_ptr<Entity> ch)
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
  */
-int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine_container_s *cont)
+int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, const std::shared_ptr<EngineContainer>& cont)
 {
     btScalar f0 = rs->floor_corners[0][2];
     if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
@@ -1734,7 +1734,7 @@ int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine
         return 0x01;
     }
 
-    bt_engine_ClosestRayResultCallback cb(cont);
+    BtEngineClosestRayResultCallback cb(cont.get());
     btVector3 from, to;
     to[0] = from[0] = rs->pos[0];
     to[1] = from[1] = rs->pos[1];
@@ -1747,7 +1747,7 @@ int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine
         v.setInterpolate3(from, to, cb.m_closestHitFraction);
         if(fabs(v[2] - floor) < 1.1)
         {
-            engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
+            EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
             if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((std::static_pointer_cast<Entity>(cont->object))->type_flags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
@@ -1804,7 +1804,7 @@ int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> 
         return 0x00;
     }
 
-    bt_engine_ClosestRayResultCallback cb(obj->self);
+    BtEngineClosestRayResultCallback cb(obj->self.get());
     btVector3 v0, v1;
     v1[0] = v0[0] = obj_s->pos[0];
     v1[1] = v0[1] = obj_s->pos[1];
@@ -1813,7 +1813,7 @@ int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> 
     bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
     if(cb.hasHit())
     {
-        engine_container_p cont = (engine_container_p)cb.m_collisionObject->getUserPointer();
+        EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((std::static_pointer_cast<Entity>(cont->object))->type_flags & ENTITY_TYPE_TRAVERSE))
         {
             return 0x00;
@@ -1848,7 +1848,7 @@ int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> 
     next_s = TR_Sector_CheckPortalPointer(next_s);
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01))
     {
-        bt_engine_ClosestConvexResultCallback ccb(obj->self);
+        BtEngineClosestConvexResultCallback ccb(obj->self.get());
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
         btVector3 v;
         btTransform from, to;
@@ -1894,7 +1894,7 @@ int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> 
     next_s = TR_Sector_CheckPortalPointer(next_s);
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->self) == 0x01))
     {
-        bt_engine_ClosestConvexResultCallback ccb(ch->self);
+        BtEngineClosestConvexResultCallback ccb(ch->self.get());
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
         btVector3 v;
         btTransform from, to;

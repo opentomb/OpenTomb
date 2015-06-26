@@ -32,7 +32,7 @@ class btCollisionShape;
 
 struct polygon_s;
 struct Room;
-struct engine_container_s;
+struct EngineContainer;
 struct obb_s;
 struct vertex_s;
 struct Entity;
@@ -217,7 +217,7 @@ struct StaticMesh : public Object
 
     btTransform transform;                                  // gl transformation matrix
     obb_s               *obb;
-    engine_container_s  *self;
+    EngineContainer  *self;
 
     base_mesh_s         *mesh;                                           // base model
     btRigidBody                *bt_body;

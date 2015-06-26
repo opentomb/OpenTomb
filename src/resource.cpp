@@ -1981,7 +1981,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
-    room->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
+    room->self = new EngineContainer();
     room->self->room = room;
     room->self->object = room;
     room->self->object_type = OBJECT_ROOM_BASE;
@@ -2005,7 +2005,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         }
         room->static_mesh.emplace_back( std::make_shared<StaticMesh>() );
         auto r_static = room->static_mesh.back();
-        r_static->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
+        r_static->self = new EngineContainer();
         r_static->self->room = room;
         r_static->self->object = room->static_mesh[i];
         r_static->self->object_type = OBJECT_STATIC_MESH;
@@ -4379,8 +4379,7 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<base_item_s> >& map)
 
         for(uint32_t i=0;i<engine_world.rooms.size();i++)
         {
-            engine_container_p cont = engine_world.rooms[i]->containers;
-            for(;cont;cont=cont->next)
+            for(const std::shared_ptr<EngineContainer>& cont : engine_world.rooms[i]->containers)
             {
                 if(cont->object_type == OBJECT_ENTITY)
                 {

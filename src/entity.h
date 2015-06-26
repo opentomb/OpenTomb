@@ -132,7 +132,7 @@ struct Entity : public Object
     struct room_sector_s               *current_sector;
     struct room_sector_s               *last_sector;
 
-    struct engine_container_s          *self;
+    std::shared_ptr<EngineContainer> self;
 
     btVector3 activation_offset;   // where we can activate object (dx, dy, dz, r)
     btScalar activation_radius = 128;

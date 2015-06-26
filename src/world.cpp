@@ -1,6 +1,8 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <algorithm>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
@@ -34,7 +36,7 @@ void Room_Empty(std::shared_ptr<Room> room)
         return;
     }
 
-    room->containers = NULL;
+    room->containers.clear();
 
     room->near_room_list_size = 0;
 
@@ -142,9 +144,7 @@ void Room_Empty(std::shared_ptr<Room> room)
 
 void Room_AddEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity)
 {
-    engine_container_p curr;
-
-    for(curr=room->containers;curr!=NULL;curr=curr->next)
+    for(const std::shared_ptr<EngineContainer>& curr : room->containers)
     {
         if(curr == entity->self)
         {
@@ -153,43 +153,30 @@ void Room_AddEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity)
     }
 
     entity->self->room = room;
-    entity->self->next = room->containers;
-    room->containers = entity->self;
+    room->containers.insert(room->containers.begin(), entity->self);
 }
 
 
-int Room_RemoveEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity)
+bool Room_RemoveEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity)
 {
-    engine_container_p previous_cont, current_cont;
+    if(!entity || room->containers.empty())
+        return false;
 
-    if((entity == NULL) || (room->containers == NULL))
-    {
-        return 0;
+    auto it = std::find( room->containers.begin(), room->containers.end(), entity->self );
+    if(it != room->containers.end()) {
+        room->containers.erase(it);
+        entity->self->room.reset();
+        return true;
     }
 
-    if(room->containers == entity->self)
+    if(room->containers.front() == entity->self)
     {
-        room->containers = entity->self->next;
-        entity->self->room = NULL;
+        room->containers.erase(room->containers.begin());
+        entity->self->room.reset();
         return 1;
     }
 
-    previous_cont = room->containers;
-    current_cont = previous_cont->next;
-    for(;current_cont!=NULL;)
-    {
-        if(current_cont == entity->self)
-        {
-            previous_cont->next = current_cont->next;
-            entity->self->room = NULL;
-            return 1;
-        }
-
-        previous_cont = current_cont;
-        current_cont = current_cont->next;
-    }
-
-    return 0;
+    return false;
 }
 
 
@@ -426,7 +413,7 @@ void World_Prepare(world_p world)
 
 void World_Empty(world_p world)
 {
-    extern engine_container_p last_cont;
+    extern EngineContainer* last_cont;
 
     last_cont = NULL;
     Engine_LuaClearTasks();
@@ -441,9 +428,8 @@ void World_Empty(world_p world)
 
     if(world->Character != NULL)
     {
-        world->Character->self->room = NULL;
-        world->Character->self->next = NULL;
-        world->Character->current_sector = NULL;
+        world->Character->self->room.reset();
+        world->Character->current_sector = nullptr;
     }
 
     /* entity empty must be done before rooms destroy */
@@ -458,7 +444,7 @@ void World_Empty(world_p world)
             btRigidBody* body = btRigidBody::upcast(obj);
             if(body != NULL)
             {
-                engine_container_p cont = (engine_container_p)body->getUserPointer();
+                EngineContainer* cont = (EngineContainer*)body->getUserPointer();
                 body->setUserPointer(NULL);
 
                 if(cont && (cont->object_type == OBJECT_BULLET_MISC))
@@ -934,7 +920,7 @@ void Room_Enable(std::shared_ptr<Room> room)
         }
     }
 
-    for(engine_container_p cont=room->containers;cont;cont=cont->next)
+    for(const std::shared_ptr<EngineContainer>& cont : room->containers)
     {
         switch(cont->object_type)
         {
@@ -968,7 +954,7 @@ void Room_Disable(std::shared_ptr<Room> room)
         }
     }
 
-    for(engine_container_p cont=room->containers;cont;cont=cont->next)
+    for(const std::shared_ptr<EngineContainer>& cont : room->containers)
     {
         switch(cont->object_type)
         {
@@ -1043,12 +1029,12 @@ void Room_SwapPortals(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_roo
 
 void Room_SwapItems(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_room)
 {
-    for(auto t=room->containers;t!=NULL;t=t->next)
+    for(std::shared_ptr<EngineContainer> t : room->containers)
     {
         t->room = dest_room;
     }
 
-    for(auto t=dest_room->containers;t!=NULL;t=t->next)
+    for(std::shared_ptr<EngineContainer> t : dest_room->containers)
     {
         t->room = room;
     }

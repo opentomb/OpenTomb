@@ -24,7 +24,7 @@ extern SDL_GameController   *sdl_controller;
 extern SDL_Haptic           *sdl_haptic;
 extern SDL_Window           *sdl_window;
 
-extern engine_container_p last_cont;
+extern EngineContainer* last_cont;
 
 
 void Controls_Key(int32_t button, int state)
@@ -646,7 +646,7 @@ void Controls_DebugKeys(int button, int state)
 
 void Controls_PrimaryMouseDown()
 {
-    engine_container_p cont = Container_Create();
+    EngineContainer* cont = new EngineContainer();
     btScalar dbgR = 128.0;
     btVector3 v = engine_camera.m_pos;
     btVector3 dir = engine_camera.m_viewDir;
@@ -676,19 +676,16 @@ void Controls_PrimaryMouseDown()
 
 void Controls_SecondaryMouseDown()
 {
-    engine_container_t *c0;
+    EngineContainer* c0;
     btVector3 from, to, place;
-    engine_container_t cam_cont;
 
     from = engine_camera.m_pos;
     to = from + btVector3(engine_camera.m_viewDir[0], engine_camera.m_viewDir[1], engine_camera.m_viewDir[2]) * 32768.0;
 
-    cam_cont.next = NULL;
-    cam_cont.object = NULL;
-    cam_cont.object_type = 0;
+    EngineContainer cam_cont;
     cam_cont.room = engine_camera.m_currentRoom;
 
-    bt_engine_ClosestRayResultCallback cbc(&cam_cont);
+    BtEngineClosestRayResultCallback cbc(&cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     bt_engine_dynamicsWorld->rayTest(from, to, cbc);
     if(cbc.hasHit())
@@ -701,7 +698,7 @@ void Controls_SecondaryMouseDown()
         cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld.m_floats[1];
         cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld.m_floats[2];
 
-        if((c0 = (engine_container_p)cbc.m_collisionObject->getUserPointer()))
+        if((c0 = (EngineContainer*)cbc.m_collisionObject->getUserPointer()))
         {
             if(c0->object_type == OBJECT_BULLET_MISC)
             {

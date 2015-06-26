@@ -27,7 +27,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
-    hair->container = Container_Create();
+    hair->container = new EngineContainer();
     hair->container->room = parent_entity->self->room;
     hair->container->object_type = OBJECT_HAIR;
     hair->container->object = hair;

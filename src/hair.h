@@ -54,7 +54,7 @@ typedef struct hair_element_s
 
 struct Hair : public Object
 {
-    engine_container_p        container;
+    EngineContainer*        container;
 
     std::shared_ptr<Entity> owner_char;         // Entity who owns this hair.
     uint32_t                  owner_body;         // Owner entity's body ID.

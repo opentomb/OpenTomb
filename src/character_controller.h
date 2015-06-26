@@ -184,10 +184,10 @@ enum CharParameters
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
-struct engine_container_s;
+struct EngineContainer;
 struct Entity;
-class bt_engine_ClosestConvexResultCallback;
-class bt_engine_ClosestRayResultCallback;
+class BtEngineClosestConvexResultCallback;
+class BtEngineClosestRayResultCallback;
 class btCollisionObject;
 class btConvexShape;
 
@@ -215,8 +215,8 @@ struct ClimbInfo
 
 struct HeightInfo
 {
-    std::shared_ptr<bt_engine_ClosestRayResultCallback> cb;
-    std::shared_ptr<bt_engine_ClosestConvexResultCallback> ccb;
+    std::shared_ptr<BtEngineClosestRayResultCallback> cb;
+    std::shared_ptr<BtEngineClosestConvexResultCallback> ccb;
     std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);
 
     int8_t                                      ceiling_climb;
@@ -338,8 +338,8 @@ struct Character
 
     std::shared_ptr<Entity> m_traversedObject = nullptr;
     
-    std::shared_ptr<bt_engine_ClosestRayResultCallback> m_rayCb;
-    std::shared_ptr<bt_engine_ClosestConvexResultCallback> m_convexCb;
+    std::shared_ptr<BtEngineClosestRayResultCallback> m_rayCb;
+    std::shared_ptr<BtEngineClosestConvexResultCallback> m_convexCb;
 
     Character(std::shared_ptr<Entity> entity);
 };
@@ -373,7 +373,7 @@ int Character_MoveUnderWater(std::shared_ptr<Entity> ent);
 int Character_MoveOnWater(std::shared_ptr<Entity> ent);
 
 int Character_FindTraverse(std::shared_ptr<Entity> ch);
-int Sector_AllowTraverse(room_sector_s *rs, btScalar floor, engine_container_s *cont);
+int Sector_AllowTraverse(room_sector_s *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
 int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> obj);
 
 void Character_ApplyCommands(std::shared_ptr<Entity> ent);

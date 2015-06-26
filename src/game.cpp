@@ -516,7 +516,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 }
 
 
-bool Cam_HasHit(std::shared_ptr<bt_engine_ClosestConvexResultCallback> cb, btTransform &cameraFrom, btTransform &cameraTo)
+bool Cam_HasHit(std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTransform &cameraFrom, btTransform &cameraTo)
 {
     btSphereShape cameraSphere(16.0);
     cb->m_closestHitFraction = 1.0;
@@ -535,14 +535,14 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
     cameraFrom.setIdentity();
     cameraTo.setIdentity();
 
-    std::shared_ptr<bt_engine_ClosestConvexResultCallback> cb;
+    std::shared_ptr<BtEngineClosestConvexResultCallback> cb;
     if(ent->character)
     {
         cb = ent->character->m_convexCb;
     }
     else
     {
-        cb = std::make_shared<bt_engine_ClosestConvexResultCallback>(ent->self);
+        cb = std::make_shared<BtEngineClosestConvexResultCallback>(ent->self.get());
         cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     }
 

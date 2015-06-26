@@ -51,7 +51,7 @@ void Entity::createGhosts()
 
         bt.ghostObjects[i]->setWorldTransform(gltr);
         bt.ghostObjects[i]->setCollisionFlags(bt.ghostObjects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
-        bt.ghostObjects[i]->setUserPointer(self);
+        bt.ghostObjects[i]->setUserPointer(self.get());
         bt.ghostObjects[i]->setCollisionShape(bt.shapes[i]);
         bt_engine_dynamicsWorld->addCollisionObject(bt.ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
 
@@ -171,7 +171,7 @@ void BT_GenEntityRigidBody(std::shared_ptr<Entity> ent)
             ent->bt.bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
             //ent->bt.bt_body[i]->setCollisionFlags(ent->bt.bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
             bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-            ent->bt.bt_body[i]->setUserPointer(ent->self);
+            ent->bt.bt_body[i]->setUserPointer(ent->self.get());
             ent->bt.bt_body[i]->setUserIndex(i);
         }
     }
@@ -323,7 +323,7 @@ void Entity_UpdateCurrentCollisions(std::shared_ptr<Entity> ent)
                             if(manifold->getContactPoint(c).getDistance() < 0.0)
                             {
                                 cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->bt.manifoldArray)[k]->getBody0();
-                                if(ent->self == (engine_container_p)(cn->obj[cn->obj_count]->getUserPointer()))
+                                if(ent->self.get() == (EngineContainer*)(cn->obj[cn->obj_count]->getUserPointer()))
                                 {
                                     cn->obj[cn->obj_count] = (btCollisionObject*)(*ent->bt.manifoldArray)[k]->getBody1();
                                 }
@@ -532,7 +532,7 @@ void Entity_CheckCollisionCallbacks(std::shared_ptr<Entity> ent)
         {
             // do callbacks here:
             int type = -1;
-            engine_container_p cont = (engine_container_p)cobj->getUserPointer();
+            EngineContainer* cont = (EngineContainer*)cobj->getUserPointer();
             if(cont != NULL)
             {
                 type = cont->object_type;
@@ -1675,8 +1675,7 @@ void Entity_CheckActivators(std::shared_ptr<Entity> ent)
     if((ent != NULL) && (ent->self->room != NULL))
     {
         btVector3 ppos = ent->transform.getOrigin() + ent->transform.getBasis()[1] * ent->bf.bb_max[1];
-        engine_container_p cont = ent->self->room->containers;
-        for(;cont;cont=cont->next)
+        for(const std::shared_ptr<EngineContainer>& cont : ent->self->room->containers)
         {
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {
@@ -2135,14 +2134,13 @@ Entity::Entity()
     , OCB( 0 )
     , trigger_layout( 0x00 )
     , timer( 0.0 )
-    , self( new engine_container_t )
+    , self( new EngineContainer() )
     , obb( new obb_s() )
     , character( NULL )
     , current_sector( NULL )
     , activation_offset{ 0.0, 256.0, 0.0 }
 {
     transform.setIdentity();
-    self->next = NULL;
     self->object = shared_from_this();
     self->object_type = OBJECT_ENTITY;
     self->room = NULL;
@@ -2255,8 +2253,7 @@ Entity::~Entity() {
         bt.bt_body = NULL;
     }
 
-    delete self;
-    self = NULL;
+    self.reset();
 
     if(bf.bone_tag_count)
     {

@@ -71,7 +71,7 @@ btScalar time_scale = 1.0;
 btVector3 light_position = {255.0, 255.0, 8.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-engine_container_p      last_cont = NULL;
+EngineContainer* last_cont = NULL;
 
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
 /*

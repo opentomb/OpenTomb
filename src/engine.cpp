@@ -55,13 +55,13 @@ extern SDL_Haptic             *sdl_haptic;
 extern ALCdevice              *al_device;
 extern ALCcontext             *al_context;
 
-struct engine_control_state_s           control_states = {0};
-struct ControlSettings               control_mapper = {0};
-struct AudioSettings                 audio_settings = {0};
+EngineControlState           control_states = {0};
+ControlSettings               control_mapper = {0};
+AudioSettings                 audio_settings = {0};
 btScalar                                engine_frame_time = 0.0;
 
-struct Camera                         engine_camera;
-struct world_s                          engine_world;
+Camera                         engine_camera;
+world_s                          engine_world;
 
 static btScalar                        *frame_vertex_buffer = NULL;
 static size_t                           frame_vertex_buffer_size = 0;
@@ -84,11 +84,11 @@ render_DebugDrawer                       debugDrawer;
  */
 void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
-    engine_container_p c0, c1;
+    EngineContainer* c0, *c1;
 
-    c0 = (engine_container_p)((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->getUserPointer();
+    c0 = (EngineContainer*)((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->getUserPointer();
     std::shared_ptr<Room> r0 = (c0)?(c0->room):(NULL);
-    c1 = (engine_container_p)((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->getUserPointer();
+    c1 = (EngineContainer*)((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->getUserPointer();
     std::shared_ptr<Room> r1 = (c1)?(c1->room):(NULL);
 
     if(c1 && c1 == c0)
@@ -135,7 +135,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
         {
             btTransform trans;
             body->getMotionState()->getWorldTransform(trans);
-            engine_container_p cont = (engine_container_p)body->getUserPointer();
+            EngineContainer* cont = (EngineContainer*)body->getUserPointer();
             if(cont && (cont->object_type == OBJECT_BULLET_MISC))
             {
                 cont->room = Room_FindPosCogerrence(trans.getOrigin(), cont->room);
@@ -287,7 +287,7 @@ int lua_DumpRoom(lua_State * lua)
         {
             Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->object_id);
         }
-        for(engine_container_p cont=r->containers;cont!=NULL;cont=cont->next)
+        for(const std::shared_ptr<EngineContainer>& cont : r->containers)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
@@ -571,7 +571,7 @@ int lua_DropEntity(lua_State * lua)
     move += g * 0.5 * time * time;
     ent->speed += g * time;
 
-    bt_engine_ClosestRayResultCallback cb(ent->self);
+    BtEngineClosestRayResultCallback cb(ent->self.get());
     btVector3 from, to;
     from = ent->transform * ent->bf.centre;
     from[2] = ent->transform.getOrigin()[2];
@@ -4120,18 +4120,6 @@ int engine_lua_printf(const char *fmt, ...)
 }
 
 
-engine_container_p Container_Create()
-{
-    engine_container_p ret;
-
-    ret = (engine_container_p)malloc(sizeof(engine_container_t));
-    ret->next = NULL;
-    ret->object = NULL;
-    ret->object_type = 0;
-    return ret;
-}
-
-
 bool Engine_FileFound(const char *name, bool Write)
 {
     FILE *ff;
@@ -4632,7 +4620,7 @@ int Engine_ExecCmd(const char *ch)
                     {
                         ConsoleInfo::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
                     }
-                    for(engine_container_p cont=sect->owner_room->containers;cont;cont=cont->next)
+                    for(const std::shared_ptr<EngineContainer>& cont : sect->owner_room->containers)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {

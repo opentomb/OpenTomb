@@ -44,16 +44,15 @@ class btDiscreteDynamicsWorld;
 struct Camera;
 struct lua_State;
 
-typedef struct engine_container_s
+struct EngineContainer
 {
-    uint16_t                     object_type;
-    uint32_t                     collide_flag;
-    std::shared_ptr<Object>      object;
-    std::shared_ptr<Room>      room;
-    struct engine_container_s   *next;
-}engine_container_t, *engine_container_p;
+    uint16_t object_type = 0;
+    uint32_t collide_flag = 0;
+    std::shared_ptr<Object> object = nullptr;
+    std::shared_ptr<Room> room = nullptr;
+};
 
-typedef struct engine_control_state_s
+struct EngineControlState
 {
     int8_t   free_look;
     btScalar free_look_speed;
@@ -108,17 +107,17 @@ typedef struct engine_control_state_s
     int8_t   gui_pause;                         // GUI keys - not sure if it must be here.
     int8_t   gui_inventory;
 
-}engine_control_state_t, *engine_control_state_p;
+};
 
 
-extern struct engine_control_state_s            control_states;
-extern struct ControlSettings                control_mapper;
+extern EngineControlState            control_states;
+extern ControlSettings                control_mapper;
 
-extern struct AudioSettings                  audio_settings;
+extern AudioSettings                  audio_settings;
 
 extern btScalar                                 engine_frame_time;
-extern struct Camera                          engine_camera;
-extern struct world_s                           engine_world;
+extern Camera                          engine_camera;
+extern world_s                           engine_world;
 
 
 extern btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
@@ -129,23 +128,23 @@ extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 
 
 
-class bt_engine_ClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
+class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    bt_engine_ClosestRayResultCallback(engine_container_p cont) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    BtEngineClosestRayResultCallback(EngineContainer* cont) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
     {
-        m_cont = cont;
+        m_container = cont;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
     {
-        engine_container_p c1;
+        EngineContainer* c1;
 
-        std::shared_ptr<Room> r0 = m_cont ? m_cont->room : NULL;
-        c1 = (engine_container_p)rayResult.m_collisionObject->getUserPointer();
+        std::shared_ptr<Room> r0 = m_container ? m_container->room : NULL;
+        c1 = (EngineContainer*)rayResult.m_collisionObject->getUserPointer();
         std::shared_ptr<Room> r1 = c1 ? c1->room : NULL;
 
-        if(c1 && c1 == m_cont)
+        if(c1 && c1 == m_container)
         {
             return 1.0;
         }
@@ -170,27 +169,27 @@ public:
         return 1.0;
     }
 
-    engine_container_p m_cont;
+    EngineContainer* m_container;
 };
 
 
-class bt_engine_ClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
+class BtEngineClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    bt_engine_ClosestConvexResultCallback(engine_container_p cont) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    BtEngineClosestConvexResultCallback(EngineContainer* cont) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
     {
-        m_cont = cont;
+        m_container = cont;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult,bool normalInWorldSpace)
     {
-        engine_container_p c1;
+        EngineContainer* c1;
 
-        std::shared_ptr<Room> r0 = (m_cont)?(m_cont->room):(NULL);
-        c1 = (engine_container_p)convexResult.m_hitCollisionObject->getUserPointer();
+        std::shared_ptr<Room> r0 = (m_container)?(m_container->room):(NULL);
+        c1 = (EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
         std::shared_ptr<Room> r1 = (c1)?(c1->room):(NULL);
 
-        if(c1 && c1 == m_cont)
+        if(c1 && c1 == m_container)
         {
             return 1.0;
         }
@@ -216,16 +215,12 @@ public:
     }
 
 protected:
-    engine_container_p m_cont;
+    EngineContainer* m_container;
 };
 
-extern "C" {
 int engine_lua_fputs(const char *str, FILE *f);
 int engine_lua_fprintf(FILE *f, const char *fmt, ...);
 int engine_lua_printf(const char *fmt, ...);
-}
-
-engine_container_p Container_Create();
 
 void Engine_Init_Pre();     // Initial init
 void Engine_Init_Post();    // Finalizing init
