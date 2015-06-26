@@ -701,9 +701,9 @@ gui_InventoryManager::~gui_InventoryManager()
 int gui_InventoryManager::getItemsTypeCount(int type)
 {
     int ret = 0;
-    for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+    for(const InventoryNode& i : *mInventory)
     {
-        auto bi = World_GetBaseItemByID(&engine_world, i->id);
+        auto bi = World_GetBaseItemByID(&engine_world, i.id);
         if(bi && bi->type == type)
         {
             ret++;
@@ -735,7 +735,7 @@ void gui_InventoryManager::restoreItemAngle(float time)
     }
 }
 
-void gui_InventoryManager::setInventory(struct inventory_node_s **i)
+void gui_InventoryManager::setInventory(std::list<InventoryNode> *i)
 {
     mInventory = i;
     mCurrentState = INVENTORY_DISABLED;
@@ -767,7 +767,7 @@ void gui_InventoryManager::setTitle(int items_type)
 
 int gui_InventoryManager::setItemsType(int type)
 {
-    if((mInventory == NULL) || (*mInventory == NULL))
+    if(!mInventory || mInventory->empty())
     {
         mCurrentItemsType = type;
         return type;
@@ -776,9 +776,9 @@ int gui_InventoryManager::setItemsType(int type)
     int count = this->getItemsTypeCount(type);
     if(count == 0)
     {
-        for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+        for(const InventoryNode& i : *mInventory)
         {
-            if(auto bi = World_GetBaseItemByID(&engine_world, i->id))
+            if(auto bi = World_GetBaseItemByID(&engine_world, i.id))
             {
                 type = bi->type;
                 count = this->getItemsTypeCount(mCurrentItemsType);
@@ -803,7 +803,7 @@ int gui_InventoryManager::setItemsType(int type)
 
 void gui_InventoryManager::frame(float time)
 {
-    if((mInventory == NULL) || (*mInventory == NULL))
+    if(!mInventory || mInventory->empty())
     {
         mCurrentState = INVENTORY_DISABLED;
         mNextState = INVENTORY_DISABLED;
@@ -1045,12 +1045,12 @@ void gui_InventoryManager::frame(float time)
 
 void gui_InventoryManager::render()
 {
-    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL) && (FontManager != NULL))
+    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && !mInventory->empty() && (FontManager != NULL))
     {
         int num = 0;
-        for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+        for(InventoryNode& i : *mInventory)
         {
-            auto bi = World_GetBaseItemByID(&engine_world, i->id);
+            auto bi = World_GetBaseItemByID(&engine_world, i.id);
             if(!bi || bi->type != mCurrentItemsType)
             {
                 continue;
@@ -1072,11 +1072,11 @@ void gui_InventoryManager::render()
                 {
                     strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
 
-                    if(i->count > 1)
+                    if(i.count > 1)
                     {
                         char counter[32];
                         lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
-                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i->count);
+                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i.count);
 
                     }
                 }
@@ -1173,7 +1173,7 @@ void Gui_DrawBars()
 {
     if(engine_world.Character && engine_world.Character->character)
     {
-        if(engine_world.Character->character->weapon_current_state > WEAPON_STATE_HIDE_TO_READY)
+        if(engine_world.Character->character->m_weaponCurrentState > WEAPON_STATE_HIDE_TO_READY)
             Bar[BAR_HEALTH].Forced = true;
 
         Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));

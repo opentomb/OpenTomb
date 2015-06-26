@@ -416,8 +416,8 @@ void Entity_FixPenetrations(std::shared_ptr<Entity> ent, btVector3* move)
     {
         if((move != NULL) && (ent->character != NULL))
         {
-            ent->character->resp.horizontal_collide    = 0x00;
-            ent->character->resp.vertical_collide      = 0x00;
+            ent->character->m_response.horizontal_collide    = 0x00;
+            ent->character->m_response.vertical_collide      = 0x00;
         }
 
         if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
@@ -446,32 +446,32 @@ void Entity_FixPenetrations(std::shared_ptr<Entity> ent, btVector3* move)
                 {
                     t2 *= t1;
                     t1 = (reaction[0] * move->x() + reaction[1] * move->y()) / sqrtf(t2);
-                    if(t1 < ent->character->critical_wall_component)
+                    if(t1 < ent->character->m_criticalWallComponent)
                     {
-                        ent->character->resp.horizontal_collide |= 0x01;
+                        ent->character->m_response.horizontal_collide |= 0x01;
                     }
                 }
                 else if((reaction[2] * reaction[2] > t1) && (move->z() * move->z() > t2))
                 {
                     if((reaction[2] > 0.0) && (move->z() < 0.0))
                     {
-                        ent->character->resp.vertical_collide |= 0x01;
+                        ent->character->m_response.vertical_collide |= 0x01;
                     }
                     else if((reaction[2] < 0.0) && (move->z() > 0.0))
                     {
-                        ent->character->resp.vertical_collide |= 0x02;
+                        ent->character->m_response.vertical_collide |= 0x02;
                     }
                 }
             }
 
-            if(ent->character->height_info.ceiling_hit && (reaction[2] < -0.1))
+            if(ent->character->m_heightInfo.ceiling_hit && (reaction[2] < -0.1))
             {
-                ent->character->resp.vertical_collide |= 0x02;
+                ent->character->m_response.vertical_collide |= 0x02;
             }
 
-            if(ent->character->height_info.floor_hit && (reaction[2] > 0.1))
+            if(ent->character->m_heightInfo.floor_hit && (reaction[2] > 0.1))
             {
-                ent->character->resp.vertical_collide |= 0x01;
+                ent->character->m_response.vertical_collide |= 0x01;
             }
         }
 
@@ -491,7 +491,7 @@ int Entity_CheckNextPenetration(std::shared_ptr<Entity> ent, const btVector3& mo
     int ret = 0;
     if(ent->bt.ghostObjects != NULL)
     {
-        character_response_p resp = &ent->character->resp;
+        CharacterResponse* resp = &ent->character->m_response;
 
         Entity_GhostUpdate(ent);
         ent->transform.getOrigin() += move;
@@ -506,7 +506,7 @@ int Entity_CheckNextPenetration(std::shared_ptr<Entity> ent, const btVector3& mo
             {
                 t2 *= t1;
                 t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
-                if(t1 < ent->character->critical_wall_component)
+                if(t1 < ent->character->m_criticalWallComponent)
                 {
                     resp->horizontal_collide |= 0x01;
                 }
@@ -866,7 +866,7 @@ void Entity_UpdateRotation(std::shared_ptr<Entity> entity)
 
 void Entity_UpdateCurrentSpeed(std::shared_ptr<Entity> entity, int zeroVz)
 {
-    btScalar t  = entity->current_speed * entity->character->speed_mult;
+    btScalar t  = entity->current_speed * entity->character->m_speedMult;
     btScalar vz = (zeroVz)?(0.0):(entity->speed[2]);
 
     if(entity->dir_flag & ENT_MOVE_FORWARD)
@@ -1007,7 +1007,7 @@ int  Entity_GetSubstanceState(std::shared_ptr<Entity> entity)
 
     if(entity->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
     {
-        if(entity->character->height_info.transition_level > entity->transform.getOrigin()[2] + entity->character->Height)
+        if(entity->character->m_heightInfo.transition_level > entity->transform.getOrigin()[2] + entity->character->m_height)
         {
             return ENTITY_SUBSTANCE_QUICKSAND_CONSUMED;
         }
@@ -1016,18 +1016,18 @@ int  Entity_GetSubstanceState(std::shared_ptr<Entity> entity)
             return ENTITY_SUBSTANCE_QUICKSAND_SHALLOW;
         }
     }
-    else if(!entity->character->height_info.water)
+    else if(!entity->character->m_heightInfo.water)
     {
         return ENTITY_SUBSTANCE_NONE;
     }
-    else if( entity->character->height_info.water &&
-            (entity->character->height_info.transition_level > entity->transform.getOrigin()[2]) &&
-            (entity->character->height_info.transition_level < entity->transform.getOrigin()[2] + entity->character->wade_depth) )
+    else if( entity->character->m_heightInfo.water &&
+            (entity->character->m_heightInfo.transition_level > entity->transform.getOrigin()[2]) &&
+            (entity->character->m_heightInfo.transition_level < entity->transform.getOrigin()[2] + entity->character->m_wadeDepth) )
     {
         return ENTITY_SUBSTANCE_WATER_SHALLOW;
     }
-    else if( entity->character->height_info.water &&
-            (entity->character->height_info.transition_level > entity->transform.getOrigin()[2] + entity->character->wade_depth) )
+    else if( entity->character->m_heightInfo.water &&
+            (entity->character->m_heightInfo.transition_level > entity->transform.getOrigin()[2] + entity->character->m_wadeDepth) )
     {
         return ENTITY_SUBSTANCE_WATER_WADE;
     }
@@ -1082,7 +1082,7 @@ void Entity_DoAnimCommands(std::shared_ptr<Entity> entity, struct ss_animation_s
                     {
                         if(entity->character)
                         {
-                            entity->character->resp.kill = 1;
+                            entity->character->m_response.kill = 1;
                         }
                     }
 
@@ -1296,18 +1296,18 @@ void Entity_ProcessSector(std::shared_ptr<Entity> ent)
 
     if(ent->character)
     {
-        ent->character->height_info.walls_climb_dir  = 0;
-        ent->character->height_info.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
+        ent->character->m_heightInfo.walls_climb_dir  = 0;
+        ent->character->m_heightInfo.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
                                                                                SECTOR_FLAG_CLIMB_EAST  |
                                                                                SECTOR_FLAG_CLIMB_NORTH |
                                                                                SECTOR_FLAG_CLIMB_SOUTH );
 
-        ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
-        ent->character->height_info.ceiling_climb   = 0x00;
+        ent->character->m_heightInfo.walls_climb     = (ent->character->m_heightInfo.walls_climb_dir > 0);
+        ent->character->m_heightInfo.ceiling_climb   = 0x00;
 
         if((highest_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (lowest_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
         {
-            ent->character->height_info.ceiling_climb = 0x01;
+            ent->character->m_heightInfo.ceiling_climb = 0x01;
         }
 
         if(lowest_sector->flags & SECTOR_FLAG_DEATH)
@@ -1319,7 +1319,7 @@ void Entity_ProcessSector(std::shared_ptr<Entity> ent)
                (ent->move_type == MOVE_QUICKSAND))
             {
                 Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                ent->character->resp.kill = 1;
+                ent->character->m_response.kill = 1;
             }
         }
     }
@@ -1745,9 +1745,9 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
          * 3: hide weapon;
          * 4: idle to fire (targeted);
          */
-        if((entity->character->cmd.ready_weapon != 0x00) && (entity->character->current_weapon > 0) && (entity->character->weapon_current_state == WEAPON_STATE_HIDE))
+        if((entity->character->m_command.ready_weapon != 0x00) && (entity->character->m_currentWeapon > 0) && (entity->character->m_weaponCurrentState == WEAPON_STATE_HIDE))
         {
-            Character_SetWeaponModel(entity, entity->character->current_weapon, 1);
+            Character_SetWeaponModel(entity, entity->character->m_currentWeapon, 1);
         }
 
         btScalar dt;
@@ -1757,17 +1757,17 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
         {
             if((ss_anim->model != NULL) && (ss_anim->model->animation_count > 4))
             {
-                switch(entity->character->weapon_current_state)
+                switch(entity->character->m_weaponCurrentState)
                 {
                     case WEAPON_STATE_HIDE:
-                        if(entity->character->cmd.ready_weapon)   // ready weapon
+                        if(entity->character->m_command.ready_weapon)   // ready weapon
                         {
                             ss_anim->current_animation = 1;
                             ss_anim->next_animation = 1;
                             ss_anim->current_frame = 0;
                             ss_anim->next_frame = 0;
                             ss_anim->frame_time = 0.0;
-                            entity->character->weapon_current_state = WEAPON_STATE_HIDE_TO_READY;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_HIDE_TO_READY;
                         }
                         break;
 
@@ -1795,7 +1795,7 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                             ss_anim->next_frame = 0;
                             ss_anim->next_animation = 0;
                             ss_anim->frame_time = 0.0;
-                            entity->character->weapon_current_state = WEAPON_STATE_IDLE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_IDLE;
                         }
                         break;
 
@@ -1805,17 +1805,17 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                         ss_anim->next_frame = 0;
                         ss_anim->next_animation = 0;
                         ss_anim->frame_time = 0.0;
-                        if(entity->character->cmd.ready_weapon)
+                        if(entity->character->m_command.ready_weapon)
                         {
                             ss_anim->current_animation = 3;
                             ss_anim->next_animation = 3;
                             ss_anim->current_frame = ss_anim->next_frame = 0;
                             ss_anim->frame_time = 0.0;
-                            entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_HIDE;
                         }
-                        else if(entity->character->cmd.action)
+                        else if(entity->character->m_command.action)
                         {
-                            entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_FIRE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_FIRE;
                         }
                         else
                         {
@@ -1840,7 +1840,7 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                         {
                             ss_anim->next_frame = ss_anim->current_frame = 0;
                             ss_anim->next_animation = ss_anim->current_animation;
-                            entity->character->weapon_current_state = WEAPON_STATE_IDLE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_IDLE;
                         }
                         break;
 
@@ -1861,24 +1861,24 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                             ss_anim->next_frame = 0;
                             ss_anim->next_animation = 2;
                         }
-                        else if(entity->character->cmd.action)
+                        else if(entity->character->m_command.action)
                         {
                             ss_anim->current_frame = 0;
                             ss_anim->next_frame = 1;
                             ss_anim->current_animation = 2;
                             ss_anim->next_animation = ss_anim->current_animation;
-                            entity->character->weapon_current_state = WEAPON_STATE_FIRE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_FIRE;
                         }
                         else
                         {
                             ss_anim->frame_time = 0.0;
                             ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
-                            entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_FIRE:
-                        if(entity->character->cmd.action)
+                        if(entity->character->m_command.action)
                         {
                             // inc time, loop;
                             ss_anim->frame_time += time;
@@ -1911,7 +1911,7 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                             ss_anim->next_animation = ss_anim->current_animation;
                             ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
                             ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
-                            entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
 
@@ -1930,25 +1930,25 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                         {
                             ss_anim->next_frame = ss_anim->current_frame = 0;
                             ss_anim->next_animation = ss_anim->current_animation;
-                            entity->character->weapon_current_state = WEAPON_STATE_HIDE;
-                            Character_SetWeaponModel(entity, entity->character->current_weapon, 0);
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_HIDE;
+                            Character_SetWeaponModel(entity, entity->character->m_currentWeapon, 0);
                         }
                         break;
                 };
             }
             else if((ss_anim->model != NULL) && (ss_anim->model->animation_count == 4))
             {
-                switch(entity->character->weapon_current_state)
+                switch(entity->character->m_weaponCurrentState)
                 {
                     case WEAPON_STATE_HIDE:
-                        if(entity->character->cmd.ready_weapon)   // ready weapon
+                        if(entity->character->m_command.ready_weapon)   // ready weapon
                         {
                             ss_anim->current_animation = 2;
                             ss_anim->next_animation = 2;
                             ss_anim->current_frame = 0;
                             ss_anim->next_frame = 0;
                             ss_anim->frame_time = 0.0;
-                            entity->character->weapon_current_state = WEAPON_STATE_HIDE_TO_READY;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_HIDE_TO_READY;
                         }
                         break;
 
@@ -1976,7 +1976,7 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                             ss_anim->next_frame = 0;
                             ss_anim->next_animation = 0;
                             ss_anim->frame_time = 0.0;
-                            entity->character->weapon_current_state = WEAPON_STATE_IDLE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_IDLE;
                         }
                         break;
 
@@ -1986,17 +1986,17 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                         ss_anim->next_frame = 0;
                         ss_anim->next_animation = 0;
                         ss_anim->frame_time = 0.0;
-                        if(entity->character->cmd.ready_weapon)
+                        if(entity->character->m_command.ready_weapon)
                         {
                             ss_anim->current_animation = 2;
                             ss_anim->next_animation = 2;
                             ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
                             ss_anim->frame_time = 0.0;
-                            entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_HIDE;
                         }
-                        else if(entity->character->cmd.action)
+                        else if(entity->character->m_command.action)
                         {
-                            entity->character->weapon_current_state = WEAPON_STATE_IDLE_TO_FIRE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_FIRE;
                         }
                         else
                         {
@@ -2021,7 +2021,7 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                         {
                             ss_anim->next_frame = ss_anim->current_frame = 0;
                             ss_anim->next_animation = ss_anim->current_animation;
-                            entity->character->weapon_current_state = WEAPON_STATE_IDLE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_IDLE;
                         }
                         break;
 
@@ -2042,24 +2042,24 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                             ss_anim->next_frame = 0;
                             ss_anim->next_animation = 3;
                         }
-                        else if(entity->character->cmd.action)
+                        else if(entity->character->m_command.action)
                         {
                             ss_anim->current_frame = 0;
                             ss_anim->next_frame = 1;
                             ss_anim->current_animation = 3;
                             ss_anim->next_animation = ss_anim->current_animation;
-                            entity->character->weapon_current_state = WEAPON_STATE_FIRE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_FIRE;
                         }
                         else
                         {
                             ss_anim->frame_time = 0.0;
                             ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
-                            entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_FIRE:
-                        if(entity->character->cmd.action)
+                        if(entity->character->m_command.action)
                         {
                             // inc time, loop;
                             ss_anim->frame_time += time;
@@ -2092,7 +2092,7 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                             ss_anim->next_animation = ss_anim->current_animation;
                             ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
                             ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
-                            entity->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
 
@@ -2113,8 +2113,8 @@ void Character_DoWeaponFrame(std::shared_ptr<Entity> entity, btScalar time)
                         {
                             ss_anim->next_frame = ss_anim->current_frame = 0;
                             ss_anim->next_animation = ss_anim->current_animation;
-                            entity->character->weapon_current_state = WEAPON_STATE_HIDE;
-                            Character_SetWeaponModel(entity, entity->character->current_weapon, 0);
+                            entity->character->m_weaponCurrentState = WEAPON_STATE_HIDE;
+                            Character_SetWeaponModel(entity, entity->character->m_currentWeapon, 0);
                         }
                         break;
                 };
@@ -2225,10 +2225,7 @@ Entity::~Entity() {
         bt.manifoldArray = NULL;
     }
 
-    if(character)
-    {
-        Character_Clean(std::static_pointer_cast<Entity>(shared_from_this()));
-    }
+    character.reset();
 
     if(bt.bt_body)
     {

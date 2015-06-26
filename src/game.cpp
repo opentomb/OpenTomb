@@ -287,14 +287,14 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
     if(ent->character != NULL)
     {
         fprintf(*f, "\nremoveAllItems(%d);", ent->id);
-        for(inventory_node_p i=ent->character->inventory;i!=NULL;i=i->next)
+        for(const InventoryNode& i : ent->character->m_inventory)
         {
-            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i->id, i->count);
+            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i.id, i.count);
         }
 
-        for(int i=0;i<PARAM_LASTINDEX;i++)
+        for(int i=0;i<PARAM_SENTINEL;i++)
         {
-            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
+            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->m_parameters.param[i], ent->character->m_parameters.maximum[i]);
         }
     }
 }
@@ -458,16 +458,16 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     else
     {
         // Apply controls to Lara
-        ent->character->cmd.action = control_states.state_action;
-        ent->character->cmd.ready_weapon = control_states.do_draw_weapon;
-        ent->character->cmd.jump = control_states.do_jump;
-        ent->character->cmd.shift = control_states.state_walk;
+        ent->character->m_command.action = control_states.state_action;
+        ent->character->m_command.ready_weapon = control_states.do_draw_weapon;
+        ent->character->m_command.jump = control_states.do_jump;
+        ent->character->m_command.shift = control_states.state_walk;
 
-        ent->character->cmd.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);
+        ent->character->m_command.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);
 
         // New commands only for TR3 and above
-        ent->character->cmd.sprint = control_states.state_sprint;
-        ent->character->cmd.crouch = control_states.state_crouch;
+        ent->character->m_command.sprint = control_states.state_sprint;
+        ent->character->m_command.crouch = control_states.state_crouch;
 
         if(control_states.use_small_medi)
         {
@@ -495,23 +495,23 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ))
         {
-            ent->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
+            ent->character->m_command.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
         }
         else
         {
-            ent->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
+            ent->character->m_command.rot[0] = -360.0 / M_PI * engine_frame_time * (btScalar)move_logic[1];
         }
 
         if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
         {
-            ent->character->cmd.rot[1] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_y;
+            ent->character->m_command.rot[1] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_y;
         }
         else
         {
-            ent->character->cmd.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
+            ent->character->m_command.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
         }
 
-        ent->character->cmd.move = move_logic;
+        ent->character->m_command.move = move_logic;
     }
 }
 
@@ -538,7 +538,7 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
     std::shared_ptr<bt_engine_ClosestConvexResultCallback> cb;
     if(ent->character)
     {
-        cb = ent->character->convex_cb;
+        cb = ent->character->m_convexCb;
     }
     else
     {
@@ -627,10 +627,10 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
         }
     }
 
-    if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
+    if((ent->character != NULL) && (ent->character->m_camFollowCenter > 0))
     {
         cam_pos = ent->obb->centre;
-        ent->character->cam_follow_center--;
+        ent->character->m_camFollowCenter--;
     }
     else
     {
@@ -743,13 +743,13 @@ void Game_UpdateCharactersTree(std::map<uint32_t, std::shared_ptr<Entity> >& ent
         std::shared_ptr<Entity> ent = it->second;
         if(IsCharacter(ent))
         {
-            if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+            if(ent->character->m_command.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
             {
                 Entity_CheckActivators(ent);
             }
             if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
             {
-                ent->character->resp.kill = 1;                                      // Kill, if no HP.
+                ent->character->m_response.kill = 1;                                      // Kill, if no HP.
             }
             Character_ApplyCommands(ent);
             Hair_Update(ent);
@@ -764,13 +764,13 @@ void Game_UpdateCharacters()
 
     if(ent && ent->character)
     {
-        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+        if(ent->character->m_command.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
             Entity_CheckActivators(ent);
         }
         if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
-            ent->character->resp.kill = 1;   // Kill, if no HP.
+            ent->character->m_response.kill = 1;   // Kill, if no HP.
         }
         Hair_Update(ent);
     }
@@ -810,7 +810,7 @@ void Game_Frame(btScalar time)
         if((is_character) &&
            (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
         {
-            main_inventory_manager->setInventory(&engine_world.Character->character->inventory);
+            main_inventory_manager->setInventory(&engine_world.Character->character->m_inventory);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
         }
         if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
@@ -902,14 +902,14 @@ void Game_Prepare()
 
         // Set character statistics to default.
 
-        engine_world.Character->character->statistics.distance       = 0.0;
-        engine_world.Character->character->statistics.ammo_used      = 0;
-        engine_world.Character->character->statistics.hits           = 0;
-        engine_world.Character->character->statistics.kills          = 0;
-        engine_world.Character->character->statistics.medipacks_used = 0;
-        engine_world.Character->character->statistics.saves_used     = 0;
-        engine_world.Character->character->statistics.secrets_game   = 0;
-        engine_world.Character->character->statistics.secrets_level  = 0;
+        engine_world.Character->character->m_statistics.distance       = 0.0;
+        engine_world.Character->character->m_statistics.ammo_used      = 0;
+        engine_world.Character->character->m_statistics.hits           = 0;
+        engine_world.Character->character->m_statistics.kills          = 0;
+        engine_world.Character->character->m_statistics.medipacks_used = 0;
+        engine_world.Character->character->m_statistics.saves_used     = 0;
+        engine_world.Character->character->m_statistics.secrets_game   = 0;
+        engine_world.Character->character->m_statistics.secrets_level  = 0;
     }
     else if(!engine_world.rooms.empty())
     {

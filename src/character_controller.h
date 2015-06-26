@@ -14,10 +14,10 @@
 #include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <cstdint>
+#include <vector>
+#include <list>
 
 #include "engine.h"
-
-#include <vector>
 
 /*------ Lara's model-------
              .=.
@@ -172,7 +172,7 @@ enum CharParameters
     PARAM_EXTRA2,
     PARAM_EXTRA3,
     PARAM_EXTRA4,
-    PARAM_LASTINDEX
+    PARAM_SENTINEL
 };
 
 // CHARACTER PARAMETERS DEFAULTS
@@ -191,7 +191,7 @@ class bt_engine_ClosestRayResultCallback;
 class btCollisionObject;
 class btConvexShape;
 
-typedef struct climb_info_s
+struct ClimbInfo
 {
     int8_t                         height_info = 0;
     int8_t                         can_hang = 0;
@@ -211,9 +211,9 @@ typedef struct climb_info_s
     btVector3                      edge_tan_xy;
     btScalar                       edge_z_ang;
     btCollisionObject             *edge_obj = nullptr;
-}climb_info_t, *climb_info_p;
+};
 
-typedef struct height_info_s
+struct HeightInfo
 {
     std::shared_ptr<bt_engine_ClosestRayResultCallback> cb;
     std::shared_ptr<bt_engine_ClosestConvexResultCallback> ccb;
@@ -236,9 +236,9 @@ typedef struct height_info_s
     btScalar                                    transition_level;
     int16_t                                     water = 0;
     int16_t                                     quicksand;
-}height_info_t, *height_info_p;
+};
 
-typedef struct character_command_s
+struct CharacterCommand
 {
     btVector3 rot;
     std::array<int8_t,3> move{{0,0,0}};
@@ -252,30 +252,30 @@ typedef struct character_command_s
     int8_t      sprint;
 
     int8_t      flags = 0;
-}character_command_t, *character_command_p;
+};
 
-typedef struct character_response_s
+struct CharacterResponse
 {
     int8_t      kill = 0;
     int8_t      vertical_collide = 0;
     int8_t      horizontal_collide = 0;
     //int8_t      step_up;
     int8_t      slide = 0;
-}character_response_t, *character_response_p;
+};
 
-typedef struct character_param_s
+struct CharacterParam
 {
-    std::array<float,PARAM_LASTINDEX> param{{}};
-    std::array<float,PARAM_LASTINDEX> maximum{{}};
+    std::array<float,PARAM_SENTINEL> param{{}};
+    std::array<float,PARAM_SENTINEL> maximum{{}};
 
-    character_param_s()
+    CharacterParam()
     {
         param.fill(0);
         maximum.fill(0);
     }
-}character_param_t, *character_param_p;
+};
 
-typedef struct character_stats_s
+struct CharacterStats
 {
     float       distance;
     uint32_t    secrets_level;         // Level amount of secrets.
@@ -285,84 +285,82 @@ typedef struct character_stats_s
     uint32_t    kills;
     uint32_t    medipacks_used;
     uint32_t    saves_used;
-}character_stats_t, *character_stats_p;
+};
 
-typedef struct inventory_node_s
+struct InventoryNode
 {
     uint32_t                    id;
     int32_t                     count;
     uint32_t                    max_count;
-    struct inventory_node_s    *next;
-}inventory_node_t, *inventory_node_p;
+};
 
 
 struct Hair;
+struct ss_animation_s;
 
 struct Character
 {
-    std::shared_ptr<Entity>    ent = nullptr;                    // actor entity
-    character_command_s   cmd;                    // character control commands
-    character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    std::shared_ptr<Entity> m_entity = nullptr;                    // actor entity
+    CharacterCommand   m_command;                    // character control commands
+    CharacterResponse  m_response;                   // character response info (collides, slide, next steps, drops, e.t.c.)
     
-    inventory_node_s     *inventory = nullptr;
-    character_param_s     parameters{};
-    character_stats_s     statistics;
+    std::list<InventoryNode> m_inventory;
+    CharacterParam     m_parameters{};
+    CharacterStats     m_statistics;
     
-    std::vector<std::shared_ptr<Hair>> hairs{};
+    std::vector<std::shared_ptr<Hair>> m_hairs{};
     
-    int                          current_weapon = 0;
-    int                          weapon_current_state = 0;
+    int                          m_currentWeapon = 0;
+    int                          m_weaponCurrentState = 0;
     
-    int (*state_func)(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_anim) = nullptr;
+    int (*state_func)(std::shared_ptr<Entity> entity, ss_animation_s *ssAnim) = nullptr;
     
-    int8_t                       cam_follow_center = 0;
-    btScalar                     speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
-    btScalar                     min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
-    btScalar                     max_step_up_height = DEFAULT_MAX_STEP_UP_HEIGHT;
-    btScalar                     max_climb_height = DEFAULT_CLIMB_UP_HEIGHT;
-    btScalar                     fall_down_height;
-    btScalar                     critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
-    btScalar                     critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
+    int8_t                       m_camFollowCenter = 0;
+    btScalar                     m_speedMult = DEFAULT_CHARACTER_SPEED_MULT;
+    btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
+    btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
+    btScalar                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
+    btScalar                     m_fallDownHeight;
+    btScalar                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
+    btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
-    btScalar                     climb_r = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
-    btScalar                     forvard_size = 48;           // offset for climbing calculation
-    btScalar                     Height = CHARACTER_BASE_HEIGHT;                 // base character height
-    btScalar                     wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
-    btScalar                     swim_depth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
+    btScalar                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
+    btScalar                     m_forvardSize = 48;           // offset for climbing calculation
+    btScalar                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
+    btScalar                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
+    btScalar                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
     
-    std::unique_ptr<btSphereShape> sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
-    std::unique_ptr<btSphereShape> climb_sensor;
+    std::unique_ptr<btSphereShape> m_sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
+    std::unique_ptr<btSphereShape> m_climbSensor;
 
-    height_info_s         height_info{};
-    climb_info_s          climb{};
+    HeightInfo         m_heightInfo{};
+    ClimbInfo          m_climb{};
 
-    std::shared_ptr<Entity> traversed_object = nullptr;
+    std::shared_ptr<Entity> m_traversedObject = nullptr;
     
-    std::shared_ptr<bt_engine_ClosestRayResultCallback> ray_cb;
-    std::shared_ptr<bt_engine_ClosestConvexResultCallback> convex_cb;
+    std::shared_ptr<bt_engine_ClosestRayResultCallback> m_rayCb;
+    std::shared_ptr<bt_engine_ClosestConvexResultCallback> m_convexCb;
 
     Character(std::shared_ptr<Entity> entity);
 };
-
-void Character_Clean(std::shared_ptr<Entity> ent);
 
 int32_t Character_AddItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
 int32_t Character_RemoveItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
 int32_t Character_RemoveAllItems(std::shared_ptr<Entity> ent);
 int32_t Character_GetItemsCount(std::shared_ptr<Entity> ent, uint32_t item_id);                // returns items count
 
-void Character_GetHeightInfo(const btVector3& pos, struct height_info_s *fc, btScalar v_offset = 0.0);
-int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3 &offset, struct height_info_s *nfc);
-int Character_HasStopSlant(std::shared_ptr<Entity> ent, height_info_p next_fc);
-climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 offset, struct height_info_s *nfc, btScalar test_height);
-climb_info_t Character_CheckWallsClimbability(std::shared_ptr<Entity> ent);
+void Character_GetHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
+int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3 &offset, HeightInfo *nfc);
+int Character_HasStopSlant(std::shared_ptr<Entity> ent, HeightInfo* next_fc);
+ClimbInfo Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 offset, HeightInfo *nfc, btScalar test_height);
+ClimbInfo Character_CheckWallsClimbability(std::shared_ptr<Entity> ent);
 
 void Character_UpdateCurrentHeight(std::shared_ptr<Entity> ent);
 void Character_UpdatePlatformPreStep(std::shared_ptr<Entity> ent);
 void Character_UpdatePlatformPostStep(std::shared_ptr<Entity> ent);
 
 void Character_SetToJump(std::shared_ptr<Entity> ent, btScalar v_vertical, btScalar v_horizontal);
-void Character_Lean(std::shared_ptr<Entity> ent, character_command_p cmd, btScalar max_lean);
+void Character_Lean(std::shared_ptr<Entity> ent, CharacterCommand* cmd, btScalar max_lean);
 btScalar Character_InertiaLinear(std::shared_ptr<Entity> ent, btScalar max_speed, btScalar accel, int8_t command);
 btScalar Character_InertiaAngular(std::shared_ptr<Entity> ent, btScalar max_angle, btScalar accel, uint8_t axis);
 
@@ -375,7 +373,7 @@ int Character_MoveUnderWater(std::shared_ptr<Entity> ent);
 int Character_MoveOnWater(std::shared_ptr<Entity> ent);
 
 int Character_FindTraverse(std::shared_ptr<Entity> ch);
-int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine_container_s *cont);
+int Sector_AllowTraverse(room_sector_s *rs, btScalar floor, engine_container_s *cont);
 int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> obj);
 
 void Character_ApplyCommands(std::shared_ptr<Entity> ent);

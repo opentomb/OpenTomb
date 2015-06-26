@@ -20,59 +20,20 @@
 #include "string.h"
 
 Character::Character(std::shared_ptr<Entity> ent)
-    : climb_sensor(new btSphereShape(ent->character->climb_r))
-    , ray_cb(std::make_shared<bt_engine_ClosestRayResultCallback>(ent->self))
-    , convex_cb(std::make_shared<bt_engine_ClosestConvexResultCallback>(ent->self))
+    : m_climbSensor(new btSphereShape(ent->character->m_climbR))
+    , m_rayCb(std::make_shared<bt_engine_ClosestRayResultCallback>(ent->self))
+    , m_convexCb(std::make_shared<bt_engine_ClosestConvexResultCallback>(ent->self))
 {
-    ray_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    convex_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
 
     ent->dir_flag = ENT_STAY;
 
-    height_info.cb = ray_cb;
-    height_info.ccb = convex_cb;
+    m_heightInfo.cb = m_rayCb;
+    m_heightInfo.ccb = m_convexCb;
 
     ent->createGhosts();
 }
-
-void Character_Clean(std::shared_ptr<Entity> ent)
-{
-    auto actor = ent->character;
-
-    if(actor == NULL)
-    {
-        return;
-    }
-
-    actor->ent = NULL;
-
-    inventory_node_p in, rn;
-    in = actor->inventory;
-    while(in)
-    {
-        rn = in;
-        in = in->next;
-        free(rn);
-    }
-
-    actor->hairs.clear();
-
-    actor->climb_sensor.reset();
-    actor->sphere.reset();
-    actor->ray_cb.reset();
-    actor->convex_cb.reset();
-
-    actor->height_info.cb.reset();
-    actor->height_info.ccb.reset();
-    actor->height_info.sp.reset();
-    actor->height_info.ceiling_hit = 0x00;
-    actor->height_info.floor_hit = 0x00;
-    actor->height_info.water = 0x00;
-    actor->climb.edge_hit = 0x00;
-
-    ent->character.reset();
-}
-
 
 int32_t Character_AddItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
@@ -88,33 +49,21 @@ int32_t Character_AddItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t
     if(!item)
         return 0;
 
-    inventory_node_p last, i  = ent->character->inventory;
 
-    count = (count == -1)?(item->count):(count);
-    last = i;
-    while(i)
-    {
-        if(i->id == item_id)
+    count = (count == -1) ? item->count : count;
+
+    for(InventoryNode& i : ent->character->m_inventory) {
+        if(i.id == item_id)
         {
-            i->count += count;
-            return i->count;
+            i.count += count;
+            return i.count;
         }
-        last = i;
-        i = i->next;
     }
 
-    i = (inventory_node_p)malloc(sizeof(inventory_node_t));
-    i->id = item_id;
-    i->count = count;
-    i->next = NULL;
-    if(last != NULL)
-    {
-        last->next = i;
-    }
-    else
-    {
-        ent->character->inventory = i;
-    }
+    InventoryNode i;
+    i.id = item_id;
+    i.count = count;
+    ent->character->m_inventory.push_back(i);
 
     return count;
 }
@@ -122,14 +71,12 @@ int32_t Character_AddItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t
 
 int32_t Character_RemoveItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count) // returns items count after in the function's end
 {
-    if((ent->character == NULL) || (ent->character->inventory == NULL))
+    if((ent->character == NULL) || ent->character->m_inventory.empty())
     {
         return 0;
     }
 
-    inventory_node_p pi, i;
-    pi = ent->character->inventory;
-    i = pi->next;
+    auto pi = ent->character->m_inventory.begin();
     if(pi->id == item_id)
     {
         if(pi->count > count)
@@ -139,8 +86,7 @@ int32_t Character_RemoveItem(std::shared_ptr<Entity> ent, uint32_t item_id, int3
         }
         else if(pi->count == count)
         {
-            ent->character->inventory = pi->next;
-            free(pi);
+            ent->character->m_inventory.pop_front();
             return 0;
         }
         else // count_to_remove > current_items_count
@@ -149,28 +95,25 @@ int32_t Character_RemoveItem(std::shared_ptr<Entity> ent, uint32_t item_id, int3
         }
     }
 
-    while(i)
-    {
-        if(i->id == item_id)
-        {
-            if(i->count > count)
-            {
+    auto i = std::next(pi);
+
+    while(i != ent->character->m_inventory.end()) {
+        // i = pi+1
+        if(i->id == item_id) {
+            if(i->count > count) {
                 i->count -= count;
                 return i->count;
             }
-            else if(i->count == count)
-            {
-                pi->next = i->next;
-                free(i);
+            else if(i->count == count) {
+                ent->character->m_inventory.erase(i);
                 return 0;
             }
-            else // count_to_remove > current_items_count
-            {
+            else { // count_to_remove > current_items_count
                 return (int32_t)i->count - (int32_t)count;
             }
         }
         pi = i;
-        i = i->next;
+        ++i;
     }
 
     return -count;
@@ -179,23 +122,12 @@ int32_t Character_RemoveItem(std::shared_ptr<Entity> ent, uint32_t item_id, int3
 
 int32_t Character_RemoveAllItems(std::shared_ptr<Entity> ent)
 {
-    if((ent->character == NULL) || (ent->character->inventory == NULL))
+    if((ent->character == NULL) || ent->character->m_inventory.empty())
     {
         return 0;
     }
-
-    inventory_node_p curr_i = ent->character->inventory, next_i;
-    int32_t ret = 0;
-
-    while(curr_i != NULL)
-    {
-        next_i = curr_i->next;
-        free(curr_i);
-        curr_i = next_i;
-        ret++;
-    }
-    ent->character->inventory = NULL;
-
+    auto ret = ent->character->m_inventory.size();
+    ent->character->m_inventory.clear();
     return ret;
 }
 
@@ -207,17 +139,7 @@ int32_t Character_GetItemsCount(std::shared_ptr<Entity> ent, uint32_t item_id)  
         return 0;
     }
 
-    inventory_node_p i = ent->character->inventory;
-    while(i)
-    {
-        if(i->id == item_id)
-        {
-            return i->count;
-        }
-        i = i->next;
-    }
-
-    return 0;
+    return ent->character->m_inventory.size();
 }
 
 /**
@@ -231,7 +153,7 @@ void Character_UpdateCurrentHeight(std::shared_ptr<Entity> ent)
     t[1] = 0.0;
     t[2] = ent->bf.bone_tags[0].transform.getOrigin()[2];
     auto pos = ent->transform * t;
-    Character_GetHeightInfo(pos, &ent->character->height_info, ent->character->Height);
+    Character_GetHeightInfo(pos, &ent->character->m_heightInfo, ent->character->m_height);
 }
 
 /*
@@ -308,7 +230,7 @@ void Character_UpdatePlatformPostStep(std::shared_ptr<Entity> ent)
 /**
  * Start position are taken from ent->transform
  */
-void Character_GetHeightInfo(const btVector3& pos, struct height_info_s *fc, btScalar v_offset)
+void Character_GetHeightInfo(const btVector3& pos, struct HeightInfo *fc, btScalar v_offset)
 {
     btVector3 from, to;
     auto cb = fc->cb;
@@ -424,10 +346,10 @@ void Character_GetHeightInfo(const btVector3& pos, struct height_info_s *fc, btS
  * @function calculates next floor info + fantom filter + returns step info.
  * Current height info must be calculated!
  */
-int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3& offset, struct height_info_s *nfc)
+int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3& offset, struct HeightInfo *nfc)
 {
     btScalar delta;
-    height_info_p fc = &ent->character->height_info;
+    HeightInfo* fc = &ent->character->m_heightInfo;
     btVector3 from, to;
     int ret = CHARACTER_STEP_HORIZONTAL;
     ///penetration test?
@@ -447,15 +369,15 @@ int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3& offset
         {
             delta = -delta;
             from[2] = fc->floor_point[2];
-            if(delta <= ent->character->min_step_up_height)
+            if(delta <= ent->character->m_minStepUpHeight)
             {
                 ret = CHARACTER_STEP_DOWN_LITTLE;
             }
-            else if(delta <= ent->character->max_step_up_height)
+            else if(delta <= ent->character->m_maxStepUpHeight)
             {
                 ret = CHARACTER_STEP_DOWN_BIG;
             }
-            else if(delta <= ent->character->Height)
+            else if(delta <= ent->character->m_height)
             {
                 ret = CHARACTER_STEP_DOWN_DROP;
             }
@@ -467,15 +389,15 @@ int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3& offset
         else                                                                    // up way
         {
             from[2] = nfc->floor_point[2];
-            if(delta <= ent->character->min_step_up_height)
+            if(delta <= ent->character->m_minStepUpHeight)
             {
                 ret = CHARACTER_STEP_UP_LITTLE;
             }
-            else if(delta <= ent->character->max_step_up_height)
+            else if(delta <= ent->character->m_maxStepUpHeight)
             {
                 ret = CHARACTER_STEP_UP_BIG;
             }
-            else if(delta <= ent->character->max_climb_height)
+            else if(delta <= ent->character->m_maxClimbHeight)
             {
                 ret = CHARACTER_STEP_UP_CLIMB;
             }
@@ -504,7 +426,7 @@ int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3& offset
     /*
      * check walls! If test is positive, than CHARACTER_STEP_UP_IMPOSSIBLE - can not go next!
      */
-    from[2] += ent->character->climb_r;
+    from[2] += ent->character->m_climbR;
     to[2] = from[2];
     from[0] = ent->transform.getOrigin()[0];
     from[1] = ent->transform.getOrigin()[1];
@@ -527,12 +449,12 @@ int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3& offset
  * @param next_fc - next step floor / ceiling information
  * @return 1 if character can't run / walk next; in other cases returns 0
  */
-int Character_HasStopSlant(std::shared_ptr<Entity> ent, height_info_p next_fc)
+int Character_HasStopSlant(std::shared_ptr<Entity> ent, HeightInfo *next_fc)
 {
     const auto& pos = ent->transform.getOrigin();
     const auto& v1 = ent->transform.getBasis()[1];
     const auto& v2 = next_fc->floor_normale;
-    return (next_fc->floor_point[2] > pos[2]) && (next_fc->floor_normale[2] < ent->character->critical_slant_z_component) &&
+    return (next_fc->floor_point[2] > pos[2]) && (next_fc->floor_normale[2] < ent->character->m_criticalSlantZComponent) &&
            (v1[0] * v2[0] + v1[1] * v2[2] < 0.0);
 }
 
@@ -542,9 +464,8 @@ int Character_HasStopSlant(std::shared_ptr<Entity> ent, height_info_p next_fc)
  * @param offset - offset, when we check height
  * @param nfc - height info (floor / ceiling)
  */
-climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 offset, struct height_info_s *nfc, btScalar test_height)
+ClimbInfo Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 offset, struct HeightInfo *nfc, btScalar test_height)
 {
-    climb_info_t ret;
     btVector3 from, to;
     btScalar d;
     const auto& pos = ent->transform.getOrigin();
@@ -554,35 +475,37 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
     /*
      * init callbacks functions
      */
-    nfc->cb = ent->character->ray_cb;
-    nfc->ccb = ent->character->convex_cb;
+    nfc->cb = ent->character->m_rayCb;
+    nfc->ccb = ent->character->m_convexCb;
     auto tmp = pos + offset;                                        // tmp = native offset point
     offset[2] += 128.0;                                                         ///@FIXME: stick for big slant
+
+    ClimbInfo ret;
     ret.height_info = Character_CheckNextStep(ent, offset, nfc);
     offset[2] -= 128.0;
     ret.can_hang = 0;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
-    ret.floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
+    ret.floor_limit = (ent->character->m_heightInfo.floor_hit)?(ent->character->m_heightInfo.floor_point[2]):(-9E10);
+    ret.ceiling_limit = (ent->character->m_heightInfo.ceiling_hit)?(ent->character->m_heightInfo.ceiling_point[2]):(9E10);
     if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
     {
         ret.ceiling_limit = nfc->ceiling_point[2];
     }
-    ret.point = ent->character->climb.point;
+    ret.point = ent->character->m_climb.point;
     /*
      * check max height
      */
-    if(ent->character->height_info.ceiling_hit && (tmp[2] > ent->character->height_info.ceiling_point[2] - ent->character->climb_r - 1.0))
+    if(ent->character->m_heightInfo.ceiling_hit && (tmp[2] > ent->character->m_heightInfo.ceiling_point[2] - ent->character->m_climbR - 1.0))
     {
-        tmp[2] = ent->character->height_info.ceiling_point[2] - ent->character->climb_r - 1.0;
+        tmp[2] = ent->character->m_heightInfo.ceiling_point[2] - ent->character->m_climbR - 1.0;
     }
 
     /*
     * Let us calculate EDGE
     */
-    from[0] = pos[0] - ent->transform.getBasis()[1][0] * ent->character->climb_r * 2.0;
-    from[1] = pos[1] - ent->transform.getBasis()[1][1] * ent->character->climb_r * 2.0;
+    from[0] = pos[0] - ent->transform.getBasis()[1][0] * ent->character->m_climbR * 2.0;
+    from[1] = pos[1] - ent->transform.getBasis()[1][1] * ent->character->m_climbR * 2.0;
     from[2] = tmp[2];
     to = tmp;
 
@@ -592,7 +515,7 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
     t1.setIdentity();
     t2.setIdentity();
     up_founded = 0;
-    test_height = (test_height >= ent->character->max_step_up_height)?(test_height):(ent->character->max_step_up_height);
+    test_height = (test_height >= ent->character->m_maxStepUpHeight)?(test_height):(ent->character->m_maxStepUpHeight);
     d = pos[2] + ent->bf.bb_max[2] - test_height;
     std::copy(to.m_floats+0, to.m_floats+3, cast_ray+0);
     std::copy(to.m_floats+0, to.m_floats+3, cast_ray+3);
@@ -604,7 +527,7 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
         t2.setOrigin(to);
         nfc->ccb->m_closestHitFraction = 1.0;
         nfc->ccb->m_hitCollisionObject = NULL;
-        bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor.get(), t1, t2, *nfc->ccb);
+        bt_engine_dynamicsWorld->convexSweepTest(ent->character->m_climbSensor.get(), t1, t2, *nfc->ccb);
         if(nfc->ccb->hasHit())
         {
             if(nfc->ccb->m_hitNormalWorld[2] >= 0.1)
@@ -617,7 +540,7 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
             {
                 n1 = nfc->ccb->m_hitNormalWorld;
                 n1[3] = -n1.dot(nfc->ccb->m_hitPointWorld);
-                ent->character->climb.edge_obj = (btCollisionObject*)nfc->ccb->m_hitCollisionObject;
+                ent->character->m_climb.edge_obj = (btCollisionObject*)nfc->ccb->m_hitCollisionObject;
                 up_founded = 2;
                 break;
             }
@@ -633,7 +556,7 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
             //vec3_copy(cast_ray+3, tmp);
             nfc->ccb->m_closestHitFraction = 1.0;
             nfc->ccb->m_hitCollisionObject = NULL;
-            bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor.get(), t1, t2, *nfc->ccb);
+            bt_engine_dynamicsWorld->convexSweepTest(ent->character->m_climbSensor.get(), t1, t2, *nfc->ccb);
             if(nfc->ccb->hasHit())
             {
                 up_founded = 1;
@@ -650,8 +573,8 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
         // close to 1.0 - bad precision, good speed;
         // close to 0.0 - bad speed, bad precision;
         // close to 0.5 - middle speed, good precision
-        from[2] -= 0.66 * ent->character->climb_r;
-        to[2] -= 0.66 * ent->character->climb_r;
+        from[2] -= 0.66 * ent->character->m_climbR;
+        to[2] -= 0.66 * ent->character->m_climbR;
     }
     while(to[2] >= d);                                                 // we can't climb under floor!
 
@@ -698,7 +621,7 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
      * unclimbable edge slant %)
      */
     n2 = n0.cross(n1);
-    d = ent->character->critical_slant_z_component;
+    d = ent->character->m_criticalSlantZComponent;
     d *= d * (n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
     if(n2[2] * n2[2] > d)
     {
@@ -731,12 +654,12 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
     ret.edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
     ret.t = ret.edge_tan_xy;
 
-    if(!ent->character->height_info.floor_hit || (ret.edge_point[2] - ent->character->height_info.floor_point[2] >= ent->character->Height))
+    if(!ent->character->m_heightInfo.floor_hit || (ret.edge_point[2] - ent->character->m_heightInfo.floor_point[2] >= ent->character->m_height))
     {
         ret.can_hang = 1;
     }
 
-    ret.next_z_space = 2.0 * ent->character->Height;
+    ret.next_z_space = 2.0 * ent->character->m_height;
     if(nfc->floor_hit && nfc->ceiling_hit)
     {
         ret.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
@@ -746,23 +669,23 @@ climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 
 }
 
 
-climb_info_t Character_CheckWallsClimbability(std::shared_ptr<Entity> ent)
+ClimbInfo Character_CheckWallsClimbability(std::shared_ptr<Entity> ent)
 {
-    climb_info_t ret;
     btVector3 from, to;
     btTransform tr1, tr2;
     btScalar wn2[2], t, *pos = ent->transform.getOrigin();
-    auto ccb = ent->character->convex_cb;
+    auto ccb = ent->character->m_convexCb;
 
+    ClimbInfo ret;
     ret.can_hang = 0x00;
     ret.wall_hit = 0x00;
     ret.edge_hit = 0x00;
     ret.edge_obj = NULL;
-    ret.floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
-    ret.ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
-    ret.point = ent->character->climb.point;
+    ret.floor_limit = (ent->character->m_heightInfo.floor_hit)?(ent->character->m_heightInfo.floor_point[2]):(-9E10);
+    ret.ceiling_limit = (ent->character->m_heightInfo.ceiling_hit)?(ent->character->m_heightInfo.ceiling_point[2]):(9E10);
+    ret.point = ent->character->m_climb.point;
 
-    if(ent->character->height_info.walls_climb == 0x00)
+    if(ent->character->m_heightInfo.walls_climb == 0x00)
     {
         return ret;
     }
@@ -771,11 +694,11 @@ climb_info_t Character_CheckWallsClimbability(std::shared_ptr<Entity> ent)
     ret.up[1] = 0.0;
     ret.up[2] = 1.0;
 
-    from[0] = pos[0] + ent->transform.getBasis()[2][0] * ent->bf.bb_max[2] - ent->transform.getBasis()[1][0] * ent->character->climb_r;
-    from[1] = pos[1] + ent->transform.getBasis()[2][1] * ent->bf.bb_max[2] - ent->transform.getBasis()[1][1] * ent->character->climb_r;
-    from[2] = pos[2] + ent->transform.getBasis()[2][2] * ent->bf.bb_max[2] - ent->transform.getBasis()[1][2] * ent->character->climb_r;
+    from[0] = pos[0] + ent->transform.getBasis()[2][0] * ent->bf.bb_max[2] - ent->transform.getBasis()[1][0] * ent->character->m_climbR;
+    from[1] = pos[1] + ent->transform.getBasis()[2][1] * ent->bf.bb_max[2] - ent->transform.getBasis()[1][1] * ent->character->m_climbR;
+    from[2] = pos[2] + ent->transform.getBasis()[2][2] * ent->bf.bb_max[2] - ent->transform.getBasis()[1][2] * ent->character->m_climbR;
     to = from;
-    t = ent->character->forvard_size + ent->bf.bb_max[1];
+    t = ent->character->m_forvardSize + ent->bf.bb_max[1];
     to[0] += ent->transform.getBasis()[1][0] * t;
     to[1] += ent->transform.getBasis()[1][1] * t;
     to[2] += ent->transform.getBasis()[1][2] * t;
@@ -786,7 +709,7 @@ climb_info_t Character_CheckWallsClimbability(std::shared_ptr<Entity> ent)
     tr1.setOrigin(from);
     tr2.setIdentity();
     tr2.setOrigin(to);
-    bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor.get(), tr1, tr2, *ccb);
+    bt_engine_dynamicsWorld->convexSweepTest(ent->character->m_climbSensor.get(), tr1, tr2, *ccb);
     if(!(ccb->hasHit()))
     {
         return ret;
@@ -805,31 +728,31 @@ climb_info_t Character_CheckWallsClimbability(std::shared_ptr<Entity> ent)
     ret.t[2] = 0.0;
     // now we have wall normale in XOY plane. Let us check all flags
 
-    if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (wn2[1] < -0.7))
+    if((ent->character->m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (wn2[1] < -0.7))
     {
         ret.wall_hit = 0x01;                                                    // nW = (0, -1, 0);
     }
-    if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST) && (wn2[0] < -0.7))
+    if((ent->character->m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST) && (wn2[0] < -0.7))
     {
         ret.wall_hit = 0x01;                                                    // nW = (-1, 0, 0);
     }
-    if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (wn2[1] > 0.7))
+    if((ent->character->m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (wn2[1] > 0.7))
     {
         ret.wall_hit = 0x01;                                                    // nW = (0, 1, 0);
     }
-    if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST) && (wn2[0] > 0.7))
+    if((ent->character->m_heightInfo.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST) && (wn2[0] > 0.7))
     {
         ret.wall_hit = 0x01;                                                    // nW = (1, 0, 0);
     }
 
     if(ret.wall_hit)
     {
-        t = 0.67 * ent->character->Height;
+        t = 0.67 * ent->character->m_height;
         from[0] -= ent->transform.getBasis()[2][0] * t;
         from[1] -= ent->transform.getBasis()[2][1] * t;
         from[2] -= ent->transform.getBasis()[2][2] * t;
         to = from;
-        t = ent->character->forvard_size + ent->bf.bb_max[1];
+        t = ent->character->m_forvardSize + ent->bf.bb_max[1];
         to[0] += ent->transform.getBasis()[1][0] * t;
         to[1] += ent->transform.getBasis()[1][1] * t;
         to[2] += ent->transform.getBasis()[1][2] * t;
@@ -840,7 +763,7 @@ climb_info_t Character_CheckWallsClimbability(std::shared_ptr<Entity> ent)
         tr1.setOrigin(from);
         tr2.setIdentity();
         tr2.setOrigin(to);
-        bt_engine_dynamicsWorld->convexSweepTest(ent->character->climb_sensor.get(), tr1, tr2, *ccb);
+        bt_engine_dynamicsWorld->convexSweepTest(ent->character->m_climbSensor.get(), tr1, tr2, *ccb);
         if(ccb->hasHit())
         {
             ret.wall_hit = 0x02;
@@ -876,7 +799,7 @@ void Character_SetToJump(std::shared_ptr<Entity> ent, btScalar v_vertical, btSca
     }
 
     // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * ent->character->speed_mult;
+    t = v_horizontal * ent->character->m_speedMult;
 
     // Calculate the direction of jump by vector multiplication.
     if(ent->dir_flag & ENT_MOVE_FORWARD)
@@ -900,20 +823,20 @@ void Character_SetToJump(std::shared_ptr<Entity> ent, btScalar v_vertical, btSca
         ent->dir_flag = ENT_MOVE_FORWARD;
     }
 
-    ent->character->resp.vertical_collide = 0x00;
-    ent->character->resp.slide = 0x00;
+    ent->character->m_response.vertical_collide = 0x00;
+    ent->character->m_response.slide = 0x00;
 
     // Jump speed should NOT be added to current speed, as native engine
     // fully replaces current speed with jump speed by anim command.
     ent->speed = spd;
 
     // Apply vertical speed.
-    ent->speed[2] = v_vertical * ent->character->speed_mult;
+    ent->speed[2] = v_vertical * ent->character->m_speedMult;
     ent->move_type = MOVE_FREE_FALLING;
 }
 
 
-void Character_Lean(std::shared_ptr<Entity> ent, character_command_p cmd, btScalar max_lean)
+void Character_Lean(std::shared_ptr<Entity> ent, CharacterCommand *cmd, btScalar max_lean)
 {
     btScalar neg_lean   = 360.0 - max_lean;
     btScalar lean_coeff = (max_lean == 0.0)?(48.0):(max_lean * 3);
@@ -1022,7 +945,7 @@ btScalar Character_InertiaLinear(std::shared_ptr<Entity> ent, btScalar max_speed
         }
     }
 
-    return ent->inertia_linear * ent->character->speed_mult;
+    return ent->inertia_linear * ent->character->m_speedMult;
 }
 
 /*
@@ -1033,8 +956,8 @@ btScalar Character_InertiaAngular(std::shared_ptr<Entity> ent, btScalar max_angl
     if((!ent) || (!ent->character) || (axis > 1)) return 0.0;
 
     uint8_t curr_rot_dir = 0;
-    if     (ent->character->cmd.rot[axis] < 0.0) { curr_rot_dir = 1; }
-    else if(ent->character->cmd.rot[axis] > 0.0) { curr_rot_dir = 2; }
+    if     (ent->character->m_command.rot[axis] < 0.0) { curr_rot_dir = 1; }
+    else if(ent->character->m_command.rot[axis] > 0.0) { curr_rot_dir = 2; }
 
     if((!curr_rot_dir) || (max_angle == 0.0) || (accel == 0.0))
     {
@@ -1071,7 +994,7 @@ btScalar Character_InertiaAngular(std::shared_ptr<Entity> ent, btScalar max_angl
         }
     }
 
-    return fabs(ent->inertia_angular[axis]) * ent->character->cmd.rot[axis];
+    return fabs(ent->inertia_angular[axis]) * ent->character->m_command.rot[axis];
 }
 
 /*
@@ -1082,7 +1005,6 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
     btVector3 tv, norm_move_xy, move, spd(0.0, 0.0, 0.0);
     btScalar norm_move_xy_len, t, ang;
     auto& pos = ent->transform.getOrigin();
-    height_info_t nfc;
 
     if(!ent->character)
     {
@@ -1092,15 +1014,16 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
     /*
      * init height info structure
      */
-    nfc.cb = ent->character->ray_cb;
-    nfc.ccb = ent->character->convex_cb;
-    ent->character->resp.horizontal_collide = 0x00;
-    ent->character->resp.vertical_collide = 0x00;
+    HeightInfo nfc;
+    nfc.cb = ent->character->m_rayCb;
+    nfc.ccb = ent->character->m_convexCb;
+    ent->character->m_response.horizontal_collide = 0x00;
+    ent->character->m_response.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
     Character_UpdateCurrentHeight(ent);
-    if(ent->character->height_info.floor_hit && (ent->character->height_info.floor_point[2] + 1.0 >= ent->transform.getOrigin()[2] + ent->bf.bb_min[2]))
+    if(ent->character->m_heightInfo.floor_hit && (ent->character->m_heightInfo.floor_point[2] + 1.0 >= ent->transform.getOrigin()[2] + ent->bf.bb_min[2]))
     {
-        engine_container_p cont = (engine_container_p)ent->character->height_info.floor_obj->getUserPointer();
+        engine_container_p cont = (engine_container_p)ent->character->m_heightInfo.floor_obj->getUserPointer();
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
         {
             std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
@@ -1114,9 +1037,9 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
     /*
      * check move type
      */
-    if(ent->character->height_info.floor_hit || (ent->character->resp.vertical_collide & 0x01))
+    if(ent->character->m_heightInfo.floor_hit || (ent->character->m_response.vertical_collide & 0x01))
     {
-        if(ent->character->height_info.floor_point[2] + ent->character->fall_down_height < pos[2])
+        if(ent->character->m_heightInfo.floor_point[2] + ent->character->m_fallDownHeight < pos[2])
         {
             ent->move_type = MOVE_FREE_FALLING;
             ent->speed[2] = 0.0;
@@ -1124,36 +1047,36 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
         }
         else
         {
-            ent->character->resp.vertical_collide |= 0x01;
+            ent->character->m_response.vertical_collide |= 0x01;
         }
 
-        tv = ent->character->height_info.floor_normale;
-        if(tv[2] > 0.02 && tv[2] < ent->character->critical_slant_z_component)
+        tv = ent->character->m_heightInfo.floor_normale;
+        if(tv[2] > 0.02 && tv[2] < ent->character->m_criticalSlantZComponent)
         {
             tv[2] = -tv[2];
-            spd = tv * ent->character->speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
+            spd = tv * ent->character->m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
             ang = 180.0 * atan2f(tv[0], -tv[1]) / M_PI;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             t = tv[0] * ent->transform.getBasis()[0][1] + tv[1] * ent->transform.getBasis()[1][1];
             if(t >= 0.0)
             {
-                ent->character->resp.slide = CHARACTER_SLIDE_FRONT;
+                ent->character->m_response.slide = CHARACTER_SLIDE_FRONT;
                 ent->angles[0] = ang + 180.0;
                 // front forward slide down
             }
             else
             {
-                ent->character->resp.slide = CHARACTER_SLIDE_BACK;
+                ent->character->m_response.slide = CHARACTER_SLIDE_BACK;
                 ent->angles[0] = ang;
                 // back forward slide down
             }
             Entity_UpdateRotation(ent);
-            ent->character->resp.vertical_collide |= 0x01;
+            ent->character->m_response.vertical_collide |= 0x01;
         }
         else    // no slide - free to walk
         {
-            t = ent->current_speed * ent->character->speed_mult;
-            ent->character->resp.vertical_collide |= 0x01;
+            t = ent->current_speed * ent->character->m_speedMult;
+            ent->character->m_response.vertical_collide |= 0x01;
 
             ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_LAND, 0);
 
@@ -1179,13 +1102,13 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
             {
                 //ent->dir_flag = ENT_MOVE_FORWARD;
             }
-            ent->character->resp.slide = 0x00;
+            ent->character->m_response.slide = 0x00;
         }
     }
     else                                                                        // no hit to the floor
     {
-        ent->character->resp.slide = 0x00;
-        ent->character->resp.vertical_collide = 0x00;
+        ent->character->m_response.slide = 0x00;
+        ent->character->m_response.vertical_collide = 0x00;
         ent->move_type = MOVE_FREE_FALLING;
         ent->speed[2] = 0.0;
         return -1;                                                              // nothing to do here
@@ -1215,19 +1138,19 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
     Entity_GhostUpdate(ent);
     pos += move;
     Entity_FixPenetrations(ent, &move);
-    if(ent->character->height_info.floor_hit)
+    if(ent->character->m_heightInfo.floor_hit)
     {
-        if(ent->character->height_info.floor_point[2] + ent->character->fall_down_height > pos[2])
+        if(ent->character->m_heightInfo.floor_point[2] + ent->character->m_fallDownHeight > pos[2])
         {
             btScalar dz_to_land = engine_frame_time * 2400.0;                   ///@FIXME: magick
-            if(pos[2] > ent->character->height_info.floor_point[2] + dz_to_land)
+            if(pos[2] > ent->character->m_heightInfo.floor_point[2] + dz_to_land)
             {
                 pos[2] -= dz_to_land;
                 Entity_FixPenetrations(ent, NULL);
             }
-            else if(pos[2] > ent->character->height_info.floor_point[2])
+            else if(pos[2] > ent->character->m_heightInfo.floor_point[2])
             {
-                pos[2] = ent->character->height_info.floor_point[2];
+                pos[2] = ent->character->m_heightInfo.floor_point[2];
                 Entity_FixPenetrations(ent, NULL);
             }
         }
@@ -1238,14 +1161,14 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
             Entity_UpdateRoomPos(ent);
             return 2;
         }
-        if((pos[2] < ent->character->height_info.floor_point[2]) && (ent->bt.no_fix_all == 0x00))
+        if((pos[2] < ent->character->m_heightInfo.floor_point[2]) && (ent->bt.no_fix_all == 0x00))
         {
-            pos[2] = ent->character->height_info.floor_point[2];
+            pos[2] = ent->character->m_heightInfo.floor_point[2];
             Entity_FixPenetrations(ent, NULL);
-            ent->character->resp.vertical_collide |= 0x01;
+            ent->character->m_response.vertical_collide |= 0x01;
         }
     }
-    else if(!(ent->character->resp.vertical_collide & 0x01))
+    else if(!(ent->character->m_response.vertical_collide & 0x01))
     {
         ent->move_type = MOVE_FREE_FALLING;
         ent->speed[2] = 0.0;
@@ -1273,9 +1196,9 @@ int Character_FreeFalling(std::shared_ptr<Entity> ent)
      * init height info structure
      */
 
-    ent->character->resp.slide = 0x00;
-    ent->character->resp.horizontal_collide = 0x00;
-    ent->character->resp.vertical_collide = 0x00;
+    ent->character->m_response.slide = 0x00;
+    ent->character->m_response.horizontal_collide = 0x00;
+    ent->character->m_response.vertical_collide = 0x00;
 
     btScalar rot = Character_InertiaAngular(ent, 1.0, ROT_SPEED_FREEFALL, 0);
     ent->angles[0] += rot;
@@ -1324,7 +1247,7 @@ int Character_FreeFalling(std::shared_ptr<Entity> ent)
 
         if((engine_world.version < TR_II))//Lara cannot wade in < TRII so when floor < transition level she has to swim
         {
-            if(!ent->character->height_info.water || (ent->current_sector->floor <= ent->character->height_info.transition_level))
+            if(!ent->character->m_heightInfo.water || (ent->current_sector->floor <= ent->character->m_heightInfo.transition_level))
             {
                 ent->move_type = MOVE_UNDERWATER;
                 return 2;
@@ -1332,7 +1255,7 @@ int Character_FreeFalling(std::shared_ptr<Entity> ent)
         }
         else
         {
-            if(!ent->character->height_info.water || (ent->current_sector->floor + ent->character->Height <= ent->character->height_info.transition_level))
+            if(!ent->character->m_heightInfo.water || (ent->current_sector->floor + ent->character->m_height <= ent->character->m_heightInfo.transition_level))
             {
                 ent->move_type = MOVE_UNDERWATER;
                 return 2;
@@ -1341,25 +1264,25 @@ int Character_FreeFalling(std::shared_ptr<Entity> ent)
     }
 
     Entity_GhostUpdate(ent);
-    if(ent->character->height_info.ceiling_hit && ent->speed[2] > 0.0)
+    if(ent->character->m_heightInfo.ceiling_hit && ent->speed[2] > 0.0)
     {
-        if(ent->character->height_info.ceiling_point[2] < ent->bf.bb_max[2] + pos[2])
+        if(ent->character->m_heightInfo.ceiling_point[2] < ent->bf.bb_max[2] + pos[2])
         {
-            pos[2] = ent->character->height_info.ceiling_point[2] - ent->bf.bb_max[2];
+            pos[2] = ent->character->m_heightInfo.ceiling_point[2] - ent->bf.bb_max[2];
             ent->speed[2] = 0.0;
-            ent->character->resp.vertical_collide |= 0x02;
+            ent->character->m_response.vertical_collide |= 0x02;
             Entity_FixPenetrations(ent, NULL);
             Entity_UpdateRoomPos(ent);
         }
     }
-    if(ent->character->height_info.floor_hit && ent->speed[2] < 0.0)   // move down
+    if(ent->character->m_heightInfo.floor_hit && ent->speed[2] < 0.0)   // move down
     {
-        if(ent->character->height_info.floor_point[2] >= pos[2] + ent->bf.bb_min[2] + move[2])
+        if(ent->character->m_heightInfo.floor_point[2] >= pos[2] + ent->bf.bb_min[2] + move[2])
         {
-            pos[2] = ent->character->height_info.floor_point[2];
+            pos[2] = ent->character->m_heightInfo.floor_point[2];
             //ent->speed[2] = 0.0;
             ent->move_type = MOVE_ON_FLOOR;
-            ent->character->resp.vertical_collide |= 0x01;
+            ent->character->m_response.vertical_collide |= 0x01;
             Entity_FixPenetrations(ent, NULL);
             Entity_UpdateRoomPos(ent);
             return 2;
@@ -1369,23 +1292,23 @@ int Character_FreeFalling(std::shared_ptr<Entity> ent)
     pos += move;
     Entity_FixPenetrations(ent, &move);                           // get horizontal collide
 
-    if(ent->character->height_info.ceiling_hit && ent->speed[2] > 0.0)
+    if(ent->character->m_heightInfo.ceiling_hit && ent->speed[2] > 0.0)
     {
-        if(ent->character->height_info.ceiling_point[2] < ent->bf.bb_max[2] + pos[2])
+        if(ent->character->m_heightInfo.ceiling_point[2] < ent->bf.bb_max[2] + pos[2])
         {
-            pos[2] = ent->character->height_info.ceiling_point[2] - ent->bf.bb_max[2];
+            pos[2] = ent->character->m_heightInfo.ceiling_point[2] - ent->bf.bb_max[2];
             ent->speed[2] = 0.0;
-            ent->character->resp.vertical_collide |= 0x02;
+            ent->character->m_response.vertical_collide |= 0x02;
         }
     }
-    if(ent->character->height_info.floor_hit && ent->speed[2] < 0.0)   // move down
+    if(ent->character->m_heightInfo.floor_hit && ent->speed[2] < 0.0)   // move down
     {
-        if(ent->character->height_info.floor_point[2] >= pos[2] + ent->bf.bb_min[2] + move[2])
+        if(ent->character->m_heightInfo.floor_point[2] >= pos[2] + ent->bf.bb_min[2] + move[2])
         {
-            pos[2] = ent->character->height_info.floor_point[2];
+            pos[2] = ent->character->m_heightInfo.floor_point[2];
             //ent->speed[2] = 0.0;
             ent->move_type = MOVE_ON_FLOOR;
-            ent->character->resp.vertical_collide |= 0x01;
+            ent->character->m_response.vertical_collide |= 0x01;
             Entity_FixPenetrations(ent, NULL);
             Entity_UpdateRoomPos(ent);
             return 2;
@@ -1406,12 +1329,12 @@ int Character_MonkeyClimbing(std::shared_ptr<Entity> ent)
     auto& pos = ent->transform.getOrigin();
 
     ent->speed[2] = 0.0;
-    ent->character->resp.slide = 0x00;
-    ent->character->resp.horizontal_collide = 0x00;
-    ent->character->resp.vertical_collide = 0x00;
+    ent->character->m_response.slide = 0x00;
+    ent->character->m_response.horizontal_collide = 0x00;
+    ent->character->m_response.vertical_collide = 0x00;
 
-    t = ent->current_speed * ent->character->speed_mult;
-    ent->character->resp.vertical_collide |= 0x01;
+    t = ent->current_speed * ent->character->m_speedMult;
+    ent->character->m_response.vertical_collide |= 0x01;
 
     ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_MONKEYSWING, 0);
     ent->angles[1] = 0.0;
@@ -1438,7 +1361,7 @@ int Character_MonkeyClimbing(std::shared_ptr<Entity> ent)
     {
         //ent->dir_flag = ENT_MOVE_FORWARD;
     }
-    ent->character->resp.slide = 0x00;
+    ent->character->m_response.slide = 0x00;
 
     ent->speed = spd;
     move = spd * engine_frame_time;
@@ -1449,9 +1372,9 @@ int Character_MonkeyClimbing(std::shared_ptr<Entity> ent)
     pos += move;
     Entity_FixPenetrations(ent, &move);                              // get horizontal collide
     ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
-    if(ent->character->height_info.ceiling_hit && (pos[2] + ent->bf.bb_max[2] - ent->character->height_info.ceiling_point[2] > - 0.33 * ent->character->min_step_up_height))
+    if(ent->character->m_heightInfo.ceiling_hit && (pos[2] + ent->bf.bb_max[2] - ent->character->m_heightInfo.ceiling_point[2] > - 0.33 * ent->character->m_minStepUpHeight))
     {
-        pos[2] = ent->character->height_info.ceiling_point[2] - ent->bf.bb_max[2];
+        pos[2] = ent->character->m_heightInfo.ceiling_point[2] - ent->bf.bb_max[2];
     }
     else
     {
@@ -1470,21 +1393,21 @@ int Character_MonkeyClimbing(std::shared_ptr<Entity> ent)
  */
 int Character_WallsClimbing(std::shared_ptr<Entity> ent)
 {
-    climb_info_t *climb = &ent->character->climb;
+    ClimbInfo* climb = &ent->character->m_climb;
     btVector3 spd, move;
     btScalar t;
     auto& pos = ent->transform.getOrigin();
 
-    ent->character->resp.slide = 0x00;
-    ent->character->resp.horizontal_collide = 0x00;
-    ent->character->resp.vertical_collide = 0x00;
+    ent->character->m_response.slide = 0x00;
+    ent->character->m_response.horizontal_collide = 0x00;
+    ent->character->m_response.vertical_collide = 0x00;
 
     spd={0,0,0};
     *climb = Character_CheckWallsClimbability(ent);
-    ent->character->climb = *climb;
+    ent->character->m_climb = *climb;
     if(!(climb->wall_hit))
     {
-        ent->character->height_info.walls_climb = 0x00;
+        ent->character->m_heightInfo.walls_climb = 0x00;
         return 2;
     }
 
@@ -1514,7 +1437,7 @@ int Character_WallsClimbing(std::shared_ptr<Entity> ent)
     {
         spd /= t;
     }
-    ent->speed = spd * ent->current_speed * ent->character->speed_mult;
+    ent->speed = spd * ent->current_speed * ent->character->m_speedMult;
     move = ent->speed * engine_frame_time;
 
     Entity_GhostUpdate(ent);
@@ -1542,13 +1465,13 @@ int Character_Climbing(std::shared_ptr<Entity> ent)
     auto& pos = ent->transform.getOrigin();
     btScalar z = pos[2];
 
-    ent->character->resp.slide = 0x00;
-    ent->character->resp.horizontal_collide = 0x00;
-    ent->character->resp.vertical_collide = 0x00;
+    ent->character->m_response.slide = 0x00;
+    ent->character->m_response.horizontal_collide = 0x00;
+    ent->character->m_response.vertical_collide = 0x00;
 
-    t = ent->current_speed * ent->character->speed_mult;
-    ent->character->resp.vertical_collide |= 0x01;
-    ent->angles[0] += ent->character->cmd.rot[0];
+    t = ent->current_speed * ent->character->m_speedMult;
+    ent->character->m_response.vertical_collide |= 0x01;
+    ent->angles[0] += ent->character->m_command.rot[0];
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
     Entity_UpdateRotation(ent);                                                 // apply rotations
@@ -1571,13 +1494,13 @@ int Character_Climbing(std::shared_ptr<Entity> ent)
     }
     else
     {
-        ent->character->resp.slide = 0x00;
+        ent->character->m_response.slide = 0x00;
         Entity_GhostUpdate(ent);
         Entity_FixPenetrations(ent, NULL);
         return 1;
     }
 
-    ent->character->resp.slide = 0x00;
+    ent->character->m_response.slide = 0x00;
     ent->speed = spd;
     move = spd * engine_frame_time;
 
@@ -1609,15 +1532,15 @@ int Character_MoveUnderWater(std::shared_ptr<Entity> ent)
         return 2;
     }
 
-    ent->character->resp.slide = 0x00;
-    ent->character->resp.horizontal_collide = 0x00;
-    ent->character->resp.vertical_collide = 0x00;
+    ent->character->m_response.slide = 0x00;
+    ent->character->m_response.horizontal_collide = 0x00;
+    ent->character->m_response.vertical_collide = 0x00;
 
     // Calculate current speed.
 
-    btScalar t = Character_InertiaLinear(ent, MAX_SPEED_UNDERWATER, INERTIA_SPEED_UNDERWATER, ent->character->cmd.jump);
+    btScalar t = Character_InertiaLinear(ent, MAX_SPEED_UNDERWATER, INERTIA_SPEED_UNDERWATER, ent->character->m_command.jump);
 
-    if(!ent->character->resp.kill)   // Block controls if Lara is dead.
+    if(!ent->character->m_response.kill)   // Block controls if Lara is dead.
     {
         ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_UNDERWATER, 0);
         ent->angles[1] -= Character_InertiaAngular(ent, 1.0, ROT_SPEED_UNDERWATER, 1);
@@ -1645,7 +1568,7 @@ int Character_MoveUnderWater(std::shared_ptr<Entity> ent)
     Entity_FixPenetrations(ent, &move);                              // get horizontal collide
 
     Entity_UpdateRoomPos(ent);
-    if(ent->character->height_info.water && (pos[2] + ent->bf.bb_max[2] >= ent->character->height_info.transition_level))
+    if(ent->character->m_heightInfo.water && (pos[2] + ent->bf.bb_max[2] >= ent->character->m_heightInfo.transition_level))
     {
         if(/*(spd[2] > 0.0)*/ent->transform.getBasis()[1][2] > 0.67)             ///@FIXME: magick!
         {
@@ -1653,9 +1576,9 @@ int Character_MoveUnderWater(std::shared_ptr<Entity> ent)
             //pos[2] = fc.transition_level;
             return 2;
         }
-        if(!ent->character->height_info.floor_hit || (ent->character->height_info.transition_level - ent->character->height_info.floor_point[2] >= ent->character->Height))
+        if(!ent->character->m_heightInfo.floor_hit || (ent->character->m_heightInfo.transition_level - ent->character->m_heightInfo.floor_point[2] >= ent->character->m_height))
         {
-            pos[2] = ent->character->height_info.transition_level - ent->bf.bb_max[2];
+            pos[2] = ent->character->m_heightInfo.transition_level - ent->bf.bb_max[2];
         }
     }
 
@@ -1668,9 +1591,9 @@ int Character_MoveOnWater(std::shared_ptr<Entity> ent)
     btVector3 move, spd(0.0, 0.0, 0.0);
     auto& pos = ent->transform.getOrigin();
 
-    ent->character->resp.slide = 0x00;
-    ent->character->resp.horizontal_collide = 0x00;
-    ent->character->resp.vertical_collide = 0x00;
+    ent->character->m_response.slide = 0x00;
+    ent->character->m_response.horizontal_collide = 0x00;
+    ent->character->m_response.vertical_collide = 0x00;
 
     ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_ONWATER, 0);
     ent->angles[1] = 0.0;
@@ -1679,21 +1602,21 @@ int Character_MoveOnWater(std::shared_ptr<Entity> ent)
 
     // Calculate current speed.
 
-    btScalar t = Character_InertiaLinear(ent, MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, ((abs(ent->character->cmd.move[0])) | (abs(ent->character->cmd.move[1]))));
+    btScalar t = Character_InertiaLinear(ent, MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, ((abs(ent->character->m_command.move[0])) | (abs(ent->character->m_command.move[1]))));
 
-    if((ent->dir_flag & ENT_MOVE_FORWARD) && (ent->character->cmd.move[0] == 1))
+    if((ent->dir_flag & ENT_MOVE_FORWARD) && (ent->character->m_command.move[0] == 1))
     {
         spd = ent->transform.getBasis()[1] * t;
     }
-    else if((ent->dir_flag & ENT_MOVE_BACKWARD) && (ent->character->cmd.move[0] == -1))
+    else if((ent->dir_flag & ENT_MOVE_BACKWARD) && (ent->character->m_command.move[0] == -1))
     {
         spd = ent->transform.getBasis()[1] * -t;
     }
-    else if((ent->dir_flag & ENT_MOVE_LEFT) && (ent->character->cmd.move[1] == -1))
+    else if((ent->dir_flag & ENT_MOVE_LEFT) && (ent->character->m_command.move[1] == -1))
     {
         spd = ent->transform.getBasis()[0] * -t;
     }
-    else if((ent->dir_flag & ENT_MOVE_RIGHT) && (ent->character->cmd.move[1] == 1))
+    else if((ent->dir_flag & ENT_MOVE_RIGHT) && (ent->character->m_command.move[1] == 1))
     {
         spd = ent->transform.getBasis()[0] * t;
     }
@@ -1702,9 +1625,9 @@ int Character_MoveOnWater(std::shared_ptr<Entity> ent)
         Entity_GhostUpdate(ent);
         Entity_FixPenetrations(ent, NULL);
         Entity_UpdateRoomPos(ent);
-        if(ent->character->height_info.water)
+        if(ent->character->m_heightInfo.water)
         {
-            pos[2] = ent->character->height_info.transition_level;
+            pos[2] = ent->character->m_heightInfo.transition_level;
         }
         else
         {
@@ -1724,9 +1647,9 @@ int Character_MoveOnWater(std::shared_ptr<Entity> ent)
     Entity_FixPenetrations(ent, &move);  // get horizontal collide
 
     Entity_UpdateRoomPos(ent);
-    if(ent->character->height_info.water)
+    if(ent->character->m_heightInfo.water)
     {
-        pos[2] = ent->character->height_info.transition_level;
+        pos[2] = ent->character->m_heightInfo.transition_level;
     }
     else
     {
@@ -1747,7 +1670,7 @@ int Character_FindTraverse(std::shared_ptr<Entity> ch)
         return 0;
     }
 
-    ch->character->traversed_object = NULL;
+    ch->character->m_traversedObject = NULL;
 
     // OX move case
     if(ch->transform.getBasis()[1][0] > 0.9)
@@ -1780,7 +1703,7 @@ int Character_FindTraverse(std::shared_ptr<Entity> ch)
                 {
                     int oz = (ch->angles[0] + 45.0) / 90.0;
                     ch->angles[0] = oz * 90.0;
-                    ch->character->traversed_object = e;
+                    ch->character->m_traversedObject = e;
                     Entity_UpdateRotation(ch);
                     return 1;
                 }
@@ -2060,13 +1983,13 @@ void Character_UpdateParams(std::shared_ptr<Entity> ent)
         case MOVE_MONKEYSWING:
         case MOVE_WALLS_CLIMB:
 
-            if((ent->character->height_info.quicksand == 0x02) &&
+            if((ent->character->m_heightInfo.quicksand == 0x02) &&
                (ent->move_type == MOVE_ON_FLOOR))
             {
                 if(!Character_ChangeParam(ent, PARAM_AIR, -3.0))
                     Character_ChangeParam(ent, PARAM_HEALTH, -3.0);
             }
-            else if(ent->character->height_info.quicksand == 0x01)
+            else if(ent->character->m_heightInfo.quicksand == 0x01)
             {
                 Character_ChangeParam(ent, PARAM_AIR, 3.0);
             }
@@ -2096,7 +2019,7 @@ void Character_UpdateParams(std::shared_ptr<Entity> ent)
             {
                 if(!Character_ChangeParam(ent, PARAM_HEALTH, -3.0))
                 {
-                    ent->character->resp.kill = 1;
+                    ent->character->m_response.kill = 1;
                 }
             }
             break;
@@ -2113,43 +2036,43 @@ bool IsCharacter(std::shared_ptr<Entity> ent)
 
 int Character_SetParamMaximum(std::shared_ptr<Entity> ent, int parameter, float max_value)
 {
-    if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
+    if((!IsCharacter(ent)) || (parameter >= PARAM_SENTINEL))
         return 0;
 
     max_value = (max_value < 0)?(0):(max_value);    // Clamp max. to at least zero
-    ent->character->parameters.maximum[parameter] = max_value;
+    ent->character->m_parameters.maximum[parameter] = max_value;
     return 1;
 }
 
 int Character_SetParam(std::shared_ptr<Entity> ent, int parameter, float value)
 {
-    if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
+    if((!IsCharacter(ent)) || (parameter >= PARAM_SENTINEL))
         return 0;
 
-    float maximum = ent->character->parameters.maximum[parameter];
+    float maximum = ent->character->m_parameters.maximum[parameter];
 
     value = (value >= 0)?(value):(maximum); // Char params can't be less than zero.
     value = (value <= maximum)?(value):(maximum);
 
-    ent->character->parameters.param[parameter] = value;
+    ent->character->m_parameters.param[parameter] = value;
     return 1;
 }
 
 float Character_GetParam(std::shared_ptr<Entity> ent, int parameter)
 {
-    if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
+    if((!IsCharacter(ent)) || (parameter >= PARAM_SENTINEL))
         return 0;
 
-    return ent->character->parameters.param[parameter];
+    return ent->character->m_parameters.param[parameter];
 }
 
 int Character_ChangeParam(std::shared_ptr<Entity> ent, int parameter, float value)
 {
-    if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
+    if((!IsCharacter(ent)) || (parameter >= PARAM_SENTINEL))
         return 0;
 
-    float maximum = ent->character->parameters.maximum[parameter];
-    float current = ent->character->parameters.param[parameter];
+    float maximum = ent->character->m_parameters.maximum[parameter];
+    float current = ent->character->m_parameters.param[parameter];
 
     if((current == maximum) && (value > 0))
         return 0;
@@ -2158,16 +2081,16 @@ int Character_ChangeParam(std::shared_ptr<Entity> ent, int parameter, float valu
 
     if(current < 0)
     {
-        ent->character->parameters.param[parameter] = 0;
+        ent->character->m_parameters.param[parameter] = 0;
         return 0;
     }
     else if(current > maximum)
     {
-        ent->character->parameters.param[parameter] = ent->character->parameters.maximum[parameter];
+        ent->character->m_parameters.param[parameter] = ent->character->m_parameters.maximum[parameter];
     }
     else
     {
-        ent->character->parameters.param[parameter] = current;
+        ent->character->m_parameters.param[parameter] = current;
     }
 
     return 1;

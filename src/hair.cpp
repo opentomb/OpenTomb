@@ -451,12 +451,12 @@ Hair::~Hair()
 
 void Hair_Update(std::shared_ptr<Entity> entity)
 {
-    if((!IsCharacter(entity)) || entity->character->hairs.empty())
+    if((!IsCharacter(entity)) || entity->character->m_hairs.empty())
         return;
 
-    for(size_t i=0; i<entity->character->hairs.size(); ++i)
+    for(size_t i=0; i<entity->character->m_hairs.size(); ++i)
     {
-        std::shared_ptr<Hair> hair = entity->character->hairs[i];
+        std::shared_ptr<Hair> hair = entity->character->m_hairs[i];
         if((!hair) || (hair->element_count < 1)) continue;
 
         /*btScalar new_transform[16];

@@ -673,18 +673,18 @@ void Render_DynamicEntity(const struct lit_shader_description *shader, std::shar
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
 void Render_Hair(std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &projection)
 {
-    if(!entity || !entity->character || entity->character->hairs.empty())
+    if(!entity || !entity->character || entity->character->m_hairs.empty())
         return;
 
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, true);
 
 
-    for(size_t h=0; h<entity->character->hairs.size(); h++)
+    for(size_t h=0; h<entity->character->m_hairs.size(); h++)
     {
         // First: Head attachment
-        btTransform globalHead = entity->transform * entity->bf.bone_tags[entity->character->hairs[h]->owner_body].full_transform;
-        btTransform globalAttachment = globalHead * entity->character->hairs[h]->owner_body_hair_root;
+        btTransform globalHead = entity->transform * entity->bf.bone_tags[entity->character->m_hairs[h]->owner_body].full_transform;
+        btTransform globalAttachment = globalHead * entity->character->m_hairs[h]->owner_body_hair_root;
 
         static constexpr int MatrixCount = 10;
 
@@ -692,7 +692,7 @@ void Render_Hair(std::shared_ptr<Entity> entity, const btTransform &modelViewMat
         (modelViewMatrix * globalAttachment).getOpenGLMatrix(hairModelToGlobalMatrices[0]);
 
         // Then: Individual hair pieces
-        for(uint16_t i=0; i<entity->character->hairs[h]->element_count; i++)
+        for(uint16_t i=0; i<entity->character->m_hairs[h]->element_count; i++)
         {
             /*
              * Definitions: x_o - as in original file. x_h - as in hair model
@@ -716,21 +716,21 @@ void Render_Hair(std::shared_ptr<Entity> entity, const btTransform &modelViewMat
             btTransform invOriginToHairModel;
             invOriginToHairModel.setIdentity();
             // Simplification: Always translation matrix, no invert needed
-            Mat4_Translate(invOriginToHairModel, -entity->character->hairs[h]->elements[i].position);
+            Mat4_Translate(invOriginToHairModel, -entity->character->m_hairs[h]->elements[i].position);
 
-            const btTransform &bt_tr = entity->character->hairs[h]->elements[i].body->getWorldTransform();
+            const btTransform &bt_tr = entity->character->m_hairs[h]->elements[i].body->getWorldTransform();
 
             btTransform globalFromHair = bt_tr * invOriginToHairModel;
 
             (modelViewMatrix * globalFromHair).getOpenGLMatrix(hairModelToGlobalMatrices[i+1]);
         }
 
-        glUniformMatrix4fvARB(shader->model_view, entity->character->hairs[h]->element_count+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
+        glUniformMatrix4fvARB(shader->model_view, entity->character->m_hairs[h]->element_count+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
 
         projection.getOpenGLMatrix(hairModelToGlobalMatrices[0]);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, hairModelToGlobalMatrices[0]);
 
-        Render_Mesh(entity->character->hairs[h]->mesh);
+        Render_Mesh(entity->character->m_hairs[h]->mesh);
     }
 }
 

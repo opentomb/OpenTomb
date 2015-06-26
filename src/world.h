@@ -191,7 +191,7 @@ typedef struct base_item_s
     uint16_t                    type;
     uint16_t                    count;
     char                        name[64];
-    struct ss_bone_frame_s     *bf;
+    ss_bone_frame_s            *bf;
 
     ~base_item_s();
 }base_item_t, *base_item_p;

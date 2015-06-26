@@ -670,9 +670,9 @@ int lua_GetCharacterParam(lua_State * lua)
     int parameter  = lua_tointeger(lua, 2);
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
 
-    if(parameter >= PARAM_LASTINDEX)
+    if(parameter >= PARAM_SENTINEL)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return 0;
     }
 
@@ -703,9 +703,9 @@ int lua_SetCharacterParam(lua_State * lua)
     int parameter    = lua_tointeger(lua, 2);
     std::shared_ptr<Entity> ent     = World_GetEntityByID(&engine_world, id);
 
-    if(parameter >= PARAM_LASTINDEX)
+    if(parameter >= PARAM_SENTINEL)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return 0;
     }
 
@@ -720,8 +720,8 @@ int lua_SetCharacterParam(lua_State * lua)
     }
     else
     {
-        ent->character->parameters.param[parameter] = lua_tonumber(lua, 3);
-        ent->character->parameters.maximum[parameter] = lua_tonumber(lua, 4);
+        ent->character->m_parameters.param[parameter] = lua_tonumber(lua, 3);
+        ent->character->m_parameters.maximum[parameter] = lua_tonumber(lua, 4);
     }
 
     return 0;
@@ -734,7 +734,7 @@ int lua_GetCharacterCombatMode(lua_State * lua)
 
     if(IsCharacter(ent))
     {
-        lua_pushnumber(lua, ent->character->weapon_current_state);
+        lua_pushnumber(lua, ent->character->m_weaponCurrentState);
         return 1;
     }
     else
@@ -756,9 +756,9 @@ int lua_ChangeCharacterParam(lua_State * lua)
     int value      = lua_tonumber(lua, 3);
     std::shared_ptr<Entity> ent   = World_GetEntityByID(&engine_world, id);
 
-    if(parameter >= PARAM_LASTINDEX)
+    if(parameter >= PARAM_SENTINEL)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_LASTINDEX);
+        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return 0;
     }
 
@@ -799,9 +799,9 @@ int lua_AddCharacterHair(lua_State *lua)
             }
             else
             {
-                ent->character->hairs.emplace_back();
+                ent->character->m_hairs.emplace_back();
 
-                if(!Hair_Create(ent->character->hairs.back(), &hair_setup, ent))
+                if(!Hair_Create(ent->character->m_hairs.back(), &hair_setup, ent))
                 {
                     Con_Warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
                 }
@@ -829,9 +829,9 @@ int lua_ResetCharacterHair(lua_State *lua)
 
         if(IsCharacter(ent))
         {
-            if(!ent->character->hairs.empty())
+            if(!ent->character->m_hairs.empty())
             {
-                ent->character->hairs.clear();
+                ent->character->m_hairs.clear();
             }
             else
             {
@@ -1269,10 +1269,9 @@ int lua_PrintItems(lua_State * lua)
 
     if(ent->character)
     {
-        inventory_node_p i = ent->character->inventory;
-        for(;i;i=i->next)
+        for(const InventoryNode& i : ent->character->m_inventory)
         {
-            Con_Printf("item[id = %d]: count = %d, type = %d", i->id, i->count);
+            Con_Printf("item[id = %d]: count = %d, type = %d", i.id, i.count);
         }
     }
     return 0;
@@ -2011,7 +2010,7 @@ int lua_CanTriggerEntity(lua_State * lua)
 
     id = lua_tointeger(lua, 1);
     std::shared_ptr<Entity> e1 = World_GetEntityByID(&engine_world, id);
-    if(e1 == NULL || !e1->character || !e1->character->cmd.action)
+    if(e1 == NULL || !e1->character || !e1->character->m_command.action)
     {
         lua_pushinteger(lua, 0);
         return 1;
@@ -2705,16 +2704,16 @@ int lua_GetEntityResponse(lua_State * lua)
         switch(lua_tointeger(lua, 2))
         {
             case 0:
-                lua_pushinteger(lua, ent->character->resp.kill);
+                lua_pushinteger(lua, ent->character->m_response.kill);
                 break;
             case 1:
-                lua_pushinteger(lua, ent->character->resp.vertical_collide);
+                lua_pushinteger(lua, ent->character->m_response.vertical_collide);
                 break;
             case 2:
-                lua_pushinteger(lua, ent->character->resp.horizontal_collide);
+                lua_pushinteger(lua, ent->character->m_response.horizontal_collide);
                 break;
             case 3:
-                lua_pushinteger(lua, ent->character->resp.slide);
+                lua_pushinteger(lua, ent->character->m_response.slide);
                 break;
             default:
                 lua_pushinteger(lua, 0);
@@ -2748,16 +2747,16 @@ int lua_SetEntityResponse(lua_State * lua)
         switch(lua_tointeger(lua, 2))
         {
             case 0:
-                ent->character->resp.kill = value;
+                ent->character->m_response.kill = value;
                 break;
             case 1:
-                ent->character->resp.vertical_collide = value;
+                ent->character->m_response.vertical_collide = value;
                 break;
             case 2:
-                ent->character->resp.horizontal_collide = value;
+                ent->character->m_response.horizontal_collide = value;
                 break;
             case 3:
-                ent->character->resp.slide = value;
+                ent->character->m_response.slide = value;
                 break;
             default:
                 break;
@@ -3234,7 +3233,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
 
     if(IsCharacter(ent))
     {
-        lua_pushinteger(lua, ent->character->current_weapon);
+        lua_pushinteger(lua, ent->character->m_currentWeapon);
         return 1;
     }
     else
@@ -3257,7 +3256,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 
     if(IsCharacter(ent))
     {
-        ent->character->current_weapon = lua_tointeger(lua, 2);
+        ent->character->m_currentWeapon = lua_tointeger(lua, 2);
     }
     else
     {

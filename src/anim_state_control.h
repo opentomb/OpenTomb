@@ -13,7 +13,7 @@ struct Camera;
 struct ss_animation_s;
 struct Entity;
 struct room_sector_s;
-struct character_command_s;
+struct CharacterCommand;
 
 /*
  * Animation control flags

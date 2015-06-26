@@ -4101,7 +4101,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             BT_GenEntityRigidBody(entity);
             if(!entity->character)
                 entity->character = std::make_shared<Character>(entity);
-            entity->character->Height = 768.0;
+            entity->character->m_height = 768.0;
             entity->character->state_func = State_Control_Lara;
 
             continue;
