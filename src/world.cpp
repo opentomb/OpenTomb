@@ -778,7 +778,8 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             ent->OCB            = 0x00;
             ent->timer          = 0.0;
 
-            ent->self->collide_flag = 0x00;
+            ent->self->collision_type = COLLISION_NONE;
+            ent->self->collision_shape = COLLISION_SHAPE_TRIMESH;
             ent->move_type          = 0x0000;
             ent->inertia_linear     = 0.0;
             ent->inertia_angular[0] = 0.0;

@@ -14,11 +14,20 @@
 --   0x18    - Object is pushable, and can be floor for other pushable
 
 -- [ coll ] flag values:
+COLLISION_TYPE_NONE                    = 0x0000;
+COLLISION_TYPE_STATIC                  = 0x0001;     -- static object - never moved
+COLLISION_TYPE_KINEMATIC               = 0x0003;     -- doors and other moveable statics
+COLLISION_TYPE_DYNAMIC                 = 0x0005;     -- hellow full physics interaction
+COLLISION_TYPE_ACTOR                   = 0x0007;     -- actor, enemies, NPC, animals
+COLLISION_TYPE_VEHICLE                 = 0x0009;     -- car, moto, bike
+COLLISION_TYPE_GHOST                   = 0x000B;     -- no fix character position, but works in collision callbacks and interacts with dynamic objects
 
---   0x0000  - Object has no collisions
---   0x0001  - Object uses real mesh data for collision.
---   0x0002  - Object uses bounding box for collision.
---   0x0003  - Object uses sphere of a specified radius for collision.
+-- [ shape ] flag values:
+COLLISION_SHAPE_BOX                    = 0x0001;
+COLLISION_SHAPE_BOX_BASE               = 0x0002;
+COLLISION_SHAPE_SPHERE                 = 0x0003;
+COLLISION_SHAPE_TRIMESH                = 0x0004;
+COLLISION_SHAPE_TRIMESH_CONVEX         = 0x0005;
 
 -- [ func ] :
 
@@ -38,36 +47,39 @@ tr1_entity_tbl = {};
 -- NOTE: Objects before ID 06 are internal service objects and never appear in-game.
 
 -- ACTORS --
-
-tr1_entity_tbl[06] = {coll = 0x02};                      -- Doppelgagner
-tr1_entity_tbl[07] = {coll = 0x02, func = "baddie"};                      -- Wolf
-tr1_entity_tbl[08] = {coll = 0x02, func = "baddie"};                      -- Bear
-tr1_entity_tbl[09] = {coll = 0x02, func = "baddie"};                      -- Bat
-tr1_entity_tbl[10] = {coll = 0x02, func = "baddie"};                      -- Crocodile (land)
-tr1_entity_tbl[11] = {coll = 0x02, func = "baddie"};                      -- Crocodile (water)
-tr1_entity_tbl[12] = {coll = 0x02, func = "baddie"};                      -- Lion Male
-tr1_entity_tbl[13] = {coll = 0x02, func = "baddie"};                      -- Lion Female
-tr1_entity_tbl[14] = {coll = 0x02, func = "baddie"};                      -- Puma
-tr1_entity_tbl[15] = {coll = 0x02, func = "baddie"};                      -- Gorilla
-tr1_entity_tbl[16] = {coll = 0x02, func = "baddie"};                      -- Rat (land)
-tr1_entity_tbl[17] = {coll = 0x02, func = "baddie"};                      -- Rat (water)
-tr1_entity_tbl[18] = {coll = 0x01, func = "baddie"};                      -- T-Rex
-tr1_entity_tbl[19] = {coll = 0x02, func = "baddie"};                      -- Raptor
-tr1_entity_tbl[20] = {coll = 0x01, func = "baddie"};                      -- Winged mutant
-tr1_entity_tbl[21] = {coll = 0x00, hide = 0x01};         -- (RESPAWN POINT?)
-tr1_entity_tbl[22] = {coll = 0x00, hide = 0x01};         -- (AI TARGET?)
-tr1_entity_tbl[23] = {coll = 0x01};                      -- Centaur
-tr1_entity_tbl[24] = {coll = 0x02};                      -- Mummy
-tr1_entity_tbl[25] = {coll = 0x02};                      -- DinoWarrior (UNUSED!)
-tr1_entity_tbl[26] = {coll = 0x02};                      -- Fish
-tr1_entity_tbl[27] = {coll = 0x02, func = "baddie"};                      -- Larson
-tr1_entity_tbl[28] = {coll = 0x02, func = "baddie"};                      -- Pierre
-tr1_entity_tbl[29] = {coll = 0x02};                      -- Skateboard
-tr1_entity_tbl[30] = {coll = 0x02, func = "baddie"};                      -- Skateboard Kid
-tr1_entity_tbl[31] = {coll = 0x02, func = "baddie"};                      -- Cowboy
-tr1_entity_tbl[32] = {coll = 0x02, func = "baddie"};                      -- Mr. T
-tr1_entity_tbl[33] = {coll = 0x02, func = "baddie"};                      -- Natla (winged)
-tr1_entity_tbl[34] = {coll = 0x01, func = "baddie"};                      -- Torso Boss
+--   0x0000  - Object has no collisions
+--   0x0001  - Object uses real mesh data for collision.
+--   0x0002  - Object uses bounding box for collision.
+--   0x0003  - Object uses sphere of a specified radius for collision.
+tr1_entity_tbl[06] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- Doppelgagner
+tr1_entity_tbl[07] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Wolf
+tr1_entity_tbl[08] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Bear
+tr1_entity_tbl[09] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Bat
+tr1_entity_tbl[10] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Crocodile (land)
+tr1_entity_tbl[11] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Crocodile (water)
+tr1_entity_tbl[12] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Lion Male
+tr1_entity_tbl[13] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Lion Female
+tr1_entity_tbl[14] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Puma
+tr1_entity_tbl[15] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Gorilla
+tr1_entity_tbl[16] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Rat (land)
+tr1_entity_tbl[17] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Rat (water)
+tr1_entity_tbl[18] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- T-Rex
+tr1_entity_tbl[19] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Raptor
+tr1_entity_tbl[20] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Winged mutant
+tr1_entity_tbl[21] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, hide = 0x01};         -- (RESPAWN POINT?)
+tr1_entity_tbl[22] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, hide = 0x01};         -- (AI TARGET?)
+tr1_entity_tbl[23] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- Centaur
+tr1_entity_tbl[24] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- Mummy
+tr1_entity_tbl[25] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- DinoWarrior (UNUSED!)
+tr1_entity_tbl[26] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- Fish
+tr1_entity_tbl[27] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Larson
+tr1_entity_tbl[28] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Pierre
+tr1_entity_tbl[29] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- Skateboard
+tr1_entity_tbl[30] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Skateboard Kid
+tr1_entity_tbl[31] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Cowboy
+tr1_entity_tbl[32] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Mr. T
+tr1_entity_tbl[33] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Natla (winged)
+tr1_entity_tbl[34] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Torso Boss
 
 -- ANIMATINGS --
 
@@ -224,44 +236,44 @@ tr2_entity_tbl[51] = {coll = 0x01};                -- Black snowmobile (with gun
 
 -- ACTORS --
 
-tr2_entity_tbl[15] = {coll = 0x02, func = "baddie"};                -- Doberman
-tr2_entity_tbl[16] = {coll = 0x02, func = "baddie"};                -- Masked goon (white mask, jacket)
-tr2_entity_tbl[17] = {coll = 0x02, func = "baddie"};                -- Masked goon (white mask, vest)
-tr2_entity_tbl[18] = {coll = 0x02, func = "baddie"};                -- Masked goon (black mask)
-tr2_entity_tbl[19] = {coll = 0x02, func = "baddie"};                -- Knifethrower
-tr2_entity_tbl[20] = {coll = 0x02, func = "baddie"};                -- Shotgun goon
-tr2_entity_tbl[21] = {coll = 0x02, func = "baddie"};                -- Rat
-tr2_entity_tbl[22] = {coll = 0x02};                -- Dragon (front)
-tr2_entity_tbl[23] = {coll = 0x02};                -- Dragon (back)
-tr2_entity_tbl[24] = {coll = 0x02};                -- Gondola (Venetian boat)
-tr2_entity_tbl[25] = {coll = 0x02, func = "baddie"};                -- Shark
-tr2_entity_tbl[26] = {coll = 0x02, func = "baddie"};                -- Yellow moray eel
-tr2_entity_tbl[27] = {coll = 0x02, func = "baddie"};                -- Black moray eel
-tr2_entity_tbl[28] = {coll = 0x02, func = "baddie"};                -- Barracuda / Whiskered Fish
-tr2_entity_tbl[29] = {coll = 0x02, func = "baddie"};                -- Scuba diver
-tr2_entity_tbl[30] = {coll = 0x02, func = "baddie"};                -- Gun-wielding rig worker (khaki pants)
-tr2_entity_tbl[31] = {coll = 0x02, func = "baddie"};                -- Gun-wielding rig worker (blue jeans)
-tr2_entity_tbl[32] = {coll = 0x02, func = "baddie"};                -- Stick-wielding goon
-tr2_entity_tbl[33] = {coll = 0x02, func = "baddie"};                -- Stick-wielding goon (can't climb)
-tr2_entity_tbl[34] = {coll = 0x02, func = "baddie"};                -- Flamethrower-wielding goon
-tr2_entity_tbl[36] = {coll = 0x02, func = "baddie"};                -- Spider
-tr2_entity_tbl[37] = {coll = 0x02, func = "baddie"};                -- Giant spider
-tr2_entity_tbl[38] = {coll = 0x02, func = "baddie"};                -- Crow
-tr2_entity_tbl[39] = {coll = 0x02, func = "baddie"};                -- Tiger / Leopard
-tr2_entity_tbl[40] = {coll = 0x02, func = "baddie"};                -- Marco Bartoli
-tr2_entity_tbl[41] = {coll = 0x02, func = "baddie"};                -- Spear-wielding Xian Guard
-tr2_entity_tbl[42] = {coll = 0x02};                -- Spear-wielding Xian Guard statue
-tr2_entity_tbl[43] = {coll = 0x02, func = "baddie"};                -- Sword-wielding Xian Guard
-tr2_entity_tbl[44] = {coll = 0x02};                -- Sword-wielding Xian Guard statue
-tr2_entity_tbl[45] = {coll = 0x02, func = "baddie"};                -- Yeti
-tr2_entity_tbl[46] = {coll = 0x02, func = "baddie"};                -- Bird monster (guards Talion)
-tr2_entity_tbl[47] = {coll = 0x02, func = "baddie"};                -- Eagle
-tr2_entity_tbl[48] = {coll = 0x02, func = "baddie"};                -- Mercenary
-tr2_entity_tbl[49] = {coll = 0x02, func = "baddie"};                -- Mercenary (black ski mask, gray jacket)
-tr2_entity_tbl[50] = {coll = 0x02, func = "baddie"};                -- Mercenary (black ski mask, brown jacket)
-tr2_entity_tbl[52] = {coll = 0x02, func = "baddie"};                -- Mercenary snowmobile driver
-tr2_entity_tbl[53] = {coll = 0x02, func = "baddie"};                -- Monk with long stick
-tr2_entity_tbl[54] = {coll = 0x02, func = "baddie"};                -- Monk with knife-end stick
+tr2_entity_tbl[15] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Doberman
+tr2_entity_tbl[16] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (white mask, jacket)
+tr2_entity_tbl[17] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (white mask, vest)
+tr2_entity_tbl[18] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (black mask)
+tr2_entity_tbl[19] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Knifethrower
+tr2_entity_tbl[20] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Shotgun goon
+tr2_entity_tbl[21] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Rat
+tr2_entity_tbl[22] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                -- Dragon (front)
+tr2_entity_tbl[23] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                -- Dragon (back)
+tr2_entity_tbl[24] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                -- Gondola (Venetian boat)
+tr2_entity_tbl[25] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Shark
+tr2_entity_tbl[26] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Yellow moray eel
+tr2_entity_tbl[27] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Black moray eel
+tr2_entity_tbl[28] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Barracuda / Whiskered Fish
+tr2_entity_tbl[29] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Scuba diver
+tr2_entity_tbl[30] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Gun-wielding rig worker (khaki pants)
+tr2_entity_tbl[31] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Gun-wielding rig worker (blue jeans)
+tr2_entity_tbl[32] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Stick-wielding goon
+tr2_entity_tbl[33] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Stick-wielding goon (can't climb)
+tr2_entity_tbl[34] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Flamethrower-wielding goon
+tr2_entity_tbl[36] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Spider
+tr2_entity_tbl[37] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Giant spider
+tr2_entity_tbl[38] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Crow
+tr2_entity_tbl[39] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Tiger / Leopard
+tr2_entity_tbl[40] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Marco Bartoli
+tr2_entity_tbl[41] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Spear-wielding Xian Guard
+tr2_entity_tbl[42] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                -- Spear-wielding Xian Guard statue
+tr2_entity_tbl[43] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Sword-wielding Xian Guard
+tr2_entity_tbl[44] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                -- Sword-wielding Xian Guard statue
+tr2_entity_tbl[45] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Yeti
+tr2_entity_tbl[46] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Bird monster (guards Talion)
+tr2_entity_tbl[47] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Eagle
+tr2_entity_tbl[48] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Mercenary
+tr2_entity_tbl[49] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Mercenary (black ski mask, gray jacket)
+tr2_entity_tbl[50] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Mercenary (black ski mask, brown jacket)
+tr2_entity_tbl[52] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Mercenary snowmobile driver
+tr2_entity_tbl[53] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Monk with long stick
+tr2_entity_tbl[54] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Monk with knife-end stick
 
 -- TRAPS --
 
@@ -433,53 +445,53 @@ tr3_entity_tbl[18] = {coll = 0x01};               -- Big gun
 -- ACTORS --
 
 tr3_entity_tbl[19] = {coll = 0x02};               -- Hydro propeller (?)
-tr3_entity_tbl[20] = {coll = 0x02, func = "baddie"};               -- Tribesman with spiked axe
-tr3_entity_tbl[21] = {coll = 0x02, func = "baddie"};               -- Tribesman with poison-dart gun
-tr3_entity_tbl[22] = {coll = 0x02, func = "baddie"};               -- Dog
-tr3_entity_tbl[23] = {coll = 0x02, func = "baddie"};               -- Rat
+tr3_entity_tbl[20] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Tribesman with spiked axe
+tr3_entity_tbl[21] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Tribesman with poison-dart gun
+tr3_entity_tbl[22] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Dog
+tr3_entity_tbl[23] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Rat
 tr3_entity_tbl[24] = {coll = 0x00, hide = 0x01};     -- Kill All Triggers
-tr3_entity_tbl[25] = {coll = 0x02, func = "baddie"};               -- Killer whale
-tr3_entity_tbl[26] = {coll = 0x02, func = "baddie"};               -- Scuba diver
-tr3_entity_tbl[27] = {coll = 0x02, func = "baddie"};               -- Crow
-tr3_entity_tbl[28] = {coll = 0x02, func = "baddie"};               -- Tiger
-tr3_entity_tbl[29] = {coll = 0x02, func = "baddie"};               -- Vulture
-tr3_entity_tbl[30] = {coll = 0x01, func = "baddie"};               -- Assault-course target
-tr3_entity_tbl[31] = {coll = 0x02, func = "baddie"};               -- Crawler mutant in closet
-tr3_entity_tbl[32] = {coll = 0x02, func = "baddie"};               -- Crocodile (in water)
-tr3_entity_tbl[34] = {coll = 0x02, func = "baddie"};               -- Compsognathus
-tr3_entity_tbl[35] = {coll = 0x02, func = "baddie"};               -- Lizard thing
-tr3_entity_tbl[36] = {coll = 0x02, func = "baddie"};               -- Puna guy
-tr3_entity_tbl[37] = {coll = 0x02, func = "baddie"};               -- Mercenary
-tr3_entity_tbl[38] = {coll = 0x01, func = "baddie"};               -- Raptor hung by rope (fish bait)
-tr3_entity_tbl[39] = {coll = 0x02, func = "baddie"};               -- RX-Tech guy in red jacket
-tr3_entity_tbl[40] = {coll = 0x02, func = "baddie"};               -- RX-Tech guy with gun (dressed like flamethrower guy)
-tr3_entity_tbl[41] = {coll = 0x02, func = "baddie"};               -- Dog (Antarctica)
-tr3_entity_tbl[42] = {coll = 0x02, func = "baddie"};               -- Crawler mutant
-tr3_entity_tbl[44] = {coll = 0x02, func = "baddie"};               -- Tinnos wasp
-tr3_entity_tbl[45] = {coll = 0x02, func = "baddie"};               -- Tinnos monster
-tr3_entity_tbl[46] = {coll = 0x02, func = "baddie"};               -- Brute mutant (with claw)
-tr3_entity_tbl[47] = {coll = 0x02, func = "baddie"};               -- Tinnos wasp respawn point
-tr3_entity_tbl[48] = {coll = 0x02, func = "baddie"};               -- Raptor respawn point
-tr3_entity_tbl[49] = {coll = 0x02, func = "baddie"};               -- Willard spider
-tr3_entity_tbl[50] = {coll = 0x02, func = "baddie"};               -- RX-Tech flamethrower guy
-tr3_entity_tbl[51] = {coll = 0x02, func = "baddie"};               -- London goon
-tr3_entity_tbl[53] = {coll = 0x02, func = "baddie"};               -- 'Damned' stick-wielding goon
-tr3_entity_tbl[56] = {coll = 0x02, func = "baddie"};               -- London guard
-tr3_entity_tbl[57] = {coll = 0x02, func = "baddie"};               -- Sophia Lee
-tr3_entity_tbl[58] = {coll = 0x01, func = "baddie"};               -- Thames Wharf machine
-tr3_entity_tbl[60] = {coll = 0x02, func = "baddie"};               -- MP with stick
-tr3_entity_tbl[61] = {coll = 0x02, func = "baddie"};               -- MP with gun
-tr3_entity_tbl[62] = {coll = 0x02, func = "baddie"};               -- Prisoner
-tr3_entity_tbl[63] = {coll = 0x02, func = "baddie"};               -- MP with sighted gun and night sight
+tr3_entity_tbl[25] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Killer whale
+tr3_entity_tbl[26] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Scuba diver
+tr3_entity_tbl[27] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Crow
+tr3_entity_tbl[28] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Tiger
+tr3_entity_tbl[29] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Vulture
+tr3_entity_tbl[30] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Assault-course target
+tr3_entity_tbl[31] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Crawler mutant in closet
+tr3_entity_tbl[32] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Crocodile (in water)
+tr3_entity_tbl[34] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Compsognathus
+tr3_entity_tbl[35] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Lizard thing
+tr3_entity_tbl[36] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Puna guy
+tr3_entity_tbl[37] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Mercenary
+tr3_entity_tbl[38] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Raptor hung by rope (fish bait)
+tr3_entity_tbl[39] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- RX-Tech guy in red jacket
+tr3_entity_tbl[40] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- RX-Tech guy with gun (dressed like flamethrower guy)
+tr3_entity_tbl[41] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Dog (Antarctica)
+tr3_entity_tbl[42] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Crawler mutant
+tr3_entity_tbl[44] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Tinnos wasp
+tr3_entity_tbl[45] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Tinnos monster
+tr3_entity_tbl[46] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Brute mutant (with claw)
+tr3_entity_tbl[47] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Tinnos wasp respawn point
+tr3_entity_tbl[48] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Raptor respawn point
+tr3_entity_tbl[49] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Willard spider
+tr3_entity_tbl[50] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- RX-Tech flamethrower guy
+tr3_entity_tbl[51] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- London goon
+tr3_entity_tbl[53] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- 'Damned' stick-wielding goon
+tr3_entity_tbl[56] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- London guard
+tr3_entity_tbl[57] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Sophia Lee
+tr3_entity_tbl[58] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Thames Wharf machine
+tr3_entity_tbl[60] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- MP with stick
+tr3_entity_tbl[61] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- MP with gun
+tr3_entity_tbl[62] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Prisoner
+tr3_entity_tbl[63] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- MP with sighted gun and night sight
 tr3_entity_tbl[64] = {coll = 0x02};               -- Gun turret
-tr3_entity_tbl[65] = {coll = 0x02, func = "baddie"};               -- Dam guard
+tr3_entity_tbl[65] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Dam guard
 tr3_entity_tbl[66] = {coll = 0x00, hide = 0x01};  -- Kind of tripwire
 tr3_entity_tbl[67] = {coll = 0x00, hide = 0x01};  -- Electrified wire
 tr3_entity_tbl[68] = {coll = 0x00, hide = 0x01};  -- Killer tripwire
-tr3_entity_tbl[69] = {coll = 0x02, func = "baddie"};               -- Cobra / Rattlesnake
+tr3_entity_tbl[69] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Cobra / Rattlesnake
 tr3_entity_tbl[70] = {coll = 0x01};               -- Temple statue
-tr3_entity_tbl[71] = {coll = 0x02, func = "baddie"};               -- Monkey
-tr3_entity_tbl[73] = {coll = 0x02, func = "baddie"};               -- Tony Firehands
+tr3_entity_tbl[71] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Monkey
+tr3_entity_tbl[73] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Tony Firehands
 
 -- AI OBJECTS --
 
@@ -738,78 +750,78 @@ tr4_entity_tbl[034] = {coll = 0x01}; -- Enemy jeep
 
 -- ENEMIES
 
-tr4_entity_tbl[035] = {coll = 0x02}; -- Skeleton
-tr4_entity_tbl[036] = {coll = 0x02}; -- Skeleton MIP - UNUSED
-tr4_entity_tbl[037] = {coll = 0x02}; -- Guide
-tr4_entity_tbl[038] = {coll = 0x02}; -- Guide MIP - UNUSED
-tr4_entity_tbl[039] = {coll = 0x02}; -- Von Croy
-tr4_entity_tbl[040] = {coll = 0x02}; -- Guide MIP - UNUSED
-tr4_entity_tbl[041] = {coll = 0x02}; -- Baddy 1
-tr4_entity_tbl[042] = {coll = 0x02}; -- Baddy 1 MIP - UNUSED
-tr4_entity_tbl[043] = {coll = 0x02}; -- Baddy 2
-tr4_entity_tbl[044] = {coll = 0x02}; -- Baddy 2 MIP - UNUSED
-tr4_entity_tbl[045] = {coll = 0x02}; -- Setha
-tr4_entity_tbl[046] = {coll = 0x02}; -- Setha MIP - UNUSED
-tr4_entity_tbl[047] = {coll = 0x02}; -- Mummy
-tr4_entity_tbl[048] = {coll = 0x02}; -- Mummy MIP - UNUSED
-tr4_entity_tbl[049] = {coll = 0x02}; -- Sphinx / Bull
-tr4_entity_tbl[050] = {coll = 0x02}; -- Sphinx / Bull MIP - UNUSED
-tr4_entity_tbl[051] = {coll = 0x02}; -- Crocodile
-tr4_entity_tbl[052] = {coll = 0x02}; -- Crocodile MIP - UNUSED
-tr4_entity_tbl[053] = {coll = 0x02}; -- Horseman
-tr4_entity_tbl[054] = {coll = 0x02}; -- Horseman MIP - UNUSED
-tr4_entity_tbl[055] = {coll = 0x02}; -- Scorpion
-tr4_entity_tbl[056] = {coll = 0x02}; -- Scorpion MIP - UNUSED
-tr4_entity_tbl[057] = {coll = 0x02}; -- Jean-Yves
-tr4_entity_tbl[058] = {coll = 0x02}; -- Jean-Yves MIP - UNUSED
-tr4_entity_tbl[059] = {coll = 0x02}; -- Troops
-tr4_entity_tbl[060] = {coll = 0x02}; -- Troops MIP - UNUSED
-tr4_entity_tbl[061] = {coll = 0x02}; -- Knights Templar
-tr4_entity_tbl[062] = {coll = 0x02}; -- Knights Templar MIP - UNUSED
-tr4_entity_tbl[063] = {coll = 0x02}; -- Mutant
-tr4_entity_tbl[064] = {coll = 0x02}; -- Mutant MIP - UNUSED
-tr4_entity_tbl[065] = {coll = 0x02}; -- Horse
-tr4_entity_tbl[066] = {coll = 0x02}; -- Horse MIP - UNUSED
-tr4_entity_tbl[067] = {coll = 0x02}; -- Baboon normal
-tr4_entity_tbl[068] = {coll = 0x02}; -- Baboon normal MIP - UNUSED
-tr4_entity_tbl[069] = {coll = 0x02}; -- Baboon invisible
-tr4_entity_tbl[070] = {coll = 0x02}; -- Baboon invisible MIP - UNUSED
-tr4_entity_tbl[071] = {coll = 0x02}; -- Baboon silent
-tr4_entity_tbl[072] = {coll = 0x02}; -- Baboon silent MIP - UNUSED
-tr4_entity_tbl[073] = {coll = 0x02}; -- Wild boar
-tr4_entity_tbl[074] = {coll = 0x02}; -- Wild boar MIP - UNUSED
-tr4_entity_tbl[075] = {coll = 0x02}; -- Harpy
-tr4_entity_tbl[076] = {coll = 0x02}; -- Harpy MIP - UNUSED
-tr4_entity_tbl[077] = {coll = 0x02}; -- Demigod 1
-tr4_entity_tbl[078] = {coll = 0x02}; -- Demigod 1 MIP - UNUSED
-tr4_entity_tbl[079] = {coll = 0x02}; -- Demigod 2
-tr4_entity_tbl[080] = {coll = 0x02}; -- Demigod 2 MIP - UNUSED
-tr4_entity_tbl[081] = {coll = 0x02}; -- Demigod 3
-tr4_entity_tbl[082] = {coll = 0x02}; -- Demigod 3 MIP - UNUSED
+tr4_entity_tbl[035] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Skeleton
+tr4_entity_tbl[036] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Skeleton MIP - UNUSED
+tr4_entity_tbl[037] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guide
+tr4_entity_tbl[038] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guide MIP - UNUSED
+tr4_entity_tbl[039] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Von Croy
+tr4_entity_tbl[040] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guide MIP - UNUSED
+tr4_entity_tbl[041] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baddy 1
+tr4_entity_tbl[042] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baddy 1 MIP - UNUSED
+tr4_entity_tbl[043] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baddy 2
+tr4_entity_tbl[044] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baddy 2 MIP - UNUSED
+tr4_entity_tbl[045] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Setha
+tr4_entity_tbl[046] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Setha MIP - UNUSED
+tr4_entity_tbl[047] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Mummy
+tr4_entity_tbl[048] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Mummy MIP - UNUSED
+tr4_entity_tbl[049] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Sphinx / Bull
+tr4_entity_tbl[050] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Sphinx / Bull MIP - UNUSED
+tr4_entity_tbl[051] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Crocodile
+tr4_entity_tbl[052] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Crocodile MIP - UNUSED
+tr4_entity_tbl[053] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Horseman
+tr4_entity_tbl[054] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Horseman MIP - UNUSED
+tr4_entity_tbl[055] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Scorpion
+tr4_entity_tbl[056] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Scorpion MIP - UNUSED
+tr4_entity_tbl[057] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Jean-Yves
+tr4_entity_tbl[058] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Jean-Yves MIP - UNUSED
+tr4_entity_tbl[059] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Troops
+tr4_entity_tbl[060] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Troops MIP - UNUSED
+tr4_entity_tbl[061] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Knights Templar
+tr4_entity_tbl[062] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Knights Templar MIP - UNUSED
+tr4_entity_tbl[063] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Mutant
+tr4_entity_tbl[064] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Mutant MIP - UNUSED
+tr4_entity_tbl[065] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Horse
+tr4_entity_tbl[066] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Horse MIP - UNUSED
+tr4_entity_tbl[067] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baboon normal
+tr4_entity_tbl[068] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baboon normal MIP - UNUSED
+tr4_entity_tbl[069] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baboon invisible
+tr4_entity_tbl[070] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baboon invisible MIP - UNUSED
+tr4_entity_tbl[071] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baboon silent
+tr4_entity_tbl[072] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Baboon silent MIP - UNUSED
+tr4_entity_tbl[073] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Wild boar
+tr4_entity_tbl[074] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Wild boar MIP - UNUSED
+tr4_entity_tbl[075] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Harpy
+tr4_entity_tbl[076] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Harpy MIP - UNUSED
+tr4_entity_tbl[077] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Demigod 1
+tr4_entity_tbl[078] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Demigod 1 MIP - UNUSED
+tr4_entity_tbl[079] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Demigod 2
+tr4_entity_tbl[080] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Demigod 2 MIP - UNUSED
+tr4_entity_tbl[081] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Demigod 3
+tr4_entity_tbl[082] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Demigod 3 MIP - UNUSED
 tr4_entity_tbl[083] = {coll = 0x00}; -- Little beetle - NO COLLISION, SWARM
-tr4_entity_tbl[084] = {coll = 0x02}; -- Big beetle
-tr4_entity_tbl[085] = {coll = 0x02}; -- Big beetle MIP - UNUSED
+tr4_entity_tbl[084] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Big beetle
+tr4_entity_tbl[085] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Big beetle MIP - UNUSED
 tr4_entity_tbl[086] = {coll = 0x00}; -- Wraith 1 - SPIRIT, NO COLLISION
 tr4_entity_tbl[087] = {coll = 0x00}; -- Wraith 2 - SPIRIT, NO COLLISION
 tr4_entity_tbl[088] = {coll = 0x00}; -- Wraith 3 - SPIRIT, NO COLLISION
 tr4_entity_tbl[089] = {coll = 0x00}; -- Wraith 4 - SPIRIT, NO COLLISION
 tr4_entity_tbl[090] = {coll = 0x00}; -- Bat - TOO SMALL TO COLLIDE WITH
-tr4_entity_tbl[091] = {coll = 0x02}; -- Dog
-tr4_entity_tbl[092] = {coll = 0x02}; -- Dog MIP - UNUSED
-tr4_entity_tbl[093] = {coll = 0x02}; -- Hammerhead
-tr4_entity_tbl[094] = {coll = 0x02}; -- Hammerhead MIP - UNUSED
-tr4_entity_tbl[095] = {coll = 0x02}; -- SAS
-tr4_entity_tbl[096] = {coll = 0x02}; -- SAS MIP - UNUSED
-tr4_entity_tbl[097] = {coll = 0x02}; -- SAS dying
-tr4_entity_tbl[098] = {coll = 0x02}; -- SAS dying MIP - UNUSED
-tr4_entity_tbl[099] = {coll = 0x02}; -- SAS Captain
-tr4_entity_tbl[100] = {coll = 0x02}; -- SAS Captain MIP - UNUSED
+tr4_entity_tbl[091] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Dog
+tr4_entity_tbl[092] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Dog MIP - UNUSED
+tr4_entity_tbl[093] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Hammerhead
+tr4_entity_tbl[094] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Hammerhead MIP - UNUSED
+tr4_entity_tbl[095] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SAS
+tr4_entity_tbl[096] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SAS MIP - UNUSED
+tr4_entity_tbl[097] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SAS dying
+tr4_entity_tbl[098] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SAS dying MIP - UNUSED
+tr4_entity_tbl[099] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SAS Captain
+tr4_entity_tbl[100] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SAS Captain MIP - UNUSED
 tr4_entity_tbl[101] = {coll = 0x01}; -- SAS Drag bloke
-tr4_entity_tbl[102] = {coll = 0x02}; -- Ahmet
-tr4_entity_tbl[103] = {coll = 0x02}; -- Ahmet MIP - UNUSED
+tr4_entity_tbl[102] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Ahmet
+tr4_entity_tbl[103] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Ahmet MIP - UNUSED
 tr4_entity_tbl[104] = {coll = 0x01}; -- Lara double
 tr4_entity_tbl[105] = {coll = 0x01}; -- Lara double MIP - UNUSED
-tr4_entity_tbl[106] = {coll = 0x02}; -- Small scorpion
+tr4_entity_tbl[106] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Small scorpion
 tr4_entity_tbl[107] = {coll = 0x00, hide = 0x01}; -- Locust (ex-Fish) - NO COLLISION, SWARM
 
 -- PUZZLE ACTION ITEMS
@@ -1235,68 +1247,68 @@ tr5_entity_tbl = {};
 
 -- ENEMIES
 
-tr5_entity_tbl[031] = {coll = 0x02}; -- SAS - UNUSED
-tr5_entity_tbl[032] = {coll = 0x02}; -- SAS MIP - UNUSED
-tr5_entity_tbl[033] = {coll = 0x02}; -- SWAT  - UNUSED
-tr5_entity_tbl[034] = {coll = 0x02}; -- SWAT MIP - UNUSED
-tr5_entity_tbl[035] = {coll = 0x02}; -- VCI guard (SWAT_PLUS)
-tr5_entity_tbl[036] = {coll = 0x02}; -- VCI guard MIP (SWAT_PLUS MIP)
-tr5_entity_tbl[037] = {coll = 0x02}; -- Guard gun (BLUE_GUARD)
-tr5_entity_tbl[038] = {coll = 0x02}; -- Guard gun MIP (BLUE_GUARD MIP)
-tr5_entity_tbl[039] = {coll = 0x02}; -- Guard laser (TWOGUN)
-tr5_entity_tbl[040] = {coll = 0x02}; -- Guard laser MIP (TWOGUN MIP)
-tr5_entity_tbl[041] = {coll = 0x02}; -- Doberman (DOG)
-tr5_entity_tbl[042] = {coll = 0x02}; -- Doberman MIP (DOG MIP)
-tr5_entity_tbl[043] = {coll = 0x02}; -- Crow
-tr5_entity_tbl[044] = {coll = 0x02}; -- Crow MIP
-tr5_entity_tbl[045] = {coll = 0x02}; -- Larson
+tr5_entity_tbl[031] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SAS - UNUSED
+tr5_entity_tbl[032] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SAS MIP - UNUSED
+tr5_entity_tbl[033] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SWAT  - UNUSED
+tr5_entity_tbl[034] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- SWAT MIP - UNUSED
+tr5_entity_tbl[035] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- VCI guard (SWAT_PLUS)
+tr5_entity_tbl[036] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- VCI guard MIP (SWAT_PLUS MIP)
+tr5_entity_tbl[037] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guard gun (BLUE_GUARD)
+tr5_entity_tbl[038] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guard gun MIP (BLUE_GUARD MIP)
+tr5_entity_tbl[039] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guard laser (TWOGUN)
+tr5_entity_tbl[040] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guard laser MIP (TWOGUN MIP)
+tr5_entity_tbl[041] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Doberman (DOG)
+tr5_entity_tbl[042] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Doberman MIP (DOG MIP)
+tr5_entity_tbl[043] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Crow
+tr5_entity_tbl[044] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Crow MIP
+tr5_entity_tbl[045] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Larson
 tr5_entity_tbl[046] = {coll = 0x00}; -- Keycard 1 (Ex-LARSON MIP)
-tr5_entity_tbl[047] = {coll = 0x02}; -- Pierre
+tr5_entity_tbl[047] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Pierre
 tr5_entity_tbl[048] = {coll = 0x00}; -- Keycard 2  (Ex-PIERRE MIP)
-tr5_entity_tbl[049] = {coll = 0x02}; -- Armed baddy 1 (MAFIA)
-tr5_entity_tbl[050] = {coll = 0x02}; -- Armed baddy 1 MIP (MAFIA MIP)
-tr5_entity_tbl[051] = {coll = 0x02}; -- Armed baddy 2 (MAFIA2)
-tr5_entity_tbl[052] = {coll = 0x02}; -- Armed baddy 2 MIP (MAFIA2 MIP)
-tr5_entity_tbl[053] = {coll = 0x02}; -- (Ex-SAILOR) - UNUSED?
-tr5_entity_tbl[054] = {coll = 0x02}; -- (Ex-SAILOR MIP) - UNUSED?
-tr5_entity_tbl[055] = {coll = 0x02}; -- Guard robot control (CRANE_GUY)
-tr5_entity_tbl[056] = {coll = 0x02}; -- Guard robot control MIP (CRANE_GUY MIP)
-tr5_entity_tbl[057] = {coll = 0x02}; -- Lion
-tr5_entity_tbl[058] = {coll = 0x02}; -- Lion MIP
-tr5_entity_tbl[059] = {coll = 0x02}; -- Gladiator
-tr5_entity_tbl[060] = {coll = 0x02}; -- Gladiator MIP
-tr5_entity_tbl[061] = {coll = 0x02}; -- Roman statue
+tr5_entity_tbl[049] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Armed baddy 1 (MAFIA)
+tr5_entity_tbl[050] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Armed baddy 1 MIP (MAFIA MIP)
+tr5_entity_tbl[051] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Armed baddy 2 (MAFIA2)
+tr5_entity_tbl[052] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Armed baddy 2 MIP (MAFIA2 MIP)
+tr5_entity_tbl[053] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- (Ex-SAILOR) - UNUSED?
+tr5_entity_tbl[054] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- (Ex-SAILOR MIP) - UNUSED?
+tr5_entity_tbl[055] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guard robot control (CRANE_GUY)
+tr5_entity_tbl[056] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Guard robot control MIP (CRANE_GUY MIP)
+tr5_entity_tbl[057] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Lion
+tr5_entity_tbl[058] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Lion MIP
+tr5_entity_tbl[059] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Gladiator
+tr5_entity_tbl[060] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Gladiator MIP
+tr5_entity_tbl[061] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Roman statue
 tr5_entity_tbl[062] = {coll = 0x00}; -- Spear tip (Ex-ROMAN_GOD MIP)
-tr5_entity_tbl[063] = {coll = 0x02}; -- Hydra
-tr5_entity_tbl[064] = {coll = 0x02}; -- Flat floor (Ex-HYDRA MIP?)
-tr5_entity_tbl[065] = {coll = 0x02}; -- Laser head (GUARDIAN)
-tr5_entity_tbl[066] = {coll = 0x02}; -- Laser head MIP (GUARDIAN MIP)
-tr5_entity_tbl[067] = {coll = 0x02}; -- Cyborg
-tr5_entity_tbl[068] = {coll = 0x02}; -- Cyborg MIP
-tr5_entity_tbl[069] = {coll = 0x02}; -- VCI worker
-tr5_entity_tbl[070] = {coll = 0x02}; -- VCI worker MIP
-tr5_entity_tbl[071] = {coll = 0x02}; -- Willowisp Guide
-tr5_entity_tbl[072] = {coll = 0x02}; -- Willowisp Guide MIP
+tr5_entity_tbl[063] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Hydra
+tr5_entity_tbl[064] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Flat floor (Ex-HYDRA MIP?)
+tr5_entity_tbl[065] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Laser head (GUARDIAN)
+tr5_entity_tbl[066] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Laser head MIP (GUARDIAN MIP)
+tr5_entity_tbl[067] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Cyborg
+tr5_entity_tbl[068] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Cyborg MIP
+tr5_entity_tbl[069] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- VCI worker
+tr5_entity_tbl[070] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- VCI worker MIP
+tr5_entity_tbl[071] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Willowisp Guide
+tr5_entity_tbl[072] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Willowisp Guide MIP
 tr5_entity_tbl[073] = {coll = 0x00}; -- Invisible ghost
 tr5_entity_tbl[074] = {coll = 0x00}; -- Invisible ghost MIP - UNUSED?
-tr5_entity_tbl[075] = {coll = 0x02}; -- Reaper - UNUSED?
-tr5_entity_tbl[076] = {coll = 0x02}; -- Reaper MIP- UNUSED?
-tr5_entity_tbl[077] = {coll = 0x02}; -- Maze Monster
-tr5_entity_tbl[078] = {coll = 0x02}; -- Maze Monster MIP - UNUSED?
-tr5_entity_tbl[079] = {coll = 0x02}; -- Lagoon Witch
-tr5_entity_tbl[080] = {coll = 0x02}; -- Lagoon Witch MIP - UNUSED?
-tr5_entity_tbl[081] = {coll = 0x02}; -- Submarine
-tr5_entity_tbl[082] = {coll = 0x02}; -- Submarine MIP
-tr5_entity_tbl[083] = {coll = 0x02}; -- M16 Guard
-tr5_entity_tbl[084] = {coll = 0x02}; -- Tree with huged man (Ex-M16 Guard MIP)
-tr5_entity_tbl[085] = {coll = 0x02}; -- Husky
-tr5_entity_tbl[086] = {coll = 0x02}; -- Husky MIP
-tr5_entity_tbl[087] = {coll = 0x02}; -- The chef
-tr5_entity_tbl[088] = {coll = 0x02}; -- Rich1 hammer door (Ex-CHEF MIP)
-tr5_entity_tbl[089] = {coll = 0x02}; -- Imp
-tr5_entity_tbl[090] = {coll = 0x02}; -- Padlock (Ex-IMP_MIP)
-tr5_entity_tbl[091] = {coll = 0x02}; -- Gunship
-tr5_entity_tbl[092] = {coll = 0x02}; -- Gunship MIP
+tr5_entity_tbl[075] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Reaper - UNUSED?
+tr5_entity_tbl[076] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Reaper MIP- UNUSED?
+tr5_entity_tbl[077] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Maze Monster
+tr5_entity_tbl[078] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Maze Monster MIP - UNUSED?
+tr5_entity_tbl[079] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Lagoon Witch
+tr5_entity_tbl[080] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Lagoon Witch MIP - UNUSED?
+tr5_entity_tbl[081] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Submarine
+tr5_entity_tbl[082] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Submarine MIP
+tr5_entity_tbl[083] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- M16 Guard
+tr5_entity_tbl[084] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Tree with huged man (Ex-M16 Guard MIP)
+tr5_entity_tbl[085] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Husky
+tr5_entity_tbl[086] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Husky MIP
+tr5_entity_tbl[087] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- The chef
+tr5_entity_tbl[088] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Rich1 hammer door (Ex-CHEF MIP)
+tr5_entity_tbl[089] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Imp
+tr5_entity_tbl[090] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Padlock (Ex-IMP_MIP)
+tr5_entity_tbl[091] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Gunship
+tr5_entity_tbl[092] = {coll = COLLISION_TYPE_ACTOR, shape = COLLISION_SHAPE_TRIMESH_CONVEX}; -- Gunship MIP
 tr5_entity_tbl[093] = {coll = 0x00}; -- Bats
 tr5_entity_tbl[094] = {coll = 0x00}; -- Little rats
 tr5_entity_tbl[095] = {coll = 0x00}; -- Spiders
@@ -1752,8 +1764,8 @@ function getEntityModelProperties(ver, id)
     end;
 
     if(tbl[id] == nil) then
-        return nil, nil, nil, nil;
+        return nil, nil, nil, nil, nil;
     else
-        return tbl[id].coll, tbl[id].hide, tbl[id].trav, tbl[id].func;
+        return tbl[id].coll, tbl[id].shape, tbl[id].hide, tbl[id].trav, tbl[id].func;
     end;
 end;
