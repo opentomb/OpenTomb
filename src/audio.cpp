@@ -7,12 +7,8 @@
 #include <AL/efx.h>
 #include <AL/efx-presets.h>
 
-extern "C" {
-#include "ogg/codec.h"
-#include "ogg/ogg.h"
-#include "ogg/os_types.h"
-#include "ogg/vorbisfile.h"
-}
+#include <ogg/ogg.h>
+#include <vorbis/vorbisfile.h>
 
 #include "audio.h"
 #include "console.h"

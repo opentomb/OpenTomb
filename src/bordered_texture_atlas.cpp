@@ -348,7 +348,7 @@ void bordered_texture_atlas::getCoordinates(unsigned long texture,
                                          signed shift,
                                          bool split)  const
 {
-    assert(poly->vertex_count <= 4);
+    assert(poly->vertices.size() <= 4);
 
     assert(texture < number_file_object_textures);
     const file_object_texture &file_object_texture = file_object_textures[texture];

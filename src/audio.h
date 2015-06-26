@@ -6,12 +6,8 @@
 #include <AL/efx-presets.h>
 #include <AL/efx-creative.h>
 
-extern "C" {
-#include "ogg/codec.h"
-#include "ogg/ogg.h"
-#include "ogg/os_types.h"
-#include "ogg/vorbisfile.h"
-}
+#include <ogg/ogg.h>
+#include <vorbis/vorbisfile.h>
 
 #include "vt/vt_level.h"
 #include "game.h"

@@ -22,12 +22,31 @@ INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIRS})
 find_package(OpenAL REQUIRED)
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
 
-add_definitions(-DAL_ALEXT_PROTOTYPES)
+function(trylinklib LIBNAME ATTRIBS)
+        find_library(
+                "${LIBNAME}_LIB"
+                NAMES "${LIBNAME}"
+                HINTS
+                PATH_SUFFIXES lib64 lib32 lib
+                PATHS
+                /sw
+                /opt/local
+                /opt/csw
+                /opt
+        )
+        if(${LIBNAME}_LIB)
+                add_library("${LIBNAME}" ${ATTRIBS} IMPORTED)
+        else()
+            message(FATAL_ERROR "Missing library: ${LIBNAME}")
+        endif()
+        mark_as_advanced(FORCE "${LIBNAME}_LIB")
+endfunction(trylinklib)
 
-IF(NOT CMAKE_BUILD_TYPE)
-    MESSAGE(STATUS "No build type selected. Default to Release")
-    SET(CMAKE_BUILD_TYPE "Release")
-ENDIF()
+trylinklib("ogg" SHARED)
+trylinklib("vorbis" SHARED)
+trylinklib("vorbisfile" SHARED)
+
+add_definitions(-DAL_ALEXT_PROTOTYPES)
 
 IF(MINGW)
     IF(CMAKE_CROSSCOMPILING)
@@ -128,6 +147,9 @@ TARGET_LINK_LIBRARIES(
     ${FREETYPE_LIBRARIES}
     ${LUA_LIBRARIES}
     ${OPENAL_LIBRARY}
+    ${ogg_LIB}
+    ${vorbis_LIB}
+    ${vorbisfile_LIB}
 )
 
 IF(APPLE)
