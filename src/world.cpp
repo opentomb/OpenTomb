@@ -1036,23 +1036,17 @@ room_sector_p Sector_CheckFlip(room_sector_p rs)
 
 room_sector_p Sector_GetLowest(room_sector_p sector)
 {
-    room_sector_p lowest_sector = sector;
+    for(sector=Sector_CheckFlip(sector);sector->sector_below!=NULL;sector=Sector_CheckFlip(sector->sector_below));
 
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_below)
-    { lowest_sector = rs; }
-
-    return Sector_CheckFlip(lowest_sector);
+    return Sector_CheckFlip(sector);
 }
 
 
 room_sector_p Sector_GetHighest(room_sector_p sector)
 {
-    room_sector_p highest_sector = sector;
+    for(sector=Sector_CheckFlip(sector);sector->sector_above!=NULL;sector=Sector_CheckFlip(sector->sector_above));
 
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_above)
-    { highest_sector = rs; }
-
-    return Sector_CheckFlip(highest_sector);
+    return sector;
 }
 
 

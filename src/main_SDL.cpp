@@ -245,13 +245,25 @@ void Engine_InitSDLVideo()
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         sdl_gl_context = SDL_GL_CreateContext(sdl_window);
         SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
-        if ((maxSamples == 0) || (renderer.settings.antialias_samples > maxSamples))
+
+        if(renderer.settings.antialias_samples > maxSamples)
         {
-            renderer.settings.antialias_samples = maxSamples;   // Limit to max.
-            Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
+            if(maxSamples == 0)
+            {
+                renderer.settings.antialias = 0;
+                renderer.settings.antialias_samples = 0;
+                Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
+            }
+            else
+            {
+                renderer.settings.antialias_samples = maxSamples;   // Limit to max.
+                Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
+            }
         }
+
         SDL_GL_DeleteContext(sdl_gl_context);
         SDL_DestroyWindow(sdl_window);
 
@@ -334,7 +346,7 @@ int main(int argc, char **argv)
 {
     btScalar time, newtime;
     static btScalar oldtime = 0.0;
-    
+
     Engine_Start();
 
     // Entering main loop.
