@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 #include "vmath.h"
 
 struct Room;

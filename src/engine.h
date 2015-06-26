@@ -3,9 +3,9 @@
 #define ENGINE_H
 
 #include <SDL2/SDL.h>
-#include <stdint.h>
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
+#include <cstdint>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h>
 #include "world.h"
 #include "script.h"
 #include "controls.h"

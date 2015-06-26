@@ -2,13 +2,13 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include <stdint.h>
+#include <cstdint>
 
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
-#include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
-#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+#include <bullet/LinearMath/btVector3.h>
+#include <bullet/BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 #include "object.h"
 #include "mesh.h"
 
@@ -135,6 +135,7 @@ struct Entity : public Object
     struct engine_container_s          *self;
 
     btVector3 activation_offset;   // where we can activate object (dx, dy, dz, r)
+    btScalar activation_radius = 128;
     
     std::shared_ptr<Character> character;
 

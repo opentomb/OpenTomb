@@ -8,12 +8,12 @@
 
 #include "bordered_texture_atlas.h"
 
-#include <assert.h>
-#include <math.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "bsp_tree_2d.h"
 #include "gl_util.h"

@@ -1,6 +1,6 @@
 
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include "vmath.h"
 
 void vec3_RotateZ(btScalar res[3], btScalar src[3], btScalar ang)

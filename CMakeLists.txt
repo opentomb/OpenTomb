@@ -10,6 +10,9 @@ PROJECT(OpenTomb)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 
+find_package(Bullet REQUIRED)
+INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIR})
+
 IF(NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "No build type selected. Default to Release")
     SET(CMAKE_BUILD_TYPE "Release")
@@ -67,13 +70,11 @@ SET(CMAKE_CXX_FLAGS "-std=c++0x")
 FIND_PACKAGE(OpenGL REQUIRED)
 
 SET(OPENAL_DIR src/al)
-SET(BULLET_DIR src/bullet)
 SET(LUA_DIR src/lua)
 SET(OGG_DIR src/ogg)
 
 INCLUDE_DIRECTORIES(
     ${OPENAL_DIR}
-    ${BULLET_DIR}
     ${LUA_DIR}
     ${OGG_DIR}
     ${SDL2_INCLUDE_DIRS}
@@ -94,15 +95,6 @@ FILE(GLOB OPENAL_FILES
     ${OPENAL_DIR}/*.inc
     ${OPENAL_DIR}/*/*.inc
     ${OPENAL_DIR}/*/*/*.inc
-)
-
-FILE(GLOB BULLET_FILES
-    ${BULLET_DIR}/*.h
-    ${BULLET_DIR}/*/*.h
-    ${BULLET_DIR}/*/*/*.h
-    ${BULLET_DIR}/*.cpp
-    ${BULLET_DIR}/*/*.cpp
-    ${BULLET_DIR}/*/*/*.cpp
 )
 
 FILE(GLOB LUA_FILES
@@ -141,7 +133,6 @@ FILE(GLOB PRJ_SRC
 ADD_EXECUTABLE(
     ${PROJECT_NAME}
     ${OPENAL_FILES}
-    ${BULLET_FILES}
     ${LUA_FILES}
     ${OGG_FILES}
     ${PRJ_HDR} ${PRJ_SRC} ${PRJ_ICON_RES}
@@ -153,6 +144,7 @@ TARGET_LINK_LIBRARIES(
     ${SDL2_LIBRARIES}
     ${SDL2_IMAGE_LIBRARIES}
     ${ZLIB_LIBRARIES}
+    ${BULLET_LIBRARIES}
 )
 
 IF(APPLE)

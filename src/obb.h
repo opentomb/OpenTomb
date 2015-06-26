@@ -8,10 +8,10 @@
 #ifndef OBB_H
 #define OBB_H
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "polygon.h"
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 
 #include <memory>
 

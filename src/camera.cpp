@@ -1,8 +1,8 @@
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 
 #include "gl_util.h"
 #include "camera.h"
@@ -40,11 +40,11 @@ void Cam_Init(camera_p cam)
 
     cam->prev_pos = btVector3(0,0,0);
 
-    cam->view_dir = btVector3(0,0,1,0);                                                     // OZ - view
+    cam->view_dir = btVector3(0,0,1);                                                     // OZ - view
 
-    cam->right_dir = btVector3({1,0,0,0});                                                    // OX - right
+    cam->right_dir = btVector3(1,0,0);                                                    // OX - right
 
-    cam->up_dir = btVector3({0,1,0,0});                                                       // OY - up
+    cam->up_dir = btVector3(0,1,0);                                                       // OY - up
 
     cam->shake_value    = 0.0;
     cam->shake_time     = 0.0;

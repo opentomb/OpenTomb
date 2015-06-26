@@ -13,8 +13,8 @@ extern "C" {
 #include "lua/lauxlib.h"
 }
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 #include "vt/vt_level.h"
 #include "audio.h"

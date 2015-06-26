@@ -1,5 +1,5 @@
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 
 #include "vmath.h"
 #include "mesh.h"
@@ -18,10 +18,10 @@
 #include "string.h"
 #include "ragdoll.h"
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 
 
 void Entity::createGhosts()
@@ -44,7 +44,7 @@ void Entity::createGhosts()
         bf.bone_tags[i].mesh_base->R = (bf.bone_tags[i].mesh_base->R < box[2])?(bf.bone_tags[i].mesh_base->R):(box[2]);
 
         bt.ghostObjects[i] = new btPairCachingGhostObject();
-        bt.ghostObjects[i]->setIgnoreCollisionCheck(bt.bt_body[i], true);
+        // FIXME bt.ghostObjects[i]->setIgnoreCollisionCheck(bt.bt_body[i], true);
 
         btTransform gltr = transform * bf.bone_tags[i].full_transform;
         gltr.setOrigin( gltr * bf.bone_tags[i].mesh_base->centre );
@@ -1681,7 +1681,7 @@ void Entity_CheckActivators(std::shared_ptr<Entity> ent)
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {
                 std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
-                btScalar r = e->activation_offset[3];
+                btScalar r = e->activation_radius;
                 r *= r;
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
@@ -2139,7 +2139,7 @@ Entity::Entity()
     , obb( new obb_s() )
     , character( NULL )
     , current_sector( NULL )
-    , activation_offset{ 0.0, 256.0, 0.0, 128.0 }
+    , activation_offset{ 0.0, 256.0, 0.0 }
 {
     transform.setIdentity();
     self->next = NULL;

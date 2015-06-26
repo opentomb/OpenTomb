@@ -1,5 +1,5 @@
 
-#include "stdlib.h"
+#include <cstdlib>
 
 #include "mesh.h"
 #include "polygon.h"
@@ -12,8 +12,8 @@
 #include "resource.h"
 #include "render.h"
 #include "shader_description.h"
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 
 vertex_p FindVertexInMesh(base_mesh_p mesh, const btVector3 &v);

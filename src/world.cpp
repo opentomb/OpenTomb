@@ -1,12 +1,12 @@
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 #include "audio.h"
 #include "vmath.h"

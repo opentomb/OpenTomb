@@ -1,8 +1,8 @@
 #ifndef HAIR_H
 #define HAIR_H
 
-#include <assert.h>
-#include <stdint.h>
+#include <cassert>
+#include <cstdint>
 
 extern "C" {
 #include "lua/lua.h"
@@ -10,9 +10,9 @@ extern "C" {
 #include "lua/lauxlib.h"
 }
 
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/LinearMath/btVector3.h>
+#include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
 
 #include "character_controller.h"
 #include "engine.h"

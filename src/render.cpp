@@ -1,11 +1,11 @@
 
 #include <cmath>
-#include <stdlib.h>
+#include <cstdlib>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include "gl_util.h"
 
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 
 #include "render.h"
 #include "console.h"

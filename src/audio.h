@@ -20,8 +20,8 @@ extern "C" {
 #include "system.h"
 
 #include <SDL2/SDL_audio.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 // AL_UNITS constant is used to translate native TR coordinates into
 // OpenAL coordinates. By default, it's the same as geometry grid

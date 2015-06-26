@@ -24,7 +24,7 @@ extern "C" {
 #include "system.h"
 #include "render.h"
 #include "string.h"
-#include <math.h>
+#include <cmath>
 
 btVector3 listener_position;
 struct audio_fxmanager_s    fxManager;

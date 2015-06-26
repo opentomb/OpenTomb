@@ -1,6 +1,6 @@
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
+#include <ctime>
+#include <cstdio>
+#include <cstring>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
@@ -22,8 +22,8 @@ extern "C" {
 #include "lua/lstate.h"
 }
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 #include "vt/vt_level.h"
 
 #include "obb.h"
@@ -75,7 +75,7 @@ ALCcontext             *al_context     = NULL;
 int done = 0;
 btScalar time_scale = 1.0;
 
-btVector3 light_position = {255.0, 255.0, 8.0, 0.0};
+btVector3 light_position = {255.0, 255.0, 8.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 engine_container_p      last_cont = NULL;

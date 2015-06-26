@@ -4,12 +4,12 @@
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <stdint.h>
+#include <cstdint>
 #include "audio.h"
 #include "camera.h"
 #include "bordered_texture_atlas.h"
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/LinearMath/btVector3.h>
 #include "object.h"
 
 #include <memory>

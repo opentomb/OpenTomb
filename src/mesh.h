@@ -18,8 +18,8 @@
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <stdint.h>
-#include "bullet/LinearMath/btScalar.h"
+#include <cstdint>
+#include <bullet/LinearMath/btScalar.h>
 #include "vertex_array.h"
 #include "object.h"
 #include <memory>

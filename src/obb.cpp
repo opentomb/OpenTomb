@@ -1,13 +1,13 @@
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 
 #include "vmath.h"
 #include "obb.h"
 #include "polygon.h"
 #include "entity.h"
 
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 #include "engine.h"
 
 void OBB_Rebuild(obb_p obb, const btVector3& bb_min, const btVector3& bb_max)

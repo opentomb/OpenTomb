@@ -5,14 +5,14 @@
 #include <SDL2/SDL_image.h>
 #endif
 #include <SDL2/SDL_opengl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 
 extern "C" {
 #include "lua/lua.h"
@@ -624,7 +624,7 @@ int lua_GetEntityActivationOffset(lua_State * lua)
     lua_pushnumber(lua, ent->activation_offset[0]);
     lua_pushnumber(lua, ent->activation_offset[1]);
     lua_pushnumber(lua, ent->activation_offset[2]);
-    lua_pushnumber(lua, ent->activation_offset[3]);
+    lua_pushnumber(lua, ent->activation_radius);
 
     return 4;
 }
@@ -656,7 +656,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
     }
     if(top >= 5)
     {
-        ent->activation_offset[3] = lua_tonumber(lua, 5);
+        ent->activation_radius = lua_tonumber(lua, 5);
     }
 
     return 0;
@@ -2028,7 +2028,7 @@ int lua_CanTriggerEntity(lua_State * lua)
         return 1;
     }
 
-    auto r = e2->activation_offset[3];
+    auto r = e2->activation_radius;
     if(top >= 3)
     {
         r = lua_tonumber(lua, 3);

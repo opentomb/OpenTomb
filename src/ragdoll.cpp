@@ -1,7 +1,7 @@
 
-#include <math.h>
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include <cmath>
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 #include "ragdoll.h"
 #include "vmath.h"
 #include "character_controller.h"
