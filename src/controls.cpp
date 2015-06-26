@@ -648,9 +648,9 @@ void Controls_PrimaryMouseDown()
 {
     engine_container_p cont = Container_Create();
     btScalar dbgR = 128.0;
-    btScalar *v = engine_camera.pos;
-    btScalar *dir = engine_camera.view_dir;
-    btScalar new_pos[3];
+    btVector3 v = engine_camera.pos;
+    btVector3 dir = engine_camera.view_dir;
+    btVector3 new_pos;
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
@@ -659,9 +659,7 @@ void Controls_PrimaryMouseDown()
     cshape = new btSphereShape(dbgR);
     //cshape = new btCapsuleShapeZ(50.0, 100.0);
     startTransform.setIdentity();
-    new_pos[0] = v[0];
-    new_pos[1] = v[1];
-    new_pos[2] = v[2];
+    new_pos = v;
     startTransform.setOrigin(btVector3(new_pos[0], new_pos[1], new_pos[2]));
     cshape->calculateLocalInertia(12.0, localInertia);
     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
@@ -682,7 +680,7 @@ void Controls_SecondaryMouseDown()
     btVector3 from, to, place;
     engine_container_t cam_cont;
 
-    vec3_copy(from.m_floats, engine_camera.pos);
+    from = engine_camera.pos;
     to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;
 
     cam_cont.next = NULL;
@@ -698,7 +696,7 @@ void Controls_SecondaryMouseDown()
         extern GLfloat cast_ray[6];
 
         place.setInterpolate3(from, to, cbc.m_closestHitFraction);
-        vec3_copy(cast_ray, place.m_floats);
+        std::copy(place.m_floats+0, place.m_floats+3, cast_ray);
         cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld.m_floats[0];
         cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld.m_floats[1];
         cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld.m_floats[2];

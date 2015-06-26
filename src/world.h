@@ -223,7 +223,7 @@ typedef struct room_sector_s
 
     int16_t                     index_x;
     int16_t                     index_y;
-    btScalar                    pos[3];
+    btVector3 pos;
 
     btVector3                   ceiling_corners[4];
     uint8_t                     ceiling_diagonal_type;
@@ -250,7 +250,7 @@ typedef struct sector_tween_s
 typedef struct room_sprite_s
 {
     struct sprite_s             *sprite;
-    btScalar                    pos[3];
+    btVector3 pos;
     int8_t                      was_rendered;
 }room_sprite_t, *room_sprite_p;
 
@@ -277,16 +277,15 @@ struct Room : public Object
 
     struct engine_container_s  *containers;                                     // engine containers with moveables objects
 
-    btScalar                    bb_min[3];                                      // room's bounding box
-    btScalar                    bb_max[3];                                      // room's bounding box
-    btScalar                    transform[16];                                  // GL transformation matrix
+    btVector3 bb_min;                                      // room's bounding box
+    btVector3 bb_max;                                      // room's bounding box
+    btTransform transform;                                  // GL transformation matrix
     btScalar                    ambient_lighting[3];
 
     uint32_t                    light_count;
     struct light_s             *lights;
 
-    uint16_t                    portal_count;                                   // number of room portals
-    struct portal_s            *portals;                                        // room portals array
+    std::vector<portal_s> portals;                                        // room portals array
     std::shared_ptr<Room> alternate_room;                                 // alternative room pointer
     std::shared_ptr<Room> base_room;                                      // base room == room->alternate_room->base_room
 
@@ -378,7 +377,7 @@ void World_Prepare(world_p world);
 void World_Empty(world_p world);
 int compEntityEQ(void *x, void *y);
 int compEntityLT(void *x, void *y);
-uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3], int32_t id);
+uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3 *pos, const btVector3 *ang, int32_t id);
 std::shared_ptr<Entity> World_GetEntityByID(world_p world, uint32_t id);
 std::shared_ptr<base_item_s> World_GetBaseItemByID(world_p world, uint32_t id);
 
@@ -389,13 +388,13 @@ int Room_RemoveEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity
 void Room_AddToNearRoomsList(std::shared_ptr<Room> room, std::shared_ptr<Room> r);
 int Room_IsPointIn(std::shared_ptr<Room> room, btScalar dot[3]);
 
-std::shared_ptr<Room> Room_FindPos(btScalar pos[3]);
-std::shared_ptr<Room> Room_FindPosCogerrence(btScalar new_pos[3], std::shared_ptr<Room> room);
+std::shared_ptr<Room> Room_FindPos(const btVector3 &pos);
+std::shared_ptr<Room> Room_FindPosCogerrence(const btVector3& new_pos, std::shared_ptr<Room> room);
 std::shared_ptr<Room> Room_GetByID(world_p w, unsigned int ID);
-room_sector_p Room_GetSectorRaw(std::shared_ptr<Room> room, btScalar pos[3]);
+room_sector_p Room_GetSectorRaw(std::shared_ptr<Room> room, const btVector3 &pos);
 room_sector_p Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3]);
 room_sector_p Sector_CheckFlip(room_sector_p rs);
-room_sector_p Room_GetSectorXYZ(std::shared_ptr<Room> room, btScalar pos[3]);
+room_sector_p Room_GetSectorXYZ(std::shared_ptr<Room> room, const btVector3 &pos);
 
 void Room_Enable(std::shared_ptr<Room> room);
 void Room_Disable(std::shared_ptr<Room> room);
@@ -407,7 +406,7 @@ void Room_SwapItems(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_room)
 void Room_BuildNearRoomsList(std::shared_ptr<Room> room);
 void Room_BuildOverlappedRoomsList(std::shared_ptr<Room> room);
 
-int Room_IsJoined(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2);
+bool Room_IsJoined(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2);
 int Room_IsOverlapped(std::shared_ptr<Room> r0, std::shared_ptr<Room> r1);
 int Room_IsInNearRoomsList(std::shared_ptr<Room> room, std::shared_ptr<Room> r);
 int Room_HasSector(std::shared_ptr<Room> room, int x, int y);//If this room contains a sector

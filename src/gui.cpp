@@ -39,7 +39,7 @@ gui_InventoryManager  *main_inventory_manager = NULL;
 GLuint crosshairBuffer;
 vertex_array *crosshairArray;
 
-GLfloat guiProjectionMatrix[16];
+btTransform guiProjectionMatrix;
 
 void Gui_Init()
 {
@@ -496,7 +496,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
                        l->text);
     }
 
-    vec4_copy(gl_font->gl_font_color, style->real_color);
+    std::copy(style->real_color+0, style->real_color+4, gl_font->gl_font_color);
     glf_render_str(gl_font, real_x, real_y, l->text);
 }
 
@@ -582,7 +582,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
     bf->animations.frame_time = (btScalar)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
     Entity_GetNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    Entity_UpdateCurrentBoneFrame(bf, NULL);
+    Entity_UpdateCurrentBoneFrame(bf, nullptr);
 }
 
 
@@ -593,7 +593,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix)
+void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btTransform& mvMatrix)
 {
     const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
@@ -602,8 +602,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
 
     if(size != 0.0)
     {
-        btScalar bb[3];
-        vec3_sub(bb, bf->bb_max, bf->bb_min);
+        auto bb = bf->bb_max - bf->bb_min;
         if(bb[0] >= bb[1])
         {
             size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
@@ -614,16 +613,14 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         }
         size *= 0.8;
 
-        btScalar scaledMatrix[16];
-        Mat4_E(scaledMatrix);
+        btTransform scaledMatrix;
+        scaledMatrix.setIdentity();
         if(size < 1.0)          // only reduce items size...
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        btScalar scaledMvMatrix[16];
-        Mat4_Mat4_mul(scaledMvMatrix, mvMatrix, scaledMatrix);
-        btScalar mvpMatrix[16];
-        Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, scaledMvMatrix);
+        btTransform scaledMvMatrix = mvMatrix * scaledMatrix;
+        btTransform mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
@@ -631,8 +628,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
     }
     else
     {
-        btScalar mvpMatrix[16];
-        Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
+        btTransform mvpMatrix = guiProjectionMatrix * mvMatrix;
         Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
@@ -1060,8 +1056,8 @@ void gui_InventoryManager::render()
                 continue;
             }
 
-            btScalar matrix[16];
-            Mat4_E_macro(matrix);
+            btTransform matrix;
+            matrix.setIdentity();
             Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0);
             //Mat4_RotateX(matrix, 25.0);
             Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
@@ -1111,17 +1107,15 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        Mat4_E_macro(guiProjectionMatrix);
-        guiProjectionMatrix[0 * 4 + 0] = 2.0 / ((GLfloat)screen_info.w);
-        guiProjectionMatrix[1 * 4 + 1] = 2.0 / ((GLfloat)screen_info.h);
-        guiProjectionMatrix[2 * 4 + 2] =-2.0 / (far_dist - near_dist);
-        guiProjectionMatrix[3 * 4 + 0] =-1.0;
-        guiProjectionMatrix[3 * 4 + 1] =-1.0;
-        guiProjectionMatrix[3 * 4 + 2] =-(far_dist + near_dist) / (far_dist - near_dist);
+        guiProjectionMatrix.setIdentity();
+        guiProjectionMatrix.getBasis()[0][0] = 2.0 / screen_info.w;
+        guiProjectionMatrix.getBasis()[1][1] = 2.0 / screen_info.h;
+        guiProjectionMatrix.getBasis()[2][2] =-2.0 / (far_dist - near_dist);
+        guiProjectionMatrix.getOrigin() = {-1, -1, -(far_dist + near_dist) / (far_dist - near_dist)};
     }
     else                                                                        // set camera coordinate system
     {
-        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(btScalar [16]));
+        guiProjectionMatrix = engine_camera.gl_proj_mat;
     }
 }
 
@@ -2547,8 +2541,8 @@ void gui_ItemNotifier::Draw()
     item->bf->animations.frame_time = 0.0;
 
     Item_Frame(item->bf, 0.0);
-    btScalar matrix[16];
-    Mat4_E_macro(matrix);
+    btTransform matrix;
+    matrix.setIdentity();
     Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
     Mat4_RotateY(matrix, mCurrRotX + mRotX);
     Mat4_RotateX(matrix, mCurrRotY + mRotY);

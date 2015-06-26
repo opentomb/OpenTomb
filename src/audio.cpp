@@ -26,7 +26,7 @@ extern "C" {
 #include "string.h"
 #include <math.h>
 
-ALfloat                     listener_position[3];
+btVector3 listener_position;
 struct audio_fxmanager_s    fxManager;
 
 bool                        StreamTrack::damp_active = false;
@@ -316,16 +316,12 @@ void AudioSource::SetUnderwater()
 
 void AudioSource::LinkEmitter()
 {
-    ALfloat  vec[3];
-
     switch(emitter_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
             if(std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, emitter_ID)) {
-                vec3_copy(vec, ent->transform + 12);
-                SetPosition(vec);
-                vec3_copy(vec, ent->speed.m_floats);
-                SetVelocity(vec);
+                SetPosition(ent->transform.getOrigin());
+                SetVelocity(ent->speed.m_floats);
             }
             return;
 
@@ -1068,13 +1064,13 @@ bool Audio_EndStreams(int stream_type)
 
 bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 {
-    ALfloat  vec[3] = {0.0, 0.0, 0.0}, dist;
+    btVector3 vec{0,0,0};
 
     switch(entity_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
             if(std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, entity_ID)) {
-                vec3_copy(vec, ent->transform + 12);
+                vec = ent->transform.getOrigin();
             }
             else {
                 return false;
@@ -1086,7 +1082,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
             {
                 return false;
             }
-            vec3_copy(vec, engine_world.audio_emitters[entity_ID].position);
+            vec = engine_world.audio_emitters[entity_ID].position;
             break;
 
         case TR_AUDIO_EMITTER_GLOBAL:
@@ -1096,7 +1092,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
             return false;
     }
 
-    dist = vec3_dist_sq(listener_position, vec);
+    auto dist = (listener_position - vec).length2();
 
     // We add 1/4 of overall distance to fix up some issues with
     // pseudo-looped sounds that are called at certain frames in animations.
@@ -1777,20 +1773,20 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
  */
 void Audio_UpdateListenerByCamera(struct camera_s *cam)
 {
-    ALfloat v[6];       // vec3 - forvard, vec3 - up
+    ALfloat v[6] = {
+        cam->view_dir[0], cam->view_dir[1], cam->view_dir[2],
+        cam->up_dir[0], cam->up_dir[1], cam->up_dir[2]
+    };
 
-    vec3_copy(v+0, cam->view_dir);
-    vec3_copy(v+3, cam->up_dir);
     alListenerfv(AL_ORIENTATION, v);
 
-    vec3_copy(v, cam->pos);
-    alListenerfv(AL_POSITION, v);
+    alListenerfv(AL_POSITION, cam->pos.m_floats);
 
-    vec3_sub(v, cam->pos, cam->prev_pos);
-    v[3] = 1.0 / engine_frame_time;
-    vec3_mul_scalar(v, v, v[3]);
-    alListenerfv(AL_VELOCITY, v);
-    vec3_copy(cam->prev_pos, cam->pos);
+    btVector3 v2 = cam->pos - cam->prev_pos;
+    v2[3] = 1.0 / engine_frame_time;
+    v2 *= v2[3];
+    alListenerfv(AL_VELOCITY, v2.m_floats);
+    cam->prev_pos = cam->pos;
 
     if(cam->current_room)
     {

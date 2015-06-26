@@ -23,6 +23,8 @@
 #include "vertex_array.h"
 #include "object.h"
 #include <memory>
+#include <vector>
+#include "vmath.h"
 
 class btCollisionShape;
 class btRigidBody;
@@ -47,9 +49,9 @@ typedef struct transparent_polygon_reference_s {
  * Animated version of vertex. Does not contain texture coordinate, because that is in a different VBO.
  */
 typedef struct animated_vertex_s {
-    float position[3];
-    float color[4];
-    float normal[3];
+    btVector3 position;
+    std::array<float,4> color;
+    btVector3 normal;
 } animated_vertex_t, *animated_vertex_p;
 
 /*
@@ -60,8 +62,7 @@ typedef struct base_mesh_s
     uint32_t              id;                                                   // mesh's ID
     uint8_t               uses_vertex_colors;                                   // does this mesh have prebaked vertex lighting
 
-    uint32_t              polygons_count;                                       // number of all mesh's polygons
-    struct polygon_s     *polygons;                                             // polygons data
+    std::vector<polygon_s> polygons;                                             // polygons data
 
     struct polygon_s     *transparency_polygons;                                // transparency mesh's polygons list
 
@@ -70,8 +71,7 @@ typedef struct base_mesh_s
     uint32_t             *elements;                                             //
     uint32_t alpha_elements;
 
-    uint32_t              vertex_count;                                         // number of mesh's vertices
-    struct vertex_s      *vertices;
+    std::vector<vertex_s> vertices;
     
     uint32_t num_animated_elements;
     uint32_t num_alpha_animated_elements;
@@ -82,9 +82,9 @@ typedef struct base_mesh_s
     uint32_t transparent_polygon_count;
     struct transparent_polygon_reference_s *transparent_polygons;
 
-    btScalar              centre[3];                                            // geometry centre of mesh
-    btScalar              bb_min[3];                                            // AABB bounding volume
-    btScalar              bb_max[3];                                            // AABB bounding volume
+    btVector3 centre;                                            // geometry centre of mesh
+    btVector3 bb_min;                                            // AABB bounding volume
+    btVector3 bb_max;                                            // AABB bounding volume
     btScalar              R;                                                    // radius of the bounding sphere
     int8_t               *matrix_indices;                                       // vertices map for skin mesh
 
@@ -147,7 +147,7 @@ enum LightType
 
 typedef struct light_s
 {
-    float                       pos[4];                                         // world position
+    btVector3 pos;                                         // world position
     float                       colour[4];                                      // RGBA value
 
     float                       inner;
@@ -206,20 +206,20 @@ struct StaticMesh : public Object
     uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
     uint8_t                     was_rendered_lines;
     uint8_t                     hide;                                           // disable static mesh rendering
-    btScalar                    pos[3];                                         // model position
-    btScalar                    rot[3];                                         // model angles
-    GLfloat                     tint[4];                                        // model tint
+    btVector3 pos;                                         // model position
+    btVector3 rot;                                         // model angles
+    std::array<float,4> tint;                                        // model tint
 
-    btScalar                    vbb_min[3];                                     // visible bounding box
-    btScalar                    vbb_max[3];
-    btScalar                    cbb_min[3];                                     // collision bounding box
-    btScalar                    cbb_max[3];
+    btVector3 vbb_min;                                     // visible bounding box
+    btVector3 vbb_max;
+    btVector3 cbb_min;                                     // collision bounding box
+    btVector3 cbb_max;
 
-    btScalar                    transform[16];                                  // gl transformation matrix
-    struct obb_s               *obb;
-    struct engine_container_s  *self;
+    btTransform transform;                                  // gl transformation matrix
+    obb_s               *obb;
+    engine_container_s  *self;
 
-    struct base_mesh_s         *mesh;                                           // base model
+    base_mesh_s         *mesh;                                           // base model
     btRigidBody                *bt_body;
 };
 
@@ -240,11 +240,11 @@ typedef struct ss_bone_tag_s
     base_mesh_p             mesh_base;                                          // base mesh - pointer to the first mesh in array
     base_mesh_p             mesh_skin;                                          // base skinned mesh for ТР4+
     base_mesh_p             mesh_slot;
-    btScalar                offset[3];                                          // model position offset
+    btVector3 offset;                                          // model position offset
 
-    btScalar                qrotate[4];                                         // quaternion rotation
-    btScalar                transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
-    btScalar                full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
+    btQuaternion qrotate;                                         // quaternion rotation
+    btTransform transform;    // 4x4 OpenGL matrix for stack usage
+    btTransform full_transform;    // 4x4 OpenGL matrix for global usage
 
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
@@ -279,10 +279,10 @@ typedef struct ss_bone_frame_s
 {
     uint16_t                    bone_tag_count;                                 // number of bones
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
-    btScalar                    pos[3];                                         // position (base offset)
-    btScalar                    bb_min[3];                                      // bounding box min coordinates
-    btScalar                    bb_max[3];                                      // bounding box max coordinates
-    btScalar                    centre[3];                                      // bounding box centre
+    btVector3 pos;                                         // position (base offset)
+    btVector3 bb_min;                                      // bounding box min coordinates
+    btVector3 bb_max;                                      // bounding box max coordinates
+    btVector3 centre;                                      // bounding box centre
 
     struct ss_animation_s       animations;                                     // animations list
     
@@ -294,8 +294,8 @@ typedef struct ss_bone_frame_s
  */
 typedef struct bone_tag_s
 {
-    btScalar              offset[3];                                            // bone vector
-    btScalar              qrotate[4];                                           // rotation quaternion
+    btVector3 offset;                                            // bone vector
+    btQuaternion qrotate;                                           // rotation quaternion
 }bone_tag_t, *bone_tag_p;
 
 /*
@@ -306,11 +306,11 @@ typedef struct bone_frame_s
     uint16_t            bone_tag_count;                                         // number of bones
     uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
     struct bone_tag_s  *bone_tags;                                              // bones data
-    btScalar            pos[3];                                                 // position (base offset)
-    btScalar            bb_min[3];                                              // bounding box min coordinates
-    btScalar            bb_max[3];                                              // bounding box max coordinates
-    btScalar            centre[3];                                              // bounding box centre
-    btScalar            move[3];                                                // move command data
+    btVector3 pos;                                                 // position (base offset)
+    btVector3 bb_min;                                              // bounding box min coordinates
+    btVector3 bb_max;                                              // bounding box max coordinates
+    btVector3 centre;                                              // bounding box centre
+    btVector3 move;                                                // move command data
     btScalar            v_Vertical;                                             // jump command data
     btScalar            v_Horizontal;                                           // jump command data
 }bone_frame_t, *bone_frame_p ;
@@ -322,7 +322,7 @@ typedef struct mesh_tree_tag_s
 {
     base_mesh_p                 mesh_base;                                      // base mesh - pointer to the first mesh in array
     base_mesh_p                 mesh_skin;                                      // base skinned mesh for ТР4+
-    btScalar                    offset[3];                                      // model position offset
+    btVector3 offset;                                      // model position offset
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
     uint32_t                    body_part;
     uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
@@ -380,9 +380,9 @@ typedef struct skeletal_model_s
     uint32_t                    id;                                             // ID
     uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
     uint8_t                     hide;                                           // do not render
-    btScalar                    bbox_min[3];                                    // bbox info
-    btScalar                    bbox_max[3];
-    btScalar                    centre[3];                                      // the centre of model
+    btVector3 bbox_min;                                    // bbox info
+    btVector3 bbox_max;
+    btVector3 centre;                                      // the centre of model
 
     uint16_t                    animation_count;                                // number of animations
     struct animation_frame_s   *animations;                                     // animations data
@@ -411,11 +411,11 @@ void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count
 void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
 
 
-uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
+uint32_t Mesh_AddVertex(base_mesh_p mesh, const vertex_s &vertex);
 void Mesh_GenFaces(base_mesh_p mesh);
 
 /* bullet collision model calculation */
-btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh, bool is_static);
+btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh, bool is_static);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 

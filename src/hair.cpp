@@ -20,7 +20,6 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
         (!(parent_entity->bt.bt_body[setup->link_body]))         ) return false;
 
     skeletal_model_p model = World_GetModelByID(&engine_world, setup->model);
-    btScalar owner_body_transform[16];
 
     // No model to link to - bypass function.
 
@@ -40,7 +39,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
     // Setup initial position / angles.
 
-    Mat4_Mat4_mul(owner_body_transform, parent_entity->transform, parent_entity->bf.bone_tags[hair->owner_body].full_transform);
+    btTransform owner_body_transform = parent_entity->transform * parent_entity->bf.bone_tags[hair->owner_body].full_transform;
     // Number of elements (bodies) is equal to number of hair meshes.
 
     hair->element_count = model->mesh_count;
@@ -81,7 +80,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
         // Initialize motion state for body.
 
-        startTransform.setFromOpenGLMatrix(owner_body_transform);
+        startTransform = owner_body_transform;
         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
 
         // Make rigid body.
@@ -150,7 +149,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
             localA.setOrigin(setup->head_offset + btVector3(joint_x, 0.0, joint_y));
             localA.getBasis().setEulerZYX(setup->root_angle[0], setup->root_angle[1], setup->root_angle[2]);
             // Stealing this calculation because I need it for drawing
-            localA.getOpenGLMatrix(hair->owner_body_hair_root);
+            hair->owner_body_hair_root = localA;
 
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
@@ -228,7 +227,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
 void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *model)
 {
-    hair->mesh = (base_mesh_s *) calloc(sizeof(base_mesh_s), 1);
+    hair->mesh = new base_mesh_s();
     hair->mesh->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), engine_world.tex_count);
     uint32_t totalElements = 0;
 
@@ -238,7 +237,6 @@ void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *mod
         const base_mesh_s *original = model->mesh_tree[i].mesh_base;
 
         hair->mesh->num_texture_pages = std::max(hair->mesh->num_texture_pages, original->num_texture_pages);
-        hair->mesh->vertex_count += original->vertex_count;
 
         for (int j = 0; j < original->num_texture_pages; j++)
         {
@@ -249,20 +247,20 @@ void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *mod
 
     // Create arrays
     hair->mesh->elements = (uint32_t *) calloc(sizeof(uint32_t), totalElements);
-    hair->mesh->vertices = (vertex_s *) calloc(sizeof(vertex_s), hair->mesh->vertex_count);
 
     // - with matrix index information
-    hair->mesh->matrix_indices = (int8_t *) calloc(sizeof(int8_t [2]), hair->mesh->vertex_count);
+    hair->mesh->matrix_indices = (int8_t *) calloc(sizeof(int8_t [2]), hair->mesh->vertices.size());
 
     // Copy information
     uint32_t *elementsStartPerTexture = (uint32_t *) calloc(sizeof(uint32_t), hair->mesh->num_texture_pages);
-    uint32_t verticesStart = 0;
+    hair->mesh->vertices.clear();
     for (int i = 0; i < model->mesh_count; i++)
     {
         const base_mesh_s *original = model->mesh_tree[i].mesh_base;
 
         // Copy vertices
-        memcpy(&hair->mesh->vertices[verticesStart], original->vertices, sizeof(vertex_t) * original->vertex_count);
+        const size_t verticesStart = hair->mesh->vertices.size();
+        hair->mesh->vertices.insert(hair->mesh->vertices.end(), original->vertices.begin(), original->vertices.end());
 
         // Copy elements
         uint32_t originalElementsStart = 0;
@@ -284,17 +282,17 @@ void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *mod
          * (i.e. as one big rope). The shader and matrix then transform it
          * correctly.
          */
-        vec3_copy(hair->elements[i].position, model->mesh_tree[i].offset);
+        hair->elements[i].position = model->mesh_tree[i].offset;
         if (i > 0)
         {
             // TODO: This assumes the parent is always the preceding mesh.
             // True for hair, obviously wrong for everything else. Can stay
             // here, but must go when we start generalizing the whole thing.
-            vec3_add_to(hair->elements[i].position, hair->elements[i - 1].position);
+            hair->elements[i].position += hair->elements[i - 1].position;
         }
 
         // And create vertex data (including matrix indices)
-        for (int j = 0; j < original->vertex_count; j++) {
+        for (size_t j = 0; j < original->vertices.size(); j++) {
             if (original->vertices[j].position[1] <= 0)
             {
                 hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = i;
@@ -307,19 +305,16 @@ void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *mod
             }
 
             // Now move all the hair vertices
-            vec3_add_to(hair->mesh->vertices[verticesStart+j].position, hair->elements[i].position);
+            hair->mesh->vertices[verticesStart+j].position += hair->elements[i].position;
 
             // If the normal isn't fully in y direction, cancel its y component
             // This is perhaps a bit dubious.
             if (hair->mesh->vertices[verticesStart+j].normal[0] != 0 || hair->mesh->vertices[verticesStart+j].normal[2] != 0)
             {
                 hair->mesh->vertices[verticesStart+j].normal[1] = 0;
-                btScalar temp;
-                vec3_norm(hair->mesh->vertices[verticesStart+j].normal, temp);
+                hair->mesh->vertices[verticesStart+j].normal.normalize();
             }
         }
-
-        verticesStart += original->vertex_count;
     }
     free(elementsStartPerTexture);
 
@@ -466,7 +461,7 @@ void Hair_Update(std::shared_ptr<Entity> entity)
 
         /*btScalar new_transform[16];
 
-        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf.bone_tags[hair->owner_body].full_transform);
+        new_transform = entity->transform * entity->bf.bone_tags[hair->owner_body].full_transform;
 
         // Calculate mixed velocities.
         btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
@@ -479,7 +474,7 @@ void Hair_Update(std::shared_ptr<Entity> entity)
             btScalar sub_tr[16];
             btTransform ang_tr;
             btVector3 mix_ang;
-            Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
+            sub_tr = hair->owner_body_transform.inverse() * new_transform;
             ang_tr.setFromOpenGLMatrix(sub_tr);
             ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
             mix_ang *= 1.0 / engine_frame_time;

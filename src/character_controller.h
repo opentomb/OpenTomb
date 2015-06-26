@@ -191,31 +191,31 @@ class btConvexShape;
 
 typedef struct climb_info_s
 {
-    int8_t                         height_info;
-    int8_t                         can_hang;
+    int8_t                         height_info = 0;
+    int8_t                         can_hang = 0;
 
-    btScalar                       point[3];
-    btScalar                       n[3];
-    btScalar                       t[3];
-    btScalar                       up[3];
+    btVector3 point;
+    btVector3 n;
+    btVector3 t;
+    btVector3 up;
     btScalar                       floor_limit;
     btScalar                       ceiling_limit;
-    btScalar                       next_z_space;
+    btScalar                       next_z_space = 0;
 
-    int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
-    int8_t                         edge_hit;
+    int8_t                         wall_hit = 0;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
+    int8_t                         edge_hit = 0;
     btVector3                      edge_point;
     btVector3                      edge_normale;
     btVector3                      edge_tan_xy;
     btScalar                       edge_z_ang;
-    btCollisionObject             *edge_obj;
+    btCollisionObject             *edge_obj = nullptr;
 }climb_info_t, *climb_info_p;
 
 typedef struct height_info_s
 {
-    bt_engine_ClosestRayResultCallback         *cb;
-    bt_engine_ClosestConvexResultCallback      *ccb;
-    btConvexShape                              *sp;
+    std::shared_ptr<bt_engine_ClosestRayResultCallback> cb;
+    std::shared_ptr<bt_engine_ClosestConvexResultCallback> ccb;
+    std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);
 
     int8_t                                      ceiling_climb;
     int8_t                                      walls_climb;
@@ -223,48 +223,54 @@ typedef struct height_info_s
 
     btVector3                                   floor_normale;
     btVector3                                   floor_point;
-    int16_t                                     floor_hit;
+    int16_t                                     floor_hit = 0;
     btCollisionObject                          *floor_obj;
 
     btVector3                                   ceiling_normale;
     btVector3                                   ceiling_point;
-    int16_t                                     ceiling_hit;
+    int16_t                                     ceiling_hit = 0;
     btCollisionObject                          *ceiling_obj;
 
     btScalar                                    transition_level;
-    int16_t                                     water;
+    int16_t                                     water = 0;
     int16_t                                     quicksand;
 }height_info_t, *height_info_p;
 
 typedef struct character_command_s
 {
-    btScalar    rot[3];
-    int8_t      move[3];
+    btVector3 rot;
+    std::array<int8_t,3> move{{0,0,0}};
 
     int8_t      roll;
     int8_t      jump;
-    int8_t      crouch;
-    int8_t      shift;
-    int8_t      action;
+    int8_t      crouch = 0;
+    int8_t      shift = 0;
+    int8_t      action = 0;
     int8_t      ready_weapon;
     int8_t      sprint;
 
-    int8_t      flags;
+    int8_t      flags = 0;
 }character_command_t, *character_command_p;
 
 typedef struct character_response_s
 {
-    int8_t      kill;
-    int8_t      vertical_collide;
-    int8_t      horizontal_collide;
+    int8_t      kill = 0;
+    int8_t      vertical_collide = 0;
+    int8_t      horizontal_collide = 0;
     //int8_t      step_up;
-    int8_t      slide;
+    int8_t      slide = 0;
 }character_response_t, *character_response_p;
 
 typedef struct character_param_s
 {
-    float       param[PARAM_LASTINDEX];
-    float       maximum[PARAM_LASTINDEX];
+    std::array<float,PARAM_LASTINDEX> param{{}};
+    std::array<float,PARAM_LASTINDEX> maximum{{}};
+
+    character_param_s()
+    {
+        param.fill(0);
+        maximum.fill(0);
+    }
 }character_param_t, *character_param_p;
 
 typedef struct character_stats_s
@@ -290,51 +296,52 @@ typedef struct inventory_node_s
 
 struct Hair;
 
-typedef struct character_s
+struct Character
 {
-    std::shared_ptr<Entity>    ent;                    // actor entity
-    struct character_command_s   cmd;                    // character control commands
-    struct character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    std::shared_ptr<Entity>    ent = nullptr;                    // actor entity
+    character_command_s   cmd;                    // character control commands
+    character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
     
-    struct inventory_node_s     *inventory;
-    struct character_param_s     parameters;
-    struct character_stats_s     statistics;
+    inventory_node_s     *inventory = nullptr;
+    character_param_s     parameters{};
+    character_stats_s     statistics;
     
-    std::vector< std::shared_ptr<Hair> >hairs;
+    std::vector<std::shared_ptr<Hair>> hairs{};
     
-    int                          current_weapon;
-    int                          weapon_current_state;
+    int                          current_weapon = 0;
+    int                          weapon_current_state = 0;
     
-    int                        (*state_func)(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_anim);
+    int (*state_func)(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_anim) = nullptr;
     
-    int8_t                       cam_follow_center;
-    btScalar                     speed_mult;
-    btScalar                     min_step_up_height;
-    btScalar                     max_step_up_height;
-    btScalar                     max_climb_height;
+    int8_t                       cam_follow_center = 0;
+    btScalar                     speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
+    btScalar                     min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
+    btScalar                     max_step_up_height = DEFAULT_MAX_STEP_UP_HEIGHT;
+    btScalar                     max_climb_height = DEFAULT_CLIMB_UP_HEIGHT;
     btScalar                     fall_down_height;
-    btScalar                     critical_slant_z_component;
-    btScalar                     critical_wall_component;
+    btScalar                     critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
+    btScalar                     critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
 
-    btScalar                     climb_r;                // climbing sensor radius
-    btScalar                     forvard_size;           // offset for climbing calculation
-    btScalar                     Height;                 // base character height
-    btScalar                     wade_depth;             // water depth that enable wade walk
-    btScalar                     swim_depth;             // depth offset for starting to swim
+    btScalar                     climb_r = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
+    btScalar                     forvard_size = 48;           // offset for climbing calculation
+    btScalar                     Height = CHARACTER_BASE_HEIGHT;                 // base character height
+    btScalar                     wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
+    btScalar                     swim_depth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
     
-    btSphereShape               *sphere;                 // needs to height calculation
-    btSphereShape               *climb_sensor;
+    std::unique_ptr<btSphereShape> sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
+    std::unique_ptr<btSphereShape> climb_sensor;
 
-    struct height_info_s         height_info;
-    struct climb_info_s          climb;
+    height_info_s         height_info{};
+    climb_info_s          climb{};
 
-    std::shared_ptr<Entity> traversed_object;
+    std::shared_ptr<Entity> traversed_object = nullptr;
     
-    bt_engine_ClosestRayResultCallback                  *ray_cb;
-    bt_engine_ClosestConvexResultCallback               *convex_cb;
-}character_t, *character_p;
+    std::shared_ptr<bt_engine_ClosestRayResultCallback> ray_cb;
+    std::shared_ptr<bt_engine_ClosestConvexResultCallback> convex_cb;
 
-void Character_Create(std::shared_ptr<Entity> ent);
+    Character(std::shared_ptr<Entity> entity);
+};
+
 void Character_Clean(std::shared_ptr<Entity> ent);
 
 int32_t Character_AddItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
@@ -342,10 +349,10 @@ int32_t Character_RemoveItem(std::shared_ptr<Entity> ent, uint32_t item_id, int3
 int32_t Character_RemoveAllItems(std::shared_ptr<Entity> ent);
 int32_t Character_GetItemsCount(std::shared_ptr<Entity> ent, uint32_t item_id);                // returns items count
 
-void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset = 0.0);
-int Character_CheckNextStep(std::shared_ptr<Entity> ent, btScalar offset[3], struct height_info_s *nfc);
+void Character_GetHeightInfo(const btVector3& pos, struct height_info_s *fc, btScalar v_offset = 0.0);
+int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3 &offset, struct height_info_s *nfc);
 int Character_HasStopSlant(std::shared_ptr<Entity> ent, height_info_p next_fc);
-climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
+climb_info_t Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 offset, struct height_info_s *nfc, btScalar test_height);
 climb_info_t Character_CheckWallsClimbability(std::shared_ptr<Entity> ent);
 
 void Character_UpdateCurrentHeight(std::shared_ptr<Entity> ent);

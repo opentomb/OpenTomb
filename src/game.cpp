@@ -34,7 +34,7 @@ extern "C" {
 #include "hair.h"
 #include "ragdoll.h"
 
-btScalar cam_angles[3] = {0.0, 0.0, 0.0};
+btVector3 cam_angles = {0.0, 0.0, 0.0};
 
 extern btScalar time_scale;
 extern lua_State *engine_lua;
@@ -251,17 +251,17 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
     {
         uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf.animations.model->id, room_id,
-                ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+                ent->transform.getOrigin()[0], ent->transform.getOrigin()[1], ent->transform.getOrigin()[2],
                 ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
     }
     else
     {
         fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
-                ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+                ent->transform.getOrigin()[0], ent->transform.getOrigin()[1], ent->transform.getOrigin()[2],
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.animations.current_animation, ent->bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.animations.next_state, ent->bf.animations.last_state);
     fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->id, ent->self->collide_flag);
@@ -361,11 +361,11 @@ int Game_Save(const char* name)
 
 void Game_ApplyControls(std::shared_ptr<Entity> ent)
 {
-    int8_t move_logic[3];
     int8_t look_logic[3];
 
     // Keyboard move logic
 
+    std::array<int8_t,3> move_logic;
     move_logic[0] = control_states.move_forward - control_states.move_backward;
     move_logic[1] = control_states.move_right - control_states.move_left;
     move_logic[2] = control_states.move_up - control_states.move_down;
@@ -454,10 +454,10 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         renderer.cam->current_room = Room_FindPosCogerrence(renderer.cam->pos, renderer.cam->current_room);
 
         ent->angles[0] = 180.0 * cam_angles[0] / M_PI;
-        pos.m_floats[0] = renderer.cam->pos[0] + renderer.cam->view_dir[0] * control_states.cam_distance;
-        pos.m_floats[1] = renderer.cam->pos[1] + renderer.cam->view_dir[1] * control_states.cam_distance;
-        pos.m_floats[2] = renderer.cam->pos[2] + renderer.cam->view_dir[2] * control_states.cam_distance - 512.0;
-        vec3_copy(ent->transform+12, pos.m_floats);
+        pos[0] = renderer.cam->pos[0] + renderer.cam->view_dir[0] * control_states.cam_distance;
+        pos[1] = renderer.cam->pos[1] + renderer.cam->view_dir[1] * control_states.cam_distance;
+        pos[2] = renderer.cam->pos[2] + renderer.cam->view_dir[2] * control_states.cam_distance - 512.0;
+        ent->transform.getOrigin() = pos;
         Entity_UpdateRotation(ent);
     }
     else
@@ -516,12 +516,12 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             ent->character->cmd.rot[1] = 360.0 / M_PI * engine_frame_time * (btScalar)move_logic[0];
         }
 
-        vec3_copy(ent->character->cmd.move, move_logic);
+        ent->character->cmd.move = move_logic;
     }
 }
 
 
-bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo)
+bool Cam_HasHit(std::shared_ptr<bt_engine_ClosestConvexResultCallback> cb, btTransform &cameraFrom, btTransform &cameraTo)
 {
     btSphereShape cameraSphere(16.0);
     cb->m_closestHitFraction = 1.0;
@@ -535,19 +535,19 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
 {
     btTransform cameraFrom, cameraTo;
     btVector3 cam_pos(cam->pos[0], cam->pos[1], cam->pos[2]), cam_pos2;
-    bt_engine_ClosestConvexResultCallback *cb;
 
     //Reset to initial
     cameraFrom.setIdentity();
     cameraTo.setIdentity();
 
+    std::shared_ptr<bt_engine_ClosestConvexResultCallback> cb;
     if(ent->character)
     {
         cb = ent->character->convex_cb;
     }
     else
     {
-        cb = new bt_engine_ClosestConvexResultCallback(ent->self);
+        cb = std::make_shared<bt_engine_ClosestConvexResultCallback>(ent->self);
         cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     }
 
@@ -566,8 +566,8 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
             {
                 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(cam_pos2);
-                cam_pos2.m_floats[0] += sinf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                cam_pos2.m_floats[1] -= cosf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                cam_pos2[0] += sinf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                cam_pos2[1] -= cosf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
                 cameraTo.setOrigin(cam_pos2);
 
                 //If collided we want to go right otherwise stay left
@@ -575,8 +575,8 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
                 {
                     cam_pos2 = cam_pos;
                     cameraFrom.setOrigin(cam_pos2);
-                    cam_pos2.m_floats[0] += sinf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                    cam_pos2.m_floats[1] -= cosf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                    cam_pos2[0] += sinf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
+                    cam_pos2[1] -= cosf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
                     cameraTo.setOrigin(cam_pos2);
 
                     //If collided we want to go to back else right
@@ -634,26 +634,26 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
 
     if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
     {
-        vec3_copy(cam_pos.m_floats, ent->obb->centre);
+        cam_pos = ent->obb->centre;
         ent->character->cam_follow_center--;
     }
     else
     {
-        Mat4_vec3_mul(cam_pos.m_floats, ent->transform, ent->bf.bone_tags->full_transform+12);
-        cam_pos.m_floats[2] += dz;
+        cam_pos = ent->transform * ent->bf.bone_tags->full_transform.getOrigin();
+        cam_pos[2] += dz;
     }
 
     //Code to manage screen shaking effects
     if((renderer.cam->shake_time > 0.0) && (renderer.cam->shake_value > 0.0))
     {
-        cam_pos.m_floats[0] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
-        cam_pos.m_floats[1] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
-        cam_pos.m_floats[2] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
+        cam_pos[0] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
+        cam_pos[1] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
+        cam_pos[2] += ((rand() % abs(renderer.cam->shake_value)) - (renderer.cam->shake_value / 2)) * renderer.cam->shake_time;;
         renderer.cam->shake_time  = (renderer.cam->shake_time < 0.0)?(0.0):(renderer.cam->shake_time)-engine_frame_time;
     }
 
     cameraFrom.setOrigin(cam_pos);
-    cam_pos.m_floats[2] += dz;
+    cam_pos[2] += dz;
     cameraTo.setOrigin(cam_pos);
     if(Cam_HasHit(cb, cameraFrom, cameraTo))
     {
@@ -664,9 +664,9 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
     if (dx != 0.0)
     {
         cameraFrom.setOrigin(cam_pos);
-        cam_pos.m_floats[0] += dx * cam->right_dir[0];
-        cam_pos.m_floats[1] += dx * cam->right_dir[1];
-        cam_pos.m_floats[2] += dx * cam->right_dir[2];
+        cam_pos[0] += dx * cam->right_dir[0];
+        cam_pos[1] += dx * cam->right_dir[1];
+        cam_pos[2] += dx * cam->right_dir[2];
         cameraTo.setOrigin(cam_pos);
         if(Cam_HasHit(cb, cameraFrom, cameraTo))
         {
@@ -675,8 +675,8 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
         }
 
         cameraFrom.setOrigin(cam_pos);
-        cam_pos.m_floats[0] += sinf(cam_angles[0]) * control_states.cam_distance;
-        cam_pos.m_floats[1] -= cosf(cam_angles[0]) * control_states.cam_distance;
+        cam_pos[0] += sinf(cam_angles[0]) * control_states.cam_distance;
+        cam_pos[1] -= cosf(cam_angles[0]) * control_states.cam_distance;
         cameraTo.setOrigin(cam_pos);
         if(Cam_HasHit(cb, cameraFrom, cameraTo))
         {
@@ -686,7 +686,7 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
     }
 
     //Update cam pos
-    vec3_copy(cam->pos, cam_pos.m_floats);
+    cam->pos = cam_pos;
 
     //Modify cam pos for quicksand rooms
     cam->pos[2] -= 128.0;
@@ -699,18 +699,13 @@ void Cam_FollowEntity(struct camera_s *cam, std::shared_ptr<Entity> ent, btScala
 
     Cam_SetRotation(cam, cam_angles);
     cam->current_room = Room_FindPosCogerrence(cam->pos, cam->current_room);
-
-    if(!ent->character)
-        delete[] cb;
 }
 
 
 void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
-    for(std::map<uint32_t, std::shared_ptr<Entity> >::iterator it = entities.begin();
-        it != entities.end();
-        ++it) {
-        std::shared_ptr<Entity> entity = it->second;
+    for(auto entityPair : entities) {
+        std::shared_ptr<Entity> entity = entityPair.second;
         if(entity->state_flags & ENTITY_STATE_ENABLED)
         {
             Entity_ProcessSector(entity);
@@ -722,10 +717,8 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 
 void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
-    for(std::map<uint32_t, std::shared_ptr<Entity> >::iterator it = entities.begin();
-        it != entities.end();
-        ++it) {
-        std::shared_ptr<Entity> entity = it->second;
+    for(auto entityPair : entities) {
+        std::shared_ptr<Entity> entity = entityPair.second;
         if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
         {
             Entity_UpdateRigidBody(entity, 0);

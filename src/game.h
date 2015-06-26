@@ -34,7 +34,7 @@ struct room_sector_s;
 
 class bt_engine_ClosestConvexResultCallback;
 
-extern btScalar cam_angles[3];
+extern btVector3 cam_angles;
 
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(lua_State *lua);

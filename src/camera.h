@@ -10,6 +10,8 @@ struct frustum_s;
 #include <SDL2/SDL_opengl.h>
 
 #include <memory>
+#include <vector>
+#include "vmath.h"
 
 #define TR_CAM_MAX_SHAKE_DISTANCE   8192.0
 #define TR_CAM_DEFAULT_SHAKE_POWER  100.0
@@ -35,21 +37,20 @@ struct frustum_s;
 #define TR_CAM_TARG_LEFT  (2)
 #define TR_CAM_TARG_RIGHT (3)
 
-
 typedef struct camera_s
 {
-    GLfloat                     pos[3];                 // camera position
-    GLfloat                     prev_pos[3];            // previous camera position
-    GLfloat                     view_dir[4];            // view cameradirection
-    GLfloat                     up_dir[4];              // up vector
-    GLfloat                     right_dir[4];           // strafe vector
-    GLfloat                     ang[3];                 // camera orientation
+    btVector3                   pos;                 // camera position
+    btVector3                   prev_pos;            // previous camera position
+    btVector3                   view_dir;            // view cameradirection
+    btVector3 up_dir;              // up vector
+    btVector3 right_dir;           // strafe vector
+    btVector3 ang;                 // camera orientation
 
-    GLfloat                     gl_view_mat[16];
-    GLfloat                     gl_proj_mat[16];
-    GLfloat                     gl_view_proj_mat[16];
+    btTransform gl_view_mat;
+    btTransform gl_proj_mat;
+    btTransform gl_view_proj_mat;
 
-    GLfloat                     clip_planes[16];        // frustum side clip planes
+    btVector3 clip_planes[4];        // frustum side clip planes
     struct frustum_s            *frustum;               // camera frustum structure
 
     GLfloat                     dist_near;
@@ -93,8 +94,8 @@ void Cam_MoveAlong(camera_p cam, GLfloat dist);
 void Cam_MoveStrafe(camera_p cam, GLfloat dist);
 void Cam_MoveVertical(camera_p cam, GLfloat dist);
 void Cam_Shake(camera_p cam, GLfloat power, GLfloat time);         // make camera shake
-void Cam_DeltaRotation(camera_p cam, GLfloat angles[3]);           // rotate camera around current camera coordinate system
-void Cam_SetRotation(camera_p cam, GLfloat angles[3]);             // set orientation by angles
+void Cam_DeltaRotation(camera_p cam, const btVector3 &angles);           // rotate camera around current camera coordinate system
+void Cam_SetRotation(camera_p cam, const btVector3& angles);             // set orientation by angles
 void Cam_RecalcClipPlanes(camera_p cam);                           // recalculation of camera frustum clipplanes
 
 #endif

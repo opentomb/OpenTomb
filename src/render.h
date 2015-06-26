@@ -10,6 +10,7 @@
 #include "bullet/LinearMath/btIDebugDraw.h"
 
 #include <memory>
+#include <vector>
 
 #define R_DRAW_WIRE             0x00000001      // Wireframe rendering
 #define R_DRAW_ROOMBOXES        0x00000002      // Show room bounds
@@ -52,21 +53,19 @@ class vertex_array;
 
 class render_DebugDrawer:public btIDebugDraw
 {
-    uint32_t m_debugMode;
-    uint32_t m_max_lines;
-    uint32_t m_lines;
-    bool     m_need_realloc;
+    uint32_t m_debugMode = 0;
 
-    GLfloat m_color[3];
-    GLfloat *m_buffer;
+    std::array<GLfloat,3> m_color{{0,0,0}};
+    std::vector<std::array<GLfloat,3>> m_buffer;
     
-    struct obb_s *m_obb;
+    std::unique_ptr<obb_s> m_obb;
 
-    void addLine(const GLfloat start[3], const GLfloat end[3]);
-    void addLine(const GLfloat start[3], const GLfloat startColor[3], const GLfloat end[3], const GLfloat endColor[3]);
+    void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &end);
+    void addLine(const btVector3& start, const btVector3& end);
+    void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &startColor, const std::array<GLfloat,3> &end, const std::array<GLfloat,3> &endColor);
     
-    vertex_array *m_vertex_array;
-    GLuint m_glbuffer;
+    vertex_array *m_vertexArray = nullptr;
+    GLuint m_glbuffer = 0;
     
     public:
         // engine debug function
@@ -74,7 +73,7 @@ class render_DebugDrawer:public btIDebugDraw
         ~render_DebugDrawer();
         bool IsEmpty()
         {
-            return m_lines == 0;
+            return m_buffer.empty();
         }
         void reset();
         void render();
@@ -84,19 +83,19 @@ class render_DebugDrawer:public btIDebugDraw
             m_color[1] = g;
             m_color[2] = b;
         }
-        void drawAxis(btScalar r, btScalar transform[16]);
-        void drawPortal(struct portal_s *p);
-        void drawFrustum(struct frustum_s *f);
-        void drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform);
+        void drawAxis(btScalar r, const btTransform& transform);
+        void drawPortal(const portal_s &p);
+        void drawFrustum(const frustum_s &f);
+        void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
         void drawOBB(struct obb_s *obb);
-        void drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals);
-        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16]);
+        void drawMeshDebugLines(struct base_mesh_s *mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals);
+        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, const btTransform& transform);
         void drawEntityDebugLines(std::shared_ptr<Entity> entity);
         void drawSectorDebugLines(struct room_sector_s *rs);
         void drawRoomDebugLines(std::shared_ptr<Room> room, struct render_s *render);
         
         // bullet's debug interface
-        virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
+        virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color);
         virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color);
         virtual void   reportErrorWarning(const char* warningString);
         virtual void   draw3dText(const btVector3& location, const char* textString);
@@ -176,13 +175,13 @@ void Render_InitGlobals();
 void Render_Init();
 
 render_list_p Render_CreateRoomListArray(unsigned int count);
-void Render_Entity(std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
-void Render_DynamicEntity(const struct lit_shader_description *shader, std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
-void Render_DynamicEntitySkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btScalar pMatrix[16]);
-void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16]);
-void Render_SkeletalModelSkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btScalar mvMatrix[16], const btScalar pMatrix[16]);
-void Render_Hair(std::shared_ptr<Entity> entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
-void Render_SkyBox(const btScalar matrix[16]);
+void Render_Entity(std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection);
+void Render_DynamicEntity(const struct lit_shader_description *shader, std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix);
+void Render_DynamicEntitySkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btTransform& pMatrix);
+void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
+void Render_SkeletalModelSkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btTransform &mvMatrix, const btTransform &pMatrix);
+void Render_Hair(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix);
+void Render_SkyBox(const btTransform &matrix);
 void Render_Mesh(struct base_mesh_s *mesh);
 void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *p, const struct unlit_tinted_shader_description *shader);
 void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
@@ -191,8 +190,8 @@ void Render_UpdateAnimTextures();
 void Render_CleanList();
 
 
-void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
-void Render_Room_Sprites(std::shared_ptr<Room> room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16]);
+void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTransform& matrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection);
+void Render_Room_Sprites(std::shared_ptr<Room> room, struct render_s *render, const btTransform& modelViewMatrix, const btTransform& projectionMatrix);
 int Render_AddRoom(std::shared_ptr<Room> room);
 void Render_DrawList();
 void Render_DrawList_DebugLines();
@@ -203,7 +202,7 @@ void Render_GenWorldList();
 
 void Render_SetWorld(struct world_s *world);
 
-void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
+void Render_CalculateWaterTint(std::array<float,4> *tint, uint8_t fixed_colour);
 
 /*
  * DEBUG PRIMITIVES RENDERING

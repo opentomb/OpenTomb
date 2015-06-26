@@ -27,7 +27,6 @@
 
 void Room_Empty(std::shared_ptr<Room> room)
 {
-    portal_p p;
     btRigidBody* body;
 
     if(room == NULL)
@@ -37,19 +36,9 @@ void Room_Empty(std::shared_ptr<Room> room)
 
     room->containers = NULL;
 
-    p = room->portals;
     room->near_room_list_size = 0;
 
-    if(room->portal_count)
-    {
-        for(uint16_t i=0;i<room->portal_count;i++,p++)
-        {
-            Portal_Clear(p);
-        }
-        free(room->portals);
-        room->portals = NULL;
-        room->portal_count = 0;
-    }
+    room->portals.clear();
 
     room->frustum = NULL;
 
@@ -84,9 +73,8 @@ void Room_Empty(std::shared_ptr<Room> room)
                 room->static_mesh[i]->bt_body = NULL;
             }
 
-            OBB_Clear(room->static_mesh[i]->obb);
-            free(room->static_mesh[i]->obb);
-            room->static_mesh[i]->obb = NULL;
+            delete room->static_mesh[i]->obb;
+            room->static_mesh[i]->obb = nullptr;
             if(room->static_mesh[i]->self)
             {
                 room->static_mesh[i]->self->room = NULL;
@@ -266,8 +254,8 @@ room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs)
     if((rs != NULL) && (rs->portal_to_room >= 0))
     {
         std::shared_ptr<Room> r = engine_world.rooms[rs->portal_to_room];
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (rs->pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             rs = r->sectors + (ind_x * r->sectors_y + ind_y);
@@ -291,8 +279,8 @@ room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs)
         {
             r = r->base_room;
         }
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (rs->pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             rs = r->sectors + (ind_x * r->sectors_y + ind_y);
@@ -308,8 +296,8 @@ room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs)
     if((rs != NULL) && (rs->owner_room->base_room != NULL))
     {
         std::shared_ptr<Room> r = rs->owner_room->base_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (rs->pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             rs = r->sectors + (ind_x * r->sectors_y + ind_y);
@@ -325,8 +313,8 @@ room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs)
     if((rs != NULL) && (rs->owner_room->alternate_room != NULL))
     {
         std::shared_ptr<Room> r = rs->owner_room->alternate_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (rs->pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
             rs = r->sectors + (ind_x * r->sectors_y + ind_y);
@@ -611,7 +599,7 @@ int compEntityLT(void *x, void *y)
 }
 
 
-uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3], int32_t id)
+uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3* pos, const btVector3* ang, int32_t id)
 {
     if(!engine_world.entity_tree.empty())
     {
@@ -624,17 +612,17 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             {
                 if(pos != NULL)
                 {
-                    vec3_copy(ent->transform+12, pos);
+                    ent->transform.getOrigin() = *pos;
                 }
                 if(ang != NULL)
                 {
-                    vec3_copy(ent->angles, ang);
+                    ent->angles = *ang;
                     Entity_UpdateRotation(ent);
                 }
                 if(room_id < engine_world.rooms.size())
                 {
                     ent->self->room = engine_world.rooms[ room_id ];
-                    ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
+                    ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform.getOrigin());
                 }
                 else
                 {
@@ -658,17 +646,17 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
 
             if(pos != NULL)
             {
-                vec3_copy(ent->transform+12, pos);
+                ent->transform.getOrigin() = *pos;
             }
             if(ang != NULL)
             {
-                vec3_copy(ent->angles, ang);
+                ent->angles = *ang;
                 Entity_UpdateRotation(ent);
             }
             if(room_id < engine_world.rooms.size())
             {
                 ent->self->room = engine_world.rooms[ room_id ];
-                ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
+                ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform.getOrigin());
             }
             else
             {
@@ -741,7 +729,7 @@ inline int Room_IsPointIn(std::shared_ptr<Room> room, btScalar dot[3])
 }
 
 
-std::shared_ptr<Room> Room_FindPos(btScalar pos[3])
+std::shared_ptr<Room> Room_FindPos(const btVector3& pos)
 {
     for(auto r : engine_world.rooms)
     {
@@ -757,7 +745,7 @@ std::shared_ptr<Room> Room_FindPos(btScalar pos[3])
 }
 
 
-std::shared_ptr<Room> Room_FindPosCogerrence(btScalar new_pos[3], std::shared_ptr<Room> room)
+std::shared_ptr<Room> Room_FindPosCogerrence(const btVector3 &new_pos, std::shared_ptr<Room> room)
 {
     if(room == NULL)
     {
@@ -807,7 +795,7 @@ std::shared_ptr<Room> Room_GetByID(world_p w, unsigned int ID)
 }
 
 
-room_sector_p Room_GetSectorRaw(std::shared_ptr<Room> room, btScalar pos[3])
+room_sector_p Room_GetSectorRaw(std::shared_ptr<Room> room, const btVector3& pos)
 {
     int x, y;
     room_sector_p ret = NULL;
@@ -817,8 +805,8 @@ room_sector_p Room_GetSectorRaw(std::shared_ptr<Room> room, btScalar pos[3])
         return NULL;
     }
 
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
+    x = (int)(pos[0] - room->transform.getOrigin()[0]) / 1024;
+    y = (int)(pos[1] - room->transform.getOrigin()[1]) / 1024;
     if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
     {
         return NULL;
@@ -861,8 +849,8 @@ room_sector_p Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3
         return NULL;
     }
 
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
+    x = (int)(pos[0] - room->transform.getOrigin()[0]) / 1024;
+    y = (int)(pos[1] - room->transform.getOrigin()[1]) / 1024;
     if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
     {
         return NULL;
@@ -896,7 +884,7 @@ room_sector_p Sector_CheckFlip(room_sector_p rs)
 }
 
 
-room_sector_p Room_GetSectorXYZ(std::shared_ptr<Room> room, btScalar pos[3])
+room_sector_p Room_GetSectorXYZ(std::shared_ptr<Room> room, const btVector3& pos)
 {
     int x, y;
     room_sector_p ret = NULL;
@@ -908,8 +896,8 @@ room_sector_p Room_GetSectorXYZ(std::shared_ptr<Room> room, btScalar pos[3])
         return NULL;
     }
 
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
+    x = (int)(pos[0] - room->transform.getOrigin()[0]) / 1024;
+    y = (int)(pos[1] - room->transform.getOrigin()[1]) / 1024;
     if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
     {
         return NULL;
@@ -1052,11 +1040,11 @@ void Room_SwapPortals(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_roo
     //Update portals in room rooms
     for(auto r : engine_world.rooms)//For every room in the world itself
     {
-        for(uint16_t j=0;j<r->portal_count;j++)//For every portal in this room
+        for(portal_s& p : r->portals) //For every portal in this room
         {
-            if(r->portals[j].dest_room->id == room->id)//If a portal is linked to the input room
+            if(p.dest_room->id == room->id)//If a portal is linked to the input room
             {
-                r->portals[j].dest_room = dest_room;//The portal destination room is the destination room!
+                p.dest_room = dest_room;//The portal destination room is the destination room!
                 //Con_Printf("The current room %d! has room %d joined to it!", room->id, i);
             }
         }
@@ -1066,19 +1054,17 @@ void Room_SwapPortals(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_roo
 
 void Room_SwapItems(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_room)
 {
-    engine_container_p t;
-
-    for(t=room->containers;t!=NULL;t=t->next)
+    for(auto t=room->containers;t!=NULL;t=t->next)
     {
         t->room = dest_room;
     }
 
-    for(t=dest_room->containers;t!=NULL;t=t->next)
+    for(auto t=dest_room->containers;t!=NULL;t=t->next)
     {
         t->room = room;
     }
 
-    SWAPT(room->containers, dest_room->containers, t);
+    std::swap(room->containers, dest_room->containers);
 }
 
 int World_AddEntity(world_p world, std::shared_ptr<Entity> entity)
@@ -1185,37 +1171,34 @@ struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world)
 /*
  * Check for join portals existing
  */
-int Room_IsJoined(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2)
+bool Room_IsJoined(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2)
 {
-    portal_p p = r1->portals;
-    for(uint16_t i=0;i<r1->portal_count;i++,p++)
+    for(const portal_s& p : r1->portals)
     {
-        if(p->dest_room->id == r2->id)
+        if(p.dest_room->id == r2->id)
         {
-            return 1;
+            return true;
         }
     }
 
-    p = r2->portals;
-    for(uint16_t i=0;i<r2->portal_count;i++,p++)
+    for(const portal_s& p : r2->portals)
     {
-        if(p->dest_room->id == r1->id)
+        if(p.dest_room->id == r1->id)
         {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 void Room_BuildNearRoomsList(std::shared_ptr<Room> room)
 {
     room->near_room_list_size = 0;
 
-    portal_p p = room->portals;
-    for(uint16_t i=0;i<room->portal_count;i++,p++)
+    for(const portal_s& p : room->portals)
     {
-        Room_AddToNearRoomsList(room, p->dest_room);
+        Room_AddToNearRoomsList(room, p.dest_room);
     }
 
     uint16_t nc1 = room->near_room_list_size;
@@ -1223,10 +1206,9 @@ void Room_BuildNearRoomsList(std::shared_ptr<Room> room)
     for(uint16_t i=0;i<nc1;i++)
     {
         std::shared_ptr<Room> r = room->near_room_list[i];
-        p = r->portals;
-        for(uint16_t j=0;j<r->portal_count;j++,p++)
+        for(const portal_s& p : r->portals)
         {
-            Room_AddToNearRoomsList(room, p->dest_room);
+            Room_AddToNearRoomsList(room, p.dest_room);
         }
     }
 }

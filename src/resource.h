@@ -148,8 +148,8 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
-void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v);
-void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c);
+void TR_vertex_to_arr(btVector3 &v, const tr5_vertex_t &tr_v);
+void TR_color_to_arr(std::array<GLfloat, 4> &v, const tr5_colour_t &tr_c);
 
 // Functions for getting various parameters from legacy TR structs.
 

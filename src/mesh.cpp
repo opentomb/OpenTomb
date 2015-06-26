@@ -16,7 +16,7 @@
 #include "bullet/btBulletDynamicsCommon.h"
 
 
-vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3]);
+vertex_p FindVertexInMesh(base_mesh_p mesh, const btVector3 &v);
 
 void BaseMesh_Clear(base_mesh_p mesh)
 {
@@ -32,24 +32,14 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->vbo_index_array = 0;
     }
 
-    if(mesh->polygons != NULL)
-    {
-        for(uint32_t i=0;i<mesh->polygons_count;i++)
-        {
-            Polygon_Clear(mesh->polygons+i);
-        }
-        free(mesh->polygons);
-        mesh->polygons = NULL;
-        mesh->polygons_count = 0;
-    }
+    mesh->polygons.clear();
 
     if(mesh->transparency_polygons != NULL)
     {
         polygon_p p = mesh->transparency_polygons;
         for(polygon_p next=p->next;p!=NULL;)
         {
-            Polygon_Clear(p);
-            free(p);
+            delete p;
             p = next;
             if(p != NULL)
             {
@@ -59,12 +49,7 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->transparency_polygons = NULL;
     }
 
-    if(mesh->vertex_count)
-    {
-        free(mesh->vertices);
-        mesh->vertices = NULL;
-        mesh->vertex_count = 0;
-    }
+    mesh->vertices.clear();
 
     if(mesh->matrix_indices)
     {
@@ -83,8 +68,6 @@ void BaseMesh_Clear(base_mesh_p mesh)
         free(mesh->elements);
         mesh->elements = NULL;
     }
-
-    mesh->vertex_count = 0;
 }
 
 
@@ -93,13 +76,13 @@ void BaseMesh_Clear(base_mesh_p mesh)
  */
 void BaseMesh_FindBB(base_mesh_p mesh)
 {
-    if(mesh->vertex_count > 0)
+    if(!mesh->vertices.empty())
     {
-        vertex_p v = mesh->vertices;
-        vec3_copy(mesh->bb_min, v->position);
-        vec3_copy(mesh->bb_max, v->position);
+        const vertex_s* v = mesh->vertices.data();
+        mesh->bb_min = v->position;
+        mesh->bb_max = v->position;
         v ++;
-        for(uint32_t i=1;i<mesh->vertex_count;i++,v++)
+        for(uint32_t i=1; i<mesh->vertices.size(); i++, v++)
         {
             // X
             if(mesh->bb_min[0] > v->position[0])
@@ -145,14 +128,14 @@ void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh)
     /// now, begin VBO filling!
     glGenBuffersARB(1, &mesh->vbo_vertex_array);
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_vertex_array);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * sizeof(vertex_t), mesh->vertices, GL_STATIC_DRAW_ARB);
+    glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertices.size() * sizeof(vertex_t), mesh->vertices.data(), GL_STATIC_DRAW_ARB);
 
     // Store additional skinning information
     if (mesh->matrix_indices)
     {
         glGenBuffersARB(1, &mesh->vbo_skin_array);
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, mesh->vbo_skin_array);
-        glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertex_count * 2, mesh->matrix_indices, GL_STATIC_DRAW_ARB);
+        glBufferDataARB(GL_ARRAY_BUFFER_ARB, mesh->vertices.size() * 2, mesh->matrix_indices, GL_STATIC_DRAW_ARB);
     }
 
     // Fill indexes vbo
@@ -285,10 +268,10 @@ void SkeletalModel_Clear(skeletal_model_p model)
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 {
     bf->hasSkin = false;
-    vec3_set_zero(bf->bb_min);
-    vec3_set_zero(bf->bb_max);
-    vec3_set_zero(bf->centre);
-    vec3_set_zero(bf->pos);
+    bf->bb_min.setZero();
+    bf->bb_max.setZero();
+    bf->centre.setZero();
+    bf->pos.setZero();
     bf->animations.anim_flags = 0x0000;
     bf->animations.frame_time = 0.0;
     bf->animations.period = 1.0 / 30.0;
@@ -319,10 +302,10 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
         bf->bone_tags[i].mesh_slot = NULL;
         bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
 
-        vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
-        vec4_set_zero(bf->bone_tags[i].qrotate);
-        Mat4_E_macro(bf->bone_tags[i].transform);
-        Mat4_E_macro(bf->bone_tags[i].full_transform);
+        bf->bone_tags[i].offset = model->mesh_tree[i].offset;
+        bf->bone_tags[i].qrotate = {0,0,0,0};
+        bf->bone_tags[i].transform.setIdentity();
+        bf->bone_tags[i].full_transform.setIdentity();
 
         if(i > 0)
         {
@@ -355,18 +338,18 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
         dst->bone_tags = (bone_tag_p)realloc(dst->bone_tags, src->bone_tag_count * sizeof(bone_tag_t));
     }
     dst->bone_tag_count = src->bone_tag_count;
-    vec3_copy(dst->pos, src->pos);
-    vec3_copy(dst->centre, src->centre);
-    vec3_copy(dst->bb_max, src->bb_max);
-    vec3_copy(dst->bb_min, src->bb_min);
+    dst->pos = src->pos;
+    dst->centre = src->centre;
+    dst->bb_max = src->bb_max;
+    dst->bb_min = src->bb_min;
 
     dst->command = src->command;
-    vec3_copy(dst->move, src->move);
+    dst->move = src->move;
 
     for(uint16_t i=0;i<dst->bone_tag_count;i++)
     {
-        vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
-        vec3_copy(dst->bone_tags[i].offset, src->bone_tags[i].offset);
+        dst->bone_tags[i].qrotate = src->bone_tags[i].qrotate;
+        dst->bone_tags[i].offset = src->bone_tags[i].offset;
     }
 }
 
@@ -389,17 +372,17 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
              */
             bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
             bf->bone_tag_count = model->mesh_count;
-            vec3_set_zero(bf->pos);
-            vec3_set_zero(bf->move);
+            bf->pos.setZero();
+            bf->move.setZero();
             bf->command = 0x00;
-            vec3_copy(bf->centre, anim->frames[0].centre);
-            vec3_copy(bf->pos, anim->frames[0].pos);
-            vec3_copy(bf->bb_max, anim->frames[0].bb_max);
-            vec3_copy(bf->bb_min, anim->frames[0].bb_min);
+            bf->centre = anim->frames[0].centre;
+            bf->pos = anim->frames[0].pos;
+            bf->bb_max = anim->frames[0].bb_max;
+            bf->bb_min = anim->frames[0].bb_min;
             for(uint16_t k=0;k<model->mesh_count;k++)
             {
-                vec3_copy(bf->bone_tags[k].offset, anim->frames[0].bone_tags[k].offset);
-                vec4_copy(bf->bone_tags[k].qrotate, anim->frames[0].bone_tags[k].qrotate);
+                bf->bone_tags[k].offset = anim->frames[0].bone_tags[k].offset;
+                bf->bone_tags[k].qrotate = anim->frames[0].bone_tags[k].qrotate;
             }
             bf++;
 
@@ -407,8 +390,8 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
             {
                 for(uint16_t l=1;l<=anim->original_frame_rate;l++)
                 {
-                    vec3_set_zero(bf->pos);
-                    vec3_set_zero(bf->move);
+                    bf->pos.setZero();
+                    bf->move.setZero();
                     bf->command = 0x00;
                     lerp = ((btScalar)l) / (btScalar)anim->original_frame_rate;
                     t = 1.0 - lerp;
@@ -438,7 +421,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                         bf->bone_tags[k].offset[1] = t * anim->frames[j-1].bone_tags[k].offset[1] + lerp * anim->frames[j].bone_tags[k].offset[1];
                         bf->bone_tags[k].offset[2] = t * anim->frames[j-1].bone_tags[k].offset[2] + lerp * anim->frames[j].bone_tags[k].offset[2];
 
-                        vec4_slerp(bf->bone_tags[k].qrotate, anim->frames[j-1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
+                        bf->bone_tags[k].qrotate = vec4_slerp(anim->frames[j-1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
                     }
                     bf++;
                 }
@@ -488,7 +471,7 @@ mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count)
         ret[i].mesh_base = src[i].mesh_base;
         ret[i].mesh_skin = src[i].mesh_skin;
         ret[i].flag = src[i].flag;
-        vec3_copy(ret[i].offset, src[i].offset);
+        ret[i].offset = src[i].offset;
         ret[i].replace_anim = src[i].replace_anim;
         ret[i].replace_mesh = src[i].replace_mesh;
     }
@@ -511,14 +494,13 @@ void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_coun
     }
 }
 
-vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3])
+vertex_p FindVertexInMesh(base_mesh_p mesh, const btVector3& v)
 {
-    vertex_p mv = mesh->vertices;
-    for(uint32_t i=0;i<mesh->vertex_count;i++,mv++)
+    for(vertex_s& mv : mesh->vertices)
     {
-        if(vec3_dist_sq(v, mv->position) < 4.0)
+        if((v - mv.position).length2() < 4.0)
         {
-            return mv;
+            return &mv;
         }
     }
 
@@ -528,7 +510,6 @@ vertex_p FindVertexInMesh(base_mesh_p mesh, btScalar v[3])
 void FillSkinnedMeshMap(skeletal_model_p model)
 {
     int8_t *ch;
-    btScalar tv[3];
     vertex_p v, rv;
     base_mesh_p mesh_base, mesh_skin;
     mesh_tree_tag_p tree_tag, prev_tree_tag;
@@ -544,23 +525,23 @@ void FillSkinnedMeshMap(skeletal_model_p model)
             return;
         }
 
-        ch = mesh_skin->matrix_indices = (int8_t*)malloc(mesh_skin->vertex_count * sizeof(int8_t [2]));
-        v = mesh_skin->vertices;
-        for(uint32_t k=0;k<mesh_skin->vertex_count;k++,v++,ch += 2)
+        ch = mesh_skin->matrix_indices = (int8_t*)malloc(mesh_skin->vertices.size() * sizeof(int8_t [2]));
+        v = mesh_skin->vertices.data();
+        for(size_t k=0;k<mesh_skin->vertices.size();k++,v++,ch += 2)
         {
             rv = FindVertexInMesh(mesh_base, v->position);
             if(rv != NULL)
             {
                 ch[0] = 0;
                 ch[1] = 0;
-                vec3_copy(v->position, rv->position);
-                vec3_copy(v->normal, rv->normal);
+                v->position = rv->position;
+                v->normal = rv->normal;
             }
             else
             {
                 ch[0] = 0;
                 ch[1] = 1;
-                vec3_add(tv, v->position, tree_tag->offset);
+                auto tv = v->position + tree_tag->offset;
                 prev_tree_tag = model->mesh_tree;
                 for(uint16_t l=0;l<model->mesh_count;l++,prev_tree_tag++)
                 {
@@ -569,8 +550,8 @@ void FillSkinnedMeshMap(skeletal_model_p model)
                     {
                         ch[0] = 1;
                         ch[1] = 1;
-                        vec3_sub(v->position, rv->position, tree_tag->offset);
-                        vec3_copy(v->normal, rv->normal);
+                        v->position = rv->position - tree_tag->offset;
+                        v->normal = rv->normal;
                         break;
                     }
                 }
@@ -582,36 +563,33 @@ void FillSkinnedMeshMap(skeletal_model_p model)
 /*
  * FACES FUNCTIONS
  */
-uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
+uint32_t Mesh_AddVertex(base_mesh_p mesh, const vertex_s& vertex)
 {
-    vertex_p v = mesh->vertices;
-    uint32_t ind = 0;
+    vertex_p v = mesh->vertices.data();
 
-    for(ind=0;ind<mesh->vertex_count;ind++,v++)
+    for(size_t ind=0; ind<mesh->vertices.size(); ind++, v++)
     {
-        if(v->position[0] == vertex->position[0] && v->position[1] == vertex->position[1] && v->position[2] == vertex->position[2] &&
-           v->tex_coord[0] == vertex->tex_coord[0] && v->tex_coord[1] == vertex->tex_coord[1])
+        if(v->position[0] == vertex.position[0] && v->position[1] == vertex.position[1] && v->position[2] == vertex.position[2] &&
+           v->tex_coord[0] == vertex.tex_coord[0] && v->tex_coord[1] == vertex.tex_coord[1])
             ///@QUESTION: color check?
         {
             return ind;
         }
     }
 
-    ind = mesh->vertex_count;                                                   // paranoid
-    mesh->vertex_count++;
-    mesh->vertices = (vertex_p)realloc(mesh->vertices, mesh->vertex_count * sizeof(vertex_t));
+    mesh->vertices.emplace_back();
 
-    v = mesh->vertices + ind;
-    vec3_copy(v->position, vertex->position);
-    vec3_copy(v->normal, vertex->normal);
-    vec4_copy(v->color, vertex->color);
-    v->tex_coord[0] = vertex->tex_coord[0];
-    v->tex_coord[1] = vertex->tex_coord[1];
+    v = &mesh->vertices.back();
+    v->position = vertex.position;
+    v->normal = vertex.normal;
+    v->color = vertex.color;
+    v->tex_coord[0] = vertex.tex_coord[0];
+    v->tex_coord[1] = vertex.tex_coord[1];
 
-    return ind;
+    return mesh->vertices.size()-1;
 }
 
-uint32_t Mesh_AddAnimatedVertex(base_mesh_p mesh, struct vertex_s *vertex)
+uint32_t Mesh_AddAnimatedVertex(base_mesh_p mesh, const vertex_s& vertex)
 {
     animated_vertex_p v = mesh->animated_vertices;
     uint32_t ind = 0;
@@ -624,9 +602,9 @@ uint32_t Mesh_AddAnimatedVertex(base_mesh_p mesh, struct vertex_s *vertex)
     mesh->animated_vertices = (animated_vertex_p)realloc(mesh->animated_vertices, mesh->animated_vertex_count * sizeof(animated_vertex_t));
 
     v = mesh->animated_vertices + ind;
-    vec3_copy(v->position, vertex->position);
-    vec3_copy(v->normal, vertex->normal);
-    vec4_copy(v->color, vertex->color);
+    v->position = vertex.position;
+    v->normal = vertex.normal;
+    v->color = vertex.color;
 
     return ind;
 }
@@ -663,12 +641,12 @@ void Mesh_GenFaces(base_mesh_p mesh)
     mesh->animated_vertex_count = 0;
     mesh->num_animated_elements = 0;
     mesh->num_alpha_animated_elements = 0;
-    for (uint32_t i = 0; i < mesh->polygons_count; i++)
+    for (uint32_t i = 0; i < mesh->polygons.size(); i++)
     {
         if (Polygon_IsBroken(&mesh->polygons[i]))
             continue;
 
-        uint32_t elementCount = (mesh->polygons[i].vertex_count - 2) * 3;
+        uint32_t elementCount = (mesh->polygons[i].vertices.size() - 2) * 3;
         if (mesh->polygons[i].double_side) elementCount *= 2;
 
         if (mesh->polygons[i].anim_id == 0)
@@ -713,25 +691,24 @@ void Mesh_GenFaces(base_mesh_p mesh)
     mesh->transparent_polygons = (transparent_polygon_reference_s *) calloc(sizeof(transparent_polygon_reference_t), mesh->transparent_polygon_count);
     uint32_t transparentPolygonStart = 0;
 
-    polygon_p p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
+    for(const polygon_s& p : mesh->polygons)
     {
-        if (Polygon_IsBroken(p)) continue;
+        if (Polygon_IsBroken(&p)) continue;
 
-        uint32_t elementCount = (p->vertex_count - 2) * 3;
+        uint32_t elementCount = (p.vertices.size() - 2) * 3;
         uint32_t backwardsStartOffset = elementCount;
-        if (p->double_side)
+        if (p.double_side)
         {
             elementCount *= 2;
         }
 
-        if(p->anim_id == 0)
+        if(p.anim_id == 0)
         {
             // Not animated
-            uint32_t texture = p->tex_index;
+            uint32_t texture = p.tex_index;
 
             uint32_t oldStart;
-            if (p->transparency < 2)
+            if (p.transparency < 2)
             {
                 oldStart = startPerTexture[texture];
                 startPerTexture[texture] += elementCount;
@@ -742,7 +719,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
                 startTransparent += elementCount;
                 mesh->transparent_polygons[transparentPolygonStart].firstIndex = oldStart;
                 mesh->transparent_polygons[transparentPolygonStart].count = elementCount;
-                mesh->transparent_polygons[transparentPolygonStart].polygon = p;
+                mesh->transparent_polygons[transparentPolygonStart].polygon = &p;
                 mesh->transparent_polygons[transparentPolygonStart].isAnimated = false;
                 transparentPolygonStart += 1;
             }
@@ -750,18 +727,18 @@ void Mesh_GenFaces(base_mesh_p mesh)
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
-            uint32_t startElement = Mesh_AddVertex(mesh, p->vertices);
-            uint32_t previousElement = Mesh_AddVertex(mesh, p->vertices + 1);
+            uint32_t startElement = Mesh_AddVertex(mesh, p.vertices[0]);
+            uint32_t previousElement = Mesh_AddVertex(mesh, p.vertices[1]);
 
-            for(uint16_t j = 2; j < p->vertex_count; j++)
+            for(size_t j = 2; j < p.vertices.size(); j++)
             {
-                uint32_t thisElement = Mesh_AddVertex(mesh, p->vertices + j);
+                uint32_t thisElement = Mesh_AddVertex(mesh, p.vertices[j]);
 
                 mesh->elements[oldStart + (j - 2)*3 + 0] = startElement;
                 mesh->elements[oldStart + (j - 2)*3 + 1] = previousElement;
                 mesh->elements[oldStart + (j - 2)*3 + 2] = thisElement;
 
-                if (p->double_side)
+                if (p.double_side)
                 {
                     mesh->elements[backwardsStart + (j - 2)*3 + 0] = startElement;
                     mesh->elements[backwardsStart + (j - 2)*3 + 1] = thisElement;
@@ -775,7 +752,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
         {
             // Animated
             uint32_t oldStart;
-            if (p->transparency < 2)
+            if (p.transparency < 2)
             {
                 oldStart = animatedStart;
                 animatedStart += elementCount;
@@ -786,7 +763,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
                 animatedStartTransparent += elementCount;
                 mesh->transparent_polygons[transparentPolygonStart].firstIndex = oldStart;
                 mesh->transparent_polygons[transparentPolygonStart].count = elementCount;
-                mesh->transparent_polygons[transparentPolygonStart].polygon = p;
+                mesh->transparent_polygons[transparentPolygonStart].polygon = &p;
                 mesh->transparent_polygons[transparentPolygonStart].isAnimated = true;
                 transparentPolygonStart += 1;
             }
@@ -794,18 +771,18 @@ void Mesh_GenFaces(base_mesh_p mesh)
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
-            uint32_t startElement = Mesh_AddAnimatedVertex(mesh, p->vertices);
-            uint32_t previousElement = Mesh_AddAnimatedVertex(mesh, p->vertices + 1);
+            uint32_t startElement = Mesh_AddAnimatedVertex(mesh, p.vertices[0]);
+            uint32_t previousElement = Mesh_AddAnimatedVertex(mesh, p.vertices[1]);
 
-            for(uint16_t j = 2; j < p->vertex_count; j++)
+            for(size_t j = 2; j < p.vertices.size(); j++)
             {
-                uint32_t thisElement = Mesh_AddAnimatedVertex(mesh, p->vertices + j);
+                uint32_t thisElement = Mesh_AddAnimatedVertex(mesh, p.vertices[j]);
 
                 mesh->animated_elements[oldStart + (j - 2)*3 + 0] = startElement;
                 mesh->animated_elements[oldStart + (j - 2)*3 + 1] = previousElement;
                 mesh->animated_elements[oldStart + (j - 2)*3 + 2] = thisElement;
 
-                if (p->double_side)
+                if (p.double_side)
                 {
                     mesh->animated_elements[backwardsStart + (j - 2)*3 + 0] = startElement;
                     mesh->animated_elements[backwardsStart + (j - 2)*3 + 1] = thisElement;
@@ -822,27 +799,26 @@ void Mesh_GenFaces(base_mesh_p mesh)
 }
 
 
-btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh, bool is_static)
+btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool useCompression, bool buildBvh, bool is_static)
 {
-    obb_p obb = OBB_Create();
-    polygon_p p = obb->base_polygons;
+    obb_s obb;
+    polygon_p p = obb.base_polygons;
     btTriangleMesh *trimesh = new btTriangleMesh;
-    btVector3 v0, v1, v2;
     btCollisionShape* ret;
     int cnt = 0;
 
-    OBB_Rebuild(obb, bb_min, bb_max);
+    OBB_Rebuild(&obb, bb_min, bb_max);
     for(uint16_t i=0;i<6;i++,p++)
     {
         if(Polygon_IsBroken(p))
         {
             continue;
         }
-        for(uint16_t j=1;j+1<p->vertex_count;j++)
+        for(size_t j=1; j+1<p->vertices.size(); j++)
         {
-            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-            vec3_copy(v1.m_floats, p->vertices[j].position);
-            vec3_copy(v2.m_floats, p->vertices[0].position);
+            const auto& v0 = p->vertices[j + 1].position;
+            const auto& v1 = p->vertices[j].position;
+            const auto& v2 = p->vertices[0].position;
             trimesh->addTriangle(v0, v1, v2, true);
         }
         cnt ++;
@@ -853,9 +829,6 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useComp
         delete trimesh;
         return NULL;
     }
-
-    OBB_Clear(obb);
-    free(obb);
 
     if(is_static)
     {
@@ -873,24 +846,22 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useComp
 btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static)
 {
     uint32_t cnt = 0;
-    polygon_p p;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
     btVector3 v0, v1, v2;
 
-    p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
+    for(const polygon_s& p : mesh->polygons)
     {
-        if(Polygon_IsBroken(p))
+        if(Polygon_IsBroken(&p))
         {
             continue;
         }
 
-        for(uint16_t j=1;j+1<p->vertex_count;j++)
+        for(size_t j=1; j+1<p.vertices.size(); j++)
         {
-            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-            vec3_copy(v1.m_floats, p->vertices[j].position);
-            vec3_copy(v2.m_floats, p->vertices[0].position);
+            const auto& v0 = p.vertices[j + 1].position;
+            const auto& v1 = p.vertices[j].position;
+            const auto& v2 = p.vertices[0].position;
             trimesh->addTriangle(v0, v1, v2, true);
         }
         cnt ++;

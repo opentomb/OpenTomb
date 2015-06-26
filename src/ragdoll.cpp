@@ -37,7 +37,7 @@ bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup)
     // Setup bodies.
     entity->bt.bt_joint_count = 0;
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
+    Entity_UpdateCurrentBoneFrame(&entity->bf, &entity->transform);
     entity->bt.no_fix_all = 0x00;
     entity->bt.no_fix_body_parts = 0x00000000;
     int map_size = entity->bf.animations.model->collision_map_size;             // does not works, strange...
@@ -121,7 +121,7 @@ bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup)
 #else
         localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
         //localA.setOrigin(setup->joint_setup[i].body1_offset);
-        localA.setOrigin(btVector3(btB->transform[12+0], btB->transform[12+1], btB->transform[12+2]));
+        localA.setOrigin(btB->transform.getOrigin());
 
         localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
         //localB.setOrigin(setup->joint_setup[i].body2_offset);

@@ -128,12 +128,12 @@ public:
    * @param y Y value 
    * @param z Z value 
    */
-	SIMD_FORCE_INLINE btVector3(const btScalar& _x, const btScalar& _y, const btScalar& _z)
+    SIMD_FORCE_INLINE btVector3(const btScalar& _x, const btScalar& _y, const btScalar& _z, const btScalar& _w = 0.f)
 	{
 		m_floats[0] = _x;
 		m_floats[1] = _y;
 		m_floats[2] = _z;
-		m_floats[3] = btScalar(0.f);
+        m_floats[3] = _w;
 	}
 
 #if (defined (BT_USE_SSE_IN_API) && defined (BT_USE_SSE) )|| defined (BT_USE_NEON)
@@ -637,12 +637,12 @@ public:
 #endif
 	}
 
-	SIMD_FORCE_INLINE void 	setValue(const btScalar& _x, const btScalar& _y, const btScalar& _z)
+    SIMD_FORCE_INLINE void 	setValue(const btScalar& _x, const btScalar& _y, const btScalar& _z, const btScalar& _w = 0.f)
 	{
 		m_floats[0]=_x;
 		m_floats[1]=_y;
 		m_floats[2]=_z;
-		m_floats[3] = btScalar(0.f);
+        m_floats[3]=_w;
 	}
 
 	void	getSkewSymmetricMatrix(btVector3* v0,btVector3* v1,btVector3* v2) const

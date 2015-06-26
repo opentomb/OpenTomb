@@ -75,7 +75,7 @@ ALCcontext             *al_context     = NULL;
 int done = 0;
 btScalar time_scale = 1.0;
 
-GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
+btVector3 light_position = {255.0, 255.0, 8.0, 0.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 engine_container_p      last_cont = NULL;
@@ -476,7 +476,6 @@ void Engine_Frame(btScalar time)
         time = 0.1;
     }
 
-    ResetTempbtScalar();
     engine_frame_time = time;
     if(cycles < 20)
     {
@@ -502,7 +501,7 @@ void ShowDebugInfo()
 {
     GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
-    vec3_copy(light_position, engine_camera.pos);
+    light_position = engine_camera.pos;
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);

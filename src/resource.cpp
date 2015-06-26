@@ -1,9 +1,9 @@
 
 #include <algorithm>
-#include <assert.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
 #include <SDL2/SDL.h>
 #include "gl_util.h"
 
@@ -180,27 +180,26 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 
 void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 {
-    if(tween->floor_corners[0].m_floats[2] > tween->floor_corners[1].m_floats[2])
+    if(tween->floor_corners[0][2] > tween->floor_corners[1][2])
     {
-        btScalar t;
-        SWAPT(tween->floor_corners[0].m_floats[2], tween->floor_corners[1].m_floats[2], t);
-        SWAPT(tween->floor_corners[2].m_floats[2], tween->floor_corners[3].m_floats[2], t);
+        std::swap(tween->floor_corners[0][2], tween->floor_corners[1][2]);
+        std::swap(tween->floor_corners[2][2], tween->floor_corners[3][2]);
     }
 
-    if(tween->floor_corners[3].m_floats[2] > tween->floor_corners[2].m_floats[2])
+    if(tween->floor_corners[3][2] > tween->floor_corners[2][2])
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;              // like a butterfly
     }
-    else if((tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2]) &&
-       (tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2]))
+    else if((tween->floor_corners[0][2] != tween->floor_corners[1][2]) &&
+       (tween->floor_corners[2][2] != tween->floor_corners[3][2]))
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
     }
-    else if(tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2])
+    else if(tween->floor_corners[0][2] != tween->floor_corners[1][2])
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT;
     }
-    else if(tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2])
+    else if(tween->floor_corners[2][2] != tween->floor_corners[3][2])
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT;
     }
@@ -212,27 +211,26 @@ void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 
 void Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
 {
-    if(tween->ceiling_corners[0].m_floats[2] > tween->ceiling_corners[1].m_floats[2])
+    if(tween->ceiling_corners[0][2] > tween->ceiling_corners[1][2])
     {
-        btScalar t;
-        SWAPT(tween->ceiling_corners[0].m_floats[2], tween->ceiling_corners[1].m_floats[2], t);
-        SWAPT(tween->ceiling_corners[2].m_floats[2], tween->ceiling_corners[3].m_floats[2], t);
+        std::swap(tween->ceiling_corners[0][2], tween->ceiling_corners[1][2]);
+        std::swap(tween->ceiling_corners[2][2], tween->ceiling_corners[3][2]);
     }
 
-    if(tween->ceiling_corners[3].m_floats[2] > tween->ceiling_corners[2].m_floats[2])
+    if(tween->ceiling_corners[3][2] > tween->ceiling_corners[2][2])
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;            // like a butterfly
     }
-    else if((tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2]) &&
-       (tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2]))
+    else if((tween->ceiling_corners[0][2] != tween->ceiling_corners[1][2]) &&
+       (tween->ceiling_corners[2][2] != tween->ceiling_corners[3][2]))
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
     }
-    else if(tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2])
+    else if(tween->ceiling_corners[0][2] != tween->ceiling_corners[1][2])
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT;
     }
-    else if(tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2])
+    else if(tween->ceiling_corners[2][2] != tween->ceiling_corners[3][2])
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT;
     }
@@ -276,23 +274,23 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
             char joined_ceilings = 0;
 
             /* XY corners coordinates must be calculated from native room sector */
-            room_tween->floor_corners[0].m_floats[1] = current_heightmap->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[1].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[2].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[3].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[0].m_floats[0] = current_heightmap->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[1].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[2].m_floats[0] = current_heightmap->floor_corners[1].m_floats[0];
-            room_tween->floor_corners[3].m_floats[0] = room_tween->floor_corners[2].m_floats[0];
+            room_tween->floor_corners[0][1] = current_heightmap->floor_corners[0][1];
+            room_tween->floor_corners[1][1] = room_tween->floor_corners[0][1];
+            room_tween->floor_corners[2][1] = room_tween->floor_corners[0][1];
+            room_tween->floor_corners[3][1] = room_tween->floor_corners[0][1];
+            room_tween->floor_corners[0][0] = current_heightmap->floor_corners[0][0];
+            room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
+            room_tween->floor_corners[2][0] = current_heightmap->floor_corners[1][0];
+            room_tween->floor_corners[3][0] = room_tween->floor_corners[2][0];
 
-            room_tween->ceiling_corners[0].m_floats[1] = current_heightmap->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[1].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[2].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[3].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[0].m_floats[0] = current_heightmap->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[1].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[2].m_floats[0] = current_heightmap->ceiling_corners[1].m_floats[0];
-            room_tween->ceiling_corners[3].m_floats[0] = room_tween->ceiling_corners[2].m_floats[0];
+            room_tween->ceiling_corners[0][1] = current_heightmap->ceiling_corners[0][1];
+            room_tween->ceiling_corners[1][1] = room_tween->ceiling_corners[0][1];
+            room_tween->ceiling_corners[2][1] = room_tween->ceiling_corners[0][1];
+            room_tween->ceiling_corners[3][1] = room_tween->ceiling_corners[0][1];
+            room_tween->ceiling_corners[0][0] = current_heightmap->ceiling_corners[0][0];
+            room_tween->ceiling_corners[1][0] = room_tween->ceiling_corners[0][0];
+            room_tween->ceiling_corners[2][0] = current_heightmap->ceiling_corners[1][0];
+            room_tween->ceiling_corners[3][0] = room_tween->ceiling_corners[2][0];
 
             if(w > 0)
             {
@@ -300,10 +298,10 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                 {
                     if(Res_Sector_IsWall(next_heightmap, current_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
+                        room_tween->floor_corners[1][2] = current_heightmap->ceiling_corners[0][2];
+                        room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[1][2];
+                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
@@ -311,10 +309,10 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                     }
                     else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[0][2] = next_heightmap->floor_corners[3][2];
+                        room_tween->floor_corners[1][2] = next_heightmap->ceiling_corners[3][2];
+                        room_tween->floor_corners[2][2] = next_heightmap->ceiling_corners[2][2];
+                        room_tween->floor_corners[3][2] = next_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
@@ -331,19 +329,19 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
-                                    room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
-                                    room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                                    room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
-                                    room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                                    room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
+                                    room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
+                                    room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
+                                    room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                                     Res_Sector_SetTweenFloorConfig(room_tween);
                                     joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
-                                    room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
-                                    room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                                    room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
-                                    room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                                    room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
+                                    room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
+                                    room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[2][2];
+                                    room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[1][2];
                                     Res_Sector_SetTweenCeilingConfig(room_tween);
                                     joined_ceilings = 1;
                                 }
@@ -393,10 +391,10 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
 
                     if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
+                        room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
+                        room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
+                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
@@ -442,10 +440,10 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
 
                     if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                     {
-                        room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
-                        room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                        room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
+                        room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
+                        room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[2][2];
+                        room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[1][2];
                         Res_Sector_SetTweenCeilingConfig(room_tween);
                     }
                 }
@@ -458,23 +456,23 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
             room_tween++;
             current_heightmap = room->sectors + (w * room->sectors_y + h);
             next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
-            room_tween->floor_corners[0].m_floats[0] = current_heightmap->floor_corners[1].m_floats[0];
-            room_tween->floor_corners[1].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[2].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[3].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[0].m_floats[1] = current_heightmap->floor_corners[1].m_floats[1];
-            room_tween->floor_corners[1].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[2].m_floats[1] = current_heightmap->floor_corners[2].m_floats[1];
-            room_tween->floor_corners[3].m_floats[1] = room_tween->floor_corners[2].m_floats[1];
+            room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
+            room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
+            room_tween->floor_corners[2][0] = room_tween->floor_corners[0][0];
+            room_tween->floor_corners[3][0] = room_tween->floor_corners[0][0];
+            room_tween->floor_corners[0][1] = current_heightmap->floor_corners[1][1];
+            room_tween->floor_corners[1][1] = room_tween->floor_corners[0][1];
+            room_tween->floor_corners[2][1] = current_heightmap->floor_corners[2][1];
+            room_tween->floor_corners[3][1] = room_tween->floor_corners[2][1];
 
-            room_tween->ceiling_corners[0].m_floats[0] = current_heightmap->ceiling_corners[1].m_floats[0];
-            room_tween->ceiling_corners[1].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[2].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[3].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[0].m_floats[1] = current_heightmap->ceiling_corners[1].m_floats[1];
-            room_tween->ceiling_corners[1].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[2].m_floats[1] = current_heightmap->ceiling_corners[2].m_floats[1];
-            room_tween->ceiling_corners[3].m_floats[1] = room_tween->ceiling_corners[2].m_floats[1];
+            room_tween->ceiling_corners[0][0] = current_heightmap->ceiling_corners[1][0];
+            room_tween->ceiling_corners[1][0] = room_tween->ceiling_corners[0][0];
+            room_tween->ceiling_corners[2][0] = room_tween->ceiling_corners[0][0];
+            room_tween->ceiling_corners[3][0] = room_tween->ceiling_corners[0][0];
+            room_tween->ceiling_corners[0][1] = current_heightmap->ceiling_corners[1][1];
+            room_tween->ceiling_corners[1][1] = room_tween->ceiling_corners[0][1];
+            room_tween->ceiling_corners[2][1] = current_heightmap->ceiling_corners[2][1];
+            room_tween->ceiling_corners[3][1] = room_tween->ceiling_corners[2][1];
 
             joined_floors = 0;
             joined_ceilings = 0;
@@ -486,10 +484,10 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                     // Init Y-plane tween  [ - ]
                     if(Res_Sector_IsWall(next_heightmap, current_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
+                        room_tween->floor_corners[1][2] = current_heightmap->ceiling_corners[1][2];
+                        room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[2][2];
+                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
@@ -497,10 +495,10 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                     }
                     else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                        room_tween->floor_corners[0][2] = next_heightmap->floor_corners[0][2];
+                        room_tween->floor_corners[1][2] = next_heightmap->ceiling_corners[0][2];
+                        room_tween->floor_corners[2][2] = next_heightmap->ceiling_corners[3][2];
+                        room_tween->floor_corners[3][2] = next_heightmap->floor_corners[3][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
@@ -517,19 +515,19 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
-                                    room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                                    room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
-                                    room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                                    room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                                    room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
+                                    room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
+                                    room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
+                                    room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                                     Res_Sector_SetTweenFloorConfig(room_tween);
                                     joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
-                                    room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                                    room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
-                                    room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                                    room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
+                                    room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
+                                    room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
+                                    room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[3][2];
+                                    room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[2][2];
                                     Res_Sector_SetTweenCeilingConfig(room_tween);
                                     joined_ceilings = 1;
                                 }
@@ -579,10 +577,10 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
 
                     if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
+                        room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
+                        room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
+                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
@@ -628,10 +626,10 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
 
                     if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                     {
-                        room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                        room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
+                        room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
+                        room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
+                        room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[3][2];
+                        room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[2][2];
                         Res_Sector_SetTweenCeilingConfig(room_tween);
                     }
                 }
@@ -727,24 +725,24 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
                     if(raw_x_slant > 0)
                     {
-                        sector->floor_corners[2].m_floats[2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
-                        sector->floor_corners[3].m_floats[2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0].m_floats[2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[1].m_floats[2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->floor_corners[0].m_floats[2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
-                        sector->floor_corners[3].m_floats[2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1].m_floats[2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[2].m_floats[2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -762,24 +760,24 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
                     if(raw_x_slant > 0)
                     {
-                        sector->ceiling_corners[3].m_floats[2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
-                        sector->ceiling_corners[2].m_floats[2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1].m_floats[2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[0].m_floats[2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->ceiling_corners[1].m_floats[2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
-                        sector->ceiling_corners[2].m_floats[2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0].m_floats[2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[3].m_floats[2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -1276,10 +1274,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->floor_corners[0].m_floats[2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1].m_floats[2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2].m_floats[2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3].m_floats[2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1300,10 +1298,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->floor_corners[0].m_floats[2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1].m_floats[2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2].m_floats[2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3].m_floats[2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1324,10 +1322,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1348,10 +1346,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1456,22 +1454,21 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
 }
 
 
-int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
+bool TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, const portal_s& p)
 {
-    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p->norm[1]) > 0.99))
+    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p.norm[1]) > 0.99))
     {
-        btScalar min_x, max_x, min_y, max_y, x;
-        max_x = min_x = p->vertex[0];
-        for(uint16_t i=1;i<p->vertex_count;i++)
+        btScalar min_x, max_x, min_y, max_y;
+        max_x = min_x = p.vertices.front().x();
+        for(const auto& v : p.vertices)
         {
-            x = p->vertex[3 * i + 0];
-            if(x > max_x)
+            if(v.x() > max_x)
             {
-                max_x = x;
+                max_x = v.x();
             }
-            if(x < min_x)
+            if(v.x() < min_x)
             {
-                min_x = x;
+                min_x = v.x();
             }
         }
         if(s1->pos[1] > s2->pos[1])
@@ -1485,25 +1482,24 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
             max_y = s2->pos[1];
         }
 
-        if((s1->pos[0] < max_x) && (s1->pos[0] > min_x) && (p->centre[1] < max_y) && (p->centre[1] > min_y))
+        if((s1->pos[0] < max_x) && (s1->pos[0] > min_x) && (p.centre[1] < max_y) && (p.centre[1] > min_y))
         {
-            return 1;
+            return true;
         }
     }
-    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p->norm[0]) > 0.99))
+    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p.norm[0]) > 0.99))
     {
-        btScalar min_x, max_x, min_y, max_y, y;
-        max_y = min_y = p->vertex[1];
-        for(uint16_t i=1;i<p->vertex_count;i++)
+        btScalar min_x, max_x, min_y, max_y;
+        max_y = min_y = p.vertices.front().y();
+        for(const auto& v : p.vertices)
         {
-            y = p->vertex[3 * i + 1];
-            if(y > max_y)
+            if(v.y() > max_y)
             {
-                max_y = y;
+                max_y = v.y();
             }
-            if(y < min_y)
+            if(v.y() < min_y)
             {
-                min_y = y;
+                min_y = v.y();
             }
         }
         if(s1->pos[0] > s2->pos[0])
@@ -1517,13 +1513,13 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
             max_x = s2->pos[0];
         }
 
-        if((p->centre[0] < max_x) && (p->centre[0] > min_x) && (s1->pos[1] < max_y) && (s1->pos[1] > min_y))
+        if((p.centre[0] < max_x) && (p.centre[0] > min_x) && (s1->pos[1] < max_y) && (s1->pos[1] > min_y))
         {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index)
@@ -1579,16 +1575,15 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
 
         if((near_sector != NULL) && (sector->portal_to_room >= 0))
         {
-            portal_p p = room->portals;
-            for(uint16_t j=0;j<room->portal_count;j++,p++)
+            for(const portal_s& p : room->portals)
             {
-                if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
+                if((p.norm[2] < 0.01) && ((p.norm[2] > -0.01)))
                 {
-                    room_sector_p dst = Room_GetSectorRaw(p->dest_room, sector->pos);
+                    room_sector_p dst = Room_GetSectorRaw(p.dest_room, sector->pos);
                     room_sector_p orig_dst = Room_GetSectorRaw(engine_world.rooms[sector->portal_to_room], sector->pos);
-                    if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p->dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
+                    if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
-                        sector->portal_to_room = p->dest_room->id;
+                        sector->portal_to_room = p.dest_room->id;
                         orig_dst = dst;
                     }
                 }
@@ -1597,19 +1592,19 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
     }
 }
 
-void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v)
+void TR_vertex_to_arr(btVector3& v, const tr5_vertex_t& tr_v)
 {
-    v[0] = tr_v->x;
-    v[1] =-tr_v->z;
-    v[2] = tr_v->y;
+    v[0] = tr_v.x;
+    v[1] =-tr_v.z;
+    v[2] = tr_v.y;
 }
 
-void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c)
+void TR_color_to_arr(std::array<GLfloat,4>& v, const tr5_colour_t& tr_c)
 {
-    v[0] = tr_c->r * 2;
-    v[1] = tr_c->g * 2;
-    v[2] = tr_c->b * 2;
-    v[3] = tr_c->a * 2;
+    v[0] = tr_c.r * 2;
+    v[1] = tr_c.g * 2;
+    v[2] = tr_c.b * 2;
+    v[3] = tr_c.a * 2;
 }
 
 room_sector_p TR_GetRoomSector(uint32_t room_id, int sx, int sy)
@@ -1653,10 +1648,10 @@ int lua_SetSectorFloorConfig(lua_State * lua)
     if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
     if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
     if(!lua_isnil(lua, 6))  rs->floor = lua_tonumber(lua, 6);
-    rs->floor_corners[0].m_floats[2] = lua_tonumber(lua, 7);
-    rs->floor_corners[1].m_floats[2] = lua_tonumber(lua, 8);
-    rs->floor_corners[2].m_floats[2] = lua_tonumber(lua, 9);
-    rs->floor_corners[3].m_floats[2] = lua_tonumber(lua, 10);
+    rs->floor_corners[0][2] = lua_tonumber(lua, 7);
+    rs->floor_corners[1][2] = lua_tonumber(lua, 8);
+    rs->floor_corners[2][2] = lua_tonumber(lua, 9);
+    rs->floor_corners[3][2] = lua_tonumber(lua, 10);
 
     return 0;
 }
@@ -1686,10 +1681,10 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
     if(!lua_isnil(lua, 4))  rs->ceiling_penetration_config = lua_tointeger(lua, 4);
     if(!lua_isnil(lua, 5))  rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
     if(!lua_isnil(lua, 6))  rs->ceiling = lua_tonumber(lua, 6);
-    rs->ceiling_corners[0].m_floats[2] = lua_tonumber(lua, 7);
-    rs->ceiling_corners[1].m_floats[2] = lua_tonumber(lua, 8);
-    rs->ceiling_corners[2].m_floats[2] = lua_tonumber(lua, 9);
-    rs->ceiling_corners[3].m_floats[2] = lua_tonumber(lua, 10);
+    rs->ceiling_corners[0][2] = lua_tonumber(lua, 7);
+    rs->ceiling_corners[1][2] = lua_tonumber(lua, 8);
+    rs->ceiling_corners[2][2] = lua_tonumber(lua, 9);
+    rs->ceiling_corners[3][2] = lua_tonumber(lua, 10);
 
     return 0;
 }
@@ -1983,10 +1978,10 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     room->water_scheme = tr->rooms[room_index].water_scheme;
     room->alternate_group = tr->rooms[room_index].alternate_group;
 
-    Mat4_E_macro(room->transform);
-    room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
-    room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
-    room->transform[14] = tr->rooms[room_index].offset.y;                       // z = y;
+    room->transform.setIdentity();
+    room->transform.getOrigin()[0] = tr->rooms[room_index].offset.x;                       // x = x;
+    room->transform.getOrigin()[1] =-tr->rooms[room_index].offset.z;                       // y =-z;
+    room->transform.getOrigin()[2] = tr->rooms[room_index].offset.y;                       // z = y;
     room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
@@ -2030,7 +2025,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
         r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
-        r_static->obb = OBB_Create();
+        r_static->obb = new obb_s();
 
         r_static->cbb_min[0] = tr_static->collision_box[0].x;
         r_static->cbb_min[1] =-tr_static->collision_box[0].z;
@@ -2046,9 +2041,9 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
 
-        r_static->obb->transform = room->static_mesh[i]->transform;
+        r_static->obb->transform = &room->static_mesh[i]->transform;
         r_static->obb->r = room->static_mesh[i]->mesh->R;
-        Mat4_E(r_static->transform);
+        r_static->transform.setIdentity();
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
@@ -2100,7 +2095,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
 
             if(cshape)
             {
-                startTransform.setFromOpenGLMatrix(r_static->transform);
+                startTransform = r_static->transform;
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
                 bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
@@ -2121,8 +2116,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
             if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites_count))
             {
                 room->sprites[i].sprite = world->sprites + tr_room->sprites[i].texture;
-                TR_vertex_to_arr(room->sprites[i].pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
-                vec3_add(room->sprites[i].pos, room->sprites[i].pos, room->transform+12);
+                TR_vertex_to_arr(room->sprites[i].pos, tr_room->vertices[tr_room->sprites[i].vertex].vertex);
+                room->sprites[i].pos += room->transform.getOrigin();
             }
         }
     }
@@ -2154,8 +2149,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         sector->index_x = i / room->sectors_y;
         sector->index_y = i % room->sectors_y;
 
-        sector->pos[0] = room->transform[12] + sector->index_x * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
-        sector->pos[1] = room->transform[13] + sector->index_y * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
+        sector->pos[0] = room->transform.getOrigin()[0] + sector->index_x * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
+        sector->pos[1] = room->transform.getOrigin()[1] + sector->index_y * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
         sector->pos[2] = 0.5 * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
@@ -2213,21 +2208,21 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         // copied into heightmap cells Y coordinates. As result, we receive flat
         // heightmap cell, which will be operated later with floordata.
 
-        room->sectors[i].ceiling_corners[0].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0].m_floats[2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[1].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1].m_floats[2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[1][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[2].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2].m_floats[2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[2][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[3].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3].m_floats[2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[3][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3][2] = (btScalar)sector->ceiling;
 
         // BUILDING FLOOR HEIGHTMAP.
 
@@ -2246,21 +2241,21 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
             room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
         }
 
-        room->sectors[i].floor_corners[0].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0].m_floats[2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[1].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1].m_floats[2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[1][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[2].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2].m_floats[2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[2][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[3].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3].m_floats[2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[3][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3][2] = (btScalar)sector->floor;
     }
 
     /*
@@ -2326,31 +2321,25 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     /*
      * portals loading / calculation!!!
      */
-    room->portal_count = tr_room->num_portals;
-    p = room->portals = (portal_p)calloc(room->portal_count, sizeof(portal_t));
+    room->portals.resize(tr_room->num_portals);
     tr_portal = tr_room->portals;
-    for(uint16_t i=0;i<room->portal_count;i++,p++,tr_portal++)
+    for(size_t i=0; i<room->portals.size(); i++, tr_portal++)
     {
+        portal_s* p = &room->portals[i];
         std::shared_ptr<Room> r_dest = world->rooms[tr_portal->adjoining_room];
-        p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
-        p->vertex = (btScalar*)malloc(3*p->vertex_count*sizeof(btScalar));
+        p->vertices.resize(4); // in original TR all portals are axis aligned rectangles
         p->flag = 0;
         p->dest_room = r_dest;
         p->current_room = room;
-        TR_vertex_to_arr(p->vertex  , &tr_portal->vertices[3]);
-        vec3_add(p->vertex, p->vertex, room->transform+12);
-        TR_vertex_to_arr(p->vertex+3, &tr_portal->vertices[2]);
-        vec3_add(p->vertex+3, p->vertex+3, room->transform+12);
-        TR_vertex_to_arr(p->vertex+6, &tr_portal->vertices[1]);
-        vec3_add(p->vertex+6, p->vertex+6, room->transform+12);
-        TR_vertex_to_arr(p->vertex+9, &tr_portal->vertices[0]);
-        vec3_add(p->vertex+9, p->vertex+9, room->transform+12);
-        vec3_add(p->centre, p->vertex, p->vertex+3);
-        vec3_add(p->centre, p->centre, p->vertex+6);
-        vec3_add(p->centre, p->centre, p->vertex+9);
-        p->centre[0] /= 4.0;
-        p->centre[1] /= 4.0;
-        p->centre[2] /= 4.0;
+        TR_vertex_to_arr(p->vertices[0], tr_portal->vertices[3]);
+        p->vertices[0] += room->transform.getOrigin();
+        TR_vertex_to_arr(p->vertices[1], tr_portal->vertices[2]);
+        p->vertices[1] += room->transform.getOrigin();
+        TR_vertex_to_arr(p->vertices[2], tr_portal->vertices[1]);
+        p->vertices[2] += room->transform.getOrigin();
+        TR_vertex_to_arr(p->vertices[3], tr_portal->vertices[0]);
+        p->vertices[3] += room->transform.getOrigin();
+        p->centre = std::accumulate(p->vertices.begin(), p->vertices.end(), btVector3()) / 4;
         Portal_GenNormale(p);
 
         /*
@@ -2359,22 +2348,19 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         // X_MIN
         if((p->norm[0] > 0.999) && (((int)p->centre[0])%2))
         {
-            btScalar pos[3] = {1.0, 0.0, 0.0};
-            Portal_Move(p, pos);
+            Portal_Move(p, {1,0,0});
         }
 
         // Y_MIN
         if((p->norm[1] > 0.999) && (((int)p->centre[1])%2))
         {
-            btScalar pos[3] = {0.0, 1.0, 0.0};
-            Portal_Move(p, pos);
+            Portal_Move(p, {0,1,0});
         }
 
         // Z_MAX
         if((p->norm[2] <-0.999) && (((int)p->centre[2])%2))
         {
-            btScalar pos[3] = {0.0, 0.0, -1.0};
-            Portal_Move(p, pos);
+            Portal_Move(p, {0,0,-1});
         }
     }
 
@@ -2384,10 +2370,10 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     room->bb_min[2] = tr_room->y_bottom;
     room->bb_max[2] = tr_room->y_top;
 
-    room->bb_min[0] = room->transform[12] + TR_METERING_SECTORSIZE;
-    room->bb_min[1] = room->transform[13] + TR_METERING_SECTORSIZE;
-    room->bb_max[0] = room->transform[12] + TR_METERING_SECTORSIZE * room->sectors_x - TR_METERING_SECTORSIZE;
-    room->bb_max[1] = room->transform[13] + TR_METERING_SECTORSIZE * room->sectors_y - TR_METERING_SECTORSIZE;
+    room->bb_min[0] = room->transform.getOrigin()[0] + TR_METERING_SECTORSIZE;
+    room->bb_min[1] = room->transform.getOrigin()[1] + TR_METERING_SECTORSIZE;
+    room->bb_max[0] = room->transform.getOrigin()[0] + TR_METERING_SECTORSIZE * room->sectors_x - TR_METERING_SECTORSIZE;
+    room->bb_max[1] = room->transform.getOrigin()[1] + TR_METERING_SECTORSIZE * room->sectors_y - TR_METERING_SECTORSIZE;
 
     /*
      * alternate room pointer calculation if one exists.
@@ -2445,9 +2431,7 @@ void Res_GenRoomCollision(struct world_s *world)
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            btTransform tr;
-            tr.setFromOpenGLMatrix(r->transform);
-            btDefaultMotionState* motionState = new btDefaultMotionState(tr);
+            btDefaultMotionState* motionState = new btDefaultMotionState(r->transform);
             r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
             bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
             r->bt_body->setUserPointer(r->self);
@@ -2667,12 +2651,8 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     int32_t   uvrotate_script = 0;
     polygon_t p0, p;
 
-    p0.vertex_count = 0;
-    p0.vertices = NULL;
-    p.vertex_count = 0;
-    p.vertices = NULL;
-    Polygon_Resize(&p0, 3);
-    Polygon_Resize(&p, 3);
+    p0.vertices.resize(3);
+    p.vertices.resize(3);
 
     pointer       = tr->animated_textures;
     num_uvrotates = tr->animated_textures_uv_count;
@@ -2801,8 +2781,6 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 
         }
     }
-    Polygon_Clear(&p0);
-    Polygon_Clear(&p);
 }
 
 /**   Assign animated texture to a polygon.
@@ -2837,27 +2815,25 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
 
 static void addPolygonCopyToList(const polygon_s *polygon, polygon_s *&list)
 {
-    polygon_p np = (polygon_p)calloc(1, sizeof(polygon_t));
-    Polygon_Copy(np, polygon);
+    polygon_s* np = new polygon_s(*polygon);
     np->next = list;
     list = np;
 }
 
 void Res_Poly_SortInMesh(struct base_mesh_s *mesh)
 {
-    polygon_p p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
+    for(polygon_s& p : mesh->polygons)
     {
-        if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
+        if(p.anim_id > 0 && p.anim_id <= engine_world.anim_sequences_count)
         {
-            anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
+            anim_seq_p seq = engine_world.anim_sequences + (p.anim_id - 1);
             // set tex coordinates to the first frame for correct texture transform in renderer
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, p, 0, seq->uvrotate);
+            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0, seq->uvrotate);
         }
 
-        if(p->transparency >= 2)
+        if(p.transparency >= 2)
         {
-            addPolygonCopyToList(p, mesh->transparency_polygons);
+            addPolygonCopyToList(&p, mesh->transparency_polygons);
         }
     }
 }
@@ -2877,31 +2853,31 @@ void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
 
 static void tr_copyNormals(const polygon_p polygon, base_mesh_p mesh, const uint16_t *mesh_vertex_indices)
 {
-    for (int i = 0; i < polygon->vertex_count; i++)
+    for (size_t i=0; i<polygon->vertices.size(); ++i)
     {
-        vec3_copy(polygon->vertices[i].normal, mesh->vertices[mesh_vertex_indices[i]].normal);
+        polygon->vertices[i].normal = mesh->vertices[mesh_vertex_indices[i]].normal;
     }
 }
 
 void tr_accumulateNormals(tr4_mesh_t *tr_mesh, base_mesh_p mesh, int numCorners, const uint16_t *vertex_indices, polygon_p p)
 {
-    Polygon_Resize(p, numCorners);
+    p->vertices.resize(numCorners);
 
     for (int i = 0; i < numCorners; i++)
     {
-        TR_vertex_to_arr(p->vertices[i].position, &tr_mesh->vertices[vertex_indices[i]]);
+        TR_vertex_to_arr(p->vertices[i].position, tr_mesh->vertices[vertex_indices[i]]);
     }
     Polygon_FindNormale(p);
 
     for (int i = 0; i < numCorners; i++)
     {
-        vec3_add(mesh->vertices[vertex_indices[i]].normal, mesh->vertices[vertex_indices[i]].normal, p->plane);
+        mesh->vertices[vertex_indices[i]].normal += p->plane;
     }
 }
 
 void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, const uint16_t *vertex_indices, unsigned color, polygon_p p)
 {
-    for (int i = 0; i < p->vertex_count; i++)
+    for (int i = 0; i < p->vertices.size(); i++)
     {
         p->vertices[i].color[0] = tr->palette.colour[color].r / 255.0f;
         p->vertices[i].color[1] = tr->palette.colour[color].g / 255.0f;
@@ -2922,7 +2898,7 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, co
 
 void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t *vertex_indices, polygon_p p)
 {
-    for (int i = 0; i < p->vertex_count; i++)
+    for (int i = 0; i < p->vertices.size(); i++)
     {
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
@@ -2935,7 +2911,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t 
         }
         else
         {
-            vec4_set_one(p->vertices[i].color);
+            p->vertices[i].color.fill(1);
         }
     }
 }
@@ -2947,9 +2923,6 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     tr4_face4_t *face4;
     tr4_face3_t *face3;
     tr4_object_texture_t *tex;
-    polygon_p p;
-    btScalar n;
-    vertex_p vertex;
     uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
     /* TR WAD FORMAT DOCUMENTATION!
@@ -2975,23 +2948,23 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     mesh->R = tr_mesh->collision_size;
     mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
 
-    mesh->vertex_count = tr_mesh->num_vertices;
-    vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));
-    for(uint32_t i=0;i<mesh->vertex_count;i++,vertex++)
+    mesh->vertices.resize( tr_mesh->num_vertices );
+    auto vertex = mesh->vertices.data();
+    for(size_t i=0; i<mesh->vertices.size(); i++, vertex++)
     {
-        TR_vertex_to_arr(vertex->position, &tr_mesh->vertices[i]);
-        vec3_set_zero(vertex->normal);                                          // paranoid
+        TR_vertex_to_arr(vertex->position, tr_mesh->vertices[i]);
+        vertex->normal.setZero();                                          // paranoid
     }
 
     BaseMesh_FindBB(mesh);
 
-    mesh->polygons_count = tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles;
-    p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
+    mesh->polygons.resize( tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles );
 
     /*
      * textured triangles
      */
-    for(int16_t i=0;i<tr_mesh->num_textured_triangles;i++,p++)
+    auto p = mesh->polygons.data();
+    for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i, ++p)
     {
         face3 = &tr_mesh->textured_triangles[i];
         tex = &tr->object_textures[face3->texture & tex_mask];
@@ -3018,7 +2991,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     /*
      * coloured triangles
      */
-    for(int16_t i=0;i<tr_mesh->num_coloured_triangles;i++,p++)
+    for(size_t i=0; i<tr_mesh->num_coloured_triangles; ++i, ++p)
     {
         face3 = &tr_mesh->coloured_triangles[i];
         col = face3->texture & 0xff;
@@ -3033,7 +3006,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     /*
      * textured rectangles
      */
-    for(int16_t i=0;i<tr_mesh->num_textured_rectangles;i++,p++)
+    for(size_t i=0; i<tr_mesh->num_textured_rectangles; ++i, ++p)
     {
         face4 = &tr_mesh->textured_rectangles[i];
         tex = &tr->object_textures[face4->texture & tex_mask];
@@ -3064,7 +3037,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     {
         face4 = &tr_mesh->coloured_rectangles[i];
         col = face4->texture & 0xff;
-        Polygon_Resize(p, 4);
+        p->vertices.resize(4);
         p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
         p->transparency = 0;
         p->anim_id = 0;
@@ -3076,10 +3049,10 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
     /*
      * let us normalise normales %)
      */
-    p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->vertex_count;i++)
+    p = mesh->polygons.data();
+    for(vertex_s& v : mesh->vertices)
     {
-        vec3_norm(mesh->vertices[i].normal, n);
+        v.normal.normalize();
     }
 
     /*
@@ -3108,31 +3081,26 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         tr_copyNormals(p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }
 
-    if(mesh->vertex_count > 0)
-    {
-        mesh->vertex_count = 0;
-        free(mesh->vertices);
-        mesh->vertices = NULL;
-    }
+    mesh->vertices.clear();
     Mesh_GenFaces(mesh);
     Res_Poly_SortInMesh(mesh);
 }
 
 void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_room_t *tr_room, base_mesh_p mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, polygon_p p)
 {
-    Polygon_Resize(p, numCorners);
+    p->vertices.resize(numCorners);
 
     for (int i = 0; i < numCorners; i++)
     {
-        TR_vertex_to_arr(p->vertices[i].position, &tr_room->vertices[vertices[i]].vertex);
+        TR_vertex_to_arr(p->vertices[i].position, tr_room->vertices[vertices[i]].vertex);
     }
     Polygon_FindNormale(p);
 
     for (int i = 0; i < numCorners; i++)
     {
-        vec3_add(mesh->vertices[vertices[i]].normal, mesh->vertices[vertices[i]].normal, p->plane);
-        vec3_copy(p->vertices[i].normal, p->plane);
-        TR_color_to_arr(p->vertices[i].color, &tr_room->vertices[vertices[i]].colour);
+        mesh->vertices[vertices[i]].normal += p->plane;
+        p->vertices[i].normal = p->plane;
+        TR_color_to_arr(p->vertices[i].color, tr_room->vertices[vertices[i]].colour);
     }
 
     tr4_object_texture_t *tex = &tr->object_textures[masked_texture];
@@ -3165,18 +3133,18 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
     mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
     mesh->uses_vertex_colors = 1; // This is implicitly true on room meshes
 
-    mesh->vertex_count = tr_room->num_vertices;
-    vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));
-    for(uint32_t i=0;i<mesh->vertex_count;i++,vertex++)
+    mesh->vertices.resize( tr_room->num_vertices );
+    vertex = mesh->vertices.data();
+    for(size_t i=0; i<mesh->vertices.size(); i++, vertex++)
     {
-        TR_vertex_to_arr(vertex->position, &tr_room->vertices[i].vertex);
-        vec3_set_zero(vertex->normal);                                          // paranoid
+        TR_vertex_to_arr(vertex->position, tr_room->vertices[i].vertex);
+        vertex->normal.setZero();                                          // paranoid
     }
 
     BaseMesh_FindBB(mesh);
 
-    mesh->polygons_count = tr_room->num_triangles + tr_room->num_rectangles;
-    p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
+    mesh->polygons.resize( tr_room->num_triangles + tr_room->num_rectangles );
+    p = mesh->polygons.data();
 
     /*
      * triangles
@@ -3199,16 +3167,16 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
     /*
      * let us normalise normales %)
      */
-    for(uint32_t i=0;i<mesh->vertex_count;i++)
+    for(vertex_s& v : mesh->vertices)
     {
-        vec3_norm(mesh->vertices[i].normal, n);
+        v.normal.normalize();
     }
 
     /*
      * triangles
      */
-    p = mesh->polygons;
-    for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
+    p = mesh->polygons.data();
+    for(size_t i=0; i<tr_room->num_triangles; i++, p++)
     {
         tr_copyNormals(p, mesh, tr_room->triangles[i].vertices);
     }
@@ -3221,12 +3189,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
         tr_copyNormals(p, mesh, tr_room->rectangles[i].vertices);
     }
 
-    if(mesh->vertex_count > 0)
-    {
-        mesh->vertex_count = 0;
-        free(mesh->vertices);
-        mesh->vertices = NULL;
-    }
+    mesh->vertices.clear();
     Mesh_GenFaces(mesh);
     Res_Poly_SortInMesh(mesh);
 }
@@ -3355,17 +3318,17 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
 
 void Res_GenVBOs(struct world_s *world)
 {
-    for(uint32_t i=0;i<world->meshes_count;i++)
+    for(uint32_t i=0; i<world->meshes_count; i++)
     {
-        if(world->meshes[i].vertex_count || world->meshes[i].animated_vertex_count)
+        if(!world->meshes[i].vertices.empty() || world->meshes[i].animated_vertex_count)
         {
             Mesh_GenVBO(&renderer, world->meshes + i);
         }
     }
 
-    for(uint32_t i=0;i<world->rooms.size();i++)
+    for(uint32_t i=0; i<world->rooms.size(); i++)
     {
-        if((world->rooms[i]->mesh) && (world->rooms[i]->mesh->vertex_count || world->rooms[i]->mesh->animated_vertex_count))
+        if((world->rooms[i]->mesh) && (!world->rooms[i]->mesh->vertices.empty() || world->rooms[i]->mesh->animated_vertex_count))
         {
             Mesh_GenVBO(&renderer, world->rooms[i]->mesh);
         }
@@ -3471,7 +3434,6 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     uint32_t frame_offset, frame_step;
     uint16_t temp1, temp2;
     float ang;
-    btScalar rot[3];
 
     bone_tag_p bone_tag;
     bone_frame_p bone_frame;
@@ -3540,8 +3502,8 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
 
-        vec3_set_zero(bone_frame->pos);
-        vec3_set_zero(bone_frame->move);
+        bone_frame->pos.setZero();
+        bone_frame->move.setZero();
         bone_frame->v_Horizontal = 0.0;
         bone_frame->v_Vertical = 0.0;
         bone_frame->command = 0x00;
@@ -3550,11 +3512,8 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             tree_tag = model->mesh_tree + k;
             bone_tag = bone_frame->bone_tags + k;
 
-            rot[0] = 0.0;
-            rot[1] = 0.0;
-            rot[2] = 0.0;
-            vec4_SetTRRotations(bone_tag->qrotate, rot);
-            vec3_copy(bone_tag->offset, tree_tag->offset);
+            vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+            bone_tag->offset = tree_tag->offset;
         }
         return;
     }
@@ -3662,8 +3621,8 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         {
             bone_frame->bone_tag_count = model->mesh_count;
             bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
-            vec3_set_zero(bone_frame->pos);
-            vec3_set_zero(bone_frame->move);
+            bone_frame->pos.setZero();
+            bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset >= tr->frame_data_size)
@@ -3673,11 +3632,8 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
                 {
                     tree_tag = model->mesh_tree + k;
                     bone_tag = bone_frame->bone_tags + k;
-                    rot[0] = 0.0;
-                    rot[1] = 0.0;
-                    rot[2] = 0.0;
-                    vec4_SetTRRotations(bone_tag->qrotate, rot);
-                    vec3_copy(bone_tag->offset, tree_tag->offset);
+                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+                    bone_tag->offset = tree_tag->offset;
                 }
             }
             else
@@ -3687,29 +3643,26 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
                 {
                     tree_tag = model->mesh_tree + k;
                     bone_tag = bone_frame->bone_tags + k;
-                    rot[0] = 0.0;
-                    rot[1] = 0.0;
-                    rot[2] = 0.0;
-                    vec4_SetTRRotations(bone_tag->qrotate, rot);
-                    vec3_copy(bone_tag->offset, tree_tag->offset);
+                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+                    bone_tag->offset = tree_tag->offset;
 
                     switch(tr->game_version)
                     {
                         case TR_I:                                              /* TR_I */
                         case TR_I_UB:
-                        case TR_I_DEMO:
+                        case TR_I_DEMO: {
                             temp2 = tr->frame_data[frame_offset + l];
                             l ++;
                             temp1 = tr->frame_data[frame_offset + l];
                             l ++;
+                            btVector3 rot;
                             rot[0] = (float)((temp1 & 0x3ff0) >> 4);
                             rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                             rot[1] = (float)(temp2 & 0x03ff);
-                            rot[0] *= 360.0 / 1024.0;
-                            rot[1] *= 360.0 / 1024.0;
-                            rot[2] *= 360.0 / 1024.0;
+                            rot *= 360.0 / 1024.0;
                             vec4_SetTRRotations(bone_tag->qrotate, rot);
                             break;
+                        }
 
                         default:                                                /* TR_II + */
                             temp1 = tr->frame_data[frame_offset + l];
@@ -3728,28 +3681,20 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
                             switch (temp1 & 0xc000)
                             {
                                 case 0x4000:    // x only
-                                    rot[0] = ang;
-                                    rot[1] = 0;
-                                    rot[2] = 0;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetTRRotations(bone_tag->qrotate, {ang,0,0});
                                     break;
 
                                 case 0x8000:    // y only
-                                    rot[0] = 0;
-                                    rot[1] = 0;
-                                    rot[2] =-ang;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,-ang});
                                     break;
 
                                 case 0xc000:    // z only
-                                    rot[0] = 0;
-                                    rot[1] = ang;
-                                    rot[2] = 0;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetTRRotations(bone_tag->qrotate, {0,ang,0});
                                     break;
 
-                                default:        // all three
+                                default: {        // all three
                                     temp2 = tr->frame_data[frame_offset + l];
+                                    btVector3 rot;
                                     rot[0] = (float)((temp1 & 0x3ff0) >> 4);
                                     rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                                     rot[1] = (float)(temp2 & 0x03ff);
@@ -3759,6 +3704,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
                                     vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     l ++;
                                     break;
+                                }
                             };
                             break;
                     };
@@ -4005,9 +3951,9 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         tr_item = &tr->items[i];
         std::shared_ptr<Entity> entity = std::make_shared<Entity>();
         entity->id = i;
-        entity->transform[12] = tr_item->pos.x;
-        entity->transform[13] =-tr_item->pos.z;
-        entity->transform[14] = tr_item->pos.y;
+        entity->transform.getOrigin()[0] = tr_item->pos.x;
+        entity->transform.getOrigin()[1] =-tr_item->pos.z;
+        entity->transform.getOrigin()[2] = tr_item->pos.y;
         entity->angles[0] = tr_item->rotation;
         entity->angles[1] = 0.0;
         entity->angles[2] = 0.0;
@@ -4059,10 +4005,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 if(replace_anim_id > 0)
                 {
                     skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
-                    animation_frame_p ta;
-                    uint16_t tc;
-                    SWAPT(entity->bf.animations.model->animations, replace_anim_model->animations, ta);
-                    SWAPT(entity->bf.animations.model->animation_count, replace_anim_model->animation_count, tc);
+                    std::swap(entity->bf.animations.model->animations, replace_anim_model->animations);
+                    std::swap(entity->bf.animations.model->animation_count, replace_anim_model->animation_count);
                 }
             }
             lua_settop(ent_ID_override, top);                                      // restore LUA stack
@@ -4080,9 +4024,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 entity->self->room->sprites = (room_sprite_p)realloc(entity->self->room->sprites, sz * sizeof(room_sprite_t));
                 rsp = entity->self->room->sprites + sz - 1;
                 rsp->sprite = sp;
-                rsp->pos[0] = entity->transform[12];
-                rsp->pos[1] = entity->transform[13];
-                rsp->pos[2] = entity->transform[14];
+                rsp->pos = entity->transform.getOrigin();
                 rsp->was_rendered = 0;
             }
 
@@ -4166,7 +4108,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             }
             Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             BT_GenEntityRigidBody(entity);
-            Character_Create(entity);
+            if(!entity->character)
+                entity->character = std::make_shared<Character>(entity);
             entity->character->Height = 768.0;
             entity->character->state_func = State_Control_Lara;
 

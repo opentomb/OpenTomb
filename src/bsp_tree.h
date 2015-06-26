@@ -1,30 +1,33 @@
 #ifndef BSP_TREE_H
 #define BSP_TREE_H
 
-#include <string.h>
-#include <stdint.h>
+#include <cstring>
+#include <cstdint>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include "bullet/LinearMath/btScalar.h"
+
+#include "vmath.h"
 
 struct polygon_s;
 struct frustum_s;
 
 typedef struct bsp_face_ref_s {
     struct bsp_face_ref_s *next;
-    btScalar transform[16];
+    btTransform transform;
     const struct transparent_polygon_reference_s *const polygon;
     
-    bsp_face_ref_s(const btScalar matrix[16], const struct transparent_polygon_reference_s *polygon)
-    : next(0), polygon(polygon)
+    bsp_face_ref_s(const btTransform& matrix, const struct transparent_polygon_reference_s *polygon)
+        : next(nullptr)
+        , transform(matrix)
+        , polygon(polygon)
     {
-        memcpy(transform, matrix, sizeof(transform));
     }
 } bsp_face_ref_t, *bsp_face_ref_p;
 
 typedef struct bsp_node_s
 {
-    btScalar            plane[4];
+    btVector3 plane;
     
     struct bsp_face_ref_s   *polygons_front;
     struct bsp_face_ref_s   *polygons_back;
@@ -43,7 +46,7 @@ class dynamicBSP
     uint32_t             m_allocated;
     
     struct bsp_node_s *createBSPNode();
-    struct bsp_face_ref_s *createFace(const btScalar transform[16], const struct transparent_polygon_reference_s *polygon);
+    struct bsp_face_ref_s *createFace(const btTransform &transform, const struct transparent_polygon_reference_s *polygon);
     struct polygon_s  *createPolygon(uint16_t vertex_count);
     void addPolygon(struct bsp_node_s *root, struct bsp_face_ref_s *const p, struct polygon_s *transformed);
     
@@ -52,7 +55,7 @@ public:
     
     dynamicBSP(uint32_t size);
    ~dynamicBSP();
-    void addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btScalar *transform, struct frustum_s *f);
+    void addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btTransform &transform, struct frustum_s *f);
     void reset()
     {
         m_allocated = 0;

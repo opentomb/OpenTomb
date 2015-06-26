@@ -74,7 +74,7 @@ public:
      * amount of checks to make sure no duplicate work is being done.
      */
     virtual void use() = 0;
-    virtual ~vertex_array() {};
+    virtual ~vertex_array() {}
 };
 
 #endif /* defined(__OpenTomb__vertex_array__) */

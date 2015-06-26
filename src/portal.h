@@ -10,6 +10,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
+
+#include "vmath.h"
 
 struct camera_s;
 struct Room;
@@ -24,20 +27,24 @@ struct frustum_s;
  */
 typedef struct portal_s                                                         
 {
-    uint16_t vertex_count;     
-    btScalar *vertex;                                                           // Оригинальные вершины портала
-    btScalar norm[4];                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
-    btScalar centre[3];                                                         // центр портала
-    std::shared_ptr<Room> dest_room;                                                   // куда ведет портал
+    std::vector<btVector3> vertices;                                                           // Оригинальные вершины портала
+    btVector3 norm;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
+    btVector3 centre;                                                         // центр портала
+    std::shared_ptr<Room> dest_room = nullptr;                                                   // куда ведет портал
     std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
-    unsigned int flag;                                                          // хз, мб потом понадобится
+    unsigned int flag = 0;                                                          // хз, мб потом понадобится
+
+    portal_s(size_t vcount = 0)
+        : vertices(vcount)
+    {
+    }
+
+    ~portal_s() = default;
 }portal_t, *portal_p;
 
 
 
 void Portal_InitGlobals();
-portal_p Portal_Create(unsigned int vcount);
-void Portal_Clear(portal_p p);
 
 /**
  * Draws wireframe of this portal.
@@ -61,10 +68,10 @@ void Portal_Clear(portal_p p);
  */
 
 // тут пошли реальные нешуточные функции
-int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector);
-int Portal_IsWayToSector(portal_p p, struct room_sector_s *sector);
-void Portal_Move(portal_p p, btScalar mv[3]);
-int Portal_RayIntersect(portal_p p, btScalar dir[3], btScalar dot[3]);              // проверка на пересечение луча и портала
+bool Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector);
+bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector);
+void Portal_Move(portal_p p, const btVector3 &mv);
+bool Portal_RayIntersect(portal_p p, const btVector3 &dir, const btVector3 &dot);              // проверка на пересечение луча и портала
 
 void Portal_GenNormale(portal_p p);
 

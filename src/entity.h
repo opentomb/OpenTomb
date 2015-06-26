@@ -20,7 +20,7 @@ class btRigidBody;
 struct Room;
 struct room_sector_s;
 struct obb_s;
-struct character_s;
+struct Character;
 struct ss_animation_s;
 struct ss_bone_frame_s;
 
@@ -124,23 +124,24 @@ struct Entity : public Object
     
     struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
     struct bt_entity_data_s             bt;
-    btScalar                            angles[3];
-    btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
+    btVector3 angles;
+    btTransform transform; // GL transformation matrix
 
-    struct obb_s                       *obb;                // oriented bounding box
+    std::unique_ptr<obb_s> obb;                // oriented bounding box
 
     struct room_sector_s               *current_sector;
     struct room_sector_s               *last_sector;
 
     struct engine_container_s          *self;
 
-    btScalar                            activation_offset[4];   // where we can activate object (dx, dy, dz, r)
+    btVector3 activation_offset;   // where we can activate object (dx, dy, dz, r)
     
-    struct character_s                 *character;
+    std::shared_ptr<Character> character;
 
     Entity();
-
     ~Entity();
+
+    void createGhosts();
 };
 
 
@@ -152,12 +153,12 @@ void Entity_DisableCollision(std::shared_ptr<Entity> ent);
 
 // Bullet entity rigid body generating.
 void BT_GenEntityRigidBody(std::shared_ptr<Entity> ent);
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
+int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);
 void Entity_GhostUpdate(std::shared_ptr<Entity> ent);
 void Entity_UpdateCurrentCollisions(std::shared_ptr<Entity> ent);
-int Entity_GetPenetrationFixVector(std::shared_ptr<Entity> ent, btScalar reaction[3], btScalar move_global[3]);
-void Entity_FixPenetrations(std::shared_ptr<Entity> ent, btScalar move[3]);
-int Entity_CheckNextPenetration(std::shared_ptr<Entity> ent, btScalar move[3]);
+int Entity_GetPenetrationFixVector(std::shared_ptr<Entity> ent, btVector3 *reaction, bool hasMove);
+void Entity_FixPenetrations(std::shared_ptr<Entity> ent, btVector3 *move);
+int Entity_CheckNextPenetration(std::shared_ptr<Entity> ent, const btVector3& move);
 void Entity_CheckCollisionCallbacks(std::shared_ptr<Entity> ent);
 bool Entity_WasCollisionBodyParts(std::shared_ptr<Entity> ent, uint32_t parts_flags);
 void Entity_CleanCollisionAllBodyParts(std::shared_ptr<Entity> ent);
@@ -181,7 +182,7 @@ void Entity_CheckActivators(std::shared_ptr<Entity> ent);
 
 int  Entity_GetSubstanceState(std::shared_ptr<Entity> entity);
 
-void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
+void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, const btTransform *etr);
 void Entity_DoAnimCommands(std::shared_ptr<Entity> entity, struct ss_animation_s *ss_anim, int changing);
 void Entity_ProcessSector(std::shared_ptr<Entity> ent);
 void Entity_SetAnimation(std::shared_ptr<Entity> entity, int animation, int frame = 0, int another_model = -1);

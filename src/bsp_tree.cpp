@@ -24,7 +24,7 @@ struct bsp_node_s *dynamicBSP::createBSPNode()
 }
 
 
-struct bsp_face_ref_s *dynamicBSP::createFace(const btScalar transform[16], const struct transparent_polygon_reference_s *polygon)
+struct bsp_face_ref_s *dynamicBSP::createFace(const btTransform& transform, const struct transparent_polygon_reference_s *polygon)
 {
     assert(polygon && polygon->polygon);
     uint8_t *start = ((uint8_t*)m_data + m_allocated);
@@ -38,34 +38,26 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct bsp_face_ref_s *cons
     if(root->polygons_front == NULL)
     {
         // we though root->front == NULL and root->back == NULL
-        vec4_copy(root->plane, transformed->plane);
+        root->plane = transformed->plane;
         root->polygons_front = face;
         return;
     }
 
-    uint16_t positive = 0;
-    uint16_t negative = 0;
-    uint16_t in_plane = 0;
-    btScalar dist;
-    vertex_p v = transformed->vertices;
-    for(uint16_t i=0;i<transformed->vertex_count;i++,v++)
+    size_t positive = 0;
+    size_t negative = 0;
+    size_t in_plane = 0;
+    for(const vertex_s& v : transformed->vertices)
     {
-        dist = vec3_plane_dist(root->plane, v->position);
+        const auto dist = planeDist(root->plane, v.position);
         if (dist > SPLIT_EPSILON)
-        {
             positive++;
-        }
         else if (dist < -SPLIT_EPSILON)
-        {
             negative++;
-        }
         else
-        {
             in_plane++;
-        }
     }
 
-    if((positive > 0) && (negative == 0))                   // SPLIT_FRONT
+    if(positive > 0 && negative == 0)                   // SPLIT_FRONT
     {
         if(root->front == NULL)
         {
@@ -83,7 +75,7 @@ void dynamicBSP::addPolygon(struct bsp_node_s *root, struct bsp_face_ref_s *cons
     }
     else //((positive == 0) && (negative == 0))             // SPLIT_IN_PLANE
     {
-        if(vec3_dot(transformed->plane, root->plane) > 0.9)
+        if(transformed->plane.dot(root->plane) > 0.9)
         {
             face->next = root->polygons_front;
             root->polygons_front = face;
@@ -119,26 +111,26 @@ dynamicBSP::~dynamicBSP()
 }
 
 
-void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btScalar *transform, struct frustum_s *f)
+void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btTransform& transform, struct frustum_s *f)
 {
     if(m_data_size - m_allocated < 1024)                                        ///@FIXME: magick 1024
     {
         return;
     }
 
-    polygon_s *transformed = Polygon_CreateArray(1);
+    polygon_s transformed;
     for(size_t i = 0; i < count; i++)
     {
         uint32_t orig_allocated = m_allocated;
         bool visible = (f == NULL);
 
-        Polygon_Resize(transformed, p[i].polygon->vertex_count);
-        Polygon_Transform(transformed, p[i].polygon, transform);
-        transformed->double_side = p[i].polygon->double_side;
+        transformed.vertices.resize( p[i].polygon->vertices.size() );
+        Polygon_Transform(&transformed, p[i].polygon, transform);
+        transformed.double_side = p[i].polygon->double_side;
 
         for(frustum_p ff=f;(!visible)&&(ff!=NULL);ff=ff->next)
         {
-            if(Frustum_IsPolyVisible(transformed, ff))
+            if(Frustum_IsPolyVisible(&transformed, ff))
             {
                 visible = true;
                 break;
@@ -148,13 +140,12 @@ void dynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygo
         if(visible)
         {
             bsp_face_ref_s *face = this->createFace(transform, &p[i]);
-            this->addPolygon(m_root, face, transformed);
+            this->addPolygon(m_root, face, &transformed);
         }
         else
         {
             m_allocated = orig_allocated;
         }
     }
-    Polygon_Clear(transformed);
 }
 

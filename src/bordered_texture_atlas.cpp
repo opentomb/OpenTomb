@@ -355,7 +355,7 @@ void bordered_texture_atlas::getCoordinates(unsigned long texture,
     const canonical_object_texture &canonical = canonical_object_textures[file_object_texture.canonical_texture_index];
 
     poly->tex_index = canonical.new_page;
-    for (unsigned long i = 0; i < poly->vertex_count; i++)
+    for (size_t i = 0; i < poly->vertices.size(); i++)
     {
         unsigned x_coord;
         unsigned y_coord;
@@ -392,7 +392,7 @@ void bordered_texture_atlas::getCoordinates(unsigned long texture,
                 assert(0);
         }
 
-        unsigned long index = reverse ? (poly->vertex_count - i-1) : i;
+        size_t index = reverse ? (poly->vertices.size() - i-1) : i;
 
         poly->vertices[index].tex_coord[0] = (GLfloat) x_coord / (GLfloat) result_page_width;
         poly->vertices[index].tex_coord[1] = (GLfloat) y_coord / (GLfloat) result_page_height[canonical.new_page];

@@ -187,7 +187,7 @@ void Con_Draw()
         {
             GLfloat *col = FontManager->GetFontStyle((font_Style)con_base.line_style_id[i])->real_color;
             y += con_base.line_height;
-            vec4_copy(con_base.font->gl_font_color, col);
+            std::copy(col, col+4, con_base.font->gl_font_color);
             glf_render_str(con_base.font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
         }
     }
