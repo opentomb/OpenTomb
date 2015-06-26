@@ -24,18 +24,19 @@
 #define OBJECT_HAIR                             (0x0004)
 #define OBJECT_BULLET_MISC                      (0x7FFF)
 
-#define COLLISION_SHAPE_BOX                     1
-#define COLLISION_SHAPE_BOX_BASE                2
-#define COLLISION_SHAPE_SPHERE                  3
-#define COLLISION_SHAPE_TRIMESH                 4
-#define COLLISION_SHAPE_TRIMESH_CONVEX          5
+#define COLLISION_SHAPE_BOX                     0x0001
+#define COLLISION_SHAPE_BOX_BASE                0x0002     // use single box collision
+#define COLLISION_SHAPE_SPHERE                  0x0003
+#define COLLISION_SHAPE_TRIMESH                 0x0004     // for static objects and room's!
+#define COLLISION_SHAPE_TRIMESH_CONVEX          0x0005     // for dynamic objects
 
-#define COLLISION_TYPE_STATIC                   0x01     // static object - never moved
-#define COLLISION_TYPE_KINEMATIC                0x03     // doors and other moveable statics
-#define COLLISION_TYPE_DYNAMIC                  0x05     // hellow full physics interaction
-#define COLLISION_TYPE_ACTOR                    0x07     // actor, enemies, NPC, animals
-#define COLLISION_TYPE_VEHICLE                  0x09     // car, moto, bike
-#define COLLISION_TYPE_GHOST                    0x00     // no one collisions
+#define COLLISION_TYPE_NONE                     0x0000
+#define COLLISION_TYPE_STATIC                   0x0001     // static object - never moved
+#define COLLISION_TYPE_KINEMATIC                0x0003     // doors and other moveable statics
+#define COLLISION_TYPE_DYNAMIC                  0x0005     // hellow full physics interaction
+#define COLLISION_TYPE_ACTOR                    0x0007     // actor, enemies, NPC, animals
+#define COLLISION_TYPE_VEHICLE                  0x0009     // car, moto, bike
+#define COLLISION_TYPE_GHOST                    0x000B     // no fix character position, but works in collision callbacks and interacts with dynamic objects
 
 #define COLLISION_NONE                          (0x0000)
 #define COLLISION_MASK_ALL                      (0x7FFF)        // bullet uses signed short int for these flags!
@@ -258,6 +259,8 @@ void Engine_Frame(btScalar time);
 void Engine_Display();
 
 void Engine_BTInit();
+
+int lua_print(lua_State * lua);
 
 bool Engine_LuaInit();
 void Engine_LuaClearTasks();

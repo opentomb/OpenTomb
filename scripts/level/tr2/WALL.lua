@@ -6,12 +6,12 @@ print("Level script loaded (WALL.lua)");
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
 
-static_tbl[00] = {coll = COLL_MESH};            -- Bank rock
-static_tbl[01] = {coll = COLL_NONE};            -- Death slide rope
-static_tbl[02] = {coll = COLL_NONE};            -- Skeleton 1
-static_tbl[03] = {coll = COLL_NONE};            -- Skeleton 2
-static_tbl[04] = {coll = COLL_NONE};            -- Cobweb
-static_tbl[10] = {coll = COLL_NONE};            -- Fireplace
-static_tbl[11] = {coll = COLL_MESH};            -- Crate with book
-static_tbl[12] = {coll = COLL_MESH};            -- Briefcase
-static_tbl[13] = {coll = COLL_MESH};            -- Crates
+static_tbl[00] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};        -- Bank rock
+static_tbl[01] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Death slide rope
+static_tbl[02] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Skeleton 1
+static_tbl[03] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Skeleton 2
+static_tbl[04] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Cobweb
+static_tbl[10] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Fireplace
+static_tbl[11] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};        -- Crate with book
+static_tbl[12] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};        -- Briefcase
+static_tbl[13] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};        -- Crates

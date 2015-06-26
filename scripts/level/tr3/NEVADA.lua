@@ -6,18 +6,18 @@ print("Level script loaded (NEVADA.lua)");
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------
 
-static_tbl[00] = {coll = COLL_NONE};            -- Bush
-static_tbl[10] = {coll = COLL_BBOX};            -- Desk
-static_tbl[11] = {coll = COLL_BBOX};            -- Warning sign
-static_tbl[12] = {coll = COLL_BBOX};            -- Door border
-static_tbl[13] = {coll = COLL_BBOX};            -- Door border 2
-static_tbl[14] = {coll = COLL_MESH};            -- Opened door
-static_tbl[15] = {coll = COLL_BBOX};            -- Locker
-static_tbl[20] = {coll = COLL_NONE};            -- Cactuss part 1
-static_tbl[21] = {coll = COLL_BBOX};            -- Cactuss part 2
-static_tbl[22] = {coll = COLL_NONE};            -- Cactuss top
-static_tbl[30] = {coll = COLL_BBOX};            -- Barbed wire 1
-static_tbl[40] = {coll = COLL_BBOX};            -- Barbed wire 2
-static_tbl[41] = {coll = COLL_BBOX};            -- Ceiling tile
-static_tbl[48] = {coll = COLL_BBOX, hide = 1};  -- Horizontal collision panel: dummy static!
-static_tbl[49] = {coll = COLL_BBOX};            -- Chain
+static_tbl[00] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Bush
+static_tbl[10] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Desk
+static_tbl[11] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Warning sign
+static_tbl[12] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Door border
+static_tbl[13] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Door border 2
+static_tbl[14] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_TRIMESH};        -- Opened door
+static_tbl[15] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Locker
+static_tbl[20] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Cactuss part 1
+static_tbl[21] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Cactuss part 2
+static_tbl[22] = {coll = COLLISION_TYPE_NONE,   shape = COLLISION_SHAPE_BOX};            -- Cactuss top
+static_tbl[30] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Barbed wire 1
+static_tbl[40] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Barbed wire 2
+static_tbl[41] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Ceiling tile
+static_tbl[48] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX, hide = 1};  -- Horizontal collision panel: dummy static!
+static_tbl[49] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX};            -- Chain

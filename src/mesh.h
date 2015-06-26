@@ -379,7 +379,7 @@ uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
 void Mesh_GenFaces(base_mesh_p mesh);
 
 /* bullet collision model calculation */
-btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh, bool is_static);
+btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 

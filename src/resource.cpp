@@ -57,7 +57,7 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
             lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
-            if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
+            if (lua_CallAndLog(objects_flags_conf, 2, 5, 0))
             {
                 ent->self->collision_type = lua_tointeger(objects_flags_conf, -5);      // get collision type flag
                 ent->self->collision_shape = lua_tointeger(objects_flags_conf, -4);     // get collision shape flag
@@ -82,7 +82,7 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
             lua_pushinteger(level_script, ent->bf.animations.model->id);        // entity model id
-            if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
+            if (lua_CallAndLog(level_script, 2, 5, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -5))
                 {
@@ -153,7 +153,7 @@ void Res_SetStaticMeshProperties(struct static_mesh_s *r_static)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, r_static->object_id);
-            if(lua_CallAndLog(level_script, 1, 2, 0))
+            if(lua_CallAndLog(level_script, 1, 3, 0))
             {
                 if(!lua_isnil(level_script, -3))
                 {
@@ -1775,6 +1775,7 @@ void Res_ScriptsOpen(int engine_version)
     if(level_script != NULL)
     {
         luaL_openlibs(level_script);
+        lua_register(level_script, "print", lua_print);
         lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
         lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
@@ -2108,11 +2109,11 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             switch(r_static->self->collision_shape)
             {
                 case COLLISION_SHAPE_BOX:
-                    cshape = BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max, true, true, false);
+                    cshape = BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max, true, true);
                     break;
 
                 case COLLISION_SHAPE_BOX_BASE:
-                    cshape = BT_CSfromBBox(r_static->mesh->bb_min, r_static->mesh->bb_max, true, true, false);
+                    cshape = BT_CSfromBBox(r_static->mesh->bb_min, r_static->mesh->bb_max, true, true);
                     break;
 
                 case COLLISION_SHAPE_TRIMESH:
@@ -4210,14 +4211,13 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         }
 
         Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
-        BT_GenEntityRigidBody(entity);
-
         Entity_RebuildBV(entity);
         Room_AddEntity(entity->self->room, entity);
         World_AddEntity(world, entity);
-
         Res_SetEntityModelProperties(entity);
-        if(!(entity->self->collision_type & 0x0001))
+        BT_GenEntityRigidBody(entity);
+
+        if((entity->self->collision_type & 0x0001) == 0)
         {
             Entity_DisableCollision(entity);
         }

@@ -273,7 +273,7 @@ void Engine_BTInit()
      return 0;
  }
 
- int lua_print(lua_State * lua)
+int lua_print(lua_State * lua)
 {
      int top = lua_gettop(lua);
 
@@ -469,6 +469,33 @@ int lua_DisableEntity(lua_State * lua)
 
     entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent != NULL) Entity_Disable(ent);
+
+    return 0;
+}
+
+
+int lua_SetEntityCollision(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        return 0;
+    }
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    if(ent != NULL)
+    {
+        if((top >= 2) && (lua_tointeger(lua, 2)))
+        {
+            Entity_EnableCollision(ent);
+        }
+        else
+        {
+            Entity_DisableCollision(ent);
+        }
+    }
 
     return 0;
 }
@@ -690,17 +717,21 @@ int lua_DropEntity(lua_State * lua)
             ent->transform[12+2] = move.m_floats[2];
 
             lua_pushboolean(lua, 1);
-            return 1;
+        }
+        else
+        {
+            lua_pushboolean(lua, 0);
         }
     }
-
-    ent->transform[12+0] += move.m_floats[0];
-    ent->transform[12+1] += move.m_floats[1];
-    ent->transform[12+2] += move.m_floats[2];
+    else
+    {
+        ent->transform[12+0] += move.m_floats[0];
+        ent->transform[12+1] += move.m_floats[1];
+        ent->transform[12+2] += move.m_floats[2];
+        lua_pushboolean(lua, 0);
+    }
 
     Entity_UpdateRigidBody(ent, 1);
-
-    lua_pushboolean(lua, 0);
     return 1;
 }
 
@@ -4148,6 +4179,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
     lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
+    lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);

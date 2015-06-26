@@ -341,7 +341,27 @@ void BT_GenEntityRigidBody(entity_p ent)
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         base_mesh_p mesh = ent->bf.animations.model->mesh_tree[i].mesh_base;
-        btCollisionShape *cshape = BT_CSfromMesh(mesh, true, true, !(ent->self->collision_shape & COLLISION_SHAPE_TRIMESH_CONVEX));
+        btCollisionShape *cshape = NULL;
+        switch(ent->self->collision_shape)
+        {
+            case COLLISION_SHAPE_TRIMESH_CONVEX:
+                cshape = BT_CSfromMesh(mesh, true, true, false);
+                break;
+
+            case COLLISION_SHAPE_TRIMESH:
+                cshape = BT_CSfromMesh(mesh, true, true, true);
+                break;
+
+            case COLLISION_SHAPE_BOX:
+                cshape = BT_CSfromBBox(mesh->bb_min, mesh->bb_max, true, true);
+                break;
+
+                ///@TODO: add other shapes implementation; may be change default;
+            default:
+                 cshape = BT_CSfromMesh(mesh, true, true, true);
+                 break;
+        };
+
         ent->bt.bt_body[i] = NULL;
 
         if(cshape)
@@ -621,7 +641,7 @@ void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3])
     {
         btScalar t1, t2, reaction[3];
 
-        if(move != NULL)
+        if((move != NULL) && (ent->character != NULL))
         {
             ent->character->resp.horizontal_collide    = 0x00;
             ent->character->resp.vertical_collide      = 0x00;
@@ -1489,28 +1509,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
 }
 
 
-room_sector_s* Entity_GetLowestSector(room_sector_s* sector)
-{
-    room_sector_p lowest_sector = sector;
-
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_below)
-    { lowest_sector = rs; }
-
-    return lowest_sector;
-}
-
-
-room_sector_s* Entity_GetHighestSector(room_sector_s* sector)
-{
-    room_sector_p highest_sector = sector;
-
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_above)
-    { highest_sector = rs; }
-
-    return highest_sector;
-}
-
-
 void Entity_ProcessSector(struct entity_s *ent)
 {
     if(!ent->current_sector) return;
@@ -1521,8 +1519,8 @@ void Entity_ProcessSector(struct entity_s *ent)
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
-    room_sector_p highest_sector = Entity_GetHighestSector(ent->current_sector);
-    room_sector_p lowest_sector  = Entity_GetLowestSector(ent->current_sector);
+    room_sector_p highest_sector = Sector_GetHighest(ent->current_sector);
+    room_sector_p lowest_sector  = Sector_GetLowest(ent->current_sector);
 
     if(ent->character)
     {

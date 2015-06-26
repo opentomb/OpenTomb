@@ -717,7 +717,7 @@ void Mesh_GenFaces(base_mesh_p mesh)
 }
 
 
-btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh, bool is_static)
+btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh)
 {
     obb_p obb = OBB_Create();
     polygon_p p = obb->base_polygons;
@@ -743,7 +743,7 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useComp
         cnt ++;
     }
 
-    if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
+    if(cnt == 0)                                                                // fixed: without that condition engine may easily crash
     {
         delete trimesh;
         return NULL;
@@ -752,14 +752,7 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useComp
     OBB_Clear(obb);
     free(obb);
 
-    if(is_static)
-    {
-        ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
-    }
-    else
-    {
-        ret = new btConvexTriangleMeshShape(trimesh, true);
-    }
+    ret = new btConvexTriangleMeshShape(trimesh, true);
 
     return ret;
 }
