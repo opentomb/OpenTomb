@@ -2,12 +2,12 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_audio.h>
 
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-#include "al/AL/efx-presets.h"
+#include <AL/al.h>
+#include <AL/alext.h>
+#include <AL/efx.h>
+#include <AL/efx-presets.h>
 
+extern "C" {
 #include "ogg/codec.h"
 #include "ogg/ogg.h"
 #include "ogg/os_types.h"

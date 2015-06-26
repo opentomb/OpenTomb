@@ -16,8 +16,8 @@
 
 #include <lua.hpp>
 
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #include "vt/vt_level.h"
 

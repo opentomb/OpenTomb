@@ -2,12 +2,11 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-#include "al/AL/efx-presets.h"
+#include <AL/al.h>
+#include <AL/efx-presets.h>
+#include <AL/efx-creative.h>
 
+extern "C" {
 #include "ogg/codec.h"
 #include "ogg/ogg.h"
 #include "ogg/os_types.h"
