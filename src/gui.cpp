@@ -392,7 +392,7 @@ void Gui_Resize()
     }
 
     /* let us update console too */
-    Con_SetLineInterval(con_base.spacing);
+    ConsoleInfo::instance().setLineInterval(ConsoleInfo::instance().spacing());
     Gui_FillCrosshairBuffer();
 }
 
@@ -414,7 +414,7 @@ void Gui_Render()
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();
-    Con_Draw();
+    ConsoleInfo::instance().draw();
 
     glDepthMask(GL_TRUE);
     glPopAttrib();
@@ -1666,7 +1666,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
         }
         else
         {
-            Con_Warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
+            ConsoleInfo::instance().warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
             SDL_FreeSurface(surface);
             return false;
         }
@@ -1690,7 +1690,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     }
     else
     {
-        Con_Warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
+        ConsoleInfo::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
         return false;
     }
 
@@ -1706,7 +1706,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
         SetAspect();
 
-        Con_Notify(SYSNOTE_LOADED_FADER, texture_path);
+        ConsoleInfo::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
         SDL_FreeSurface(surface);
         return true;
     }

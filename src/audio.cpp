@@ -426,7 +426,7 @@ bool StreamTrack::Load_Ogg(const char *path)
 
     vorbis_Info = ov_info(&vorbis_Stream, -1);
 
-    Con_Notify(SYSNOTE_OGG_OPENED, path,
+    ConsoleInfo::instance().notify(SYSNOTE_OGG_OPENED, path,
                vorbis_Info->channels, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
 
     if(vorbis_Info->channels == 1)
@@ -831,7 +831,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(track_index >= engine_world.stream_track_map.size())
     {
-        Con_AddLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -840,7 +840,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(Audio_IsTrackPlaying(track_index))
     {
-        Con_AddLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
@@ -852,7 +852,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!lua_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
     {
-        Con_AddLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -877,7 +877,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
         target_stream = Audio_GetFreeStream();        // Try again to assign free stream.
 
         if(target_stream == -1)
-            Con_AddLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
+            ConsoleInfo::instance().addLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
             return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
     }
     else
@@ -894,7 +894,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
     {
-        Con_AddLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_LOADERROR;
     }
 
@@ -902,7 +902,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in)))
     {
-        Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_PLAYERROR;
     }
 
@@ -1615,13 +1615,13 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 
     if(!file)
     {
-        Con_Warning(SYSWARN_CANT_OPEN_FILE);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_OPEN_FILE);
         return -1;
     }
 
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
-        Con_Warning(SYSWARN_BAD_FILE_FORMAT);
+        ConsoleInfo::instance().warning(SYSWARN_BAD_FILE_FORMAT);
         return -2;
     }
 

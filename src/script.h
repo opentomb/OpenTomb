@@ -3,7 +3,7 @@
 #define PARSE_H
 
 struct screen_info_s;
-struct console_info_s;
+struct ConsoleInfo;
 struct Entity;
 struct lua_State;
 struct AudioSettings;
@@ -17,9 +17,9 @@ struct render_settings_s;
 
 extern lua_State *engine_lua;
 
-char *parse_token(char *data, char *token);
+const char *parse_token(const char *data, char *token);
 
-float SC_ParseFloat(char **ch);
+float SC_ParseFloat(const char **ch);
 int   SC_ParseInt(char **ch);
 
 void lua_Clean(lua_State *lua);
@@ -30,7 +30,7 @@ bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, co
 int lua_ParseScreen(lua_State *lua, screen_info_s *sc);
 int lua_ParseRender(lua_State *lua, render_settings_s *rs);
 int lua_ParseAudio(lua_State *lua, AudioSettings *as);
-int lua_ParseConsole(lua_State *lua, console_info_s *cn);
+int lua_ParseConsole(lua_State *lua, ConsoleInfo *cn);
 int lua_ParseControls(lua_State *lua, control_settings_s *cs);
 
 bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask);

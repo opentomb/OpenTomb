@@ -272,12 +272,12 @@ void Engine_InitSDLVideo()
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
-    Con_AddLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
-    Con_AddLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
-    char buf[con_base.line_size];
-    snprintf(buf, con_base.line_size, "OpenGL version %s", glGetString(GL_VERSION));
-    Con_AddLine((const char*)buf, FONTSTYLE_CONSOLE_INFO);
-    Con_AddLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
+    std::string version = "OpenGL version ";
+    version += (const char*)glGetString(GL_VERSION);
+    ConsoleInfo::instance().addLine(version, FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
 }
 
 #if !defined(__MACOSX__)

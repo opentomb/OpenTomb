@@ -1438,7 +1438,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
                                 af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
-                                Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
+                                ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
                                 //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
                                 break;
                         }
@@ -1627,7 +1627,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
 
     if(top < 10)
     {
-        Con_AddLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1637,7 +1637,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1660,7 +1660,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
 
     if(top < 10)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1670,7 +1670,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1693,7 +1693,7 @@ int lua_SetSectorPortal(lua_State * lua)
 
     if(top < 4)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1703,7 +1703,7 @@ int lua_SetSectorPortal(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1724,7 +1724,7 @@ int lua_SetSectorFlags(lua_State * lua)
 
     if(top < 7)
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -1734,7 +1734,7 @@ int lua_SetSectorFlags(lua_State * lua)
     room_sector_p rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 

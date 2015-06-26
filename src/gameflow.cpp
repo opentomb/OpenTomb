@@ -73,7 +73,7 @@ void Gameflow_Do()
                     else
                     {
                         Gui_FadeStop(FADER_LOADSCREEN);
-                        Con_AddLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
+                        ConsoleInfo::instance().addLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
                     }
                     lua_settop(engine_lua, top);
                     gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;

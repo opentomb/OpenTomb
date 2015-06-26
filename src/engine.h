@@ -261,7 +261,7 @@ void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix = NULL);
 int  Engine_LoadMap(const char *name);
 
-int  Engine_ExecCmd(char *ch);
+int  Engine_ExecCmd(const char *ch);
 
 void Engine_InitConfig(const char *filename);
 void Engine_SaveConfig();

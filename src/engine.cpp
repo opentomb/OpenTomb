@@ -146,7 +146,7 @@ void Engine_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
 
 void Engine_InitDefaultGlobals()
 {
-    Con_InitGlobals();
+    ConsoleInfo::instance().initGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
     Render_InitGlobals();
@@ -157,11 +157,11 @@ void Engine_InitDefaultGlobals()
 
 void Engine_Init_Pre()
 {
-    /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
+    /* Console must be initialized previously! some functions uses ConsoleInfo::instance().addLine before GL initialization!
      * Rendering activation may be done later. */
 
     Gui_InitFontManager();
-    Con_Init();
+    ConsoleInfo::instance().init();
     Engine_LuaInit();
 
     lua_CallVoidFunc(engine_lua, "loadscript_pre", true);
@@ -186,12 +186,12 @@ void Engine_Init_Post()
 {
     lua_CallVoidFunc(engine_lua, "loadscript_post", true);
 
-    Con_InitFonts();
+    ConsoleInfo::instance().initFonts();
 
     Gui_Init();
     Sys_Init();
 
-    Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
+    ConsoleInfo::instance().addLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
 }
 
 // Bullet Physics initialization.
@@ -228,7 +228,7 @@ void Engine_BTInit()
 
  int lua_CheckStack(lua_State *lua)
  {
-     Con_Printf("Current Lua stack index: %d", lua_gettop(lua));
+     ConsoleInfo::instance().printf("Current Lua stack index: %d", lua_gettop(lua));
      return 0;
  }
 
@@ -243,13 +243,13 @@ void Engine_BTInit()
      skeletal_model_p sm = World_GetModelByID(&engine_world, id);
      if(sm == NULL)
      {
-        Con_Printf("wrong model id = %d", id);
+        ConsoleInfo::instance().printf("wrong model id = %d", id);
         return 0;
      }
 
      for(int i=0;i<sm->mesh_count;i++)
      {
-         Con_Printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->id);
+         ConsoleInfo::instance().printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->id);
      }
 
      return 0;
@@ -268,7 +268,7 @@ int lua_DumpRoom(lua_State * lua)
         uint32_t id = lua_tointeger(lua, 1);
         if(id >= engine_world.rooms.size())
         {
-            Con_Warning(SYSWARN_WRONG_ROOM, id);
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_ROOM, id);
             return 0;
         }
         r = engine_world.rooms[id];
@@ -305,14 +305,14 @@ int lua_SetRoomEnabled(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id], [value]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id], [value]");
         return 0;
     }
 
     uint32_t id = lua_tointeger(lua, 1);
     if(id >= engine_world.rooms.size())
     {
-        Con_Warning(SYSWARN_WRONG_ROOM, id);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ROOM, id);
         return 0;
     }
 
@@ -336,7 +336,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id], [value]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id], [value]");
         return 0;
     }
 
@@ -344,7 +344,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
+        ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
         return 0;
     }
 
@@ -362,7 +362,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "(id, map_index, value)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "(id, map_index, value)");
         return 0;
     }
 
@@ -370,7 +370,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
+        ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
         return 0;
     }
 
@@ -390,7 +390,7 @@ int lua_EnableEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        ConsoleInfo::instance().warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
@@ -406,7 +406,7 @@ int lua_DisableEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        ConsoleInfo::instance().warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
@@ -421,7 +421,7 @@ int lua_SetEntityCollision(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        ConsoleInfo::instance().warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
     }
 
@@ -521,7 +521,7 @@ int lua_SetGravity(lua_State * lua)                                             
     {
         case 0:                                                                 // get value
             g = bt_engine_dynamicsWorld->getGravity();
-            Con_Printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
+            ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
             break;
 
         case 1:                                                                 // set z only value
@@ -529,7 +529,7 @@ int lua_SetGravity(lua_State * lua)                                             
             g[1] = 0.0;
             g[2] = lua_tonumber(lua, 1);
             bt_engine_dynamicsWorld->setGravity(g);
-            Con_Printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
+            ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
             break;
 
         case 3:                                                                 // set xyz value
@@ -537,11 +537,11 @@ int lua_SetGravity(lua_State * lua)                                             
             g[1] = lua_tonumber(lua, 2);
             g[2] = lua_tonumber(lua, 3);
             bt_engine_dynamicsWorld->setGravity(g);
-            Con_Printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
+            ConsoleInfo::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
             break;
 
         default:
-            Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "0, 1 or 3");
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS_COUNT, "0, 1 or 3");
             break;
     };
 
@@ -553,7 +553,7 @@ int lua_DropEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [time]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [time]");
         return 0;
     }
 
@@ -561,7 +561,7 @@ int lua_DropEntity(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -632,7 +632,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
 
     if(top < 1)
     {
-        Con_AddLine("not set entity id");
+        ConsoleInfo::instance().addLine("not set entity id", FONTSTYLE_CONSOLE_EVENT);
         return 0;
     }
 
@@ -640,7 +640,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -662,7 +662,7 @@ int lua_GetCharacterParam(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [param]");
         return 0;
     }
 
@@ -672,7 +672,7 @@ int lua_GetCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_SENTINEL)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return 0;
     }
 
@@ -683,7 +683,7 @@ int lua_GetCharacterParam(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_CHARACTER, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, id);
         return 0;
     }
 }
@@ -695,7 +695,7 @@ int lua_SetCharacterParam(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value], (max_value)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value], (max_value)");
         return 0;
     }
 
@@ -705,13 +705,13 @@ int lua_SetCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_SENTINEL)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return 0;
     }
 
     if(!IsCharacter(ent))
     {
-        Con_Warning(SYSWARN_NO_CHARACTER, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, id);
         return 0;
     }
     else if(top == 3)
@@ -747,7 +747,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [param], [value]");
         return 0;
     }
 
@@ -758,7 +758,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
     if(parameter >= PARAM_SENTINEL)
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, PARAM_SENTINEL);
         return 0;
     }
 
@@ -768,7 +768,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_CHARACTER, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, id);
     }
 
     return 0;
@@ -779,7 +779,7 @@ int lua_AddCharacterHair(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [hair_setup_index]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [hair_setup_index]");
     }
     else
     {
@@ -795,7 +795,7 @@ int lua_AddCharacterHair(lua_State *lua)
 
             if(!Hair_GetSetup(setup_index, &hair_setup))
             {
-                Con_Warning(SYSWARN_NO_HAIR_SETUP, setup_index);
+                ConsoleInfo::instance().warning(SYSWARN_NO_HAIR_SETUP, setup_index);
             }
             else
             {
@@ -803,13 +803,13 @@ int lua_AddCharacterHair(lua_State *lua)
 
                 if(!Hair_Create(ent->character->m_hairs.back(), &hair_setup, ent))
                 {
-                    Con_Warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
+                    ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
                 }
             }
         }
         else
         {
-            Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+            ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, ent_id);
         }
     }
     return 0;
@@ -819,7 +819,7 @@ int lua_ResetCharacterHair(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
     else
@@ -835,12 +835,12 @@ int lua_ResetCharacterHair(lua_State *lua)
             }
             else
             {
-                Con_Warning(SYSWARN_CANT_RESET_HAIR, ent_id);
+                ConsoleInfo::instance().warning(SYSWARN_CANT_RESET_HAIR, ent_id);
             }
         }
         else
         {
-            Con_Warning(SYSWARN_NO_CHARACTER, ent_id);
+            ConsoleInfo::instance().warning(SYSWARN_NO_CHARACTER, ent_id);
         }
     }
     return 0;
@@ -850,7 +850,7 @@ int lua_AddEntityRagdoll(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [ragdoll_setup_index]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [ragdoll_setup_index]");
     }
     else
     {
@@ -866,19 +866,19 @@ int lua_AddEntityRagdoll(lua_State *lua)
 
             if(!Ragdoll_GetSetup(setup_index, &ragdoll_setup))
             {
-                Con_Warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
+                ConsoleInfo::instance().warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
             }
             else
             {
                 if(!Ragdoll_Create(ent, &ragdoll_setup))
                 {
-                    Con_Warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
+                    ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
                 }
             }
         }
         else
         {
-            Con_Warning(SYSWARN_NO_ENTITY, ent_id);
+            ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ent_id);
         }
     }
     return 0;
@@ -888,7 +888,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
     else
@@ -904,12 +904,12 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
             }
             else
             {
-                Con_Warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
+                ConsoleInfo::instance().warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
             }
         }
         else
         {
-            Con_Warning(SYSWARN_NO_ENTITY, ent_id);
+            ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ent_id);
         }
     }
     return 0;
@@ -945,7 +945,7 @@ int lua_GetActionState(lua_State *lua)
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return 0;
     }
     else if(top == 1)
@@ -954,7 +954,7 @@ int lua_GetActionState(lua_State *lua)
         return 1;
     }
 
-    Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
+    ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS_COUNT, "1");
     return 0;
 }
 
@@ -966,7 +966,7 @@ int lua_GetActionChange(lua_State *lua)
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return 0;
     }
     else if(top == 1)
@@ -975,7 +975,7 @@ int lua_GetActionChange(lua_State *lua)
         return 1;
     }
 
-    Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "1");
+    ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS_COUNT, "1");
     return 0;
 }
 
@@ -994,7 +994,7 @@ int lua_BindKey(lua_State *lua)
 
     if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
     {
-        Con_Warning(SYSWARN_WRONG_ACTION_NUMBER);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
     }
 
     else if(top == 2)
@@ -1008,7 +1008,7 @@ int lua_BindKey(lua_State *lua)
     }
     else
     {
-        Con_Warning(SYSWARN_WRONG_ARGS_COUNT, "2 or 3");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS_COUNT, "2 or 3");
     }
 
     return 0;
@@ -1018,7 +1018,7 @@ int lua_AddFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[font index], [font path], [font size]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[font index], [font path], [font size]");
         return 0;
     }
 
@@ -1026,7 +1026,7 @@ int lua_AddFont(lua_State *lua)
                             (uint32_t) lua_tointeger(lua, 3),
                                        lua_tostring(lua, 2)))
     {
-        Con_Warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_FONT, FontManager->GetFontCount(), GUI_MAX_FONTS);
 
     }
 
@@ -1037,7 +1037,7 @@ int lua_AddFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 14)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[index, R, G, B, A, shadow, fade, rect, border, bR, bG, bB, bA, hide]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[index, R, G, B, A, shadow, fade, rect, border, bR, bG, bB, bA, hide]");
         return 0;
     }
 
@@ -1064,7 +1064,7 @@ int lua_AddFontStyle(lua_State *lua)
                                   hide))
     {
 
-        Con_Warning(SYSWARN_CANT_CREATE_STYLE, FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_STYLE, FontManager->GetFontStyleCount(), GUI_MAX_FONTSTYLES);
     }
 
     return 0;
@@ -1074,13 +1074,13 @@ int lua_DeleteFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[font index]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[font index]");
         return 0;
     }
 
     if(!FontManager->RemoveFont((font_Type)lua_tointeger(lua, 1)))
     {
-        Con_Warning(SYSWARN_CANT_REMOVE_FONT);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_REMOVE_FONT);
     }
 
     return 0;
@@ -1090,13 +1090,13 @@ int lua_DeleteFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[style index]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[style index]");
         return 0;
     }
 
     if(!FontManager->RemoveFontStyle((font_Style)lua_tointeger(lua, 1)))
     {
-        Con_Warning(SYSWARN_CANT_REMOVE_STYLE);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_REMOVE_STYLE);
     }
 
     return 0;
@@ -1109,7 +1109,7 @@ int lua_AddItem(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
         return 0;
     }
 
@@ -1134,7 +1134,7 @@ int lua_AddItem(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 }
@@ -1144,7 +1144,7 @@ int lua_RemoveItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id], [items_count]");
         return 0;
     }
 
@@ -1161,7 +1161,7 @@ int lua_RemoveItem(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 }
@@ -1171,7 +1171,7 @@ int lua_RemoveAllItems(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -1184,7 +1184,7 @@ int lua_RemoveAllItems(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
     }
 
     return 0;
@@ -1195,7 +1195,7 @@ int lua_GetItemsCount(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [item_id]");
         return 0;
     }
     int entity_id = lua_tointeger(lua, 1);
@@ -1210,7 +1210,7 @@ int lua_GetItemsCount(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 
@@ -1221,7 +1221,7 @@ int lua_CreateBaseItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 5)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[item_id], [model_id], [world_model_id], [type], [count], (name))");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[item_id], [model_id], [world_model_id], [type], [count], (name))");
         return 0;
     }
 
@@ -1241,7 +1241,7 @@ int lua_DeleteBaseItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[item_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[item_id]");
     }
     else
     {
@@ -1255,7 +1255,7 @@ int lua_PrintItems(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -1263,7 +1263,7 @@ int lua_PrintItems(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, entity_id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, entity_id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, entity_id);
         return 0;
     }
 
@@ -1271,7 +1271,7 @@ int lua_PrintItems(lua_State * lua)
     {
         for(const InventoryNode& i : ent->character->m_inventory)
         {
-            Con_Printf("item[id = %d]: count = %d, type = %d", i.id, i.count);
+            ConsoleInfo::instance().printf("item[id = %d]: count = %d, type = %d", i.id, i.count);
         }
     }
     return 0;
@@ -1284,7 +1284,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if(top < 6)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [state_id], [dispatch_num], [start_frame], [end_frame], (next_anim), (next_frame)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [state_id], [dispatch_num], [start_frame], [end_frame], (next_anim), (next_frame)");
         return 0;
     }
 
@@ -1293,7 +1293,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
@@ -1305,7 +1305,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1326,7 +1326,7 @@ int lua_SetStateChangeRange(lua_State * lua)
             }
             else
             {
-                Con_Warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
+                ConsoleInfo::instance().warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
             }
             break;
         }
@@ -1340,7 +1340,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [frame_num]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[model_id], [anim_num], [frame_num]");
         return 0;
     }
 
@@ -1350,13 +1350,13 @@ int lua_GetAnimCommandTransform(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1367,7 +1367,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
-        Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return 0;
     }
 
@@ -1386,7 +1386,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if(top < 4)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id] [anim_num], [frame_num], [flag], (dx, dy, dz)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[model_id] [anim_num], [frame_num], [flag], (dx, dy, dz)");
         return 0;
     }
 
@@ -1396,13 +1396,13 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     skeletal_model_p model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     if((anim < 0) || (anim + 1 > model->animation_count))
     {
-        Con_Warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
@@ -1413,7 +1413,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
     {
-        Con_Warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return 0;
     }
 
@@ -1434,7 +1434,7 @@ int lua_SpawnEntity(lua_State * lua)
     if(lua_gettop(lua) < 5)
     {
         ///uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3])
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id1], [room_id], [x], [y], [z], (ax, ay, az))");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[model_id1], [room_id], [x], [y], [z], (ax, ay, az))");
         return 0;
     }
 
@@ -1475,7 +1475,7 @@ int lua_GetEntityVector(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
         return 0;
     }
 
@@ -1483,14 +1483,14 @@ int lua_GetEntityVector(lua_State * lua)
     std::shared_ptr<Entity> e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     std::shared_ptr<Entity> e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1504,7 +1504,7 @@ int lua_GetEntityDistance(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
         return 0;
     }
 
@@ -1512,14 +1512,14 @@ int lua_GetEntityDistance(lua_State * lua)
     std::shared_ptr<Entity> e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     std::shared_ptr<Entity> e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1532,7 +1532,7 @@ int lua_GetEntityDirDot(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id1], [id2]");
         return 0;
     }
 
@@ -1540,14 +1540,14 @@ int lua_GetEntityDirDot(lua_State * lua)
     std::shared_ptr<Entity> e1 = World_GetEntityByID(&engine_world, id);
     if(e1 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
     id = lua_tointeger(lua, 2);
     std::shared_ptr<Entity> e2 = World_GetEntityByID(&engine_world, id);
     if(e2 == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1560,7 +1560,7 @@ int lua_GetEntityPosition(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -1568,7 +1568,7 @@ int lua_GetEntityPosition(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1593,7 +1593,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    Con_Printf("can not find entity with id = %d", id);
+                    ConsoleInfo::instance().printf("can not find entity with id = %d", id);
                     return 0;
                 }
                 ent->transform.getOrigin()[0] = lua_tonumber(lua, 2);
@@ -1612,7 +1612,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    Con_Printf("can not find entity with id = %d", id);
+                    ConsoleInfo::instance().printf("can not find entity with id = %d", id);
                     return 0;
                 }
                 ent->transform.getOrigin()[0] = lua_tonumber(lua, 2);
@@ -1630,7 +1630,7 @@ int lua_SetEntityPosition(lua_State * lua)
             return 0;
 
         default:
-            Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z] or [id, x, y, z, fi_x, fi_y, fi_z]");
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, x, y, z] or [id, x, y, z, fi_x, fi_y, fi_z]");
             return 0;
     }
 
@@ -1648,7 +1648,7 @@ int lua_MoveEntityGlobal(lua_State * lua)
                 std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    Con_Printf("can not find entity with id = %d", id);
+                    ConsoleInfo::instance().printf("can not find entity with id = %d", id);
                     return 0;
                 }
                 ent->transform.getOrigin()[0] += lua_tonumber(lua, 2);
@@ -1659,7 +1659,7 @@ int lua_MoveEntityGlobal(lua_State * lua)
             return 0;
 
         default:
-            Con_Warning(SYSWARN_WRONG_ARGS, "[id, x, y, z]");
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, x, y, z]");
             return 0;
     }
 
@@ -1671,7 +1671,7 @@ int lua_MoveEntityLocal(lua_State * lua)
 {
     if(lua_gettop(lua) < 4)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, dx, dy, dz]");
         return 0;
     }
 
@@ -1680,7 +1680,7 @@ int lua_MoveEntityLocal(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1701,7 +1701,7 @@ int lua_MoveEntityToSink(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, sink_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, sink_id]");
         return 0;
     }
 
@@ -1746,7 +1746,7 @@ int lua_MoveEntityToEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_to_move_id, entity_id, speed]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_to_move_id, entity_id, speed]");
         return 0;
     }
 
@@ -1780,7 +1780,7 @@ int lua_GetEntitySpeed(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -1789,7 +1789,7 @@ int lua_GetEntitySpeed(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1803,7 +1803,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id]");
         return 0;
     }
 
@@ -1812,7 +1812,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1827,7 +1827,7 @@ int lua_SetEntitySpeed(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1840,7 +1840,7 @@ int lua_SetEntitySpeed(lua_State * lua)
             break;
 
         default:
-            Con_Warning(SYSWARN_WRONG_ARGS, "[id, Vx, Vy, Vz]");
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, Vx, Vy, Vz]");
             break;
     }
 
@@ -1854,7 +1854,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id, (frame_number, another_model)]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_id, (frame_number, another_model)]");
         return 0;
     }
 
@@ -1863,7 +1863,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1890,7 +1890,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     if(top != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_flag]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, anim_flag]");
         return 0;
     }
 
@@ -1899,7 +1899,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -1914,7 +1914,7 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, bone_id, body_part_flag]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, bone_id, body_part_flag]");
         return 0;
     }
 
@@ -1923,14 +1923,14 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
     int bone_id = lua_tointeger(lua, 2);
     if((bone_id < 0) || (bone_id >= ent->bf.bone_tag_count))
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return 0;
     }
 
@@ -1946,7 +1946,7 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
     if(top < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id, bone_id, body_part_flag]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[model_id, bone_id, body_part_flag]");
         return 0;
     }
 
@@ -1955,14 +1955,14 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
     if(model == NULL)
     {
-        Con_Warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
     int bone_id = lua_tointeger(lua, 2);
     if((bone_id < 0) || (bone_id >= model->mesh_count))
     {
-        Con_Warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return 0;
     }
 
@@ -1976,7 +1976,7 @@ int lua_GetEntityAnim(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -1985,7 +1985,7 @@ int lua_GetEntityAnim(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2055,7 +2055,7 @@ int lua_GetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2064,7 +2064,7 @@ int lua_GetEntityVisibility(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2077,7 +2077,7 @@ int lua_SetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
@@ -2086,7 +2086,7 @@ int lua_SetEntityVisibility(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2107,7 +2107,7 @@ int lua_GetEntityEnability(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2116,7 +2116,7 @@ int lua_GetEntityEnability(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2130,7 +2130,7 @@ int lua_GetEntityActivity(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2139,7 +2139,7 @@ int lua_GetEntityActivity(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2153,7 +2153,7 @@ int lua_SetEntityActivity(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
@@ -2162,7 +2162,7 @@ int lua_SetEntityActivity(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2199,7 +2199,7 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
 
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, layout] or [entity_id, mask, event, once] / %d");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, layout] or [entity_id, mask, event, once] / %d");
         return 0;
     }
 
@@ -2208,7 +2208,7 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2364,7 +2364,7 @@ int lua_GetEntityFlags(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2373,7 +2373,7 @@ int lua_GetEntityFlags(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2388,7 +2388,7 @@ int lua_SetEntityFlags(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
         return 0;
     }
 
@@ -2397,7 +2397,7 @@ int lua_SetEntityFlags(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2424,7 +2424,7 @@ int lua_GetEntityTypeFlag(lua_State *lua)
     
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (type_flag)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], (type_flag)");
         return 0;
     }
 
@@ -2433,7 +2433,7 @@ int lua_GetEntityTypeFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2455,7 +2455,7 @@ int lua_SetEntityTypeFlag(lua_State *lua)
     
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, type_flag], (value)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, type_flag], (value)");
         return 0;
     }
 
@@ -2464,7 +2464,7 @@ int lua_SetEntityTypeFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2494,7 +2494,7 @@ int lua_GetEntityStateFlag(lua_State *lua)
     
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (state_flag)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], (state_flag)");
         return 0;
     }
 
@@ -2503,7 +2503,7 @@ int lua_GetEntityStateFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2525,7 +2525,7 @@ int lua_SetEntityStateFlag(lua_State *lua)
     
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flag], (value)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flag], (value)");
         return 0;
     }
 
@@ -2534,7 +2534,7 @@ int lua_SetEntityStateFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2564,7 +2564,7 @@ int lua_GetEntityCallbackFlag(lua_State *lua)
     
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id], (callback_flag)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], (callback_flag)");
         return 0;
     }
 
@@ -2573,7 +2573,7 @@ int lua_GetEntityCallbackFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2595,7 +2595,7 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
     
     if(top < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, callback_flag], (value)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, callback_flag], (value)");
         return 0;
     }
 
@@ -2604,7 +2604,7 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2653,7 +2653,7 @@ int lua_GetEntityMoveType(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2662,7 +2662,7 @@ int lua_GetEntityMoveType(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2675,7 +2675,7 @@ int lua_SetEntityMoveType(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, move_type]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, move_type]");
         return 0;
     }
 
@@ -2692,7 +2692,7 @@ int lua_GetEntityResponse(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id]");
         return 0;
     }
 
@@ -2723,7 +2723,7 @@ int lua_GetEntityResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 }
@@ -2733,7 +2733,7 @@ int lua_SetEntityResponse(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id, value]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, response_id, value]");
         return 0;
     }
 
@@ -2764,7 +2764,7 @@ int lua_SetEntityResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
     }
 
     return 0;
@@ -2774,7 +2774,7 @@ int lua_GetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2783,7 +2783,7 @@ int lua_GetEntityState(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2796,7 +2796,7 @@ int lua_GetEntityModel(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2805,7 +2805,7 @@ int lua_GetEntityModel(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2818,7 +2818,7 @@ int lua_SetEntityState(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, value]");
         return 0;
     }
 
@@ -2827,7 +2827,7 @@ int lua_SetEntityState(lua_State * lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2844,7 +2844,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
 {
     if(lua_gettop(lua) < 4)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id, room_id, move_type, dir_flag]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id, room_id, move_type, dir_flag]");
         return 0;
     }
 
@@ -2852,7 +2852,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2892,7 +2892,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -2901,7 +2901,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
 
     if(ent == NULL)
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 
@@ -2913,7 +2913,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id_dest, id_src]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id_dest, id_src]");
         return 0;
     }
 
@@ -2941,7 +2941,7 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (id_model, bone_num, flag)");
+        ConsoleInfo::instance().printf("Wrong arguments count. Must be (id_model, bone_num, flag)");
         return 0;
     }
 
@@ -2956,12 +2956,12 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
         }
         else
         {
-            Con_Printf("wrong bone number = %d", bone);
+            ConsoleInfo::instance().printf("wrong bone number = %d", bone);
         }
     }
     else
     {
-        Con_Printf("can not find model with id = %d", id);
+        ConsoleInfo::instance().printf("can not find model with id = %d", id);
     }
 
     return 0;
@@ -2971,7 +2971,7 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (id_model, bone_num, flag)");
+        ConsoleInfo::instance().printf("Wrong arguments count. Must be (id_model, bone_num, flag)");
         return 0;
     }
 
@@ -2986,12 +2986,12 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
         }
         else
         {
-            Con_Printf("wrong bone number = %d", bone);
+            ConsoleInfo::instance().printf("wrong bone number = %d", bone);
         }
     }
     else
     {
-        Con_Printf("can not find model with id = %d", id);
+        ConsoleInfo::instance().printf("can not find model with id = %d", id);
     }
 
     return 0;
@@ -3001,7 +3001,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
 {
     if(lua_gettop(lua) < 4)
     {
-        Con_Printf("Wrong arguments count. Must be (id_model1, id_model2, bone_num1, bone_num2)");
+        ConsoleInfo::instance().printf("Wrong arguments count. Must be (id_model1, id_model2, bone_num1, bone_num2)");
         return 0;
     }
 
@@ -3009,7 +3009,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     skeletal_model_p sm1 = World_GetModelByID(&engine_world, id);
     if(sm1 == NULL)
     {
-        Con_Printf("can not find model with id = %d", id);
+        ConsoleInfo::instance().printf("can not find model with id = %d", id);
         return 0;
     }
 
@@ -3017,7 +3017,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     skeletal_model_p sm2 = World_GetModelByID(&engine_world, id);
     if(sm2 == NULL)
     {
-        Con_Printf("can not find model with id = %d", id);
+        ConsoleInfo::instance().printf("can not find model with id = %d", id);
         return 0;
     }
 
@@ -3030,7 +3030,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     }
     else
     {
-        Con_AddLine("wrong bone number = %d");
+        ConsoleInfo::instance().addLine("wrong bone number = %d", FONTSTYLE_CONSOLE_WARNING);
     }
 
     return 0;
@@ -3040,7 +3040,7 @@ int lua_PushEntityBody(lua_State *lua)
 {
     if(lua_gettop(lua) != 5)
     {
-        Con_Printf("Wrong arguments count. Must be [entity_id, body_number, h_force, v_force, reset_flag]");
+        ConsoleInfo::instance().printf("Wrong arguments count. Must be [entity_id, body_number, h_force, v_force, reset_flag]");
         return 0;
     }
 
@@ -3068,7 +3068,7 @@ int lua_PushEntityBody(lua_State *lua)
     }
     else
     {
-        Con_Printf("Can't apply force to entity %d - no entity, body, or entity is not kinematic!", id);
+        ConsoleInfo::instance().printf("Can't apply force to entity %d - no entity, body, or entity is not kinematic!", id);
     }
 
     return 0;
@@ -3080,7 +3080,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
     if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be [entity_id, body_number, (mass / each body mass)]");
+        ConsoleInfo::instance().printf("Wrong arguments count. Must be [entity_id, body_number, (mass / each body mass)]");
         return 0;
     }
 
@@ -3154,7 +3154,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     }
     else
     {
-        Con_Printf("Can't find entity %d or body number is more than %d", id, body_number);
+        ConsoleInfo::instance().printf("Can't find entity %d or body number is more than %d", id, body_number);
     }
 
     return 0;
@@ -3166,7 +3166,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
 
     if(top < 2)
     {
-        Con_Printf("Wrong arguments count. Must be [entity_id, body_number, (vertical_factor)]");
+        ConsoleInfo::instance().printf("Wrong arguments count. Must be [entity_id, body_number, (vertical_factor)]");
         return 0;
     }
 
@@ -3191,7 +3191,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     }
     else
     {
-        Con_Printf("Can't apply force to entity %d - no entity, body, or entity is not dynamic!", id);
+        ConsoleInfo::instance().printf("Can't apply force to entity %d - no entity, body, or entity is not dynamic!", id);
     }
 
     return 0;
@@ -3201,7 +3201,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
 {
     if(lua_gettop(lua) < 3)
     {
-        Con_Printf("Wrong arguments count. Must be (id_entity, id_weapon_model, armed_state)");
+        ConsoleInfo::instance().printf("Wrong arguments count. Must be (id_entity, id_weapon_model, armed_state)");
         return 0;
     }
 
@@ -3214,7 +3214,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
     }
     else
     {
-        Con_Printf("can not find entity with id = %d", id);
+        ConsoleInfo::instance().printf("can not find entity with id = %d", id);
     }
 
     return 0;
@@ -3224,7 +3224,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id]");
         return 0;
     }
 
@@ -3238,7 +3238,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
     }
     else
     {
-        Con_Warning(SYSWARN_NO_ENTITY, id);
+        ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, id);
         return 0;
     }
 }
@@ -3247,7 +3247,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 {
     if(lua_gettop(lua) < 2)
     {
-        Con_Printf("Wrong arguments count. Must be (id_entity, id_weapon)");
+        ConsoleInfo::instance().printf("Wrong arguments count. Must be (id_entity, id_weapon)");
         return 0;
     }
 
@@ -3260,7 +3260,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
     }
     else
     {
-        Con_Printf("can not find entity with id = %d", id);
+        ConsoleInfo::instance().printf("can not find entity with id = %d", id);
     }
 
     return 0;
@@ -3328,7 +3328,7 @@ int lua_PlayStream(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[id] or [id, mask].");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[id] or [id, mask].");
         return 0;
     }
 
@@ -3338,7 +3338,7 @@ int lua_PlayStream(lua_State *lua)
 
     if(id < 0)
     {
-        Con_Warning(SYSWARN_WRONG_STREAM_ID);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_STREAM_ID);
         return 0;
     }
 
@@ -3360,14 +3360,14 @@ int lua_PlaySound(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
         return 0;
     }
 
     uint32_t id  = lua_tointeger(lua, 1);
     if(id >= engine_world.audio_map.size())
     {
-        Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
         return 0;
     }
 
@@ -3395,11 +3395,11 @@ int lua_PlaySound(lua_State *lua)
         switch(result)
         {
             case TR_AUDIO_SEND_NOCHANNEL:
-                Con_Warning(SYSWARN_AS_NOCHANNEL);
+                ConsoleInfo::instance().warning(SYSWARN_AS_NOCHANNEL);
                 break;
 
             case TR_AUDIO_SEND_NOSAMPLE:
-                Con_Warning(SYSWARN_AS_NOSAMPLE);
+                ConsoleInfo::instance().warning(SYSWARN_AS_NOSAMPLE);
                 break;
         }
     }
@@ -3414,14 +3414,14 @@ int lua_StopSound(lua_State *lua)
 
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[sound_id], (entity_id)");
         return 0;
     }
 
     uint32_t id  = lua_tointeger(lua, 1);
     if(id >= engine_world.audio_map.size())
     {
-        Con_Warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_SOUND_ID, engine_world.audio_map.size());
         return 0;
     }
 
@@ -3444,7 +3444,7 @@ int lua_StopSound(lua_State *lua)
         result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
     }
 
-    if(result < 0) Con_Warning(SYSWARN_AK_NOTPLAYED, id);
+    if(result < 0) ConsoleInfo::instance().warning(SYSWARN_AK_NOTPLAYED, id);
 
     return 0;
 }
@@ -3459,12 +3459,12 @@ int lua_SetLevel(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[level_id]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[level_id]");
         return 0;
     }
 
     int id  = lua_tointeger(lua, 1);
-    Con_Notify(SYSNOTE_CHANGING_LEVEL, id);
+    ConsoleInfo::instance().notify(SYSNOTE_CHANGING_LEVEL, id);
 
     Game_LevelTransition(id);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
@@ -3477,7 +3477,7 @@ int lua_SetGame(lua_State *lua)
     int top = lua_gettop(lua);
     if(top < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[gameversion], (level_id)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[gameversion], (level_id)");
         return 0;
     }
 
@@ -3500,7 +3500,7 @@ int lua_SetGame(lua_State *lua)
     }
     lua_settop(lua, top);
 
-    Con_Notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
+    ConsoleInfo::instance().notify(SYSNOTE_CHANGING_GAME, gameflow_manager.CurrentGameID);
     Game_LevelTransition(gameflow_manager.CurrentLevelID);
     Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow_manager.CurrentLevelID);
 
@@ -3511,7 +3511,7 @@ int lua_LoadMap(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[map_name], (game_id, map_id)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[map_name], (game_id, map_id)");
         return 0;
     }
 
@@ -3548,7 +3548,7 @@ int lua_SetFlipState(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_state]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_state]");
         return 0;
     }
 
@@ -3558,7 +3558,7 @@ int lua_SetFlipState(lua_State *lua)
 
     if(group >= engine_world.flip_count)
     {
-        Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return 0;
     }
 
@@ -3610,7 +3610,7 @@ int lua_SetFlipMap(lua_State *lua)
 {
     if(lua_gettop(lua) != 3)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_mask, flip_operation]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[flip_index, flip_mask, flip_operation]");
         return 0;
     }
 
@@ -3621,7 +3621,7 @@ int lua_SetFlipMap(lua_State *lua)
 
     if(group >= engine_world.flip_count)
     {
-        Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return 0;
     }
 
@@ -3645,7 +3645,7 @@ int lua_GetFlipMap(lua_State *lua)
 
         if(group >= engine_world.flip_count)
         {
-            Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
             return 0;
         }
 
@@ -3654,7 +3654,7 @@ int lua_GetFlipMap(lua_State *lua)
     }
     else
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[flip_index]");
         return 0;
     }
 }
@@ -3667,7 +3667,7 @@ int lua_GetFlipState(lua_State *lua)
 
         if(group >= engine_world.flip_count)
         {
-            Con_Warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+            ConsoleInfo::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
             return 0;
         }
 
@@ -3676,7 +3676,7 @@ int lua_GetFlipState(lua_State *lua)
     }
     else
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[flip_index]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[flip_index]");
         return 0;
     }
 }
@@ -3689,7 +3689,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning(SYSWARN_WRONG_ARGS, "[model_id]", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[model_id]", FONTSTYLE_CONSOLE_WARNING);
         return 0;
     }
 
@@ -3990,7 +3990,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 void Engine_Destroy()
 {
     Render_Empty(&renderer);
-    Con_Destroy();
+    //ConsoleInfo::instance().destroy();
     Com_Destroy();
     Sys_Destroy();
 
@@ -4078,7 +4078,7 @@ void Engine_Shutdown(int val)
 
 int engine_lua_fputs(const char *str, FILE *f)
 {
-    Con_AddText(str, FONTSTYLE_CONSOLE_NOTIFY);
+    ConsoleInfo::instance().addText(str, FONTSTYLE_CONSOLE_NOTIFY);
     return strlen(str);
 }
 
@@ -4098,7 +4098,7 @@ int engine_lua_fprintf(FILE *f, const char *fmt, ...)
     fwrite(buf, 1, ret, f);
 
     // Write it to console, too (if it helps) und
-    Con_AddText(buf, FONTSTYLE_CONSOLE_NOTIFY);
+    ConsoleInfo::instance().addText(buf, FONTSTYLE_CONSOLE_NOTIFY);
 
     return ret;
 }
@@ -4114,7 +4114,7 @@ int engine_lua_printf(const char *fmt, ...)
     ret = vsnprintf(buf, 4096, fmt, argptr);
     va_end(argptr);
 
-    Con_AddText(buf, FONTSTYLE_CONSOLE_NOTIFY);
+    ConsoleInfo::instance().addText(buf, FONTSTYLE_CONSOLE_NOTIFY);
 
     return ret;
 }
@@ -4380,9 +4380,9 @@ bool Engine_LoadPCLevel(const char *name)
     char buf[LEVEL_NAME_MAX_LEN] = {0x00};
     Engine_GetLevelName(buf, name);
     
-    Con_Notify(SYSNOTE_LOADED_PC_LEVEL);
-    Con_Notify(SYSNOTE_ENGINE_VERSION, trv, buf);
-    Con_Notify(SYSNOTE_NUM_ROOMS, engine_world.rooms.size());
+    ConsoleInfo::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
+    ConsoleInfo::instance().notify(SYSNOTE_ENGINE_VERSION, trv, buf);
+    ConsoleInfo::instance().notify(SYSNOTE_NUM_ROOMS, engine_world.rooms.size());
     
     delete tr_level;
     
@@ -4395,7 +4395,7 @@ int Engine_LoadMap(const char *name)
 
     if(!Engine_FileFound(name))
     {
-        Con_Warning(SYSWARN_FILE_NOT_FOUND, name);
+        ConsoleInfo::instance().warning(SYSWARN_FILE_NOT_FOUND, name);
         return 0;
     }
 
@@ -4456,11 +4456,11 @@ int Engine_LoadMap(const char *name)
     return 1;
 }
 
-int Engine_ExecCmd(char *ch)
+int Engine_ExecCmd(const char *ch)
 {
-    char token[con_base.line_size];
-    char buf[con_base.line_size + 32];
-    char *pch;
+    char token[ConsoleInfo::instance().lineSize()];
+    char buf[ConsoleInfo::instance().lineSize() + 32];
+    const char *pch;
     int val;
     room_sector_p sect;
     FILE *f;
@@ -4471,22 +4471,22 @@ int Engine_ExecCmd(char *ch)
         ch = parse_token(ch, token);
         if(!strcmp(token, "help"))
         {
-            Con_AddLine("Available commands:\0", FONTSTYLE_CONSOLE_WARNING);
-            Con_AddLine("help - show help info\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("save, load - save and load game state in \"file_name\"\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("exit - close program\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("cls - clean console\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("show_fps - switch show fps flag\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("spacing - read and write spacing\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("showing_lines - read and write number of showing lines\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("free_look - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("cam_distance - camera distance to actor\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("playsound(id) - play specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("stopsound(id) - stop specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("Watch out for case sensitive commands!\0", FONTSTYLE_CONSOLE_WARNING);
+            ConsoleInfo::instance().addLine("Available commands:", FONTSTYLE_CONSOLE_WARNING);
+            ConsoleInfo::instance().addLine("help - show help info", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("loadMap(\"file_name\") - load level \"file_name\"", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("save, load - save and load game state in \"file_name\"", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("exit - close program", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("cls - clean console", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("show_fps - switch show fps flag", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("spacing - read and write spacing", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("showing_lines - read and write number of showing lines", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("free_look - switch camera mode", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("cam_distance - camera distance to actor", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("playsound(id) - play specified sound", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("stopsound(id) - stop specified sound", FONTSTYLE_CONSOLE_NOTIFY);
+            ConsoleInfo::instance().addLine("Watch out for case sensitive commands!", FONTSTYLE_CONSOLE_WARNING);
         }
         else if(!strcmp(token, "goto"))
         {
@@ -4521,7 +4521,7 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "cls"))
         {
-            Con_Clean();
+            ConsoleInfo::instance().clean();
             return 1;
         }
         else if(!strcmp(token, "spacing"))
@@ -4529,10 +4529,10 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                Con_Notify(SYSNOTE_CONSOLE_SPACING, con_base.spacing);
+                ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_SPACING, ConsoleInfo::instance().spacing());
                 return 1;
             }
-            Con_SetLineInterval(atof(token));
+            ConsoleInfo::instance().setLineInterval(atof(token));
             return 1;
         }
         else if(!strcmp(token, "showing_lines"))
@@ -4540,20 +4540,20 @@ int Engine_ExecCmd(char *ch)
             ch = parse_token(ch, token);
             if(NULL == ch)
             {
-                Con_Notify(SYSNOTE_CONSOLE_LINECOUNT, con_base.showing_lines);
+                ConsoleInfo::instance().notify(SYSNOTE_CONSOLE_LINECOUNT, ConsoleInfo::instance().visibleLines());
                 return 1;
             }
             else
             {
                 val = atoi(token);
-                if((val >=2 ) && (val <= con_base.line_count))
+                if((val >=2 ) && (val <= ConsoleInfo::instance().visibleLines()))
                 {
-                    con_base.showing_lines = val;
-                    con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
+                    ConsoleInfo::instance().setVisibleLines( val );
+                    ConsoleInfo::instance().setCursorY( screen_info.h - ConsoleInfo::instance().lineHeight() * ConsoleInfo::instance().visibleLines() );
                 }
                 else
                 {
-                    Con_Warning(SYSWARN_INVALID_LINECOUNT);
+                    ConsoleInfo::instance().warning(SYSWARN_INVALID_LINECOUNT);
                 }
             }
             return 1;
@@ -4623,21 +4623,21 @@ int Engine_ExecCmd(char *ch)
             if(std::shared_ptr<Room> r = renderer.cam->m_currentRoom)
             {
                 sect = Room_GetSectorXYZ(r, renderer.cam->m_pos);
-                Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
+                ConsoleInfo::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {
-                    Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
+                    ConsoleInfo::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
                                (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
                     for(uint32_t i=0;i<sect->owner_room->static_mesh.size();i++)
                     {
-                        Con_Printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
+                        ConsoleInfo::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->object_id);
                     }
                     for(engine_container_p cont=sect->owner_room->containers;cont;cont=cont->next)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
-                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform.getOrigin()[0], (int)e->transform.getOrigin()[1], (int)e->transform.getOrigin()[2], e->id);
+                            ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform.getOrigin()[0], (int)e->transform.getOrigin()[1], (int)e->transform.getOrigin()[2], e->id);
                         }
                     }
                 }
@@ -4659,13 +4659,13 @@ int Engine_ExecCmd(char *ch)
                 fread(buf, size, sizeof(char), f);
                 buf[size] = 0;
                 fclose(f);
-                Con_Clean();
-                Con_AddText(buf, FONTSTYLE_CONSOLE_INFO);
+                ConsoleInfo::instance().clean();
+                ConsoleInfo::instance().addText(buf, FONTSTYLE_CONSOLE_INFO);
                 free(buf);
             }
             else
             {
-                Con_AddText("Not avaliable =(", FONTSTYLE_CONSOLE_WARNING);
+                ConsoleInfo::instance().addText("Not avaliable =(", FONTSTYLE_CONSOLE_WARNING);
             }
             return 1;
         }
@@ -4673,17 +4673,17 @@ int Engine_ExecCmd(char *ch)
         {
             if(engine_lua)
             {
-                Con_AddLine(pch);
+                ConsoleInfo::instance().addLine(pch, FONTSTYLE_CONSOLE_EVENT);
                 if (luaL_dostring(engine_lua, pch) != LUA_OK)
                 {
-                    Con_AddLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
+                    ConsoleInfo::instance().addLine(lua_tostring(engine_lua, -1), FONTSTYLE_CONSOLE_WARNING);
                     lua_pop(engine_lua, 1);
                 }
             }
             else
             {
-                snprintf(buf, con_base.line_size + 32, "Command \"%s\" not found", token);
-                Con_AddLine(buf, FONTSTYLE_CONSOLE_WARNING);
+                snprintf(buf, ConsoleInfo::instance().lineSize() + 32, "Command \"%s\" not found", token);
+                ConsoleInfo::instance().addLine(buf, FONTSTYLE_CONSOLE_WARNING);
             }
             return 0;
         }
@@ -4710,7 +4710,7 @@ void Engine_InitConfig(const char *filename)
             lua_ParseScreen(lua, &screen_info);
             lua_ParseRender(lua, &renderer.settings);
             lua_ParseAudio(lua, &audio_settings);
-            lua_ParseConsole(lua, &con_base);
+            lua_ParseConsole(lua, &ConsoleInfo::instance());
             lua_ParseControls(lua, &control_mapper);
             lua_close(lua);
         }

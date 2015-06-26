@@ -42,12 +42,12 @@ int lua_mlook(lua_State * lua)
     if(lua_gettop(lua) == 0)
     {
         control_states.mouse_look = !control_states.mouse_look;
-        Con_Printf("mlook = %d", control_states.mouse_look);
+        ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
         return 0;
     }
 
     control_states.mouse_look = lua_tointeger(lua, 1);
-    Con_Printf("mlook = %d", control_states.mouse_look);
+    ConsoleInfo::instance().printf("mlook = %d", control_states.mouse_look);
     return 0;
 }
 
@@ -57,12 +57,12 @@ int lua_freelook(lua_State * lua)
     if(lua_gettop(lua) == 0)
     {
         control_states.free_look = !control_states.free_look;
-        Con_Printf("free_look = %d", control_states.free_look);
+        ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
         return 0;
     }
 
     control_states.free_look = lua_tointeger(lua, 1);
-    Con_Printf("free_look = %d", control_states.free_look);
+    ConsoleInfo::instance().printf("free_look = %d", control_states.free_look);
     return 0;
 }
 
@@ -71,12 +71,12 @@ int lua_cam_distance(lua_State * lua)
 {
     if(lua_gettop(lua) == 0)
     {
-        Con_Printf("cam_distance = %.2f", control_states.cam_distance);
+        ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
         return 0;
     }
 
     control_states.cam_distance = lua_tonumber(lua, 1);
-    Con_Printf("cam_distance = %.2f", control_states.cam_distance);
+    ConsoleInfo::instance().printf("cam_distance = %.2f", control_states.cam_distance);
     return 0;
 }
 
@@ -92,7 +92,7 @@ int lua_noclip(lua_State * lua)
         control_states.noclip = lua_tointeger(lua, 1);
     }
 
-    Con_Printf("noclip = %d", control_states.noclip);
+    ConsoleInfo::instance().printf("noclip = %d", control_states.noclip);
     return 0;
 }
 
@@ -107,7 +107,7 @@ int lua_debuginfo(lua_State * lua)
         screen_info.show_debuginfo = lua_tointeger(lua, 1);
     }
 
-    Con_Printf("debug info = %d", screen_info.show_debuginfo);
+    ConsoleInfo::instance().printf("debug info = %d", screen_info.show_debuginfo);
     return 0;
 }
 
@@ -117,12 +117,12 @@ int lua_print(lua_State * lua)
 
      if(top == 0)
      {
-        Con_AddLine("nil");
+        ConsoleInfo::instance().addLine("nil", FONTSTYLE_CONSOLE_EVENT);
      }
 
      for(int i=1;i<=top;i++)
      {
-         Con_AddLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
+         ConsoleInfo::instance().addLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
      }
 
      return 0;
@@ -146,7 +146,7 @@ int lua_timescale(lua_State * lua)
         time_scale = lua_tonumber(lua, 1);
     }
 
-    Con_Printf("time_scale = %.3f", time_scale);
+    ConsoleInfo::instance().printf("time_scale = %.3f", time_scale);
     return 0;
 }
 
@@ -805,7 +805,7 @@ void Game_Frame(btScalar time)
 
     ///@FIXME: I have no idea what's happening here! - Lwmte
 
-    if(!con_base.show && control_states.gui_inventory && main_inventory_manager)
+    if(!ConsoleInfo::instance().isVisible() && control_states.gui_inventory && main_inventory_manager)
     {
         if((is_character) &&
            (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
@@ -820,7 +820,7 @@ void Game_Frame(btScalar time)
     }
 
     // If console or inventory is active, only thing to update is audio.
-    if(con_base.show || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
+    if(ConsoleInfo::instance().isVisible() || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
     {
         if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
         {

@@ -546,7 +546,7 @@ void Entity_CheckCollisionCallbacks(std::shared_ptr<Entity> ent)
                 {
                     // Activator and entity IDs are swapped in case of collision callback.
                     lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
-                    Con_Printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
+                    ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
                 }
             }
         }
