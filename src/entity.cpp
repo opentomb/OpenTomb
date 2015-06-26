@@ -341,7 +341,27 @@ void BT_GenEntityRigidBody(entity_p ent)
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         base_mesh_p mesh = ent->bf.animations.model->mesh_tree[i].mesh_base;
-        btCollisionShape *cshape = BT_CSfromMesh(mesh, true, true, !(ent->self->collision_shape & COLLISION_SHAPE_TRIMESH_CONVEX));
+        btCollisionShape *cshape = NULL;
+        switch(ent->self->collision_shape)
+        {
+            case COLLISION_SHAPE_TRIMESH_CONVEX:
+                cshape = BT_CSfromMesh(mesh, true, true, false);
+                break;
+
+            case COLLISION_SHAPE_TRIMESH:
+                cshape = BT_CSfromMesh(mesh, true, true, true);
+                break;
+
+            case COLLISION_SHAPE_BOX:
+                cshape = BT_CSfromBBox(mesh->bb_min, mesh->bb_max, true, true);
+                break;
+
+                ///@TODO: add other shapes implementation; may be change default;
+            default:
+                 cshape = BT_CSfromMesh(mesh, true, true, true);
+                 break;
+        };
+
         ent->bt.bt_body[i] = NULL;
 
         if(cshape)
