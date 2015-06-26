@@ -11,7 +11,10 @@ PROJECT(OpenTomb)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 
 find_package(Bullet REQUIRED)
-INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${BULLET_INCLUDE_DIRS})
+
+find_package(Freetype REQUIRED)
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
 
 IF(NOT CMAKE_BUILD_TYPE)
     MESSAGE(STATUS "No build type selected. Default to Release")
@@ -81,8 +84,6 @@ INCLUDE_DIRECTORIES(
     ${SDL2_IMAGE_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
-
-    src/freetype2/include
 )
 
 FILE(GLOB OPENAL_FILES
@@ -115,17 +116,12 @@ FILE(GLOB OGG_FILES
 
 FILE(GLOB PRJ_HDR
     src/*.h*
-    src/freetype2/include/*.h
-    src/freetype2/include/*/*.h
-    src/freetype2/include/*/*/*.h
     src/lua/*.h*
     src/vt/*.h
 )
 
 FILE(GLOB PRJ_SRC
     src/*.c*
-    src/freetype2/src/*.c
-    src/freetype2/src/*/*.c
     src/vt/*.cpp
 )
 
@@ -145,6 +141,7 @@ TARGET_LINK_LIBRARIES(
     ${SDL2_IMAGE_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${BULLET_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
 )
 
 IF(APPLE)
