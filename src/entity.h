@@ -44,13 +44,6 @@ struct ss_bone_frame_s;
 #define ENTITY_CALLBACK_STAND                       (0x00000008)
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
 
-#define ENTITY_COLLISION_GHOST                    0     // no one collisions
-#define ENTITY_COLLISION_DYNAMIC                  1     // hallo full physics interaction
-#define ENTITY_COLLISION_KINEMATIC                2     // doors and other moveable statics
-#define ENTITY_COLLISION_STATIC                   3     // static object - never moved
-#define ENTITY_COLLISION_ACTOR                    4     // actor, enemies, NPC, animals
-#define ENTITY_COLLISION_VEHICLE                  5     // car, moto, bike
-
 #define ENTITY_SUBSTANCE_NONE                     0
 #define ENTITY_SUBSTANCE_WATER_SHALLOW            1
 #define ENTITY_SUBSTANCE_WATER_WADE               2

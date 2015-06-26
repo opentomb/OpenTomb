@@ -678,17 +678,21 @@ int lua_DropEntity(lua_State * lua)
             ent->transform[12+2] = move.m_floats[2];
 
             lua_pushboolean(lua, 1);
-            return 1;
+        }
+        else
+        {
+            lua_pushboolean(lua, 0);
         }
     }
-
-    ent->transform[12+0] += move.m_floats[0];
-    ent->transform[12+1] += move.m_floats[1];
-    ent->transform[12+2] += move.m_floats[2];
+    else
+    {
+        ent->transform[12+0] += move.m_floats[0];
+        ent->transform[12+1] += move.m_floats[1];
+        ent->transform[12+2] += move.m_floats[2];
+        lua_pushboolean(lua, 0);
+    }
 
     Entity_UpdateRigidBody(ent, 1);
-
-    lua_pushboolean(lua, 0);
     return 1;
 }
 

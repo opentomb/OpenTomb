@@ -778,7 +778,8 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             ent->OCB            = 0x00;
             ent->timer          = 0.0;
 
-            ent->self->collide_flag = 0x00;
+            ent->self->collision_type = COLLISION_NONE;
+            ent->self->collision_shape = COLLISION_SHAPE_TRIMESH;
             ent->move_type          = 0x0000;
             ent->inertia_linear     = 0.0;
             ent->inertia_angular[0] = 0.0;
@@ -1036,23 +1037,17 @@ room_sector_p Sector_CheckFlip(room_sector_p rs)
 
 room_sector_p Sector_GetLowest(room_sector_p sector)
 {
-    room_sector_p lowest_sector = sector;
+    for(sector=Sector_CheckFlip(sector);sector->sector_below!=NULL;sector=Sector_CheckFlip(sector->sector_below));
 
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_below)
-    { lowest_sector = rs; }
-
-    return Sector_CheckFlip(lowest_sector);
+    return Sector_CheckFlip(sector);
 }
 
 
 room_sector_p Sector_GetHighest(room_sector_p sector)
 {
-    room_sector_p highest_sector = sector;
+    for(sector=Sector_CheckFlip(sector);sector->sector_above!=NULL;sector=Sector_CheckFlip(sector->sector_above));
 
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_above)
-    { highest_sector = rs; }
-
-    return Sector_CheckFlip(highest_sector);
+    return sector;
 }
 
 

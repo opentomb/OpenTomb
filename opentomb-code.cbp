@@ -24,11 +24,9 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-march=prescott" />
+					<Add option="-march=core2" />
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O2" />
-					<Add option="-Wextra" />
-					<Add option="-Wall" />
 					<Add option="-fno-exceptions -funsafe-math-optimizations -m32 -msse3" />
 				</Compiler>
 				<Linker>

@@ -841,7 +841,7 @@ function damocles_init(id)      -- Sword of Damocles
                 entity_funcs[object_id].falling = true;
                 addTask(
                 function()
-                    moveEntityToEntity(object_id, player, 24.0, true);
+                    moveEntityToEntity(object_id, player, 32.0, true);
                     if(dropEntity(object_id, frame_time, true)) then
                         playSound(103, object_id);
                         setEntityActivity(object_id, 0);

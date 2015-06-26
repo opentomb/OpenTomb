@@ -251,7 +251,7 @@ void Save_Entity(FILE **f, entity_p ent)
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed.m_floats[0], ent->speed.m_floats[1], ent->speed.m_floats[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf.animations.current_animation, ent->bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf.animations.next_state, ent->bf.animations.last_state);
-    fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->id, ent->self->collide_flag);
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);
 
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {

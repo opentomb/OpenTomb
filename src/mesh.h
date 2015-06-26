@@ -9,12 +9,6 @@
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
 
-#define COLLISION_NONE              (0x00)
-#define COLLISION_TRIMESH           (0x01)
-#define COLLISION_BOX               (0x02)
-#define COLLISION_SPHERE            (0x03)
-#define COLLISION_BASE_BOX          (0x04)
-
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
