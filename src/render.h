@@ -40,7 +40,7 @@
 #define STENCIL_FRUSTUM 1
 
 struct portal_s;
-struct frustum_s;
+struct Frustum;
 struct world_s;
 struct Room;
 struct Camera;
@@ -85,7 +85,7 @@ class render_DebugDrawer:public btIDebugDraw
         }
         void drawAxis(btScalar r, const btTransform& transform);
         void drawPortal(const portal_s &p);
-        void drawFrustum(const frustum_s &f);
+        void drawFrustum(const Frustum &f);
         void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
         void drawOBB(struct obb_s *obb);
         void drawMeshDebugLines(struct base_mesh_s *mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals);
@@ -199,8 +199,8 @@ int Render_AddRoom(std::shared_ptr<Room> room);
 void Render_DrawList();
 void Render_DrawList_DebugLines();
 
-int Render_HaveFrustumParent(struct Room *room, struct frustum_s *frus);
-int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus);
+int Render_HaveFrustumParent(struct Room *room, struct Frustum *frus);
+int Render_ProcessRoom(struct portal_s *portal, const std::shared_ptr<Frustum> &frus);
 void Render_GenWorldList();
 
 void Render_SetWorld(struct world_s *world);

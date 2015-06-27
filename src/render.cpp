@@ -746,8 +746,7 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
     ////start test stencil test code
     bool need_stencil = false;
 #if STENCIL_FRUSTUM
-    if(room->frustum != NULL)
-    {
+    if(!room->frustum.empty()) {
         for(uint16_t i=0;i<room->overlapped_room_list_size;i++)
         {
             if(room->overlapped_room_list[i]->is_in_r_list)
@@ -778,15 +777,13 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
             vertex_array *array = render->vertex_array_manager->createArray(0, 1, attribs);
             array->use();
 
-            for(frustum_p f=room->frustum;f!=NULL;f=f->next)
-            {
+            for(const auto& f : room->frustum) {
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, stencilVBO);
                 glBufferDataARB(GL_ARRAY_BUFFER_ARB, f->vertices.size() * sizeof(GLfloat [3]), NULL, GL_STREAM_DRAW_ARB);
 
                 GLfloat *v = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
 
-                for(int16_t i=f->vertices.size()-1;i>=0;i--)
-                {
+                for(int16_t i=f->vertices.size()-1;i>=0;i--) {
                     *v++ = f->vertices[i].x();
                     *v++ = f->vertices[i].y();
                     *v++ = f->vertices[i].z();
@@ -831,7 +828,7 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
         glUseProgramObjectARB(render->shader_manager->getStaticMeshShader()->program);
         for(auto sm : room->static_mesh)
         {
-            if(sm->was_rendered || !Frustum_IsOBBVisibleInRoom(sm->obb, room))
+            if(sm->was_rendered || !Frustum::isOBBVisibleInRoom(sm->obb, room))
             {
                 continue;
             }
@@ -869,7 +866,7 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
                 if(ent->m_wasRendered == 0)
                 {
-                    if(Frustum_IsOBBVisibleInRoom(ent->m_obb.get(), room))
+                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), room))
                     {
                         Render_Entity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
                     }
@@ -993,7 +990,7 @@ void Render_CleanList()
 
         r->is_in_r_list = 0;
         r->active_frustums = 0;
-        r->frustum = NULL;
+        r->frustum.clear();
     }
 
     renderer.style &= ~R_DRAW_SKYBOX;
@@ -1073,7 +1070,7 @@ void Render_DrawList()
         // Add transparency polygons from static meshes (if they exists)
         for(auto sm : r->static_mesh)
         {
-            if((sm->mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInRoom(sm->obb, r))
+            if((sm->mesh->transparency_polygons != NULL) && Frustum::isOBBVisibleInRoom(sm->obb, r))
             {
                 render_dBSP.addNewPolygonList(sm->mesh->transparent_polygon_count, sm->mesh->transparent_polygons, sm->transform, r->frustum);
             }
@@ -1085,7 +1082,7 @@ void Render_DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
-                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->m_stateFlags & ENTITY_STATE_VISIBLE) && (Frustum_IsOBBVisibleInRoom(ent->m_obb.get(), r)))
+                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->m_stateFlags & ENTITY_STATE_VISIBLE) && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), r)))
                 {
                     for(uint16_t j=0;j<ent->m_bf.bone_tag_count;j++)
                     {
@@ -1108,7 +1105,7 @@ void Render_DrawList()
             if(ent->m_bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
                 btTransform tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->m_bf.bone_tags[j].mesh_base->transparent_polygons, tr, NULL);
+                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->m_bf.bone_tags[j].mesh_base->transparent_polygons, tr, {});
             }
         }
     }
@@ -1189,12 +1186,11 @@ void Render_DrawList_DebugLines()
  * @frus - frustum that intersects the portal
  * @return number of added rooms
  */
-int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
+int Render_ProcessRoom(struct portal_s *portal, const std::shared_ptr<Frustum>& frus)
 {
     int ret = 0;
     std::shared_ptr<Room> room = portal->dest_room;                                            // куда ведет портал
     std::shared_ptr<Room> src_room = portal->current_room;                                     // откуда ведет портал
-    frustum_p gen_frus;                                                         // новый генерируемый фрустум
 
     if((src_room == NULL) || !src_room->active || (room == NULL) || !room->active)
     {
@@ -1205,9 +1201,8 @@ int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     {
         if((p.dest_room->active) && (p.dest_room != src_room))                // обратно идти даже не пытаемся
         {
-            gen_frus = engine_frustumManager.portalFrustumIntersect(&p, frus, &renderer);             // Главная ф-я портального рендерера. Тут и проверка
-            if(NULL != gen_frus)                                                // на пересечение и генерация фрустума по порталу
-            {
+            auto gen_frus = Frustum::portalFrustumIntersect(&p, frus, &renderer);             // Главная ф-я портального рендерера. Тут и проверка
+            if(gen_frus) {
                 ret++;
                 Render_AddRoom(p.dest_room);
                 Render_ProcessRoom(&p, gen_frus);
@@ -1229,21 +1224,20 @@ void Render_GenWorldList()
 
     Render_CleanList();                                                         // clear old render list
     debugDrawer.reset();
-    renderer.cam->frustum->next = NULL;
+    //renderer.cam->frustum->next = NULL;
 
     std::shared_ptr<Room> curr_room = Room_FindPosCogerrence(renderer.cam->m_pos, renderer.cam->m_currentRoom);                // find room that contains camera
 
     renderer.cam->m_currentRoom = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
     {
-        curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
+        curr_room->frustum.clear();                                              // room with camera inside has no frustums!
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
         for(portal_s& p : curr_room->portals)                   // go through all start room portals
         {
-            frustum_p last_frus = engine_frustumManager.portalFrustumIntersect(&p, renderer.cam->frustum, &renderer);
-            if(last_frus)
-            {
+            auto last_frus = Frustum::portalFrustumIntersect(&p, renderer.cam->frustum, &renderer);
+            if(last_frus) {
                 Render_AddRoom(p.dest_room);                                   // portal destination room
                 last_frus->parents_count = 1;                                   // created by camera
                 Render_ProcessRoom(&p, last_frus);                               // next start reccursion algorithm
@@ -1254,7 +1248,7 @@ void Render_GenWorldList()
     {
         for(auto r : renderer.world->rooms)
         {
-            if(Frustum_IsAABBVisible(r->bb_min, r->bb_max, renderer.cam->frustum))
+            if(renderer.cam->frustum->isAABBVisible(r->bb_min, r->bb_max))
             {
                 Render_AddRoom(r);
             }
@@ -1293,7 +1287,7 @@ void Render_SetWorld(struct world_s *world)
     renderer.r_list_active_count = 0;
 
     renderer.cam = &engine_camera;
-    engine_camera.frustum->next = NULL;
+    //engine_camera.frustum->next = NULL;
     engine_camera.m_currentRoom = NULL;
 
     for(auto r : world->rooms)
@@ -1471,7 +1465,7 @@ void render_DebugDrawer::drawAxis(btScalar r, const btTransform &transform)
     m_buffer.push_back({0.0, 0.0, 1.0});
 }
 
-void render_DebugDrawer::drawFrustum(const frustum_s& f)
+void render_DebugDrawer::drawFrustum(const Frustum& f)
 {
     for(size_t i=0; i<f.vertices.size()-1; i++)
     {
@@ -1606,7 +1600,6 @@ void render_DebugDrawer::drawSectorDebugLines(struct room_sector_s *rs)
 void render_DebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, struct render_s *render)
 {
     uint32_t flag;
-    frustum_p frus;
 
     flag = render->style & R_DRAW_ROOMBOXES;
     if(flag)
@@ -1633,8 +1626,7 @@ void render_DebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, struct r
     if(flag)
     {
         debugDrawer.setColor(1.0, 0.0, 0.0);
-        for(frus=room->frustum; frus; frus=frus->next)
-        {
+        for(const auto& frus : room->frustum) {
             debugDrawer.drawFrustum(*frus);
         }
     }
@@ -1647,7 +1639,7 @@ void render_DebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, struct r
     flag = render->style & R_DRAW_BOXES;
     for(auto sm : room->static_mesh)
     {
-        if(sm->was_rendered_lines || !Frustum_IsOBBVisibleInRoom(sm->obb, room) ||
+        if(sm->was_rendered_lines || !Frustum::isOBBVisibleInRoom(sm->obb, room) ||
           ((sm->hide == 1) && !(renderer.style & R_DRAW_DUMMY_STATICS)))
         {
             continue;
@@ -1677,7 +1669,7 @@ void render_DebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, struct r
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
                 if(ent->m_wasRenderedLines == 0)
                 {
-                    if(Frustum_IsOBBVisibleInRoom(ent->m_obb.get(), room))
+                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), room))
                     {
                         debugDrawer.drawEntityDebugLines(ent);
                     }

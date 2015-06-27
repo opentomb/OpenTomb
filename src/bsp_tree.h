@@ -11,7 +11,7 @@
 #include "vmath.h"
 
 struct polygon_s;
-struct frustum_s;
+struct Frustum;
 struct transparent_polygon_reference_s;
 
 struct BSPFaceRef {
@@ -48,7 +48,7 @@ private:
     void addPolygon(const std::unique_ptr<BSPNode> &root, BSPFaceRef *const p, polygon_s *transformed);
     
 public:
-    void addNewPolygonList(size_t count, const transparent_polygon_reference_s *p, const btTransform &transform, struct frustum_s *f);
+    void addNewPolygonList(size_t count, const transparent_polygon_reference_s *p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f);
 
     const std::unique_ptr<BSPNode>& root() const
     {

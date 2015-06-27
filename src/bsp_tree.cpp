@@ -66,28 +66,24 @@ void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, struct BSPFace
 }
 
 
-void DynamicBSP::addNewPolygonList(size_t count, const struct transparent_polygon_reference_s *p, const btTransform& transform, struct frustum_s *f)
+void DynamicBSP::addNewPolygonList(size_t count, const transparent_polygon_reference_s *p, const btTransform& transform, const std::vector<std::shared_ptr<Frustum>>& f)
 {
     polygon_s transformed;
-    for(size_t i = 0; i < count; i++)
-    {
-        bool visible = (f == nullptr);
+    for(size_t i = 0; i < count; i++) {
+        bool visible = f.empty();
 
         transformed.vertices.resize( p[i].polygon->vertices.size() );
         Polygon_Transform(&transformed, p[i].polygon, transform);
         transformed.double_side = p[i].polygon->double_side;
 
-        for(frustum_p ff=f;(!visible)&&(ff!=NULL);ff=ff->next)
-        {
-            if(Frustum_IsPolyVisible(&transformed, ff))
-            {
+        for(const auto& ff : f) {
+            if(ff->isPolyVisible(&transformed)) {
                 visible = true;
                 break;
             }
         }
 
-        if(visible)
-        {
+        if(visible) {
             BSPFaceRef *face = new BSPFaceRef(transform, &p[i]);
             this->addPolygon(m_root, face, &transformed);
         }

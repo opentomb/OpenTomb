@@ -1967,7 +1967,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
 
     room->id = room_index;
     room->active = 1;
-    room->frustum = NULL;
+    room->frustum.clear();
     room->flags = tr->rooms[room_index].flags;
     room->light_mode = tr->rooms[room_index].light_mode;
     room->reverb_info = tr->rooms[room_index].reverb_info;

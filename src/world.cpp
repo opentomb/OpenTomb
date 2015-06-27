@@ -42,7 +42,7 @@ void Room_Empty(std::shared_ptr<Room> room)
 
     room->portals.clear();
 
-    room->frustum = NULL;
+    room->frustum.clear();
 
     if(room->mesh)
     {

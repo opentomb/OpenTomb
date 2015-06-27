@@ -175,7 +175,7 @@ struct polygon_s;
 struct Camera;
 struct portal_s;
 struct render_s;
-struct frustum_s;
+struct Frustum;
 struct base_mesh_s;
 struct StaticMesh;
 struct Entity;
@@ -296,7 +296,7 @@ struct Room : public Object
     struct room_sector_s       *sectors;
 
     uint16_t                    active_frustums;                                // current number of this room active frustums
-    struct frustum_s           *frustum;
+    std::vector<std::shared_ptr<Frustum>> frustum;
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
     uint16_t                    near_room_list_size;

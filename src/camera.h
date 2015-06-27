@@ -4,7 +4,7 @@
 
 struct Room;
 struct polygon_s;
-struct frustum_s;
+struct Frustum;
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
@@ -52,7 +52,7 @@ struct Camera
     btTransform m_glViewProjMat = btTransform::getIdentity();
 
     btVector3 m_clipPlanes[4];        // frustum side clip planes
-    frustum_s* frustum;               // camera frustum structure
+    std::shared_ptr<Frustum> frustum;               // camera frustum structure
 
     GLfloat m_distNear = 1;
     GLfloat m_distFar = 65536;
