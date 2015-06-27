@@ -296,7 +296,7 @@ tr2_entity_tbl[77] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_B
 tr2_entity_tbl[78] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Overhead pulley hook
 tr2_entity_tbl[79] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};                     -- Sandbag / Ceiling fragments
 tr2_entity_tbl[80] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Rolling spindle
-tr2_entity_tbl[81] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "wallblade"};                     -- Wall-mounted knife blade
+tr2_entity_tbl[81] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "wallblade"};                     -- Wall-mounted knife blade
 tr2_entity_tbl[82] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Statue with knife blade
 tr2_entity_tbl[83] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX};          -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Detachable icicles
@@ -474,7 +474,7 @@ tr3_entity_tbl[51] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_T
 tr3_entity_tbl[53] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- 'Damned' stick-wielding goon
 tr3_entity_tbl[56] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- London guard
 tr3_entity_tbl[57] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Sophia Lee
-tr3_entity_tbl[58] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Thames Wharf machine
+tr3_entity_tbl[58] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "cleaner"};              -- Thames Wharf machine
 tr3_entity_tbl[60] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- MP with stick
 tr3_entity_tbl[61] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- MP with gun
 tr3_entity_tbl[62] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};               -- Prisoner

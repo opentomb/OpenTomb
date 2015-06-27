@@ -57,7 +57,6 @@ void Character_Create(struct entity_s *ent)
     vec3_set_zero(ret->cmd.rot);
 
     ret->cam_follow_center = 0x00;
-    ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
     ret->max_climb_height = DEFAULT_CLIMB_UP_HEIGHT;
     ret->max_step_up_height = DEFAULT_MAX_STEP_UP_HEIGHT;
@@ -77,9 +76,9 @@ void Character_Create(struct entity_s *ent)
     ret->sphere = new btSphereShape(CHARACTER_BASE_RADIUS);
     ret->climb_sensor = new btSphereShape(ent->character->climb_r);
 
-    ret->ray_cb = new bt_engine_ClosestRayResultCallback(ent->self);
+    ret->ray_cb = new bt_engine_ClosestRayResultCallback(ent->self, true);
     ret->ray_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    ret->convex_cb = new bt_engine_ClosestConvexResultCallback(ent->self);
+    ret->convex_cb = new bt_engine_ClosestConvexResultCallback(ent->self, true);
     ret->convex_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
 
     ret->height_info.cb = ret->ray_cb;
@@ -974,7 +973,7 @@ void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_h
     }
 
     // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * ent->character->speed_mult;
+    t = v_horizontal * ent->speed_mult;
 
     // Calculate the direction of jump by vector multiplication.
     if(ent->dir_flag & ENT_MOVE_FORWARD)
@@ -1006,7 +1005,7 @@ void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_h
     ent->speed = spd;
 
     // Apply vertical speed.
-    ent->speed.m_floats[2] = v_vertical * ent->character->speed_mult;
+    ent->speed.m_floats[2] = v_vertical * ent->speed_mult;
     ent->move_type = MOVE_FREE_FALLING;
 }
 
@@ -1120,7 +1119,7 @@ btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btSca
         }
     }
 
-    return ent->inertia_linear * ent->character->speed_mult;
+    return ent->inertia_linear * ent->speed_mult;
 }
 
 /*
@@ -1228,7 +1227,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         if(tv.m_floats[2] > 0.02 && tv.m_floats[2] < ent->character->critical_slant_z_component)
         {
             tv.m_floats[2] = -tv.m_floats[2];
-            spd = tv * ent->character->speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
+            spd = tv * ent->speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
             ang = 180.0 * atan2f(tv.m_floats[0], -tv.m_floats[1]) / M_PI;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             t = tv.m_floats[0] * ent->transform[4] + tv.m_floats[1] * ent->transform[5];
@@ -1249,7 +1248,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         }
         else    // no slide - free to walk
         {
-            t = ent->current_speed * ent->character->speed_mult;
+            t = ent->current_speed * ent->speed_mult;
             ent->character->resp.vertical_collide |= 0x01;
 
             ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_LAND, 0);
@@ -1506,7 +1505,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    t = ent->current_speed * ent->character->speed_mult;
+    t = ent->current_speed * ent->speed_mult;
     ent->character->resp.vertical_collide |= 0x01;
 
     ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_MONKEYSWING, 0);
@@ -1609,7 +1608,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     {
         spd /= t;
     }
-    ent->speed = spd * ent->current_speed * ent->character->speed_mult;
+    ent->speed = spd * ent->current_speed * ent->speed_mult;
     move = ent->speed * engine_frame_time;
 
     Entity_GhostUpdate(ent);
@@ -1640,7 +1639,7 @@ int Character_Climbing(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    t = ent->current_speed * ent->character->speed_mult;
+    t = ent->current_speed * ent->speed_mult;
     ent->character->resp.vertical_collide |= 0x01;
     ent->angles[0] += ent->character->cmd.rot[0];
     ent->angles[1] = 0.0;

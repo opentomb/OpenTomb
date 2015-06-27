@@ -36,9 +36,9 @@ function getStaticMeshProperties(id)
         return COLLISION_TYPE_STATIC, COLLISION_SHAPE_BOX, nil;
     else
         local coll, shape, hide;
-        if(static_tbl[id].hide ~= nil) then hide = static_tbl[id].hide; else hide = 0; end;
-        if(static_tbl[id].coll ~= nil) then coll = static_tbl[id].coll; else coll = COLLISION_TYPE_NONE; end;
-        if(static_tbl[id].shape ~= nil) then shape = static_tbl[id].shape; else shape = COLLISION_SHAPE_BOX; end;
+        if(static_tbl[id].hide ~= nil) then hide = static_tbl[id].hide else hide = 0 end;
+        if(static_tbl[id].coll ~= nil) then coll = static_tbl[id].coll else coll = COLLISION_TYPE_NONE end;
+        if(static_tbl[id].shape ~= nil) then shape = static_tbl[id].shape else shape = COLLISION_SHAPE_BOX end;
         return coll, shape, hide;
     end;
 end;

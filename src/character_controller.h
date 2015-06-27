@@ -305,7 +305,6 @@ typedef struct character_s
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     
     int8_t                       cam_follow_center;
-    btScalar                     speed_mult;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
     btScalar                     max_climb_height;
