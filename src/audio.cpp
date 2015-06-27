@@ -1785,5 +1785,5 @@ void Audio_Update()
 {
     Audio_UpdateSources();
     Audio_UpdateStreams();
-    Audio_UpdateListenerByCamera(renderer.cam);
+    Audio_UpdateListenerByCamera(renderer.camera());
 }

@@ -122,7 +122,7 @@ void Engine_InitGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    if(renderer.settings.antialias)
+    if(renderer.settings().antialias)
     {
         glEnable(GL_MULTISAMPLE);
     }
@@ -232,7 +232,7 @@ void Engine_InitSDLVideo()
     }
 
     // Check for correct number of antialias samples.
-    if(renderer.settings.antialias)
+    if(renderer.settings().antialias)
     {
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
@@ -240,16 +240,16 @@ void Engine_InitSDLVideo()
         SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
-        if ((maxSamples == 0) || (renderer.settings.antialias_samples > maxSamples))
+        if ((maxSamples == 0) || (renderer.settings().antialias_samples > maxSamples))
         {
-            renderer.settings.antialias_samples = maxSamples;   // Limit to max.
+            renderer.settings().antialias_samples = maxSamples;   // Limit to max.
             Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
         }
         SDL_GL_DeleteContext(sdl_gl_context);
         SDL_DestroyWindow(sdl_window);
 
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings().antialias);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings().antialias_samples);
     }
     else
     {
@@ -258,7 +258,7 @@ void Engine_InitSDLVideo()
     }
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings().z_depth);
 #if STENCIL_FRUSTUM
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 #endif
@@ -366,7 +366,7 @@ void Engine_Start()
 
     // Additional OpenGL initialization.
     Engine_InitGL();
-    Render_DoShaders();
+    renderer.doShaders();
 
     // Secondary (deferred) initialization.
     Engine_Init_Post();
@@ -409,8 +409,8 @@ void Engine_Display()
 
         glFrontFace(GL_CW);
 
-        Render_GenWorldList();
-        Render_DrawList();
+        renderer.genWorldList();
+        renderer.drawList();
 
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);
@@ -436,7 +436,7 @@ void Engine_Display()
         Gui_Render();
         Gui_SwitchGLMode(0);
 
-        Render_DrawList_DebugLines();
+        renderer.drawListDebugLines();
 
         SDL_GL_SwapWindow(sdl_window);
     }

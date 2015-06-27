@@ -508,7 +508,7 @@ void Gui_RenderStrings()
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        const text_shader_description *shader = renderer.shader_manager->getTextShader();
+        const text_shader_description *shader = renderer.shaderManager()->getTextShader();
         glUseProgramObjectARB(shader->program);
         GLfloat screenSize[2] = {
             (GLfloat) screen_info.w,
@@ -595,7 +595,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
  */
 void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
-    const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0, false);
+    const lit_shader_description *shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
     glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -624,12 +624,12 @@ void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
         btTransform mvpMatrix = guiProjectionMatrix * mvMatrix;
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 
@@ -1140,12 +1140,12 @@ void Gui_FillCrosshairBuffer()
         vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
         vertex_array_attribute(gui_shader_description::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
     };
-    crosshairArray = renderer.vertex_array_manager->createArray(0, 2, attribs);
+    crosshairArray = renderer.vertexArrayManager()->createArray(0, 2, attribs);
 }
 
 void Gui_DrawCrosshair()
 {
-    const gui_shader_description *shader = renderer.shader_manager->getGuiShader(false);
+    const gui_shader_description *shader = renderer.shaderManager()->getGuiShader(false);
 
     glUseProgramObjectARB(shader->program);
     GLfloat factor[2] = {
@@ -1318,7 +1318,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
             vertex_array_attribute(gui_shader_description::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
         };
-        rectangleArray = renderer.vertex_array_manager->createArray(0, 2, attribs);
+        rectangleArray = renderer.vertexArrayManager()->createArray(0, 2, attribs);
     }
     
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectangleColorBuffer);
@@ -1333,7 +1333,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    const gui_shader_description *shader = renderer.shader_manager->getGuiShader(texture != 0);
+    const gui_shader_description *shader = renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->sampler, 0);
     if (texture)

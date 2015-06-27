@@ -31,7 +31,7 @@ void fontBuffer_ensureAvailable()
         vertex_array_attribute(text_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [4])),
     };
     
-    fontBufferVAO = renderer.vertex_array_manager->createArray(0, 3, attribs);
+    fontBufferVAO = renderer.vertexArrayManager()->createArray(0, 3, attribs);
 }
 
 void *FontBuffer_ResizeAndMap(size_t bytes)

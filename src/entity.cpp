@@ -1108,7 +1108,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
                             btScalar dist = engine_world.Character->findDistance(*this);
                             dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
                             if(dist > 0)
-                                renderer.cam->shake(dist * TR_CAM_DEFAULT_SHAKE_POWER, 0.5);
+                                renderer.camera()->shake(dist * TR_CAM_DEFAULT_SHAKE_POWER, 0.5);
                         }
                         break;
 

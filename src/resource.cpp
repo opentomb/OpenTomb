@@ -55,7 +55,7 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
             if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
                 ent->m_self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
-                ent->m_bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3); // get info about model visibility
+                ent->m_bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3) != 0; // get info about model visibility
                 ent->m_typeFlags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
 
                 if(!lua_isnil(objects_flags_conf, -1))
@@ -84,7 +84,7 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
                 }
                 if(!lua_isnil(level_script, -3))
                 {
-                    ent->m_bf.animations.model->hide = lua_tointeger(level_script, -3);   // get info about model visibility
+                    ent->m_bf.animations.model->hide = lua_tointeger(level_script, -3)!=0;   // get info about model visibility
                 }
                 if(!lua_isnil(level_script, -2))
                 {
@@ -151,7 +151,7 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
                 }
                 if(!lua_isnil(level_script, -1))
                 {
-                    r_static->hide = lua_tointeger(level_script, -1);
+                    r_static->hide = lua_tointeger(level_script, -1)!=0;
                 }
             }
         }
@@ -1966,7 +1966,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     btCollisionShape *cshape;
 
     room->id = room_index;
-    room->active = 1;
+    room->active = true;
     room->frustum.clear();
     room->flags = tr->rooms[room_index].flags;
     room->light_mode = tr->rooms[room_index].light_mode;
@@ -2047,7 +2047,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         r_static->obb->doTransform();
 
         r_static->bt_body = NULL;
-        r_static->hide = 0;
+        r_static->hide = false;
 
         // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
         // coordinates are equal (TR2-5).
@@ -2563,7 +2563,7 @@ void Res_GenSpritesBuffer(struct world_s *world)
 
 void TR_GenTextures(struct world_s* world, class VT_Level *tr)
 {
-    int border_size = renderer.settings.texture_border;
+    int border_size = renderer.settings().texture_border;
     border_size = (border_size < 0)?(0):(border_size);
     border_size = (border_size > 128)?(128):(border_size);
     world->tex_atlas = new BorderedTextureAtlas(border_size,
@@ -2590,7 +2590,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
 
     // Select mipmap mode
-    switch(renderer.settings.mipmap_mode)
+    switch(renderer.settings().mipmap_mode)
     {
         case 0:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
@@ -2611,13 +2611,13 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     };
 
     // Set mipmaps number
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings.mipmaps);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings().mipmaps);
 
     // Set anisotropy degree
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings.anisotropy);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings().anisotropy);
 
     // Read lod bias
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings.lod_bias);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings().lod_bias);
 
 
     glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
@@ -3273,7 +3273,7 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
         vertex_array_attribute(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
     };
 
-    room->sprite_buffer->data = renderer.vertex_array_manager->createArray(elementBuffer, 3, attribs);
+    room->sprite_buffer->data = renderer.vertexArrayManager()->createArray(elementBuffer, 3, attribs);
 }
 
 void Res_GenVBOs(struct world_s *world)
@@ -3972,7 +3972,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 rsp = entity->m_self->room->sprites + sz - 1;
                 rsp->sprite = sp;
                 rsp->pos = entity->m_transform.getOrigin();
-                rsp->was_rendered = 0;
+                rsp->was_rendered = false;
             }
 
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
@@ -3993,7 +3993,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             entity->m_moveType = MOVE_ON_FLOOR;
             world->Character = entity;
             entity->m_self->collide_flag = ENTITY_COLLISION_ACTOR;
-            entity->m_bf.animations.model->hide = 0;
+            entity->m_bf.animations.model->hide = false;
             entity->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             LM = (SkeletalModel*)entity->m_bf.animations.model;
 

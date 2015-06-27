@@ -142,9 +142,9 @@ void Frustum::genClipPlanes(Camera *cam)
  * receiver - указатель на базовый фрустум рума, куда ведет портал - берется из портала!!!
  * возвращает указатель на свежесгенеренный фрустум
  */
-std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const std::shared_ptr<Frustum>& emitter, render_s *render)
+std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const std::shared_ptr<Frustum>& emitter, Render *render)
 {
-    if(planeDist(portal->norm, render->cam->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
+    if(planeDist(portal->norm, render->camera()->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
     {
         return nullptr;
     }
@@ -157,7 +157,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const s
     bool in_dist = false, in_face = false;
     for(const btVector3& v : portal->vertices)
     {
-        if(!in_dist && (planeDist(render->cam->frustum->norm, v) < render->cam->m_distFar))
+        if(!in_dist && (planeDist(render->camera()->frustum->norm, v) < render->camera()->m_distFar))
             in_dist = true;
         if(!in_face && (planeDist(emitter->norm, v) > 0.0))
             in_face = true;
@@ -190,7 +190,7 @@ std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const s
             }
         }
 
-        current_gen->genClipPlanes(render->cam);                      // all is OK, let us generate clipplanes
+        current_gen->genClipPlanes(render->camera());                      // all is OK, let us generate clipplanes
 
         current_gen->parent = emitter;                                      // add parent pointer
         current_gen->parents_count = emitter->parents_count + 1;

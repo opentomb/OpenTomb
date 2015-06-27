@@ -63,7 +63,7 @@ void BaseMesh::findBB()
 }
 
 
-void BaseMesh::genVBO(const render_s *renderer)
+void BaseMesh::genVBO(const Render *renderer)
 {
     m_vboVertexArray = 0;
     m_vboIndexArray = 0;
@@ -102,7 +102,7 @@ void BaseMesh::genVBO(const render_s *renderer)
         vertex_array_attribute(lit_shader_description::vertex_attribs::matrix_index, 2, GL_UNSIGNED_BYTE, false, m_vboSkinArray, 2, 0),
     };
     int numAttribs = !m_matrixIndices.empty() ? 5 : 4;
-    m_mainVertexArray = renderer->vertex_array_manager->createArray(m_vboIndexArray, numAttribs, attribs);
+    m_mainVertexArray = renderer->vertexArrayManager()->createArray(m_vboIndexArray, numAttribs, attribs);
 
     // Now for animated polygons, if any
     if (!m_allAnimatedElements.empty())
@@ -129,7 +129,7 @@ void BaseMesh::genVBO(const render_s *renderer)
 
             vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, m_animatedVboTexCoordArray, sizeof(GLfloat [2]), 0),
         };
-        m_animatedVertexArray = renderer->vertex_array_manager->createArray(m_animatedVboIndexArray, 4, attribs);
+        m_animatedVertexArray = renderer->vertexArrayManager()->createArray(m_animatedVboIndexArray, 4, attribs);
     }
     else
     {

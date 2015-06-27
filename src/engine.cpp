@@ -77,7 +77,7 @@ btSequentialImpulseConstraintSolver     *bt_engine_solver;
 btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 btOverlapFilterCallback                 *bt_engine_filterCallback;
 
-render_DebugDrawer                       debugDrawer;
+RenderDebugDrawer                       debugDrawer;
 
 /**
  * overlapping room collision filter
@@ -149,7 +149,7 @@ void Engine_InitDefaultGlobals()
     ConsoleInfo::instance().initGlobals();
     Controls_InitGlobals();
     Game_InitGlobals();
-    Render_InitGlobals();
+    renderer.initGlobals();
     Audio_InitGlobals();
 }
 
@@ -173,9 +173,9 @@ void Engine_Init_Pre()
     frame_vertex_buffer_size_left = frame_vertex_buffer_size;
 
     Com_Init();
-    Render_Init();
+    renderer.init();
     engine_camera = Camera();
-    renderer.cam = &engine_camera;
+    renderer.setCamera( &engine_camera );
 
     Engine_BTInit();
 }
@@ -3271,7 +3271,7 @@ int lua_CamShake(lua_State *lua)
 
     float power = lua_tonumber(lua, 1);
     float time  = lua_tonumber(lua, 2);
-    renderer.cam->shake(power, time);
+    renderer.camera()->shake(power, time);
 
     return 0;
 }
@@ -3985,7 +3985,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
 
 void Engine_Destroy()
 {
-    Render_Empty(&renderer);
+    renderer.empty();
     //ConsoleInfo::instance().destroy();
     Com_Destroy();
     Sys_Destroy();
@@ -4020,7 +4020,7 @@ void Engine_Destroy()
 void Engine_Shutdown(int val)
 {
     Engine_LuaClearTasks();
-    Render_Empty(&renderer);
+    renderer.empty();
     World_Empty(&engine_world);
     Engine_Destroy();
 
@@ -4385,9 +4385,9 @@ int Engine_LoadMap(const char *name)
 
     Gui_DrawLoadScreen(0);
     
-    renderer.style &= ~R_DRAW_SKYBOX;
-    renderer.r_list_active_count = 0;
-    renderer.world = NULL;
+    renderer.hideSkyBox();
+    renderer.resetRListActiveCount();
+    renderer.resetWorld();
 
     strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.
 
@@ -4430,7 +4430,7 @@ int Engine_LoadMap(const char *name)
 
     Game_Prepare();
 
-    Render_SetWorld(&engine_world);
+    renderer.setWorld(&engine_world);
     
     Gui_DrawLoadScreen(1000);
 
@@ -4475,9 +4475,9 @@ int Engine_ExecCmd(const char *ch)
         else if(!strcmp(token, "goto"))
         {
             control_states.free_look = 1;
-            renderer.cam->m_pos[0] = SC_ParseFloat(&ch);
-            renderer.cam->m_pos[1] = SC_ParseFloat(&ch);
-            renderer.cam->m_pos[2] = SC_ParseFloat(&ch);
+            renderer.camera()->m_pos[0] = SC_ParseFloat(&ch);
+            renderer.camera()->m_pos[1] = SC_ParseFloat(&ch);
+            renderer.camera()->m_pos[2] = SC_ParseFloat(&ch);
             return 1;
         }
         else if(!strcmp(token, "save"))
@@ -4544,69 +4544,69 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token, "r_wireframe"))
         {
-            renderer.style ^= R_DRAW_WIRE;
+            renderer.toggleWireframe();
             return 1;
         }
         else if(!strcmp(token, "r_points"))
         {
-            renderer.style ^= R_DRAW_POINTS;
+            renderer.toggleDrawPoints();
             return 1;
         }
         else if(!strcmp(token, "r_coll"))
         {
-            renderer.style ^= R_DRAW_COLL;
+            renderer.toggleDrawColl();
             return 1;
         }
         else if(!strcmp(token, "r_normals"))
         {
-            renderer.style ^= R_DRAW_NORMALS;
+            renderer.toggleDrawNormals();
             return 1;
         }
         else if(!strcmp(token, "r_portals"))
         {
-            renderer.style ^= R_DRAW_PORTALS;
+            renderer.toggleDrawPortals();
             return 1;
         }
         else if(!strcmp(token, "r_frustums"))
         {
-            renderer.style ^= R_DRAW_FRUSTUMS;
+            renderer.toggleDrawFrustums();
             return 1;
         }
         else if(!strcmp(token, "r_room_boxes"))
         {
-            renderer.style ^= R_DRAW_ROOMBOXES;
+            renderer.toggleDrawRoomBoxes();
             return 1;
         }
         else if(!strcmp(token, "r_boxes"))
         {
-            renderer.style ^= R_DRAW_BOXES;
+            renderer.toggleDrawBoxes();
             return 1;
         }
         else if(!strcmp(token, "r_axis"))
         {
-            renderer.style ^= R_DRAW_AXIS;
+            renderer.toggleDrawAxis();
             return 1;
         }
         else if(!strcmp(token, "r_nullmeshes"))
         {
-            renderer.style ^= R_DRAW_NULLMESHES;
+            renderer.toggleDrawNullMeshes();
             return 1;
         }
         else if(!strcmp(token, "r_dummy_statics"))
         {
-            renderer.style ^= R_DRAW_DUMMY_STATICS;
+            renderer.toggleDrawDummyStatics();
             return 1;
         }
         else if(!strcmp(token, "r_skip_room"))
         {
-            renderer.style ^= R_SKIP_ROOM;
+            renderer.toggleSkipRoom();
             return 1;
         }
         else if(!strcmp(token, "room_info"))
         {
-            if(std::shared_ptr<Room> r = renderer.cam->m_currentRoom)
+            if(std::shared_ptr<Room> r = renderer.camera()->m_currentRoom)
             {
-                sect = Room_GetSectorXYZ(r, renderer.cam->m_pos);
+                sect = Room_GetSectorXYZ(r, renderer.camera()->m_pos);
                 ConsoleInfo::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {
@@ -4692,7 +4692,7 @@ void Engine_InitConfig(const char *filename)
             luaL_dofile(lua, filename);
 
             lua_ParseScreen(lua, &screen_info);
-            lua_ParseRender(lua, &renderer.settings);
+            lua_ParseRender(lua, &renderer.settings());
             lua_ParseAudio(lua, &audio_settings);
             lua_ParseConsole(lua, &ConsoleInfo::instance());
             lua_ParseControls(lua, &control_mapper);

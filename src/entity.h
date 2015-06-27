@@ -111,8 +111,8 @@ struct Entity : public Object
     uint8_t                             m_dirFlag;           // (move direction)
     uint16_t                            m_moveType;          // on floor / free fall / swim ....
     
-    uint8_t                             m_wasRendered;       // render once per frame trigger
-    uint8_t                             m_wasRenderedLines; // same for debug lines
+    bool m_wasRendered;       // render once per frame trigger
+    bool m_wasRenderedLines; // same for debug lines
 
     btScalar                            m_currentSpeed;      // current linear speed from animation info
     btVector3                           m_speed;              // speed of the entity XYZ

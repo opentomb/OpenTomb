@@ -377,7 +377,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
     cam_angles[2] += 2.2 * engine_frame_time * look_logic[2];
 
-    if(!renderer.world)
+    if(!renderer.world())
     {
         if(control_mapper.use_joy)
         {
@@ -400,11 +400,11 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
             control_states.look_axis_y = 0.0;
         }
 
-        renderer.cam->setRotation(cam_angles);
+        renderer.camera()->setRotation(cam_angles);
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        renderer.cam->moveAlong(dist * move_logic[0]);
-        renderer.cam->moveStrafe(dist * move_logic[1]);
-        renderer.cam->moveVertical(dist * move_logic[2]);
+        renderer.camera()->moveAlong(dist * move_logic[0]);
+        renderer.camera()->moveStrafe(dist * move_logic[1]);
+        renderer.camera()->moveVertical(dist * move_logic[2]);
 
         return;
     }
@@ -432,26 +432,26 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
     if((control_states.free_look != 0) || !IsCharacter(ent))
     {
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        renderer.cam->setRotation(cam_angles);
-        renderer.cam->moveAlong(dist * move_logic[0]);
-        renderer.cam->moveStrafe(dist * move_logic[1]);
-        renderer.cam->moveVertical(dist * move_logic[2]);
-        renderer.cam->m_currentRoom = Room_FindPosCogerrence(renderer.cam->m_pos, renderer.cam->m_currentRoom);
+        renderer.camera()->setRotation(cam_angles);
+        renderer.camera()->moveAlong(dist * move_logic[0]);
+        renderer.camera()->moveStrafe(dist * move_logic[1]);
+        renderer.camera()->moveVertical(dist * move_logic[2]);
+        renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
     }
     else if(control_states.noclip != 0)
     {
         btVector3 pos;
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
-        renderer.cam->setRotation(cam_angles);
-        renderer.cam->moveAlong(dist * move_logic[0]);
-        renderer.cam->moveStrafe(dist * move_logic[1]);
-        renderer.cam->moveVertical(dist * move_logic[2]);
-        renderer.cam->m_currentRoom = Room_FindPosCogerrence(renderer.cam->m_pos, renderer.cam->m_currentRoom);
+        renderer.camera()->setRotation(cam_angles);
+        renderer.camera()->moveAlong(dist * move_logic[0]);
+        renderer.camera()->moveStrafe(dist * move_logic[1]);
+        renderer.camera()->moveVertical(dist * move_logic[2]);
+        renderer.camera()->m_currentRoom = Room_FindPosCogerrence(renderer.camera()->m_pos, renderer.camera()->m_currentRoom);
 
         ent->m_angles[0] = 180.0 * cam_angles[0] / M_PI;
-        pos[0] = renderer.cam->m_pos[0] + renderer.cam->m_viewDir[0] * control_states.cam_distance;
-        pos[1] = renderer.cam->m_pos[1] + renderer.cam->m_viewDir[1] * control_states.cam_distance;
-        pos[2] = renderer.cam->m_pos[2] + renderer.cam->m_viewDir[2] * control_states.cam_distance - 512.0;
+        pos[0] = renderer.camera()->m_pos[0] + renderer.camera()->m_viewDir[0] * control_states.cam_distance;
+        pos[1] = renderer.camera()->m_pos[1] + renderer.camera()->m_viewDir[1] * control_states.cam_distance;
+        pos[2] = renderer.camera()->m_pos[2] + renderer.camera()->m_viewDir[2] * control_states.cam_distance - 512.0;
         ent->m_transform.getOrigin() = pos;
         ent->updateRotation();
     }
@@ -639,12 +639,12 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
     }
 
     //Code to manage screen shaking effects
-    if((renderer.cam->m_shakeTime > 0.0) && (renderer.cam->m_shakeValue > 0.0))
+    if((renderer.camera()->m_shakeTime > 0.0) && (renderer.camera()->m_shakeValue > 0.0))
     {
-        cam_pos[0] += ((rand() % abs(renderer.cam->m_shakeValue)) - (renderer.cam->m_shakeValue / 2)) * renderer.cam->m_shakeTime;;
-        cam_pos[1] += ((rand() % abs(renderer.cam->m_shakeValue)) - (renderer.cam->m_shakeValue / 2)) * renderer.cam->m_shakeTime;;
-        cam_pos[2] += ((rand() % abs(renderer.cam->m_shakeValue)) - (renderer.cam->m_shakeValue / 2)) * renderer.cam->m_shakeTime;;
-        renderer.cam->m_shakeTime  = (renderer.cam->m_shakeTime < 0.0)?(0.0):(renderer.cam->m_shakeTime)-engine_frame_time;
+        cam_pos[0] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        cam_pos[1] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        cam_pos[2] += ((rand() % abs(renderer.camera()->m_shakeValue)) - (renderer.camera()->m_shakeValue / 2)) * renderer.camera()->m_shakeTime;;
+        renderer.camera()->m_shakeTime  = (renderer.camera()->m_shakeTime < 0.0)?(0.0):(renderer.camera()->m_shakeTime)-engine_frame_time;
     }
 
     cameraFrom.setOrigin(cam_pos);
@@ -868,7 +868,7 @@ void Game_Frame(btScalar time)
         {
             Character_ApplyCommands(engine_world.Character);
             engine_world.Character->frame(engine_frame_time);
-            Cam_FollowEntity(renderer.cam, engine_world.Character, 16.0, 128.0);
+            Cam_FollowEntity(renderer.camera(), engine_world.Character, 16.0, 128.0);
         }
     }
 
@@ -881,7 +881,7 @@ void Game_Frame(btScalar time)
     bt_engine_dynamicsWorld->stepSimulation(time / 2.0, 0);
 
     Controls_RefreshStates();
-    Render_UpdateAnimTextures();
+    engine_world.updateAnimTextures();
 }
 
 

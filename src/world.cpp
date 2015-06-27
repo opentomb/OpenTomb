@@ -780,7 +780,7 @@ room_sector_p Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3
 
     if(room != NULL)
     {
-        if(room->active == 0)
+        if(!room->active)
         {
             if((room->base_room != NULL) && (room->base_room->active))
             {
@@ -819,7 +819,7 @@ room_sector_p Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3
 
 room_sector_p Sector_CheckFlip(room_sector_p rs)
 {
-    if((rs != NULL) && (rs->owner_room->active == 0))
+    if(rs && !rs->owner_room->active)
     {
         if((rs->owner_room->base_room != NULL) && (rs->owner_room->base_room->active))
         {
@@ -908,7 +908,7 @@ void Room_Enable(std::shared_ptr<Room> room)
         }
     }
 
-    room->active = 1;
+    room->active = true;
 }
 
 
@@ -942,14 +942,14 @@ void Room_Disable(std::shared_ptr<Room> room)
         }
     }
 
-    room->active = 0;
+    room->active = false;
 }
 
 void Room_SwapToBase(std::shared_ptr<Room> room)
 {
-    if((room->base_room != NULL) && (room->active == 1))                        //If room is active alternate room
+    if((room->base_room != NULL) && room->active)                        //If room is active alternate room
     {
-        Render_CleanList();
+        renderer.cleanList();
         Room_Disable(room);                             //Disable current room
         Room_Disable(room->base_room);                  //Paranoid
         Room_SwapPortals(room, room->base_room);        //Update portals to match this room
@@ -960,9 +960,9 @@ void Room_SwapToBase(std::shared_ptr<Room> room)
 
 void Room_SwapToAlternate(std::shared_ptr<Room> room)
 {
-    if((room->alternate_room != NULL) && (room->active == 1))              //If room is active base room
+    if((room->alternate_room != NULL) && room->active)              //If room is active base room
     {
-        Render_CleanList();
+        renderer.cleanList();
         Room_Disable(room);                             //Disable current room
         Room_Disable(room->alternate_room);             //Paranoid
         Room_SwapPortals(room, room->alternate_room);   //Update portals to match this room
@@ -973,7 +973,7 @@ void Room_SwapToAlternate(std::shared_ptr<Room> room)
 
 std::shared_ptr<Room> Room_CheckFlip(std::shared_ptr<Room> r)
 {
-    if((r != NULL) && (r->active == 0))
+    if(r && !r->active)
     {
         if((r->base_room != NULL) && (r->base_room->active))
         {
@@ -1182,4 +1182,111 @@ void Room_BuildOverlappedRoomsList(std::shared_ptr<Room> room)
 
 base_item_s::~base_item_s() {
     bf->bone_tags.clear();
+}
+
+void world_s::updateAnimTextures()                                                // This function is used for updating global animated texture frame
+{
+    AnimSeq* seq = anim_sequences;
+    for(uint16_t i=0;i<anim_sequences_count;i++,seq++)
+    {
+        if(seq->frame_lock)
+        {
+            continue;
+        }
+
+        seq->frame_time += engine_frame_time;
+        if(seq->frame_time >= seq->frame_rate)
+        {
+            int j = (seq->frame_time / seq->frame_rate);
+            seq->frame_time -= (btScalar)j * seq->frame_rate;
+
+            switch(seq->anim_type)
+            {
+                case TR_ANIMTEXTURE_REVERSE:
+                    if(seq->reverse_direction)
+                    {
+                        if(seq->current_frame == 0)
+                        {
+                            seq->current_frame++;
+                            seq->reverse_direction = false;
+                        }
+                        else if(seq->current_frame > 0)
+                        {
+                            seq->current_frame--;
+                        }
+                    }
+                    else
+                    {
+                        if(seq->current_frame == seq->frames.size() - 1)
+                        {
+                            seq->current_frame--;
+                            seq->reverse_direction = true;
+                        }
+                        else if(seq->current_frame < seq->frames.size() - 1)
+                        {
+                            seq->current_frame++;
+                        }
+                        seq->current_frame %= seq->frames.size();                ///@PARANOID
+                    }
+                    break;
+
+                case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
+                case TR_ANIMTEXTURE_BACKWARD:
+                    seq->current_frame++;
+                    seq->current_frame %= seq->frames.size();
+                    break;
+            };
+        }
+    }
+}
+
+void world_s::calculateWaterTint(std::array<float,4>* tint, bool fixed_colour)
+{
+    if(version < TR_IV)  // If water room and level is TR1-3
+    {
+        if(version < TR_III)
+        {
+             // Placeholder, color very similar to TR1 PSX ver.
+            if(fixed_colour)
+            {
+                (*tint)[0] = 0.585f;
+                (*tint)[1] = 0.9f;
+                (*tint)[2] = 0.9f;
+                (*tint)[3] = 1.0f;
+            }
+            else
+            {
+                (*tint)[0] *= 0.585f;
+                (*tint)[1] *= 0.9f;
+                (*tint)[2] *= 0.9f;
+            }
+        }
+        else
+        {
+            // TOMB3 - closely matches TOMB3
+            if(fixed_colour)
+            {
+                (*tint)[0] = 0.275f;
+                (*tint)[1] = 0.45f;
+                (*tint)[2] = 0.5f;
+                (*tint)[3] = 1.0f;
+            }
+            else
+            {
+                (*tint)[0] *= 0.275f;
+                (*tint)[1] *= 0.45f;
+                (*tint)[2] *= 0.5f;
+            }
+        }
+    }
+    else
+    {
+        if(fixed_colour)
+        {
+            (*tint)[0] = 1.0f;
+            (*tint)[1] = 1.0f;
+            (*tint)[2] = 1.0f;
+            (*tint)[3] = 1.0f;
+        }
+    }
 }

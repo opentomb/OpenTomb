@@ -35,7 +35,7 @@ struct Room;
 struct EngineContainer;
 struct OBB;
 struct Vertex;
-struct render_s;
+struct Render;
 struct Entity;
 
 struct TransparentPolygonReference {
@@ -109,7 +109,7 @@ struct BaseMesh
 
     void clear();
     void findBB();
-    void genVBO(const render_s *renderer);
+    void genVBO(const Render *renderer);
     void genFaces();
     uint32_t addVertex(const Vertex& v);
     uint32_t addAnimatedVertex(const Vertex& v);
@@ -217,7 +217,7 @@ struct StaticMesh : public Object
     uint32_t                    object_id;                                      //
     uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
     uint8_t                     was_rendered_lines;
-    uint8_t                     hide;                                           // disable static mesh rendering
+    bool hide;                                           // disable static mesh rendering
     btVector3 pos;                                         // model position
     btVector3 rot;                                         // model angles
     std::array<float,4> tint;                                        // model tint
@@ -390,7 +390,7 @@ struct SkeletalModel
 {
     uint32_t                    id;                                             // ID
     uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
-    uint8_t                     hide;                                           // do not render
+    bool hide;                                           // do not render
     btVector3 bbox_min;                                    // bbox info
     btVector3 bbox_max;
     btVector3 centre;                                      // the centre of model

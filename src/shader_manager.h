@@ -6,7 +6,7 @@
 // Highest number of lights that will show up in the entity shader.
 #define MAX_NUM_LIGHTS 8
 
-class shader_manager {
+class ShaderManager {
     unlit_tinted_shader_description *room_shaders[2][2];
     unlit_tinted_shader_description *static_mesh_shader;
     unlit_shader_description *stencil;
@@ -18,8 +18,8 @@ class shader_manager {
     sprite_shader_description *sprites;
 
 public:
-    shader_manager();
-    ~shader_manager();
+    ShaderManager();
+    ~ShaderManager();
     
     const lit_shader_description *getEntityShader(unsigned numberOfLights, bool skin) const;
     

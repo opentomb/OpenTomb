@@ -3,7 +3,7 @@
 
 #include "shader_manager.h"
 
-shader_manager::shader_manager()
+ShaderManager::ShaderManager()
 {
     //Color mult prog
     static_mesh_shader = new unlit_tinted_shader_description(shader_stage(GL_VERTEX_SHADER_ARB, "shaders/static_mesh.vsh"), shader_stage(GL_FRAGMENT_SHADER_ARB, "shaders/static_mesh.fsh"));
@@ -47,23 +47,23 @@ shader_manager::shader_manager()
     debugline = new unlit_shader_description(shader_stage(GL_VERTEX_SHADER_ARB, "shaders/debuglines.vsh"), shader_stage(GL_FRAGMENT_SHADER_ARB, "shaders/debuglines.fsh"));
 }
 
-shader_manager::~shader_manager()
+ShaderManager::~ShaderManager()
 {
     // Do nothing. All shaders are released by OpenGL anyway.
 }
 
-const lit_shader_description *shader_manager::getEntityShader(unsigned numberOfLights, bool skin) const {
+const lit_shader_description *ShaderManager::getEntityShader(unsigned numberOfLights, bool skin) const {
     assert(numberOfLights <= MAX_NUM_LIGHTS);
     
     return entity_shader[numberOfLights][skin ? 1 : 0];
 }
 
-const unlit_tinted_shader_description *shader_manager::getRoomShader(bool isFlickering, bool isWater) const
+const unlit_tinted_shader_description *ShaderManager::getRoomShader(bool isFlickering, bool isWater) const
 {
     return room_shaders[isWater ? 1 : 0][isFlickering ? 1 : 0];
 }
 
-const gui_shader_description *shader_manager::getGuiShader(bool includingTexture) const
+const gui_shader_description *ShaderManager::getGuiShader(bool includingTexture) const
 {
     if (includingTexture)
         return gui_textured;

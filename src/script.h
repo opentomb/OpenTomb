@@ -8,7 +8,7 @@ struct Entity;
 struct lua_State;
 struct AudioSettings;
 struct ControlSettings;
-struct render_settings_s;
+struct RenderSettings;
 
 #define CVAR_NAME_SIZE 32
 #define CVAR_LUA_TABLE_NAME "cvars"
@@ -28,7 +28,7 @@ void lua_Clean(lua_State *lua);
 bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline);
 
 int lua_ParseScreen(lua_State *lua, screen_info_s *sc);
-int lua_ParseRender(lua_State *lua, render_settings_s *rs);
+int lua_ParseRender(lua_State *lua, RenderSettings *rs);
 int lua_ParseAudio(lua_State *lua, AudioSettings *as);
 int lua_ParseConsole(lua_State *lua, ConsoleInfo *cn);
 int lua_ParseControls(lua_State *lua, ControlSettings *cs);

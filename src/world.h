@@ -174,7 +174,7 @@ struct Room;
 struct Polygon;
 struct Camera;
 struct Portal;
-struct render_s;
+struct Render;
 struct Frustum;
 struct BaseMesh;
 struct StaticMesh;
@@ -252,7 +252,7 @@ typedef struct room_sprite_s
 {
     Sprite             *sprite;
     btVector3 pos;
-    int8_t                      was_rendered;
+    bool was_rendered;
 }room_Sprite, *room_sprite_p;
 
 struct EngineContainer;
@@ -269,9 +269,9 @@ struct Room : public Object
     uint8_t                     water_scheme;
     uint8_t                     alternate_group;
 
-    int8_t                      active;                                         // flag: is active
-    int8_t                      is_in_r_list;                                   // is room in render list
-    int8_t                      hide;                                           // do not render
+    bool active;                                         // flag: is active
+    bool is_in_r_list;                                   // is room in render list
+    bool hide;                                           // do not render
     std::shared_ptr<BaseMesh> mesh;                                           // room's base mesh
     //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
     SpriteBuffer *sprite_buffer;               // Render data for sprites
@@ -364,6 +364,9 @@ typedef struct world_s
     std::vector<AudioSource> audio_sources;          // Channels.
     std::vector<StreamTrack> stream_tracks;          // Stream tracks.
     std::vector<uint8_t> stream_track_map;       // Stream track flag map.
+
+    void updateAnimTextures();
+    void calculateWaterTint(std::array<float,4> *tint, bool fixed_colour);
 }world_t, *world_p;
 
 void World_Prepare(world_p world);

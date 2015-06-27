@@ -616,7 +616,7 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
     return -1;
 }
 
-int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
+int lua_ParseRender(lua_State *lua, struct RenderSettings *rs)
 {
     if(lua)
     {
@@ -627,11 +627,11 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
         rs->mipmaps = lua_GetScalarField(lua, "mipmaps");
         rs->lod_bias = lua_GetScalarField(lua, "lod_bias");
         rs->anisotropy = lua_GetScalarField(lua, "anisotropy");
-        rs->antialias = lua_GetScalarField(lua, "antialias");
+        rs->antialias = lua_GetScalarField(lua, "antialias")!=0;
         rs->antialias_samples = lua_GetScalarField(lua, "antialias_samples");
         rs->texture_border = lua_GetScalarField(lua, "texture_border");
         rs->z_depth = lua_GetScalarField(lua, "z_depth");
-        rs->fog_enabled = lua_GetScalarField(lua, "fog_enabled");
+        rs->fog_enabled = lua_GetScalarField(lua, "fog_enabled") != 0;
         rs->fog_start_depth = lua_GetScalarField(lua, "fog_start_depth");
         rs->fog_end_depth = lua_GetScalarField(lua, "fog_end_depth");
 
