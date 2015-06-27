@@ -5,21 +5,15 @@
 #include "mesh.h"
 #include "render.h"
 
-// Internal utility function:
-// Creates a single mesh out of all the parts of the given model.
-// This assumes that Mesh_GenFaces was already called on the parts of model.
-// @TODO: Should this be in this file or somewhere else? Where would it make sense?
-void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *model);
-
-bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr<Entity> parent_entity)
+bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 {
     // No setup or parent to link to - bypass function.
 
     if( (!parent_entity) || (!setup)                           ||
-        (setup->link_body >= parent_entity->m_bf.bone_tag_count) ||
-        (!(parent_entity->m_bt.bt_body[setup->link_body]))         ) return false;
+        (setup->m_linkBody >= parent_entity->m_bf.bone_tag_count) ||
+        (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))         ) return false;
 
-    skeletal_model_p model = World_GetModelByID(&engine_world, setup->model);
+    skeletal_model_p model = World_GetModelByID(&engine_world, setup->m_model);
 
     // No model to link to - bypass function.
 
@@ -27,42 +21,42 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
-    hair->container = new EngineContainer();
-    hair->container->room = parent_entity->m_self->room;
-    hair->container->object_type = OBJECT_HAIR;
-    hair->container->object = hair;
+    m_container.reset( new EngineContainer() );
+    m_container->room = parent_entity->m_self->room;
+    m_container->object_type = OBJECT_HAIR;
+    m_container->object = shared_from_this();
 
     // Setup initial hair parameters.
 
-    hair->owner_char = parent_entity;       // Entity to refer to.
-    hair->owner_body = setup->link_body;    // Entity body to refer to.
+    m_ownerChar = parent_entity;       // Entity to refer to.
+    m_ownerBody = setup->m_linkBody;    // Entity body to refer to.
 
     // Setup initial position / angles.
 
-    btTransform owner_body_transform = parent_entity->m_transform * parent_entity->m_bf.bone_tags[hair->owner_body].full_transform;
+    btTransform owner_body_transform = parent_entity->m_transform * parent_entity->m_bf.bone_tags[m_ownerBody].full_transform;
     // Number of elements (bodies) is equal to number of hair meshes.
 
-    hair->element_count = model->mesh_count;
-    hair->elements      = (hair_element_p)calloc(hair->element_count, sizeof(hair_element_t));
+    m_elements.clear();
+    m_elements.resize(model->mesh_count);
 
     // Root index should be always zero, as it is how engine determines that it is
     // connected to head and renders it properly. Tail index should be always the
     // last element of the hair, as it indicates absence of "child" constraint.
 
-    hair->root_index = 0;
-    hair->tail_index = hair->element_count-1;
+    m_rootIndex = 0;
+    m_tailIndex = m_elements.size()-1;
 
     // Weight step is needed to determine the weight of each hair body.
     // It is derived from root body weight and tail body weight.
 
-    btScalar weight_step = ((setup->root_weight - setup->tail_weight) / hair->element_count);
-    btScalar current_weight = setup->root_weight;
+    btScalar weight_step = ((setup->m_rootWeight - setup->m_tailWeight) / m_elements.size());
+    btScalar current_weight = setup->m_rootWeight;
 
-    for(uint8_t i=0;i<hair->element_count;i++)
+    for(size_t i=0; i<m_elements.size(); i++)
     {
         // Point to corresponding mesh.
 
-        hair->elements[i].mesh = model->mesh_tree[i].mesh_base;
+        m_elements[i].mesh = model->mesh_tree[i].mesh_base;
 
         // Begin creating ACTUAL physical hair mesh.
 
@@ -71,8 +65,8 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
         // Make collision shape out of mesh.
 
-        hair->elements[i].shape = BT_CSfromMesh(hair->elements[i].mesh, true, true, false);
-        hair->elements[i].shape->calculateLocalInertia((current_weight * setup->hair_inertia), localInertia);
+        m_elements[i].shape.reset( BT_CSfromMesh(m_elements[i].mesh, true, true, false) );
+        m_elements[i].shape->calculateLocalInertia((current_weight * setup->m_hairInertia), localInertia);
 
         // Decrease next body weight to weight_step parameter.
 
@@ -85,30 +79,30 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
         // Make rigid body.
 
-        hair->elements[i].body.reset( new btRigidBody(current_weight, motionState, hair->elements[i].shape, localInertia) );
+        m_elements[i].body.reset( new btRigidBody(current_weight, motionState, m_elements[i].shape.get(), localInertia) );
 
         // Damping makes body stop in space by itself, to prevent it from continous movement.
 
-        hair->elements[i].body->setDamping(setup->hair_damping[0], setup->hair_damping[1]);
+        m_elements[i].body->setDamping(setup->m_hairDamping[0], setup->m_hairDamping[1]);
 
         // Restitution and friction parameters define "bounciness" and "dullness" of hair.
 
-        hair->elements[i].body->setRestitution(setup->hair_restitution);
-        hair->elements[i].body->setFriction(setup->hair_friction);
+        m_elements[i].body->setRestitution(setup->m_hairRestitution);
+        m_elements[i].body->setFriction(setup->m_hairFriction);
 
         // Since hair is always moving with Lara, even if she's in still state (like, hanging
         // on a ledge), hair bodies shouldn't deactivate over time.
 
-        hair->elements[i].body->forceActivationState(DISABLE_DEACTIVATION);
+        m_elements[i].body->forceActivationState(DISABLE_DEACTIVATION);
 
         // Hair bodies must not collide with each other, and also collide ONLY with kinematic
         // bodies (e. g. animated meshes), or else Lara's ghost object or anything else will be able to
         // collide with hair!
 
-        hair->elements[i].body->setUserPointer(hair->container);
-        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
+        m_elements[i].body->setUserPointer(m_container.get());
+        bt_engine_dynamicsWorld->addRigidBody(m_elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
 
-        hair->elements[i].body->activate();
+        m_elements[i].body->activate();
     }
 
     // GENERATE CONSTRAINTS.
@@ -117,8 +111,7 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
     // Joint count is calculated from overall body amount multiplied by per-body constraint
     // count.
 
-    hair->joint_count = hair->element_count;
-    hair->joints      = (btGeneric6DofConstraint**)calloc(sizeof(btGeneric6DofConstraint*), hair->joint_count);
+    m_joints.resize(m_elements.size());
 
     // If multiple joints per body is specified, joints are placed in circular manner,
     // with obvious step of (SIMD_2_PI) / joint count. It means that all joints will form
@@ -126,14 +119,14 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
 
     int curr_joint = 0;
 
-    for(uint16_t i=0; i<hair->element_count; i++)
+    for(size_t i=0; i<m_elements.size(); i++)
     {
         btScalar     body_length;
 
         // Each body width and height are used to calculate position of each joint.
 
-        //btScalar body_width = fabs(hair->elements[i].mesh->bb_max[0] - hair->elements[i].mesh->bb_min[0]);
-        //btScalar body_depth = fabs(hair->elements[i].mesh->bb_max[3] - hair->elements[i].mesh->bb_min[3]);
+        //btScalar body_width = fabs(elements[i].mesh->bb_max[0] - elements[i].mesh->bb_min[0]);
+        //btScalar body_depth = fabs(elements[i].mesh->bb_max[3] - elements[i].mesh->bb_min[3]);
 
         btTransform localA; localA.setIdentity();
         btTransform localB; localB.setIdentity();
@@ -146,21 +139,21 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
         {
             // Adjust pivot point A to parent body.
 
-            localA.setOrigin(setup->head_offset + btVector3(joint_x, 0.0, joint_y));
-            localA.getBasis().setEulerZYX(setup->root_angle[0], setup->root_angle[1], setup->root_angle[2]);
+            localA.setOrigin(setup->m_headOffset + btVector3(joint_x, 0.0, joint_y));
+            localA.getBasis().setEulerZYX(setup->m_rootAngle[0], setup->m_rootAngle[1], setup->m_rootAngle[2]);
             // Stealing this calculation because I need it for drawing
-            hair->owner_body_hair_root = localA;
+            m_ownerBodyHairRoot = localA;
 
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0,-SIMD_HALF_PI,0);
 
-            prev_body = parent_entity->m_bt.bt_body[hair->owner_body];   // Previous body is parent body.
+            prev_body = parent_entity->m_bt.bt_body[m_ownerBody];   // Previous body is parent body.
         }
         else
         {
             // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
 
-            body_length = fabs(hair->elements[i-1].mesh->bb_max[1] - hair->elements[i-1].mesh->bb_min[1]) * setup->joint_overlap;
+            body_length = fabs(m_elements[i-1].mesh->bb_max[1] - m_elements[i-1].mesh->bb_min[1]) * setup->m_jointOverlap;
 
             localA.setOrigin(btVector3(joint_x, body_length, joint_y));
             localA.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
@@ -170,20 +163,20 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
 
-            prev_body = hair->elements[i-1].body;   // Previous body is preceiding hair mesh.
+            prev_body = m_elements[i-1].body;   // Previous body is preceiding hair mesh.
         }
 
         // Create 6DOF constraint.
 
-        hair->joints[curr_joint] = new btGeneric6DofConstraint(*prev_body, *(hair->elements[i].body), localA, localB, true);
+        m_joints[curr_joint].reset( new btGeneric6DofConstraint(*prev_body, *(m_elements[i].body), localA, localB, true) );
 
         // CFM and ERP parameters are critical for making joint "hard" and link
         // to Lara's head. With wrong values, constraints may become "elastic".
 
         for(int axis=0;axis<=5;axis++)
         {
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, axis);
-            hair->joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, axis);
+            m_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->m_jointCfm, axis);
+            m_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->m_jointErp, axis);
         }
 
         if(i == 0)
@@ -191,86 +184,87 @@ bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr
             // First joint group should be more limited in motion, as it is connected
             // right to the head. NB: Should we make it scriptable as well?
 
-            hair->joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
-            hair->joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
-            hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI,     0., -SIMD_HALF_PI*0.4));
-            hair->joints[curr_joint]->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0.,  SIMD_HALF_PI*0.4));
+            m_joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
+            m_joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
+            m_joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI,     0., -SIMD_HALF_PI*0.4));
+            m_joints[curr_joint]->setAngularUpperLimit(btVector3(-SIMD_HALF_PI*0.3, 0.,  SIMD_HALF_PI*0.4));
 
             // Increased solver iterations make constraint even more stable.
 
-            hair->joints[curr_joint]->setOverrideNumSolverIterations(100);
+            m_joints[curr_joint]->setOverrideNumSolverIterations(100);
         }
         else
         {
             // Normal joint with more movement freedom.
 
-            hair->joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
-            hair->joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
-            hair->joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI*0.5, 0., -SIMD_HALF_PI*0.5));
-            hair->joints[curr_joint]->setAngularUpperLimit(btVector3( SIMD_HALF_PI*0.5, 0.,  SIMD_HALF_PI*0.5));
+            m_joints[curr_joint]->setLinearLowerLimit(btVector3(0., 0., 0.));
+            m_joints[curr_joint]->setLinearUpperLimit(btVector3(0., 0., 0.));
+            m_joints[curr_joint]->setAngularLowerLimit(btVector3(-SIMD_HALF_PI*0.5, 0., -SIMD_HALF_PI*0.5));
+            m_joints[curr_joint]->setAngularUpperLimit(btVector3( SIMD_HALF_PI*0.5, 0.,  SIMD_HALF_PI*0.5));
 
         }
 
-        hair->joints[curr_joint]->setDbgDrawSize(btScalar(5.f));    // Draw constraint axes.
+        m_joints[curr_joint]->setDbgDrawSize(btScalar(5.f));    // Draw constraint axes.
 
         // Add constraint to the world.
 
-        bt_engine_dynamicsWorld->addConstraint(hair->joints[curr_joint], true);
+        bt_engine_dynamicsWorld->addConstraint(m_joints[curr_joint].get(), true);
 
         curr_joint++;   // Point to the next joint.
     }
 
-    hair_CreateHairMesh(hair, model);
+    createHairMesh(model);
 
     return true;
 }
 
-void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *model)
+// Internal utility function:
+// Creates a single mesh out of all the parts of the given model.
+// This assumes that Mesh_GenFaces was already called on the parts of model.
+void Hair::createHairMesh(const skeletal_model_s *model)
 {
-    hair->mesh = new base_mesh_s();
-    hair->mesh->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), engine_world.tex_count);
-    uint32_t totalElements = 0;
+    m_mesh = new base_mesh_s();
+    m_mesh->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), engine_world.tex_count);
+    size_t totalElements = 0;
 
     // Gather size information
     for (int i = 0; i < model->mesh_count; i++)
-    {
-        const base_mesh_s *original = model->mesh_tree[i].mesh_base;
+    { const base_mesh_s *original = model->mesh_tree[i].mesh_base;
 
-        hair->mesh->num_texture_pages = std::max(hair->mesh->num_texture_pages, original->num_texture_pages);
+        m_mesh->num_texture_pages = std::max(m_mesh->num_texture_pages, original->num_texture_pages);
 
-        for (int j = 0; j < original->num_texture_pages; j++)
-        {
-            hair->mesh->element_count_per_texture[j] += original->element_count_per_texture[j];
+        for (int j = 0; j < original->num_texture_pages; j++) {
+            m_mesh->element_count_per_texture[j] += original->element_count_per_texture[j];
             totalElements += original->element_count_per_texture[j];
         }
     }
 
     // Create arrays
-    hair->mesh->elements = (uint32_t *) calloc(sizeof(uint32_t), totalElements);
+    m_mesh->elements = (uint32_t *) calloc(sizeof(uint32_t), totalElements);
 
     // - with matrix index information
-    hair->mesh->matrix_indices = (int8_t *) calloc(sizeof(int8_t [2]), hair->mesh->vertices.size());
+    m_mesh->matrix_indices = (int8_t *) calloc(sizeof(int8_t [2]), m_mesh->vertices.size());
 
     // Copy information
-    uint32_t *elementsStartPerTexture = (uint32_t *) calloc(sizeof(uint32_t), hair->mesh->num_texture_pages);
-    hair->mesh->vertices.clear();
+    std::vector<uint32_t> elementsStartPerTexture(m_mesh->num_texture_pages);
+    m_mesh->vertices.clear();
     for (int i = 0; i < model->mesh_count; i++)
     {
         const base_mesh_s *original = model->mesh_tree[i].mesh_base;
 
         // Copy vertices
-        const size_t verticesStart = hair->mesh->vertices.size();
-        hair->mesh->vertices.insert(hair->mesh->vertices.end(), original->vertices.begin(), original->vertices.end());
+        const size_t verticesStart = m_mesh->vertices.size();
+        m_mesh->vertices.insert(m_mesh->vertices.end(), original->vertices.begin(), original->vertices.end());
 
         // Copy elements
         uint32_t originalElementsStart = 0;
         for (int page = 0; page < original->num_texture_pages; page++)
         {
-            memcpy(&hair->mesh->elements[elementsStartPerTexture[page]],
+            memcpy(&m_mesh->elements[elementsStartPerTexture[page]],
                    &original->elements[originalElementsStart],
                    sizeof(uint32_t) * original->element_count_per_texture[page]);
             for (int j = 0; j < original->element_count_per_texture[page]; j++) {
-                hair->mesh->elements[elementsStartPerTexture[page]] = verticesStart + original->elements[originalElementsStart];
+                m_mesh->elements[elementsStartPerTexture[page]] = verticesStart + original->elements[originalElementsStart];
                 originalElementsStart += 1;
                 elementsStartPerTexture[page] += 1;
             }
@@ -282,46 +276,45 @@ void hair_CreateHairMesh(std::shared_ptr<Hair> hair, const skeletal_model_s *mod
          * (i.e. as one big rope). The shader and matrix then transform it
          * correctly.
          */
-        hair->elements[i].position = model->mesh_tree[i].offset;
+        m_elements[i].position = model->mesh_tree[i].offset;
         if (i > 0)
         {
             // TODO: This assumes the parent is always the preceding mesh.
             // True for hair, obviously wrong for everything else. Can stay
             // here, but must go when we start generalizing the whole thing.
-            hair->elements[i].position += hair->elements[i - 1].position;
+            m_elements[i].position += m_elements[i - 1].position;
         }
 
         // And create vertex data (including matrix indices)
         for (size_t j = 0; j < original->vertices.size(); j++) {
             if (original->vertices[j].position[1] <= 0)
             {
-                hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = i;
-                hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = i+1;
+                m_mesh->matrix_indices[(verticesStart+j)*2 + 0] = i;
+                m_mesh->matrix_indices[(verticesStart+j)*2 + 1] = i+1;
             }
             else
             {
-                hair->mesh->matrix_indices[(verticesStart+j)*2 + 0] = i+1;
-                hair->mesh->matrix_indices[(verticesStart+j)*2 + 1] = std::min((int8_t) (i+2), (int8_t) model->mesh_count);
+                m_mesh->matrix_indices[(verticesStart+j)*2 + 0] = i+1;
+                m_mesh->matrix_indices[(verticesStart+j)*2 + 1] = std::min((int8_t) (i+2), (int8_t) model->mesh_count);
             }
 
             // Now move all the hair vertices
-            hair->mesh->vertices[verticesStart+j].position += hair->elements[i].position;
+            m_mesh->vertices[verticesStart+j].position += m_elements[i].position;
 
             // If the normal isn't fully in y direction, cancel its y component
             // This is perhaps a bit dubious.
-            if (hair->mesh->vertices[verticesStart+j].normal[0] != 0 || hair->mesh->vertices[verticesStart+j].normal[2] != 0)
+            if (m_mesh->vertices[verticesStart+j].normal[0] != 0 || m_mesh->vertices[verticesStart+j].normal[2] != 0)
             {
-                hair->mesh->vertices[verticesStart+j].normal[1] = 0;
-                hair->mesh->vertices[verticesStart+j].normal.normalize();
+                m_mesh->vertices[verticesStart+j].normal[1] = 0;
+                m_mesh->vertices[verticesStart+j].normal.normalize();
             }
         }
     }
-    free(elementsStartPerTexture);
 
-    Mesh_GenVBO(&renderer, hair->mesh);
+    Mesh_GenVBO(&renderer, m_mesh);
 }
 
-bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
+bool HairSetup::getSetup(uint32_t hair_entry_index)
 {
     bool result = true;
 
@@ -336,40 +329,28 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
         {
             if(lua_istable(engine_lua, -1))
             {
-                hair_setup->model               = (uint32_t)lua_GetScalarField(engine_lua, "model");
-                hair_setup->link_body           = (uint32_t)lua_GetScalarField(engine_lua, "link_body");
-                hair_setup->vertex_map_count    = (uint32_t)lua_GetScalarField(engine_lua, "v_count");
+                m_model               = (uint32_t)lua_GetScalarField(engine_lua, "model");
+                m_linkBody           = (uint32_t)lua_GetScalarField(engine_lua, "link_body");
 
                 lua_getfield(engine_lua, -1, "props");
                 if(lua_istable(engine_lua, -1))
                 {
-                    hair_setup->root_weight      = lua_GetScalarField(engine_lua, "root_weight");
-                    hair_setup->tail_weight      = lua_GetScalarField(engine_lua, "tail_weight");
-                    hair_setup->hair_inertia     = lua_GetScalarField(engine_lua, "hair_inertia");
-                    hair_setup->hair_friction    = lua_GetScalarField(engine_lua, "hair_friction");
-                    hair_setup->hair_restitution = lua_GetScalarField(engine_lua, "hair_bouncing");
-                    hair_setup->joint_overlap    = lua_GetScalarField(engine_lua, "joint_overlap");
-                    hair_setup->joint_cfm        = lua_GetScalarField(engine_lua, "joint_cfm");
-                    hair_setup->joint_erp        = lua_GetScalarField(engine_lua, "joint_erp");
+                    m_rootWeight      = lua_GetScalarField(engine_lua, "root_weight");
+                    m_tailWeight      = lua_GetScalarField(engine_lua, "tail_weight");
+                    m_hairInertia     = lua_GetScalarField(engine_lua, "hair_inertia");
+                    m_hairFriction    = lua_GetScalarField(engine_lua, "hair_friction");
+                    m_hairRestitution = lua_GetScalarField(engine_lua, "hair_bouncing");
+                    m_jointOverlap    = lua_GetScalarField(engine_lua, "joint_overlap");
+                    m_jointCfm        = lua_GetScalarField(engine_lua, "joint_cfm");
+                    m_jointErp        = lua_GetScalarField(engine_lua, "joint_erp");
 
                     lua_getfield(engine_lua, -1, "hair_damping");
                     if(lua_istable(engine_lua, -1))
                     {
-                        hair_setup->hair_damping[0] = lua_GetScalarField(engine_lua, 1);
-                        hair_setup->hair_damping[1] = lua_GetScalarField(engine_lua, 2);
+                        m_hairDamping[0] = lua_GetScalarField(engine_lua, 1);
+                        m_hairDamping[1] = lua_GetScalarField(engine_lua, 2);
                     }
                     lua_pop(engine_lua, 1);
-                }
-                else { result = false; }
-                lua_pop(engine_lua, 1);
-
-                lua_getfield(engine_lua, -1, "v_index");
-                if(lua_istable(engine_lua, -1))
-                {
-                    for(int i=1; i<=hair_setup->vertex_map_count; i++)
-                    {
-                        hair_setup->head_vertex_map[i-1] = (uint32_t)lua_GetScalarField(engine_lua, i);
-                    }
                 }
                 else { result = false; }
                 lua_pop(engine_lua, 1);
@@ -377,9 +358,9 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
                 lua_getfield(engine_lua, -1, "offset");
                 if(lua_istable(engine_lua, -1))
                 {
-                    hair_setup->head_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
-                    hair_setup->head_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
-                    hair_setup->head_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
+                    m_headOffset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
+                    m_headOffset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
+                    m_headOffset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
                 }
                 else { result = false; }
                 lua_pop(engine_lua, 1);
@@ -387,9 +368,9 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
                 lua_getfield(engine_lua, -1, "root_angle");
                 if(lua_istable(engine_lua, -1))
                 {
-                    hair_setup->root_angle[0] = lua_GetScalarField(engine_lua, 1);
-                    hair_setup->root_angle[1] = lua_GetScalarField(engine_lua, 2);
-                    hair_setup->root_angle[2] = lua_GetScalarField(engine_lua, 3);
+                    m_rootAngle[0] = lua_GetScalarField(engine_lua, 1);
+                    m_rootAngle[1] = lua_GetScalarField(engine_lua, 2);
+                    m_rootAngle[2] = lua_GetScalarField(engine_lua, 3);
                 }
                 else { result = false; }
                 lua_pop(engine_lua, 1);
@@ -407,96 +388,15 @@ bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup)
 
 Hair::~Hair()
 {
-    for(int i=0; i<joint_count; i++)
-    {
-        if(joints[i])
-        {
-            bt_engine_dynamicsWorld->removeConstraint(joints[i]);
-            delete joints[i];
-            joints[i] = NULL;
-        }
+    for(auto& joint : m_joints) {
+        if(joint)
+            bt_engine_dynamicsWorld->removeConstraint(joint.get());
     }
-    free(joints);
-    joints = NULL;
-    joint_count = 0;
 
-    for(int i=0; i<element_count; i++)
-    {
-        if(elements[i].body)
-        {
-            elements[i].body->setUserPointer(nullptr);
-            bt_engine_dynamicsWorld->removeRigidBody(elements[i].body.get());
-            elements[i].body.reset();
+    for(auto& element : m_elements) {
+        if(element.body) {
+            element.body->setUserPointer(nullptr);
+            bt_engine_dynamicsWorld->removeRigidBody(element.body.get());
         }
-        if(elements[i].shape)
-        {
-            delete elements[i].shape;
-            elements[i].shape = NULL;
-        }
-    }
-    free(elements);
-    elements = NULL;
-    element_count = 0;
-
-    free(container);
-    container = NULL;
-
-    owner_char = NULL;
-    owner_body = 0;
-
-    root_index = 0;
-    tail_index = 0;
-}
-
-void Hair_Update(std::shared_ptr<Entity> entity)
-{
-    if((!IsCharacter(entity)) || entity->m_character->m_hairs.empty())
-        return;
-
-    for(size_t i=0; i<entity->m_character->m_hairs.size(); ++i)
-    {
-        std::shared_ptr<Hair> hair = entity->m_character->m_hairs[i];
-        if((!hair) || (hair->element_count < 1)) continue;
-
-        /*btScalar new_transform[16];
-
-        new_transform = entity->transform * entity->bf.bone_tags[hair->owner_body].full_transform;
-
-        // Calculate mixed velocities.
-        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
-                          new_transform[12+1] - hair->owner_body_transform[12+1],
-                          new_transform[12+2] - hair->owner_body_transform[12+2]);
-        mix_vel *= 1.0 / engine_frame_time;
-
-        if(0)
-        {
-            btScalar sub_tr[16];
-            btTransform ang_tr;
-            btVector3 mix_ang;
-            sub_tr = hair->owner_body_transform.inverse() * new_transform;
-            ang_tr.setFromOpenGLMatrix(sub_tr);
-            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
-            mix_ang *= 1.0 / engine_frame_time;
-
-            // Looks like angular velocity breaks up constraints on VERY fast moves,
-            // like mid-air turn. Probably, I've messed up with multiplier value...
-
-            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
-        }
-        Mat4_Copy(hair->owner_body_transform, new_transform);*/
-
-        // Set mixed velocities to both parent body and first hair body.
-
-        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
-        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
-
-        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
-        for(int j=0;j<hair->element_count;j++)
-        {
-            hair->elements[j].body->applyCentralForce(mix_vel);
-        }*/
-
-        hair->container->room = hair->owner_char->m_self->room;
     }
 }

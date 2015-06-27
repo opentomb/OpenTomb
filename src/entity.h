@@ -184,6 +184,9 @@ struct Entity : public Object
     room_sector_s* getLowestSector(room_sector_s* sector);
     room_sector_s* getHighestSector(room_sector_s* sector);
 
+    // Constantly updates some specific parameters to keep hair aligned to entity.
+    void updateHair();
+
 private:
     void doAnimMove(int16_t *anim, int16_t *frame);
     void doWeaponFrame(btScalar time);

@@ -1,5 +1,4 @@
-#ifndef HAIR_H
-#define HAIR_H
+#pragma once
 
 #include <cassert>
 #include <cstdint>
@@ -29,93 +28,72 @@
 #define HAIR_TR5_KID_2 7
 #define HAIR_TR5_OLD   8
 
-// Maximum amount of joint hair vertices. By default, TR4-5 used four
-// vertices for each hair (unused TR1 hair mesh even used three).
-// It's hardly possible if anyone will exceed a limit of 8 vertices,
-// but if it happens, this should be edited.
-
-#define HAIR_VERTEX_MAP_LIMIT 8
-
 // Since we apply TR4 hair scheme to TR2-3 as well, we need to discard
 // polygons which are unused. These are 0 and 5 in both TR2 and TR3.
 
 #define HAIR_DISCARD_ROOT_FACE 0
 #define HAIR_DISCARD_TAIL_FACE 5
 
-typedef struct hair_element_s
+struct HairElement
 {
-    base_mesh_s        *mesh;           // Pointer to rendered mesh.
-    btCollisionShape   *shape;          // Pointer to collision shape.
+    base_mesh_s* mesh;           // Pointer to rendered mesh.
+    std::unique_ptr<btCollisionShape> shape;          // Pointer to collision shape.
     std::shared_ptr<btRigidBody> body;           // Pointer to dynamic body.
     btVector3 position;     // Position of this hair element
     // relative to the model (NOT the parent!). Should be a matrix in theory,
     // but since this never has a rotation part, we can save a few bytes here.
-}hair_element_t, *hair_element_p;
+};
+
+struct HairSetup;
 
 struct Hair : public Object
 {
-    EngineContainer*        container;
+    std::unique_ptr<EngineContainer> m_container;
 
-    std::shared_ptr<Entity> owner_char;         // Entity who owns this hair.
-    uint32_t                  owner_body;         // Owner entity's body ID.
-    btTransform owner_body_hair_root; // transform from owner body to root of hair start
+    std::shared_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
+    uint32_t m_ownerBody;         // Owner entity's body ID.
+    btTransform m_ownerBodyHairRoot; // transform from owner body to root of hair start
 
-    uint8_t                   root_index;         // Index of "root" element.
-    uint8_t                   tail_index;         // Index of "tail" element.
+    uint8_t m_rootIndex;         // Index of "root" element.
+    uint8_t m_tailIndex;         // Index of "tail" element.
 
-    uint8_t                   element_count;      // Overall amount of elements.
-    hair_element_s           *elements;           // Array of elements.
+    std::vector<HairElement> m_elements;           // Array of elements.
 
-    uint8_t                   joint_count;        // Overall amount of joints.
-    btGeneric6DofConstraint **joints;             // Array of joints.
+    std::vector<std::unique_ptr<btGeneric6DofConstraint>> m_joints;             // Array of joints.
 
-    uint8_t                   vertex_map_count;
-    uint32_t                 *hair_vertex_map;    // Hair vertex indices to link
-    uint32_t                 *head_vertex_map;    // Head vertex indices to link
-
-    struct base_mesh_s       *mesh;               // Mesh containing all vertices of all parts of this hair object.
+    base_mesh_s* m_mesh;               // Mesh containing all vertices of all parts of this hair object.
 
     ~Hair();
+
+    // Creates hair into allocated hair structure, using previously defined setup and
+    // entity index.
+    bool create(HairSetup* setup, std::shared_ptr<Entity> parent_entity);
+
+private:
+    void createHairMesh(const skeletal_model_s *model);
 };
 
-typedef struct hair_setup_s
+struct HairSetup
 {
-    uint32_t     model;              // Hair model ID
-    uint32_t     link_body;          // Lara's head mesh index
+    uint32_t     m_model;              // Hair model ID
+    uint32_t     m_linkBody;          // Lara's head mesh index
 
-    btScalar     root_weight;        // Root and tail hair body weight. Intermediate body
-    btScalar     tail_weight;        // weights are calculated from these two parameters
+    btScalar     m_rootWeight;        // Root and tail hair body weight. Intermediate body
+    btScalar     m_tailWeight;        // weights are calculated from these two parameters
 
-    btScalar     hair_damping[2];    // Damping affects hair "plasticity"
-    btScalar     hair_inertia;       // Inertia affects hair "responsiveness"
-    btScalar     hair_restitution;   // "Bounciness" of the hair
-    btScalar     hair_friction;      // How much other bodies will affect hair trajectory
+    btScalar     m_hairDamping[2];    // Damping affects hair "plasticity"
+    btScalar     m_hairInertia;       // Inertia affects hair "responsiveness"
+    btScalar     m_hairRestitution;   // "Bounciness" of the hair
+    btScalar     m_hairFriction;      // How much other bodies will affect hair trajectory
 
-    btScalar     joint_overlap;      // How much two hair bodies overlap each other
+    btScalar     m_jointOverlap;      // How much two hair bodies overlap each other
 
-    btScalar     joint_cfm;          // Constraint force mixing (joint softness)
-    btScalar     joint_erp;          // Error reduction parameter (joint "inertia")
+    btScalar     m_jointCfm;          // Constraint force mixing (joint softness)
+    btScalar     m_jointErp;          // Error reduction parameter (joint "inertia")
 
-    btVector3    head_offset;        // Linear offset to place hair to
-    btScalar     root_angle[3];      // First constraint set angle (to align hair angle)
+    btVector3    m_headOffset;        // Linear offset to place hair to
+    btScalar     m_rootAngle[3];      // First constraint set angle (to align hair angle)
 
-    uint32_t     vertex_map_count;   // Amount of REAL vertices to link head and hair
-    uint32_t     hair_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Hair vertex indices to link
-    uint32_t     head_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Head vertex indices to link
-
-}hair_setup_t, *hair_setup_p;
-
-// Gets scripted hair set-up to specified hair set-up structure.
-
-bool Hair_GetSetup(uint32_t hair_entry_index, hair_setup_p hair_setup);
-
-// Creates hair into allocated hair structure, using previously defined setup and
-// entity index.
-
-bool Hair_Create(std::shared_ptr<Hair> hair, hair_setup_p setup, std::shared_ptr<Entity> parent_entity);
-
-// Constantly updates some specific parameters to keep hair aligned to entity.
-
-void Hair_Update(std::shared_ptr<Entity> entity);
-
-#endif  // HAIR_H
+    // Gets scripted hair set-up to specified hair set-up structure.
+    bool getSetup(uint32_t hair_entry_index);
+};

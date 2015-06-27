@@ -786,10 +786,10 @@ int lua_AddCharacterHair(lua_State *lua)
 
         if(IsCharacter(ent))
         {
-            hair_setup_s hair_setup;
-            memset(&hair_setup, 0, sizeof(hair_setup_s));
+            HairSetup hair_setup;
+            memset(&hair_setup, 0, sizeof(HairSetup));
 
-            if(!Hair_GetSetup(setup_index, &hair_setup))
+            if(!hair_setup.getSetup(setup_index))
             {
                 ConsoleInfo::instance().warning(SYSWARN_NO_HAIR_SETUP, setup_index);
             }
@@ -797,7 +797,7 @@ int lua_AddCharacterHair(lua_State *lua)
             {
                 ent->m_character->m_hairs.emplace_back();
 
-                if(!Hair_Create(ent->m_character->m_hairs.back(), &hair_setup, ent))
+                if(!ent->m_character->m_hairs.back()->create(&hair_setup, ent))
                 {
                     ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
                 }

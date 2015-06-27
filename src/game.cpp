@@ -752,7 +752,7 @@ void Game_UpdateCharactersTree(std::map<uint32_t, std::shared_ptr<Entity> >& ent
                 ent->m_character->m_response.kill = 1;                                      // Kill, if no HP.
             }
             Character_ApplyCommands(ent);
-            Hair_Update(ent);
+            ent->updateHair();
         }
     }
 }
@@ -772,7 +772,7 @@ void Game_UpdateCharacters()
         {
             ent->m_character->m_response.kill = 1;   // Kill, if no HP.
         }
-        Hair_Update(ent);
+        ent->updateHair();
     }
 
     if(!engine_world.entity_tree.empty())

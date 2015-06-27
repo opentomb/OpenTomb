@@ -17,6 +17,7 @@
 #include "gameflow.h"
 #include "string.h"
 #include "ragdoll.h"
+#include "hair.h"
 
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>
@@ -2230,4 +2231,57 @@ Entity::~Entity() {
         ss_anim = ss_anim_next;
     }
     m_bf.animations.next = NULL;
+}
+
+void Entity::updateHair()
+{
+    if((!IsCharacter(std::static_pointer_cast<Entity>(shared_from_this()))) || m_character->m_hairs.empty())
+        return;
+
+    for(std::shared_ptr<Hair> hair : m_character->m_hairs)
+    {
+        if(!hair || hair->m_elements.empty())
+            continue;
+
+        /*btScalar new_transform[16];
+
+        new_transform = transform * bf.bone_tags[hair->owner_body].full_transform;
+
+        // Calculate mixed velocities.
+        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
+                          new_transform[12+1] - hair->owner_body_transform[12+1],
+                          new_transform[12+2] - hair->owner_body_transform[12+2]);
+        mix_vel *= 1.0 / engine_frame_time;
+
+        if(0)
+        {
+            btScalar sub_tr[16];
+            btTransform ang_tr;
+            btVector3 mix_ang;
+            sub_tr = hair->owner_body_transform.inverse() * new_transform;
+            ang_tr.setFromOpenGLMatrix(sub_tr);
+            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
+            mix_ang *= 1.0 / engine_frame_time;
+
+            // Looks like angular velocity breaks up constraints on VERY fast moves,
+            // like mid-air turn. Probably, I've messed up with multiplier value...
+
+            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
+            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
+        }
+        Mat4_Copy(hair->owner_body_transform, new_transform);*/
+
+        // Set mixed velocities to both parent body and first hair body.
+
+        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
+        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
+
+        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
+        for(int j=0;j<hair->element_count;j++)
+        {
+            hair->elements[j].body->applyCentralForce(mix_vel);
+        }*/
+
+        hair->m_container->room = hair->m_ownerChar->m_self->room;
+    }
 }
