@@ -8,7 +8,7 @@
  */
 class vao_vertex_array;
 
-class vao_vertex_array_manager : public vertex_array_manager {
+class vao_vertex_array_manager : public VertexArrayManager {
     GLuint currentVertexArrayObject;
     
 public:
@@ -34,7 +34,7 @@ public:
  */
 class manual_vertex_array;
 
-class manual_vertex_array_manager : public vertex_array_manager {
+class manual_vertex_array_manager : public VertexArrayManager {
     uint64_t activeAttribsBitset;
     manual_vertex_array *activeArray;
     GLuint currentArrayBuffer;
@@ -61,7 +61,7 @@ public:
 
 /*** Implementation choosing. ***/
 
-vertex_array_manager * vertex_array_manager::createManager()
+VertexArrayManager * VertexArrayManager::createManager()
 {
     if (glGenVertexArrays)
     {

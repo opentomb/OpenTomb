@@ -542,21 +542,21 @@ void Gui_RenderStrings()
  * That function updates item animation and rebuilds skeletal matrices;
  * @param bf - extended bone frame of the item;
  */
-void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
+void Item_Frame(struct SSBoneFrame *bf, btScalar time)
 {
     int16_t frame, anim;
     long int t;
     btScalar dt;
-    state_change_p stc;
+    StateChange* stc;
 
     bf->animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
+    stc = Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
     Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
         bf->animations.last_animation = bf->animations.current_animation;
-        /*frame %= bf->model->animations[anim].frames_count;
-        frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames_count - 1 + frame);
+        /*frame %= bf->model->animations[anim].frames.size();
+        frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames.size() - 1 + frame);
 
         bf->last_state = bf->model->animations[anim].state_id;
         bf->next_state = bf->model->animations[anim].state_id;
@@ -564,7 +564,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
         bf->current_frame = frame;
         bf->next_animation = anim;
         bf->next_frame = frame;*/
-        stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
+        stc = Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
     }
     else if(bf->animations.current_frame != frame)
     {
@@ -593,7 +593,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btTransform& mvMatrix)
+void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
     const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
@@ -1081,16 +1081,16 @@ void gui_InventoryManager::render()
                     }
                 }
                 Mat4_RotateZ(matrix, 90.0 + mItemAngle - ang);
-                Item_Frame(bi->bf, 0.0);                            // here will be time != 0 for using items animation
+                Item_Frame(bi->bf.get(), 0.0);                            // here will be time != 0 for using items animation
             }
             else
             {
                 Mat4_RotateZ(matrix, 90.0 - ang);
-                Item_Frame(bi->bf, 0.0);
+                Item_Frame(bi->bf.get(), 0.0);
             }
             Mat4_Translate(matrix, -0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
             Mat4_Scale(matrix, 0.7, 0.7, 0.7);
-            Gui_RenderItem(bi->bf, 0.0, matrix);
+            Gui_RenderItem(bi->bf.get(), 0.0, matrix);
 
             num++;
         }
@@ -2540,13 +2540,13 @@ void gui_ItemNotifier::Draw()
     item->bf->animations.current_frame = 0;
     item->bf->animations.frame_time = 0.0;
 
-    Item_Frame(item->bf, 0.0);
+    Item_Frame(item->bf.get(), 0.0);
     btTransform matrix;
     matrix.setIdentity();
     Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
     Mat4_RotateY(matrix, mCurrRotX + mRotX);
     Mat4_RotateX(matrix, mCurrRotY + mRotY);
-    Gui_RenderItem(item->bf, mSize, matrix);
+    Gui_RenderItem(item->bf.get(), mSize, matrix);
 
     item->bf->animations.current_animation = anim;
     item->bf->animations.current_frame = frame;

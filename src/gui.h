@@ -518,8 +518,8 @@ void Gui_RenderStrings();
 /**
  * Inventory rendering / manipulation functions
  */
-void Item_Frame(struct ss_bone_frame_s *bf, btScalar time);
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btTransform &mvMatrix);
+void Item_Frame(struct SSBoneFrame *bf, btScalar time);
+void Gui_RenderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
 #if 0
 typedef struct gui_invmenu_item_ammo_s
 {

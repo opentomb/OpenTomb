@@ -45,10 +45,13 @@ struct world_s;
 struct Room;
 struct Camera;
 struct Entity;
-struct sprite_s;
-struct base_mesh_s;
+struct Sprite;
+struct BaseMesh;
 struct obb_s;
 struct lit_shader_description;
+struct SSBoneFrame;
+struct room_sector_s;
+struct render_s;
 class vertex_array;
 
 class render_DebugDrawer:public btIDebugDraw
@@ -87,12 +90,12 @@ class render_DebugDrawer:public btIDebugDraw
         void drawPortal(const portal_s &p);
         void drawFrustum(const Frustum &f);
         void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
-        void drawOBB(struct obb_s *obb);
-        void drawMeshDebugLines(struct base_mesh_s *mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals);
-        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, const btTransform& transform);
+        void drawOBB(obb_s *obb);
+        void drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals);
+        void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform);
         void drawEntityDebugLines(std::shared_ptr<Entity> entity);
-        void drawSectorDebugLines(struct room_sector_s *rs);
-        void drawRoomDebugLines(std::shared_ptr<Room> room, struct render_s *render);
+        void drawSectorDebugLines(room_sector_s *rs);
+        void drawRoomDebugLines(std::shared_ptr<Room> room, render_s *render);
         
         // bullet's debug interface
         virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color);
@@ -152,6 +155,8 @@ typedef struct render_settings_s
     float     fog_end_depth;
 }render_settings_t, *render_settings_p;
 
+class VertexArrayManager;
+
 typedef struct render_s
 {
     int8_t                      blocked;
@@ -160,7 +165,7 @@ typedef struct render_s
     struct Camera            *cam;
     struct render_settings_s    settings;
     class shader_manager *shader_manager;
-    class vertex_array_manager *vertex_array_manager;
+    VertexArrayManager *vertex_array_manager;
 
     uint32_t                    r_list_size;
     uint32_t                    r_list_active_count;
@@ -177,15 +182,17 @@ void Render_Empty(render_p render);
 void Render_InitGlobals();
 void Render_Init();
 
+struct SSBoneFrame;
+
 render_list_p Render_CreateRoomListArray(unsigned int count);
 void Render_Entity(std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection);
 void Render_DynamicEntity(const struct lit_shader_description *shader, std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix);
 void Render_DynamicEntitySkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btTransform& pMatrix);
-void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
+void Render_SkeletalModel(const struct lit_shader_description *shader, SSBoneFrame* bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
 void Render_SkeletalModelSkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btTransform &mvMatrix, const btTransform &pMatrix);
 void Render_Hair(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix);
 void Render_SkyBox(const btTransform &matrix);
-void Render_Mesh(struct base_mesh_s *mesh);
+void Render_Mesh(const std::shared_ptr<BaseMesh> &mesh);
 void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *p, const struct unlit_tinted_shader_description *shader);
 void Render_BSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const unlit_tinted_shader_description *shader);
 void Render_BSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const unlit_tinted_shader_description *shader);

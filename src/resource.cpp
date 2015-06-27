@@ -1384,21 +1384,21 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 }
 
 
-void GenerateAnimCommandsTransform(skeletal_model_p model)
+void GenerateAnimCommandsTransform(SkeletalModel* model)
 {
     if(engine_world.anim_commands_count == 0)
     {
         return;
     }
     //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model->id);
-    for(uint16_t anim = 0;anim < model->animation_count;anim++)
+    for(uint16_t anim = 0;anim < model->animations.size();anim++)
     {
         if(model->animations[anim].num_anim_commands > 255)
         {
             continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
         }
 
-        animation_frame_p af  = model->animations + anim;
+        AnimationFrame* af  = &model->animations[anim];
         int16_t *pointer      = engine_world.anim_commands + af->anim_command;
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++, pointer++)
@@ -1407,17 +1407,17 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
                     // This command executes ONLY at the end of animation.
-                    af->frames[af->frames_count-1].move[0] = (btScalar)(*++pointer);                          // x = x;
-                    af->frames[af->frames_count-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
-                    af->frames[af->frames_count-1].move[1] = (btScalar)(*++pointer);                          // y = z
-                    af->frames[af->frames_count-1].command |= ANIM_CMD_MOVE;
-                    //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames_count-1, af->frames_count);
+                    af->frames[af->frames.size()-1].move[0] = (btScalar)(*++pointer);                          // x = x;
+                    af->frames[af->frames.size()-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
+                    af->frames[af->frames.size()-1].move[1] = (btScalar)(*++pointer);                          // y = z
+                    af->frames[af->frames.size()-1].command |= ANIM_CMD_MOVE;
+                    //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames.size()-1, af->frames.size());
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    af->frames[af->frames_count-1].v_Vertical   = *++pointer;
-                    af->frames[af->frames_count-1].v_Horizontal = *++pointer;
-                    af->frames[af->frames_count-1].command |= ANIM_CMD_JUMP;
+                    af->frames[af->frames.size()-1].v_Vertical   = *++pointer;
+                    af->frames[af->frames.size()-1].v_Horizontal = *++pointer;
+                    af->frames[af->frames.size()-1].command |= ANIM_CMD_JUMP;
                     break;
 
                 case TR_ANIMCOMMAND_EMPTYHANDS:
@@ -1438,8 +1438,8 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
                                 af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
-                                ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
-                                //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
+                                ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames.size());
+                                //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames.size());
                                 break;
                         }
                     }
@@ -2004,13 +2004,13 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
             continue;
         }
         room->static_mesh.emplace_back( std::make_shared<StaticMesh>() );
-        auto r_static = room->static_mesh.back();
+        std::shared_ptr<StaticMesh> r_static = room->static_mesh.back();
         r_static->self = new EngineContainer();
         r_static->self->room = room;
         r_static->self->object = room->static_mesh[i];
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->object_id = tr_room->static_meshes[i].object_id;
-        r_static->mesh = world->meshes + tr->mesh_indices[tr_static->mesh];
+        r_static->mesh = world->meshes[ tr->mesh_indices[tr_static->mesh] ];
         r_static->pos[0] = tr_room->static_meshes[i].pos.x;
         r_static->pos[1] =-tr_room->static_meshes[i].pos.z;
         r_static->pos[2] = tr_room->static_meshes[i].pos.y;
@@ -2038,7 +2038,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
 
         r_static->obb->transform = &room->static_mesh[i]->transform;
-        r_static->obb->r = room->static_mesh[i]->mesh->R;
+        r_static->obb->r = room->static_mesh[i]->mesh->m_radius;
         r_static->transform.setIdentity();
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
@@ -2077,7 +2077,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
                     break;
 
                 case COLLISION_BASE_BOX:
-                    cshape = BT_CSfromBBox(r_static->mesh->bb_min, r_static->mesh->bb_max, true, true, false);
+                    cshape = BT_CSfromBBox(r_static->mesh->m_bbMin, r_static->mesh->m_bbMax, true, true, false);
                     break;
 
                 case COLLISION_TRIMESH:
@@ -2106,7 +2106,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     room->sprites_count = tr_room->num_sprites;
     if(room->sprites_count != 0)
     {
-        room->sprites = (room_sprite_p)calloc(room->sprites_count, sizeof(room_sprite_t));
+        room->sprites = (room_sprite_p)calloc(room->sprites_count, sizeof(room_Sprite));
         for(uint32_t i=0;i<room->sprites_count;i++)
         {
             if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites_count))
@@ -2261,7 +2261,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     room->lights = NULL;
     if(room->light_count)
     {
-        room->lights = (light_p)malloc(room->light_count * sizeof(light_t));
+        room->lights = (Light*)malloc(room->light_count * sizeof(Light));
     }
 
     for(uint16_t i=0;i<tr_room->num_lights;i++)
@@ -2521,22 +2521,22 @@ void TR_GenCameras(struct world_s *world, class VT_Level *tr)
  */
 void TR_GenSprites(struct world_s *world, class VT_Level *tr)
 {
-    sprite_p s;
-    tr_sprite_texture_t *tr_st;
+    Sprite* s;
+    tr_Spriteexture_t *tr_st;
 
-    if(tr->sprite_textures_count == 0)
+    if(tr->Spriteextures_count == 0)
     {
         world->sprites = NULL;
         world->sprites_count = 0;
         return;
     }
 
-    world->sprites_count = tr->sprite_textures_count;
-    s = world->sprites = (sprite_p)calloc(world->sprites_count, sizeof(sprite_t));
+    world->sprites_count = tr->Spriteextures_count;
+    s = world->sprites = (Sprite*)calloc(world->sprites_count, sizeof(Sprite));
 
     for(uint32_t i=0;i<world->sprites_count;i++,s++)
     {
-        tr_st = &tr->sprite_textures[i];
+        tr_st = &tr->Spriteextures[i];
 
         s->left = tr_st->left_side;
         s->right = tr_st->right_side;
@@ -2571,8 +2571,8 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
                                                   tr->textile32,
                                                   tr->object_textures_count,
                                                   tr->object_textures,
-                                                  tr->sprite_textures_count,
-                                                  tr->sprite_textures);
+                                                  tr->Spriteextures_count,
+                                                  tr->Spriteextures);
 
     world->tex_count = (uint32_t) world->tex_atlas->getNumAtlasPages() + 1;
     world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
@@ -2651,13 +2651,13 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
 
     world->anim_sequences_count = num_sequences;
-    world->anim_sequences = (anim_seq_p)calloc(num_sequences, sizeof(anim_seq_t));
+    world->anim_sequences = (AnimSeq*)calloc(num_sequences, sizeof(AnimSeq));
 
-    anim_seq_p seq = world->anim_sequences;
+    AnimSeq* seq = world->anim_sequences;
     for(uint16_t i = 0; i < num_sequences; i++,seq++)
     {
-        seq->frames_count = *(pointer++) + 1;
-        seq->frame_list   =  (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
+        seq->frames.resize(*(pointer++) + 1);
+        seq->frame_list.resize(seq->frames.size());
 
         // Fill up new sequence with frame list.
         seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
@@ -2668,7 +2668,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         seq->frame_time        = 0.0;   // Reset frame time to initial state.
         seq->current_frame     = 0;     // Reset current frame to zero.
 
-        for(uint16_t j = 0; j < seq->frames_count; j++)
+        for(uint16_t j = 0; j < seq->frames.size(); j++)
         {
             seq->frame_list[j] = *(pointer++);  // Add one frame.
         }
@@ -2698,11 +2698,10 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
             // if scrolling is completed or not.
-            seq->frames_count = 8;
+            seq->frames.resize(8);
             seq->uvrotate_max   = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
-            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
-            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-            seq->frame_list = (uint32_t *) calloc(seq->frames_count, sizeof(uint32_t));
+            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames.size();
+            seq->frame_list.resize(8);
 
             if(uvrotate_script > 0)
             {
@@ -2714,7 +2713,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             }
 
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
-            for(uint16_t j=0;j<seq->frames_count;j++)
+            for(uint16_t j=0;j<seq->frames.size();j++)
             {
                 engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, (GLfloat)j * seq->uvrotate_speed, true);
                 seq->frames[j].tex_ind = p.tex_index;
@@ -2742,9 +2741,8 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         }
         else
         {
-            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
-            for(uint16_t j=0;j<seq->frames_count;j++)
+            for(uint16_t j=0;j<seq->frames.size();j++)
             {
                 engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
                 seq->frames[j].tex_ind = p.tex_index;
@@ -2787,7 +2785,7 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
 
     for(uint32_t i = 0; i < world->anim_sequences_count; i++)
     {
-        for(uint16_t j = 0; j < world->anim_sequences[i].frames_count; j++)
+        for(uint16_t j = 0; j < world->anim_sequences[i].frames.size(); j++)
         {
             if(world->anim_sequences[i].frame_list[j] == tex_index)
             {
@@ -2804,53 +2802,25 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
     return false;   // No such TexInfo found in animation textures lists.
 }
 
-static void addPolygonCopyToList(const polygon_s *polygon, polygon_s *&list)
-{
-    polygon_s* np = new polygon_s(*polygon);
-    np->next = list;
-    list = np;
-}
-
-void Res_Poly_SortInMesh(struct base_mesh_s *mesh)
-{
-    for(polygon_s& p : mesh->polygons)
-    {
-        if(p.anim_id > 0 && p.anim_id <= engine_world.anim_sequences_count)
-        {
-            anim_seq_p seq = engine_world.anim_sequences + (p.anim_id - 1);
-            // set tex coordinates to the first frame for correct texture transform in renderer
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0, seq->uvrotate);
-        }
-
-        if(p.transparency >= 2)
-        {
-            addPolygonCopyToList(&p, mesh->transparency_polygons);
-        }
-    }
-}
-
-
 void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
 {
-    base_mesh_p base_mesh;
-
-    world->meshes_count = tr->meshes_count;
-    base_mesh = world->meshes = (base_mesh_p)calloc(world->meshes_count, sizeof(base_mesh_t));
-    for(uint32_t i=0;i<world->meshes_count;i++,base_mesh++)
-    {
-        TR_GenMesh(world, i, base_mesh, tr);
+    world->meshes.resize( tr->meshes_count );
+    size_t i=0;
+    for(std::shared_ptr<BaseMesh>& baseMesh : world->meshes) {
+        baseMesh = std::make_shared<BaseMesh>();
+        TR_GenMesh(world, i++, baseMesh, tr);
     }
 }
 
-static void tr_copyNormals(const polygon_p polygon, base_mesh_p mesh, const uint16_t *mesh_vertex_indices)
+static void tr_copyNormals(const polygon_p polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
 {
     for (size_t i=0; i<polygon->vertices.size(); ++i)
     {
-        polygon->vertices[i].normal = mesh->vertices[mesh_vertex_indices[i]].normal;
+        polygon->vertices[i].normal = mesh->m_vertices[mesh_vertex_indices[i]].normal;
     }
 }
 
-void tr_accumulateNormals(tr4_mesh_t *tr_mesh, base_mesh_p mesh, int numCorners, const uint16_t *vertex_indices, polygon_p p)
+void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, const uint16_t *vertex_indices, polygon_p p)
 {
     p->vertices.resize(numCorners);
 
@@ -2862,11 +2832,11 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, base_mesh_p mesh, int numCorners,
 
     for (int i = 0; i < numCorners; i++)
     {
-        mesh->vertices[vertex_indices[i]].normal += p->plane;
+        mesh->m_vertices[vertex_indices[i]].normal += p->plane;
     }
 }
 
-void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, const uint16_t *vertex_indices, unsigned color, polygon_p p)
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, polygon_p p)
 {
     for (int i = 0; i < p->vertices.size(); i++)
     {
@@ -2884,10 +2854,10 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, co
         p->vertices[i].tex_coord[0] = i & 2 ? 1.0 : 0.0;
         p->vertices[i].tex_coord[1] = i >= 2 ? 1.0 : 0.0;
     }
-    mesh->uses_vertex_colors = 1;
+    mesh->m_usesVertexColors = true;
 }
 
-void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t *vertex_indices, polygon_p p)
+void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, polygon_p p)
 {
     for (int i = 0; i < p->vertices.size(); i++)
     {
@@ -2898,7 +2868,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t 
             p->vertices[i].color[2] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
             p->vertices[i].color[3] = 1.0f;
 
-            mesh->uses_vertex_colors = 1;
+            mesh->m_usesVertexColors = true;
         }
         else
         {
@@ -2907,7 +2877,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t 
     }
 }
 
-void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr)
+void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, class VT_Level *tr)
 {
     uint16_t col;
     tr4_mesh_t *tr_mesh;
@@ -2932,29 +2902,29 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      */
 
     tr_mesh = &tr->meshes[mesh_index];
-    mesh->id = mesh_index;
-    mesh->centre[0] = tr_mesh->centre.x;
-    mesh->centre[1] =-tr_mesh->centre.z;
-    mesh->centre[2] = tr_mesh->centre.y;
-    mesh->R = tr_mesh->collision_size;
-    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
+    mesh->m_id = mesh_index;
+    mesh->m_center[0] = tr_mesh->centre.x;
+    mesh->m_center[1] =-tr_mesh->centre.z;
+    mesh->m_center[2] = tr_mesh->centre.y;
+    mesh->m_radius = tr_mesh->collision_size;
+    mesh->m_texturePageCount = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
 
-    mesh->vertices.resize( tr_mesh->num_vertices );
-    auto vertex = mesh->vertices.data();
-    for(size_t i=0; i<mesh->vertices.size(); i++, vertex++)
+    mesh->m_vertices.resize( tr_mesh->num_vertices );
+    auto vertex = mesh->m_vertices.data();
+    for(size_t i=0; i<mesh->m_vertices.size(); i++, vertex++)
     {
         TR_vertex_to_arr(vertex->position, tr_mesh->vertices[i]);
         vertex->normal.setZero();                                          // paranoid
     }
 
-    BaseMesh_FindBB(mesh);
+    mesh->findBB();
 
-    mesh->polygons.resize( tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles );
+    mesh->m_polygons.resize( tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles );
 
     /*
      * textured triangles
      */
-    auto p = mesh->polygons.data();
+    auto p = mesh->m_polygons.data();
     for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i, ++p)
     {
         face3 = &tr_mesh->textured_triangles[i];
@@ -2973,8 +2943,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
             p->transparency = tex->transparency_flags;
         }
 
-        tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
-        tr_setupTexturedFace(tr_mesh, mesh, face3->vertices, p);
+        tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, p);
+        tr_setupTexturedFace(tr_mesh, mesh.get(), face3->vertices, p);
 
         world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
     }
@@ -2990,8 +2960,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->transparency = 0;
         p->anim_id = 0;
 
-        tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
-        tr_setupColoredFace(tr_mesh, tr, mesh, face3->vertices, col, p);
+        tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, p);
+        tr_setupColoredFace(tr_mesh, tr, mesh.get(), face3->vertices, col, p);
     }
 
     /*
@@ -3015,8 +2985,8 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
             p->transparency = tex->transparency_flags;
         }
 
-        tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
-        tr_setupTexturedFace(tr_mesh, mesh, face4->vertices, p);
+        tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, p);
+        tr_setupTexturedFace(tr_mesh, mesh.get(), face4->vertices, p);
 
         world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
     }
@@ -3033,15 +3003,15 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         p->transparency = 0;
         p->anim_id = 0;
 
-        tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
-        tr_setupColoredFace(tr_mesh, tr, mesh, face4->vertices, col, p);
+        tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, p);
+        tr_setupColoredFace(tr_mesh, tr, mesh.get(), face4->vertices, col, p);
     }
 
     /*
      * let us normalise normales %)
      */
-    p = mesh->polygons.data();
-    for(vertex_s& v : mesh->vertices)
+    p = mesh->m_polygons.data();
+    for(vertex_s& v : mesh->m_vertices)
     {
         v.normal.normalize();
     }
@@ -3072,12 +3042,12 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
         tr_copyNormals(p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }
 
-    mesh->vertices.clear();
-    Mesh_GenFaces(mesh);
-    Res_Poly_SortInMesh(mesh);
+    mesh->m_vertices.clear();
+    mesh->genFaces();
+    mesh->polySortInMesh();
 }
 
-void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_room_t *tr_room, base_mesh_p mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, polygon_p p)
+void tr_setupRoomVertices(world_s *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, polygon_p p)
 {
     p->vertices.resize(numCorners);
 
@@ -3089,7 +3059,7 @@ void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_r
 
     for (int i = 0; i < numCorners; i++)
     {
-        mesh->vertices[vertices[i]].normal += p->plane;
+        mesh->m_vertices[vertices[i]].normal += p->plane;
         p->vertices[i].normal = p->plane;
         TR_color_to_arr(p->vertices[i].color, tr_room->vertices[vertices[i]].colour);
     }
@@ -3106,7 +3076,6 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
 {
     tr5_room_t *tr_room;
     polygon_p p;
-    base_mesh_p mesh;
     btScalar n;
     vertex_p vertex;
     uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
@@ -3119,30 +3088,30 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
         return;
     }
 
-    mesh = room->mesh = (base_mesh_p)calloc(1, sizeof(base_mesh_t));
-    mesh->id = room_index;
-    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
-    mesh->uses_vertex_colors = 1; // This is implicitly true on room meshes
+    room->mesh = std::make_shared<BaseMesh>();
+    room->mesh->m_id = room_index;
+    room->mesh->m_texturePageCount = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
+    room->mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
-    mesh->vertices.resize( tr_room->num_vertices );
-    vertex = mesh->vertices.data();
-    for(size_t i=0; i<mesh->vertices.size(); i++, vertex++)
+    room->mesh->m_vertices.resize( tr_room->num_vertices );
+    vertex = room->mesh->m_vertices.data();
+    for(size_t i=0; i<room->mesh->m_vertices.size(); i++, vertex++)
     {
         TR_vertex_to_arr(vertex->position, tr_room->vertices[i].vertex);
         vertex->normal.setZero();                                          // paranoid
     }
 
-    BaseMesh_FindBB(mesh);
+    room->mesh->findBB();
 
-    mesh->polygons.resize( tr_room->num_triangles + tr_room->num_rectangles );
-    p = mesh->polygons.data();
+    room->mesh->m_polygons.resize( tr_room->num_triangles + tr_room->num_rectangles );
+    p = room->mesh->m_polygons.data();
 
     /*
      * triangles
      */
     for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
     {
-        tr_setupRoomVertices(world, tr, tr_room, mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, p);
+        tr_setupRoomVertices(world, tr, tr_room, room->mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, p);
         p->double_side = tr_room->triangles[i].texture & 0x8000;
     }
 
@@ -3151,14 +3120,14 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
      */
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        tr_setupRoomVertices(world, tr, tr_room, mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, p);
+        tr_setupRoomVertices(world, tr, tr_room, room->mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, p);
         p->double_side = tr_room->rectangles[i].texture & 0x8000;
     }
 
     /*
      * let us normalise normales %)
      */
-    for(vertex_s& v : mesh->vertices)
+    for(vertex_s& v : room->mesh->m_vertices)
     {
         v.normal.normalize();
     }
@@ -3166,10 +3135,10 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
     /*
      * triangles
      */
-    p = mesh->polygons.data();
+    p = room->mesh->m_polygons.data();
     for(size_t i=0; i<tr_room->num_triangles; i++, p++)
     {
-        tr_copyNormals(p, mesh, tr_room->triangles[i].vertices);
+        tr_copyNormals(p, room->mesh, tr_room->triangles[i].vertices);
     }
 
     /*
@@ -3177,12 +3146,12 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
      */
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_room->rectangles[i].vertices);
+        tr_copyNormals(p, room->mesh, tr_room->rectangles[i].vertices);
     }
 
-    mesh->vertices.clear();
-    Mesh_GenFaces(mesh);
-    Res_Poly_SortInMesh(mesh);
+    room->mesh->m_vertices.clear();
+    room->mesh->genFaces();
+    room->mesh->polySortInMesh();
 }
 
 void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
@@ -3204,7 +3173,7 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
         return;
     }
 
-    room->sprite_buffer = (struct sprite_buffer_s *) calloc(sizeof(struct sprite_buffer_s), 1);
+    room->sprite_buffer = (struct SpriteBuffer *) calloc(sizeof(struct SpriteBuffer), 1);
     room->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
     room->sprite_buffer->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), room->sprite_buffer->num_texture_pages);
 
@@ -3309,19 +3278,19 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
 
 void Res_GenVBOs(struct world_s *world)
 {
-    for(uint32_t i=0; i<world->meshes_count; i++)
+    for(uint32_t i=0; i<world->meshes.size(); i++)
     {
-        if(!world->meshes[i].vertices.empty() || world->meshes[i].animated_vertex_count)
+        if(!world->meshes[i]->m_vertices.empty() || world->meshes[i]->m_animatedVertices.size())
         {
-            Mesh_GenVBO(&renderer, world->meshes + i);
+            world->meshes[i]->genVBO(&renderer);
         }
     }
 
     for(uint32_t i=0; i<world->rooms.size(); i++)
     {
-        if((world->rooms[i]->mesh) && (!world->rooms[i]->mesh->vertices.empty() || world->rooms[i]->mesh->animated_vertex_count))
+        if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || world->rooms[i]->mesh->m_animatedVertices.size()))
         {
-            Mesh_GenVBO(&renderer, world->rooms[i]->mesh);
+            world->rooms[i]->mesh->genVBO(&renderer);
         }
     }
 }
@@ -3386,7 +3355,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
     return tr_animation->frame_offset;
 }
 
-struct skeletal_model_s* Res_GetSkybox(struct world_s *world, uint32_t engine_version)
+struct SkeletalModel* Res_GetSkybox(struct world_s *world, uint32_t engine_version)
 {
     switch(engine_version)
     {
@@ -3417,7 +3386,7 @@ void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr)
     tr->anim_commands_count = 0;
 }
 
-void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_model_s *model, class VT_Level *tr)
+void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct SkeletalModel *model, class VT_Level *tr)
 {
     tr_moveable_t *tr_moveable;
     tr_animation_t *tr_animation;
@@ -3426,27 +3395,26 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     uint16_t temp1, temp2;
     float ang;
 
-    bone_tag_p bone_tag;
-    bone_frame_p bone_frame;
-    mesh_tree_tag_p tree_tag;
-    animation_frame_p anim;
+    BoneTag* bone_tag;
+    BoneFrame* bone_frame;
+    MeshTreeTag* tree_tag;
+    AnimationFrame* anim;
 
     tr_moveable = &tr->moveables[model_num];                                    // original tr structure
-    model->collision_map = (uint16_t*)malloc(model->mesh_count * sizeof(uint16_t));
-    model->collision_map_size = model->mesh_count;
+    model->collision_map.resize(model->mesh_count);
     for(uint16_t i=0;i<model->mesh_count;i++)
     {
         model->collision_map[i] = i;
     }
 
-    model->mesh_tree = (mesh_tree_tag_p)calloc(model->mesh_count, sizeof(mesh_tree_tag_t));
-    tree_tag = model->mesh_tree;
+    model->mesh_tree.resize(model->mesh_count);
+    tree_tag = model->mesh_tree.data();
 
     uint32_t *mesh_index = tr->mesh_indices + tr_moveable->starting_mesh;
 
     for(uint16_t k=0;k<model->mesh_count;k++,tree_tag++)
     {
-        tree_tag->mesh_base = world->meshes + (mesh_index[k]);
+        tree_tag->mesh_base = world->meshes[mesh_index[k]];
         tree_tag->mesh_skin = NULL;                                             ///@PARANOID: I use calloc for tree_tag's
         tree_tag->replace_anim = 0x00;
         tree_tag->replace_mesh = 0x00;
@@ -3477,31 +3445,27 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         /*
          * model has no start offset and any animation
          */
-        model->animation_count = 1;
-        model->animations = (animation_frame_p)malloc(sizeof(animation_frame_t));
-        model->animations->frames_count = 1;
-        model->animations->frames = (bone_frame_p)calloc(model->animations->frames_count , sizeof(bone_frame_t));
-        bone_frame = model->animations->frames;
+        model->animations.resize(1);
+        model->animations.front().frames.resize(1);
+        bone_frame = model->animations.front().frames.data();
 
-        model->animations->id = 0;
-        model->animations->next_anim = NULL;
-        model->animations->next_frame = 0;
-        model->animations->state_change = NULL;
-        model->animations->state_change_count = 0;
-        model->animations->original_frame_rate = 1;
+        model->animations.front().id = 0;
+        model->animations.front().next_anim = NULL;
+        model->animations.front().next_frame = 0;
+        model->animations.front().state_change.clear();
+        model->animations.front().original_frame_rate = 1;
 
-        bone_frame->bone_tag_count = model->mesh_count;
-        bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
+        bone_frame->bone_tags.resize( model->mesh_count );
 
         bone_frame->pos.setZero();
         bone_frame->move.setZero();
         bone_frame->v_Horizontal = 0.0;
         bone_frame->v_Vertical = 0.0;
         bone_frame->command = 0x00;
-        for(uint16_t k=0;k<bone_frame->bone_tag_count;k++)
+        for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
         {
-            tree_tag = model->mesh_tree + k;
-            bone_tag = bone_frame->bone_tags + k;
+            tree_tag = &model->mesh_tree[k];
+            bone_tag = &bone_frame->bone_tags[k];
 
             vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
             bone_tag->offset = tree_tag->offset;
@@ -3509,13 +3473,13 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         return;
     }
     //Sys_DebugLog(LOG_FILENAME, "model = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
-    model->animation_count = TR_GetNumAnimationsForMoveable(tr, model_num);
-    if(model->animation_count <= 0)
+    model->animations.resize( TR_GetNumAnimationsForMoveable(tr, model_num) );
+    if(model->animations.empty())
     {
         /*
          * the animation count must be >= 1
          */
-        model->animation_count = 1;
+        model->animations.resize(1);
     }
 
     /*
@@ -3527,9 +3491,8 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
      * - in the next follows rotation's data. one word - one rotation, if rotation is one-axis (one angle).
      *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
      */
-    model->animations = (animation_frame_p)calloc(model->animation_count, sizeof(animation_frame_t));
-    anim = model->animations;
-    for(uint16_t i=0;i<model->animation_count;i++,anim++)
+    anim = model->animations.data();
+    for(uint16_t i=0;i<model->animations.size();i++,anim++)
     {
         tr_animation = &tr->animations[tr_moveable->animation_index+i];
         frame_offset = tr_animation->frame_offset / 2;
@@ -3552,7 +3515,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
 
-        anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
+        anim->frames.resize( TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i) );
 
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
@@ -3595,23 +3558,21 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         }
 
 
-        if(anim->frames_count <= 0)
+        if(anim->frames.empty())
         {
             /*
              * number of animations must be >= 1, because frame contains base model offset
              */
-            anim->frames_count = 1;
+            anim->frames.resize(1);
         }
-        anim->frames = (bone_frame_p)calloc(anim->frames_count, sizeof(bone_frame_t));
 
         /*
          * let us begin to load animations
          */
-        bone_frame = anim->frames;
-        for(uint16_t j=0;j<anim->frames_count;j++,bone_frame++,frame_offset+=frame_step)
+        bone_frame = anim->frames.data();
+        for(uint16_t j=0;j<anim->frames.size();j++,bone_frame++,frame_offset+=frame_step)
         {
-            bone_frame->bone_tag_count = model->mesh_count;
-            bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
+            bone_frame->bone_tags.resize( model->mesh_count );
             bone_frame->pos.setZero();
             bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
@@ -3619,10 +3580,10 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             if(frame_offset >= tr->frame_data_size)
             {
                 //Con_Printf("Bad frame offset");
-                for(uint16_t k=0;k<bone_frame->bone_tag_count;k++)
+                for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
                 {
-                    tree_tag = model->mesh_tree + k;
-                    bone_tag = bone_frame->bone_tags + k;
+                    tree_tag = &model->mesh_tree[k];
+                    bone_tag = &bone_frame->bone_tags[k];
                     vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
                     bone_tag->offset = tree_tag->offset;
                 }
@@ -3630,10 +3591,10 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             else
             {
                 uint16_t l = l_start;
-                for(uint16_t k=0;k<bone_frame->bone_tag_count;k++)
+                for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
                 {
-                    tree_tag = model->mesh_tree + k;
-                    bone_tag = bone_frame->bone_tags + k;
+                    tree_tag = &model->mesh_tree[k];
+                    bone_tag = &bone_frame->bone_tags[k];
                     vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
                     bone_tag->offset = tree_tag->offset;
 
@@ -3707,31 +3668,30 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     /*
      * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
      */
-    SkeletalModel_InterpolateFrames(model);
+    model->interpolateFrames();
     /*
      * state change's loading
      */
 
 #if LOG_ANIM_DISPATCHES
-    if(model->animation_count > 1)
+    if(model->animations.size() > 1)
     {
-        Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d", model_num, model->animation_count);
+        Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d", model_num, model->animations.size());
     }
 #endif
-    anim = model->animations;
-    for(uint16_t i=0;i<model->animation_count;i++,anim++)
+    anim = model->animations.data();
+    for(uint16_t i=0;i<model->animations.size();i++,anim++)
     {
-        anim->state_change_count = 0;
-        anim->state_change = NULL;
+        anim->state_change.clear();
 
         tr_animation = &tr->animations[tr_moveable->animation_index+i];
         int16_t j = tr_animation->next_animation - tr_moveable->animation_index;
         j &= 0x7fff;
-        if((j >= 0) && (j < model->animation_count))
+        if((j >= 0) && (j < model->animations.size()))
         {
-            anim->next_anim = model->animations + j;
+            anim->next_anim = &model->animations[j];
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
-            anim->next_frame %= anim->next_anim->frames_count;
+            anim->next_frame %= anim->next_anim->frames.size();
             if(anim->next_frame < 0)
             {
                 anim->next_frame = 0;
@@ -3746,50 +3706,47 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             anim->next_frame = 0;
         }
 
-        anim->state_change_count = 0;
-        anim->state_change = NULL;
+        anim->state_change.clear();
 
-        if((tr_animation->num_state_changes > 0) && (model->animation_count > 1))
+        if((tr_animation->num_state_changes > 0) && (model->animations.size() > 1))
         {
-            state_change_p sch_p;
+            StateChange* sch_p;
 #if LOG_ANIM_DISPATCHES
             Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?(anim->next_anim->id):(-1), anim->next_frame);
 #endif
-            anim->state_change_count = tr_animation->num_state_changes;
-            sch_p = anim->state_change = (state_change_p)malloc(tr_animation->num_state_changes * sizeof(state_change_t));
+            anim->state_change.resize( tr_animation->num_state_changes );
+            sch_p = anim->state_change.data();
 
             for(uint16_t j=0;j<tr_animation->num_state_changes;j++,sch_p++)
             {
                 tr_state_change_t *tr_sch;
                 tr_sch = &tr->state_changes[j+tr_animation->state_change_offset];
                 sch_p->id = tr_sch->state_id;
-                sch_p->anim_dispatch = NULL;
-                sch_p->anim_dispatch_count = 0;
+                sch_p->anim_dispatch.clear();
                 for(uint16_t l=0;l<tr_sch->num_anim_dispatches;l++)
                 {
                     tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch+l];
                     uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
                     uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
-                    if((next_anim_ind >= 0) &&(next_anim_ind < model->animation_count))
+                    if((next_anim_ind >= 0) &&(next_anim_ind < model->animations.size()))
                     {
-                        sch_p->anim_dispatch_count++;
-                        sch_p->anim_dispatch = (anim_dispatch_p)realloc(sch_p->anim_dispatch, sch_p->anim_dispatch_count * sizeof(anim_dispatch_t));
+                        sch_p->anim_dispatch.emplace_back();
 
-                        anim_dispatch_p adsp = sch_p->anim_dispatch + sch_p->anim_dispatch_count - 1;
-                        uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames_count;
+                        AnimDispatch* adsp = &sch_p->anim_dispatch.back();
+                        uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames.size();
                         uint16_t next_frame = tr_adisp->next_frame - tr->animations[next_anim].frame_start;
 
                         uint16_t low  = tr_adisp->low  - tr_animation->frame_start;
                         uint16_t high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low  = low  % anim->frames_count;
-                        adsp->frame_high = (high - 1) % anim->frames_count;
+                        adsp->frame_low  = low  % anim->frames.size();
+                        adsp->frame_high = (high - 1) % anim->frames.size();
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         adsp->next_frame = next_frame % next_frames_count;
 
 #if LOG_ANIM_DISPATCHES
-                        Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], frames_count = %d: interval[%d.. %d], next_anim = %d, next_frame = %d", l,
-                                    anim->frames_count, adsp->frame_low, adsp->frame_high,
+                        Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], frames.size() = %d: interval[%d.. %d], next_anim = %d, next_frame = %d", l,
+                                    anim->frames.size(), adsp->frame_low, adsp->frame_high,
                                     adsp->next_anim, adsp->next_frame);
 #endif
                     }
@@ -3873,7 +3830,7 @@ int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
     return ret;
 }
 
-void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame)
+void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone_frame)
 {
     unsigned short int *frame;
 
@@ -3914,11 +3871,11 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bo
 
 void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
 {
-    skeletal_model_p smodel;
+    SkeletalModel* smodel;
     tr_moveable_t *tr_moveable;
 
     world->skeletal_model_count = tr->moveables_count;
-    smodel = world->skeletal_models = (skeletal_model_p)calloc(world->skeletal_model_count, sizeof(skeletal_model_t));
+    smodel = world->skeletal_models = (SkeletalModel*)calloc(world->skeletal_model_count, sizeof(SkeletalModel));
 
     for(uint32_t i=0;i<world->skeletal_model_count;i++,smodel++)
     {
@@ -3926,7 +3883,7 @@ void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
         TR_GenSkeletalModel(world, i, smodel, tr);
-        SkeletonModel_FillTransparency(smodel);
+        smodel->fillTransparency();
     }
 }
 
@@ -3995,9 +3952,8 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 int replace_anim_id = lua_tointeger(ent_ID_override, -1);
                 if(replace_anim_id > 0)
                 {
-                    skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
+                    SkeletalModel* replace_anim_model = World_GetModelByID(world, replace_anim_id);
                     std::swap(entity->m_bf.animations.model->animations, replace_anim_model->animations);
-                    std::swap(entity->m_bf.animations.model->animation_count, replace_anim_model->animation_count);
                 }
             }
             lua_settop(ent_ID_override, top);                                      // restore LUA stack
@@ -4007,12 +3963,12 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         if(entity->m_bf.animations.model == NULL)
         {
             // SPRITE LOADING
-            sprite_p sp = World_GetSpriteByID(tr_item->object_id, world);
+            Sprite* sp = World_GetSpriteByID(tr_item->object_id, world);
             if(sp && entity->m_self->room)
             {
                 room_sprite_p rsp;
                 int sz = ++entity->m_self->room->sprites_count;
-                entity->m_self->room->sprites = (room_sprite_p)realloc(entity->m_self->room->sprites, sz * sizeof(room_sprite_t));
+                entity->m_self->room->sprites = (room_sprite_p)realloc(entity->m_self->room->sprites, sz * sizeof(room_Sprite));
                 rsp = entity->m_self->room->sprites + sz - 1;
                 rsp->sprite = sp;
                 rsp->pos = entity->m_transform.getOrigin();
@@ -4028,18 +3984,18 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             continue;
         }
 
-        SSBoneFrame_CreateFromModel(&entity->m_bf, entity->m_bf.animations.model);
+        entity->m_bf.fromModel(entity->m_bf.animations.model);
 
         if(0 == tr_item->object_id)                                             // Lara is unical model
         {
-            skeletal_model_p tmp, LM;                                           // LM - Lara Model
+            SkeletalModel* tmp, *LM;                                           // LM - Lara Model
 
             entity->m_moveType = MOVE_ON_FLOOR;
             world->Character = entity;
             entity->m_self->collide_flag = ENTITY_COLLISION_ACTOR;
             entity->m_bf.animations.model->hide = 0;
             entity->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            LM = (skeletal_model_p)entity->m_bf.animations.model;
+            LM = (SkeletalModel*)entity->m_bf.animations.model;
 
             top = lua_gettop(engine_lua);
             lua_pushinteger(engine_lua, entity->m_id);
@@ -4056,7 +4012,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                         {
                             // In TR1, Lara has unified head mesh for all her alternate skins.
                             // Hence, we copy all meshes except head, to prevent Potato Raider bug.
-                            SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count - 1);
+                            SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count - 1);
                         }
                     }
                     break;
@@ -4065,11 +4021,11 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                     LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR3);
                     if(LM)
                     {
-                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
                         tmp = World_GetModelByID(world, 11);                   // moto / quadro cycle animations
                         if(tmp)
                         {
-                            SkeletonCopyMeshes(tmp->mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                            SkeletonCopyMeshes(tmp->mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
                         }
                     }
                     break;
@@ -4080,18 +4036,18 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                     LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
                     if(LM)
                     {
-                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
                     }
                     LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_JOINTS_TR45);                         // skin skeleton meshes
                     if(LM)
                     {
-                        SkeletonCopyMeshes2(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                        SkeletonCopyMeshes2(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
                     }
-                    FillSkinnedMeshMap(&world->skeletal_models[0]);
+                    world->skeletal_models[0].fillSkinnedMeshMap();
                     break;
             };
 
-            for(uint16_t j=0;j<entity->m_bf.bone_tag_count;j++)
+            for(uint16_t j=0;j<entity->m_bf.bone_tags.size();j++)
             {
                 entity->m_bf.bone_tags[j].mesh_base = entity->m_bf.animations.model->mesh_tree[j].mesh_base;
                 entity->m_bf.bone_tags[j].mesh_skin = entity->m_bf.animations.model->mesh_tree[j].mesh_skin;

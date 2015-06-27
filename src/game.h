@@ -20,7 +20,7 @@
 
 class VT_Level;
 struct polygon_s;
-struct base_mesh_s;
+struct BaseMesh;
 struct Room;
 struct world_s;
 struct Camera;

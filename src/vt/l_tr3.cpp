@@ -113,7 +113,7 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
         read_tr_face3(src, room.triangles[i]);
 
     room.num_sprites = read_bitu16(src);
-    room.sprites = (tr_room_sprite_t*)malloc(room.num_sprites * sizeof(tr_room_sprite_t));
+    room.sprites = (tr_room_Sprite*)malloc(room.num_sprites * sizeof(tr_room_Sprite));
     for (i = 0; i < room.num_sprites; i++)
         read_tr_room_sprite(src, room.sprites[i]);
 
@@ -265,10 +265,10 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
     for (i = 0; i < this->static_meshes_count; i++)
         read_tr_staticmesh(src, this->static_meshes[i]);
 
-    this->sprite_textures_count = read_bitu32(src);
-    this->sprite_textures = (tr_sprite_texture_t*)malloc(this->sprite_textures_count * sizeof(tr_sprite_texture_t));
-    for (i = 0; i < this->sprite_textures_count; i++)
-        read_tr_sprite_texture(src, this->sprite_textures[i]);
+    this->Spriteextures_count = read_bitu32(src);
+    this->Spriteextures = (tr_Spriteexture_t*)malloc(this->Spriteextures_count * sizeof(tr_Spriteexture_t));
+    for (i = 0; i < this->Spriteextures_count; i++)
+        read_tr_Spriteexture(src, this->Spriteextures[i]);
 
     this->sprite_sequences_count = read_bitu32(src);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));

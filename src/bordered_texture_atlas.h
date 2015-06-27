@@ -105,7 +105,7 @@ class BorderedTextureAtlas
     void addObjectTexture(const tr4_object_texture_t &texture);
     
     /*! Adds a sprite texture to the list. */
-    void addSpriteTexture(const tr_sprite_texture_t &texture);
+    void addSpriteTexture(const tr_Spriteexture_t &texture);
     
 public:
     /*!
@@ -117,8 +117,8 @@ public:
                            const tr4_textile32_t *pages,
                            size_t object_texture_count,
                            const tr4_object_texture_t *object_textures,
-                           size_t sprite_texture_count,
-                           const tr_sprite_texture_t *sprite_textures);
+                           size_t Spriteexture_count,
+                           const tr_Spriteexture_t *Spriteextures);
     
     /*!
      * Destroy all contents of a bordered texture atlas. Using the atlas afterwards
@@ -147,7 +147,7 @@ public:
     /*!
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
      */
-    void getSpriteCoordinates(size_t sprite_texture,
+    void getSpriteCoordinates(size_t Spriteexture,
                               uint32_t &outPage,
                               GLfloat *coordinates) const;
     

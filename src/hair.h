@@ -36,7 +36,7 @@
 
 struct HairElement
 {
-    base_mesh_s* mesh;           // Pointer to rendered mesh.
+    std::shared_ptr<BaseMesh> mesh;           // Pointer to rendered mesh.
     std::unique_ptr<btCollisionShape> shape;          // Pointer to collision shape.
     std::shared_ptr<btRigidBody> body;           // Pointer to dynamic body.
     btVector3 position;     // Position of this hair element
@@ -61,7 +61,7 @@ struct Hair : public Object
 
     std::vector<std::unique_ptr<btGeneric6DofConstraint>> m_joints;             // Array of joints.
 
-    base_mesh_s* m_mesh;               // Mesh containing all vertices of all parts of this hair object.
+    std::shared_ptr<BaseMesh> m_mesh;               // Mesh containing all vertices of all parts of this hair object.
 
     ~Hair();
 
@@ -70,7 +70,7 @@ struct Hair : public Object
     bool create(HairSetup* setup, std::shared_ptr<Entity> parent_entity);
 
 private:
-    void createHairMesh(const skeletal_model_s *model);
+    void createHairMesh(const SkeletalModel *model);
 };
 
 struct HairSetup

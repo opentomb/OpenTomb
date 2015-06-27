@@ -31,24 +31,24 @@ void Entity::createGhosts()
         return;
 
     m_bt.manifoldArray = new btManifoldArray();
-    m_bt.shapes = new btCollisionShape*[m_bf.bone_tag_count];
-    m_bt.ghostObjects = new btPairCachingGhostObject*[m_bf.bone_tag_count];
-    m_bt.last_collisions = new EntityCollisionNode[m_bf.bone_tag_count];
-    for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+    m_bt.shapes = new btCollisionShape*[m_bf.bone_tags.size()];
+    m_bt.ghostObjects = new btPairCachingGhostObject*[m_bf.bone_tags.size()];
+    m_bt.last_collisions = new EntityCollisionNode[m_bf.bone_tags.size()];
+    for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
     {
         btVector3 box;
-        box[0] = 0.40 * (m_bf.bone_tags[i].mesh_base->bb_max[0] - m_bf.bone_tags[i].mesh_base->bb_min[0]);
-        box[1] = 0.40 * (m_bf.bone_tags[i].mesh_base->bb_max[1] - m_bf.bone_tags[i].mesh_base->bb_min[1]);
-        box[2] = 0.40 * (m_bf.bone_tags[i].mesh_base->bb_max[2] - m_bf.bone_tags[i].mesh_base->bb_min[2]);
+        box[0] = 0.40 * (m_bf.bone_tags[i].mesh_base->m_bbMax[0] - m_bf.bone_tags[i].mesh_base->m_bbMin[0]);
+        box[1] = 0.40 * (m_bf.bone_tags[i].mesh_base->m_bbMax[1] - m_bf.bone_tags[i].mesh_base->m_bbMin[1]);
+        box[2] = 0.40 * (m_bf.bone_tags[i].mesh_base->m_bbMax[2] - m_bf.bone_tags[i].mesh_base->m_bbMin[2]);
         m_bt.shapes[i] = new btBoxShape(box);
-        m_bf.bone_tags[i].mesh_base->R = (box[0] < box[1])?(box[0]):(box[1]);
-        m_bf.bone_tags[i].mesh_base->R = (m_bf.bone_tags[i].mesh_base->R < box[2])?(m_bf.bone_tags[i].mesh_base->R):(box[2]);
+        m_bf.bone_tags[i].mesh_base->m_radius = (box[0] < box[1])?(box[0]):(box[1]);
+        m_bf.bone_tags[i].mesh_base->m_radius = (m_bf.bone_tags[i].mesh_base->m_radius < box[2])?(m_bf.bone_tags[i].mesh_base->m_radius):(box[2]);
 
         m_bt.ghostObjects[i] = new btPairCachingGhostObject();
         // FIXME bt.ghostObjects[i]->setIgnoreCollisionCheck(bt.bt_body[i], true);
 
         btTransform gltr = m_transform * m_bf.bone_tags[i].full_transform;
-        gltr.setOrigin( gltr * m_bf.bone_tags[i].mesh_base->centre );
+        gltr.setOrigin( gltr * m_bf.bone_tags[i].mesh_base->m_center );
 
         m_bt.ghostObjects[i]->setWorldTransform(gltr);
         m_bt.ghostObjects[i]->setCollisionFlags(m_bt.ghostObjects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
@@ -133,10 +133,9 @@ void Entity::genEntityRigidBody()
 
     m_bt.bt_body.clear();
 
-    for(uint16_t i=0; i<m_bf.bone_tag_count; i++)
+    for(uint16_t i=0; i<m_bf.bone_tags.size(); i++)
     {
-        base_mesh_p mesh = m_bf.animations.model->mesh_tree[i].mesh_base;
-        btCollisionShape *cshape = BT_CSfromMesh(mesh, true, true, false);
+        btCollisionShape *cshape = BT_CSfromMesh(m_bf.animations.model->mesh_tree[i].mesh_base, true, true, false);
         m_bt.bt_body.emplace_back();
 
         if(cshape)
@@ -228,10 +227,10 @@ void Entity::ghostUpdate()
     {
         if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
-            for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+            for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
             {
                 auto tr = m_transform * m_bf.bone_tags[i].full_transform;
-                auto v = m_bf.animations.model->mesh_tree[i].mesh_base->centre;
+                auto v = m_bf.animations.model->mesh_tree[i].mesh_base->m_center;
                 m_bt.ghostObjects[i]->getWorldTransform() = tr;
                 auto pos = tr * v;
                 m_bt.ghostObjects[i]->getWorldTransform().setOrigin(pos);
@@ -239,10 +238,10 @@ void Entity::ghostUpdate()
         }
         else
         {
-            for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+            for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
             {
                 auto tr = m_bt.bt_body[i]->getWorldTransform();
-                tr.setOrigin(tr * m_bf.bone_tags[i].mesh_base->centre);
+                tr.setOrigin(tr * m_bf.bone_tags[i].mesh_base->m_center);
                 m_bt.ghostObjects[i]->getWorldTransform() = tr;
             }
         }
@@ -254,14 +253,14 @@ void Entity::updateCurrentCollisions()
 {
     if(m_bt.ghostObjects != NULL)
     {
-        for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
         {
             btPairCachingGhostObject *ghost = m_bt.ghostObjects[i];
             EntityCollisionNode* cn = m_bt.last_collisions + i;
 
             cn->obj_count = 0;
             auto tr = m_transform * m_bf.bone_tags[i].full_transform;
-            auto v = m_bf.animations.model->mesh_tree[i].mesh_base->centre;
+            auto v = m_bf.animations.model->mesh_tree[i].mesh_base->m_center;
             auto orig_tr = ghost->getWorldTransform();
             ghost->getWorldTransform() = tr;
             auto pos = tr * v;
@@ -327,10 +326,10 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
     if((m_bt.ghostObjects != NULL) && (m_bt.no_fix_all == 0))
     {
         auto orig_pos = m_transform.getOrigin();
-        for(uint16_t i=0;i<m_bf.animations.model->collision_map_size;i++)
+        for(uint16_t i=0;i<m_bf.animations.model->collision_map.size();i++)
         {
             uint16_t m = m_bf.animations.model->collision_map[i];
-            ss_bone_tag_p btag = m_bf.bone_tags + m;
+            SSBoneTag* btag = &m_bf.bone_tags[m];
 
             if(btag->body_part & m_bt.no_fix_body_parts)
             {
@@ -346,12 +345,12 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
             }
             else
             {
-                auto parent_from = btag->full_transform * btag->mesh_base->centre;
+                auto parent_from = btag->full_transform * btag->mesh_base->m_center;
                 from = m_transform * parent_from;
             }
 
             auto tr = m_transform * btag->full_transform;
-            auto to = tr * btag->mesh_base->centre;
+            auto to = tr * btag->mesh_base->m_center;
             auto curr = from;
             auto move = to - from;
             auto move_len = move.length();
@@ -359,7 +358,7 @@ int Entity::getPenetrationFixVector(btVector3* reaction, bool hasMove)
             {
                 break;
             }
-            int iter = (btScalar)(4.0 * move_len / btag->mesh_base->R) + 1;     ///@FIXME (not a critical): magick const 4.0!
+            int iter = (btScalar)(4.0 * move_len / btag->mesh_base->m_radius) + 1;     ///@FIXME (not a critical): magick const 4.0!
             move[0] /= (btScalar)iter;
             move[1] /= (btScalar)iter;
             move[2] /= (btScalar)iter;
@@ -536,7 +535,7 @@ bool Entity::wasCollisionBodyParts(uint32_t parts_flags)
 {
     if(m_bt.last_collisions != NULL)
     {
-        for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
         {
             if((m_bf.bone_tags[i].body_part & parts_flags) && (m_bt.last_collisions[i].obj_count > 0))
             {
@@ -553,7 +552,7 @@ void Entity::cleanCollisionAllBodyParts()
 {
     if(m_bt.last_collisions != NULL)
     {
-        for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
         {
             m_bt.last_collisions[i].obj_count = 0;
         }
@@ -565,7 +564,7 @@ void Entity::cleanCollisionBodyParts(uint32_t parts_flags)
 {
     if(m_bt.last_collisions != NULL)
     {
-        for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
         {
             if(m_bf.bone_tags[i].body_part & parts_flags)
             {
@@ -581,7 +580,7 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
     *curr_flag = 0x00;
     if(m_bt.last_collisions != NULL)
     {
-        for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
         {
             if(m_bf.bone_tags[i].body_part & parts_flags)
             {
@@ -649,14 +648,14 @@ void Entity::updateRigidBody(bool force)
         //vec3_copy(transform+12, pos);
         m_transform = m_bt.bt_body[0]->getWorldTransform();
         updateRoomPos();
-        for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
         {
             auto tr = m_bt.bt_body[i]->getWorldTransform();
             m_bf.bone_tags[i].full_transform = m_transform.inverse() * tr;
         }
 
         // that cycle is necessary only for skinning models;
-        for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
         {
             if(m_bf.bone_tags[i].parent != NULL)
             {
@@ -670,29 +669,29 @@ void Entity::updateRigidBody(bool force)
 
         if(m_character && m_bt.ghostObjects)
         {
-            for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+            for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
             {
                 auto tr = m_bt.bt_body[i]->getWorldTransform();
-                auto v = tr * m_bf.bone_tags[i].mesh_base->centre;
+                auto v = tr * m_bf.bone_tags[i].mesh_base->m_center;
                 tr.setOrigin(v);
                 m_bt.ghostObjects[i]->getWorldTransform() = tr;
             }
         }
 
-        if(m_bf.bone_tag_count == 1)
+        if(m_bf.bone_tags.size() == 1)
         {
-            m_bf.bb_min = m_bf.bone_tags[0].mesh_base->bb_min;
-            m_bf.bb_max = m_bf.bone_tags[0].mesh_base->bb_max;
+            m_bf.bb_min = m_bf.bone_tags[0].mesh_base->m_bbMin;
+            m_bf.bb_max = m_bf.bone_tags[0].mesh_base->m_bbMax;
         }
         else
         {
-            m_bf.bb_min = m_bf.bone_tags[0].mesh_base->bb_min;
-            m_bf.bb_max = m_bf.bone_tags[0].mesh_base->bb_max;
-            for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+            m_bf.bb_min = m_bf.bone_tags[0].mesh_base->m_bbMin;
+            m_bf.bb_max = m_bf.bone_tags[0].mesh_base->m_bbMax;
+            for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
             {
                 auto& pos = m_bf.bone_tags[i].full_transform.getOrigin();
-                auto& bb_min = m_bf.bone_tags[i].mesh_base->bb_min;
-                auto& bb_max = m_bf.bone_tags[i].mesh_base->bb_max;
+                auto& bb_min = m_bf.bone_tags[i].mesh_base->m_bbMin;
+                auto& bb_max = m_bf.bone_tags[i].mesh_base->m_bbMax;
                 btScalar r = bb_max[0] - bb_min[0];
                 btScalar t = bb_max[1] - bb_min[1];
                 r = (t > r)?(t):(r);
@@ -732,7 +731,7 @@ void Entity::updateRigidBody(bool force)
     {
         if((m_bf.animations.model == NULL) ||
            m_bt.bt_body.empty() ||
-           (!force && (m_bf.animations.model->animation_count == 1) && (m_bf.animations.model->animations->frames_count == 1)))
+           (!force && (m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
         {
             return;
         }
@@ -740,7 +739,7 @@ void Entity::updateRigidBody(bool force)
         updateRoomPos();
         if(m_self->collide_flag != 0x00)
         {
-            for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+            for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
             {
                 if(m_bt.bt_body[i])
                 {
@@ -869,11 +868,11 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(int model_id)
 {
-    skeletal_model_p sm = World_GetModelByID(&engine_world, model_id);
+    SkeletalModel* sm = World_GetModelByID(&engine_world, model_id);
 
-    if((sm != NULL) && (sm->mesh_count == m_bf.bone_tag_count))
+    if((sm != NULL) && (sm->mesh_count == m_bf.bone_tags.size()))
     {
-        ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
+        SSAnimation* ss_anim = new SSAnimation();
 
         ss_anim->model = sm;
         ss_anim->onFrame = NULL;
@@ -892,15 +891,15 @@ void Entity::addOverrideAnim(int model_id)
 }
 
 
-void Entity::updateCurrentBoneFrame(ss_bone_frame_s *bf, const btTransform* etr)
+void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
 {
-    ss_bone_tag_p btag = bf->bone_tags;
-    bone_tag_p src_btag, next_btag;
-    skeletal_model_p model = bf->animations.model;
-    bone_frame_p curr_bf, next_bf;
+    SSBoneTag* btag = bf->bone_tags.data();
+    BoneTag* src_btag, *next_btag;
+    SkeletalModel* model = bf->animations.model;
+    BoneFrame* curr_bf, *next_bf;
 
-    next_bf = model->animations[bf->animations.next_animation].frames + bf->animations.next_frame;
-    curr_bf = model->animations[bf->animations.current_animation].frames + bf->animations.current_frame;
+    next_bf = &model->animations[bf->animations.next_animation].frames[bf->animations.next_frame];
+    curr_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
 
     btScalar t = 1.0 - bf->animations.lerp;
     btVector3 tr, cmd_tr;
@@ -924,9 +923,9 @@ void Entity::updateCurrentBoneFrame(ss_bone_frame_s *bf, const btTransform* etr)
 
     vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->animations.lerp, t);
     bf->pos += cmd_tr;
-    next_btag = next_bf->bone_tags;
-    src_btag = curr_bf->bone_tags;
-    for(uint16_t k=0;k<curr_bf->bone_tag_count;k++,btag++,src_btag++,next_btag++)
+    next_btag = next_bf->bone_tags.data();
+    src_btag = curr_bf->bone_tags.data();
+    for(uint16_t k=0;k<curr_bf->bone_tags.size();k++,btag++,src_btag++,next_btag++)
     {
         vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->animations.lerp, t);
         btag->transform.getOrigin() = btag->offset;
@@ -938,17 +937,17 @@ void Entity::updateCurrentBoneFrame(ss_bone_frame_s *bf, const btTransform* etr)
         }
         else
         {
-            bone_tag_p ov_src_btag = src_btag;
-            bone_tag_p ov_next_btag = next_btag;
+            BoneTag* ov_src_btag = src_btag;
+            BoneTag* ov_next_btag = next_btag;
             btScalar ov_lerp = bf->animations.lerp;
-            for(ss_animation_p ov_anim=bf->animations.next;ov_anim!=NULL;ov_anim = ov_anim->next)
+            for(SSAnimation* ov_anim=bf->animations.next;ov_anim!=NULL;ov_anim = ov_anim->next)
             {
                 if((ov_anim->model != NULL) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
                 {
-                    bone_frame_p ov_curr_bf = ov_anim->model->animations[ov_anim->current_animation].frames + ov_anim->current_frame;
-                    bone_frame_p ov_next_bf = ov_anim->model->animations[ov_anim->next_animation].frames + ov_anim->next_frame;
-                    ov_src_btag = ov_curr_bf->bone_tags + k;
-                    ov_next_btag = ov_next_bf->bone_tags + k;
+                    BoneFrame* ov_curr_bf = &ov_anim->model->animations[ov_anim->current_animation].frames[ov_anim->current_frame];
+                    BoneFrame* ov_next_bf = &ov_anim->model->animations[ov_anim->next_animation].frames[ov_anim->next_frame];
+                    ov_src_btag = &ov_curr_bf->bone_tags[k];
+                    ov_next_btag = &ov_next_bf->bone_tags[k];
                     ov_lerp = ov_anim->lerp;
                     break;
                 }
@@ -961,10 +960,10 @@ void Entity::updateCurrentBoneFrame(ss_bone_frame_s *bf, const btTransform* etr)
     /*
      * build absolute coordinate matrix system
      */
-    btag = bf->bone_tags;
+    btag = bf->bone_tags.data();
     btag->full_transform = btag->transform;
     btag++;
-    for(uint16_t k=1;k<curr_bf->bone_tag_count;k++,btag++)
+    for(uint16_t k=1;k<curr_bf->bone_tags.size();k++,btag++)
     {
         btag->full_transform = btag->parent->full_transform * btag->transform;
     }
@@ -1015,14 +1014,14 @@ btScalar Entity::findDistance(const Entity& other)
     return (m_transform.getOrigin() - other.m_transform.getOrigin()).length();
 }
 
-void Entity::doAnimCommands(struct ss_animation_s *ss_anim, int changing)
+void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
 {
     if((engine_world.anim_commands_count == 0) || (ss_anim->model == NULL))
     {
         return;  // If no anim commands
     }
 
-    animation_frame_p af  = ss_anim->model->animations + ss_anim->current_animation;
+    AnimationFrame* af  = &ss_anim->model->animations[ss_anim->current_animation];
     if(af->num_anim_commands <= 255)
     {
         uint32_t count        = af->num_anim_commands;
@@ -1049,7 +1048,7 @@ void Entity::doAnimCommands(struct ss_animation_s *ss_anim, int changing)
 
                 case TR_ANIMCOMMAND_KILL:
                     // This command executes ONLY at the end of animation.
-                    if(ss_anim->current_frame == af->frames_count - 1)
+                    if(ss_anim->current_frame == af->frames.size() - 1)
                     {
                         if(m_character)
                         {
@@ -1318,7 +1317,7 @@ void Entity::processSector()
 
 void Entity::setAnimation(int animation, int frame, int another_model)
 {
-    if(!m_bf.animations.model || (animation >= m_bf.animations.model->animation_count))
+    if(!m_bf.animations.model || (animation >= m_bf.animations.model->animations.size()))
     {
         return;
     }
@@ -1328,16 +1327,16 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     if(another_model >= 0)
     {
-        skeletal_model_p model = World_GetModelByID(&engine_world, another_model);
-        if((!model) || (animation >= model->animation_count)) return;
+        SkeletalModel* model = World_GetModelByID(&engine_world, another_model);
+        if((!model) || (animation >= model->animations.size())) return;
         m_bf.animations.model = model;
     }
 
-    animation_frame_p anim = &m_bf.animations.model->animations[animation];
+    AnimationFrame* anim = &m_bf.animations.model->animations[animation];
 
     m_bf.animations.lerp = 0.0;
-    frame %= anim->frames_count;
-    frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
+    frame %= anim->frames.size();
+    frame = (frame >= 0)?(frame):(anim->frames.size() - 1 + frame);
     m_bf.animations.period = 1.0 / 30.0;
 
     m_bf.animations.last_state = anim->state_id;
@@ -1358,14 +1357,14 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 }
 
 
-struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
+struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim)
 {
     if(state_change_anim >= 0)
     {
-        state_change_p ret = anim->state_change;
-        for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
+        StateChange* ret = anim->state_change.data();
+        for(uint16_t i=0;i<anim->state_change.size();i++,ret++)
         {
-            for(uint16_t j=0;j<ret->anim_dispatch_count;j++)
+            for(uint16_t j=0;j<ret->anim_dispatch.size();j++)
             {
                 if(ret->anim_dispatch[j].next_anim == state_change_anim)
                 {
@@ -1379,10 +1378,10 @@ struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim
 }
 
 
-struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
+struct StateChange *Anim_FindStateChangeByID(struct AnimationFrame *anim, uint32_t id)
 {
-    state_change_p ret = anim->state_change;
-    for(uint16_t i=0;i<anim->state_change_count;i++,ret++)
+    StateChange* ret = anim->state_change.data();
+    for(uint16_t i=0;i<anim->state_change.size();i++,ret++)
     {
         if(ret->id == id)
         {
@@ -1396,15 +1395,15 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 
 int Entity::getAnimDispatchCase(uint32_t id)
 {
-    animation_frame_p anim = m_bf.animations.model->animations + m_bf.animations.current_animation;
-    state_change_p stc = anim->state_change;
+    AnimationFrame* anim = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
+    StateChange* stc = anim->state_change.data();
 
-    for(uint16_t i=0;i<anim->state_change_count;i++,stc++)
+    for(uint16_t i=0;i<anim->state_change.size();i++,stc++)
     {
         if(stc->id == id)
         {
-            anim_dispatch_p disp = stc->anim_dispatch;
-            for(uint16_t j=0;j<stc->anim_dispatch_count;j++,disp++)
+            AnimDispatch* disp = stc->anim_dispatch.data();
+            for(uint16_t j=0;j<stc->anim_dispatch.size();j++,disp++)
             {
                 if((disp->frame_high >= disp->frame_low) && (m_bf.animations.current_frame >= disp->frame_low) && (m_bf.animations.current_frame <= disp->frame_high))// ||
                    //(disp->frame_high <  disp->frame_low) && ((bf.current_frame >= disp->frame_low) || (bf.current_frame <= disp->frame_high)))
@@ -1421,9 +1420,9 @@ int Entity::getAnimDispatchCase(uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void Entity::getNextFrame(ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+void Entity::getNextFrame(SSBoneFrame *bf, btScalar time, struct StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
 {
-    animation_frame_p curr_anim = bf->animations.model->animations + bf->animations.current_animation;
+    AnimationFrame* curr_anim = &bf->animations.model->animations[ bf->animations.current_animation ];
 
     *frame = (bf->animations.frame_time + time) / bf->animations.period;
     *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
@@ -1434,9 +1433,9 @@ void Entity::getNextFrame(ss_bone_frame_s *bf, btScalar time, struct state_chang
      */
     if(anim_flags == ANIM_LOOP_LAST_FRAME)
     {
-        if(*frame >= curr_anim->frames_count - 1)
+        if(*frame >= curr_anim->frames.size() - 1)
         {
-            *frame = curr_anim->frames_count - 1;
+            *frame = curr_anim->frames.size() - 1;
             *anim  = bf->animations.current_animation;                          // paranoid dublicate
         }
         return;
@@ -1449,9 +1448,9 @@ void Entity::getNextFrame(ss_bone_frame_s *bf, btScalar time, struct state_chang
     }
 
     /*
-     * Check next anim if frame >= frames_count
+     * Check next anim if frame >= frames.size()
      */
-    if(*frame >= curr_anim->frames_count)
+    if(*frame >= curr_anim->frames.size())
     {
         if(curr_anim->next_anim)
         {
@@ -1460,7 +1459,7 @@ void Entity::getNextFrame(ss_bone_frame_s *bf, btScalar time, struct state_chang
             return;
         }
 
-        *frame %= curr_anim->frames_count;
+        *frame %= curr_anim->frames.size();
         *anim   = bf->animations.current_animation;                             // paranoid dublicate
         return;
     }
@@ -1470,14 +1469,14 @@ void Entity::getNextFrame(ss_bone_frame_s *bf, btScalar time, struct state_chang
      */
     if(stc != NULL)
     {
-        anim_dispatch_p disp = stc->anim_dispatch;
-        for(uint16_t i=0;i<stc->anim_dispatch_count;i++,disp++)
+        AnimDispatch* disp = stc->anim_dispatch.data();
+        for(uint16_t i=0;i<stc->anim_dispatch.size();i++,disp++)
         {
             if((disp->frame_high >= disp->frame_low) && (*frame >= disp->frame_low) && (*frame <= disp->frame_high))
             {
                 *anim  = disp->next_anim;
                 *frame = disp->next_frame;
-                //*frame = (disp->next_frame + (*frame - disp->frame_low)) % bf->model->animations[disp->next_anim].frames_count;
+                //*frame = (disp->next_frame + (*frame - disp->frame_low)) % bf->model->animations[disp->next_anim].frames.size();
                 return;                                                         // anim was changed
             }
         }
@@ -1489,8 +1488,8 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 {
     if(m_bf.animations.model != NULL)
     {
-        animation_frame_p curr_af = m_bf.animations.model->animations + m_bf.animations.current_animation;
-        bone_frame_p curr_bf = curr_af->frames + m_bf.animations.current_frame;
+        AnimationFrame* curr_af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
+        BoneFrame* curr_bf = &curr_af->frames[ m_bf.animations.current_frame ];
 
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
@@ -1533,12 +1532,12 @@ int Entity::frame(btScalar time)
     int16_t frame, anim, ret = 0x00;
     long int t;
     btScalar dt;
-    animation_frame_p af;
-    state_change_p stc;
-    ss_animation_p ss_anim;
+    AnimationFrame* af;
+    StateChange* stc;
+    SSAnimation* ss_anim;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !(m_stateFlags & ENTITY_STATE_ACTIVE)  || !(m_stateFlags & ENTITY_STATE_ENABLED) ||
-       (m_bf.animations.model == NULL) || ((m_bf.animations.model->animation_count == 1) && (m_bf.animations.model->animations->frames_count == 1)))
+       (m_bf.animations.model == NULL) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
     {
         return 0;
     }
@@ -1550,7 +1549,7 @@ int Entity::frame(btScalar time)
     ghostUpdate();
 
     m_bf.animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+    stc = Anim_FindStateChangeByID(&ss_anim->model->animations[ss_anim->current_animation], ss_anim->next_state);
     getNextFrame(&m_bf, time, stc, &frame, &anim, ss_anim->anim_flags);
     if(ss_anim->current_animation != anim)
     {
@@ -1561,7 +1560,7 @@ int Entity::frame(btScalar time)
         doAnimMove(&anim, &frame);
 
         setAnimation(anim, frame);
-        stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+        stc = Anim_FindStateChangeByID(&ss_anim->model->animations[ss_anim->current_animation], ss_anim->next_state);
     }
     else if(ss_anim->current_frame != frame)
     {
@@ -1575,7 +1574,7 @@ int Entity::frame(btScalar time)
         doAnimMove(&anim, &frame);
     }
 
-    af = m_bf.animations.model->animations + m_bf.animations.current_animation;
+    af = &m_bf.animations.model->animations[ m_bf.animations.current_animation ];
     m_bf.animations.frame_time += time;
 
     t = (m_bf.animations.frame_time) / m_bf.animations.period;
@@ -1720,9 +1719,9 @@ void Entity::doWeaponFrame(btScalar time)
         btScalar dt;
         int t;
 
-        for(ss_animation_p ss_anim=m_bf.animations.next;ss_anim!=NULL;ss_anim=ss_anim->next)
+        for(SSAnimation* ss_anim=m_bf.animations.next;ss_anim!=NULL;ss_anim=ss_anim->next)
         {
-            if((ss_anim->model != NULL) && (ss_anim->model->animation_count > 4))
+            if((ss_anim->model != NULL) && (ss_anim->model->animations.size() > 4))
             {
                 switch(m_character->m_weaponCurrentState)
                 {
@@ -1743,7 +1742,7 @@ void Entity::doWeaponFrame(btScalar time)
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                         if(ss_anim->current_frame < t - 1)
                         {
@@ -1792,7 +1791,7 @@ void Entity::doWeaponFrame(btScalar time)
 
                     case WEAPON_STATE_FIRE_TO_IDLE:
                         // Yes, same animation, reverse frames order;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
@@ -1816,7 +1815,7 @@ void Entity::doWeaponFrame(btScalar time)
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                         if(ss_anim->current_frame < t - 1)
                         {
@@ -1839,7 +1838,7 @@ void Entity::doWeaponFrame(btScalar time)
                         else
                         {
                             ss_anim->frame_time = 0.0;
-                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
                             m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
@@ -1852,7 +1851,7 @@ void Entity::doWeaponFrame(btScalar time)
                             ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                             dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
                             ss_anim->lerp = dt / ss_anim->period;
-                            t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                            t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                             if(ss_anim->current_frame < t - 1)
                             {
@@ -1876,14 +1875,14 @@ void Entity::doWeaponFrame(btScalar time)
                             ss_anim->frame_time = 0.0;
                             ss_anim->current_animation = 0;
                             ss_anim->next_animation = ss_anim->current_animation;
-                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
                             ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
                             m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
 
                     case WEAPON_STATE_IDLE_TO_HIDE:
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
@@ -1903,7 +1902,7 @@ void Entity::doWeaponFrame(btScalar time)
                         break;
                 };
             }
-            else if((ss_anim->model != NULL) && (ss_anim->model->animation_count == 4))
+            else if((ss_anim->model != NULL) && (ss_anim->model->animations.size() == 4))
             {
                 switch(m_character->m_weaponCurrentState)
                 {
@@ -1924,7 +1923,7 @@ void Entity::doWeaponFrame(btScalar time)
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                         if(ss_anim->current_frame < t - 1)
                         {
@@ -1957,7 +1956,7 @@ void Entity::doWeaponFrame(btScalar time)
                         {
                             ss_anim->current_animation = 2;
                             ss_anim->next_animation = 2;
-                            ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
                             ss_anim->frame_time = 0.0;
                             m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_HIDE;
                         }
@@ -1973,7 +1972,7 @@ void Entity::doWeaponFrame(btScalar time)
 
                     case WEAPON_STATE_FIRE_TO_IDLE:
                         // Yes, same animation, reverse frames order;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
@@ -1997,7 +1996,7 @@ void Entity::doWeaponFrame(btScalar time)
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
                         ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                         if(ss_anim->current_frame < t - 1)
                         {
@@ -2020,7 +2019,7 @@ void Entity::doWeaponFrame(btScalar time)
                         else
                         {
                             ss_anim->frame_time = 0.0;
-                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
                             m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
@@ -2033,7 +2032,7 @@ void Entity::doWeaponFrame(btScalar time)
                             ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                             dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
                             ss_anim->lerp = dt / ss_anim->period;
-                            t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                            t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
                             if(ss_anim->current_frame < t - 1)
                             {
@@ -2057,7 +2056,7 @@ void Entity::doWeaponFrame(btScalar time)
                             ss_anim->frame_time = 0.0;
                             ss_anim->current_animation = 0;
                             ss_anim->next_animation = ss_anim->current_animation;
-                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
                             ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
                             m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
                         }
@@ -2065,7 +2064,7 @@ void Entity::doWeaponFrame(btScalar time)
 
                     case WEAPON_STATE_IDLE_TO_HIDE:
                         // Yes, same animation, reverse frames order;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
@@ -2135,8 +2134,7 @@ Entity::Entity()
     m_bf.animations.next_animation = 0;
     m_bf.animations.next_frame = 0;
     m_bf.animations.next = NULL;
-    m_bf.bone_tag_count = 0;
-    m_bf.bone_tags = 0;
+    m_bf.bone_tags.clear();
     m_bf.bb_max.setZero();
     m_bf.bb_min.setZero();
     m_bf.centre.setZero();
@@ -2163,7 +2161,7 @@ Entity::~Entity() {
 
     if(m_bt.ghostObjects)
     {
-        for(int i=0;i<m_bf.bone_tag_count;i++)
+        for(int i=0;i<m_bf.bone_tags.size();i++)
         {
             m_bt.ghostObjects[i]->setUserPointer(NULL);
             bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i]);
@@ -2176,7 +2174,7 @@ Entity::~Entity() {
 
     if(m_bt.shapes)
     {
-        for(uint16_t i=0;i<m_bf.bone_tag_count;i++)
+        for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
         {
             delete m_bt.shapes[i];
         }
@@ -2216,16 +2214,11 @@ Entity::~Entity() {
 
     m_self.reset();
 
-    if(m_bf.bone_tag_count)
-    {
-        free(m_bf.bone_tags);
-        m_bf.bone_tags = NULL;
-        m_bf.bone_tag_count = 0;
-    }
+    m_bf.bone_tags.clear();
 
-    for(ss_animation_p ss_anim=m_bf.animations.next;ss_anim!=NULL;)
+    for(SSAnimation* ss_anim=m_bf.animations.next;ss_anim!=NULL;)
     {
-        ss_animation_p ss_anim_next = ss_anim->next;
+        SSAnimation* ss_anim_next = ss_anim->next;
         ss_anim->next = NULL;
         free(ss_anim);
         ss_anim = ss_anim_next;

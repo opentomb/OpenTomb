@@ -43,13 +43,13 @@ struct vertex_array_attribute {
  * The vertex array manager is in charge of creating new vertex arrays and
  * switching between them.
  */
-class vertex_array_manager {
+class VertexArrayManager {
 public:
     /*!
      * Creates a new vertex array manager that matches the current renderer's
      * hardware capabilities.
      */
-    static vertex_array_manager *createManager();
+    static VertexArrayManager *createManager();
     
     /*!
      * Creates a new vertex array object for the given elements and attributes.

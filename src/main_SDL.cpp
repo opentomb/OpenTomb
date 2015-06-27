@@ -68,7 +68,7 @@ ALCcontext             *al_context     = NULL;
 int done = 0;
 btScalar time_scale = 1.0;
 
-btVector3 light_position = {255.0, 255.0, 8.0};
+btVector3 Lightosition = {255.0, 255.0, 8.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 EngineContainer* last_cont = NULL;
@@ -494,7 +494,7 @@ void ShowDebugInfo()
 {
     GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
-    light_position = engine_camera.m_pos;
+    Lightosition = engine_camera.m_pos;
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);

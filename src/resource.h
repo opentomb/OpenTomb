@@ -69,7 +69,7 @@
 #define LOG_ANIM_DISPATCHES 0
 
 class  VT_Level;
-struct base_mesh_s;
+struct BaseMesh;
 struct world_s;
 struct Room;
 struct room_sector_s;
@@ -80,26 +80,26 @@ struct bordered_texture_atlas_s;
 // additional _TR_ prefix. Functions which doesn't use specific TR structures
 // should NOT use such prefix!
 
-void Res_GenRBTrees(struct world_s *world);
-void Res_GenSpritesBuffer(struct world_s *world);
+void Res_GenRBTrees(world_s *world);
+void Res_GenSpritesBuffer(world_s *world);
 void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room);
-void Res_GenRoomCollision(struct world_s *world);
-void Res_GenRoomFlipMap(struct world_s *world);
-void Res_GenBaseItems(struct world_s *world);
-void Res_GenVBOs(struct world_s *world);
+void Res_GenRoomCollision(world_s *world);
+void Res_GenRoomFlipMap(world_s *world);
+void Res_GenBaseItems(world_s *world);
+void Res_GenVBOs(world_s *world);
 
-void     Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *room_tween);
+void     Res_Sector_GenTweens(std::shared_ptr<Room> room, sector_tween_s *room_tween);
 uint32_t Res_Sector_BiggestCorner(uint32_t v1,uint32_t v2,uint32_t v3,uint32_t v4);
-void     Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
-void     Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
+void     Res_Sector_SetTweenFloorConfig(sector_tween_s *tween);
+void     Res_Sector_SetTweenCeilingConfig(sector_tween_s *tween);
 int      Res_Sector_IsWall(room_sector_p ws, room_sector_p ns);
 
-void     Res_Poly_SortInMesh(struct base_mesh_s *mesh);
-bool     Res_Poly_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world);
+bool     Res_Poly_SetAnimTexture(polygon_s *polygon, uint32_t tex_index, world_s *world);
 
-void     Res_FixRooms(struct world_s *world);   // Fix start-up room states.
+void     Res_FixRooms(world_s *world);   // Fix start-up room states.
 
-struct   skeletal_model_s* Res_GetSkybox(struct world_s *world, uint32_t engine_version);
+struct SkeletalModel;
+SkeletalModel* Res_GetSkybox(world_s *world, uint32_t engine_version);
 
 // Create entity function from script, if exists.
 
@@ -128,23 +128,23 @@ void Res_AutoexecOpen(int engine_version);
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 
-void TR_GenWorld(struct world_s *world, class VT_Level *tr);
-void TR_GenMeshes(struct world_s *world, class VT_Level *tr);
-void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr);
-void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr);
-void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr);
-void TR_GenSkeletalModel(size_t model_id, struct skeletal_model_s *model, class VT_Level *tr);
-void TR_GenEntities(struct world_s *world, class VT_Level *tr);
-void TR_GenSprites(struct world_s *world, class VT_Level *tr);
-void TR_GenTextures(struct world_s *world, class VT_Level *tr);
-void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr);
-void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr);
-void TR_GenRooms(struct world_s *world, class VT_Level *tr);
-void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *world, class VT_Level *tr);
-void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr);
-void TR_GenBoxes(struct world_s *world, class VT_Level *tr);
-void TR_GenCameras(struct world_s *world, class VT_Level *tr);
-void TR_GenSamples(struct world_s *world, class VT_Level *tr);
+void TR_GenWorld(world_s *world, class VT_Level *tr);
+void TR_GenMeshes(world_s *world, class VT_Level *tr);
+void TR_GenMesh(world_s *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, class VT_Level *tr);
+void TR_GenRoomMesh(world_s *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr);
+void TR_GenSkeletalModels(world_s *world, class VT_Level *tr);
+void TR_GenSkeletalModel(size_t model_id, SkeletalModel *model, class VT_Level *tr);
+void TR_GenEntities(world_s *world, class VT_Level *tr);
+void TR_GenSprites(world_s *world, class VT_Level *tr);
+void TR_GenTextures(world_s *world, class VT_Level *tr);
+void TR_GenAnimCommands(world_s *world, class VT_Level *tr);
+void TR_GenAnimTextures(world_s *world, class VT_Level *tr);
+void TR_GenRooms(world_s *world, class VT_Level *tr);
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, world_s *world, class VT_Level *tr);
+void TR_GenRoomProperties(world_s *world, class VT_Level *tr);
+void TR_GenBoxes(world_s *world, class VT_Level *tr);
+void TR_GenCameras(world_s *world, class VT_Level *tr);
+void TR_GenSamples(world_s *world, class VT_Level *tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
@@ -153,7 +153,9 @@ void TR_color_to_arr(std::array<GLfloat, 4> &v, const tr5_colour_t &tr_c);
 
 // Functions for getting various parameters from legacy TR structs.
 
-void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame);
+struct BoneFrame;
+
+void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame* bone_frame);
 int      TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
 int      TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr);
@@ -162,6 +164,6 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
 // to native OpenTomb structs.
 
 int      TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr);
-void     TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index);
+void     TR_Sector_Calculate(world_s *world, class VT_Level *tr, long int room_index);
 
 #endif

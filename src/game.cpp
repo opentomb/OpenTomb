@@ -634,7 +634,7 @@ void Cam_FollowEntity(struct Camera *cam, std::shared_ptr<Entity> ent, btScalar 
     }
     else
     {
-        cam_pos = ent->m_transform * ent->m_bf.bone_tags->full_transform.getOrigin();
+        cam_pos = ent->m_transform * ent->m_bf.bone_tags.front().full_transform.getOrigin();
         cam_pos[2] += dz;
     }
 

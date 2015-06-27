@@ -6,11 +6,11 @@
 
 class VT_Level;
 struct polygon_s;
-struct base_mesh_s;
+struct BaseMesh;
 struct Room;
 struct world_s;
 struct Camera;
-struct ss_animation_s;
+struct SSAnimation;
 struct Entity;
 struct room_sector_s;
 struct CharacterCommand;
@@ -753,7 +753,7 @@ struct CharacterCommand;
 #define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
 
-int State_Control_Lara(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_anim);
+int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim);
 
 #endif
 

@@ -12,14 +12,14 @@
 
 struct polygon_s;
 struct Frustum;
-struct transparent_polygon_reference_s;
+struct TransparentPolygonReference;
 
 struct BSPFaceRef {
     BSPFaceRef *next = nullptr;
     btTransform transform;
-    const transparent_polygon_reference_s *const polygon;
+    const TransparentPolygonReference *const polygon;
     
-    BSPFaceRef(const btTransform& matrix, const struct transparent_polygon_reference_s *polygon)
+    BSPFaceRef(const btTransform& matrix, const struct TransparentPolygonReference *polygon)
         : transform(matrix)
         , polygon(polygon)
     {
@@ -48,7 +48,7 @@ private:
     void addPolygon(const std::unique_ptr<BSPNode> &root, BSPFaceRef *const p, polygon_s *transformed);
     
 public:
-    void addNewPolygonList(size_t count, const transparent_polygon_reference_s *p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f);
+    void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f);
 
     const std::unique_ptr<BSPNode>& root() const
     {

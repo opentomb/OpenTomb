@@ -19,8 +19,8 @@ struct Room;
 struct room_sector_s;
 struct obb_s;
 struct Character;
-struct ss_animation_s;
-struct ss_bone_frame_s;
+struct SSAnimation;
+struct SSBoneFrame;
 
 #define ENTITY_STATE_ENABLED                        (0x0001)    // Entity is enabled.
 #define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
@@ -120,7 +120,7 @@ struct Entity : public Object
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
     
-    ss_bone_frame_s m_bf;                 // current boneframe with full frame information
+    SSBoneFrame m_bf;                 // current boneframe with full frame information
     BtEntityData m_bt;
     btVector3 m_angles;
     btTransform m_transform; // GL transformation matrix
@@ -162,7 +162,7 @@ struct Entity : public Object
     void rebuildBV();
 
     int  getAnimDispatchCase(uint32_t id);
-    static void getNextFrame(ss_bone_frame_s *bf, btScalar time, state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+    static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
     int  frame(btScalar time);  // process frame + trying to change state
 
     void updateRotation();
@@ -172,8 +172,8 @@ struct Entity : public Object
 
     int  getSubstanceState();
 
-    static void updateCurrentBoneFrame(ss_bone_frame_s *bf, const btTransform *etr);
-    void doAnimCommands(ss_animation_s *ss_anim, int changing);
+    static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
+    void doAnimCommands(SSAnimation *ss_anim, int changing);
     void processSector();
     void setAnimation(int animation, int frame = 0, int another_model = -1);
     void moveForward(btScalar dist);
@@ -194,5 +194,5 @@ private:
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);
 
-struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
-struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
+struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim);
+struct StateChange *Anim_FindStateChangeByID(struct AnimationFrame *anim, uint32_t id);

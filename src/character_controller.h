@@ -296,7 +296,7 @@ struct InventoryNode
 
 
 struct Hair;
-struct ss_animation_s;
+struct SSAnimation;
 
 struct Character
 {
@@ -313,7 +313,7 @@ struct Character
     int                          m_currentWeapon = 0;
     int                          m_weaponCurrentState = 0;
     
-    int (*state_func)(std::shared_ptr<Entity> entity, ss_animation_s *ssAnim) = nullptr;
+    int (*state_func)(std::shared_ptr<Entity> entity, SSAnimation *ssAnim) = nullptr;
     
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_speedMult = DEFAULT_CHARACTER_SPEED_MULT;

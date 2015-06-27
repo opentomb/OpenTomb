@@ -240,7 +240,7 @@ int lua_DumpModel(lua_State * lua)
         id = lua_tointeger(lua, 1);
     }
 
-    skeletal_model_p sm = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm = World_GetModelByID(&engine_world, id);
     if(sm == NULL)
     {
         ConsoleInfo::instance().printf("wrong model id = %d", id);
@@ -249,7 +249,7 @@ int lua_DumpModel(lua_State * lua)
 
     for(int i=0;i<sm->mesh_count;i++)
     {
-        ConsoleInfo::instance().printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->id);
+        ConsoleInfo::instance().printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->m_id);
     }
 
     return 0;
@@ -341,7 +341,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
     }
 
     /// engine_world.skeletal_models[id] != World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
-    skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
+    SkeletalModel* model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
@@ -351,7 +351,7 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
     int size = lua_tointeger(lua, 2);
     if(size >= 0 && size < model->mesh_count)
     {
-        model->collision_map_size = size;
+        model->collision_map.resize(size);
     }
 
     return 0;
@@ -367,7 +367,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
     }
 
     /// engine_world.skeletal_models[id] != World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
-    skeletal_model_p model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
+    SkeletalModel* model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
@@ -1285,7 +1285,7 @@ int lua_SetStateChangeRange(lua_State * lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    skeletal_model_p model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = World_GetModelByID(&engine_world, id);
 
     if(model == NULL)
     {
@@ -1299,18 +1299,18 @@ int lua_SetStateChangeRange(lua_State * lua)
     int frame_low = lua_tointeger(lua, 5);
     int frame_high = lua_tointeger(lua, 6);
 
-    if((anim < 0) || (anim + 1 > model->animation_count))
+    if((anim < 0) || (anim + 1 > model->animations.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
     }
 
-    animation_frame_p af = model->animations + anim;
-    for(uint16_t i=0;i<af->state_change_count;i++)
+    AnimationFrame* af = &model->animations[anim];
+    for(uint16_t i=0;i<af->state_change.size();i++)
     {
         if(af->state_change[i].id == (uint32_t)state)
         {
-            if((dispatch >= 0) && (dispatch < af->state_change[i].anim_dispatch_count))
+            if((dispatch >= 0) && (dispatch < af->state_change[i].anim_dispatch.size()))
             {
                 af->state_change[i].anim_dispatch[dispatch].frame_low = frame_low;
                 af->state_change[i].anim_dispatch[dispatch].frame_high = frame_high;
@@ -1343,14 +1343,14 @@ int lua_GetAnimCommandTransform(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     int anim = lua_tointeger(lua, 2);
     int frame = lua_tointeger(lua, 3);
-    skeletal_model_p model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
-    if((anim < 0) || (anim + 1 > model->animation_count))
+    if((anim < 0) || (anim + 1 > model->animations.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
@@ -1358,10 +1358,10 @@ int lua_GetAnimCommandTransform(lua_State * lua)
 
     if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
     {
-        frame = (int)model->animations[anim].frames_count + frame;
+        frame = (int)model->animations[anim].frames.size() + frame;
     }
 
-    if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
+    if((frame < 0) || (frame + 1 > model->animations[anim].frames.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return 0;
@@ -1389,14 +1389,14 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     int anim = lua_tointeger(lua, 2);
     int frame = lua_tointeger(lua, 3);
-    skeletal_model_p model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = World_GetModelByID(&engine_world, id);
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return 0;
     }
 
-    if((anim < 0) || (anim + 1 > model->animation_count))
+    if((anim < 0) || (anim + 1 > model->animations.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return 0;
@@ -1404,10 +1404,10 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 
     if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
     {
-        frame = (int)model->animations[anim].frames_count + frame;
+        frame = (int)model->animations[anim].frames.size() + frame;
     }
 
-    if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
+    if((frame < 0) || (frame + 1 > model->animations[anim].frames.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_FRAME_NUMBER, frame);
         return 0;
@@ -1924,7 +1924,7 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
     }
 
     int bone_id = lua_tointeger(lua, 2);
-    if((bone_id < 0) || (bone_id >= ent->m_bf.bone_tag_count))
+    if((bone_id < 0) || (bone_id >= ent->m_bf.bone_tags.size()))
     {
         ConsoleInfo::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return 0;
@@ -1947,7 +1947,7 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    skeletal_model_p model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = World_GetModelByID(&engine_world, id);
 
     if(model == NULL)
     {
@@ -1987,7 +1987,7 @@ int lua_GetEntityAnim(lua_State * lua)
 
     lua_pushinteger(lua, ent->m_bf.animations.current_animation);
     lua_pushinteger(lua, ent->m_bf.animations.current_frame);
-    lua_pushinteger(lua, ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames_count);
+    lua_pushinteger(lua, ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames.size());
 
     return 3;
 }
@@ -2901,7 +2901,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->m_bf.bone_tag_count);
+    lua_pushinteger(lua, ent->m_bf.bone_tags.size());
     return 1;
 }
 
@@ -2917,12 +2917,12 @@ int lua_SetEntityMeshswap(lua_State * lua)
     int id_src = lua_tointeger(lua, 2);
 
     std::shared_ptr<Entity>         ent_dest;
-    skeletal_model_p model_src;
+    SkeletalModel* model_src;
 
     ent_dest   = World_GetEntityByID(&engine_world, id_dest);
     model_src  = World_GetModelByID(&engine_world, id_src);
 
-    int meshes_to_copy = (ent_dest->m_bf.bone_tag_count > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->m_bf.bone_tag_count);
+    int meshes_to_copy = (ent_dest->m_bf.bone_tags.size() > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->m_bf.bone_tags.size());
 
     for(int i = 0; i < meshes_to_copy; i++)
     {
@@ -2942,7 +2942,7 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    skeletal_model_p sm = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm = World_GetModelByID(&engine_world, id);
     if(sm != NULL)
     {
         int bone = lua_tointeger(lua, 2);
@@ -2972,7 +2972,7 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    skeletal_model_p sm = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm = World_GetModelByID(&engine_world, id);
     if(sm != NULL)
     {
         int bone = lua_tointeger(lua, 2);
@@ -3002,7 +3002,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    skeletal_model_p sm1 = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm1 = World_GetModelByID(&engine_world, id);
     if(sm1 == NULL)
     {
         ConsoleInfo::instance().printf("can not find model with id = %d", id);
@@ -3010,7 +3010,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     }
 
     id = lua_tointeger(lua, 2);
-    skeletal_model_p sm2 = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm2 = World_GetModelByID(&engine_world, id);
     if(sm2 == NULL)
     {
         ConsoleInfo::instance().printf("can not find model with id = %d", id);
@@ -3044,7 +3044,7 @@ int lua_PushEntityBody(lua_State *lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->m_bf.bone_tag_count) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if((ent != NULL) && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar h_force = lua_tonumber(lua, 3);
         btScalar v_force = lua_tonumber(lua, 4);
@@ -3091,7 +3091,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
     btScalar mass;
 
-    if((ent != NULL) && (ent->m_bf.bone_tag_count >= body_number))
+    if((ent != NULL) && (ent->m_bf.bone_tags.size() >= body_number))
     {
         for(int i=0; i<body_number; i++)
         {
@@ -3170,7 +3170,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
     std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
     int body_number = lua_tointeger(lua, 2);
 
-    if((ent != NULL) && (body_number < ent->m_bf.bone_tag_count) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if((ent != NULL) && (body_number < ent->m_bf.bone_tags.size()) && (ent->m_bt.bt_body[body_number] != NULL) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         btScalar t    = ent->m_angles[0] * M_PI / 180.0;
         btScalar ang1 = sinf(t);
@@ -3690,65 +3690,66 @@ int lua_genUVRotateAnimation(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    skeletal_model_p model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = World_GetModelByID(&engine_world, id);
 
-    if(model != NULL)
+    if(!model)
+        return 0;
+
+    if(model->mesh_tree.front().mesh_base->m_transparencyPolygons.empty())
+        return 0;
+    polygon_p p = &model->mesh_tree.front().mesh_base->m_transparencyPolygons.front();
+    if(p->anim_id != 0)
+        return 0;
+
+    engine_world.anim_sequences_count++;
+    engine_world.anim_sequences = (AnimSeq*)realloc(engine_world.anim_sequences, engine_world.anim_sequences_count * sizeof(AnimSeq));
+    AnimSeq* seq = engine_world.anim_sequences + engine_world.anim_sequences_count - 1;
+
+    // Fill up new sequence with frame list.
+    seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
+    seq->frame_lock        = false; // by default anim is playing
+    seq->uvrotate          = true;
+    seq->reverse_direction = false; // Needed for proper reverse-type start-up.
+    seq->frame_rate        = 0.025;  // Should be passed as 1 / FPS.
+    seq->frame_time        = 0.0;   // Reset frame time to initial state.
+    seq->current_frame     = 0;     // Reset current frame to zero.
+    seq->frames.resize(16);
+    seq->frame_list.resize(16);
+    seq->frame_list[0] = 0;
+
+    btScalar v_min, v_max;
+    v_min = v_max = p->vertices[0].tex_coord[1];
+    for(size_t j=1; j<p->vertices.size(); j++)
     {
-        polygon_p p=model->mesh_tree->mesh_base->transparency_polygons;
-        if((p != NULL) && (p->anim_id == 0))
+        if(p->vertices[j].tex_coord[1] > v_max)
         {
-            engine_world.anim_sequences_count++;
-            engine_world.anim_sequences = (anim_seq_p)realloc(engine_world.anim_sequences, engine_world.anim_sequences_count * sizeof(anim_seq_t));
-            anim_seq_p seq = engine_world.anim_sequences + engine_world.anim_sequences_count - 1;
+            v_max = p->vertices[j].tex_coord[1];
+        }
+        if(p->vertices[j].tex_coord[1] < v_min)
+        {
+            v_min = p->vertices[j].tex_coord[1];
+        }
+    }
 
-            // Fill up new sequence with frame list.
-            seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
-            seq->frame_lock        = false; // by default anim is playing
-            seq->uvrotate          = true;
-            seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-            seq->frame_rate        = 0.025;  // Should be passed as 1 / FPS.
-            seq->frame_time        = 0.0;   // Reset frame time to initial state.
-            seq->current_frame     = 0;     // Reset current frame to zero.
-            seq->frames_count      = 16;
-            seq->frame_list        = (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
-            seq->frame_list[0]     = 0;
-            seq->frames            = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
+    seq->uvrotate_max = 0.5 * (v_max - v_min);
+    seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames.size();
+    for(uint16_t j=0;j<seq->frames.size();j++)
+    {
+        seq->frames[j].tex_ind = p->tex_index;
+        seq->frames[j].mat[0] = 1.0;
+        seq->frames[j].mat[1] = 0.0;
+        seq->frames[j].mat[2] = 0.0;
+        seq->frames[j].mat[3] = 1.0;
+        seq->frames[j].move[0] = 0.0;
+        seq->frames[j].move[1] = -((btScalar)j * seq->uvrotate_speed);
+    }
 
-            btScalar v_min, v_max;
-            v_min = v_max = p->vertices[0].tex_coord[1];
-            for(size_t j=1; j<p->vertices.size(); j++)
-            {
-                if(p->vertices[j].tex_coord[1] > v_max)
-                {
-                    v_max = p->vertices[j].tex_coord[1];
-                }
-                if(p->vertices[j].tex_coord[1] < v_min)
-                {
-                    v_min = p->vertices[j].tex_coord[1];
-                }
-            }
-
-            seq->uvrotate_max = 0.5 * (v_max - v_min);
-            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
-            for(uint16_t j=0;j<seq->frames_count;j++)
-            {
-                seq->frames[j].tex_ind = p->tex_index;
-                seq->frames[j].mat[0] = 1.0;
-                seq->frames[j].mat[1] = 0.0;
-                seq->frames[j].mat[2] = 0.0;
-                seq->frames[j].mat[3] = 1.0;
-                seq->frames[j].move[0] = 0.0;
-                seq->frames[j].move[1] = -((btScalar)j * seq->uvrotate_speed);
-            }
-
-            for(;p!=NULL;p=p->next)
-            {
-                p->anim_id = engine_world.anim_sequences_count;
-                for(size_t j=0; j<p->vertices.size(); j++)
-                {
-                    p->vertices[j].tex_coord[1] = v_min + 0.5 * (p->vertices[j].tex_coord[1] - v_min) + seq->uvrotate_max;
-                }
-            }
+    for(;p!=NULL;p=p->next)
+    {
+        p->anim_id = engine_world.anim_sequences_count;
+        for(size_t j=0; j<p->vertices.size(); j++)
+        {
+            p->vertices[j].tex_coord[1] = v_min + 0.5 * (p->vertices[j].tex_coord[1] - v_min) + seq->uvrotate_max;
         }
     }
 

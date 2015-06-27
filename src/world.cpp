@@ -44,12 +44,7 @@ void Room_Empty(std::shared_ptr<Room> room)
 
     room->frustum.clear();
 
-    if(room->mesh)
-    {
-        BaseMesh_Clear(room->mesh);
-        free(room->mesh);
-        room->mesh = NULL;
-    }
+    room->mesh.reset();
 
     if(!room->static_mesh.empty())
     {
@@ -376,8 +371,7 @@ void World_Prepare(world_p world)
     world->id = 0;
     world->name = NULL;
     world->type = 0x00;
-    world->meshes = NULL;
-    world->meshes_count = 0;
+    world->meshes.clear();
     world->sprites = NULL;
     world->sprites_count = 0;
     world->rooms.clear();
@@ -508,7 +502,7 @@ void World_Empty(world_p world)
     {
         for(uint32_t i=0;i<world->skeletal_model_count;i++)
         {
-            SkeletalModel_Clear(world->skeletal_models+i);
+            world->skeletal_models[i].clear();
         }
         free(world->skeletal_models);
         world->skeletal_models = NULL;
@@ -517,16 +511,7 @@ void World_Empty(world_p world)
 
     /*mesh empty*/
 
-    if(world->meshes_count)
-    {
-        for(uint32_t i=0;i<world->meshes_count;i++)
-        {
-            BaseMesh_Clear(world->meshes+i);
-        }
-        free(world->meshes);
-        world->meshes = NULL;
-        world->meshes_count = 0;
-    }
+    world->meshes.clear();
 
     if(world->tex_count)
     {
@@ -546,14 +531,7 @@ void World_Empty(world_p world)
     {
         for(uint32_t i=0;i < world->anim_sequences_count;i++)
         {
-            if(world->anim_sequences[i].frames_count != 0)
-            {
-                free(world->anim_sequences[i].frame_list);
-                world->anim_sequences[i].frame_list = NULL;
-                free(world->anim_sequences[i].frames);
-                world->anim_sequences[i].frames = NULL;
-            }
-            world->anim_sequences[i].frames_count = 0;
+            world->anim_sequences[i].frames.clear();
         }
         world->anim_sequences_count = 0;
         free(world->anim_sequences);
@@ -578,7 +556,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3*
 {
     if(!engine_world.entity_tree.empty())
     {
-        skeletal_model_p model = World_GetModelByID(&engine_world, model_id);
+        SkeletalModel* model = World_GetModelByID(&engine_world, model_id);
         if(model != NULL)
         {
             std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
@@ -651,7 +629,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3*
             ent->m_inertiaAngular[1] = 0.0;
             ent->m_moveType          = 0;
 
-            SSBoneFrame_CreateFromModel(&ent->m_bf, model);
+            ent->m_bf.fromModel(model);
             ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
             ent->genEntityRigidBody();
 
@@ -1053,14 +1031,14 @@ int World_AddEntity(world_p world, std::shared_ptr<Entity> entity)
 
 int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
-    skeletal_model_p model = World_GetModelByID(world, model_id);
+    SkeletalModel* model = World_GetModelByID(world, model_id);
     if((model == NULL) || (world->items_tree.empty()))
     {
         return 0;
     }
 
-    ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
-    SSBoneFrame_CreateFromModel(bf, model);
+    std::unique_ptr<SSBoneFrame> bf(new SSBoneFrame());
+    bf->fromModel(model);
 
     auto item = std::make_shared<base_item_s>();
     item->id = item_id;
@@ -1072,7 +1050,7 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     {
         strncpy(item->name, name, 64);
     }
-    item->bf = bf;
+    item->bf = std::move(bf);
 
     world->items_tree[item->id] = item;
 
@@ -1087,7 +1065,7 @@ int World_DeleteItem(world_p world, uint32_t item_id)
 }
 
 
-struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id)
+struct SkeletalModel* World_GetModelByID(world_p w, uint32_t id)
 {
     long int i, min, max;
 
@@ -1128,9 +1106,9 @@ struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id)
  * find sprite by ID.
  * not a binary search - sprites may be not sorted by ID
  */
-struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world)
+struct Sprite* World_GetSpriteByID(unsigned int ID, world_p world)
 {
-    sprite_p sp = world->sprites;
+    Sprite* sp = world->sprites;
     for(uint32_t i=0;i<world->sprites_count;i++,sp++)
     {
         if(sp->id == ID)
@@ -1203,6 +1181,5 @@ void Room_BuildOverlappedRoomsList(std::shared_ptr<Room> room)
 }
 
 base_item_s::~base_item_s() {
-    free(bf->bone_tags);
-    free(bf);
+    bf->bone_tags.clear();
 }

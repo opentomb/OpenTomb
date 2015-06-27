@@ -44,7 +44,7 @@
 
 #define OSCILLATE_HANG_USE 0
 
-void ent_stop_traverse(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_stop_traverse(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -59,7 +59,7 @@ void ent_stop_traverse(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int 
     }
 }
 
-void ent_set_on_floor(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_set_on_floor(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -70,7 +70,7 @@ void ent_set_on_floor(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int s
     }
 }
 
-void ent_set_turn_fast(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_set_turn_fast(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -79,10 +79,10 @@ void ent_set_turn_fast(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int 
     }
 }
 
-void ent_set_on_floor_after_climb(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_set_on_floor_after_climb(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
-    animation_frame_p af = ss_anim->model->animations + ss_anim->current_animation;
-    if(ss_anim->current_frame >= af->frames_count - 1)
+    AnimationFrame* af = &ss_anim->model->animations[ ss_anim->current_animation ];
+    if(ss_anim->current_frame >= af->frames.size() - 1)
     {
         auto move = ent->m_transform * ent->m_bf.bone_tags[0].full_transform.getOrigin();
         ent->setAnimation(af->next_anim->id, af->next_frame);
@@ -98,7 +98,7 @@ void ent_set_on_floor_after_climb(std::shared_ptr<Entity> ent, ss_animation_p ss
     }
 }
 
-void ent_set_underwater(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_set_underwater(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -107,7 +107,7 @@ void ent_set_underwater(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int
     }
 }
 
-void ent_set_free_falling(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_set_free_falling(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -116,7 +116,7 @@ void ent_set_free_falling(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, i
     }
 }
 
-void ent_set_cmd_slide(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_set_cmd_slide(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -125,7 +125,7 @@ void ent_set_cmd_slide(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int 
     }
 }
 
-void ent_correct_diving_angle(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_correct_diving_angle(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -135,7 +135,7 @@ void ent_correct_diving_angle(std::shared_ptr<Entity> ent, ss_animation_p ss_ani
     }
 }
 
-void ent_to_on_water(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_to_on_water(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -146,7 +146,7 @@ void ent_to_on_water(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int st
     }
 }
 
-void ent_climb_out_of_water(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_climb_out_of_water(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -159,7 +159,7 @@ void ent_climb_out_of_water(std::shared_ptr<Entity> ent, ss_animation_p ss_anim,
     }
 }
 
-void ent_to_edge_climb(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_to_edge_climb(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -173,7 +173,7 @@ void ent_to_edge_climb(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int 
     }
 }
 
-void ent_to_monkey_swing(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_to_monkey_swing(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -184,7 +184,7 @@ void ent_to_monkey_swing(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, in
     }
 }
 
-void ent_crawl_to_climb(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int state)
+void ent_crawl_to_climb(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int state)
 {
     if(state == 0x02)
     {
@@ -210,7 +210,7 @@ void ent_crawl_to_climb(std::shared_ptr<Entity> ent, ss_animation_p ss_anim, int
 /**
  * Current animation != current state - use original TR state concept!
  */
-int State_Control_Lara(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_anim)
+int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
 {
     int i;
     btVector3& pos = ent->m_transform.getOrigin();
@@ -235,7 +235,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_an
     Character_UpdateCurrentHeight(ent);
 
     int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point[2] - curr_fc->floor_point[2] < ent->m_character->m_height - LARA_HANG_VERTICAL_EPSILON));
-    int8_t last_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count <= ss_anim->current_frame + 1;
+    int8_t last_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() <= ss_anim->current_frame + 1;
 
     if(resp->kill)   // Stop any music, if Lara is dead.
     {
@@ -1186,7 +1186,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_an
             {
                 if(ent->m_bt.no_fix_all == 0x00)
                 {
-                    int frames_count = ss_anim->model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames_count;
+                    int frames_count = ss_anim->model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size();
                     int frames_count2 = (frames_count + 1) / 2;
                     if((ss_anim->current_frame >= 0) && (ss_anim->current_frame <= frames_count2))
                     {
@@ -1401,7 +1401,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_an
             ss_anim->onFrame = ent_stop_traverse;
             cmd->rot[0] = 0.0;
             ent->m_character->m_camFollowCenter = 64;
-            i = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+            i = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
             if((cmd->action == 0) || !(0x01 & Character_CheckTraverse(ent, ent->m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
             {
@@ -1488,7 +1488,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct ss_animation_s *ss_an
             ss_anim->onFrame = ent_stop_traverse;
             cmd->rot[0] = 0.0;
             ent->m_character->m_camFollowCenter = 64;
-            i = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+            i = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
             if((cmd->action == 0) || !(0x02 & Character_CheckTraverse(ent, ent->m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
             {

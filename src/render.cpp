@@ -60,7 +60,7 @@ void Render_InitGlobals()
 void Render_DoShaders()
 {
     renderer.shader_manager = new shader_manager();
-    renderer.vertex_array_manager = vertex_array_manager::createManager();
+    renderer.vertex_array_manager = VertexArrayManager::createManager();
 }
 
 
@@ -118,9 +118,9 @@ void Render_SkyBox(const btTransform& modelViewProjectionMatrix)
         glDepthMask(GL_FALSE);
         btTransform tr;
         tr.setIdentity();
-        tr.getOrigin() = renderer.cam->m_pos + renderer.world->sky_box->animations->frames->bone_tags->offset;
+        tr.getOrigin() = renderer.cam->m_pos + renderer.world->sky_box->animations.front().frames.front().bone_tags.front().offset;
         tr.getOrigin().setW(1);
-        tr.setRotation( renderer.world->sky_box->animations->frames->bone_tags->qrotate );
+        tr.setRotation( renderer.world->sky_box->animations.front().frames.front().bone_tags.front().qrotate );
         btTransform fullView = modelViewProjectionMatrix * tr;
 
         const unlit_tinted_shader_description *shader = renderer.shader_manager->getStaticMeshShader();
@@ -132,7 +132,7 @@ void Render_SkyBox(const btTransform& modelViewProjectionMatrix)
         GLfloat tint[] = { 1, 1, 1, 1 };
         glUniform4fvARB(shader->tint_mult, 1, tint);
 
-        Render_Mesh(renderer.world->sky_box->mesh_tree->mesh_base);
+        Render_Mesh(renderer.world->sky_box->mesh_tree.front().mesh_base);
         glDepthMask(GL_TRUE);
     }
 }
@@ -140,32 +140,32 @@ void Render_SkyBox(const btTransform& modelViewProjectionMatrix)
 /**
  * Opaque meshes drawing
  */
-void Render_Mesh(struct base_mesh_s *mesh)
+void Render_Mesh(const std::shared_ptr<BaseMesh>& mesh)
 {
-    if(mesh->num_animated_elements > 0 || mesh->num_alpha_animated_elements > 0)
+    if(!mesh->m_allAnimatedElements.empty())
     {
         // Respecify the tex coord buffer
-        glBindBufferARB(GL_ARRAY_BUFFER, mesh->animated_vbo_texcoord_array);
+        glBindBufferARB(GL_ARRAY_BUFFER, mesh->m_animatedVboTexCoordArray);
         // Tell OpenGL to discard the old values
-        glBufferDataARB(GL_ARRAY_BUFFER, mesh->animated_vertex_count * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
+        glBufferDataARB(GL_ARRAY_BUFFER, mesh->m_animatedVertices.size() * sizeof(GLfloat [2]), 0, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
         GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
         size_t offset = 0;
-        for(const polygon_s& p : mesh->polygons)
+        for(const polygon_s& p : mesh->m_polygons)
         {
             if (p.anim_id == 0 || Polygon_IsBroken(&p))
             {
                 continue;
             }
-             anim_seq_p seq = engine_world.anim_sequences + p.anim_id - 1;
+             AnimSeq* seq = engine_world.anim_sequences + p.anim_id - 1;
 
             if (seq->uvrotate) {
                 printf("?");
             }
 
-            uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames_count;
-            tex_frame_p tf = seq->frames + frame;
+            uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames.size();
+            TexFrame* tf = &seq->frames[frame];
             for(const vertex_s& vert : p.vertices)
             {
                 const auto& v = vert.tex_coord;
@@ -177,32 +177,32 @@ void Render_Mesh(struct base_mesh_s *mesh)
         }
         glUnmapBufferARB(GL_ARRAY_BUFFER);
 
-        if (mesh->num_animated_elements > 0)
+        if (mesh->m_animatedElementCount > 0)
         {
-            mesh->animated_vertex_array->use();
+            mesh->m_animatedVertexArray->use();
 
             glBindTexture(GL_TEXTURE_2D, renderer.world->textures[0]);
-            glDrawElements(GL_TRIANGLES, mesh->num_animated_elements, GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, mesh->m_animatedElementCount, GL_UNSIGNED_INT, 0);
         }
     }
 
-    if(!mesh->vertices.empty())
+    if(!mesh->m_vertices.empty())
     {
-        mesh->main_vertex_array->use();
+        mesh->m_mainVertexArray->use();
 
         const uint32_t *elementsbase = NULL;
 
         unsigned long offset = 0;
-        for(uint32_t texture = 0; texture < mesh->num_texture_pages; texture++)
+        for(uint32_t texture = 0; texture < mesh->m_texturePageCount; texture++)
         {
-            if(mesh->element_count_per_texture[texture] == 0)
+            if(mesh->m_elementsPerTexture[texture] == 0)
             {
                 continue;
             }
 
             glBindTexture(GL_TEXTURE_2D, renderer.world->textures[texture]);
-            glDrawElements(GL_TRIANGLES, mesh->element_count_per_texture[texture], GL_UNSIGNED_INT, elementsbase + offset);
-            offset += mesh->element_count_per_texture[texture];
+            glDrawElements(GL_TRIANGLES, mesh->m_elementsPerTexture[texture], GL_UNSIGNED_INT, elementsbase + offset);
+            offset += mesh->m_elementsPerTexture[texture];
         }
     }
 }
@@ -217,7 +217,7 @@ void Render_PolygonTransparency(uint16_t &currentTransparency, const struct BSPF
     // Note that modes above 2 aren't explicitly used in TR textures, only for
     // internal particle processing. Theoretically it's still possible to use
     // them if you will force type via TRTextur utility.
-    const struct transparent_polygon_reference_s *ref = bsp_ref->polygon;
+    const struct TransparentPolygonReference *ref = bsp_ref->polygon;
     const struct polygon_s *p = ref->polygon;
     if (currentTransparency != p->transparency)
     {
@@ -360,7 +360,7 @@ void Render_BSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<
 
 void Render_UpdateAnimTextures()                                                // This function is used for updating global animated texture frame
 {
-    anim_seq_p seq = engine_world.anim_sequences;
+    AnimSeq* seq = engine_world.anim_sequences;
     for(uint16_t i=0;i<engine_world.anim_sequences_count;i++,seq++)
     {
         if(seq->frame_lock)
@@ -391,23 +391,23 @@ void Render_UpdateAnimTextures()                                                
                     }
                     else
                     {
-                        if(seq->current_frame == seq->frames_count - 1)
+                        if(seq->current_frame == seq->frames.size() - 1)
                         {
                             seq->current_frame--;
                             seq->reverse_direction = true;
                         }
-                        else if(seq->current_frame < seq->frames_count - 1)
+                        else if(seq->current_frame < seq->frames.size() - 1)
                         {
                             seq->current_frame++;
                         }
-                        seq->current_frame %= seq->frames_count;                ///@PARANOID
+                        seq->current_frame %= seq->frames.size();                ///@PARANOID
                     }
                     break;
 
                 case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
                 case TR_ANIMTEXTURE_BACKWARD:
                     seq->current_frame++;
-                    seq->current_frame %= seq->frames_count;
+                    seq->current_frame %= seq->frames.size();
                     break;
             };
         }
@@ -417,11 +417,11 @@ void Render_UpdateAnimTextures()                                                
 /**
  * skeletal model drawing
  */
-void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btTransform& mvMatrix, const btTransform& mvpMatrix)
+void Render_SkeletalModel(const lit_shader_description *shader, struct SSBoneFrame *bframe, const btTransform& mvMatrix, const btTransform& mvpMatrix)
 {
-    ss_bone_tag_p btag = bframe->bone_tags;
+    SSBoneTag* btag = bframe->bone_tags.data();
 
-    for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+    for(uint16_t i=0; i<bframe->bone_tags.size(); i++,btag++)
     {
         btTransform mvTransform = mvMatrix * btag->full_transform;
         btScalar glMatrix[16];
@@ -442,14 +442,14 @@ void Render_SkeletalModel(const lit_shader_description *shader, struct ss_bone_f
 
 void Render_SkeletalModelSkin(const struct lit_shader_description *shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix)
 {
-    ss_bone_tag_p btag = ent->m_bf.bone_tags;
+    SSBoneTag* btag = ent->m_bf.bone_tags.data();
 
     btScalar glMatrix[16+16];
     pMatrix.getOpenGLMatrix(glMatrix);
 
     glUniformMatrix4fvARB(shader->projection, 1, false, glMatrix);
 
-    for(uint16_t i=0; i<ent->m_bf.bone_tag_count; i++,btag++)
+    for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++,btag++)
     {
         btTransform mvTransforms = mvMatrix * btag->full_transform;
         mvTransforms.getOpenGLMatrix(glMatrix+0);
@@ -480,7 +480,7 @@ void Render_DynamicEntitySkin(const struct lit_shader_description *shader, std::
     pMatrix.getOpenGLMatrix(glMatrix);
     glUniformMatrix4fvARB(shader->projection, 1, false, glMatrix);
 
-    for(uint16_t i=0; i<ent->m_bf.bone_tag_count; i++)
+    for(uint16_t i=0; i<ent->m_bf.bone_tags.size(); i++)
     {
         btTransform mvTransforms[2];
 
@@ -490,9 +490,9 @@ void Render_DynamicEntitySkin(const struct lit_shader_description *shader, std::
         mvTransforms[0] = mvMatrix * tr0;
 
         // Calculate parent transform
-        struct ss_bone_tag_s &btag = ent->m_bf.bone_tags[i];
+        struct SSBoneTag &btag = ent->m_bf.bone_tags[i];
         bool foundParentTransform = false;
-        for (int j = 0; j < ent->m_bf.bone_tag_count; j++) {
+        for (int j = 0; j < ent->m_bf.bone_tags.size(); j++) {
             if (&(ent->m_bf.bone_tags[j]) == btag.parent) {
                 tr1 = ent->m_bt.bt_body[j]->getWorldTransform();
                 foundParentTransform = true;
@@ -546,7 +546,7 @@ const lit_shader_description *render_setupEntityLight(std::shared_ptr<Entity> en
         }
 
         GLenum current_light_number = 0;
-        light_s *current_light = NULL;
+        Light *current_light = NULL;
 
         std::array<GLfloat,3> positions[MAX_NUM_LIGHTS];
         std::array<GLfloat,4> colors[MAX_NUM_LIGHTS];
@@ -597,7 +597,7 @@ const lit_shader_description *render_setupEntityLight(std::shared_ptr<Entity> en
         glUseProgramObjectARB(shader->program);
         glUniform4fvARB(shader->light_ambient, 1, ambient_component.data());
         glUniform4fvARB(shader->light_color, current_light_number, reinterpret_cast<const GLfloat*>(colors));
-        glUniform3fvARB(shader->light_position, current_light_number, reinterpret_cast<const GLfloat*>(positions));
+        glUniform3fvARB(shader->Lightosition, current_light_number, reinterpret_cast<const GLfloat*>(positions));
         glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
         glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
     } else {
@@ -617,7 +617,7 @@ void Render_Entity(std::shared_ptr<Entity> entity, const btTransform& modelViewM
     // Calculate lighting
     const lit_shader_description *shader = render_setupEntityLight(entity, modelViewMatrix, false);
 
-    if(entity->m_bf.animations.model && entity->m_bf.animations.model->animations)
+    if(entity->m_bf.animations.model && !entity->m_bf.animations.model->animations.empty())
     {
         // base frame offset
         if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
@@ -646,9 +646,9 @@ void Render_Entity(std::shared_ptr<Entity> entity, const btTransform& modelViewM
 
 void Render_DynamicEntity(const struct lit_shader_description *shader, std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix)
 {
-    ss_bone_tag_p btag = entity->m_bf.bone_tags;
+    SSBoneTag* btag = entity->m_bf.bone_tags.data();
 
-    for(uint16_t i=0; i<entity->m_bf.bone_tag_count; i++,btag++)
+    for(uint16_t i=0; i<entity->m_bf.bone_tags.size(); i++,btag++)
     {
         btTransform tr = entity->m_bt.bt_body[i]->getWorldTransform();
         btTransform mvTransform = modelViewMatrix * tr;
@@ -841,7 +841,6 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
             btTransform transform = modelViewProjectionMatrix * sm->transform;
             transform.getOpenGLMatrix(glMat);
             glUniformMatrix4fvARB(render->shader_manager->getStaticMeshShader()->model_view_projection, 1, false, glMat);
-            base_mesh_s *mesh = sm->mesh;
 
             auto tint = sm->tint;
 
@@ -851,7 +850,7 @@ void Render_Room(std::shared_ptr<Room> room, struct render_s *render, const btTr
                 Render_CalculateWaterTint(&tint, 0);
             }
             glUniform4fvARB(render->shader_manager->getStaticMeshShader()->tint_mult, 1, tint.data());
-            Render_Mesh(mesh);
+            Render_Mesh(sm->mesh);
             sm->was_rendered = 1;
         }
     }
@@ -1058,9 +1057,9 @@ void Render_DrawList()
     for(uint32_t i=0;i<renderer.r_list_active_count;i++)
     {
         std::shared_ptr<Room> r = renderer.r_list[i].room;
-        if((r->mesh != NULL) && (r->mesh->transparency_polygons != NULL))
+        if(r->mesh && !r->mesh->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(r->mesh->transparent_polygon_count, r->mesh->transparent_polygons, r->transform, r->frustum);
+            render_dBSP.addNewPolygonList(r->mesh->m_transparentPolygons, r->transform, r->frustum);
         }
     }
 
@@ -1070,9 +1069,9 @@ void Render_DrawList()
         // Add transparency polygons from static meshes (if they exists)
         for(auto sm : r->static_mesh)
         {
-            if((sm->mesh->transparency_polygons != NULL) && Frustum::isOBBVisibleInRoom(sm->obb, r))
+            if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, r))
             {
-                render_dBSP.addNewPolygonList(sm->mesh->transparent_polygon_count, sm->mesh->transparent_polygons, sm->transform, r->frustum);
+                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, r->frustum);
             }
         }
 
@@ -1084,12 +1083,12 @@ void Render_DrawList()
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
                 if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->m_stateFlags & ENTITY_STATE_VISIBLE) && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), r)))
                 {
-                    for(uint16_t j=0;j<ent->m_bf.bone_tag_count;j++)
+                    for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
                     {
-                        if(ent->m_bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
+                        if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
                         {
                             btTransform tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->m_bf.bone_tags[j].mesh_base->transparent_polygons, tr, r->frustum);
+                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, r->frustum);
                         }
                     }
                 }
@@ -1100,12 +1099,12 @@ void Render_DrawList()
     if((engine_world.Character != NULL) && (engine_world.Character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
         std::shared_ptr<Entity> ent = engine_world.Character;
-        for(uint16_t j=0;j<ent->m_bf.bone_tag_count;j++)
+        for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
         {
-            if(ent->m_bf.bone_tags[j].mesh_base->transparency_polygons != NULL)
+            if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
             {
                 btTransform tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->transparent_polygon_count, ent->m_bf.bone_tags[j].mesh_base->transparent_polygons, tr, {});
+                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, {});
             }
         }
     }
@@ -1150,9 +1149,9 @@ void Render_DrawList_DebugLines()
     {
         btTransform tr;
         tr.setIdentity();
-        tr.getOrigin() = renderer.cam->m_pos + renderer.world->sky_box->animations->frames->bone_tags->offset;
-        tr.setRotation(renderer.world->sky_box->animations->frames->bone_tags->qrotate);
-        debugDrawer.drawMeshDebugLines(renderer.world->sky_box->mesh_tree->mesh_base, tr, {}, {});
+        tr.getOrigin() = renderer.cam->m_pos + renderer.world->sky_box->animations.front().frames.front().bone_tags.front().offset;
+        tr.setRotation(renderer.world->sky_box->animations.front().frames.front().bone_tags.front().qrotate);
+        debugDrawer.drawMeshDebugLines(renderer.world->sky_box->mesh_tree.front().mesh_base, tr, {}, {});
     }
 
     for(uint32_t i=0; i<renderer.r_list_active_count; i++)
@@ -1511,7 +1510,7 @@ void render_DebugDrawer::drawOBB(struct obb_s *obb)
     }
 }
 
-void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, const btTransform &transform, const std::vector<btVector3>& overrideVertices, const std::vector<btVector3>& overrideNormals)
+void render_DebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh>& mesh, const btTransform &transform, const std::vector<btVector3>& overrideVertices, const std::vector<btVector3>& overrideNormals)
 {
     if(renderer.style & R_DRAW_NORMALS)
     {
@@ -1520,7 +1519,7 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, const btTr
         {
             const btVector3* ov = &overrideVertices.front();
             const btVector3* on = &overrideNormals.front();
-            for(uint32_t i=0; i<mesh->vertices.size(); i++,ov++,on++)
+            for(uint32_t i=0; i<mesh->m_vertices.size(); i++,ov++,on++)
             {
                 btVector3 v = transform * *ov;
                 m_buffer.push_back({v.x(), v.y(), v.z()});
@@ -1532,8 +1531,8 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, const btTr
         }
         else
         {
-            vertex_s* mv = mesh->vertices.data();
-            for (uint32_t i = 0; i < mesh->vertices.size(); i++,mv++)
+            vertex_s* mv = mesh->m_vertices.data();
+            for (uint32_t i = 0; i < mesh->m_vertices.size(); i++,mv++)
             {
                 btVector3 v = transform * mv->position;
                 m_buffer.push_back({v.x(), v.y(), v.z()});
@@ -1546,12 +1545,12 @@ void render_DebugDrawer::drawMeshDebugLines(struct base_mesh_s *mesh, const btTr
     }
 }
 
-void render_DebugDrawer::drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, const btTransform &transform)
+void render_DebugDrawer::drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform &transform)
 {
     if(renderer.style & R_DRAW_NORMALS)
     {
-        ss_bone_tag_p btag = bframe->bone_tags;
-        for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+        SSBoneTag* btag = bframe->bone_tags.data();
+        for(uint16_t i=0; i<bframe->bone_tags.size(); i++,btag++)
         {
             btTransform tr = transform * btag->full_transform;
             drawMeshDebugLines(btag->mesh_base, tr, {}, {});
@@ -1579,7 +1578,7 @@ void render_DebugDrawer::drawEntityDebugLines(std::shared_ptr<Entity> entity)
         debugDrawer.drawAxis(1000.0, entity->m_transform);
     }
 
-    if(entity->m_bf.animations.model && entity->m_bf.animations.model->animations)
+    if(entity->m_bf.animations.model && !entity->m_bf.animations.model->animations.empty())
     {
         debugDrawer.drawSkeletalModelDebugLines(&entity->m_bf, entity->m_transform);
     }

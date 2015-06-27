@@ -158,8 +158,8 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
                                                const tr4_textile32_t *pages,
                                                size_t object_texture_count,
                                                const tr4_object_texture_t *object_textures,
-                                               size_t sprite_texture_count,
-                                               const tr_sprite_texture_t *sprite_textures)
+                                               size_t Spriteexture_count,
+                                               const tr_Spriteexture_t *Spriteextures)
 : m_borderWidth(border),
 m_resultPageWidth(0),
 m_resultPageHeights(),
@@ -179,9 +179,9 @@ m_canonicalObjectTextures()
         addObjectTexture(object_textures[i]);
     }
     
-    for (size_t i = 0; i < sprite_texture_count; i++)
+    for (size_t i = 0; i < Spriteexture_count; i++)
     {
-        addSpriteTexture(sprite_textures[i]);
+        addSpriteTexture(Spriteextures[i]);
     }
     
     layOutTextures();
@@ -261,7 +261,7 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
     }
 }
 
-void BorderedTextureAtlas::addSpriteTexture(const tr_sprite_texture_t &texture)
+void BorderedTextureAtlas::addSpriteTexture(const tr_Spriteexture_t &texture)
 {
     // Determine the canonical texture for this texture.
     unsigned x = texture.x0;
@@ -371,11 +371,11 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
     }
 }
 
-void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, uint32_t &outPage, GLfloat *coordinates) const
+void BorderedTextureAtlas::getSpriteCoordinates(size_t Spriteexture, uint32_t &outPage, GLfloat *coordinates) const
 {
-    assert(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
+    assert(Spriteexture < m_canonicalTexturesForSpriteTextures.size());
 
-    const size_t canonical_index = m_canonicalTexturesForSpriteTextures[sprite_texture];
+    const size_t canonical_index = m_canonicalTexturesForSpriteTextures[Spriteexture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[canonical_index];
 
     outPage = canonical.new_page;

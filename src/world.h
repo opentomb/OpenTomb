@@ -176,12 +176,12 @@ struct Camera;
 struct portal_s;
 struct render_s;
 struct Frustum;
-struct base_mesh_s;
+struct BaseMesh;
 struct StaticMesh;
 struct Entity;
-struct skeletal_model_s;
+struct SkeletalModel;
 struct RedBlackHeader_s;
-struct ss_bone_frame_s;
+struct SSBoneFrame;
 
 
 typedef struct base_item_s
@@ -191,7 +191,7 @@ typedef struct base_item_s
     uint16_t                    type;
     uint16_t                    count;
     char                        name[64];
-    ss_bone_frame_s            *bf;
+    std::unique_ptr<SSBoneFrame> bf;
 
     ~base_item_s();
 }base_item_t, *base_item_p;
@@ -217,8 +217,8 @@ typedef struct room_sector_s
     int32_t                     floor;
     int32_t                     ceiling;
 
-    struct room_sector_s        *sector_below;
-    struct room_sector_s        *sector_above;
+    room_sector_s        *sector_below;
+    room_sector_s        *sector_above;
     std::shared_ptr<Room> owner_room;    // Room that contain this sector
 
     int16_t                     index_x;
@@ -246,15 +246,19 @@ typedef struct sector_tween_s
     uint8_t                     ceiling_tween_type;
 }sector_tween_t, *sector_tween_p;
 
+struct Sprite;
 
 typedef struct room_sprite_s
 {
-    struct sprite_s             *sprite;
+    Sprite             *sprite;
     btVector3 pos;
     int8_t                      was_rendered;
-}room_sprite_t, *room_sprite_p;
+}room_Sprite, *room_sprite_p;
 
 struct EngineContainer;
+struct SpriteBuffer;
+struct Light;
+struct AnimSeq;
 
 struct Room : public Object
 {
@@ -268,13 +272,13 @@ struct Room : public Object
     int8_t                      active;                                         // flag: is active
     int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      hide;                                           // do not render
-    struct base_mesh_s         *mesh;                                           // room's base mesh
+    std::shared_ptr<BaseMesh> mesh;                                           // room's base mesh
     //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
-    struct sprite_buffer_s *sprite_buffer;               // Render data for sprites
+    SpriteBuffer *sprite_buffer;               // Render data for sprites
 
     std::vector<std::shared_ptr<StaticMesh>> static_mesh;
     uint32_t                    sprites_count;
-    struct room_sprite_s       *sprites;
+    room_sprite_s       *sprites;
 
     std::vector<std::shared_ptr<EngineContainer>> containers;                                     // engine containers with moveables objects
 
@@ -284,7 +288,7 @@ struct Room : public Object
     btScalar                    ambient_lighting[3];
 
     uint32_t                    light_count;
-    struct light_s             *lights;
+    Light             *lights;
 
     std::vector<portal_s> portals;                                        // room portals array
     std::shared_ptr<Room> alternate_room;                                 // alternative room pointer
@@ -293,7 +297,7 @@ struct Room : public Object
     uint32_t                    sectors_count;
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;
-    struct room_sector_s       *sectors;
+    room_sector_s       *sectors;
 
     uint16_t                    active_frustums;                                // current number of this room active frustums
     std::vector<std::shared_ptr<Frustum>> frustum;
@@ -318,7 +322,7 @@ typedef struct world_s
     std::vector< std::shared_ptr<Room> > rooms;
 
     uint32_t                    room_box_count;
-    struct room_box_s          *room_boxes;
+    room_box_s          *room_boxes;
 
     uint32_t                    flip_count;             // Number of flips
     uint8_t                    *flip_map;               // Flipped room activity array.
@@ -329,19 +333,18 @@ typedef struct world_s
     GLuint                     *textures;               // OpenGL textures indexes
 
     uint32_t                    anim_sequences_count;   // Animated texture sequence count
-    struct anim_seq_s          *anim_sequences;         // Animated textures
+    AnimSeq          *anim_sequences;         // Animated textures
 
-    uint32_t                    meshes_count;           // Base meshes count
-    struct base_mesh_s         *meshes;                 // Base meshes data
+    std::vector<std::shared_ptr<BaseMesh>> meshes;                 // Base meshes data
 
     uint32_t                    sprites_count;          // Base sprites count
-    struct sprite_s            *sprites;                // Base sprites data
+    Sprite            *sprites;                // Base sprites data
 
     uint32_t                    skeletal_model_count;   // number of base skeletal models
-    struct skeletal_model_s    *skeletal_models;        // base skeletal models data
+    SkeletalModel    *skeletal_models;        // base skeletal models data
 
     std::shared_ptr<Entity>   Character;              // this is an unique Lara's pointer =)
-    struct skeletal_model_s    *sky_box;                // global skybox
+    SkeletalModel    *sky_box;                // global skybox
 
     std::map<uint32_t, std::shared_ptr<Entity> > entity_tree;            // tree of world active objects
     std::map<uint32_t, std::shared_ptr<base_item_s> > items_tree;             // tree of world items
@@ -409,8 +412,8 @@ int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
 int World_AddEntity(world_p world, std::shared_ptr<Entity> entity);
 int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
 int World_DeleteItem(world_p world, uint32_t item_id);
-struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world);
-struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id);           // binary search the model by ID
+Sprite* World_GetSpriteByID(unsigned int ID, world_p world);
+SkeletalModel* World_GetModelByID(world_p w, uint32_t id);           // binary search the model by ID
 
 
 #endif

@@ -2104,11 +2104,11 @@ int Character_ChangeParam(std::shared_ptr<Entity> ent, int parameter, float valu
 ///@TODO: separate mesh replacing control and animation disabling / enabling
 int Character_SetWeaponModel(std::shared_ptr<Entity> ent, int weapon_model, int armed)
 {
-    skeletal_model_p sm = World_GetModelByID(&engine_world, weapon_model);
+    SkeletalModel* sm = World_GetModelByID(&engine_world, weapon_model);
 
-    if((sm != NULL) && (ent->m_bf.bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
+    if((sm != NULL) && (ent->m_bf.bone_tags.size() == sm->mesh_count) && (sm->animations.size() >= 4))
     {
-        skeletal_model_p bm = ent->m_bf.animations.model;
+        SkeletalModel* bm = ent->m_bf.animations.model;
         if(ent->m_bf.animations.next == NULL)
         {
             ent->addOverrideAnim(weapon_model);
@@ -2159,7 +2159,7 @@ int Character_SetWeaponModel(std::shared_ptr<Entity> ent, int weapon_model, int 
     else
     {
         // do unarmed default model
-        skeletal_model_p bm = ent->m_bf.animations.model;
+        SkeletalModel* bm = ent->m_bf.animations.model;
         for(int i=0;i<bm->mesh_count;i++)
         {
             ent->m_bf.bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;

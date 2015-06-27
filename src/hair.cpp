@@ -10,10 +10,10 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     // No setup or parent to link to - bypass function.
 
     if( (!parent_entity) || (!setup)                           ||
-        (setup->m_linkBody >= parent_entity->m_bf.bone_tag_count) ||
+        (setup->m_linkBody >= parent_entity->m_bf.bone_tags.size()) ||
         (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))         ) return false;
 
-    skeletal_model_p model = World_GetModelByID(&engine_world, setup->m_model);
+    SkeletalModel* model = World_GetModelByID(&engine_world, setup->m_model);
 
     // No model to link to - bypass function.
 
@@ -153,7 +153,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         {
             // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
 
-            body_length = fabs(m_elements[i-1].mesh->bb_max[1] - m_elements[i-1].mesh->bb_min[1]) * setup->m_jointOverlap;
+            body_length = fabs(m_elements[i-1].mesh->m_bbMax[1] - m_elements[i-1].mesh->m_bbMin[1]) * setup->m_jointOverlap;
 
             localA.setOrigin(btVector3(joint_x, body_length, joint_y));
             localA.getBasis().setEulerZYX(0,SIMD_HALF_PI,0);
@@ -221,50 +221,50 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 // Internal utility function:
 // Creates a single mesh out of all the parts of the given model.
 // This assumes that Mesh_GenFaces was already called on the parts of model.
-void Hair::createHairMesh(const skeletal_model_s *model)
+void Hair::createHairMesh(const SkeletalModel *model)
 {
-    m_mesh = new base_mesh_s();
-    m_mesh->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), engine_world.tex_count);
+    m_mesh = std::make_shared<BaseMesh>();
+    m_mesh->m_elementsPerTexture.resize(engine_world.tex_count, 0);
     size_t totalElements = 0;
 
     // Gather size information
-    for (int i = 0; i < model->mesh_count; i++)
-    { const base_mesh_s *original = model->mesh_tree[i].mesh_base;
+    for (int i = 0; i < model->mesh_count; i++) {
+        const std::shared_ptr<BaseMesh> original = model->mesh_tree[i].mesh_base;
 
-        m_mesh->num_texture_pages = std::max(m_mesh->num_texture_pages, original->num_texture_pages);
+        m_mesh->m_texturePageCount = std::max(m_mesh->m_texturePageCount, original->m_texturePageCount);
 
-        for (int j = 0; j < original->num_texture_pages; j++) {
-            m_mesh->element_count_per_texture[j] += original->element_count_per_texture[j];
-            totalElements += original->element_count_per_texture[j];
+        for (int j = 0; j < original->m_texturePageCount; j++) {
+            m_mesh->m_elementsPerTexture[j] += original->m_elementsPerTexture[j];
+            totalElements += original->m_elementsPerTexture[j];
         }
     }
 
     // Create arrays
-    m_mesh->elements = (uint32_t *) calloc(sizeof(uint32_t), totalElements);
+    m_mesh->m_elements.resize(totalElements, 0);
 
     // - with matrix index information
-    m_mesh->matrix_indices = (int8_t *) calloc(sizeof(int8_t [2]), m_mesh->vertices.size());
+    m_mesh->m_matrixIndices.resize( m_mesh->m_vertices.size() );
 
     // Copy information
-    std::vector<uint32_t> elementsStartPerTexture(m_mesh->num_texture_pages);
-    m_mesh->vertices.clear();
+    std::vector<uint32_t> elementsStartPerTexture(m_mesh->m_texturePageCount);
+    m_mesh->m_vertices.clear();
     for (int i = 0; i < model->mesh_count; i++)
     {
-        const base_mesh_s *original = model->mesh_tree[i].mesh_base;
+        const std::shared_ptr<BaseMesh> original = model->mesh_tree[i].mesh_base;
 
         // Copy vertices
-        const size_t verticesStart = m_mesh->vertices.size();
-        m_mesh->vertices.insert(m_mesh->vertices.end(), original->vertices.begin(), original->vertices.end());
+        const size_t verticesStart = m_mesh->m_vertices.size();
+        m_mesh->m_vertices.insert(m_mesh->m_vertices.end(), original->m_vertices.begin(), original->m_vertices.end());
 
         // Copy elements
         uint32_t originalElementsStart = 0;
-        for (int page = 0; page < original->num_texture_pages; page++)
+        for (int page = 0; page < original->m_texturePageCount; page++)
         {
-            memcpy(&m_mesh->elements[elementsStartPerTexture[page]],
-                   &original->elements[originalElementsStart],
-                   sizeof(uint32_t) * original->element_count_per_texture[page]);
-            for (int j = 0; j < original->element_count_per_texture[page]; j++) {
-                m_mesh->elements[elementsStartPerTexture[page]] = verticesStart + original->elements[originalElementsStart];
+            memcpy(&m_mesh->m_elements[elementsStartPerTexture[page]],
+                   &original->m_elements[originalElementsStart],
+                   sizeof(uint32_t) * original->m_elementsPerTexture[page]);
+            for (int j = 0; j < original->m_elementsPerTexture[page]; j++) {
+                m_mesh->m_elements[elementsStartPerTexture[page]] = verticesStart + original->m_elements[originalElementsStart];
                 originalElementsStart += 1;
                 elementsStartPerTexture[page] += 1;
             }
@@ -286,32 +286,32 @@ void Hair::createHairMesh(const skeletal_model_s *model)
         }
 
         // And create vertex data (including matrix indices)
-        for (size_t j = 0; j < original->vertices.size(); j++) {
-            if (original->vertices[j].position[1] <= 0)
+        for (size_t j = 0; j < original->m_vertices.size(); j++) {
+            if (original->m_vertices[j].position[1] <= 0)
             {
-                m_mesh->matrix_indices[(verticesStart+j)*2 + 0] = i;
-                m_mesh->matrix_indices[(verticesStart+j)*2 + 1] = i+1;
+                m_mesh->m_matrixIndices[verticesStart+j].i = i;
+                m_mesh->m_matrixIndices[verticesStart+j].j = i+1;
             }
             else
             {
-                m_mesh->matrix_indices[(verticesStart+j)*2 + 0] = i+1;
-                m_mesh->matrix_indices[(verticesStart+j)*2 + 1] = std::min((int8_t) (i+2), (int8_t) model->mesh_count);
+                m_mesh->m_matrixIndices[verticesStart+j].i = i+1;
+                m_mesh->m_matrixIndices[verticesStart+j].j = std::min((int8_t) (i+2), (int8_t) model->mesh_count);
             }
 
             // Now move all the hair vertices
-            m_mesh->vertices[verticesStart+j].position += m_elements[i].position;
+            m_mesh->m_vertices[verticesStart+j].position += m_elements[i].position;
 
             // If the normal isn't fully in y direction, cancel its y component
             // This is perhaps a bit dubious.
-            if (m_mesh->vertices[verticesStart+j].normal[0] != 0 || m_mesh->vertices[verticesStart+j].normal[2] != 0)
+            if (m_mesh->m_vertices[verticesStart+j].normal[0] != 0 || m_mesh->m_vertices[verticesStart+j].normal[2] != 0)
             {
-                m_mesh->vertices[verticesStart+j].normal[1] = 0;
-                m_mesh->vertices[verticesStart+j].normal.normalize();
+                m_mesh->m_vertices[verticesStart+j].normal[1] = 0;
+                m_mesh->m_vertices[verticesStart+j].normal.normalize();
             }
         }
     }
 
-    Mesh_GenVBO(&renderer, m_mesh);
+    m_mesh->genVBO(&renderer);
 }
 
 bool HairSetup::getSetup(uint32_t hair_entry_index)

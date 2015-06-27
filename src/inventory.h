@@ -1,6 +1,4 @@
-#ifndef ENGINE_INVENTORY_H
-#define ENGINE_INVENTORY_H
-
+#pragma once
 
 #define ITEM_COMPASS  1     // Aka Watch in TR2-3, Timex in TR5
 #define ITEM_PASSPORT 2     // Exists only in TR1-3, not used in TR4 (diary)
@@ -51,5 +49,3 @@
 #define ITEM_SECRET_1 120
 #define ITEM_SECRET_2 121
 #define ITEM_SECRET_3 122
-
-#endif

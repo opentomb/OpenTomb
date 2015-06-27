@@ -20,7 +20,7 @@ bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup)
     // No entity, setup or body count overflow - bypass function.
 
     if( (!entity) || (!setup) ||
-        (setup->body_count > entity->m_bf.bone_tag_count) )
+        (setup->body_count > entity->m_bf.bone_tags.size()) )
     {
         return false;
     }
@@ -40,14 +40,18 @@ bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup)
     Entity::updateCurrentBoneFrame(&entity->m_bf, &entity->m_transform);
     entity->m_bt.no_fix_all = 0x00;
     entity->m_bt.no_fix_body_parts = 0x00000000;
-    int map_size = entity->m_bf.animations.model->collision_map_size;             // does not works, strange...
-    entity->m_bf.animations.model->collision_map_size = entity->m_bf.animations.model->mesh_count;
+#if 0
+    int map_size = entity->m_bf.animations.model->collision_map.size();             // does not works, strange...
+    entity->m_bf.animations.model->collision_map.size() = entity->m_bf.animations.model->mesh_count;
     entity->fixPenetrations(nullptr);
-    entity->m_bf.animations.model->collision_map_size = map_size;
+    entity->m_bf.animations.model->collision_map.size() = map_size;
+#else
+    entity->fixPenetrations(nullptr);
+#endif
 
     for(int i=0; i<setup->body_count; i++)
     {
-        if( (i >= entity->m_bf.bone_tag_count) || (entity->m_bt.bt_body[i] == NULL) )
+        if( (i >= entity->m_bf.bone_tags.size()) || (entity->m_bt.bt_body[i] == NULL) )
         {
             result = false;
             continue;   // If body is absent, return false and bypass this body setup.
@@ -75,14 +79,14 @@ bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup)
             if(entity->m_bf.bone_tags[i].parent == NULL)
             {
                 entity->m_bf.bone_tags[i].mesh_base;
-                btScalar r = getInnerBBRadius(entity->m_bf.bone_tags[i].mesh_base->bb_min, entity->m_bf.bone_tags[i].mesh_base->bb_max);
+                btScalar r = getInnerBBRadius(entity->m_bf.bone_tags[i].mesh_base->m_bbMin, entity->m_bf.bone_tags[i].mesh_base->m_bbMax);
                 entity->m_bt.bt_body[i]->setCcdMotionThreshold(0.8 * r);
                 entity->m_bt.bt_body[i]->setCcdSweptSphereRadius(r);
             }
     }
 
     entity->updateRigidBody(true);
-    for(uint16_t i=0;i<entity->m_bf.bone_tag_count;i++)
+    for(uint16_t i=0;i<entity->m_bf.bone_tags.size();i++)
     {
         bt_engine_dynamicsWorld->addRigidBody(entity->m_bt.bt_body[i].get());
         entity->m_bt.bt_body[i]->activate();
@@ -100,7 +104,7 @@ bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup)
 
     for(int i=0; i<entity->m_bt.bt_joint_count; i++)
     {
-        if( (setup->joint_setup[i].body_index >= entity->m_bf.bone_tag_count) ||
+        if( (setup->joint_setup[i].body_index >= entity->m_bf.bone_tags.size()) ||
             (entity->m_bt.bt_body[setup->joint_setup[i].body_index] == NULL) )
         {
             result = false;
@@ -108,8 +112,8 @@ bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup)
         }
 
         btTransform localA, localB;
-        ss_bone_tag_p btB = entity->m_bf.bone_tags + setup->joint_setup[i].body_index;
-        ss_bone_tag_p btA = btB->parent;
+        SSBoneTag* btB = &entity->m_bf.bone_tags[ setup->joint_setup[i].body_index ];
+        SSBoneTag* btA = btB->parent;
         if(btA == NULL)
         {
             result = false;
@@ -187,7 +191,7 @@ bool Ragdoll_Delete(std::shared_ptr<Entity> entity)
         }
     }
 
-    for(int i=0;i<entity->m_bf.bone_tag_count;i++)
+    for(int i=0;i<entity->m_bf.bone_tags.size();i++)
     {
         bt_engine_dynamicsWorld->removeRigidBody(entity->m_bt.bt_body[i].get());
         entity->m_bt.bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));

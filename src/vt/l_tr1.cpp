@@ -126,7 +126,7 @@ void TR_Level::read_tr_box(SDL_RWops * const src, tr_box_t & box)
 }
 
 /// \brief reads a room sprite definition.
-void TR_Level::read_tr_room_sprite(SDL_RWops * const src, tr_room_sprite_t & room_sprite)
+void TR_Level::read_tr_room_sprite(SDL_RWops * const src, tr_room_Sprite & room_sprite)
 {
     room_sprite.vertex = read_bit16(src);
     room_sprite.texture = read_bit16(src);
@@ -292,7 +292,7 @@ void TR_Level::read_tr_room(SDL_RWops * const src, tr5_room_t & room)
         read_tr_face3(src, room.triangles[i]);
 
     room.num_sprites = read_bitu16(src);
-    room.sprites = (tr_room_sprite_t*)malloc(room.num_sprites * sizeof(tr_room_sprite_t));
+    room.sprites = (tr_room_Sprite*)malloc(room.num_sprites * sizeof(tr_room_Sprite));
     for (i = 0; i < room.num_sprites; i++)
         read_tr_room_sprite(src, room.sprites[i]);
 
@@ -380,14 +380,14 @@ void TR_Level::read_tr_object_texture(SDL_RWops * const src, tr4_object_texture_
   *
   * some sanity checks get done and if they fail an exception gets thrown.
   */
-void TR_Level::read_tr_sprite_texture(SDL_RWops * const src, tr_sprite_texture_t & sprite_texture)
+void TR_Level::read_tr_Spriteexture(SDL_RWops * const src, tr_Spriteexture_t & Spriteexture)
 {
     int tx, ty, tw, th, tleft, tright, ttop, tbottom;
     float w, h;
 
-    sprite_texture.tile = read_bitu16(src);
-    if (sprite_texture.tile > 64)
-        Sys_extWarn("sprite_texture.tile > 64");
+    Spriteexture.tile = read_bitu16(src);
+    if (Spriteexture.tile > 64)
+        Sys_extWarn("Spriteexture.tile > 64");
 
     tx = read_bitu8(src);
     ty = read_bitu8(src);
@@ -400,15 +400,15 @@ void TR_Level::read_tr_sprite_texture(SDL_RWops * const src, tr_sprite_texture_t
 
     w = tw / 256.0;
     h = th / 256.0;
-    sprite_texture.x0 = tx;
-    sprite_texture.y0 = ty;
-    sprite_texture.x1 = sprite_texture.x0 + w;
-    sprite_texture.y1 = sprite_texture.y0 + h;
+    Spriteexture.x0 = tx;
+    Spriteexture.y0 = ty;
+    Spriteexture.x1 = Spriteexture.x0 + w;
+    Spriteexture.y1 = Spriteexture.y0 + h;
 
-    sprite_texture.left_side = tleft;
-    sprite_texture.right_side = tright;
-    sprite_texture.top_side =-tbottom;
-    sprite_texture.bottom_side =-ttop;
+    Spriteexture.left_side = tleft;
+    Spriteexture.right_side = tright;
+    Spriteexture.top_side =-tbottom;
+    Spriteexture.bottom_side =-ttop;
 }
 
 /** \brief reads sprite sequence definition.
@@ -669,10 +669,10 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
     for (i = 0; i < this->object_textures_count; i++)
         read_tr_object_texture(src, this->object_textures[i]);
 
-    this->sprite_textures_count = read_bitu32(src);
-    this->sprite_textures = (tr_sprite_texture_t*)malloc(this->sprite_textures_count * sizeof(tr_sprite_texture_t));
-    for (i = 0; i < this->sprite_textures_count; i++)
-        read_tr_sprite_texture(src, this->sprite_textures[i]);
+    this->Spriteextures_count = read_bitu32(src);
+    this->Spriteextures = (tr_Spriteexture_t*)malloc(this->Spriteextures_count * sizeof(tr_Spriteexture_t));
+    for (i = 0; i < this->Spriteextures_count; i++)
+        read_tr_Spriteexture(src, this->Spriteextures[i]);
 
     this->sprite_sequences_count = read_bitu32(src);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));
