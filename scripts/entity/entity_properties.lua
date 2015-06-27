@@ -81,12 +81,12 @@ tr1_entity_tbl[34] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_T
 
 tr1_entity_tbl[35] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallblock"};  -- Falling floor
 tr1_entity_tbl[36] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "swingblade"}; -- Swinging blade (Vilcabamba, etc.)
-tr1_entity_tbl[37] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "oldspike"};   -- Spikes
+tr1_entity_tbl[37] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};   -- Spikes
 tr1_entity_tbl[38] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                      -- Boulder
 tr1_entity_tbl[39] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dart
 tr1_entity_tbl[40] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dartgun
 tr1_entity_tbl[41] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Lifting door
-tr1_entity_tbl[42] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "slamdoor"};   -- Slamming sawtooth doors
+tr1_entity_tbl[42] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};   -- Slamming sawtooth doors
 tr1_entity_tbl[43] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "damocles"};                      -- Sword of Damocles
 tr1_entity_tbl[44] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Thor's hammer (handle)
 tr1_entity_tbl[45] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Thor's hammer (block)
@@ -276,12 +276,12 @@ tr2_entity_tbl[54] = {coll = COLLISION_TYPE_ACTOR,     shape = COLLISION_SHAPE_T
 tr2_entity_tbl[55] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "fallblock"}; -- Collapsible floor
 tr2_entity_tbl[57] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Loose boards
 tr2_entity_tbl[58] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Swinging sandbag / spiky ball
-tr2_entity_tbl[59] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "oldspike"};  -- Spikes / Glass shards
+tr2_entity_tbl[59] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};  -- Spikes / Glass shards
 tr2_entity_tbl[60] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                     -- Boulder
 tr2_entity_tbl[61] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Disk (like dart)
 tr2_entity_tbl[62] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                     -- Wall-mounted disk shooter (like dartgun)
 tr2_entity_tbl[63] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Drawbridge
-tr2_entity_tbl[64] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "slamdoor"};                     -- Slamming door
+tr2_entity_tbl[64] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};                     -- Slamming door
 tr2_entity_tbl[65] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Elevator
 tr2_entity_tbl[66] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Minisub
 tr2_entity_tbl[67] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
@@ -291,7 +291,7 @@ tr2_entity_tbl[70] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_B
 tr2_entity_tbl[71] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Big bowl (Ice Palace)
 tr2_entity_tbl[72] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Breakable window (can shoot out)
 tr2_entity_tbl[73] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Breakable window (must jump through)
-tr2_entity_tbl[76] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Airplane propeller
+tr2_entity_tbl[76] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                     -- Airplane propeller
 tr2_entity_tbl[77] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Power saw
 tr2_entity_tbl[78] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Overhead pulley hook
 tr2_entity_tbl[79] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};                     -- Sandbag / Ceiling fragments
@@ -307,7 +307,7 @@ tr2_entity_tbl[88] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_B
 tr2_entity_tbl[91] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                     -- Lara and a snowmobile
 tr2_entity_tbl[92] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};                     -- Wheel knob
 tr2_entity_tbl[93] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
-tr2_entity_tbl[94] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Underwater propeller
+tr2_entity_tbl[94] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                     -- Underwater propeller
 tr2_entity_tbl[95] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Air fan
 tr2_entity_tbl[96] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Swinging box / spiky ball
 tr2_entity_tbl[101] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                    -- Rolling storage drums
@@ -505,12 +505,12 @@ tr3_entity_tbl[82] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_B
 
 tr3_entity_tbl[83] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "fallblock"};                 -- Collapsible floor
 tr3_entity_tbl[86] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                 -- Swinging thing
-tr3_entity_tbl[87] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "oldspike"};                 -- Spikes / Barbed wire
+tr3_entity_tbl[87] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};                 -- Spikes / Barbed wire
 tr3_entity_tbl[88] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                 -- Boulder / Barrel
 tr3_entity_tbl[89] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                 -- Giant boulder (Temple of Puna)
 tr3_entity_tbl[90] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                 -- Disk (like dart)
 tr3_entity_tbl[91] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, hide = 0x01};                 -- Dart shooter
-tr3_entity_tbl[94] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "slamdoor"};                 -- Spiked impaled skeleton / Slamming door
+tr3_entity_tbl[94] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};                 -- Spiked impaled skeleton / Slamming door
 tr3_entity_tbl[97] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, trav = 0x18, func = "pushable"};    -- Movable cubical block (pushable)
 tr3_entity_tbl[98] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, trav = 0x18, func = "pushable"};    -- Movable cubical block (pushable)
 tr3_entity_tbl[101] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Destroyable boarded-up window
@@ -525,8 +525,8 @@ tr3_entity_tbl[114] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr3_entity_tbl[116] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "spikeceiling"};                -- Spiky movable vertical wall / Tunnel borer
 tr3_entity_tbl[117] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Valve wheel / Pulley
 tr3_entity_tbl[118] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
-tr3_entity_tbl[119] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Underwater propeller / Diver sitting on block / Underwater rotating knives / Meteorite
-tr3_entity_tbl[120] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Fan
+tr3_entity_tbl[119] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                -- Underwater propeller / Diver sitting on block / Underwater rotating knives / Meteorite
+tr3_entity_tbl[120] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                -- Fan
 tr3_entity_tbl[121] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Heavy stamper / Grinding drum / Underwater rotating knives
 tr3_entity_tbl[122] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Temple statue (original petrified state)
 tr3_entity_tbl[123] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Monkey with medipack
@@ -854,8 +854,8 @@ tr4_entity_tbl[129] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 -- TRAPS & INTERACTION OBJECTS
 
 tr4_entity_tbl[130] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"}; -- Rolling ball
-tr4_entity_tbl[131] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey floor - UNUSED?
-tr4_entity_tbl[132] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Teeth spikes
+tr4_entity_tbl[131] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey floor - UNUSED?
+tr4_entity_tbl[132] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Teeth spikes
 tr4_entity_tbl[133] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Joby spikes
 tr4_entity_tbl[134] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX}; -- Slicer dicer
 tr4_entity_tbl[135] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Chain
@@ -1335,8 +1335,8 @@ tr5_entity_tbl[115] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 
 -- TRAPS & INTERACTION OBJECTS
 
-tr5_entity_tbl[116] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey Floor - UNUSED?
-tr5_entity_tbl[117] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Teeth Spikes
+tr5_entity_tbl[116] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey Floor - UNUSED?
+tr5_entity_tbl[117] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Teeth Spikes
 tr5_entity_tbl[118] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Rome Hammer
 tr5_entity_tbl[119] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Hammer 2 - UNUSED?
 
