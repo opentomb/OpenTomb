@@ -1,21 +1,23 @@
-#ifndef __OpenTomb__shader_manager__
-#define __OpenTomb__shader_manager__
+#pragma once
 
 #include "shader_description.h"
+
+#include <memory>
 
 // Highest number of lights that will show up in the entity shader.
 #define MAX_NUM_LIGHTS 8
 
 class ShaderManager {
-    UnlitTintedShaderDescription *room_shaders[2][2];
-    UnlitTintedShaderDescription *static_mesh_shader;
-    UnlitShaderDescription *stencil;
-    UnlitShaderDescription *debugline;
-    LitShaderDescription *entity_shader[MAX_NUM_LIGHTS+1][2];
-    GuiShaderDescription *gui;
-    GuiShaderDescription *gui_textured;
-    TextShaderDescription *text;
-    SpriteShaderDescription *sprites;
+private:
+    UnlitTintedShaderDescription *m_roomShaders[2][2];
+    std::unique_ptr<UnlitTintedShaderDescription> m_staticMeshShader;
+    std::unique_ptr<UnlitShaderDescription> m_stencil;
+    std::unique_ptr<UnlitShaderDescription> m_debugline;
+    LitShaderDescription *m_entityShader[MAX_NUM_LIGHTS+1][2];
+    std::unique_ptr<GuiShaderDescription> m_gui;
+    std::unique_ptr<GuiShaderDescription> m_guiTextured;
+    std::unique_ptr<TextShaderDescription> m_text;
+    std::unique_ptr<SpriteShaderDescription> m_sprites;
 
 public:
     ShaderManager();
@@ -23,16 +25,14 @@ public:
     
     const LitShaderDescription *getEntityShader(unsigned numberOfLights, bool skin) const;
     
-    const UnlitTintedShaderDescription *getStaticMeshShader() const { return static_mesh_shader; }
+    const std::unique_ptr<UnlitTintedShaderDescription>& getStaticMeshShader() const { return m_staticMeshShader; }
     
-    const UnlitShaderDescription *getStencilShader() const { return stencil; }
+    const std::unique_ptr<UnlitShaderDescription>& getStencilShader() const { return m_stencil; }
     
-    const UnlitShaderDescription *getDebugLineShader() const { return debugline; }
+    const std::unique_ptr<UnlitShaderDescription>& getDebugLineShader() const { return m_debugline; }
     
     const UnlitTintedShaderDescription *getRoomShader(bool isFlickering, bool isWater) const;
-    const GuiShaderDescription *getGuiShader(bool includingTexture) const;
-    const TextShaderDescription *getTextShader() const { return text; }
-    const SpriteShaderDescription *getSpriteShader() const { return sprites; }
+    const std::unique_ptr<GuiShaderDescription> &getGuiShader(bool includingTexture) const;
+    const std::unique_ptr<TextShaderDescription>& getTextShader() const { return m_text; }
+    const std::unique_ptr<SpriteShaderDescription>& getSpriteShader() const { return m_sprites; }
 };
-
-#endif /* defined(__OpenTomb__shader_manager__) */

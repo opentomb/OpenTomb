@@ -102,7 +102,7 @@ void Render::renderSkyBox(const btTransform& modelViewProjectionMatrix)
         tr.setRotation( m_world->sky_box->animations.front().frames.front().bone_tags.front().qrotate );
         btTransform fullView = modelViewProjectionMatrix * tr;
 
-        const UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
+        const std::unique_ptr<UnlitTintedShaderDescription>& shader = m_shaderManager->getStaticMeshShader();
         glUseProgramObjectARB(shader->program);
         btScalar glFullView[16];
         fullView.getOpenGLMatrix(glFullView);
@@ -681,7 +681,7 @@ void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelView
 
         if(need_stencil)
         {
-            const UnlitShaderDescription *shader = m_shaderManager->getStencilShader();
+            const std::unique_ptr<UnlitShaderDescription>& shader = m_shaderManager->getStencilShader();
             glUseProgramObjectARB(shader->program);
             engine_camera.m_glViewProjMat.getOpenGLMatrix(glMat);
             glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
@@ -811,7 +811,7 @@ void Render::renderRoomSprites(std::shared_ptr<Room> room, const btTransform &mo
 {
     if (room->sprites_count > 0 && room->sprite_buffer)
     {
-        const SpriteShaderDescription *shader = m_shaderManager->getSpriteShader();
+        const std::unique_ptr<SpriteShaderDescription>& shader = m_shaderManager->getSpriteShader();
         glUseProgramObjectARB(shader->program);
         btScalar glMat[16];
         modelViewMatrix.getOpenGLMatrix(glMat);
@@ -1089,7 +1089,7 @@ void Render::drawListDebugLines()
 
     if(!debugDrawer.IsEmpty())
     {
-        const UnlitShaderDescription *shader = m_shaderManager->getDebugLineShader();
+        const std::unique_ptr<UnlitShaderDescription>& shader = m_shaderManager->getDebugLineShader();
         glUseProgramObjectARB(shader->program);
         glUniform1iARB(shader->sampler, 0);
         btScalar glMat[16];
