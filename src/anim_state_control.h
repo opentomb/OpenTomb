@@ -5,7 +5,7 @@
 #include <memory>
 
 class VT_Level;
-struct polygon_s;
+struct Polygon;
 struct BaseMesh;
 struct Room;
 struct world_s;

@@ -3697,7 +3697,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 
     if(model->mesh_tree.front().mesh_base->m_transparencyPolygons.empty())
         return 0;
-    polygon_p p = &model->mesh_tree.front().mesh_base->m_transparencyPolygons.front();
+    Polygon* p = &model->mesh_tree.front().mesh_base->m_transparencyPolygons.front();
     if(p->anim_id != 0)
         return 0;
 

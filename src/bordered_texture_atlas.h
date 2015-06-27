@@ -140,7 +140,7 @@ public:
      */
     void getCoordinates(size_t texture,
                         bool reverse,
-                        polygon_p poly,
+                        Polygon* poly,
                         int shift = 0,
                         bool split = false) const;
     

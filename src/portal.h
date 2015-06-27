@@ -16,7 +16,7 @@
 
 struct Camera;
 struct Room;
-struct polygon_s;
+struct Polygon;
 struct render_s;
 struct Frustum;
 

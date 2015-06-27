@@ -3,7 +3,7 @@
 #define CAMERA_H
 
 struct Room;
-struct polygon_s;
+struct Polygon;
 struct Frustum;
 
 #include <SDL2/SDL_platform.h>

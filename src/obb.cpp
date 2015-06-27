@@ -16,9 +16,9 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     base_centre = (bb_min + bb_max)/2;
     r = extent.length();
 
-    polygon_p p = base_polygons;
+    Polygon* p = base_polygons;
     // UP
-    polygon_p p_up = p;
+    Polygon* p_up = p;
     auto v = &p->vertices.front();
     // 0 1
     // 0 0
@@ -51,11 +51,11 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     //p->plane[1] = 0.0;
     //p->plane[2] = 1.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
     // DOWN
-    polygon_p p_down = p;
+    Polygon* p_down = p;
     v = &p->vertices.front();
     // 0 1
     // 0 0
@@ -88,7 +88,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     //p->plane[1] = 0.0;
     //p->plane[2] =-1.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
     // RIGHT: OX+
@@ -102,7 +102,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     //p->plane[1] = 0.0;
     //p->plane[2] = 0.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
 
@@ -117,7 +117,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     //p->plane[1] = 0.0;
     //p->plane[2] = 0.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
 
@@ -132,7 +132,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     //p->plane[1] = 1.0;
     //p->plane[2] = 0.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
     // BACKWARD: OY-
@@ -146,7 +146,7 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     //p->plane[1] = 1.0;
     //p->plane[2] = 0.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
 }
 
 
@@ -154,7 +154,7 @@ void OBB::doTransform()
 {
     if(transform != NULL) {
         for(int i=0;i<6;i++) {
-            Polygon_vTransform(&polygons[i], &base_polygons[i], *transform);
+            polygons[i].vTransform(&base_polygons[i], *transform);
         }
         centre = *transform * base_centre;
     }

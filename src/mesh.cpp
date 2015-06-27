@@ -16,7 +16,7 @@
 #include <bullet/btBulletDynamicsCommon.h>
 
 
-vertex_p FindVertexInMesh(const std::shared_ptr<BaseMesh> &mesh, const btVector3 &v);
+Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh> &mesh, const btVector3 &v);
 
 void BaseMesh::clear()
 {
@@ -71,7 +71,7 @@ void BaseMesh::genVBO(const render_s *renderer)
     /// now, begin VBO filling!
     glGenBuffersARB(1, &m_vboVertexArray);
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_vboVertexArray);
-    glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_vertices.size() * sizeof(vertex_t), m_vertices.data(), GL_STATIC_DRAW_ARB);
+    glBufferDataARB(GL_ARRAY_BUFFER_ARB, m_vertices.size() * sizeof(Vertex), m_vertices.data(), GL_STATIC_DRAW_ARB);
 
     // Store additional skinning information
     if (!m_matrixIndices.empty())
@@ -94,10 +94,10 @@ void BaseMesh::genVBO(const render_s *renderer)
 
     // Prepare vertex array
     vertex_array_attribute attribs[] = {
-        vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(vertex_t), offsetof(vertex_t, position)),
-        vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(vertex_t), offsetof(vertex_t, normal)),
-        vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, m_vboVertexArray, sizeof(vertex_t), offsetof(vertex_t, color)),
-        vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, m_vboVertexArray, sizeof(vertex_t), offsetof(vertex_t, tex_coord)),
+        vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, position)),
+        vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, normal)),
+        vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, color)),
+        vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, tex_coord)),
         // Only used for skinned meshes
         vertex_array_attribute(lit_shader_description::vertex_attribs::matrix_index, 2, GL_UNSIGNED_BYTE, false, m_vboSkinArray, 2, 0),
     };
@@ -362,9 +362,9 @@ void SkeletonCopyMeshes2(MeshTreeTag *dst, MeshTreeTag *src, int tags_count)
     }
 }
 
-vertex_p FindVertexInMesh(const std::shared_ptr<BaseMesh>& mesh, const btVector3& v)
+Vertex* FindVertexInMesh(const std::shared_ptr<BaseMesh>& mesh, const btVector3& v)
 {
-    for(vertex_s& mv : mesh->m_vertices)
+    for(Vertex& mv : mesh->m_vertices)
     {
         if((v - mv.position).length2() < 4.0)
         {
@@ -377,7 +377,7 @@ vertex_p FindVertexInMesh(const std::shared_ptr<BaseMesh>& mesh, const btVector3
 
 void SkeletalModel::fillSkinnedMeshMap()
 {
-    vertex_p v, rv;
+    Vertex* v, *rv;
     MeshTreeTag* tree_tag, *prev_tree_tag;
 
     tree_tag = mesh_tree.data();
@@ -427,9 +427,9 @@ void SkeletalModel::fillSkinnedMeshMap()
 /*
  * FACES FUNCTIONS
  */
-uint32_t BaseMesh::addVertex(const vertex_s& vertex)
+uint32_t BaseMesh::addVertex(const Vertex& vertex)
 {
-    vertex_p v = m_vertices.data();
+    Vertex* v = m_vertices.data();
 
     for(size_t ind=0; ind<m_vertices.size(); ind++, v++)
     {
@@ -453,7 +453,7 @@ uint32_t BaseMesh::addVertex(const vertex_s& vertex)
     return m_vertices.size()-1;
 }
 
-uint32_t BaseMesh::addAnimatedVertex(const vertex_s& vertex)
+uint32_t BaseMesh::addAnimatedVertex(const Vertex& vertex)
 {
     // Skip search for equal vertex; tex coords may differ but aren't stored in
     // animated_vertex_s
@@ -504,7 +504,7 @@ void BaseMesh::genFaces()
     size_t transparent = 0;
     for (uint32_t i = 0; i < m_polygons.size(); i++)
     {
-        if (Polygon_IsBroken(&m_polygons[i]))
+        if (m_polygons[i].isBroken())
             continue;
 
         uint32_t elementCount = (m_polygons[i].vertices.size() - 2) * 3;
@@ -552,9 +552,10 @@ void BaseMesh::genFaces()
     m_transparentPolygons.resize(transparent);
     uint32_t transparentPolygonStart = 0;
 
-    for(const polygon_s& p : m_polygons)
+    for(const Polygon& p : m_polygons)
     {
-        if (Polygon_IsBroken(&p)) continue;
+        if (p.isBroken())
+            continue;
 
         uint32_t elementCount = (p.vertices.size() - 2) * 3;
         uint32_t backwardsStartOffset = elementCount;
@@ -667,11 +668,11 @@ btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max
     int cnt = 0;
 
     OBB obb;
-    polygon_p p = obb.base_polygons;
+    Polygon* p = obb.base_polygons;
     obb.rebuild(bb_min, bb_max);
     for(uint16_t i=0;i<6;i++,p++)
     {
-        if(Polygon_IsBroken(p))
+        if(p->isBroken())
         {
             continue;
         }
@@ -711,9 +712,9 @@ btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useC
     btCollisionShape* ret;
     btVector3 v0, v1, v2;
 
-    for(const polygon_s& p : mesh->m_polygons)
+    for(const Polygon& p : mesh->m_polygons)
     {
-        if(Polygon_IsBroken(&p))
+        if(p.isBroken())
         {
             continue;
         }
@@ -961,7 +962,7 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
 void BaseMesh::polySortInMesh()
 {
-    for(polygon_s& p : m_polygons) {
+    for(Polygon& p : m_polygons) {
         if(p.anim_id > 0 && p.anim_id <= engine_world.anim_sequences_count) {
             AnimSeq* seq = engine_world.anim_sequences + (p.anim_id - 1);
             // set tex coordinates to the first frame for correct texture transform in renderer

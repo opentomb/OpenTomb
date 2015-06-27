@@ -232,7 +232,7 @@ bool Frustum::hasParent(const std::shared_ptr<Frustum>& parent)
  * Проверка полигона на видимость через портал.
  * данный метод НЕ для реалтайма, т.к. проверка в общем случае выходит дороже отрисовки...
  */
-bool Frustum::isPolyVisible(struct polygon_s *p)
+bool Frustum::isPolyVisible(struct Polygon *p)
 {
     if(planeDist(p->plane, *cam_pos) < 0.0)
     {
@@ -241,7 +241,7 @@ bool Frustum::isPolyVisible(struct polygon_s *p)
 
     auto dir = vertices[0] - *cam_pos;                            // направление от позици камеры до произвольной вершины фрустума
     btScalar t;
-    if(Polygon_RayIntersect(p, dir, *cam_pos, &t))                      // полигон вмещает фрустум портала (бреед, но проверить надо)
+    if(p->rayIntersect(dir, *cam_pos, &t))                      // полигон вмещает фрустум портала (бреед, но проверить надо)
     {
         return true;
     }
@@ -252,8 +252,8 @@ bool Frustum::isPolyVisible(struct polygon_s *p)
     bool ins = true;                                                                    // на случай если нет пересечений
     for(size_t i=0; i<vertices.size(); i++)                               // перебираем все плоскости текущего фрустума
     {
-        vertex_s* curr_v = &p->vertices.front();                                                   // генерим очередь вершин под проверку
-        vertex_s* prev_v = &p->vertices.back();                             //
+        Vertex* curr_v = &p->vertices.front();                                                   // генерим очередь вершин под проверку
+        Vertex* prev_v = &p->vertices.back();                             //
         btScalar dist0 = planeDist(*curr_n, prev_v->position);                    // расстояние со знаком от текущей точки до предыдущей плоскости
         bool outs = true;
         for(size_t j=0; j<p->vertices.size(); j++)                                 // перебираем все вершины полигона
@@ -319,7 +319,7 @@ bool Frustum::isPolyVisible(struct polygon_s *p)
  */
 bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 {
-    polygon_t poly;
+    Polygon poly;
     poly.vertices.resize(4);
     bool ins = true;
 
@@ -501,7 +501,7 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 bool Frustum::isOBBVisible(OBB *obb)
 {
     bool ins = true;
-    polygon_p p = obb->polygons;
+    Polygon* p = obb->polygons;
     for(int i=0;i<6;i++,p++)
     {
         auto t = planeDist(p->plane, *cam_pos);

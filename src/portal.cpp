@@ -229,7 +229,5 @@ void Portal_GenNormale(portal_p p)
 {
     auto v1 = p->vertices[1] - p->vertices[0];
     auto v2 = p->vertices[2] - p->vertices[1];
-    p->norm = v1.cross(v2);
-    p->norm[3] = p->norm.length();
-    vec3_norm_plane(p->norm, p->vertices[0], p->norm[3])
+    p->norm = v1.cross(v2).normalized();
 }

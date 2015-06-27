@@ -10,7 +10,7 @@
 
 #include "vmath.h"
 
-struct polygon_s;
+struct Polygon;
 struct Frustum;
 struct TransparentPolygonReference;
 
@@ -45,7 +45,7 @@ class DynamicBSP
 private:
     std::unique_ptr<BSPNode> m_root{ new BSPNode() };
 
-    void addPolygon(const std::unique_ptr<BSPNode> &root, BSPFaceRef *const p, polygon_s *transformed);
+    void addPolygon(const std::unique_ptr<BSPNode> &root, BSPFaceRef *const p, Polygon *transformed);
     
 public:
     void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f);

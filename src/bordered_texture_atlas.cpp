@@ -313,10 +313,10 @@ size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
     return canonical.height;
 }
 
-///@FIXME - use polygon_p to replace vertex and numCoordinates (maybe texture in / out))
+///@FIXME - use Polygon* to replace vertex and numCoordinates (maybe texture in / out))
 void BorderedTextureAtlas::getCoordinates(size_t texture,
                                          bool reverse,
-                                         polygon_p poly,
+                                         Polygon* poly,
                                          int shift,
                                          bool split)  const
 {

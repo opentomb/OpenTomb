@@ -19,7 +19,7 @@
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0 / 60.0)
 
 class VT_Level;
-struct polygon_s;
+struct Polygon;
 struct BaseMesh;
 struct Room;
 struct world_s;

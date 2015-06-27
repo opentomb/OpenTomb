@@ -10,7 +10,7 @@
 #include "mesh.h"
 #include "frustum.h"
 
-void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, struct BSPFaceRef *const face, struct polygon_s *transformed)
+void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, struct BSPFaceRef *const face, struct Polygon *transformed)
 {
     if(root->polygons_front == NULL)
     {
@@ -23,7 +23,7 @@ void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, struct BSPFace
     size_t positive = 0;
     size_t negative = 0;
     size_t in_plane = 0;
-    for(const vertex_s& v : transformed->vertices)
+    for(const Vertex& v : transformed->vertices)
     {
         const auto dist = planeDist(root->plane, v.position);
         if (dist > SPLIT_EPSILON)
@@ -68,12 +68,12 @@ void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, struct BSPFace
 
 void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const btTransform& transform, const std::vector<std::shared_ptr<Frustum>>& f)
 {
-    polygon_s transformed;
+    Polygon transformed;
     for(const TransparentPolygonReference& pp : p) {
         bool visible = f.empty();
 
         transformed.vertices.resize( pp.polygon->vertices.size() );
-        Polygon_Transform(&transformed, pp.polygon, transform);
+        transformed.transform(pp.polygon, transform);
         transformed.double_side = pp.polygon->double_side;
 
         for(const auto& ff : f) {

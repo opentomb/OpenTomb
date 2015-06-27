@@ -24,8 +24,6 @@ inline btScalar planeDist(const btVector3& p, const btVector3& dot)
     return p[3] + p[0]*dot[0] + p[1]*dot[1] + p[2]*dot[2];
 }
 
-#define vec3_norm_plane(p, dot, a) {(p)[0] /= (a); (p)[1] /= (a); (p)[2] /= (a); \
-                                    (p)[3] = -((p)[0]*(dot)[0] + (p)[1]*(dot)[1] + (p)[2]*(dot)[2]);}
 /**
  * p - point of ray entrance                                                    in
  * v - ray direction                                                            in

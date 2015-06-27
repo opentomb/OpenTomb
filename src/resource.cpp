@@ -2640,7 +2640,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
     int32_t   uvrotate_script = 0;
-    polygon_t p0, p;
+    Polygon p0, p;
 
     p0.vertices.resize(3);
     p.vertices.resize(3);
@@ -2779,7 +2779,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
   *   same TexInfo index that is applied to polygon, and if corresponding
   *   animation list is found, we assign it to polygon.
   */
-bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world)
+bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct world_s *world)
 {
     polygon->anim_id = 0;                           // Reset to 0 by default.
 
@@ -2812,7 +2812,7 @@ void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
     }
 }
 
-static void tr_copyNormals(const polygon_p polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
+static void tr_copyNormals(Polygon* polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
 {
     for (size_t i=0; i<polygon->vertices.size(); ++i)
     {
@@ -2820,7 +2820,7 @@ static void tr_copyNormals(const polygon_p polygon, const std::shared_ptr<BaseMe
     }
 }
 
-void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, const uint16_t *vertex_indices, polygon_p p)
+void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, const uint16_t *vertex_indices, Polygon* p)
 {
     p->vertices.resize(numCorners);
 
@@ -2828,7 +2828,7 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, c
     {
         TR_vertex_to_arr(p->vertices[i].position, tr_mesh->vertices[vertex_indices[i]]);
     }
-    Polygon_FindNormale(p);
+    p->findNormal();
 
     for (int i = 0; i < numCorners; i++)
     {
@@ -2836,7 +2836,7 @@ void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, c
     }
 }
 
-void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, polygon_p p)
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, Polygon* p)
 {
     for (int i = 0; i < p->vertices.size(); i++)
     {
@@ -2857,7 +2857,7 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, cons
     mesh->m_usesVertexColors = true;
 }
 
-void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, polygon_p p)
+void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, Polygon* p)
 {
     for (int i = 0; i < p->vertices.size(); i++)
     {
@@ -3011,7 +3011,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMe
      * let us normalise normales %)
      */
     p = mesh->m_polygons.data();
-    for(vertex_s& v : mesh->m_vertices)
+    for(Vertex& v : mesh->m_vertices)
     {
         v.normal.normalize();
     }
@@ -3047,7 +3047,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMe
     mesh->polySortInMesh();
 }
 
-void tr_setupRoomVertices(world_s *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, polygon_p p)
+void tr_setupRoomVertices(world_s *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, Polygon* p)
 {
     p->vertices.resize(numCorners);
 
@@ -3055,7 +3055,7 @@ void tr_setupRoomVertices(world_s *world, VT_Level *tr, tr5_room_t *tr_room, con
     {
         TR_vertex_to_arr(p->vertices[i].position, tr_room->vertices[vertices[i]].vertex);
     }
-    Polygon_FindNormale(p);
+    p->findNormal();
 
     for (int i = 0; i < numCorners; i++)
     {
@@ -3075,9 +3075,9 @@ void tr_setupRoomVertices(world_s *world, VT_Level *tr, tr5_room_t *tr_room, con
 void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr)
 {
     tr5_room_t *tr_room;
-    polygon_p p;
+    Polygon* p;
     btScalar n;
-    vertex_p vertex;
+    Vertex* vertex;
     uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
     tr_room = &tr->rooms[room_index];
@@ -3127,7 +3127,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
     /*
      * let us normalise normales %)
      */
-    for(vertex_s& v : room->mesh->m_vertices)
+    for(Vertex& v : room->mesh->m_vertices)
     {
         v.normal.normalize();
     }

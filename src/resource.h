@@ -94,7 +94,7 @@ void     Res_Sector_SetTweenFloorConfig(sector_tween_s *tween);
 void     Res_Sector_SetTweenCeilingConfig(sector_tween_s *tween);
 int      Res_Sector_IsWall(room_sector_p ws, room_sector_p ns);
 
-bool     Res_Poly_SetAnimTexture(polygon_s *polygon, uint32_t tex_index, world_s *world);
+bool     Res_Poly_SetAnimTexture(Polygon *polygon, uint32_t tex_index, world_s *world);
 
 void     Res_FixRooms(world_s *world);   // Fix start-up room states.
 

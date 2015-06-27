@@ -23,8 +23,8 @@ struct Entity;
 
 struct OBB
 {
-    polygon_s base_polygons[6];               // bv base surface
-    polygon_s polygons[6];                       // bv world coordinate surface
+    Polygon base_polygons[6];               // bv base surface
+    Polygon polygons[6];                       // bv world coordinate surface
     const btTransform* transform = nullptr;                      // Object transform matrix
     btScalar r;
 

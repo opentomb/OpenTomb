@@ -152,9 +152,9 @@ void Render_Mesh(const std::shared_ptr<BaseMesh>& mesh)
         GLfloat *data = (GLfloat *) glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 
         size_t offset = 0;
-        for(const polygon_s& p : mesh->m_polygons)
+        for(const Polygon& p : mesh->m_polygons)
         {
-            if (p.anim_id == 0 || Polygon_IsBroken(&p))
+            if (p.anim_id == 0 || p.isBroken())
             {
                 continue;
             }
@@ -166,7 +166,7 @@ void Render_Mesh(const std::shared_ptr<BaseMesh>& mesh)
 
             uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames.size();
             TexFrame* tf = &seq->frames[frame];
-            for(const vertex_s& vert : p.vertices)
+            for(const Vertex& vert : p.vertices)
             {
                 const auto& v = vert.tex_coord;
                 data[offset + 0] = tf->mat[0+0*2] * v[0] + tf->mat[0+1*2] * v[1] + tf->move[0];
@@ -218,7 +218,7 @@ void Render_PolygonTransparency(uint16_t &currentTransparency, const struct BSPF
     // internal particle processing. Theoretically it's still possible to use
     // them if you will force type via TRTextur utility.
     const struct TransparentPolygonReference *ref = bsp_ref->polygon;
-    const struct polygon_s *p = ref->polygon;
+    const struct Polygon *p = ref->polygon;
     if (currentTransparency != p->transparency)
     {
         currentTransparency = p->transparency;
@@ -1494,7 +1494,7 @@ void render_DebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_m
 
 void render_DebugDrawer::drawOBB(struct OBB *obb)
 {
-    polygon_s* p = obb->polygons;
+    Polygon* p = obb->polygons;
     addLine(p->vertices[0].position, (p+1)->vertices[0].position);
     addLine(p->vertices[1].position, (p+1)->vertices[3].position);
     addLine(p->vertices[2].position, (p+1)->vertices[2].position);
@@ -1531,7 +1531,7 @@ void render_DebugDrawer::drawMeshDebugLines(const std::shared_ptr<BaseMesh>& mes
         }
         else
         {
-            vertex_s* mv = mesh->m_vertices.data();
+            Vertex* mv = mesh->m_vertices.data();
             for (uint32_t i = 0; i < mesh->m_vertices.size(); i++,mv++)
             {
                 btVector3 v = transform * mv->position;

@@ -171,7 +171,7 @@ class btCollisionShape;
 class btRigidBody;
 
 struct Room;
-struct polygon_s;
+struct Polygon;
 struct Camera;
 struct portal_s;
 struct render_s;

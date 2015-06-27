@@ -30,16 +30,16 @@ class btCollisionShape;
 class btRigidBody;
 class btCollisionShape;
 
-struct polygon_s;
+struct Polygon;
 struct Room;
 struct EngineContainer;
 struct OBB;
-struct vertex_s;
+struct Vertex;
 struct render_s;
 struct Entity;
 
 struct TransparentPolygonReference {
-    const polygon_s *polygon;
+    const Polygon *polygon;
     vertex_array* used_vertex_array;
     size_t firstIndex;
     size_t count;
@@ -63,16 +63,16 @@ struct BaseMesh
     uint32_t m_id;                                                   // mesh's ID
     bool m_usesVertexColors;                                   // does this mesh have prebaked vertex lighting
 
-    std::vector<polygon_s> m_polygons;                                             // polygons data
+    std::vector<Polygon> m_polygons;                                             // polygons data
 
-    std::vector<polygon_s> m_transparencyPolygons;                                // transparency mesh's polygons list
+    std::vector<Polygon> m_transparencyPolygons;                                // transparency mesh's polygons list
 
     uint32_t              m_texturePageCount;                                    // face without structure wrapping
     std::vector<uint32_t> m_elementsPerTexture;                            //
     std::vector<uint32_t> m_elements;                                             //
     uint32_t m_alphaElements;
 
-    std::vector<vertex_s> m_vertices;
+    std::vector<Vertex> m_vertices;
     
     size_t m_animatedElementCount;
     size_t m_alphaAnimatedElementCount;
@@ -111,8 +111,8 @@ struct BaseMesh
     void findBB();
     void genVBO(const render_s *renderer);
     void genFaces();
-    uint32_t addVertex(const vertex_s& v);
-    uint32_t addAnimatedVertex(const vertex_s& v);
+    uint32_t addVertex(const Vertex& v);
+    uint32_t addAnimatedVertex(const Vertex& v);
     void polySortInMesh();
 };
 
