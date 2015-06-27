@@ -273,7 +273,6 @@ void Engine_BTInit()
      return 0;
  }
 
-// print is a system function;
 int lua_print(lua_State * lua)
 {
      int top = lua_gettop(lua);
@@ -477,7 +476,9 @@ int lua_DisableEntity(lua_State * lua)
 
 int lua_SetEntityCollision(lua_State * lua)
 {
-    if(lua_gettop(lua) < 1)
+    int top = lua_gettop(lua);
+
+    if(top < 1)
     {
         Con_Warning(SYSWARN_ENTER_ENTITY_ID);
         return 0;
@@ -486,7 +487,7 @@ int lua_SetEntityCollision(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent != NULL)
     {
-        if(lua_tointeger(lua, 2) != 0)
+        if((top >= 2) && (lua_tointeger(lua, 2)))
         {
             Entity_EnableCollision(ent);
         }
@@ -499,6 +500,40 @@ int lua_SetEntityCollision(lua_State * lua)
     return 0;
 }
 
+int lua_SetEntityCollisionFlags(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Warning(SYSWARN_ENTER_ENTITY_ID);
+        return 0;
+    }
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
+    if(ent != NULL)
+    {
+        if((top >= 2) && !lua_isnil(lua, 2))
+        {
+            ent->self->collision_type = lua_tointeger(lua, 2);
+        }
+        if((top >= 3) && !lua_isnil(lua, 3))
+        {
+            ent->self->collision_type = lua_tointeger(lua, 3);
+        }
+
+        if(ent->self->collision_type & 0x0001)
+        {
+            Entity_EnableCollision(ent);
+        }
+        else
+        {
+            Entity_DisableCollision(ent);
+        }
+    }
+
+    return 0;
+}
 
 int lua_GetEntitySectorFlags(lua_State *lua)
 {
@@ -874,7 +909,6 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
     return 0;
 }
-
 
 int lua_AddCharacterHair(lua_State *lua)
 {
@@ -1686,7 +1720,6 @@ int lua_GetEntityPosition(lua_State * lua)
 
     return 6;
 }
-
 
 int lua_GetEntityAngles(lua_State * lua)
 {
@@ -4200,6 +4233,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
     lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
+    lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
     lua_register(lua, "setEntityAnimFlag", lua_SetEntityAnimFlag);
