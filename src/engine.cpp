@@ -1687,6 +1687,31 @@ int lua_GetEntityPosition(lua_State * lua)
     return 6;
 }
 
+
+int lua_GetEntityAngles(lua_State * lua)
+{
+    if(lua_gettop(lua) != 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushnumber(lua, ent->angles[0]);
+    lua_pushnumber(lua, ent->angles[1]);
+    lua_pushnumber(lua, ent->angles[2]);
+
+    return 3;
+}
+
 int lua_SimilarSector(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -1790,7 +1815,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 entity_p ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    Con_Printf("can not find entity with id = %d", id);
+                    Con_Warning(SYSWARN_NO_ENTITY, id);
                     return 0;
                 }
                 ent->transform[12+0] = lua_tonumber(lua, 2);
@@ -1809,7 +1834,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 entity_p ent = World_GetEntityByID(&engine_world, id);
                 if(ent == NULL)
                 {
-                    Con_Printf("can not find entity with id = %d", id);
+                    Con_Warning(SYSWARN_NO_ENTITY, id);
                     return 0;
                 }
                 ent->transform[12+0] = lua_tonumber(lua, 2);
@@ -1834,6 +1859,36 @@ int lua_SetEntityPosition(lua_State * lua)
     return 0;
 }
 
+int lua_SetEntityAngles(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, fi_x], (fi_y, fi_z)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+    }
+    else
+    {
+        ent->angles[0] = lua_tonumber(lua, 2);
+
+        if(top > 2)
+        {
+            ent->angles[1] = lua_tonumber(lua, 3);
+            ent->angles[2] = lua_tonumber(lua, 4);
+        }
+    }
+
+    return 0;
+}
 
 int lua_MoveEntityGlobal(lua_State * lua)
 {
@@ -2058,26 +2113,32 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
 
 int lua_SetEntitySpeed(lua_State * lua)
 {
+    int top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id, speed_x], (speed_y, speed_z)");
+        return 0;
+    }
+
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
 
     if(ent == NULL)
     {
         Con_Warning(SYSWARN_NO_ENTITY, id);
-        return 0;
     }
-
-    switch(lua_gettop(lua))
+    else
     {
-        case 4:
-            ent->speed[0] = lua_tonumber(lua, 2);
+        ent->speed[0] = lua_tonumber(lua, 2);
+
+        if(top > 2)
+        {
             ent->speed[1] = lua_tonumber(lua, 3);
             ent->speed[2] = lua_tonumber(lua, 4);
-            break;
+        }
 
-        default:
-            Con_Warning(SYSWARN_WRONG_ARGS, "[id, Vx, Vy, Vz]");
-            break;
+        Entity_UpdateCurrentSpeed(ent);
     }
 
     return 0;
@@ -4133,6 +4194,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntityDistance", lua_GetEntityDistance);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
+    lua_register(lua, "getEntityAngles", lua_GetEntityAngles);
+    lua_register(lua, "setEntityAngles", lua_SetEntityAngles);
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
     lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);

@@ -466,7 +466,7 @@ tr3_entity_tbl[51] = {coll = 0x02, func = "baddie"};               -- London goo
 tr3_entity_tbl[53] = {coll = 0x02, func = "baddie"};               -- 'Damned' stick-wielding goon
 tr3_entity_tbl[56] = {coll = 0x02, func = "baddie"};               -- London guard
 tr3_entity_tbl[57] = {coll = 0x02, func = "baddie"};               -- Sophia Lee
-tr3_entity_tbl[58] = {coll = 0x01, func = "baddie"};               -- Thames Wharf machine
+tr3_entity_tbl[58] = {coll = 0x01, func = "cleaner"};               -- Thames Wharf machine
 tr3_entity_tbl[60] = {coll = 0x02, func = "baddie"};               -- MP with stick
 tr3_entity_tbl[61] = {coll = 0x02, func = "baddie"};               -- MP with gun
 tr3_entity_tbl[62] = {coll = 0x02, func = "baddie"};               -- Prisoner
