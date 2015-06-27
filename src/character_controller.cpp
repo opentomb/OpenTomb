@@ -1232,7 +1232,7 @@ int Character_FreeFalling(std::shared_ptr<Entity> ent)
     move *= engine_frame_time;
     ent->m_speed += bt_engine_dynamicsWorld->getGravity() * engine_frame_time;
     ent->m_speed[2] = (ent->m_speed[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(ent->m_speed[2]);
-    vec3_RotateZ(ent->m_speed, ent->m_speed, rot);
+    ent->m_speed = ent->m_speed.rotate({0,0,1}, rot * M_PI/180);
 
     Character_UpdateCurrentHeight(ent);
 

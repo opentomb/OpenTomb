@@ -294,13 +294,9 @@ void SkeletalModel::interpolateFrames()
                     bf->bb_min[1] = t * anim->frames[j-1].bb_min[1] + lerp * anim->frames[j].bb_min[1];
                     bf->bb_min[2] = t * anim->frames[j-1].bb_min[2] + lerp * anim->frames[j].bb_min[2];
 
-                    for(uint16_t k=0;k<mesh_count;k++)
-                    {
-                        bf->bone_tags[k].offset[0] = t * anim->frames[j-1].bone_tags[k].offset[0] + lerp * anim->frames[j].bone_tags[k].offset[0];
-                        bf->bone_tags[k].offset[1] = t * anim->frames[j-1].bone_tags[k].offset[1] + lerp * anim->frames[j].bone_tags[k].offset[1];
-                        bf->bone_tags[k].offset[2] = t * anim->frames[j-1].bone_tags[k].offset[2] + lerp * anim->frames[j].bone_tags[k].offset[2];
-
-                        bf->bone_tags[k].qrotate = vec4_slerp(anim->frames[j-1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
+                    for(uint16_t k=0;k<mesh_count;k++) {
+                        bf->bone_tags[k].offset = anim->frames[j-1].bone_tags[k].offset.lerp(anim->frames[j].bone_tags[k].offset, lerp);
+                        bf->bone_tags[k].qrotate =  anim->frames[j-1].bone_tags[k].qrotate.slerp(anim->frames[j].bone_tags[k].qrotate, lerp);
                     }
                     bf++;
                 }

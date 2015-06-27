@@ -901,7 +901,6 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
     next_bf = &model->animations[bf->animations.next_animation].frames[bf->animations.next_frame];
     curr_bf = &model->animations[bf->animations.current_animation].frames[bf->animations.current_frame];
 
-    btScalar t = 1.0 - bf->animations.lerp;
     btVector3 tr, cmd_tr;
     if(etr && (curr_bf->command & ANIM_CMD_MOVE))
     {
@@ -914,26 +913,22 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
         cmd_tr.setZero();
     }
 
-    bf->bb_max = curr_bf->bb_max * t + next_bf->bb_max * bf->animations.lerp;
-    bf->bb_max += cmd_tr;
-    bf->bb_min = curr_bf->bb_min * t + next_bf->bb_min * bf->animations.lerp;
-    bf->bb_min += cmd_tr;
-    bf->centre = curr_bf->centre * t + next_bf->centre * bf->animations.lerp;
-    bf->centre += cmd_tr;
+    bf->bb_max = curr_bf->bb_max.lerp(next_bf->bb_max, bf->animations.lerp) + cmd_tr;
+    bf->bb_min = curr_bf->bb_min.lerp( next_bf->bb_min, bf->animations.lerp ) + cmd_tr;
+    bf->centre = curr_bf->centre.lerp( next_bf->centre, bf->animations.lerp ) + cmd_tr;
+    bf->pos = curr_bf->pos.lerp(next_bf->pos, bf->animations.lerp) + cmd_tr;
 
-    vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->animations.lerp, t);
-    bf->pos += cmd_tr;
     next_btag = next_bf->bone_tags.data();
     src_btag = curr_bf->bone_tags.data();
     for(uint16_t k=0;k<curr_bf->bone_tags.size();k++,btag++,src_btag++,next_btag++)
     {
-        vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->animations.lerp, t);
+        btag->offset = src_btag->offset.lerp( next_btag->offset, bf->animations.lerp );
         btag->transform.getOrigin() = btag->offset;
         btag->transform.getOrigin()[3] = 1.0;
         if(k == 0)
         {
             btag->transform.getOrigin() += bf->pos;
-            btag->qrotate = vec4_slerp(src_btag->qrotate, next_btag->qrotate, bf->animations.lerp);
+            btag->qrotate = src_btag->qrotate.slerp( next_btag->qrotate, bf->animations.lerp );
         }
         else
         {
@@ -952,7 +947,7 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
                     break;
                 }
             }
-            btag->qrotate = vec4_slerp(ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
+            btag->qrotate = ov_src_btag->qrotate.slerp(ov_next_btag->qrotate, ov_lerp);
         }
         btag->transform.setRotation(btag->qrotate);
     }

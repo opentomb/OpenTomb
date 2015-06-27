@@ -382,7 +382,7 @@ void Render::renderSkeletalModelSkin(const struct lit_shader_description *shader
 
         btTransform translate;
         translate.setIdentity();
-        Mat4_Translate(translate, btag->offset);
+        translate.getOrigin() += btag->offset;
 
         btTransform secondTransform = *parentTransform * translate;
 
@@ -427,7 +427,7 @@ void Render::renderDynamicEntitySkin(const lit_shader_description *shader, std::
 
         btTransform translate;
         translate.setIdentity();
-        Mat4_Translate(translate, btag.offset);
+        translate.getOrigin() += btag.offset;
 
         btTransform secondTransform = tr1 * translate;
         mvTransforms[1] = mvMatrix * secondTransform;
@@ -639,7 +639,7 @@ void Render::renderHair(std::shared_ptr<Entity> entity, const btTransform &model
             btTransform invOriginToHairModel;
             invOriginToHairModel.setIdentity();
             // Simplification: Always translation matrix, no invert needed
-            Mat4_Translate(invOriginToHairModel, -entity->m_character->m_hairs[h]->m_elements[i].position);
+            invOriginToHairModel.getOrigin() -= entity->m_character->m_hairs[h]->m_elements[i].position;
 
             const btTransform &bt_tr = entity->m_character->m_hairs[h]->m_elements[i].body->getWorldTransform();
 
