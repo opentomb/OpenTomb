@@ -662,13 +662,13 @@ void BaseMesh::genFaces()
 
 btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool useCompression, bool buildBvh, bool is_static)
 {
-    obb_s obb;
-    polygon_p p = obb.base_polygons;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
     int cnt = 0;
 
-    OBB_Rebuild(&obb, bb_min, bb_max);
+    OBB obb;
+    polygon_p p = obb.base_polygons;
+    obb.rebuild(bb_min, bb_max);
     for(uint16_t i=0;i<6;i++,p++)
     {
         if(Polygon_IsBroken(p))

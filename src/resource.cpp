@@ -2021,7 +2021,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
         r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
-        r_static->obb = new obb_s();
+        r_static->obb = new OBB();
 
         r_static->cbb_min[0] = tr_static->collision_box[0].x;
         r_static->cbb_min[1] =-tr_static->collision_box[0].z;
@@ -2043,8 +2043,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
-        OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
-        OBB_Transform(r_static->obb);
+        r_static->obb->rebuild(r_static->vbb_min, r_static->vbb_max);
+        r_static->obb->doTransform();
 
         r_static->bt_body = NULL;
         r_static->hide = 0;

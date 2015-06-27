@@ -1631,8 +1631,8 @@ void Entity::rebuildBV()
         /*
          * get current BB from animation
          */
-        OBB_Rebuild(m_obb.get(), m_bf.bb_min, m_bf.bb_max);
-        OBB_Transform(m_obb.get());
+        m_obb->rebuild(m_bf.bb_min, m_bf.bb_max);
+        m_obb->doTransform();
     }
 }
 
@@ -2102,7 +2102,7 @@ Entity::Entity()
     , m_triggerLayout( 0x00 )
     , m_timer( 0.0 )
     , m_self( new EngineContainer() )
-    , m_obb( new obb_s() )
+    , m_obb( new OBB() )
     , m_character( NULL )
     , m_currentSector( NULL )
     , m_activationOffset{ 0.0, 256.0, 0.0 }

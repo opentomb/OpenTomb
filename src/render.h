@@ -47,7 +47,7 @@ struct Camera;
 struct Entity;
 struct Sprite;
 struct BaseMesh;
-struct obb_s;
+struct OBB;
 struct lit_shader_description;
 struct SSBoneFrame;
 struct room_sector_s;
@@ -61,7 +61,7 @@ class render_DebugDrawer:public btIDebugDraw
     std::array<GLfloat,3> m_color{{0,0,0}};
     std::vector<std::array<GLfloat,3>> m_buffer;
     
-    std::unique_ptr<obb_s> m_obb;
+    std::unique_ptr<OBB> m_obb;
 
     void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &end);
     void addLine(const btVector3& start, const btVector3& end);
@@ -90,7 +90,7 @@ class render_DebugDrawer:public btIDebugDraw
         void drawPortal(const portal_s &p);
         void drawFrustum(const Frustum &f);
         void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
-        void drawOBB(obb_s *obb);
+        void drawOBB(OBB *obb);
         void drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals);
         void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform);
         void drawEntityDebugLines(std::shared_ptr<Entity> entity);

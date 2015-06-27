@@ -10,17 +10,15 @@
 #include <bullet/LinearMath/btScalar.h>
 #include "engine.h"
 
-void OBB_Rebuild(obb_p obb, const btVector3& bb_min, const btVector3& bb_max)
+void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
 {
-    polygon_p p, p_up, p_down;
+    extent = (bb_max - bb_min)/2;
+    base_centre = (bb_min + bb_max)/2;
+    r = extent.length();
 
-    obb->extent = (bb_max - bb_min)/2;
-    obb->base_centre = (bb_min + bb_max)/2;
-    obb->r = obb->extent.length();
-
-    p = obb->base_polygons;
+    polygon_p p = base_polygons;
     // UP
-    p_up = p;
+    polygon_p p_up = p;
     auto v = &p->vertices.front();
     // 0 1
     // 0 0
@@ -57,7 +55,7 @@ void OBB_Rebuild(obb_p obb, const btVector3& bb_min, const btVector3& bb_max)
     p++;
 
     // DOWN
-    p_down = p;
+    polygon_p p_down = p;
     v = &p->vertices.front();
     // 0 1
     // 0 0
@@ -152,23 +150,19 @@ void OBB_Rebuild(obb_p obb, const btVector3& bb_min, const btVector3& bb_max)
 }
 
 
-void OBB_Transform(obb_p obb)
+void OBB::doTransform()
 {
-    if(obb->transform != NULL)
-    {
-        for(int i=0;i<6;i++)
-        {
-            Polygon_vTransform(&obb->polygons[i], &obb->base_polygons[i], *obb->transform);
+    if(transform != NULL) {
+        for(int i=0;i<6;i++) {
+            Polygon_vTransform(&polygons[i], &base_polygons[i], *transform);
         }
-        obb->centre = *obb->transform * obb->base_centre;
+        centre = *transform * base_centre;
     }
-    else
-    {
-        for(int i=0;i<6;i++)
-        {
-            obb->polygons[i] = obb->base_polygons[i];
+    else {
+        for(int i=0;i<6;i++) {
+            polygons[i] = base_polygons[i];
         }
-        obb->centre = obb->base_centre;
+        centre = base_centre;
     }
 }
 
@@ -178,12 +172,9 @@ void OBB_Transform(obb_p obb)
 int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2)
 {
     //translation, in parent frame
-    btScalar T[3];
     auto v = e2->m_obb->centre - e1->m_obb->centre;
     //translation, in A's frame
-    T[0] = v.dot(e1->m_transform.getBasis()[0]);
-    T[1] = v.dot(e1->m_transform.getBasis()[1]);
-    T[2] = v.dot(e1->m_transform.getBasis()[2]);
+    btVector3 T = e1->m_transform.getBasis() * v;
 
     btScalar *a = e1->m_obb->extent;
     btScalar *b = e2->m_obb->extent;

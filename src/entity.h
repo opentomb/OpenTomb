@@ -17,7 +17,7 @@ class btRigidBody;
 
 struct Room;
 struct room_sector_s;
-struct obb_s;
+struct OBB;
 struct Character;
 struct SSAnimation;
 struct SSBoneFrame;
@@ -125,7 +125,7 @@ struct Entity : public Object
     btVector3 m_angles;
     btTransform m_transform; // GL transformation matrix
 
-    std::unique_ptr<obb_s> m_obb;                // oriented bounding box
+    std::unique_ptr<OBB> m_obb;                // oriented bounding box
 
     room_sector_s* m_currentSector;
     room_sector_s* m_lastSector;

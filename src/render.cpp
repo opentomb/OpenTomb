@@ -1351,7 +1351,7 @@ void Render_CalculateWaterTint(std::array<float,4>* tint, uint8_t fixed_colour)
  * DEBUG PRIMITIVES RENDERING
  */
 render_DebugDrawer::render_DebugDrawer()
-    : m_obb(new obb_s())
+    : m_obb(new OBB())
 {
 }
 
@@ -1486,13 +1486,13 @@ void render_DebugDrawer::drawPortal(const portal_s& p)
 
 void render_DebugDrawer::drawBBox(const btVector3& bb_min, const btVector3& bb_max, const btTransform* transform)
 {
-    OBB_Rebuild(m_obb.get(), bb_min, bb_max);
+    m_obb->rebuild(bb_min, bb_max);
     m_obb->transform = transform;
-    OBB_Transform(m_obb.get());
+    m_obb->doTransform();
     drawOBB(m_obb.get());
 }
 
-void render_DebugDrawer::drawOBB(struct obb_s *obb)
+void render_DebugDrawer::drawOBB(struct OBB *obb)
 {
     polygon_s* p = obb->polygons;
     addLine(p->vertices[0].position, (p+1)->vertices[0].position);

@@ -33,7 +33,7 @@ class btCollisionShape;
 struct polygon_s;
 struct Room;
 struct EngineContainer;
-struct obb_s;
+struct OBB;
 struct vertex_s;
 struct render_s;
 struct Entity;
@@ -228,7 +228,7 @@ struct StaticMesh : public Object
     btVector3 cbb_max;
 
     btTransform transform;                                  // gl transformation matrix
-    obb_s               *obb;
+    OBB               *obb;
     EngineContainer  *self;
 
     std::shared_ptr<BaseMesh> mesh;                                           // base model

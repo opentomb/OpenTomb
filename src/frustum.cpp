@@ -498,7 +498,7 @@ bool Frustum::isAABBVisible(const btVector3& bbmin, const btVector3& bbmax)
 }
 
 
-bool Frustum::isOBBVisible(obb_s *obb)
+bool Frustum::isOBBVisible(OBB *obb)
 {
     bool ins = true;
     polygon_p p = obb->polygons;
@@ -518,7 +518,7 @@ bool Frustum::isOBBVisible(obb_s *obb)
     return ins;
 }
 
-bool Frustum::isOBBVisibleInRoom(obb_s *obb, std::shared_ptr<Room> room)
+bool Frustum::isOBBVisibleInRoom(OBB *obb, std::shared_ptr<Room> room)
 {
     if(room->frustum.empty())                                                         // В комнате нет активного фрустума, значит применяем фрустум камеры
     {
