@@ -24,7 +24,21 @@
 #define OBJECT_HAIR                             (0x0004)
 #define OBJECT_BULLET_MISC                      (0x7FFF)
 
-#define COLLISION_MASK_NONE                     (0x0000)
+#define COLLISION_SHAPE_BOX                     (0x0001)
+#define COLLISION_SHAPE_BOX_BASE                (0x0002)     // use single box collision
+#define COLLISION_SHAPE_SPHERE                  (0x0003)
+#define COLLISION_SHAPE_TRIMESH                 (0x0004)     // for static objects and room's!
+#define COLLISION_SHAPE_TRIMESH_CONVEX          (0x0005)     // for dynamic objects
+
+#define COLLISION_TYPE_NONE                     (0x0000)
+#define COLLISION_TYPE_STATIC                   (0x0001)     // static object - never moved
+#define COLLISION_TYPE_KINEMATIC                (0x0003)     // doors and other moveable statics
+#define COLLISION_TYPE_DYNAMIC                  (0x0005)     // hellow full physics interaction
+#define COLLISION_TYPE_ACTOR                    (0x0007)     // actor, enemies, NPC, animals
+#define COLLISION_TYPE_VEHICLE                  (0x0009)     // car, moto, bike
+#define COLLISION_TYPE_GHOST                    (0x000B)     // no fix character position, but works in collision callbacks and interacts with dynamic objects
+
+#define COLLISION_NONE                          (0x0000)
 #define COLLISION_MASK_ALL                      (0x7FFF)        // bullet uses signed short int for these flags!
 
 #define COLLISION_GROUP_ALL                     (0x7FFF)
@@ -46,7 +60,8 @@ struct lua_State;
 typedef struct engine_container_s
 {
     uint16_t                     object_type;
-    uint32_t                     collide_flag;
+    uint16_t                     collision_type;
+    uint16_t                     collision_shape;
     void                        *object;
     struct room_s               *room;
     struct engine_container_s   *next;
@@ -245,6 +260,7 @@ void Engine_Display();
 
 void Engine_BTInit();
 
+int lua_print(lua_State * lua);
 bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);

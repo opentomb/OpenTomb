@@ -3,4 +3,4 @@
 
 print("Level script loaded (SHORE.lua)");
 
-static_tbl[30] = {coll = COLL_BBOX_BASE};           -- 
+static_tbl[30] = {coll = COLLISION_TYPE_STATIC, shape = COLLISION_SHAPE_BOX_BASE};           -- 

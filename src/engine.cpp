@@ -273,8 +273,8 @@ void Engine_BTInit()
      return 0;
  }
 
- // print is a system function;
- int lua_print(lua_State * lua)
+// print is a system function;
+int lua_print(lua_State * lua)
 {
      int top = lua_gettop(lua);
 
