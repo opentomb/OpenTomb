@@ -107,6 +107,7 @@ typedef struct entity_s
     uint8_t                             was_rendered_lines; // same for debug lines
 
     btScalar                            current_speed;      // current linear speed from animation info
+    btScalar                            speed_mult;
     btVector3                           speed;              // speed of the entity XYZ
 
     btScalar                            inertia_linear;     // linear inertia

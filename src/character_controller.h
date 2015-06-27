@@ -256,7 +256,6 @@ typedef struct character_response_s
     int8_t      kill;
     int8_t      vertical_collide;
     int8_t      horizontal_collide;
-    //int8_t      step_up;
     int8_t      slide;
 }character_response_t, *character_response_p;
 
@@ -306,7 +305,6 @@ typedef struct character_s
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     
     int8_t                       cam_follow_center;
-    btScalar                     speed_mult;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
     btScalar                     max_climb_height;

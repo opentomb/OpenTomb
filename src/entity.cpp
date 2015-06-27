@@ -79,6 +79,9 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf.pos);
     vec4_set_zero(ret->speed.m_floats);
 
+    ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
+    ret->current_speed = 0.0;
+
     ret->activation_offset[0] = 0.0;
     ret->activation_offset[1] = 256.0;
     ret->activation_offset[2] = 0.0;
@@ -1114,7 +1117,7 @@ void Entity_UpdateRotation(entity_p entity)
 
 void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
 {
-    btScalar t  = entity->current_speed * entity->character->speed_mult;
+    btScalar t  = entity->current_speed * entity->speed_mult;
     btScalar vz = (zeroVz)?(0.0):(entity->speed.m_floats[2]);
 
     if(entity->dir_flag & ENT_MOVE_FORWARD)
