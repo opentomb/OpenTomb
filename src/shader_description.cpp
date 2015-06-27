@@ -8,21 +8,21 @@
 
 #include "shader_description.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
-shader_stage::shader_stage(GLenum type, const char *filename, const char *additionalDefines)
+ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {
     shader = glCreateShaderObjectARB(type);
     if (!loadShaderFromFile(shader, filename, additionalDefines))
         abort();
 }
 
-shader_stage::~shader_stage()
+ShaderStage::~ShaderStage()
 {
     glDeleteObjectARB(shader);
 }
 
-shader_description::shader_description(const shader_stage &vertex, const shader_stage &fragment)
+ShaderDescription::ShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
 {
     program = glCreateProgramObjectARB();
     glAttachObjectARB(program, vertex.shader);
@@ -33,13 +33,13 @@ shader_description::shader_description(const shader_stage &vertex, const shader_
     sampler = glGetUniformLocationARB(program, "color_map");
 }
 
-shader_description::~shader_description()
+ShaderDescription::~ShaderDescription()
 {
     glDeleteObjectARB(program);
 }
 
-gui_shader_description::gui_shader_description(const shader_stage &vertex, const shader_stage &fragment)
-: shader_description(vertex, fragment)
+GuiShaderDescription::GuiShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
+: ShaderDescription(vertex, fragment)
 {
     offset = glGetUniformLocationARB(program, "offset");
     factor = glGetUniformLocationARB(program, "factor");
@@ -49,8 +49,8 @@ gui_shader_description::gui_shader_description(const shader_stage &vertex, const
     printInfoLog(program);
 }
 
-text_shader_description::text_shader_description(const shader_stage &vertex, const shader_stage &fragment)
-: shader_description(vertex, fragment)
+TextShaderDescription::TextShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
+: ShaderDescription(vertex, fragment)
 {
     glBindAttribLocationARB(program, vertex_attribs::position, "position");
     glBindAttribLocationARB(program, vertex_attribs::color, "color");
@@ -62,8 +62,8 @@ text_shader_description::text_shader_description(const shader_stage &vertex, con
     screenSize = glGetUniformLocationARB(program, "screenSize");
 }
 
-sprite_shader_description::sprite_shader_description(const shader_stage &vertex, const shader_stage &fragment)
-: shader_description(vertex, fragment)
+SpriteShaderDescription::SpriteShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
+: ShaderDescription(vertex, fragment)
 {
     model_view = glGetUniformLocationARB(program, "modelView");
     projection = glGetUniformLocationARB(program, "projection");
@@ -74,14 +74,14 @@ sprite_shader_description::sprite_shader_description(const shader_stage &vertex,
     printInfoLog(program);
 }
 
-unlit_shader_description::unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment)
-: shader_description(vertex, fragment)
+UnlitShaderDescription::UnlitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
+: ShaderDescription(vertex, fragment)
 {
-    glBindAttribLocationARB(program, vertex_attribs::position, "position");
-    glBindAttribLocationARB(program, vertex_attribs::color, "color");
-    glBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
-    glBindAttribLocationARB(program, vertex_attribs::normal, "normal");
-    glBindAttribLocationARB(program, vertex_attribs::matrix_index, "matrixIndex");
+    glBindAttribLocationARB(program, VertexAttribs::Position, "position");
+    glBindAttribLocationARB(program, VertexAttribs::Color, "color");
+    glBindAttribLocationARB(program, VertexAttribs::TexCoord, "texCoord");
+    glBindAttribLocationARB(program, VertexAttribs::Normal, "normal");
+    glBindAttribLocationARB(program, VertexAttribs::MatrixIndex, "matrixIndex");
     glLinkProgramARB(program);
     
     printInfoLog(program);
@@ -89,8 +89,8 @@ unlit_shader_description::unlit_shader_description(const shader_stage &vertex, c
     model_view_projection = glGetUniformLocationARB(program, "modelViewProjection");
 }
 
-lit_shader_description::lit_shader_description(const shader_stage &vertex, const shader_stage &fragment)
-: unlit_shader_description(vertex, fragment)
+LitShaderDescription::LitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
+: UnlitShaderDescription(vertex, fragment)
 {
     model_view = glGetUniformLocationARB(program, "modelView");
     projection = glGetUniformLocationARB(program, "projection");
@@ -102,8 +102,8 @@ lit_shader_description::lit_shader_description(const shader_stage &vertex, const
     light_ambient = glGetUniformLocationARB(program, "light_ambient");
 }
 
-unlit_tinted_shader_description::unlit_tinted_shader_description(const shader_stage &vertex, const shader_stage &fragment)
-: unlit_shader_description(vertex, fragment)
+UnlitTintedShaderDescription::UnlitTintedShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment)
+: UnlitShaderDescription(vertex, fragment)
 {
     current_tick = glGetUniformLocationARB(program, "fCurrentTick");
     tint_mult = glGetUniformLocationARB(program, "tintMult");

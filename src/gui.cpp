@@ -508,7 +508,7 @@ void Gui_RenderStrings()
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        const text_shader_description *shader = renderer.shaderManager()->getTextShader();
+        const TextShaderDescription *shader = renderer.shaderManager()->getTextShader();
         glUseProgramObjectARB(shader->program);
         GLfloat screenSize[2] = {
             (GLfloat) screen_info.w,
@@ -595,7 +595,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
  */
 void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
-    const lit_shader_description *shader = renderer.shaderManager()->getEntityShader(0, false);
+    const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
     glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -1137,15 +1137,15 @@ void Gui_FillCrosshairBuffer()
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
     
     vertex_array_attribute attribs[] = {
-        vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
-        vertex_array_attribute(gui_shader_description::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
+        vertex_array_attribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
+        vertex_array_attribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
     };
     crosshairArray = renderer.vertexArrayManager()->createArray(0, 2, attribs);
 }
 
 void Gui_DrawCrosshair()
 {
-    const gui_shader_description *shader = renderer.shaderManager()->getGuiShader(false);
+    const GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(false);
 
     glUseProgramObjectARB(shader->program);
     GLfloat factor[2] = {
@@ -1315,8 +1315,8 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         glGenBuffersARB(1, &rectangleColorBuffer);
         
         vertex_array_attribute attribs[] = {
-            vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
-            vertex_array_attribute(gui_shader_description::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
+            vertex_array_attribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
+            vertex_array_attribute(GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
         };
         rectangleArray = renderer.vertexArrayManager()->createArray(0, 2, attribs);
     }
@@ -1333,7 +1333,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    const gui_shader_description *shader = renderer.shaderManager()->getGuiShader(texture != 0);
+    const GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->sampler, 0);
     if (texture)

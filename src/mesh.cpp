@@ -94,12 +94,12 @@ void BaseMesh::genVBO(const Render *renderer)
 
     // Prepare vertex array
     vertex_array_attribute attribs[] = {
-        vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, position)),
-        vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, normal)),
-        vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, color)),
-        vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, tex_coord)),
+        vertex_array_attribute(LitShaderDescription::VertexAttribs::Position, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, position)),
+        vertex_array_attribute(LitShaderDescription::VertexAttribs::Normal, 3, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, normal)),
+        vertex_array_attribute(LitShaderDescription::VertexAttribs::Color, 4, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, color)),
+        vertex_array_attribute(LitShaderDescription::VertexAttribs::TexCoord, 2, GL_FLOAT, false, m_vboVertexArray, sizeof(Vertex), offsetof(Vertex, tex_coord)),
         // Only used for skinned meshes
-        vertex_array_attribute(lit_shader_description::vertex_attribs::matrix_index, 2, GL_UNSIGNED_BYTE, false, m_vboSkinArray, 2, 0),
+        vertex_array_attribute(LitShaderDescription::VertexAttribs::MatrixIndex, 2, GL_UNSIGNED_BYTE, false, m_vboSkinArray, 2, 0),
     };
     int numAttribs = !m_matrixIndices.empty() ? 5 : 4;
     m_mainVertexArray = renderer->vertexArrayManager()->createArray(m_vboIndexArray, numAttribs, attribs);
@@ -123,11 +123,11 @@ void BaseMesh::genVBO(const Render *renderer)
 
         // Create vertex array object.
         vertex_array_attribute attribs[] = {
-            vertex_array_attribute(lit_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, position)),
-            vertex_array_attribute(lit_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, color)),
-            vertex_array_attribute(lit_shader_description::vertex_attribs::normal, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, normal)),
+            vertex_array_attribute(LitShaderDescription::VertexAttribs::Position, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, position)),
+            vertex_array_attribute(LitShaderDescription::VertexAttribs::Color, 4, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, color)),
+            vertex_array_attribute(LitShaderDescription::VertexAttribs::Normal, 3, GL_FLOAT, false, m_animatedVboVertexArray, sizeof(AnimatedVertex), offsetof(AnimatedVertex, normal)),
 
-            vertex_array_attribute(lit_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, m_animatedVboTexCoordArray, sizeof(GLfloat [2]), 0),
+            vertex_array_attribute(LitShaderDescription::VertexAttribs::TexCoord, 2, GL_FLOAT, false, m_animatedVboTexCoordArray, sizeof(GLfloat [2]), 0),
         };
         m_animatedVertexArray = renderer->vertexArrayManager()->createArray(m_animatedVboIndexArray, 4, attribs);
     }

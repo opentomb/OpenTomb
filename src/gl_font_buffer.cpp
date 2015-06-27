@@ -26,9 +26,9 @@ void fontBuffer_ensureAvailable()
     glGenBuffersARB(1, &fontBufferVBO);
     
     vertex_array_attribute attribs[] = {
-        vertex_array_attribute(text_shader_description::vertex_attribs::position, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [0])),
-        vertex_array_attribute(text_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [2])),
-        vertex_array_attribute(text_shader_description::vertex_attribs::color, 4, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [4])),
+        vertex_array_attribute(TextShaderDescription::vertex_attribs::position, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [0])),
+        vertex_array_attribute(TextShaderDescription::vertex_attribs::tex_coord, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [2])),
+        vertex_array_attribute(TextShaderDescription::vertex_attribs::color, 4, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [4])),
     };
     
     fontBufferVAO = renderer.vertexArrayManager()->createArray(0, 3, attribs);

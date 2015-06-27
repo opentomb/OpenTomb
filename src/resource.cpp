@@ -3268,9 +3268,9 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     free(elements);
 
     struct vertex_array_attribute attribs[3] = {
-        vertex_array_attribute(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
-        vertex_array_attribute(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
-        vertex_array_attribute(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
+        vertex_array_attribute(SpriteShaderDescription::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
+        vertex_array_attribute(SpriteShaderDescription::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
+        vertex_array_attribute(SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
     };
 
     room->sprite_buffer->data = renderer.vertexArrayManager()->createArray(elementBuffer, 3, attribs);

@@ -84,7 +84,7 @@ void ConsoleInfo::draw() {
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    const text_shader_description *shader = renderer.shaderManager()->getTextShader();
+    const TextShaderDescription *shader = renderer.shaderManager()->getTextShader();
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->sampler, 0);
     GLfloat screenSize[2] = {
