@@ -592,7 +592,7 @@ int lua_ParseControls(lua_State *lua, struct ControlSettings *cs)
     return -1;
 }
 
-int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
+int lua_ParseScreen(lua_State *lua, struct ScreenInfo *sc)
 {
     if(lua)
     {

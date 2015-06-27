@@ -2,7 +2,7 @@
 #ifndef PARSE_H
 #define PARSE_H
 
-struct screen_info_s;
+struct ScreenInfo;
 struct ConsoleInfo;
 struct Entity;
 struct lua_State;
@@ -27,7 +27,7 @@ void lua_Clean(lua_State *lua);
 #define lua_CallAndLog(L,n,r,f) lua_CallWithError(L, n, r, f, __FILE__, __LINE__)
 bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline);
 
-int lua_ParseScreen(lua_State *lua, screen_info_s *sc);
+int lua_ParseScreen(lua_State *lua, ScreenInfo *sc);
 int lua_ParseRender(lua_State *lua, RenderSettings *rs);
 int lua_ParseAudio(lua_State *lua, AudioSettings *as);
 int lua_ParseConsole(lua_State *lua, ConsoleInfo *cn);
