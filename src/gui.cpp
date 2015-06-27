@@ -37,7 +37,7 @@ gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 GLuint crosshairBuffer;
-vertex_array *crosshairArray;
+std::unique_ptr<VertexArray> crosshairArray;
 
 btTransform guiProjectionMatrix;
 
@@ -1136,11 +1136,11 @@ void Gui_FillCrosshairBuffer()
     glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
     
-    vertex_array_attribute attribs[] = {
-        vertex_array_attribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
-        vertex_array_attribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
+    VertexArrayAttribute attribs[] = {
+        VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
+        VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
     };
-    crosshairArray = renderer.vertexArrayManager()->createArray(0, 2, attribs);
+    crosshairArray.reset( new VertexArray(0, 2, attribs) );
 }
 
 void Gui_DrawCrosshair()
@@ -1156,7 +1156,7 @@ void Gui_DrawCrosshair()
     GLfloat offset[2] = { -1.f, -1.f };
     glUniform2fvARB(shader->offset, 1, offset);
 
-    crosshairArray->use();
+    crosshairArray->bind();
     
     glDrawArrays(GL_LINES, 0, 4);
 }
@@ -1267,9 +1267,12 @@ void Gui_DrawLoadScreen(int value)
     SDL_GL_SwapWindow(sdl_window);
 }
 
+namespace
+{
 GLuint rectanglePositionBuffer = 0;
 GLuint rectangleColorBuffer = 0;
-vertex_array *rectangleArray = 0;
+std::unique_ptr<VertexArray> rectangleArray = 0;
+}
 
 /**
  * Draws simple colored rectangle with given parameters.
@@ -1314,11 +1317,11 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         
         glGenBuffersARB(1, &rectangleColorBuffer);
         
-        vertex_array_attribute attribs[] = {
-            vertex_array_attribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
-            vertex_array_attribute(GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
+        VertexArrayAttribute attribs[] = {
+            VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
+            VertexArrayAttribute(GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
         };
-        rectangleArray = renderer.vertexArrayManager()->createArray(0, 2, attribs);
+        rectangleArray.reset( new VertexArray(0, 2, attribs) );
     }
     
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectangleColorBuffer);
@@ -1344,7 +1347,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glUniform2fvARB(shader->offset, 1, offset);
     glUniform2fvARB(shader->factor, 1, factor);
 
-    rectangleArray->use();
+    rectangleArray->bind();
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }

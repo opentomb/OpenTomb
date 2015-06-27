@@ -47,7 +47,6 @@ void Render::initGlobals()
 void Render::doShaders()
 {
     m_shaderManager.reset( new ShaderManager() );
-    m_vertexArrayManager = VertexArrayManager::createManager();
 }
 
 
@@ -158,7 +157,7 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
 
         if (mesh->m_animatedElementCount > 0)
         {
-            mesh->m_animatedVertexArray->use();
+            mesh->m_animatedVertexArray->bind();
 
             glBindTexture(GL_TEXTURE_2D, m_world->textures[0]);
             glDrawElements(GL_TRIANGLES, mesh->m_animatedElementCount, GL_UNSIGNED_INT, 0);
@@ -167,7 +166,7 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
 
     if(!mesh->m_vertices.empty())
     {
-        mesh->m_mainVertexArray->use();
+        mesh->m_mainVertexArray->bind();
 
         const uint32_t *elementsbase = NULL;
 
@@ -234,7 +233,7 @@ void Render::renderPolygonTransparency(uint16_t &currentTransparency, const stru
 
     glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMvp);
 
-    ref->used_vertex_array->use();
+    ref->used_vertex_array->bind();
     glBindTexture(GL_TEXTURE_2D, m_world->textures[p->tex_index]);
 
     glDrawElements(GL_TRIANGLES, ref->count, GL_UNSIGNED_INT, (GLvoid *) (sizeof(GLuint) * ref->firstIndex));
@@ -693,12 +692,12 @@ void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelView
             GLuint stencilVBO;
             glGenBuffersARB(1, &stencilVBO);
 
-            vertex_array_attribute attribs[] = {
-                vertex_array_attribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, stencilVBO, sizeof(GLfloat [3]), 0)
+            VertexArrayAttribute attribs[] = {
+                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, stencilVBO, sizeof(GLfloat [3]), 0)
             };
 
-            vertex_array *array = m_vertexArrayManager->createArray(0, 1, attribs);
-            array->use();
+            std::unique_ptr<VertexArray> array( new VertexArray(0, 1, attribs) );
+            array->bind();
 
             for(const auto& f : room->frustum) {
                 glBindBufferARB(GL_ARRAY_BUFFER_ARB, stencilVBO);
@@ -717,8 +716,6 @@ void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelView
                 glDrawArrays(GL_TRIANGLE_FAN, 0, f->vertices.size());
             }
             glStencilFunc(GL_EQUAL, 1, 0xFF);
-
-            delete array;
             glDeleteBuffersARB(1, &stencilVBO);
         }
     }
@@ -820,7 +817,7 @@ void Render::renderRoomSprites(std::shared_ptr<Room> room, const btTransform &mo
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, glMat);
         glUniform1iARB(shader->sampler, 0);
 
-        room->sprite_buffer->data->use();
+        room->sprite_buffer->data->bind();
 
         unsigned long offset = 0;
         for(uint32_t texture = 0; texture < room->sprite_buffer->num_texture_pages; texture++)
@@ -1098,7 +1095,7 @@ void Render::drawListDebugLines()
         glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
-        debugDrawer.render(this);
+        debugDrawer.render();
     }
 }
 
@@ -1276,17 +1273,17 @@ void RenderDebugDrawer::drawContactPoint(const btVector3& pointOnB,const btVecto
     drawLine(pointOnB, pointOnB + normalOnB * distance, color);
 }
 
-void RenderDebugDrawer::render(Render *render)
+void RenderDebugDrawer::render()
 {
     if(!m_buffer.empty())
     {
         if (m_glbuffer == 0) {
             glGenBuffersARB(1, &m_glbuffer);
-            vertex_array_attribute attribs[] = {
-                vertex_array_attribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [0])),
-                vertex_array_attribute(UnlitShaderDescription::Color, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
+            VertexArrayAttribute attribs[] = {
+                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [0])),
+                VertexArrayAttribute(UnlitShaderDescription::Color, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
             };
-            m_vertexArray = render->vertexArrayManager()->createArray(0, 2, attribs);
+            m_vertexArray.reset( new VertexArray(0, 2, attribs) );
         }
 
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, m_glbuffer);
@@ -1296,7 +1293,7 @@ void RenderDebugDrawer::render(Render *render)
         std::copy(m_buffer.begin(), m_buffer.end(), data);
         glUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
 
-        m_vertexArray->use();
+        m_vertexArray->bind();
         glDrawArrays(GL_LINES, 0, m_buffer.size()/2);
     }
 

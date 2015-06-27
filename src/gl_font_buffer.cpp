@@ -12,26 +12,29 @@
 #include "vertex_array.h"
 #include "shader_description.h"
 
-static GLuint fontBufferVBO = 0;
-static vertex_array *fontBufferVAO = 0;
-static size_t currentSize = 0;
+namespace
+{
+    GLuint fontBufferVBO = 0;
+    std::unique_ptr<VertexArray> fontBufferVAO;
+    size_t currentSize = 0;
+}
 
 void fontBuffer_ensureAvailable()
 {
-    if (fontBufferVAO != 0 && fontBufferVBO != 0)
+    if (fontBufferVAO && fontBufferVBO != 0)
     {
         return;
     }
     
     glGenBuffersARB(1, &fontBufferVBO);
     
-    vertex_array_attribute attribs[] = {
-        vertex_array_attribute(TextShaderDescription::vertex_attribs::position, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [0])),
-        vertex_array_attribute(TextShaderDescription::vertex_attribs::tex_coord, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [2])),
-        vertex_array_attribute(TextShaderDescription::vertex_attribs::color, 4, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [4])),
+    VertexArrayAttribute attribs[] = {
+        VertexArrayAttribute(TextShaderDescription::vertex_attribs::position, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [0])),
+        VertexArrayAttribute(TextShaderDescription::vertex_attribs::tex_coord, 2, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [2])),
+        VertexArrayAttribute(TextShaderDescription::vertex_attribs::color, 4, GL_FLOAT, false, fontBufferVBO, sizeof(GLfloat [8]), sizeof(GLfloat [4])),
     };
     
-    fontBufferVAO = renderer.vertexArrayManager()->createArray(0, 3, attribs);
+    fontBufferVAO.reset( new VertexArray(0, 3, attribs) );
 }
 
 void *FontBuffer_ResizeAndMap(size_t bytes)
@@ -56,5 +59,5 @@ void FontBuffer_Bind()
 {
     fontBuffer_ensureAvailable();
     
-    fontBufferVAO->use();
+    fontBufferVAO->bind();
 }

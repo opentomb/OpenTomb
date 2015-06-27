@@ -40,7 +40,7 @@ struct Entity;
 
 struct TransparentPolygonReference {
     const Polygon *polygon;
-    vertex_array* used_vertex_array;
+    std::shared_ptr<VertexArray> used_vertex_array;
     size_t firstIndex;
     size_t count;
     bool isAnimated;
@@ -93,7 +93,7 @@ struct BaseMesh
     GLuint                m_vboVertexArray;
     GLuint                m_vboIndexArray;
     GLuint                m_vboSkinArray;
-    vertex_array*        m_mainVertexArray;
+    std::shared_ptr<VertexArray> m_mainVertexArray;
     
     // Buffers for animated polygons
     // The first contains position, normal and color.
@@ -101,7 +101,7 @@ struct BaseMesh
     GLuint                m_animatedVboVertexArray;
     GLuint                m_animatedVboTexCoordArray;
     GLuint                m_animatedVboIndexArray;
-    vertex_array*        m_animatedVertexArray;
+    std::shared_ptr<VertexArray> m_animatedVertexArray;
 
     ~BaseMesh() {
         clear();
@@ -138,7 +138,7 @@ struct Sprite
 struct SpriteBuffer
 {
     // Vertex data for the sprites
-    vertex_array *data;
+    std::unique_ptr<VertexArray> data;
     
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
     uint32_t              num_texture_pages;

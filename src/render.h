@@ -10,6 +10,8 @@
 #include <memory>
 #include <vector>
 
+#include "vertex_array.h"
+
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
 #define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
 
@@ -28,7 +30,6 @@ struct LitShaderDescription;
 struct SSBoneFrame;
 struct room_sector_s;
 struct Render;
-class vertex_array;
 
 class RenderDebugDrawer : public btIDebugDraw
 {
@@ -43,7 +44,7 @@ class RenderDebugDrawer : public btIDebugDraw
     void addLine(const btVector3& start, const btVector3& end);
     void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &startColor, const std::array<GLfloat,3> &end, const std::array<GLfloat,3> &endColor);
     
-    vertex_array *m_vertexArray = nullptr;
+    std::unique_ptr<VertexArray> m_vertexArray{};
     GLuint m_glbuffer = 0;
     
 public:
@@ -55,7 +56,7 @@ public:
         return m_buffer.empty();
     }
     void reset();
-    void render(Render* render);
+    void render();
     void setColor(GLfloat r, GLfloat g, GLfloat b)
     {
         m_color[0] = r;
@@ -131,7 +132,6 @@ struct RenderSettings
     float     fog_end_depth = 16000;
 };
 
-class VertexArrayManager;
 class ShaderManager;
 struct BSPNode;
 struct UnlitTintedShaderDescription;
@@ -147,7 +147,6 @@ private:
     Camera* m_cam = nullptr;
     RenderSettings m_settings;
     std::unique_ptr<ShaderManager> m_shaderManager;
-    VertexArrayManager* m_vertexArrayManager;
 
     size_t m_rListActiveCount = 0;
     std::vector<RenderList> m_rList{};
@@ -186,9 +185,6 @@ public:
         m_rListActiveCount = 0;
     }
 
-    VertexArrayManager* vertexArrayManager() const {
-        return m_vertexArrayManager;
-    }
     const std::unique_ptr<ShaderManager>& shaderManager() {
         return m_shaderManager;
     }
