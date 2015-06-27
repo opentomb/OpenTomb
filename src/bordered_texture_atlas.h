@@ -1,5 +1,4 @@
-#ifndef BORDERED_TEXTURE_ATLAS_H
-#define BORDERED_TEXTURE_ATLAS_H
+#pragma once
 
 /*!
  * @header bordered_texture_atlas.h
@@ -27,8 +26,10 @@
  */
 
 #include <cstdint>
+
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+
 #include "vt/tr_types.h"
 #include "polygon.h"
 
@@ -173,5 +174,3 @@ public:
     void createTextures(GLuint *textureNames, GLuint additionalTextureNames) const;
 
 };
-
-#endif /* BORDERED_TEXTURE_ATLAS_H */

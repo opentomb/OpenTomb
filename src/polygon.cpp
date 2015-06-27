@@ -86,15 +86,15 @@ void Polygon::transformSelf(const btTransform& tr)
 }
 
 
-void Polygon::transform(const Polygon *src, const btTransform& tr)
+void Polygon::transform(const Polygon& src, const btTransform& tr)
 {
-    vertices.resize(src->vertices.size());
+    vertices.resize(src.vertices.size());
 
-    plane = tr.getBasis() * src->plane;
-    for(size_t i=0; i<src->vertices.size(); i++)
+    plane = tr.getBasis() * src.plane;
+    for(size_t i=0; i<src.vertices.size(); i++)
     {
-        vertices[i].position = tr * src->vertices[i].position;
-        vertices[i].normal = tr.getBasis() * src->vertices[i].normal;
+        vertices[i].position = tr * src.vertices[i].position;
+        vertices[i].normal = tr.getBasis() * src.vertices[i].normal;
     }
 
     plane[3] = -plane.dot(vertices[0].position);

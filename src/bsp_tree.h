@@ -4,6 +4,8 @@
 #include <cstring>
 #include <cstdint>
 #include <memory>
+#include <vector>
+
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include <bullet/LinearMath/btScalar.h>
@@ -15,11 +17,10 @@ struct Frustum;
 struct TransparentPolygonReference;
 
 struct BSPFaceRef {
-    BSPFaceRef *next = nullptr;
     btTransform transform;
-    const TransparentPolygonReference *const polygon;
+    const TransparentPolygonReference* polygon;
     
-    BSPFaceRef(const btTransform& matrix, const struct TransparentPolygonReference *polygon)
+    BSPFaceRef(const btTransform& matrix, const TransparentPolygonReference* polygon)
         : transform(matrix)
         , polygon(polygon)
     {
@@ -30,11 +31,11 @@ struct BSPNode
 {
     btVector3 plane{0,0,0};
     
-    BSPFaceRef *polygons_front = nullptr;
-    BSPFaceRef *polygons_back = nullptr;
+    std::vector<BSPFaceRef> polygons_front;
+    std::vector<BSPFaceRef> polygons_back;
     
-    std::unique_ptr<BSPNode> front = nullptr;
-    std::unique_ptr<BSPNode> back = nullptr;
+    std::unique_ptr<BSPNode> front;
+    std::unique_ptr<BSPNode> back;
 };
 
 /**
@@ -45,7 +46,7 @@ class DynamicBSP
 private:
     std::unique_ptr<BSPNode> m_root{ new BSPNode() };
 
-    void addPolygon(const std::unique_ptr<BSPNode> &root, BSPFaceRef *const p, Polygon *transformed);
+    void addPolygon(const std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const Polygon &transformed);
     
 public:
     void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f);

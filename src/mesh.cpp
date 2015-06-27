@@ -498,19 +498,18 @@ void BaseMesh::genFaces()
     m_alphaAnimatedElementCount = 0;
 
     size_t transparent = 0;
-    for (uint32_t i = 0; i < m_polygons.size(); i++)
-    {
-        if (m_polygons[i].isBroken())
+    for (const auto& p : m_polygons) {
+        if (p.isBroken())
             continue;
 
-        uint32_t elementCount = (m_polygons[i].vertices.size() - 2) * 3;
-        if (m_polygons[i].double_side) elementCount *= 2;
+        uint32_t elementCount = (p.vertices.size() - 2) * 3;
+        if (p.double_side) elementCount *= 2;
 
-        if (m_polygons[i].anim_id == 0)
+        if (p.anim_id == 0)
         {
-            if (m_polygons[i].transparency < 2)
+            if (p.transparency < 2)
             {
-                m_elementsPerTexture[m_polygons[i].tex_index] += elementCount;
+                m_elementsPerTexture[p.tex_index] += elementCount;
                 numNormalElements += elementCount;
             }
             else
@@ -521,7 +520,7 @@ void BaseMesh::genFaces()
         }
         else
         {
-            if (m_polygons[i].transparency < 2)
+            if (p.transparency < 2)
                 m_animatedElementCount += elementCount;
             else
             {

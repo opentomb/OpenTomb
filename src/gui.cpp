@@ -508,7 +508,7 @@ void Gui_RenderStrings()
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        const std::unique_ptr<TextShaderDescription>& shader = renderer.shaderManager()->getTextShader();
+        std::shared_ptr<TextShaderDescription> shader = renderer.shaderManager()->getTextShader();
         glUseProgramObjectARB(shader->program);
         GLfloat screenSize[2] = {
             (GLfloat) screen_info.w,
@@ -595,7 +595,7 @@ void Item_Frame(struct SSBoneFrame *bf, btScalar time)
  */
 void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
-    const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
+    const std::shared_ptr<LitShaderDescription>& shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
     glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -1145,7 +1145,7 @@ void Gui_FillCrosshairBuffer()
 
 void Gui_DrawCrosshair()
 {
-    const std::unique_ptr<GuiShaderDescription>& shader = renderer.shaderManager()->getGuiShader(false);
+    std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(false);
 
     glUseProgramObjectARB(shader->program);
     GLfloat factor[2] = {
@@ -1336,7 +1336,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    const std::unique_ptr<GuiShaderDescription>& shader = renderer.shaderManager()->getGuiShader(texture != 0);
+    std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->sampler, 0);
     if (texture)

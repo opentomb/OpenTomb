@@ -6,7 +6,7 @@
 ShaderManager::ShaderManager()
 {
     //Color mult prog
-    m_staticMeshShader.reset( new UnlitTintedShaderDescription(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/static_mesh.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/static_mesh.fsh")) );
+    m_staticMeshShader = std::make_shared<UnlitTintedShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/static_mesh.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/static_mesh.fsh"));
     
     //Room prog
     ShaderStage roomFragmentShader(GL_FRAGMENT_SHADER_ARB, "shaders/room.fsh");
@@ -18,7 +18,7 @@ ShaderManager::ShaderManager()
             stream << "#define IS_WATER " << isWater << std::endl;
             stream << "#define IS_FLICKER " << isFlicker << std::endl;
             
-            m_roomShaders[isWater][isFlicker] = new UnlitTintedShaderDescription(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/room.vsh", stream.str().c_str()), roomFragmentShader);
+            m_roomShaders[isWater][isFlicker] = std::make_shared<UnlitTintedShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/room.vsh", stream.str().c_str()), roomFragmentShader);
         }
     }
     
@@ -30,43 +30,25 @@ ShaderManager::ShaderManager()
         stream << "#define NUMBER_OF_LIGHTS " << i << std::endl;
         
         ShaderStage fragment(GL_FRAGMENT_SHADER_ARB, "shaders/entity.fsh", stream.str().c_str());
-        m_entityShader[i][0] = new LitShaderDescription(entityVertexShader, fragment);
-        m_entityShader[i][1] = new LitShaderDescription(entitySkinVertexShader, fragment);
+        m_entityShader[i][0] = std::make_shared<LitShaderDescription>(entityVertexShader, fragment);
+        m_entityShader[i][1] = std::make_shared<LitShaderDescription>(entitySkinVertexShader, fragment);
     }
     
     // GUI prog
     ShaderStage guiVertexShader(GL_VERTEX_SHADER_ARB, "shaders/gui.vsh");
-    m_gui.reset( new GuiShaderDescription(guiVertexShader, ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/gui.fsh")) );
-    m_guiTextured.reset( new GuiShaderDescription(guiVertexShader, ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/gui_tex.fsh")) );
+    m_gui = std::make_shared<GuiShaderDescription>(guiVertexShader, ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/gui.fsh"));
+    m_guiTextured = std::make_shared<GuiShaderDescription>(guiVertexShader, ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/gui_tex.fsh"));
     
-    m_text.reset( new TextShaderDescription(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/text.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/text.fsh")) );
-    m_sprites.reset( new SpriteShaderDescription(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/sprite.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/sprite.fsh")) );
+    m_text = std::make_shared<TextShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/text.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/text.fsh"));
+    m_sprites = std::make_shared<SpriteShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/sprite.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/sprite.fsh"));
     
-    m_stencil.reset( new UnlitShaderDescription(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/stencil.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/stencil.fsh")) );
+    m_stencil = std::make_shared<UnlitShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/stencil.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/stencil.fsh"));
     
-    m_debugline.reset( new UnlitShaderDescription(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/debuglines.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/debuglines.fsh")) );
+    m_debugline = std::make_shared<UnlitShaderDescription>(ShaderStage(GL_VERTEX_SHADER_ARB, "shaders/debuglines.vsh"), ShaderStage(GL_FRAGMENT_SHADER_ARB, "shaders/debuglines.fsh"));
 }
 
-ShaderManager::~ShaderManager()
-{
-    // Do nothing. All shaders are released by OpenGL anyway.
-}
 
-const LitShaderDescription *ShaderManager::getEntityShader(unsigned numberOfLights, bool skin) const {
-    assert(numberOfLights <= MAX_NUM_LIGHTS);
-    
-    return m_entityShader[numberOfLights][skin ? 1 : 0];
-}
 
-const UnlitTintedShaderDescription *ShaderManager::getRoomShader(bool isFlickering, bool isWater) const
-{
-    return m_roomShaders[isWater ? 1 : 0][isFlickering ? 1 : 0];
-}
 
-const std::unique_ptr<GuiShaderDescription>& ShaderManager::getGuiShader(bool includingTexture) const
-{
-    if (includingTexture)
-        return m_guiTextured;
-    else
-        return m_gui;
-}
+
+

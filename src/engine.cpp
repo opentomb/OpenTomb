@@ -3696,8 +3696,8 @@ int lua_genUVRotateAnimation(lua_State *lua)
 
     if(model->mesh_tree.front().mesh_base->m_transparencyPolygons.empty())
         return 0;
-    Polygon* p = &model->mesh_tree.front().mesh_base->m_transparencyPolygons.front();
-    if(p->anim_id != 0)
+    const Polygon& firstPolygon = model->mesh_tree.front().mesh_base->m_transparencyPolygons.front();
+    if(firstPolygon.anim_id != 0)
         return 0;
 
     engine_world.anim_sequences_count++;
@@ -3717,16 +3717,16 @@ int lua_genUVRotateAnimation(lua_State *lua)
     seq->frame_list[0] = 0;
 
     btScalar v_min, v_max;
-    v_min = v_max = p->vertices[0].tex_coord[1];
-    for(size_t j=1; j<p->vertices.size(); j++)
+    v_min = v_max = firstPolygon.vertices[0].tex_coord[1];
+    for(size_t j=1; j<firstPolygon.vertices.size(); j++)
     {
-        if(p->vertices[j].tex_coord[1] > v_max)
+        if(firstPolygon.vertices[j].tex_coord[1] > v_max)
         {
-            v_max = p->vertices[j].tex_coord[1];
+            v_max = firstPolygon.vertices[j].tex_coord[1];
         }
-        if(p->vertices[j].tex_coord[1] < v_min)
+        if(firstPolygon.vertices[j].tex_coord[1] < v_min)
         {
-            v_min = p->vertices[j].tex_coord[1];
+            v_min = firstPolygon.vertices[j].tex_coord[1];
         }
     }
 
@@ -3734,7 +3734,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
     seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames.size();
     for(uint16_t j=0;j<seq->frames.size();j++)
     {
-        seq->frames[j].tex_ind = p->tex_index;
+        seq->frames[j].tex_ind = firstPolygon.tex_index;
         seq->frames[j].mat[0] = 1.0;
         seq->frames[j].mat[1] = 0.0;
         seq->frames[j].mat[2] = 0.0;
@@ -3743,12 +3743,10 @@ int lua_genUVRotateAnimation(lua_State *lua)
         seq->frames[j].move[1] = -((btScalar)j * seq->uvrotate_speed);
     }
 
-    for(;p!=NULL;p=p->next)
-    {
-        p->anim_id = engine_world.anim_sequences_count;
-        for(size_t j=0; j<p->vertices.size(); j++)
-        {
-            p->vertices[j].tex_coord[1] = v_min + 0.5 * (p->vertices[j].tex_coord[1] - v_min) + seq->uvrotate_max;
+    for(Polygon& p : model->mesh_tree.front().mesh_base->m_transparencyPolygons) {
+        p.anim_id = engine_world.anim_sequences_count;
+        for(Vertex& v : p.vertices) {
+            v.tex_coord[1] = v_min + 0.5 * (v.tex_coord[1] - v_min) + seq->uvrotate_max;
         }
     }
 

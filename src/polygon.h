@@ -50,7 +50,6 @@ struct Polygon
         , transparency(rhs.transparency)
         , double_side(rhs.double_side)
         , plane(rhs.plane)
-        , next(nullptr)
     {
     }
 
@@ -67,14 +66,12 @@ struct Polygon
         return *this;
     }
 
-    Polygon *next = nullptr;                                                   // polygon list (for BSP using)
-
     bool isBroken() const;
 
     void moveSelf(const btVector3 &move);
     void move(Polygon* src, const btVector3 &move);
     void vTransform(Polygon* src, const btTransform &tr);
-    void transform(const Polygon *src, const btTransform &tr);
+    void transform(const Polygon &src, const btTransform &tr);
     void transformSelf(const btTransform &tr);
 
     void findNormal();

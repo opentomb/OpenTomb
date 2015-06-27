@@ -246,16 +246,16 @@ public:
     }
 
     void renderEntity(std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection);
-    void renderDynamicEntity(const LitShaderDescription *shader, std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix);
-    void renderDynamicEntitySkin(const LitShaderDescription *shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix);
-    void renderSkeletalModel(const LitShaderDescription *shader, SSBoneFrame* bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
-    void renderSkeletalModelSkin(const LitShaderDescription *shader, std::shared_ptr<Entity> ent, const btTransform &mvMatrix, const btTransform &pMatrix);
+    void renderDynamicEntity(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix);
+    void renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix);
+    void renderSkeletalModel(const std::shared_ptr<LitShaderDescription> &shader, SSBoneFrame* bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
+    void renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> ent, const btTransform &mvMatrix, const btTransform &pMatrix);
     void renderHair(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix);
     void renderSkyBox(const btTransform &matrix);
     void renderMesh(const std::shared_ptr<BaseMesh> &mesh);
-    void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef *p, const UnlitTintedShaderDescription *shader);
-    void renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
-    void renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
+    void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef &p, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
+    void renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription>& shader);
+    void renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
     void renderRoom(std::shared_ptr<Room> room, const btTransform& matrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection);
     void renderRoomSprites(std::shared_ptr<Room> room, const btTransform& modelViewMatrix, const btTransform& projectionMatrix);
 
@@ -264,7 +264,7 @@ public:
     void renderSkyBoxDebugLines();
 
 private:
-    const LitShaderDescription *setupEntityLight(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, bool skin);
+    std::shared_ptr<LitShaderDescription> setupEntityLight(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, bool skin);
 };
 
 extern Render renderer;

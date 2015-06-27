@@ -39,7 +39,7 @@ struct Render;
 struct Entity;
 
 struct TransparentPolygonReference {
-    const Polygon *polygon;
+    const Polygon* polygon;
     std::shared_ptr<VertexArray> used_vertex_array;
     size_t firstIndex;
     size_t count;

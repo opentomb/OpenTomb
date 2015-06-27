@@ -2779,7 +2779,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
   *   same TexInfo index that is applied to polygon, and if corresponding
   *   animation list is found, we assign it to polygon.
   */
-bool SetAnimTexture(struct Polygon *polygon, uint32_t tex_index, struct world_s *world)
+bool SetAnimTexture(Polygon* polygon, uint32_t tex_index, world_s *world)
 {
     polygon->anim_id = 0;                           // Reset to 0 by default.
 
@@ -2879,12 +2879,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *v
 
 void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, class VT_Level *tr)
 {
-    uint16_t col;
-    tr4_mesh_t *tr_mesh;
-    tr4_face4_t *face4;
-    tr4_face3_t *face3;
-    tr4_object_texture_t *tex;
-    uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
     /* TR WAD FORMAT DOCUMENTATION!
      * tr4_face[3,4]_t:
@@ -2901,7 +2896,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMe
      * of the square angle of the triangles, 7 represents a quad.
      */
 
-    tr_mesh = &tr->meshes[mesh_index];
+    tr4_mesh_t* tr_mesh = &tr->meshes[mesh_index];
     mesh->m_id = mesh_index;
     mesh->m_center[0] = tr_mesh->centre.x;
     mesh->m_center[1] =-tr_mesh->centre.z;
@@ -2919,114 +2914,124 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMe
 
     mesh->findBB();
 
-    mesh->m_polygons.resize( tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles );
+    mesh->m_polygons.clear();
 
     /*
      * textured triangles
      */
-    auto p = mesh->m_polygons.data();
-    for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i, ++p)
+    for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i)
     {
-        face3 = &tr_mesh->textured_triangles[i];
-        tex = &tr->object_textures[face3->texture & tex_mask];
+        mesh->m_polygons.emplace_back();
+        Polygon& p = mesh->m_polygons.back();
 
-        p->double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        auto face3 = &tr_mesh->textured_triangles[i];
+        auto tex = &tr->object_textures[face3->texture & tex_mask];
 
-        SetAnimTexture(p, face3->texture & tex_mask, world);
+        p.double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+
+        SetAnimTexture(&p, face3->texture & tex_mask, world);
 
         if(face3->lighting & 0x01)
         {
-            p->transparency = BM_MULTIPLY;
+            p.transparency = BM_MULTIPLY;
         }
         else
         {
-            p->transparency = tex->transparency_flags;
+            p.transparency = tex->transparency_flags;
         }
 
-        tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, p);
-        tr_setupTexturedFace(tr_mesh, mesh.get(), face3->vertices, p);
+        tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, &p);
+        tr_setupTexturedFace(tr_mesh, mesh.get(), face3->vertices, &p);
 
-        world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
+        world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, &p);
     }
 
     /*
      * coloured triangles
      */
-    for(size_t i=0; i<tr_mesh->num_coloured_triangles; ++i, ++p)
+    for(size_t i=0; i<tr_mesh->num_coloured_triangles; ++i)
     {
-        face3 = &tr_mesh->coloured_triangles[i];
-        col = face3->texture & 0xff;
-        p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
-        p->transparency = 0;
-        p->anim_id = 0;
+        mesh->m_polygons.emplace_back();
+        Polygon& p = mesh->m_polygons.back();
 
-        tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, p);
-        tr_setupColoredFace(tr_mesh, tr, mesh.get(), face3->vertices, col, p);
+        auto face3 = &tr_mesh->coloured_triangles[i];
+        auto col = face3->texture & 0xff;
+        p.tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
+        p.transparency = 0;
+        p.anim_id = 0;
+
+        tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, &p);
+        tr_setupColoredFace(tr_mesh, tr, mesh.get(), face3->vertices, col, &p);
     }
 
     /*
      * textured rectangles
      */
-    for(size_t i=0; i<tr_mesh->num_textured_rectangles; ++i, ++p)
+    for(size_t i=0; i<tr_mesh->num_textured_rectangles; ++i)
     {
-        face4 = &tr_mesh->textured_rectangles[i];
-        tex = &tr->object_textures[face4->texture & tex_mask];
+        mesh->m_polygons.emplace_back();
+        Polygon& p = mesh->m_polygons.back();
 
-        p->double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        auto face4 = &tr_mesh->textured_rectangles[i];
+        auto tex = &tr->object_textures[face4->texture & tex_mask];
 
-        SetAnimTexture(p, face4->texture & tex_mask, world);
+        p.double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+
+        SetAnimTexture(&p, face4->texture & tex_mask, world);
 
         if(face4->lighting & 0x01)
         {
-            p->transparency = BM_MULTIPLY;
+            p.transparency = BM_MULTIPLY;
         }
         else
         {
-            p->transparency = tex->transparency_flags;
+            p.transparency = tex->transparency_flags;
         }
 
-        tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, p);
-        tr_setupTexturedFace(tr_mesh, mesh.get(), face4->vertices, p);
+        tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, &p);
+        tr_setupTexturedFace(tr_mesh, mesh.get(), face4->vertices, &p);
 
-        world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
+        world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, &p);
     }
 
     /*
      * coloured rectangles
      */
-    for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++,p++)
+    for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++)
     {
-        face4 = &tr_mesh->coloured_rectangles[i];
-        col = face4->texture & 0xff;
-        p->vertices.resize(4);
-        p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
-        p->transparency = 0;
-        p->anim_id = 0;
+        mesh->m_polygons.emplace_back();
+        Polygon& p = mesh->m_polygons.back();
 
-        tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, p);
-        tr_setupColoredFace(tr_mesh, tr, mesh.get(), face4->vertices, col, p);
+        auto face4 = &tr_mesh->coloured_rectangles[i];
+        auto col = face4->texture & 0xff;
+        p.vertices.resize(4);
+        p.tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
+        p.transparency = 0;
+        p.anim_id = 0;
+
+        tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, &p);
+        tr_setupColoredFace(tr_mesh, tr, mesh.get(), face4->vertices, col, &p);
     }
 
     /*
      * let us normalise normales %)
      */
-    p = mesh->m_polygons.data();
-    for(Vertex& v : mesh->m_vertices)
-    {
+    for(Vertex& v : mesh->m_vertices) {
         v.normal.normalize();
     }
 
     /*
      * triangles
      */
+    auto p = mesh->m_polygons.begin();
     for(int16_t i=0;i<tr_mesh->num_textured_triangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_mesh->textured_triangles[i].vertices);
+        tr_copyNormals(&*p, mesh, tr_mesh->textured_triangles[i].vertices);
     }
 
     for(int16_t i=0;i<tr_mesh->num_coloured_triangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_mesh->coloured_triangles[i].vertices);
+        tr_copyNormals(&*p, mesh, tr_mesh->coloured_triangles[i].vertices);
     }
 
     /*
@@ -3034,12 +3039,12 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMe
      */
     for(int16_t i=0;i<tr_mesh->num_textured_rectangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_mesh->textured_rectangles[i].vertices);
+        tr_copyNormals(&*p, mesh, tr_mesh->textured_rectangles[i].vertices);
     }
 
     for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_mesh->coloured_rectangles[i].vertices);
+        tr_copyNormals(&*p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }
 
     mesh->m_vertices.clear();
@@ -3074,13 +3079,9 @@ void tr_setupRoomVertices(world_s *world, VT_Level *tr, tr5_room_t *tr_room, con
 
 void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr)
 {
-    tr5_room_t *tr_room;
-    Polygon* p;
-    btScalar n;
-    Vertex* vertex;
-    uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
-    tr_room = &tr->rooms[room_index];
+    auto tr_room = &tr->rooms[room_index];
 
     if(tr_room->num_triangles + tr_room->num_rectangles == 0)
     {
@@ -3094,7 +3095,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
     room->mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
     room->mesh->m_vertices.resize( tr_room->num_vertices );
-    vertex = room->mesh->m_vertices.data();
+    auto vertex = room->mesh->m_vertices.data();
     for(size_t i=0; i<room->mesh->m_vertices.size(); i++, vertex++)
     {
         TR_vertex_to_arr(vertex->position, tr_room->vertices[i].vertex);
@@ -3104,14 +3105,14 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
     room->mesh->findBB();
 
     room->mesh->m_polygons.resize( tr_room->num_triangles + tr_room->num_rectangles );
-    p = room->mesh->m_polygons.data();
+    auto p = room->mesh->m_polygons.begin();
 
     /*
      * triangles
      */
     for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
     {
-        tr_setupRoomVertices(world, tr, tr_room, room->mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, p);
+        tr_setupRoomVertices(world, tr, tr_room, room->mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
         p->double_side = tr_room->triangles[i].texture & 0x8000;
     }
 
@@ -3120,7 +3121,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
      */
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        tr_setupRoomVertices(world, tr, tr_room, room->mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, p);
+        tr_setupRoomVertices(world, tr, tr_room, room->mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
         p->double_side = tr_room->rectangles[i].texture & 0x8000;
     }
 
@@ -3135,10 +3136,10 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
     /*
      * triangles
      */
-    p = room->mesh->m_polygons.data();
+    p = room->mesh->m_polygons.begin();
     for(size_t i=0; i<tr_room->num_triangles; i++, p++)
     {
-        tr_copyNormals(p, room->mesh, tr_room->triangles[i].vertices);
+        tr_copyNormals(&*p, room->mesh, tr_room->triangles[i].vertices);
     }
 
     /*
@@ -3146,7 +3147,7 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Ro
      */
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        tr_copyNormals(p, room->mesh, tr_room->rectangles[i].vertices);
+        tr_copyNormals(&*p, room->mesh, tr_room->rectangles[i].vertices);
     }
 
     room->mesh->m_vertices.clear();
