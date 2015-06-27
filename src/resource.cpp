@@ -1450,7 +1450,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
 }
 
 
-bool TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, const portal_s& p)
+bool TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, const Portal& p)
 {
     if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p.norm[1]) > 0.99))
     {
@@ -1571,7 +1571,7 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
 
         if((near_sector != NULL) && (sector->portal_to_room >= 0))
         {
-            for(const portal_s& p : room->portals)
+            for(const Portal& p : room->portals)
             {
                 if((p.norm[2] < 0.01) && ((p.norm[2] > -0.01)))
                 {
@@ -1956,7 +1956,7 @@ void TR_GenRooms(struct world_s *world, class VT_Level *tr)
 
 void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *world, class VT_Level *tr)
 {
-    portal_p p;
+    Portal* p;
     tr5_room_t *tr_room = &tr->rooms[room_index];
     tr_staticmesh_t *tr_static;
     tr_room_portal_t *tr_portal;
@@ -2321,7 +2321,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     tr_portal = tr_room->portals;
     for(size_t i=0; i<room->portals.size(); i++, tr_portal++)
     {
-        portal_s* p = &room->portals[i];
+        Portal* p = &room->portals[i];
         std::shared_ptr<Room> r_dest = world->rooms[tr_portal->adjoining_room];
         p->vertices.resize(4); // in original TR all portals are axis aligned rectangles
         p->flag = 0;
@@ -2336,7 +2336,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         TR_vertex_to_arr(p->vertices[3], tr_portal->vertices[0]);
         p->vertices[3] += room->transform.getOrigin();
         p->centre = std::accumulate(p->vertices.begin(), p->vertices.end(), btVector3()) / 4;
-        Portal_GenNormale(p);
+        p->genNormale();
 
         /*
          * Portal position fix...
@@ -2344,19 +2344,19 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
         // X_MIN
         if((p->norm[0] > 0.999) && (((int)p->centre[0])%2))
         {
-            Portal_Move(p, {1,0,0});
+            p->move({1,0,0});
         }
 
         // Y_MIN
         if((p->norm[1] > 0.999) && (((int)p->centre[1])%2))
         {
-            Portal_Move(p, {0,1,0});
+            p->move({0,1,0});
         }
 
         // Z_MAX
         if((p->norm[2] <-0.999) && (((int)p->centre[2])%2))
         {
-            Portal_Move(p, {0,0,-1});
+            p->move({0,0,-1});
         }
     }
 

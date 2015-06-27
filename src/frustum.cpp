@@ -17,7 +17,7 @@
 #include "obb.h"
 
 
-void Frustum::splitPrepare(struct portal_s *p)
+void Frustum::splitPrepare(struct Portal *p)
 {
     vertices = p->vertices;
     norm = -p->norm;
@@ -142,7 +142,7 @@ void Frustum::genClipPlanes(Camera *cam)
  * receiver - указатель на базовый фрустум рума, куда ведет портал - берется из портала!!!
  * возвращает указатель на свежесгенеренный фрустум
  */
-std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(portal_s *portal, const std::shared_ptr<Frustum>& emitter, render_s *render)
+std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const std::shared_ptr<Frustum>& emitter, render_s *render)
 {
     if(planeDist(portal->norm, render->cam->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
     {

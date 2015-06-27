@@ -9,7 +9,7 @@
 #include "vmath.h"
 
 struct Room;
-struct portal_s;
+struct Portal;
 struct render_s;
 struct OBB;
 struct Polygon;
@@ -31,8 +31,8 @@ struct Frustum
     bool isOBBVisible(OBB *obb);
     static bool isOBBVisibleInRoom(OBB *obb, std::shared_ptr<Room> room);
 
-    static std::shared_ptr<Frustum> portalFrustumIntersect(portal_s* portal, const std::shared_ptr<Frustum> &emitter, render_s *render);         // Основная функция для работы с порталами.
-    void splitPrepare(struct portal_s *p);// подготовка фрустума к сплиту
+    static std::shared_ptr<Frustum> portalFrustumIntersect(Portal* portal, const std::shared_ptr<Frustum> &emitter, render_s *render);         // Основная функция для работы с порталами.
+    void splitPrepare(struct Portal *p);// подготовка фрустума к сплиту
     void genClipPlanes(Camera* cam);                      // генерация плоскостей отсечения
     int split_by_plane(const btVector3 &n, std::vector<btVector3> *buf);              // отсечение части портала плоскостью
 };

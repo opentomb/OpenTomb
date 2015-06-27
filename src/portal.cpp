@@ -17,23 +17,15 @@
  * CLIP PLANES
  */
 
-struct room_sector_s;
-
-
-void Portal_InitGlobals()
-{
-}
-
-
 /*
  * Есть ли портал над сектором
  */
-bool Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector)
+bool Portal::isOnSectorTop(room_sector_s *sector) const
 {
     /*
      * Если портал вертикальный, то
      */
-    if(p->norm[2] < -0.999)
+    if(norm[2] < -0.999)
     {
         btScalar bb_min[2], bb_max[2];
         bb_min[0] = bb_max[0] = sector->owner_room->transform.getOrigin()[0] + 1024.0 * sector->index_x;
@@ -45,9 +37,9 @@ bool Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector)
          * определение границ портала в плоскости XY
          */
         btScalar prtl_range_x[2], prtl_range_y[2];
-        prtl_range_x[0] = prtl_range_x[1] = p->vertices.front().x();
-        prtl_range_y[0] = prtl_range_y[1] = p->vertices.front().y();
-        for(const btVector3& v : p->vertices)
+        prtl_range_x[0] = prtl_range_x[1] = vertices.front().x();
+        prtl_range_y[0] = prtl_range_y[1] = vertices.front().y();
+        for(const btVector3& v : vertices)
         {
             prtl_range_x[0] = std::min(prtl_range_x[0], v.x());
             prtl_range_x[1] = std::max(prtl_range_x[1], v.x());
@@ -70,7 +62,7 @@ bool Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector)
  * Ведет ли портал непосредственно в данный сектор.
  * Сектор должен "прилегать" к порталу.
  */
-bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
+bool Portal::isWayToSector(room_sector_s *sector) const
 {
 
     btScalar bb_min[2], bb_max[2];
@@ -83,9 +75,9 @@ bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
      * определение границ портала в плоскости XY
      */
     btScalar prtl_range_x[2], prtl_range_y[2];
-    prtl_range_x[0] = prtl_range_x[1] = p->vertices[0].x();
-    prtl_range_y[0] = prtl_range_y[1] = p->vertices[0].y();
-    for(const btVector3& v : p->vertices)
+    prtl_range_x[0] = prtl_range_x[1] = vertices[0].x();
+    prtl_range_y[0] = prtl_range_y[1] = vertices[0].y();
+    for(const btVector3& v : vertices)
     {
         prtl_range_x[0] = std::min(prtl_range_x[0], v.x());
         prtl_range_x[1] = std::max(prtl_range_x[1], v.x());
@@ -94,9 +86,9 @@ bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
     }
 
     // X_MAX
-    if(p->norm[0] < -0.999)
+    if(norm[0] < -0.999)
     {
-        if(std::fabs(bb_min[0] - p->centre[0]) <= 1.0)                                // прилегание плоскости выполнено
+        if(std::fabs(bb_min[0] - centre[0]) <= 1.0)                                // прилегание плоскости выполнено
         {
             if(prtl_range_y[0] < bb_max[1] && prtl_range_y[1] > bb_min[1]) // проверка на пересечение диапазонов
             {
@@ -105,9 +97,9 @@ bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
         }
     }
     // X_MIN
-    else if(p->norm[0] > 0.999)
+    else if(norm[0] > 0.999)
     {
-        if(std::fabs(bb_max[0] - p->centre[0]) <= 1.0)                                // прилегание плоскости выполнено
+        if(std::fabs(bb_max[0] - centre[0]) <= 1.0)                                // прилегание плоскости выполнено
         {
             if(prtl_range_y[0] < bb_max[1] && prtl_range_y[1] > bb_min[1]) // проверка на пересечение диапазонов
             {
@@ -116,9 +108,9 @@ bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
         }
     }
     // Y_MAX
-    else if(p->norm[1] < -0.999)
+    else if(norm[1] < -0.999)
     {
-        if(std::fabs(bb_min[1] - p->centre[1]) <= 1.0)                                // прилегание плоскости выполнено
+        if(std::fabs(bb_min[1] - centre[1]) <= 1.0)                                // прилегание плоскости выполнено
         {
             if(prtl_range_x[0] < bb_max[0] && prtl_range_x[1] > bb_min[0]) // проверка на пересечение диапазонов
             {
@@ -127,9 +119,9 @@ bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
         }
     }
     // Y_MIN
-    else if(p->norm[1] > 0.999)
+    else if(norm[1] > 0.999)
     {
-        if(std::fabs(bb_max[1] - p->centre[1]) <= 1.0)                                // прилегание плоскости выполнено
+        if(std::fabs(bb_max[1] - centre[1]) <= 1.0)                                // прилегание плоскости выполнено
         {
             if(!prtl_range_x[0] < bb_max[0] && prtl_range_x[1] > bb_min[0]) // проверка на пересечение диапазонов
             {
@@ -141,7 +133,7 @@ bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
     /*
      * Если портал вертикальный, то
      */
-    if(p->norm[2] < -0.999)
+    if(norm[2] < -0.999)
     {
         const bool in_x = !((prtl_range_x[0] >= bb_max[0]) || (prtl_range_x[1] <= bb_min[0]));
         const bool in_y = !((prtl_range_y[0] >= bb_max[1]) || (prtl_range_y[1] <= bb_min[1]));
@@ -165,13 +157,13 @@ bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector)
 }
 
 
-void Portal_Move(portal_p p, const btVector3& mv)
+void Portal::move(const btVector3& mv)
 {
-    p->centre += mv;
-    for(btVector3& v : p->vertices)
+    centre += mv;
+    for(btVector3& v : vertices)
         v += mv;
 
-    p->norm[3] = -p->norm.dot(p->vertices.front());
+    norm[3] = -norm.dot(vertices.front());
 }
 
 
@@ -181,28 +173,28 @@ void Portal_Move(portal_p p, const btVector3& mv)
  * dir - ray directionа
  * dot - point of ray - plane intersection
  */
-bool Portal_RayIntersect(portal_p p, const btVector3& dir, const btVector3& dot)
+bool Portal::rayIntersect(const btVector3& dir, const btVector3& dot)
 {
-    btScalar u = p->norm.dot(dir);
+    btScalar u = norm.dot(dir);
     if(std::fabs(u) < SPLIT_EPSILON)
     {
         return false;                                                               // плоскость параллельна лучу
     }
-    btScalar t = -(p->norm[3] + p->norm.dot(dot));
+    btScalar t = -(norm[3] + norm.dot(dot));
     t /= u;
     if(0.0 > t)
     {
         return false;                                                               // плоскость не с той стороны луча
     }
 
-    auto* vd = &p->vertices.front();                                                             // Указатель на текущий треугольник
+    auto* vd = &vertices.front();                                                             // Указатель на текущий треугольник
     auto T = dot - *vd;                                                        // Вектор который не меняется для всего полигона
 
-    auto E2 = p->vertices[1]-p->vertices[0];
-    for(size_t i=0; i<p->vertices.size()-2; i++, vd++)                             // Обход полигона веером, один из векторов остается прежним
+    auto E2 = vertices[1]-vertices[0];
+    for(size_t i=0; i<vertices.size()-2; i++, vd++)                             // Обход полигона веером, один из векторов остается прежним
     {
         auto E1 = E2;                                                       // PREV
-        E2 = vd[2] - p->vertices[0];                                           // NEXT
+        E2 = vd[2] - vertices[0];                                           // NEXT
 
         auto P = dir.cross(E2);
         auto Q = T.cross(E1);
@@ -225,9 +217,9 @@ bool Portal_RayIntersect(portal_p p, const btVector3& dir, const btVector3& dot)
 /**
  * Просто генерация нормали к порталу
  */
-void Portal_GenNormale(portal_p p)
+void Portal::genNormale()
 {
-    auto v1 = p->vertices[1] - p->vertices[0];
-    auto v2 = p->vertices[2] - p->vertices[1];
-    p->norm = v1.cross(v2).normalized();
+    auto v1 = vertices[1] - vertices[0];
+    auto v2 = vertices[2] - vertices[1];
+    norm = v1.cross(v2).normalized();
 }

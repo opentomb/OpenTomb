@@ -173,7 +173,7 @@ class btRigidBody;
 struct Room;
 struct Polygon;
 struct Camera;
-struct portal_s;
+struct Portal;
 struct render_s;
 struct Frustum;
 struct BaseMesh;
@@ -290,7 +290,7 @@ struct Room : public Object
     uint32_t                    light_count;
     Light             *lights;
 
-    std::vector<portal_s> portals;                                        // room portals array
+    std::vector<Portal> portals;                                        // room portals array
     std::shared_ptr<Room> alternate_room;                                 // alternative room pointer
     std::shared_ptr<Room> base_room;                                      // base room == room->alternate_room->base_room
 

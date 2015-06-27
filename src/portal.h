@@ -14,18 +14,14 @@
 
 #include "vmath.h"
 
-struct Camera;
 struct Room;
-struct Polygon;
-struct render_s;
-struct Frustum;
-
+struct room_sector_s;
 
 /*
  * пока геометрия текущего портала и портала назначения совпадают.
  * далее будет проведена привязка камеры к взаимоориентации порталов
  */
-typedef struct portal_s                                                         
+struct Portal
 {
     std::vector<btVector3> vertices;                                                           // Оригинальные вершины портала
     btVector3 norm;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
@@ -34,17 +30,21 @@ typedef struct portal_s
     std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
     unsigned int flag = 0;                                                          // хз, мб потом понадобится
 
-    portal_s(size_t vcount = 0)
+    Portal(size_t vcount = 0)
         : vertices(vcount)
     {
     }
 
-    ~portal_s() = default;
-}portal_t, *portal_p;
+    ~Portal() = default;
 
+    bool isOnSectorTop(room_sector_s *sector) const;
+    bool isWayToSector(room_sector_s *sector) const;
+    void move(const btVector3 &mv);
+    bool rayIntersect(const btVector3 &dir, const btVector3 &dot);              // проверка на пересечение луча и портала
 
+    void genNormale();
+};
 
-void Portal_InitGlobals();
 
 /**
  * Draws wireframe of this portal.
@@ -66,13 +66,5 @@ void Portal_InitGlobals();
  *  - Current position will be arbitrary.
  *  - Vertex pointer will be arbitray.
  */
-
-// тут пошли реальные нешуточные функции
-bool Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector);
-bool Portal_IsWayToSector(portal_p p, struct room_sector_s *sector);
-void Portal_Move(portal_p p, const btVector3 &mv);
-bool Portal_RayIntersect(portal_p p, const btVector3 &dir, const btVector3 &dot);              // проверка на пересечение луча и портала
-
-void Portal_GenNormale(portal_p p);
 
 #endif   // PORTAL_H

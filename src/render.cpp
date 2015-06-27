@@ -1185,7 +1185,7 @@ void Render_DrawList_DebugLines()
  * @frus - frustum that intersects the portal
  * @return number of added rooms
  */
-int Render_ProcessRoom(struct portal_s *portal, const std::shared_ptr<Frustum>& frus)
+int Render_ProcessRoom(struct Portal *portal, const std::shared_ptr<Frustum>& frus)
 {
     int ret = 0;
     std::shared_ptr<Room> room = portal->dest_room;                                            // куда ведет портал
@@ -1196,7 +1196,7 @@ int Render_ProcessRoom(struct portal_s *portal, const std::shared_ptr<Frustum>& 
         return 0;
     }
 
-    for(portal_s& p : room->portals)                            // перебираем все порталы входной комнаты
+    for(Portal& p : room->portals)                            // перебираем все порталы входной комнаты
     {
         if((p.dest_room->active) && (p.dest_room != src_room))                // обратно идти даже не пытаемся
         {
@@ -1233,7 +1233,7 @@ void Render_GenWorldList()
         curr_room->frustum.clear();                                              // room with camera inside has no frustums!
         curr_room->max_path = 0;
         Render_AddRoom(curr_room);                                              // room with camera inside adds to the render list immediately
-        for(portal_s& p : curr_room->portals)                   // go through all start room portals
+        for(Portal& p : curr_room->portals)                   // go through all start room portals
         {
             auto last_frus = Frustum::portalFrustumIntersect(&p, renderer.cam->frustum, &renderer);
             if(last_frus) {
@@ -1474,7 +1474,7 @@ void render_DebugDrawer::drawFrustum(const Frustum& f)
     addLine(f.vertices.back(), f.vertices.front());
 }
 
-void render_DebugDrawer::drawPortal(const portal_s& p)
+void render_DebugDrawer::drawPortal(const Portal& p)
 {
     for(size_t i=0; i<p.vertices.size()-1; i++)
     {

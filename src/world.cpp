@@ -993,7 +993,7 @@ void Room_SwapPortals(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_roo
     //Update portals in room rooms
     for(auto r : engine_world.rooms)//For every room in the world itself
     {
-        for(portal_s& p : r->portals) //For every portal in this room
+        for(Portal& p : r->portals) //For every portal in this room
         {
             if(p.dest_room->id == room->id)//If a portal is linked to the input room
             {
@@ -1126,7 +1126,7 @@ struct Sprite* World_GetSpriteByID(unsigned int ID, world_p world)
  */
 bool Room_IsJoined(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2)
 {
-    for(const portal_s& p : r1->portals)
+    for(const Portal& p : r1->portals)
     {
         if(p.dest_room->id == r2->id)
         {
@@ -1134,7 +1134,7 @@ bool Room_IsJoined(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2)
         }
     }
 
-    for(const portal_s& p : r2->portals)
+    for(const Portal& p : r2->portals)
     {
         if(p.dest_room->id == r1->id)
         {
@@ -1149,7 +1149,7 @@ void Room_BuildNearRoomsList(std::shared_ptr<Room> room)
 {
     room->near_room_list_size = 0;
 
-    for(const portal_s& p : room->portals)
+    for(const Portal& p : room->portals)
     {
         Room_AddToNearRoomsList(room, p.dest_room);
     }
@@ -1159,7 +1159,7 @@ void Room_BuildNearRoomsList(std::shared_ptr<Room> room)
     for(uint16_t i=0;i<nc1;i++)
     {
         std::shared_ptr<Room> r = room->near_room_list[i];
-        for(const portal_s& p : r->portals)
+        for(const Portal& p : r->portals)
         {
             Room_AddToNearRoomsList(room, p.dest_room);
         }
