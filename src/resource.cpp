@@ -1782,14 +1782,17 @@ void Res_ScriptsOpen(int engine_version)
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
-        int lua_err = luaL_dofile(level_script, temp_script_name);
 
-        if(lua_err)
+        if(Engine_FileFound(temp_script_name, false))
         {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(level_script, -1));
-            lua_pop(level_script, 1);
-            lua_close(level_script);
-            level_script = NULL;
+            int lua_err = luaL_dofile(level_script, temp_script_name);
+            if(lua_err)
+            {
+                Sys_DebugLog("lua_out.txt", "%s", lua_tostring(level_script, -1));
+                lua_pop(level_script, 1);
+                lua_close(level_script);
+                level_script = NULL;
+            }
         }
     }
 
