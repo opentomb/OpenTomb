@@ -932,6 +932,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
         entity_funcs[object_id].target_angle        = nil;
         entity_funcs[object_id].turn_rot_speed      = nil;
         entity_funcs[object_id].stuck_rot_speed     = nil;
+        entity_funcs[object_id].move_speed          = nil;
         entity_funcs[object_id].move_count          = nil;
         entity_funcs[object_id].loop_count          = nil;
         entity_funcs[object_id].dead                = nil;

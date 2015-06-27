@@ -8,12 +8,13 @@ OpenTomb — an open-source Tomb Raider 1-5 engine remake
 1. What is this?
 2. Why it's developed?
 3. Features
-4. Supported platforms
-5. Configuration and autoexec files
-6. Installation and running
-7. Compiling
-8. Licensing
-9. Credits
+4. System requirements
+5. Supported platforms
+6. Configuration and autoexec files
+7. Installation and running
+8. Compiling
+9. Licensing
+10. Credits
 
 
 1. What is this?
@@ -63,28 +64,35 @@ structures and functions. You are not that limited with open-source engine.
   unused items, hidden PSX-specific structures inside level files, and so on! Also, original
   functionality is being drastically extended, while preserving original gameplay pipeline.
 
-4. Supported platforms
+4. System requirements
+----------------------
+
+OpenTomb should run fine on any contemporary computer, but you **absolutely** need OpenGL 2.1
+compliant videocard (with support of VBOs). Also, make sure you have latest drivers installed
+for your videocard, as OpenTomb may use some other advanced OpenGL features.
+
+5. Supported platforms
 ----------------------
 
 OpenTomb is a cross-platform engine — currently, you can run it on Windows, Mac or Linux.
 No mobile implementations are made yet, but they are fully possible.
 
-5. Configuration and autoexec files
+6. Configuration and autoexec files
 -----------------------------------
 
 Currently, all settings in OpenTomb are managed through configuration and autoexec files.
 Configuration file contains persistent engine and game settings, while autoexec contains
 any commands which should be executed on engine start-up.
 
-Configuration file (config.lua) is divided into different sections: screen, audio, render,
+Configuration file (**config.lua**) is divided into different sections: screen, audio, render,
 controls, console and system. In each of these sections, you can change numerous parameters,
 which names are usually intuitive to understand.  
-Autoexec file (autoexec.lua) is a simple command file which is executed at engine start-up,
+Autoexec file (**autoexec.lua**) is a simple command file which is executed at engine start-up,
 just like you type them in the console. Basically, you shouldn't remove any existing commands
 from autoexec, as most likely engine won't start properly then, but you can modify these
 commands or add new ones — like changing start-up level by modifying setgamef() command.
 
-6. Installation and running
+7. Installation and running
 ---------------------------
 
 You don't need to install OpenTomb, but you need all classic TR game resources. Problem is,
@@ -111,31 +119,32 @@ assets and where to get them:
    simply download loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip  
    Just put it right into OpenTomb directory, and that should do the trick.
     
-7. Compiling
+8. Compiling
 ------------
+
+To compile OpenTomb, primarily you need libs and defines for these external libraries:
+
+* SDL 2.0.3 (get it from http://libsdl.org/download-2.0.php)
+* SDL_Image 2.0 - for Win/Linux (get it from https://www.libsdl.org/projects/SDL_image/)
+* zlib (get it from http://www.zlib.net/ or http://xmlsoft.org/sources/win32/64bit/)
 
 There is a CMakeLists.txt file provided with source code, so you can compile OpenTomb using
 CMake. On Windows, you can also compile it from Code::Blocks IDE (project file is also provided).
 Alternatively, you can manually compile it in Code::Blocks by recursively adding all source files
-from /src directory, and adding these libraries in Linker Settings under Project Build options:
+from /src directory, and setting up these Project Build options:
 
-* libmingw32.a
-* libglu32.a
-* libopengl32.a
-* libuser32.a
-* libgdi32.a
-* libwinmm.a
-* libmm32.a
-* libole32.a
-* liboleaut32.a
-* libversion.a
-* libuuid.a
-* libSDL2main.a
-* libSDL2.a
-* libSDL2_image.a
-* libz.a
-* libpthreadGC2.dll.a
-* libpthread.a
+* In *Compiler options -> Compiler flags*, specify **-std=c++11** flag.
+* In *Compiler options -> Other compiler options*, put this string:
+
+    ` -I"src\bullet" -I"src\freetype2\include" `
+        
+* In *Compiler options -> #defines*, put this string:
+
+    ` LOAD_BMP -DLOAD_JPG -DLOAD_PNG -DLOAD_XPM -DLOAD_TGA -DLOAD_PCX -DOV_EXCLUDE_STATIC_CALLBACKS `
+    
+* In *Linker settings -> Other linker options*, put this string:
+
+    ` -static -lmingw32 -lSDL2main -lSDL2.dll -lopengl32 -lz -lpthread `
 
 On Linux, just download the source code and run in terminal:
 
@@ -154,7 +163,7 @@ You may use CPU-specific optimization flags (-march=prescott, -march=i486, -marc
 as well as general optimization flags (-O1 and -O2), but DON'T USE -O3 flag, as Bullet tends to
 crash with this optimization level.
 
-8. Licensing
+9. Licensing
 ------------
 
 OpenTomb is an open-source engine distributed under LGPLv3 license, which means that ANY part of
@@ -171,7 +180,7 @@ their licenses:
 
 * Droid Sans Mono, Roboto Condensed Regular and Roboto Regular fonts — Apache
     
-9. Credits
+10. Credits
 ----------
 
 NB: Please note that authors and contributors list is constantly extending, as there is more and
@@ -187,6 +196,7 @@ more people involved in project development, so someone may be missing from this
 * Saracen: room and static mesh lighting.
 * T4Larson: general stability patches and bugfixing.
 * vobject: nightly builds, maintaining general compiler compatibility.
+* vvs-: extensive testing and bug reporting.
 
 Additional contributions from: Ado Croft (extensive testing), E. Popov (TRN caustics shader port),
 godmodder (general help), jack9267 (vt loader optimization), meta2tr (testing and bugtracking),

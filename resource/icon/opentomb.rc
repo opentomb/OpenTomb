@@ -1,1 +1,2 @@
-IDI_ICON1   ICON  DISCARDABLE  "opentomb.ico"
+IDI_ICON1    ICON  DISCARDABLE  "opentomb.ico"
+IDR_APP_ICON ICON               "opentomb.ico"
