@@ -21,6 +21,7 @@ struct OBB;
 struct Character;
 struct SSAnimation;
 struct SSBoneFrame;
+struct RDSetup;
 
 #define ENTITY_STATE_ENABLED                        (0x0001)    // Entity is enabled.
 #define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
@@ -91,8 +92,7 @@ struct BtEntityData
     
     btCollisionShape                  **shapes;
     std::vector< std::shared_ptr<btRigidBody> > bt_body;
-    uint32_t                            bt_joint_count;         // Ragdoll joints
-    btTypedConstraint                 **bt_joints;              // Ragdoll joints
+    std::vector<std::shared_ptr<btTypedConstraint>> bt_joints;              // Ragdoll joints
     
     EntityCollisionNode     *last_collisions;
 };
@@ -187,9 +187,18 @@ struct Entity : public Object
     // Constantly updates some specific parameters to keep hair aligned to entity.
     void updateHair();
 
+    bool createRagdoll(RDSetup* setup);
+    bool deleteRagdoll();
+
 private:
     void doAnimMove(int16_t *anim, int16_t *frame);
     void doWeaponFrame(btScalar time);
+
+    static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
+    {
+        btVector3 d = bb_max-bb_min;
+        return std::min(d[0], std::min(d[1], d[2]));
+    }
 };
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);

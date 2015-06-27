@@ -857,16 +857,15 @@ int lua_AddEntityRagdoll(lua_State *lua)
 
         if(ent)
         {
-            rd_setup_s ragdoll_setup;
-            memset(&ragdoll_setup, 0, sizeof(rd_setup_t));
+            RDSetup ragdoll_setup;
 
-            if(!Ragdoll_GetSetup(setup_index, &ragdoll_setup))
+            if(!ragdoll_setup.getSetup(setup_index))
             {
                 ConsoleInfo::instance().warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
             }
             else
             {
-                if(!Ragdoll_Create(ent, &ragdoll_setup))
+                if(!ent->createRagdoll(&ragdoll_setup))
                 {
                     ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
                 }
@@ -894,9 +893,9 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 
         if(ent)
         {
-            if(ent->m_bt.bt_joint_count)
+            if(!ent->m_bt.bt_joints.empty())
             {
-                Ragdoll_Delete(ent);
+                ent->deleteRagdoll();
             }
             else
             {

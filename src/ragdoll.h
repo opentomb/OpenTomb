@@ -1,47 +1,45 @@
-#ifndef RAGDOLL_H
-#define RAGDOLL_H
+#pragma once
 
-#include <cassert>
 #include <cstdint>
+#include <string>
+#include <memory>
+#include <vector>
 
 #include <lua.hpp>
 
 #include <bullet/LinearMath/btScalar.h>
 #include <bullet/LinearMath/btVector3.h>
-#include <bullet/btBulletDynamicsCommon.h>
-
-#include "engine.h"
-#include "entity.h"
-
-
-#define RD_CONSTRAINT_POINT 0
-#define RD_CONSTRAINT_HINGE 1
-#define RD_CONSTRAINT_CONE  2
 
 #define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
 
 // Joint setup struct is used to parse joint script entry to
 // actual joint.
 
-typedef struct rd_joint_setup_s
+struct RDJointSetup
 {
+    enum Type {
+        Point = 0,
+        Hinge = 1,
+        Cone = 2
+    };
+
     uint16_t        body_index;     // Primary body index
-    uint16_t        joint_type;     // See above as RD_CONSTRAINT_* definitions.
+    Type joint_type;     // See above as RD_CONSTRAINT_* definitions.
     
     btVector3       body1_offset;   // Primary pivot point offset
     btVector3       body2_offset;   // Secondary pivot point offset
     
-    btScalar        body1_angle[3]; // Primary pivot point angle
-    btScalar        body2_angle[3]; // Secondary pivot point angle
-    
+    btVector3 body1_angle; // Primary pivot point angle
+    btVector3 body2_angle; // Secondary pivot point angle
+
     btScalar        joint_limit[3]; // Only first two are used for hinge constraint.
         
-}rd_joint_setup_t, *rd_joint_setup_p;
+};
 
 
 // Ragdoll body setup is used to modify body properties for ragdoll needs.
 
-typedef struct rd_body_setup_s
+struct RDBodySetup
 {
     btScalar        mass;
     
@@ -49,31 +47,22 @@ typedef struct rd_body_setup_s
     btScalar        restitution;
     btScalar        friction;
     
-}rd_body_setup_t, *rd_body_setup_p;
+};
 
 
 // Ragdoll setup struct is an unified structure which contains settings
 // for ALL joints and bodies of a given ragdoll.
 
-typedef struct rd_setup_s
+struct RDSetup
 {
-    uint32_t            joint_count;
-    uint32_t            body_count;
+    btScalar            joint_cfm = 0;      // Constraint force mixing (joint softness)
+    btScalar            joint_erp = 0;      // Error reduction parameter (joint "inertia")
     
-    btScalar            joint_cfm;      // Constraint force mixing (joint softness)
-    btScalar            joint_erp;      // Error reduction parameter (joint "inertia")
+    std::vector<RDJointSetup> joint_setup;
+    std::vector<RDBodySetup> body_setup;
     
-    rd_joint_setup_s   *joint_setup;
-    rd_body_setup_s    *body_setup;
-    
-    char               *hit_func;   // Later to be implemented as hit callback function.
-}rd_setup_t, *rd_setup_p;
+    std::string hit_func;   // Later to be implemented as hit callback function.
 
-
-bool Ragdoll_Create(std::shared_ptr<Entity> entity, rd_setup_p setup);
-bool Ragdoll_Delete(std::shared_ptr<Entity> entity);
-
-bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup);
-void Ragdoll_ClearSetup(rd_setup_p setup);
-
-#endif  // RAGDOLL_H
+    bool getSetup(int ragdoll_index);
+    void clearSetup();
+};

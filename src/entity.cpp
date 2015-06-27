@@ -730,8 +730,8 @@ void Entity::updateRigidBody(bool force)
     else
     {
         if((m_bf.animations.model == NULL) ||
-           m_bt.bt_body.empty() ||
-           (!force && (m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
+                m_bt.bt_body.empty() ||
+                (!force && (m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
         {
             return;
         }
@@ -993,13 +993,13 @@ int Entity::getSubstanceState()
         return ENTITY_SUBSTANCE_NONE;
     }
     else if( m_character->m_heightInfo.water &&
-            (m_character->m_heightInfo.transition_level > m_transform.getOrigin()[2]) &&
-            (m_character->m_heightInfo.transition_level < m_transform.getOrigin()[2] + m_character->m_wadeDepth) )
+             (m_character->m_heightInfo.transition_level > m_transform.getOrigin()[2]) &&
+             (m_character->m_heightInfo.transition_level < m_transform.getOrigin()[2] + m_character->m_wadeDepth) )
     {
         return ENTITY_SUBSTANCE_WATER_SHALLOW;
     }
     else if( m_character->m_heightInfo.water &&
-            (m_character->m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_character->m_wadeDepth) )
+             (m_character->m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_character->m_wadeDepth) )
     {
         return ENTITY_SUBSTANCE_WATER_WADE;
     }
@@ -1032,197 +1032,197 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
         {
             switch(*pointer)
             {
-                case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 3; // Parse through 3 operands.
-                    break;
+            case TR_ANIMCOMMAND_SETPOSITION:
+                // This command executes ONLY at the end of animation.
+                pointer += 3; // Parse through 3 operands.
+                break;
 
-                case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 2; // Parse through 2 operands.
-                    break;
+            case TR_ANIMCOMMAND_JUMPDISTANCE:
+                // This command executes ONLY at the end of animation.
+                pointer += 2; // Parse through 2 operands.
+                break;
 
-                case TR_ANIMCOMMAND_EMPTYHANDS:
-                    ///@FIXME: Behaviour is yet to be discovered.
-                    break;
+            case TR_ANIMCOMMAND_EMPTYHANDS:
+                ///@FIXME: Behaviour is yet to be discovered.
+                break;
 
-                case TR_ANIMCOMMAND_KILL:
-                    // This command executes ONLY at the end of animation.
-                    if(ss_anim->current_frame == af->frames.size() - 1)
+            case TR_ANIMCOMMAND_KILL:
+                // This command executes ONLY at the end of animation.
+                if(ss_anim->current_frame == af->frames.size() - 1)
+                {
+                    if(m_character)
                     {
-                        if(m_character)
-                        {
-                            m_character->m_response.kill = 1;
-                        }
+                        m_character->m_response.kill = 1;
+                    }
+                }
+
+                break;
+
+            case TR_ANIMCOMMAND_PLAYSOUND:
+                int16_t sound_index;
+
+                if(ss_anim->current_frame == *++pointer)
+                {
+                    sound_index = *++pointer & 0x3FFF;
+
+                    // Quick workaround for TR3 quicksand.
+                    if((getSubstanceState() == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
+                            (getSubstanceState() == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
+                    {
+                        sound_index = 18;
                     }
 
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYSOUND:
-                    int16_t sound_index;
-
-                    if(ss_anim->current_frame == *++pointer)
+                    if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
                     {
-                        sound_index = *++pointer & 0x3FFF;
-
-                        // Quick workaround for TR3 quicksand.
-                        if((getSubstanceState() == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
-                           (getSubstanceState() == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
-                        {
-                            sound_index = 18;
-                        }
-
-                        if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
-                        {
-                            if(getSubstanceState() == ENTITY_SUBSTANCE_WATER_SHALLOW)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
-                        }
-                        else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
-                        {
-                            if(getSubstanceState() != ENTITY_SUBSTANCE_WATER_SHALLOW)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
-                        }
-                        else
-                        {
+                        if(getSubstanceState() == ENTITY_SUBSTANCE_WATER_SHALLOW)
                             Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
-                        }
-
+                    }
+                    else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
+                    {
+                        if(getSubstanceState() != ENTITY_SUBSTANCE_WATER_SHALLOW)
+                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
                     }
                     else
                     {
-                        pointer++;
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, m_id);
                     }
-                    break;
 
-                case TR_ANIMCOMMAND_PLAYEFFECT:
-                    // Effects (flipeffects) are various non-typical actions which vary
-                    // across different TR game engine versions. There are common ones,
-                    // however, and currently only these are supported.
-                    if(ss_anim->current_frame == *++pointer)
+                }
+                else
+                {
+                    pointer++;
+                }
+                break;
+
+            case TR_ANIMCOMMAND_PLAYEFFECT:
+                // Effects (flipeffects) are various non-typical actions which vary
+                // across different TR game engine versions. There are common ones,
+                // however, and currently only these are supported.
+                if(ss_anim->current_frame == *++pointer)
+                {
+                    switch(*++pointer & 0x3FFF)
                     {
-                        switch(*++pointer & 0x3FFF)
+                    case TR_EFFECT_SHAKESCREEN:
+                        if(engine_world.Character)
                         {
-                            case TR_EFFECT_SHAKESCREEN:
-                                if(engine_world.Character)
-                                {
-                                    btScalar dist = engine_world.Character->findDistance(*this);
-                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
-                                    if(dist > 0)
-                                        renderer.cam->shake(dist * TR_CAM_DEFAULT_SHAKE_POWER, 0.5);
-                                }
-                                break;
-
-                            case TR_EFFECT_CHANGEDIRECTION:
-                                break;
-
-                            case TR_EFFECT_HIDEOBJECT:
-                                m_stateFlags &= ~ENTITY_STATE_VISIBLE;
-                                break;
-
-                            case TR_EFFECT_SHOWOBJECT:
-                                m_stateFlags |= ENTITY_STATE_VISIBLE;
-                                break;
-
-                            case TR_EFFECT_PLAYSTEPSOUND:
-                                // Please note that we bypass land/water mask, as TR3-5 tends to ignore
-                                // this flag and play step sound in any case on land, ignoring it
-                                // completely in water rooms.
-                                if(!getSubstanceState())
-                                {
-                                    // TR3-5 footstep map.
-                                    // We define it here as a magic numbers array, because TR3-5 versions
-                                    // fortunately have no differences in footstep sounds order.
-                                    // Also note that some footstep types mutually share same sound IDs
-                                    // across different TR versions.
-                                    switch(m_currentSector->material)
-                                    {
-                                        case SECTOR_MATERIAL_MUD:
-                                            Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
-                                            if(engine_world.version != TR_IV)
-                                            {
-                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_SAND:  // Same as grass
-                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_GRAVEL:
-                                            Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
-                                            if(engine_world.version != TR_IV)
-                                            {
-                                                Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_WATER: // BYPASS!
-                                            // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
-                                            // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_WOOD:
-                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_METAL:
-                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_MARBLE:    // TR4 only
-                                            if(engine_world.version == TR_IV)
-                                            {
-                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_GRASS:     // Same as sand
-                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
-                                            Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
-                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
-                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                            break;
-                                    }
-                                }
-                                break;
-
-                            case TR_EFFECT_BUBBLE:
-                                ///@FIXME: Spawn bubble particle here, when particle system is developed.
-                                random_value = rand() % 100;
-                                if(random_value > 60)
-                                {
-                                    Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, m_id);
-                                }
-                                break;
-
-                            default:
-                                ///@FIXME: TODO ALL OTHER EFFECTS!
-                                break;
+                            btScalar dist = engine_world.Character->findDistance(*this);
+                            dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
+                            if(dist > 0)
+                                renderer.cam->shake(dist * TR_CAM_DEFAULT_SHAKE_POWER, 0.5);
                         }
+                        break;
+
+                    case TR_EFFECT_CHANGEDIRECTION:
+                        break;
+
+                    case TR_EFFECT_HIDEOBJECT:
+                        m_stateFlags &= ~ENTITY_STATE_VISIBLE;
+                        break;
+
+                    case TR_EFFECT_SHOWOBJECT:
+                        m_stateFlags |= ENTITY_STATE_VISIBLE;
+                        break;
+
+                    case TR_EFFECT_PLAYSTEPSOUND:
+                        // Please note that we bypass land/water mask, as TR3-5 tends to ignore
+                        // this flag and play step sound in any case on land, ignoring it
+                        // completely in water rooms.
+                        if(!getSubstanceState())
+                        {
+                            // TR3-5 footstep map.
+                            // We define it here as a magic numbers array, because TR3-5 versions
+                            // fortunately have no differences in footstep sounds order.
+                            // Also note that some footstep types mutually share same sound IDs
+                            // across different TR versions.
+                            switch(m_currentSector->material)
+                            {
+                            case SECTOR_MATERIAL_MUD:
+                                Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+
+                            case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
+                                if(engine_world.version != TR_IV)
+                                {
+                                    Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                }
+                                break;
+
+                            case SECTOR_MATERIAL_SAND:  // Same as grass
+                                Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+
+                            case SECTOR_MATERIAL_GRAVEL:
+                                Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+
+                            case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
+                                if(engine_world.version != TR_IV)
+                                {
+                                    Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                }
+                                break;
+
+                            case SECTOR_MATERIAL_WATER: // BYPASS!
+                                // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, id);
+                                break;
+
+                            case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
+                                // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, id);
+                                break;
+
+                            case SECTOR_MATERIAL_WOOD:
+                                Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+
+                            case SECTOR_MATERIAL_METAL:
+                                Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+
+                            case SECTOR_MATERIAL_MARBLE:    // TR4 only
+                                if(engine_world.version == TR_IV)
+                                {
+                                    Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                }
+                                break;
+
+                            case SECTOR_MATERIAL_GRASS:     // Same as sand
+                                Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+
+                            case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
+                                Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+
+                            case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
+                                Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+
+                            case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
+                                Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, m_id);
+                                break;
+                            }
+                        }
+                        break;
+
+                    case TR_EFFECT_BUBBLE:
+                        ///@FIXME: Spawn bubble particle here, when particle system is developed.
+                        random_value = rand() % 100;
+                        if(random_value > 60)
+                        {
+                            Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, m_id);
+                        }
+                        break;
+
+                    default:
+                        ///@FIXME: TODO ALL OTHER EFFECTS!
+                        break;
                     }
-                    else
-                    {
-                        pointer++;
-                    }
-                    break;
+                }
+                else
+                {
+                    pointer++;
+                }
+                break;
             }
         }
     }
@@ -1268,9 +1268,9 @@ void Entity::processSector()
     {
         m_character->m_heightInfo.walls_climb_dir  = 0;
         m_character->m_heightInfo.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
-                                                                               SECTOR_FLAG_CLIMB_EAST  |
-                                                                               SECTOR_FLAG_CLIMB_NORTH |
-                                                                               SECTOR_FLAG_CLIMB_SOUTH );
+                                                                             SECTOR_FLAG_CLIMB_EAST  |
+                                                                             SECTOR_FLAG_CLIMB_NORTH |
+                                                                             SECTOR_FLAG_CLIMB_SOUTH );
 
         m_character->m_heightInfo.walls_climb     = (m_character->m_heightInfo.walls_climb_dir > 0);
         m_character->m_heightInfo.ceiling_climb   = 0x00;
@@ -1283,10 +1283,10 @@ void Entity::processSector()
         if(lowest_sector->flags & SECTOR_FLAG_DEATH)
         {
             if((m_moveType == MOVE_ON_FLOOR)    ||
-               (m_moveType == MOVE_UNDERWATER) ||
-               (m_moveType == MOVE_WADE)        ||
-               (m_moveType == MOVE_ON_WATER)    ||
-               (m_moveType == MOVE_QUICKSAND))
+                    (m_moveType == MOVE_UNDERWATER) ||
+                    (m_moveType == MOVE_WADE)        ||
+                    (m_moveType == MOVE_ON_WATER)    ||
+                    (m_moveType == MOVE_QUICKSAND))
             {
                 Character_SetParam(std::static_pointer_cast<Entity>(shared_from_this()), PARAM_HEALTH, 0.0);
                 m_character->m_response.kill = 1;
@@ -1406,7 +1406,7 @@ int Entity::getAnimDispatchCase(uint32_t id)
             for(uint16_t j=0;j<stc->anim_dispatch.size();j++,disp++)
             {
                 if((disp->frame_high >= disp->frame_low) && (m_bf.animations.current_frame >= disp->frame_low) && (m_bf.animations.current_frame <= disp->frame_high))// ||
-                   //(disp->frame_high <  disp->frame_low) && ((bf.current_frame >= disp->frame_low) || (bf.current_frame <= disp->frame_high)))
+                    //(disp->frame_high <  disp->frame_low) && ((bf.current_frame >= disp->frame_low) || (bf.current_frame <= disp->frame_high)))
                 {
                     return (int)j;
                 }
@@ -1537,7 +1537,7 @@ int Entity::frame(btScalar time)
     SSAnimation* ss_anim;
 
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) || !(m_stateFlags & ENTITY_STATE_ACTIVE)  || !(m_stateFlags & ENTITY_STATE_ENABLED) ||
-       (m_bf.animations.model == NULL) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
+            (m_bf.animations.model == NULL) || ((m_bf.animations.model->animations.size() == 1) && (m_bf.animations.model->animations.front().frames.size() == 1)))
     {
         return 0;
     }
@@ -1661,7 +1661,7 @@ void Entity::checkActivators()
                 {
                     const btVector3& v = e->m_transform.getOrigin();
                     if((e.get() != this) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                                      (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2]) && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
+                            (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2]) && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
                     {
                         lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
                     }
@@ -1725,92 +1725,128 @@ void Entity::doWeaponFrame(btScalar time)
             {
                 switch(m_character->m_weaponCurrentState)
                 {
-                    case WEAPON_STATE_HIDE:
-                        if(m_character->m_command.ready_weapon)   // ready weapon
-                        {
-                            ss_anim->current_animation = 1;
-                            ss_anim->next_animation = 1;
-                            ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 0;
-                            ss_anim->frame_time = 0.0;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_HIDE_TO_READY;
-                        }
-                        break;
+                case WEAPON_STATE_HIDE:
+                    if(m_character->m_command.ready_weapon)   // ready weapon
+                    {
+                        ss_anim->current_animation = 1;
+                        ss_anim->next_animation = 1;
+                        ss_anim->current_frame = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->frame_time = 0.0;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_HIDE_TO_READY;
+                    }
+                    break;
 
-                    case WEAPON_STATE_HIDE_TO_READY:
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                case WEAPON_STATE_HIDE_TO_READY:
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
-                        if(ss_anim->current_frame < t - 1)
-                        {
-                            ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else if(ss_anim->current_frame < t)
-                        {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = 0;
-                        }
-                        else
-                        {
-                            ss_anim->current_frame = 0;
-                            ss_anim->current_animation = 0;
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = 0;
-                            ss_anim->frame_time = 0.0;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_IDLE;
-                        }
-                        break;
-
-                    case WEAPON_STATE_IDLE:
+                    if(ss_anim->current_frame < t - 1)
+                    {
+                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else if(ss_anim->current_frame < t)
+                    {
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                    }
+                    else
+                    {
                         ss_anim->current_frame = 0;
                         ss_anim->current_animation = 0;
                         ss_anim->next_frame = 0;
                         ss_anim->next_animation = 0;
                         ss_anim->frame_time = 0.0;
-                        if(m_character->m_command.ready_weapon)
-                        {
-                            ss_anim->current_animation = 3;
-                            ss_anim->next_animation = 3;
-                            ss_anim->current_frame = ss_anim->next_frame = 0;
-                            ss_anim->frame_time = 0.0;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_HIDE;
-                        }
-                        else if(m_character->m_command.action)
-                        {
-                            m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_FIRE;
-                        }
-                        else
-                        {
-                            // do nothing here, may be;
-                        }
-                        break;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_IDLE;
+                    }
+                    break;
 
-                    case WEAPON_STATE_FIRE_TO_IDLE:
-                        // Yes, same animation, reverse frames order;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                        if(ss_anim->current_frame > 0)
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame - 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_IDLE;
-                        }
-                        break;
+                case WEAPON_STATE_IDLE:
+                    ss_anim->current_frame = 0;
+                    ss_anim->current_animation = 0;
+                    ss_anim->next_frame = 0;
+                    ss_anim->next_animation = 0;
+                    ss_anim->frame_time = 0.0;
+                    if(m_character->m_command.ready_weapon)
+                    {
+                        ss_anim->current_animation = 3;
+                        ss_anim->next_animation = 3;
+                        ss_anim->current_frame = ss_anim->next_frame = 0;
+                        ss_anim->frame_time = 0.0;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_HIDE;
+                    }
+                    else if(m_character->m_command.action)
+                    {
+                        m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_FIRE;
+                    }
+                    else
+                    {
+                        // do nothing here, may be;
+                    }
+                    break;
 
-                    case WEAPON_STATE_IDLE_TO_FIRE:
+                case WEAPON_STATE_FIRE_TO_IDLE:
+                    // Yes, same animation, reverse frames order;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                    if(ss_anim->current_frame > 0)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame - 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_IDLE;
+                    }
+                    break;
+
+                case WEAPON_STATE_IDLE_TO_FIRE:
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+
+                    if(ss_anim->current_frame < t - 1)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame + 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else if(ss_anim->current_frame < t)
+                    {
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 2;
+                    }
+                    else if(m_character->m_command.action)
+                    {
+                        ss_anim->current_frame = 0;
+                        ss_anim->next_frame = 1;
+                        ss_anim->current_animation = 2;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_FIRE;
+                    }
+                    else
+                    {
+                        ss_anim->frame_time = 0.0;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
+                    }
+                    break;
+
+                case WEAPON_STATE_FIRE:
+                    if(m_character->m_command.action)
+                    {
+                        // inc time, loop;
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
@@ -1825,173 +1861,173 @@ void Entity::doWeaponFrame(btScalar time)
                         else if(ss_anim->current_frame < t)
                         {
                             ss_anim->next_frame = 0;
-                            ss_anim->next_animation = 2;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
-                        else if(m_character->m_command.action)
+                        else
                         {
+                            ss_anim->frame_time = dt;
                             ss_anim->current_frame = 0;
                             ss_anim->next_frame = 1;
-                            ss_anim->current_animation = 2;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_FIRE;
                         }
-                        else
-                        {
-                            ss_anim->frame_time = 0.0;
-                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
-                        }
-                        break;
+                    }
+                    else
+                    {
+                        ss_anim->frame_time = 0.0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
+                        m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
+                    }
+                    break;
 
-                    case WEAPON_STATE_FIRE:
-                        if(m_character->m_command.action)
-                        {
-                            // inc time, loop;
-                            ss_anim->frame_time += time;
-                            ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                            dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                            ss_anim->lerp = dt / ss_anim->period;
-                            t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                            if(ss_anim->current_frame < t - 1)
-                            {
-                                ss_anim->next_frame = ss_anim->current_frame + 1;
-                                ss_anim->next_animation = ss_anim->current_animation;
-                            }
-                            else if(ss_anim->current_frame < t)
-                            {
-                                ss_anim->next_frame = 0;
-                                ss_anim->next_animation = ss_anim->current_animation;
-                            }
-                            else
-                            {
-                                ss_anim->frame_time = dt;
-                                ss_anim->current_frame = 0;
-                                ss_anim->next_frame = 1;
-                            }
-                        }
-                        else
-                        {
-                            ss_anim->frame_time = 0.0;
-                            ss_anim->current_animation = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                            ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
-                            m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
-                        }
-                        break;
-
-                    case WEAPON_STATE_IDLE_TO_HIDE:
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        if(ss_anim->current_frame < t - 1)
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_HIDE;
-                            Character_SetWeaponModel(std::static_pointer_cast<Entity>(shared_from_this()), m_character->m_currentWeapon, 0);
-                        }
-                        break;
+                case WEAPON_STATE_IDLE_TO_HIDE:
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    if(ss_anim->current_frame < t - 1)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame + 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_HIDE;
+                        Character_SetWeaponModel(std::static_pointer_cast<Entity>(shared_from_this()), m_character->m_currentWeapon, 0);
+                    }
+                    break;
                 };
             }
             else if((ss_anim->model != NULL) && (ss_anim->model->animations.size() == 4))
             {
                 switch(m_character->m_weaponCurrentState)
                 {
-                    case WEAPON_STATE_HIDE:
-                        if(m_character->m_command.ready_weapon)   // ready weapon
-                        {
-                            ss_anim->current_animation = 2;
-                            ss_anim->next_animation = 2;
-                            ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 0;
-                            ss_anim->frame_time = 0.0;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_HIDE_TO_READY;
-                        }
-                        break;
+                case WEAPON_STATE_HIDE:
+                    if(m_character->m_command.ready_weapon)   // ready weapon
+                    {
+                        ss_anim->current_animation = 2;
+                        ss_anim->next_animation = 2;
+                        ss_anim->current_frame = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->frame_time = 0.0;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_HIDE_TO_READY;
+                    }
+                    break;
 
-                    case WEAPON_STATE_HIDE_TO_READY:
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                case WEAPON_STATE_HIDE_TO_READY:
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
 
-                        if(ss_anim->current_frame < t - 1)
-                        {
-                            ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else if(ss_anim->current_frame < t)
-                        {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = 0;
-                        }
-                        else
-                        {
-                            ss_anim->current_frame = 0;
-                            ss_anim->current_animation = 0;
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = 0;
-                            ss_anim->frame_time = 0.0;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_IDLE;
-                        }
-                        break;
-
-                    case WEAPON_STATE_IDLE:
+                    if(ss_anim->current_frame < t - 1)
+                    {
+                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else if(ss_anim->current_frame < t)
+                    {
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                    }
+                    else
+                    {
                         ss_anim->current_frame = 0;
                         ss_anim->current_animation = 0;
                         ss_anim->next_frame = 0;
                         ss_anim->next_animation = 0;
                         ss_anim->frame_time = 0.0;
-                        if(m_character->m_command.ready_weapon)
-                        {
-                            ss_anim->current_animation = 2;
-                            ss_anim->next_animation = 2;
-                            ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                            ss_anim->frame_time = 0.0;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_HIDE;
-                        }
-                        else if(m_character->m_command.action)
-                        {
-                            m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_FIRE;
-                        }
-                        else
-                        {
-                            // do nothing here, may be;
-                        }
-                        break;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_IDLE;
+                    }
+                    break;
 
-                    case WEAPON_STATE_FIRE_TO_IDLE:
-                        // Yes, same animation, reverse frames order;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                        if(ss_anim->current_frame > 0)
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame - 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_IDLE;
-                        }
-                        break;
+                case WEAPON_STATE_IDLE:
+                    ss_anim->current_frame = 0;
+                    ss_anim->current_animation = 0;
+                    ss_anim->next_frame = 0;
+                    ss_anim->next_animation = 0;
+                    ss_anim->frame_time = 0.0;
+                    if(m_character->m_command.ready_weapon)
+                    {
+                        ss_anim->current_animation = 2;
+                        ss_anim->next_animation = 2;
+                        ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        ss_anim->frame_time = 0.0;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_HIDE;
+                    }
+                    else if(m_character->m_command.action)
+                    {
+                        m_character->m_weaponCurrentState = WEAPON_STATE_IDLE_TO_FIRE;
+                    }
+                    else
+                    {
+                        // do nothing here, may be;
+                    }
+                    break;
 
-                    case WEAPON_STATE_IDLE_TO_FIRE:
+                case WEAPON_STATE_FIRE_TO_IDLE:
+                    // Yes, same animation, reverse frames order;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                    if(ss_anim->current_frame > 0)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame - 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_IDLE;
+                    }
+                    break;
+
+                case WEAPON_STATE_IDLE_TO_FIRE:
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+
+                    if(ss_anim->current_frame < t - 1)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame + 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else if(ss_anim->current_frame < t)
+                    {
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 3;
+                    }
+                    else if(m_character->m_command.action)
+                    {
+                        ss_anim->current_frame = 0;
+                        ss_anim->next_frame = 1;
+                        ss_anim->current_animation = 3;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_FIRE;
+                    }
+                    else
+                    {
+                        ss_anim->frame_time = 0.0;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
+                    }
+                    break;
+
+                case WEAPON_STATE_FIRE:
+                    if(m_character->m_command.action)
+                    {
+                        // inc time, loop;
                         ss_anim->frame_time += time;
                         ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                         dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
@@ -2006,83 +2042,47 @@ void Entity::doWeaponFrame(btScalar time)
                         else if(ss_anim->current_frame < t)
                         {
                             ss_anim->next_frame = 0;
-                            ss_anim->next_animation = 3;
+                            ss_anim->next_animation = ss_anim->current_animation;
                         }
-                        else if(m_character->m_command.action)
+                        else
                         {
+                            ss_anim->frame_time = dt;
                             ss_anim->current_frame = 0;
                             ss_anim->next_frame = 1;
-                            ss_anim->current_animation = 3;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_FIRE;
                         }
-                        else
-                        {
-                            ss_anim->frame_time = 0.0;
-                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
-                        }
-                        break;
+                    }
+                    else
+                    {
+                        ss_anim->frame_time = 0.0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
+                        ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
+                        m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
+                    }
+                    break;
 
-                    case WEAPON_STATE_FIRE:
-                        if(m_character->m_command.action)
-                        {
-                            // inc time, loop;
-                            ss_anim->frame_time += time;
-                            ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                            dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                            ss_anim->lerp = dt / ss_anim->period;
-                            t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                            if(ss_anim->current_frame < t - 1)
-                            {
-                                ss_anim->next_frame = ss_anim->current_frame + 1;
-                                ss_anim->next_animation = ss_anim->current_animation;
-                            }
-                            else if(ss_anim->current_frame < t)
-                            {
-                                ss_anim->next_frame = 0;
-                                ss_anim->next_animation = ss_anim->current_animation;
-                            }
-                            else
-                            {
-                                ss_anim->frame_time = dt;
-                                ss_anim->current_frame = 0;
-                                ss_anim->next_frame = 1;
-                            }
-                        }
-                        else
-                        {
-                            ss_anim->frame_time = 0.0;
-                            ss_anim->current_animation = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                            ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
-                            m_character->m_weaponCurrentState = WEAPON_STATE_FIRE_TO_IDLE;
-                        }
-                        break;
-
-                    case WEAPON_STATE_IDLE_TO_HIDE:
-                        // Yes, same animation, reverse frames order;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                        if(ss_anim->current_frame > 0)
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame - 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                            m_character->m_weaponCurrentState = WEAPON_STATE_HIDE;
-                            Character_SetWeaponModel(std::static_pointer_cast<Entity>(shared_from_this()), m_character->m_currentWeapon, 0);
-                        }
-                        break;
+                case WEAPON_STATE_IDLE_TO_HIDE:
+                    // Yes, same animation, reverse frames order;
+                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
+                    ss_anim->frame_time += time;
+                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->lerp = dt / ss_anim->period;
+                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                    if(ss_anim->current_frame > 0)
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame - 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                    }
+                    else
+                    {
+                        ss_anim->next_frame = ss_anim->current_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
+                        m_character->m_weaponCurrentState = WEAPON_STATE_HIDE;
+                        Character_SetWeaponModel(std::static_pointer_cast<Entity>(shared_from_this()), m_character->m_currentWeapon, 0);
+                    }
+                    break;
                 };
             }
 
@@ -2114,8 +2114,7 @@ Entity::Entity()
     m_self->collide_flag = 0;
     m_obb->transform = &m_transform;
     m_bt.bt_body.clear();
-    m_bt.bt_joints = NULL;
-    m_bt.bt_joint_count = 0;
+    m_bt.bt_joints.clear();
     m_bt.no_fix_all = 0x00;
     m_bt.no_fix_body_parts = 0x00000000;
     m_bt.manifoldArray = NULL;
@@ -2154,9 +2153,9 @@ Entity::~Entity() {
         m_bt.last_collisions = NULL;
     }
 
-    if(m_bt.bt_joint_count)
+    if(!m_bt.bt_joints.empty())
     {
-        Ragdoll_Delete(std::static_pointer_cast<Entity>(shared_from_this()));
+        deleteRagdoll();
     }
 
     if(m_bt.ghostObjects)
@@ -2277,4 +2276,179 @@ void Entity::updateHair()
 
         hair->m_container->room = hair->m_ownerChar->m_self->room;
     }
+}
+
+bool Entity::createRagdoll(RDSetup* setup)
+{
+    // No entity, setup or body count overflow - bypass function.
+
+    if( !setup || setup->body_setup.size() > m_bf.bone_tags.size() ) {
+        return false;
+    }
+
+    bool result = true;
+
+    // If ragdoll already exists, overwrite it with new one.
+
+    if(!m_bt.bt_joints.empty()) {
+        result = deleteRagdoll();
+    }
+
+    // Setup bodies.
+    m_bt.bt_joints.clear();
+    // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
+    Entity::updateCurrentBoneFrame(&m_bf, &m_transform);
+    m_bt.no_fix_all = 0x00;
+    m_bt.no_fix_body_parts = 0x00000000;
+#if 0
+    int map_size = m_bf.animations.model->collision_map.size();             // does not works, strange...
+    m_bf.animations.model->collision_map.size() = m_bf.animations.model->mesh_count;
+    fixPenetrations(nullptr);
+    m_bf.animations.model->collision_map.size() = map_size;
+#else
+    fixPenetrations(nullptr);
+#endif
+
+    for(int i=0; i<setup->body_setup.size(); i++) {
+        if( i >= m_bf.bone_tags.size() || !m_bt.bt_body[i] ) {
+            result = false;
+            continue;   // If body is absent, return false and bypass this body setup.
+        }
+
+        btVector3 inertia (0.0, 0.0, 0.0);
+        btScalar  mass = setup->body_setup[i].mass;
+
+        bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
+
+        m_bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+        m_bt.bt_body[i]->setMassProps(mass, inertia);
+
+        m_bt.bt_body[i]->updateInertiaTensor();
+        m_bt.bt_body[i]->clearForces();
+
+        m_bt.bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
+        m_bt.bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
+
+        m_bt.bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
+        m_bt.bt_body[i]->setRestitution(setup->body_setup[i].restitution);
+        m_bt.bt_body[i]->setFriction(setup->body_setup[i].friction);
+        m_bt.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
+
+        if(!m_bf.bone_tags[i].parent) {
+            m_bf.bone_tags[i].mesh_base;
+            btScalar r = getInnerBBRadius(m_bf.bone_tags[i].mesh_base->m_bbMin, m_bf.bone_tags[i].mesh_base->m_bbMax);
+            m_bt.bt_body[i]->setCcdMotionThreshold(0.8 * r);
+            m_bt.bt_body[i]->setCcdSweptSphereRadius(r);
+        }
+    }
+
+    updateRigidBody(true);
+    for(uint16_t i=0;i<m_bf.bone_tags.size();i++) {
+        bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get());
+        m_bt.bt_body[i]->activate();
+        m_bt.bt_body[i]->setLinearVelocity(m_speed);
+        if(m_bt.ghostObjects[i]) {
+            bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i], COLLISION_NONE, COLLISION_NONE);
+        }
+    }
+
+    // Setup constraints.
+    m_bt.bt_joints.resize(setup->joint_setup.size());
+
+    for(int i=0; i<setup->joint_setup.size(); i++) {
+        if( setup->joint_setup[i].body_index >= m_bf.bone_tags.size() || !m_bt.bt_body[setup->joint_setup[i].body_index] ) {
+            result = false;
+            break;       // If body 1 or body 2 are absent, return false and bypass this joint.
+        }
+
+        btTransform localA, localB;
+        SSBoneTag* btB = &m_bf.bone_tags[ setup->joint_setup[i].body_index ];
+        SSBoneTag* btA = btB->parent;
+        if(!btA) {
+            result = false;
+            break;
+        }
+#if 0
+        localA.setFromOpenGLMatrix(btB->transform);
+        localB.setIdentity();
+#else
+        localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
+        //localA.setOrigin(setup->joint_setup[i].body1_offset);
+        localA.setOrigin(btB->transform.getOrigin());
+
+        localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
+        //localB.setOrigin(setup->joint_setup[i].body2_offset);
+        localB.setOrigin(btVector3(0.0, 0.0, 0.0));
+#endif
+
+        switch(setup->joint_setup[i].joint_type) {
+        case RDJointSetup::Point: {
+            m_bt.bt_joints[i] = std::make_shared<btPoint2PointConstraint>(*m_bt.bt_body[btA->index], *m_bt.bt_body[btB->index], localA.getOrigin(), localB.getOrigin());
+        }
+            break;
+
+        case RDJointSetup::Hinge: {
+            std::shared_ptr<btHingeConstraint> hingeC = std::make_shared<btHingeConstraint>(*m_bt.bt_body[btA->index], *m_bt.bt_body[btB->index], localA, localB);
+            hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9, 0.3, 0.3);
+            m_bt.bt_joints[i] = hingeC;
+        }
+            break;
+
+        case RDJointSetup::Cone: {
+            std::shared_ptr<btConeTwistConstraint> coneC = std::make_shared<btConeTwistConstraint>(*m_bt.bt_body[btA->index], *m_bt.bt_body[btB->index], localA, localB);
+            coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9, 0.3, 0.7);
+            m_bt.bt_joints[i] = coneC;
+        }
+            break;
+        }
+
+        m_bt.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
+        m_bt.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
+
+        m_bt.bt_joints[i]->setDbgDrawSize(64.0);
+        bt_engine_dynamicsWorld->addConstraint(m_bt.bt_joints[i].get(), true);
+    }
+
+    if(!result) {
+        deleteRagdoll();  // PARANOID: Clean up the mess, if something went wrong.
+    }
+    else {
+        m_typeFlags |=  ENTITY_TYPE_DYNAMIC;
+    }
+    return result;
+}
+
+bool Entity::deleteRagdoll()
+{
+    if(m_bt.bt_joints.empty())
+        return false;
+
+    for(auto& joint : m_bt.bt_joints) {
+        if(joint) {
+            bt_engine_dynamicsWorld->removeConstraint(joint.get());
+            joint.reset();
+        }
+    }
+
+    for(size_t i=0; i<m_bf.bone_tags.size(); i++)
+    {
+        bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
+        m_bt.bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
+        bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        if(m_bt.ghostObjects[i])
+        {
+            bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i]);
+            bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+        }
+    }
+
+    m_bt.bt_joints.clear();
+
+    m_typeFlags &= ~ENTITY_TYPE_DYNAMIC;
+
+    return true;
+
+    // NB! Bodies remain in the same state!
+    // To make them static again, additionally call setEntityBodyMass script function.
 }
