@@ -296,7 +296,7 @@ tr2_entity_tbl[77] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_B
 tr2_entity_tbl[78] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Overhead pulley hook
 tr2_entity_tbl[79] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};                     -- Sandbag / Ceiling fragments
 tr2_entity_tbl[80] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Rolling spindle
-tr2_entity_tbl[81] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "wallblade"};                     -- Wall-mounted knife blade
+tr2_entity_tbl[81] = {coll = COLLISION_TYPE_GHOST,     shape = COLLISION_SHAPE_BOX, func = "wallblade"};                     -- Wall-mounted knife blade
 tr2_entity_tbl[82] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Statue with knife blade
 tr2_entity_tbl[83] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX};          -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Detachable icicles

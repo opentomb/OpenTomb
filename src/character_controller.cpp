@@ -76,9 +76,9 @@ void Character_Create(struct entity_s *ent)
     ret->sphere = new btSphereShape(CHARACTER_BASE_RADIUS);
     ret->climb_sensor = new btSphereShape(ent->character->climb_r);
 
-    ret->ray_cb = new bt_engine_ClosestRayResultCallback(ent->self);
+    ret->ray_cb = new bt_engine_ClosestRayResultCallback(ent->self, true);
     ret->ray_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    ret->convex_cb = new bt_engine_ClosestConvexResultCallback(ent->self);
+    ret->convex_cb = new bt_engine_ClosestConvexResultCallback(ent->self, true);
     ret->convex_cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
 
     ret->height_info.cb = ret->ray_cb;

@@ -431,6 +431,12 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
         {
             btPersistentManifold* manifold = (*manifoldArray)[j];
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
+            engine_container_p cont0 = (engine_container_p)manifold->getBody0()->getUserPointer();
+            engine_container_p cont1 = (engine_container_p)manifold->getBody1()->getUserPointer();
+            if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
+            {
+                continue;
+            }
             for(int k=0;k<manifold->getNumContacts();k++)
             {
                 const btManifoldPoint&pt = manifold->getContactPoint(k);

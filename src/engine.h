@@ -146,9 +146,10 @@ extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 class bt_engine_ClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    bt_engine_ClosestRayResultCallback(engine_container_p cont) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    bt_engine_ClosestRayResultCallback(engine_container_p cont, bool skip_ghost = false) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
     {
         m_cont = cont;
+        m_skip_ghost = skip_ghost;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
@@ -160,7 +161,7 @@ public:
         c1 = (engine_container_p)rayResult.m_collisionObject->getUserPointer();
         r1 = (c1)?(c1->room):(NULL);
 
-        if(c1 && c1 == m_cont)
+        if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
             return 1.0;
         }
@@ -185,6 +186,7 @@ public:
         return 1.0;
     }
 
+    bool               m_skip_ghost;
     engine_container_p m_cont;
 };
 
@@ -192,9 +194,10 @@ public:
 class bt_engine_ClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    bt_engine_ClosestConvexResultCallback(engine_container_p cont) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    bt_engine_ClosestConvexResultCallback(engine_container_p cont, bool skip_ghost = false) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
     {
         m_cont = cont;
+        m_skip_ghost = skip_ghost;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult,bool normalInWorldSpace)
@@ -206,7 +209,7 @@ public:
         c1 = (engine_container_p)convexResult.m_hitCollisionObject->getUserPointer();
         r1 = (c1)?(c1->room):(NULL);
 
-        if(c1 && c1 == m_cont)
+        if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
             return 1.0;
         }
@@ -232,6 +235,7 @@ public:
     }
 
 protected:
+    bool               m_skip_ghost;
     engine_container_p m_cont;
 };
 
