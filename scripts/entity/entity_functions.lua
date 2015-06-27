@@ -801,8 +801,9 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
     entity_funcs[id].current_angle = 0.0;           -- Current cleaner rotating angle.
     entity_funcs[id].target_angle  = 0.0;           -- Desired angle value, after which cleaner stops rotating.
     
-    entity_funcs[id].turn_rot_speed  = 8.0;         -- Rotation speed for free left-turn.
-    entity_funcs[id].stuck_rot_speed = 8.0;         -- Rotation speed for face-wall right turn.
+    entity_funcs[id].turn_rot_speed  = 2.0;         -- Rotation speed for free left-turn.
+    entity_funcs[id].stuck_rot_speed = 2.0;         -- Rotation speed for face-wall right turn.
+    entity_funcs[id].move_speed      = 32.0;        -- Ordinary movement speed.
     
     entity_funcs[id].loop_detector = {};            -- Loop detector struct needed to prevent cleaner stuck at flat floor.
     
@@ -857,7 +858,11 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 -- loop counter is reset back to zero. When loop counter reaches 4, robot is forced to turn right,
                 -- not left. This prevents robot from being stuck at 2x2 flat floor section.
                 
-                if(entity_funcs[object_id].rotating == 0) then entity_funcs[object_id].distance_traveled = 0.0 end;
+                if(entity_funcs[object_id].rotating == 0) then
+                    entity_funcs[object_id].distance_traveled = 0.0;
+                    moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed, 0.0);  -- Move forward...
+                    entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed;
+                end;
                 
                 if((entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].x == px) and
                    (entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].y == py)) then
@@ -872,8 +877,8 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 entity_funcs[object_id].move_count = entity_funcs[object_id].move_count + 1;
                 if(entity_funcs[object_id].move_count > 4) then entity_funcs[object_id].move_count = 1 end;
             else
-                moveEntityLocal(object_id, 0.0, 16.0, 0.0);  -- Move forward...
-                entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + 16.0;
+                moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed, 0.0);  -- Move forward...
+                entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed;
             end;
         else            
             if(entity_funcs[object_id].rotating == 1) then
