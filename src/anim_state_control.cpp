@@ -713,9 +713,9 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
 
             if(cmd->move[0] == 1)
             {
-                int substance_state = ent->getSubstanceState();
-                if((substance_state == ENTITY_SUBSTANCE_NONE) ||
-                   (substance_state == ENTITY_SUBSTANCE_WATER_SHALLOW))
+                Substance substance_state = ent->getSubstanceState();
+                if((substance_state == Substance::None) ||
+                   (substance_state == Substance::WaterShallow))
                 {
                     if(cmd->shift == 1)
                     {
@@ -738,11 +738,11 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
             else if(((ss_anim->last_state == TR_STATE_LARA_TURN_LEFT_SLOW ) && (cmd->move[1] == -1)) ||
                     ((ss_anim->last_state == TR_STATE_LARA_TURN_RIGHT_SLOW) && (cmd->move[1] ==  1))  )
             {
-                int substance_state = ent->getSubstanceState();
+                Substance substance_state = ent->getSubstanceState();
                 if((last_frame) &&
-                   (substance_state != ENTITY_SUBSTANCE_WATER_WADE) &&
-                   (substance_state != ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) &&
-                   (substance_state != ENTITY_SUBSTANCE_QUICKSAND_SHALLOW))
+                   (substance_state != Substance::WaterWade) &&
+                   (substance_state != Substance::QuicksandConsumed) &&
+                   (substance_state != Substance::QuicksandShallow))
                  {
                      ss_anim->next_state = TR_STATE_LARA_TURN_FAST;
                  }

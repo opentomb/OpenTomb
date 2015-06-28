@@ -23,10 +23,6 @@ struct SSAnimation;
 struct SSBoneFrame;
 struct RDSetup;
 
-#define ENTITY_STATE_ENABLED                        (0x0001)    // Entity is enabled.
-#define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
-#define ENTITY_STATE_VISIBLE                        (0x0004)    // Entity is visible.
-
 #define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.
 #define ENTITY_TYPE_INTERACTIVE                     (0x0001)    // Can respond to other entity's commands.
 #define ENTITY_TYPE_TRIGGER_ACTIVATOR               (0x0002)    // Can activate triggers.
@@ -46,29 +42,21 @@ struct RDSetup;
 #define ENTITY_CALLBACK_STAND                       (0x00000008)
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
 
-#define ENTITY_SUBSTANCE_NONE                     0
-#define ENTITY_SUBSTANCE_WATER_SHALLOW            1
-#define ENTITY_SUBSTANCE_WATER_WADE               2
-#define ENTITY_SUBSTANCE_WATER_SWIM               3
-#define ENTITY_SUBSTANCE_QUICKSAND_SHALLOW        4
-#define ENTITY_SUBSTANCE_QUICKSAND_CONSUMED       5
+enum class Substance {
+    None,
+    WaterShallow,
+    WaterWade,
+    WaterSwim,
+    QuicksandShallow,
+    QuicksandConsumed
+};
 
 #define ENTITY_TLAYOUT_MASK     0x1F    // Activation mask
 #define ENTITY_TLAYOUT_EVENT    0x20    // Last trigger event
 #define ENTITY_TLAYOUT_LOCK     0x40    // Activity lock
 #define ENTITY_TLAYOUT_SSTATUS  0x80    // Sector status
 
-#define WEAPON_STATE_HIDE                       (0x00)
-#define WEAPON_STATE_HIDE_TO_READY              (0x01)
-#define WEAPON_STATE_IDLE                       (0x02)
-#define WEAPON_STATE_IDLE_TO_FIRE               (0x03)
-#define WEAPON_STATE_FIRE                       (0x04)
-#define WEAPON_STATE_FIRE_TO_IDLE               (0x05)
-#define WEAPON_STATE_IDLE_TO_HIDE               (0x06)
-
 // Specific in-game entity structure.
-
-#define MAX_OBJECTS_IN_COLLSION_NODE    (4)
 
 struct EntityCollisionNode
 {
@@ -93,14 +81,16 @@ struct BtEntityData
 
 struct Entity : public Object
 {
-    uint32_t                            m_id;                 // Unique entity ID
-    int32_t                             m_OCB;                // Object code bit (since TR4)
-    uint8_t                             m_triggerLayout;     // Mask + once + event + sector status flags
-    float                               m_timer;              // Set by "timer" trigger field
+    uint32_t                            m_id = 0;                 // Unique entity ID
+    int32_t                             m_OCB = 0;                // Object code bit (since TR4)
+    uint8_t                             m_triggerLayout = 0;     // Mask + once + event + sector status flags
+    float                               m_timer = 0;              // Set by "timer" trigger field
 
-    uint32_t                            m_callbackFlags;     // information about scripts callbacks
-    uint16_t                            m_typeFlags;
-    uint16_t                            m_stateFlags;
+    uint32_t                            m_callbackFlags = 0;     // information about scripts callbacks
+    uint16_t                            m_typeFlags = ENTITY_TYPE_GENERIC;
+    bool m_enabled = true;
+    bool m_active = true;
+    bool m_visible = true;
 
     uint8_t                             m_dirFlag;           // (move direction)
     uint16_t                            m_moveType;          // on floor / free fall / swim ....
@@ -122,15 +112,15 @@ struct Entity : public Object
 
     std::unique_ptr<OBB> m_obb;                // oriented bounding box
 
-    RoomSector* m_currentSector;
+    RoomSector* m_currentSector = nullptr;
     RoomSector* m_lastSector;
 
     std::shared_ptr<EngineContainer> m_self;
 
-    btVector3 m_activationOffset;   // where we can activate object (dx, dy, dz)
+    btVector3 m_activationOffset = {0,256,0};   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;
     
-    std::shared_ptr<Character> m_character;
+    std::shared_ptr<Character> m_character = nullptr;
 
     Entity();
     ~Entity();
@@ -165,7 +155,7 @@ struct Entity : public Object
     void addOverrideAnim(int model_id);
     void checkActivators();
 
-    int  getSubstanceState();
+    Substance getSubstanceState();
 
     static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
     void doAnimCommands(SSAnimation *ss_anim, int changing);
@@ -190,7 +180,7 @@ private:
     static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
     {
         btVector3 d = bb_max-bb_min;
-        return std::min(d[0], std::min(d[1], d[2]));
+        return btMin(d[0], btMin(d[1], d[2]));
     }
 };
 

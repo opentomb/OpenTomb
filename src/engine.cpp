@@ -825,7 +825,7 @@ int lua_GetCharacterCombatMode(lua_State * lua)
 
     if(IsCharacter(ent))
     {
-        lua_pushnumber(lua, ent->m_character->m_weaponCurrentState);
+        lua_pushnumber(lua, static_cast<int>(ent->m_character->m_weaponCurrentState));
         return 1;
     }
 
@@ -2332,7 +2332,7 @@ int lua_GetEntityVisibility(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, (ent->m_stateFlags & ENTITY_STATE_VISIBLE) != 0);
+    lua_pushinteger(lua, ent->m_visible);
 
     return 1;
 }
@@ -2354,14 +2354,7 @@ int lua_SetEntityVisibility(lua_State * lua)
         return 0;
     }
 
-    if(lua_tointeger(lua, 2) != 0)
-    {
-        ent->m_stateFlags |= ENTITY_STATE_VISIBLE;
-    }
-    else
-    {
-        ent->m_stateFlags &= ~ENTITY_STATE_VISIBLE;
-    }
+    ent->m_visible = lua_tointeger(lua, 2) != 0;
 
     return 0;
 }
@@ -2384,7 +2377,7 @@ int lua_GetEntityEnability(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, (ent->m_stateFlags & ENTITY_STATE_ENABLED) != 0);
+    lua_pushinteger(lua, ent->m_enabled);
 
     return 1;
 }
@@ -2407,7 +2400,7 @@ int lua_GetEntityActivity(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, (ent->m_stateFlags & ENTITY_STATE_ACTIVE) != 0);
+    lua_pushinteger(lua, ent->m_active);
 
     return 1;
 }
@@ -2430,14 +2423,7 @@ int lua_SetEntityActivity(lua_State * lua)
         return 0;
     }
 
-    if(lua_tointeger(lua, 2) != 0)
-    {
-        ent->m_stateFlags |= ENTITY_STATE_ACTIVE;
-    }
-    else
-    {
-        ent->m_stateFlags &= ~ENTITY_STATE_ACTIVE;
-    }
+    ent->m_active = lua_tointeger(lua, 2) != 0;
 
     return 0;
 }
@@ -2641,7 +2627,9 @@ int lua_GetEntityFlags(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->m_stateFlags);
+    lua_pushinteger(lua, ent->m_active);
+    lua_pushinteger(lua, ent->m_enabled);
+    lua_pushinteger(lua, ent->m_visible);
     lua_pushinteger(lua, ent->m_typeFlags);
     lua_pushinteger(lua, ent->m_callbackFlags);
 
@@ -2650,9 +2638,9 @@ int lua_GetEntityFlags(lua_State * lua)
 
 int lua_SetEntityFlags(lua_State * lua)
 {
-    if(lua_gettop(lua) < 3)
+    if(lua_gettop(lua) < 5)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flags, type_flags, (callback_flags)]");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, active_flag, enabled_flag, visible_flag, type_flags, (callback_flags)]");
         return 0;
     }
 
@@ -2665,18 +2653,11 @@ int lua_SetEntityFlags(lua_State * lua)
         return 0;
     }
 
-    if(!lua_isnil(lua, 2))
-    {
-        ent->m_stateFlags = lua_tointeger(lua, 2);
-    }
-    if(!lua_isnil(lua, 3))
-    {
-        ent->m_typeFlags = lua_tointeger(lua, 3);
-    }
-    if(!lua_isnil(lua, 4))
-    {
-        ent->m_callbackFlags = lua_tointeger(lua, 4);
-    }
+    if(!lua_isnil(lua, 2)) ent->m_active = lua_tointeger(lua, 2)!=0;
+    if(!lua_isnil(lua, 3)) ent->m_enabled = lua_tointeger(lua, 3)!=0;
+    if(!lua_isnil(lua, 4)) ent->m_visible = lua_tointeger(lua, 4)!=0;
+    if(!lua_isnil(lua, 5)) ent->m_typeFlags = lua_tointeger(lua, 5);
+    if(!lua_isnil(lua, 6)) ent->m_callbackFlags = lua_tointeger(lua, 6);
 
     return 0;
 }
@@ -2756,9 +2737,9 @@ int lua_GetEntityStateFlag(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 1)
+    if(top < 2)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], (state_flag)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [active|enabled|visible]");
         return 0;
     }
 
@@ -2771,13 +2752,15 @@ int lua_GetEntityStateFlag(lua_State *lua)
         return 0;
     }
 
-    if(top == 1)
-    {
-        lua_pushinteger(lua, ent->m_stateFlags);
-    }
-    else
-    {
-        lua_pushinteger(lua, (ent->m_stateFlags & (uint16_t)(lua_tointeger(lua, 2))));
+    std::string which = lua_tostring(lua, 2);
+    if(which == "active")
+        lua_pushinteger(lua, ent->m_active);
+    else if(which == "enabled")
+        lua_pushinteger(lua, ent->m_enabled);
+    else if(which == "visible")
+        lua_pushinteger(lua, ent->m_visible);
+    else {
+        return 0;
     }
 
     return 1;
@@ -2789,7 +2772,7 @@ int lua_SetEntityStateFlag(lua_State *lua)
 
     if(top < 2)
     {
-        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, state_flag], (value)");
+        ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, (active|enabled|visible)], (value)");
         return 0;
     }
 
@@ -2802,20 +2785,20 @@ int lua_SetEntityStateFlag(lua_State *lua)
         return 0;
     }
 
+    std::string which = lua_tostring(lua, 2);
+    bool* flag = nullptr;
+    if(which == "active") flag = &ent->m_active;
+    else if(which == "enabled") flag = &ent->m_enabled;
+    else if(which == "visible") flag = &ent->m_visible;
+    else return 0;
+
     if(top == 2)
     {
-        ent->m_stateFlags ^= (uint16_t)lua_tointeger(lua, 2);
+        *flag = !*flag;
     }
     else
     {
-        if(lua_tointeger(lua, 3) == 1)
-        {
-            ent->m_stateFlags |=  (uint16_t)lua_tointeger(lua, 2);
-        }
-        else
-        {
-            ent->m_stateFlags &= ~(uint16_t)lua_tointeger(lua, 2);
-        }
+        *flag = lua_tointeger(lua, 3)!=0;
     }
 
     return 0;

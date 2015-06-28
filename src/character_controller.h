@@ -297,6 +297,16 @@ struct InventoryNode
 struct Hair;
 struct SSAnimation;
 
+enum class WeaponState {
+    Hide,
+    HideToReady,
+    Idle,
+    IdleToFire,
+    Fire,
+    FireToIdle,
+    IdleToHide
+};
+
 struct Character
 {
     std::shared_ptr<Entity> m_entity = nullptr;                    // actor entity
@@ -310,7 +320,7 @@ struct Character
     std::vector<std::shared_ptr<Hair>> m_hairs{};
     
     int                          m_currentWeapon = 0;
-    int                          m_weaponCurrentState = 0;
+    WeaponState m_weaponCurrentState = WeaponState::Hide;
     
     int (*state_func)(std::shared_ptr<Entity> entity, SSAnimation *ssAnim) = nullptr;
     

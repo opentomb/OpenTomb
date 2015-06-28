@@ -1173,7 +1173,7 @@ void Gui_DrawBars()
 {
     if(engine_world.Character && engine_world.Character->m_character)
     {
-        if(engine_world.Character->m_character->m_weaponCurrentState > WEAPON_STATE_HIDE_TO_READY)
+        if(engine_world.Character->m_character->m_weaponCurrentState > WeaponState::HideToReady)
             Bar[BAR_HEALTH].Forced = true;
 
         Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));

@@ -526,7 +526,7 @@ std::shared_ptr<LitShaderDescription> Render::setupEntityLight(std::shared_ptr<E
 
 void Render::renderEntity(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection)
 {
-    if(entity->m_wasRendered || !(entity->m_stateFlags & ENTITY_STATE_VISIBLE) || (entity->m_bf.animations.model->hide && !m_drawNullMeshes))
+    if(entity->m_wasRendered || !entity->m_visible || (entity->m_bf.animations.model->hide && !m_drawNullMeshes))
     {
         return;
     }
@@ -990,7 +990,7 @@ void Render::drawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
-                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->m_stateFlags & ENTITY_STATE_VISIBLE) && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), r)))
+                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), r)))
                 {
                     for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
                     {
@@ -1410,7 +1410,7 @@ void RenderDebugDrawer::drawSkeletalModelDebugLines(SSBoneFrame *bframe, const b
 void RenderDebugDrawer::drawEntityDebugLines(std::shared_ptr<Entity> entity, Render* render)
 {
     if(entity->m_wasRenderedLines || !(render->m_drawAxis || render->m_drawNormals || render->m_drawBoxes) ||
-       !(entity->m_stateFlags & ENTITY_STATE_VISIBLE) || (entity->m_bf.animations.model->hide && !(render->m_drawNullMeshes)))
+       !entity->m_visible || (entity->m_bf.animations.model->hide && !(render->m_drawNullMeshes)))
     {
         return;
     }

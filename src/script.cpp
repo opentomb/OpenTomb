@@ -545,7 +545,7 @@ int lua_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activa
 void lua_LoopEntity(lua_State *lua, int object_id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(object_id);
-    if((lua) && (ent->m_stateFlags & ENTITY_STATE_ACTIVE))
+    if((lua) && ent->m_active)
     {
         int top = lua_gettop(lua);
         lua_getglobal(lua, "loopEntity");

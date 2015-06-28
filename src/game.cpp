@@ -243,7 +243,7 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->m_id, ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->m_id, ent->m_self->collision_type, ent->m_self->collision_shape);
 
-    if(ent->m_stateFlags & ENTITY_STATE_ENABLED)
+    if(ent->m_enabled)
     {
         fprintf(*f, "\nenableEntity(%d);", ent->m_id);
     }
@@ -252,7 +252,7 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
         fprintf(*f, "\ndisableEntity(%d);", ent->m_id);
     }
 
-    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->m_id, ent->m_stateFlags, ent->m_typeFlags, ent->m_callbackFlags);
+    fprintf(*f, "\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);", ent->m_id, ent->m_active, ent->m_enabled, ent->m_visible, ent->m_typeFlags, ent->m_callbackFlags);
 
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->m_id, ent->m_triggerLayout);
     //setEntityMeshswap()
@@ -683,7 +683,7 @@ void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
     for(auto entityPair : entities) {
         std::shared_ptr<Entity> entity = entityPair.second;
-        if(entity->m_stateFlags & ENTITY_STATE_ENABLED)
+        if(entity->m_enabled)
         {
             entity->processSector();
             lua_LoopEntity(engine_lua, entity->m_id);

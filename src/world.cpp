@@ -586,7 +586,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             }
 
             ent->m_typeFlags     = ENTITY_TYPE_SPAWNED;
-            ent->m_stateFlags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
+            ent->m_active = ent->m_enabled = ent->m_visible = true;
             ent->m_triggerLayout = 0x00;
             ent->m_OCB            = 0x00;
             ent->m_timer          = 0.0;
