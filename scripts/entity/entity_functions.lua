@@ -726,9 +726,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 0);
     
-    setEntityVisibility(id, 0);
-    setEntityCollision(id, 0);
-    setEntityScaling(id, 0.0, 0.0, 0.0);
+    disableEntity(id);
     
     entity_funcs[id].interval        = 150;     -- 150 frames
     entity_funcs[id].curr_timer      = entity_funcs[id].interval;   -- This activates spikes on first call.
@@ -741,13 +739,14 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
     
+        
         -- This is case for spikes which were already activated before, but were set to idle state
         -- after activation - that is, it means if we're activating it again, they should be
         -- disabled. On the next activation event, however, they will be activated again.
     
         if(entity_funcs[object_id].waiting == true) then
             entity_funcs[object_id].waiting = false;
-            entity_funcs[id].onDeactivate(object_id, activator_id);
+            entity_funcs[object_id].onDeactivate(object_id, activator_id);
             return;
         end;
     
@@ -778,7 +777,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         
         entity_funcs[object_id].mode = bit32.rshift(bit32.band(curr_OCB, 0x30), 4);
     
-        setEntityActivity(object_id, 1);
+        enableEntity(object_id);
     end    
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
@@ -823,8 +822,8 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
                 entity_funcs[object_id].curr_subscaling = 0;
                 entity_funcs[object_id].curr_scaling = 0.0;
                 setEntityVisibility(object_id, 0);
-                setEntityCollision(object_id, 0);
                 setEntityScaling(object_id, 1.0, 1.0, 0.0);
+                setEntityCollision(object_id, 0);
                 entity_funcs[object_id].waiting = true;
                 if(entity_funcs[object_id].mode == 2) then
                     setEntityActivity(object_id, 0);

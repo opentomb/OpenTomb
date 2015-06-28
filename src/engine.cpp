@@ -487,7 +487,7 @@ int lua_SetEntityCollision(lua_State * lua)
     entity_p ent = World_GetEntityByID(&engine_world, lua_tonumber(lua, 1));
     if(ent != NULL)
     {
-        if((top >= 2) && (lua_tointeger(lua, 2)))
+        if((top >= 2) && (lua_tointeger(lua, 2) == 1))
         {
             Entity_EnableCollision(ent);
         }
