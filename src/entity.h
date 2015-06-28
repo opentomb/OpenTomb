@@ -200,6 +200,9 @@ struct Entity : public Object
         return cam_pos;
     }
 
+    virtual void updatePlatformPreStep() {
+    }
+
 private:
     void doAnimMove(int16_t *anim, int16_t *frame);
 

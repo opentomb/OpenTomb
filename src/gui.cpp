@@ -1176,10 +1176,10 @@ void Gui_DrawBars()
         if(engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
             Bar[BAR_HEALTH].Forced = true;
 
-        Bar[BAR_AIR].Show    (Character_GetParam(engine_world.character, PARAM_AIR    ));
-        Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.character, PARAM_STAMINA));
-        Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.character, PARAM_HEALTH ));
-        Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.character, PARAM_WARMTH ));
+        Bar[BAR_AIR].Show    (engine_world.character->getParam( PARAM_AIR    ));
+        Bar[BAR_STAMINA].Show(engine_world.character->getParam( PARAM_STAMINA));
+        Bar[BAR_HEALTH].Show (engine_world.character->getParam( PARAM_HEALTH ));
+        Bar[BAR_WARMTH].Show (engine_world.character->getParam( PARAM_WARMTH ));
     }
 }
 

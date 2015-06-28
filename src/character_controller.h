@@ -381,48 +381,48 @@ struct Character : public Entity
         return m_convexCb;
     }
     btVector3 camPosForFollowing(btScalar dz) override;
+
+    int32_t addItem(uint32_t item_id, int32_t count);       // returns items count after in the function's end
+    int32_t removeItem(uint32_t item_id, int32_t count);    // returns items count after in the function's end
+    int32_t removeAllItems();
+    int32_t getItemsCount(uint32_t item_id);                // returns items count
+
+    static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
+    int checkNextStep(const btVector3 &offset, HeightInfo *nfc);
+    int hasStopSlant(HeightInfo* next_fc);
+    ClimbInfo checkClimbability(btVector3 offset, HeightInfo *nfc, btScalar test_height);
+    ClimbInfo checkWallsClimbability();
+
+    void updateCurrentHeight();
+    void updatePlatformPreStep() override;
+    void updatePlatformPostStep();
+
+    void setToJump(btScalar v_vertical, btScalar v_horizontal);
+    void lean(CharacterCommand* cmd, btScalar max_lean);
+    btScalar inertiaLinear(btScalar max_speed, btScalar accel, int8_t command);
+    btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
+
+    int moveOnFloor();
+    int freeFalling();
+    int monkeyClimbing();
+    int wallsClimbing();
+    int climbing();
+    int moveUnderWater();
+    int moveOnWater();
+
+    int findTraverse();
+    int checkTraverse(std::shared_ptr<Entity> obj);
+
+    void applyCommands();
+    void updateParams();
+
+    float getParam(int parameter);
+    int   setParam(int parameter, float value);
+    int   changeParam(int parameter, float value);
+    int   setParamMaximum(int parameter, float max_value);
+
+    int   setWeaponModel(int weapon_model, int armed);
 };
 
-int32_t Character_AddItem(std::shared_ptr<Character> ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
-int32_t Character_RemoveItem(std::shared_ptr<Character> ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
-int32_t Character_RemoveAllItems(std::shared_ptr<Character> ent);
-int32_t Character_GetItemsCount(std::shared_ptr<Character> ent, uint32_t item_id);                // returns items count
-
-void Character_GetHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
-int Character_CheckNextStep(std::shared_ptr<Character> ent, const btVector3 &offset, HeightInfo *nfc);
-int Character_HasStopSlant(std::shared_ptr<Character> ent, HeightInfo* next_fc);
-ClimbInfo Character_CheckClimbability(std::shared_ptr<Character> ent, btVector3 offset, HeightInfo *nfc, btScalar test_height);
-ClimbInfo Character_CheckWallsClimbability(std::shared_ptr<Character> ent);
-
-void Character_UpdateCurrentHeight(std::shared_ptr<Character> ent);
-void Character_UpdatePlatformPreStep(std::shared_ptr<Character> ent);
-void Character_UpdatePlatformPostStep(std::shared_ptr<Character> ent);
-
-void Character_SetToJump(std::shared_ptr<Character> ent, btScalar v_vertical, btScalar v_horizontal);
-void Character_Lean(std::shared_ptr<Character> ent, CharacterCommand* cmd, btScalar max_lean);
-btScalar Character_InertiaLinear(std::shared_ptr<Character> ent, btScalar max_speed, btScalar accel, int8_t command);
-btScalar Character_InertiaAngular(std::shared_ptr<Character> ent, btScalar max_angle, btScalar accel, uint8_t axis);
-
-int Character_MoveOnFloor(std::shared_ptr<Character> ent);
-int Character_FreeFalling(std::shared_ptr<Character> ent);
-int Character_MonkeyClimbing(std::shared_ptr<Character> ent);
-int Character_WallsClimbing(std::shared_ptr<Character> ent);
-int Character_Climbing(std::shared_ptr<Character> ent);
-int Character_MoveUnderWater(std::shared_ptr<Character> ent);
-int Character_MoveOnWater(std::shared_ptr<Character> ent);
-
-int Character_FindTraverse(std::shared_ptr<Character> ch);
-int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
-int Character_CheckTraverse(std::shared_ptr<Character> ch, std::shared_ptr<Entity> obj);
-
-void Character_ApplyCommands(std::shared_ptr<Character> ent);
-void Character_UpdateParams(std::shared_ptr<Character> ent);
-
-float Character_GetParam(std::shared_ptr<Character> ent, int parameter);
-int   Character_SetParam(std::shared_ptr<Character> ent, int parameter, float value);
-int   Character_ChangeParam(std::shared_ptr<Character> ent, int parameter, float value);
-int   Character_SetParamMaximum(std::shared_ptr<Character> ent, int parameter, float max_value);
-
-int   Character_SetWeaponModel(std::shared_ptr<Character> ent, int weapon_model, int armed);
-
 bool IsCharacter(std::shared_ptr<Entity> ent);
+int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);

@@ -411,7 +411,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         control_states.look_axis_y = 0.0;
     }
 
-    if((control_states.free_look != 0) || !IsCharacter(ent))
+    if((control_states.free_look != 0) || !std::dynamic_pointer_cast<Character>(ent))
     {
         btScalar dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         renderer.camera()->setRotation(cam_angles);
@@ -454,10 +454,10 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if(control_states.use_small_medi)
         {
-            if((Character_GetItemsCount(ch, ITEM_SMALL_MEDIPACK) > 0) &&
-               (Character_ChangeParam(ch, PARAM_HEALTH, 250)))
+            if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 &&
+               ch->changeParam(PARAM_HEALTH, 250))
             {
-                Character_RemoveItem(ch, ITEM_SMALL_MEDIPACK, 1);
+                ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
@@ -466,10 +466,10 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
 
         if(control_states.use_big_medi)
         {
-            if((Character_GetItemsCount(ch, ITEM_LARGE_MEDIPACK) > 0) &&
-               (Character_ChangeParam(ch, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX)))
+            if(ch->getItemsCount(ITEM_LARGE_MEDIPACK) > 0 &&
+               ch->changeParam(PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
             {
-                Character_RemoveItem(ch, ITEM_LARGE_MEDIPACK, 1);
+                ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
@@ -710,11 +710,11 @@ void Game_UpdateCharactersTree(std::map<uint32_t, std::shared_ptr<Entity> >& ent
         {
             ent->checkActivators();
         }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
+        if(ent->getParam(PARAM_HEALTH) <= 0.0)
         {
             ent->m_response.kill = 1;                                      // Kill, if no HP.
         }
-        Character_ApplyCommands(ent);
+        ent->applyCommands();
         ent->updateHair();
     }
 }
@@ -730,7 +730,7 @@ void Game_UpdateCharacters()
         {
             ent->checkActivators();
         }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
+        if(ent->getParam(PARAM_HEALTH) <= 0.0)
         {
             ent->m_response.kill = 1;   // Kill, if no HP.
         }
@@ -806,7 +806,7 @@ void Game_Frame(btScalar time)
         if(is_character)
         {
             engine_world.character->processSector();
-            Character_UpdateParams(engine_world.character);
+            engine_world.character->updateParams();
             engine_world.character->checkCollisionCallbacks();   ///@FIXME: Must do it for ALL interactive entities!
         }
 
@@ -828,7 +828,7 @@ void Game_Frame(btScalar time)
         }
         if(!control_states.noclip && !control_states.free_look)
         {
-            Character_ApplyCommands(engine_world.character);
+            engine_world.character->applyCommands();
             engine_world.character->frame(engine_frame_time);
             Cam_FollowEntity(renderer.camera(), engine_world.character, 16.0, 128.0);
         }
@@ -849,18 +849,18 @@ void Game_Frame(btScalar time)
 
 void Game_Prepare()
 {
-    if(IsCharacter(engine_world.character))
+    if(engine_world.character)
     {
         // Set character values to default.
 
-        Character_SetParamMaximum(engine_world.character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-        Character_SetParam       (engine_world.character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-        Character_SetParamMaximum(engine_world.character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-        Character_SetParam       (engine_world.character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-        Character_SetParamMaximum(engine_world.character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        Character_SetParam       (engine_world.character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        Character_SetParamMaximum(engine_world.character, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
-        Character_SetParam       (engine_world.character, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
+        engine_world.character->setParamMaximum(PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+        engine_world.character->setParamMaximum(PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+        engine_world.character->setParamMaximum(PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        engine_world.character->setParamMaximum(PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        engine_world.character->setParamMaximum(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine_world.character->setParamMaximum(PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine_world.character->setParamMaximum(PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
+        engine_world.character->setParamMaximum(PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
 
         // Set character statistics to default.
 
