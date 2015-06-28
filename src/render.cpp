@@ -632,12 +632,7 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
             btScalar subModelViewProjection[16];
 
             memcpy(scaledTransform, entity->transform, sizeof(btScalar) * 16);
-
-            scaledTransform[0]  *= entity->scaling.m_floats[0];                                                      // OX - right
-            scaledTransform[1]  *= entity->scaling.m_floats[0];
-            scaledTransform[4]  *= entity->scaling.m_floats[1];                                                       // OY - view
-            scaledTransform[5]  *= entity->scaling.m_floats[1];
-            scaledTransform[10] *= entity->scaling.m_floats[2];
+            Mat4_Scale(scaledTransform, entity->scaling[0], entity->scaling[1], entity->scaling[2]);
 
             Mat4_Mat4_mul(subModelView, modelViewMatrix, scaledTransform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, scaledTransform);

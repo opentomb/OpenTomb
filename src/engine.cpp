@@ -1968,7 +1968,9 @@ int lua_SetEntityScaling(lua_State * lua)
     }
     else
     {
-        ent->scaling = btVector3(lua_tonumber(lua, 2), lua_tonumber(lua, 3), lua_tonumber(lua, 4));
+        ent->scaling[0] = lua_tonumber(lua, 2);
+        ent->scaling[1] = lua_tonumber(lua, 3);
+        ent->scaling[2] = lua_tonumber(lua, 4);
 
         if((ent->bf.bone_tag_count > 0) && (ent->bt.bt_body))
         {
@@ -1977,7 +1979,7 @@ int lua_SetEntityScaling(lua_State * lua)
                 if(ent->bt.bt_body[i] != NULL)
                 {
                     bt_engine_dynamicsWorld->removeRigidBody(ent->bt.bt_body[i]);
-                        ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(ent->scaling);
+                        ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
                     bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i]);
 
                     ent->bt.bt_body[i]->activate();
@@ -3514,7 +3516,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
                     ent->bt.bt_body[i]->updateInertiaTensor();
                     ent->bt.bt_body[i]->clearForces();
 
-                    ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(ent->scaling);
+                    ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
 
                     btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
                     ent->bt.bt_body[i]->setLinearFactor (factor);

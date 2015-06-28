@@ -57,7 +57,9 @@ entity_p Entity_Create()
     ret->bt.ghostObjects = NULL;
     ret->bt.last_collisions = NULL;
 
-    ret->scaling = btVector3(1.0, 1.0, 1.0);
+    ret->scaling[0] = 1.0;
+    ret->scaling[1] = 1.0;
+    ret->scaling[2] = 1.0;
 
     ret->character = NULL;
     ret->current_sector = NULL;
