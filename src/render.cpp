@@ -491,7 +491,7 @@ std::shared_ptr<LitShaderDescription> Render::setupEntityLight(std::shared_ptr<E
 
             // Find position
             btVector3 tmpPos = modelViewMatrix * current_light->pos;
-            std::copy(tmpPos.m_floats+0, tmpPos.m_floats+3, positions[current_light_number].begin());
+            std::copy(tmpPos+0, tmpPos+3, positions[current_light_number].begin());
 
             // Find fall-off
             if(current_light->light_type == LT_SUN)
@@ -662,9 +662,9 @@ void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelView
     bool need_stencil = false;
 #if STENCIL_FRUSTUM
     if(!room->frustum.empty()) {
-        for(uint16_t i=0;i<room->overlapped_room_list_size;i++)
+        for(const std::shared_ptr<Room>& r : room->overlapped_room_list)
         {
-            if(room->overlapped_room_list[i]->is_in_r_list)
+            if(r->is_in_r_list)
             {
                 need_stencil = true;
                 break;

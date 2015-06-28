@@ -693,10 +693,10 @@ void Controls_SecondaryMouseDown()
         extern GLfloat cast_ray[6];
 
         place.setInterpolate3(from, to, cbc.m_closestHitFraction);
-        std::copy(place.m_floats+0, place.m_floats+3, cast_ray);
-        cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld.m_floats[0];
-        cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld.m_floats[1];
-        cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld.m_floats[2];
+        std::copy(place+0, place+3, cast_ray);
+        cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld[0];
+        cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld[1];
+        cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld[2];
 
         if((c0 = (EngineContainer*)cbc.m_collisionObject->getUserPointer()))
         {

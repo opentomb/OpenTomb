@@ -110,7 +110,6 @@
 #define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (-0.707)                        ///@FIXME: cos(alpha = 45 deg)
-#define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_CLIMB_R               (32.0)
 #define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
@@ -316,7 +315,6 @@ struct Character
     int (*state_func)(std::shared_ptr<Entity> entity, SSAnimation *ssAnim) = nullptr;
     
     int8_t                       m_camFollowCenter = 0;
-    btScalar                     m_speedMult = DEFAULT_CHARACTER_SPEED_MULT;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
     btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
     btScalar                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;

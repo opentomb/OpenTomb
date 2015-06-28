@@ -85,18 +85,18 @@ bool RDSetup::getSetup(int ragdoll_index)
 
                                 lua_getfield(engine_lua, -1, "body1_offset");
                                 if(lua_istable(engine_lua, -1)) {
-                                    joint_setup[i].body1_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
-                                    joint_setup[i].body1_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
-                                    joint_setup[i].body1_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
+                                    joint_setup[i].body1_offset[0] = lua_GetScalarField(engine_lua, 1);
+                                    joint_setup[i].body1_offset[1] = lua_GetScalarField(engine_lua, 2);
+                                    joint_setup[i].body1_offset[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
 
                                 lua_getfield(engine_lua, -1, "body2_offset");
                                 if(lua_istable(engine_lua, -1)) {
-                                    joint_setup[i].body2_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
-                                    joint_setup[i].body2_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
-                                    joint_setup[i].body2_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
+                                    joint_setup[i].body2_offset[0] = lua_GetScalarField(engine_lua, 1);
+                                    joint_setup[i].body2_offset[1] = lua_GetScalarField(engine_lua, 2);
+                                    joint_setup[i].body2_offset[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);

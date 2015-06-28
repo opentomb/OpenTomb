@@ -391,7 +391,7 @@ void Engine_Start()
     Engine_InitAL();
 
     // Clearing up memory for initial level loading.
-    World_Prepare(&engine_world);
+    engine_world.prepare();
 
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -520,7 +520,7 @@ void ShowDebugInfo()
     if(ent && ent->m_character)
     {
         /*height_info_p fc = &ent->character->height_info
-        txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
+        txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
 
         Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->m_bf.animations.last_animation, ent->m_bf.animations.current_animation, ent->m_bf.animations.next_animation, ent->m_bf.animations.last_state, ent->m_bf.animations.next_state);
@@ -549,7 +549,7 @@ void ShowDebugInfo()
 
     if(engine_camera.m_currentRoom != NULL)
     {
-        RoomSector* rs = Room_GetSectorRaw(engine_camera.m_currentRoom, engine_camera.m_pos);
+        RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.m_pos);
         if(rs != NULL)
         {
             Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);

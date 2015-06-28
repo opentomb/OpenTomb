@@ -237,6 +237,17 @@ struct RoomSector
 
     RoomSector* getLowestSector();
     RoomSector* getHighestSector();
+
+    RoomSector* checkFlip();
+    RoomSector* checkBaseRoom();
+    RoomSector* checkAlternateRoom();
+    RoomSector* checkPortalPointerRaw();
+    RoomSector* checkPortalPointer();
+    bool is2SidePortals(RoomSector* s2);
+    bool similarCeiling(RoomSector* s2, bool ignore_doors);
+    bool similarFloor(RoomSector* s2, bool ignore_doors);
+    btVector3 getFloorPoint();
+    btVector3 getCeilingPoint();
 };
 
 
@@ -303,31 +314,62 @@ struct Room : public Object
     std::vector<std::shared_ptr<Frustum>> frustum;
     uint16_t                    max_path;                                       // maximum number of portals from camera to this room
 
-    uint16_t                    near_room_list_size;
-    std::shared_ptr<Room> near_room_list[32];
-    uint16_t                    overlapped_room_list_size;
-    std::shared_ptr<Room> overlapped_room_list[32];
+    std::vector<std::shared_ptr<Room>> near_room_list;
+    std::vector<std::shared_ptr<Room>> overlapped_room_list;
     btRigidBody                *bt_body;
 
     std::unique_ptr<EngineContainer> self;
+
+    void enable();
+    void disable();
+    void swapToAlternate();
+    void swapToBase();
+    std::shared_ptr<Room> checkFlip();
+    void swapPortals(std::shared_ptr<Room> dest_room); //Swap room portals of input room to destination room
+    void swapItems(std::shared_ptr<Room> dest_room);   //Swap room items of input room to destination room
+    void buildNearRoomsList();
+    void buildOverlappedRoomsList();
+
+    bool isJoined(std::shared_ptr<Room> r2);
+    bool isOverlapped(std::shared_ptr<Room> r1);
+    int isInNearRoomsList(std::shared_ptr<Room> r);
+    bool hasSector(int x, int y);//If this room contains a sector
+    void empty();
+    void addEntity(std::shared_ptr<Entity> entity);
+    bool removeEntity(std::shared_ptr<Entity> entity);
+    void addToNearRoomsList(std::shared_ptr<Room> r);
+
+    bool isPointIn(const btVector3& dot)
+    {
+        return (dot[0] >= bb_min[0]) && (dot[0] < bb_max[0]) &&
+                (dot[1] >= bb_min[1]) && (dot[1] < bb_max[1]) &&
+                (dot[2] >= bb_min[2]) && (dot[2] < bb_max[2]);
+    }
+
+    RoomSector* getSectorRaw(const btVector3 &pos);
+    RoomSector* getSectorCheckFlip(const btVector3& pos);
+    RoomSector* getSectorXYZ(const btVector3 &pos);
 };
 
 
 struct World
 {
-    char                       *name;
-    uint32_t                    id;
+    char                       *name = nullptr;
+    uint32_t                    id = 0;
     uint32_t                    version;
 
     std::vector< std::shared_ptr<Room> > rooms;
 
     std::vector<RoomBox> room_boxes;
 
-    uint32_t                    flip_count;             // Number of flips
-    uint8_t                    *flip_map;               // Flipped room activity array.
-    uint8_t                    *flip_state;             // Flipped room state array.
+    struct FlipInfo {
+        uint8_t map = 0; // Flipped room activity
+        uint8_t state = 0; // Flipped room state
+    };
 
-    BorderedTextureAtlas     *tex_atlas;
+    std::vector<FlipInfo> flip_data;
+
+    std::unique_ptr<BorderedTextureAtlas> tex_atlas;
     std::vector<GLuint> textures;               // OpenGL textures indexes
 
     std::vector<AnimSeq> anim_sequences;         // Animated textures
@@ -339,12 +381,12 @@ struct World
     std::vector<SkeletalModel> skeletal_models;        // base skeletal models data
 
     std::shared_ptr<Entity>   Character;              // this is an unique Lara's pointer =)
-    SkeletalModel    *sky_box;                // global skybox
+    SkeletalModel    *sky_box = nullptr;                // global skybox
 
     std::map<uint32_t, std::shared_ptr<Entity> > entity_tree;            // tree of world active objects
     std::map<uint32_t, std::shared_ptr<BaseItem> > items_tree;             // tree of world items
 
-    uint32_t                    type;
+    uint32_t                    type = 0;
 
     std::vector<StatCameraSink> cameras_sinks;          // Cameras and sinks.
 
@@ -367,54 +409,16 @@ struct World
     int deleteItem(uint32_t item_id);
     Sprite* getSpriteByID(unsigned int ID);
     SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
+
+    void prepare();
+    void empty();
+    uint32_t spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3 *pos, const btVector3 *ang, int32_t id);
+    std::shared_ptr<Entity> getEntityByID(uint32_t id);
+    std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);
+    std::shared_ptr<Room> findRoomByPosition(const btVector3& pos);
+    std::shared_ptr<Room> getByID(unsigned int ID);
 };
 
-void World_Prepare(World* world);
-void World_Empty(World* world);
-int compEntityEQ(void *x, void *y);
-int compEntityLT(void *x, void *y);
-uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3 *pos, const btVector3 *ang, int32_t id);
-std::shared_ptr<Entity> World_GetEntityByID(World* world, uint32_t id);
-std::shared_ptr<BaseItem> World_GetBaseItemByID(World* world, uint32_t id);
-
-void Room_Empty(std::shared_ptr<Room> room);
-void Room_AddEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity);
-bool Room_RemoveEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity);
-
-void Room_AddToNearRoomsList(std::shared_ptr<Room> room, std::shared_ptr<Room> r);
-int Room_IsPointIn(std::shared_ptr<Room> room, btScalar dot[3]);
-
-std::shared_ptr<Room> Room_FindPos(const btVector3 &pos);
 std::shared_ptr<Room> Room_FindPosCogerrence(const btVector3& new_pos, std::shared_ptr<Room> room);
-std::shared_ptr<Room> Room_GetByID(World* w, unsigned int ID);
-RoomSector* Room_GetSectorRaw(std::shared_ptr<Room> room, const btVector3 &pos);
-RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3]);
-RoomSector* Sector_CheckFlip(RoomSector* rs);
-RoomSector* Room_GetSectorXYZ(std::shared_ptr<Room> room, const btVector3 &pos);
-
-void Room_Enable(std::shared_ptr<Room> room);
-void Room_Disable(std::shared_ptr<Room> room);
-void Room_SwapToAlternate(std::shared_ptr<Room> room);
-void Room_SwapToBase(std::shared_ptr<Room> room);
-std::shared_ptr<Room> Room_CheckFlip(std::shared_ptr<Room> r);
-void Room_SwapPortals(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_room); //Swap room portals of input room to destination room
-void Room_SwapItems(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_room);   //Swap room items of input room to destination room
-void Room_BuildNearRoomsList(std::shared_ptr<Room> room);
-void Room_BuildOverlappedRoomsList(std::shared_ptr<Room> room);
-
-bool Room_IsJoined(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2);
-int Room_IsOverlapped(std::shared_ptr<Room> r0, std::shared_ptr<Room> r1);
-int Room_IsInNearRoomsList(std::shared_ptr<Room> room, std::shared_ptr<Room> r);
-int Room_HasSector(std::shared_ptr<Room> room, int x, int y);//If this room contains a sector
-RoomSector* TR_Sector_CheckBaseRoom(RoomSector* rs);
-RoomSector* TR_Sector_CheckAlternateRoom(RoomSector* rs);
-RoomSector* TR_Sector_CheckPortalPointerRaw(RoomSector* rs);
-RoomSector* TR_Sector_CheckPortalPointer(RoomSector* rs);
-int Sectors_Is2SidePortals(RoomSector* s1, RoomSector* s2);
-bool Sectors_SimilarCeiling(RoomSector* s1, RoomSector* s2, bool ignore_doors);
-bool Sectors_SimilarFloor(RoomSector* s1, RoomSector* s2, bool ignore_doors);
-btVector3 Sector_GetFloorPoint(RoomSector* rs);
-btVector3 Sector_GetCeilingPoint(RoomSector* rs);
-
 
 #endif

@@ -92,7 +92,7 @@ struct HairSetup
     btScalar     m_jointErp;          // Error reduction parameter (joint "inertia")
 
     btVector3    m_headOffset;        // Linear offset to place hair to
-    btScalar     m_rootAngle[3];      // First constraint set angle (to align hair angle)
+    btVector3    m_rootAngle;      // First constraint set angle (to align hair angle)
 
     // Gets scripted hair set-up to specified hair set-up structure.
     bool getSetup(uint32_t hair_entry_index);

@@ -319,10 +319,10 @@ int Game_Save(const char* name)
 
     // Save flipmap and flipped room states.
 
-    for(int i=0; i < engine_world.flip_count; i++)
+    for(int i=0; i < engine_world.flip_data.size(); i++)
     {
-        fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_map[i]);
-        fprintf(f, "setFlipState(%d, %d);\n", i, engine_world.flip_state[i]);
+        fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_data[i].map);
+        fprintf(f, "setFlipState(%d, %d);\n", i, engine_world.flip_data[i].state);
     }
 
     Save_Entity(&f, engine_world.Character);    // Save Lara.

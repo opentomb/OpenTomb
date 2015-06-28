@@ -703,7 +703,7 @@ int gui_InventoryManager::getItemsTypeCount(int type)
     int ret = 0;
     for(const InventoryNode& i : *mInventory)
     {
-        auto bi = World_GetBaseItemByID(&engine_world, i.id);
+        auto bi = engine_world.getBaseItemByID(i.id);
         if(bi && bi->type == type)
         {
             ret++;
@@ -778,7 +778,7 @@ int gui_InventoryManager::setItemsType(int type)
     {
         for(const InventoryNode& i : *mInventory)
         {
-            if(auto bi = World_GetBaseItemByID(&engine_world, i.id))
+            if(auto bi = engine_world.getBaseItemByID(i.id))
             {
                 type = bi->type;
                 count = this->getItemsTypeCount(mCurrentItemsType);
@@ -1050,7 +1050,7 @@ void gui_InventoryManager::render()
         int num = 0;
         for(InventoryNode& i : *mInventory)
         {
-            auto bi = World_GetBaseItemByID(&engine_world, i.id);
+            auto bi = engine_world.getBaseItemByID(i.id);
             if(!bi || bi->type != mCurrentItemsType)
             {
                 continue;
@@ -2531,7 +2531,7 @@ void gui_ItemNotifier::Draw()
     if(!mActive)
         return;
 
-    auto item = World_GetBaseItemByID(&engine_world, mItem);
+    auto item = engine_world.getBaseItemByID(mItem);
     if(!item)
         return;
 

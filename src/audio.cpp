@@ -315,9 +315,9 @@ void AudioSource::LinkEmitter()
     switch(emitter_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            if(std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, emitter_ID)) {
+            if(std::shared_ptr<Entity> ent = engine_world.getEntityByID(emitter_ID)) {
                 SetPosition(ent->m_transform.getOrigin());
-                SetVelocity(ent->m_speed.m_floats);
+                SetVelocity(ent->m_speed);
             }
             return;
 
@@ -1065,7 +1065,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
     switch(entity_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            if(std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, entity_ID)) {
+            if(std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_ID)) {
                 vec = ent->m_transform.getOrigin();
             }
             else {
@@ -1741,12 +1741,12 @@ void Audio_UpdateListenerByCamera(struct Camera *cam)
 
     alListenerfv(AL_ORIENTATION, v);
 
-    alListenerfv(AL_POSITION, cam->m_pos.m_floats);
+    alListenerfv(AL_POSITION, cam->m_pos);
 
     btVector3 v2 = cam->m_pos - cam->m_prevPos;
     v2[3] = 1.0 / engine_frame_time;
     v2 *= v2[3];
-    alListenerfv(AL_VELOCITY, v2.m_floats);
+    alListenerfv(AL_VELOCITY, v2);
     cam->m_prevPos = cam->m_pos;
 
     if(cam->m_currentRoom)

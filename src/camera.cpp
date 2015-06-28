@@ -18,7 +18,7 @@ void Camera::apply()
     M[1][1] = m_f;
     M[2][2] = (m_distNear + m_distFar) / (m_distNear - m_distFar);
     M[2][3] =-1.0;
-    M[3][2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
+    m_glProjMat.getOrigin()[2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
 
     btMatrix3x3& M2 = m_glViewMat.getBasis();
     M2[0] = m_rightDir;
@@ -108,7 +108,6 @@ void Camera::recalcClipPlanes()
     LU = nearViewPoint - m_height / 2.0 * m_upDir;                                       // вектор нижней плоскости отсечения
 
     m_clipPlanes[2] = m_rightDir.cross(LU);
-    LU[3] = m_clipPlanes[2].length();                                      // модуль нормали к левой / правой плоскостям
     m_clipPlanes[2].normalize();
     m_clipPlanes[2][3] = -m_clipPlanes[2].dot(m_pos);
 
@@ -125,7 +124,6 @@ void Camera::recalcClipPlanes()
     LU = nearViewPoint - m_width / 2.0 * m_rightDir;                                    // вектор левой плоскости отсечения
 
     m_clipPlanes[0] = m_upDir.cross(LU);
-    LU[3] = m_clipPlanes[0].length();                                         // модуль нормали к левой / правой плоскостям
     m_clipPlanes[0].normalize();
     m_clipPlanes[0][3] = -m_clipPlanes[2].dot(m_pos);
 

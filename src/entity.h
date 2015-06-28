@@ -90,6 +90,8 @@ struct BtEntityData
     EntityCollisionNode     *last_collisions;
 };
 
+#define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
+
 struct Entity : public Object
 {
     uint32_t                            m_id;                 // Unique entity ID
@@ -109,8 +111,8 @@ struct Entity : public Object
 
     btScalar                            m_currentSpeed;      // current linear speed from animation info
     btVector3                           m_speed;              // speed of the entity XYZ
-    btScalar                            m_speedMult;
-    
+    btScalar                     m_speedMult = DEFAULT_CHARACTER_SPEED_MULT;
+
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
     

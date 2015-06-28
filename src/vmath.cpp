@@ -5,40 +5,14 @@
 
 void vec4_SetTRRotations(btQuaternion& v, const btVector3& rot)
 {
-    btScalar angle, sin_t2, cos_t2;
-
-    // OZ    Mat4_RotateZ(btag->transform, btag->rotate[2]);
-    angle = M_PI * rot[2] / 360.0;
-    sin_t2 = sin(angle);
-    cos_t2 = cos(angle);
-
     btQuaternion qZ;
-    qZ[0] = 0.0 * sin_t2;
-    qZ[1] = 0.0 * sin_t2;
-    qZ[2] = 1.0 * sin_t2;
-    qZ[3] = cos_t2;
-
-    // OX    Mat4_RotateX(btag->transform, btag->rotate[0]);
-    angle = M_PI * rot[0] / 360.0;
-    sin_t2 = sin(angle);
-    cos_t2 = cos(angle);
+    qZ.setRotation({0,0,1}, M_PI * rot[2] / 360.0);
 
     btQuaternion qX;
-    qX[0] = 1.0 * sin_t2;
-    qX[1] = 0.0 * sin_t2;
-    qX[2] = 0.0 * sin_t2;
-    qX[3] = cos_t2;
-
-    // OY    Mat4_RotateY(btag->transform, btag->rotate[1]);
-    angle = M_PI * rot[1] / 360.0;
-    sin_t2 = sin(angle);
-    cos_t2 = cos(angle);
+    qX.setRotation({1,0,0}, M_PI * rot[0] / 360.0);
 
     btQuaternion qY;
-    qY[0] = 0.0 * sin_t2;
-    qY[1] = 1.0 * sin_t2;
-    qY[2] = 0.0 * sin_t2;
-    qY[3] = cos_t2;
+    qY.setRotation({0,1,0}, M_PI * rot[1] / 360.0);
 
     v = qZ * qX * qY;
 }

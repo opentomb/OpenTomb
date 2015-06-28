@@ -122,12 +122,6 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     for(size_t i=0; i<m_elements.size(); i++)
     {
         btScalar     body_length;
-
-        // Each body width and height are used to calculate position of each joint.
-
-        //btScalar body_width = fabs(elements[i].mesh->bb_max[0] - elements[i].mesh->bb_min[0]);
-        //btScalar body_depth = fabs(elements[i].mesh->bb_max[3] - elements[i].mesh->bb_min[3]);
-
         btTransform localA; localA.setIdentity();
         btTransform localB; localB.setIdentity();
 
@@ -358,9 +352,9 @@ bool HairSetup::getSetup(uint32_t hair_entry_index)
                 lua_getfield(engine_lua, -1, "offset");
                 if(lua_istable(engine_lua, -1))
                 {
-                    m_headOffset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
-                    m_headOffset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
-                    m_headOffset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
+                    m_headOffset[0] = lua_GetScalarField(engine_lua, 1);
+                    m_headOffset[1] = lua_GetScalarField(engine_lua, 2);
+                    m_headOffset[2] = lua_GetScalarField(engine_lua, 3);
                 }
                 else { result = false; }
                 lua_pop(engine_lua, 1);

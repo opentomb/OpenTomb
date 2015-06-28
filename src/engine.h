@@ -172,7 +172,7 @@ public:
 
         if(r0 && r1)
         {
-            if(Room_IsInNearRoomsList(r0, r1))
+            if(r0->isInNearRoomsList(r1))
             {
                 return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
             }
@@ -219,7 +219,7 @@ public:
 
         if(r0 && r1)
         {
-            if(Room_IsInNearRoomsList(r0, r1))
+            if(r0->isInNearRoomsList(r1))
             {
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
             }

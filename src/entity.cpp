@@ -642,7 +642,7 @@ void Entity::updateRoomPos()
     auto new_room = Room_FindPosCogerrence(pos, m_self->room);
     if(new_room)
     {
-        auto new_sector = Room_GetSectorXYZ(new_room, pos);
+        auto new_sector = new_room->getSectorXYZ(pos);
         if(new_room != new_sector->owner_room)
         {
             new_room = new_sector->owner_room;
@@ -650,15 +650,15 @@ void Entity::updateRoomPos()
 
         if(!m_character && (m_self->room != new_room))
         {
-            if((m_self->room != NULL) && !Room_IsOverlapped(m_self->room, new_room))
+            if((m_self->room != NULL) && !m_self->room->isOverlapped(new_room))
             {
                 if(m_self->room)
                 {
-                    Room_RemoveEntity(m_self->room, std::static_pointer_cast<Entity>(shared_from_this()));
+                    m_self->room->removeEntity(std::static_pointer_cast<Entity>(shared_from_this()));
                 }
                 if(new_room)
                 {
-                    Room_AddEntity(new_room, std::static_pointer_cast<Entity>(shared_from_this()));
+                    new_room->addEntity(std::static_pointer_cast<Entity>(shared_from_this()));
                 }
             }
         }
@@ -816,55 +816,23 @@ void Entity::updateRotation()
      * LEFT - RIGHT INIT
      */
 
-    view_dir[0] =-sin_t2;                                                       // OY - view
-    view_dir[1] = cos_t2;
-    view_dir[2] = 0.0;
-    view_dir[3] = 0.0;
-
-    right_dir[0] = cos_t2;                                                      // OX - right
-    right_dir[1] = sin_t2;
-    right_dir[2] = 0.0;
-    right_dir[3] = 0.0;
-
-    up_dir[0] = 0.0;                                                            // OZ - up
-    up_dir[1] = 0.0;
-    up_dir[2] = 1.0;
-    up_dir[3] = 0.0;
+    up_dir = {0,0,1};
+    view_dir = btVector3(0,1,0).rotate(up_dir, t);
+    right_dir = btVector3(1,0,0).rotate(up_dir, t);
 
     if(m_angles[1] != 0.0)
     {
         t = m_angles[1] * M_PI / 360.0;                                   // UP - DOWN
-        sin_t2 = sin(t);
-        cos_t2 = cos(t);
-        btVector3 R;
-        R[3] = cos_t2;
-        R[0] = right_dir[0] * sin_t2;
-        R[1] = right_dir[1] * sin_t2;
-        R[2] = right_dir[2] * sin_t2;
-        auto Rt = -R;
-        up_dir = R * up_dir * Rt;
-        view_dir = R * view_dir * Rt;
+        up_dir = up_dir.rotate(right_dir, t);
+        view_dir = view_dir.rotate(right_dir, t);
     }
 
     if(m_angles[2] != 0.0)
     {
         t = m_angles[2] * M_PI / 360.0;                                   // ROLL
-        sin_t2 = sin(t);
-        cos_t2 = cos(t);
-        btVector3 R;
-        R[3] = cos_t2;
-        R[0] = view_dir[0] * sin_t2;
-        R[1] = view_dir[1] * sin_t2;
-        R[2] = view_dir[2] * sin_t2;
-        auto Rt = -R;
-
-        right_dir = R * right_dir * Rt;
-        up_dir = R * up_dir * Rt;
+        right_dir = right_dir.rotate(view_dir, t);
+        up_dir = up_dir.rotate(view_dir, t);
     }
-
-    view_dir[3] = 0.0;
-    right_dir[3] = 0.0;
-    up_dir[3] = 0.0;
 
     if(m_character != NULL)
         fixPenetrations(nullptr);
@@ -2152,7 +2120,7 @@ Entity::Entity()
 Entity::~Entity() {
     if((m_self->room != NULL) && (this != engine_world.Character.get()))
     {
-        Room_RemoveEntity(m_self->room, std::static_pointer_cast<Entity>(shared_from_this()));
+        m_self->room->removeEntity(std::static_pointer_cast<Entity>(shared_from_this()));
     }
 
     if(m_bt.last_collisions)
@@ -2260,7 +2228,7 @@ void Entity::updateHair()
             btVector3 mix_ang;
             sub_tr = hair->owner_body_transform.inverse() * new_transform;
             ang_tr.setFromOpenGLMatrix(sub_tr);
-            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
+            ang_tr.getBasis().getEulerYPR(mix_ang[2], mix_ang[1], mix_ang[0]);
             mix_ang *= 1.0 / engine_frame_time;
 
             // Looks like angular velocity breaks up constraints on VERY fast moves,

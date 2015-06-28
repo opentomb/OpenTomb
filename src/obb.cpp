@@ -84,10 +84,6 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     v->position[1] = bb_max[1];
     v->position[2] = bb_min[2];
 
-    //p->plane[0] = 0.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] =-1.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
     p->findNormal();
     p++;
 
@@ -98,10 +94,6 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     v[2].position = p_down->vertices[1].position;                     // 1 0  down
     v[3].position = p_down->vertices[0].position;                     // 0 1  down
 
-    //p->plane[0] = 1.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
     p->findNormal();
     p++;
 
@@ -113,10 +105,6 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     v[2].position = p_down->vertices[2].position;                     // 1 0  down
     v[1].position = p_down->vertices[3].position;                     // 0 1  down
 
-    //p->plane[0] =-1.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
     p->findNormal();
     p++;
 
@@ -128,10 +116,6 @@ void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
     v[2].position = p_down->vertices[3].position;                     // 1 0  down
     v[1].position = p_down->vertices[0].position;                     // 0 1  down
 
-    //p->plane[0] = 0.0;
-    //p->plane[1] = 1.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
     p->findNormal();
     p++;
 

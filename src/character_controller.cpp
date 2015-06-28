@@ -45,7 +45,7 @@ int32_t Character_AddItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t
 
     Gui_NotifierStart(item_id);
 
-    auto item = World_GetBaseItemByID(&engine_world, item_id);
+    auto item = engine_world.getBaseItemByID(item_id);
     if(!item)
         return 0;
 
@@ -244,15 +244,15 @@ void Character_GetHeightInfo(const btVector3& pos, struct HeightInfo *fc, btScal
     fc->transition_level = 32512.0;
 
     r = Room_FindPosCogerrence(pos, r);
-    r = Room_CheckFlip(r);
+    r = r->checkFlip();
     if(r)
     {
-        rs = Room_GetSectorXYZ(r, pos);                                         // if r != NULL then rs can not been NULL!!!
+        rs = r->getSectorXYZ(pos);                                         // if r != NULL then rs can not been NULL!!!
         if(r->flags & TR_ROOM_FLAG_WATER)                                       // in water - go up
         {
             while(rs->sector_above)
             {
-                rs = Sector_CheckFlip(rs->sector_above);
+                rs = rs->sector_above->checkFlip();
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -265,7 +265,7 @@ void Character_GetHeightInfo(const btVector3& pos, struct HeightInfo *fc, btScal
         {
             while(rs->sector_above)
             {
-                rs = Sector_CheckFlip(rs->sector_above);
+                rs = rs->sector_above->checkFlip();
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = (btScalar)rs->floor;
@@ -285,7 +285,7 @@ void Character_GetHeightInfo(const btVector3& pos, struct HeightInfo *fc, btScal
         {
             while(rs->sector_below)
             {
-                rs = Sector_CheckFlip(rs->sector_below);
+                rs = rs->sector_below->checkFlip();
                 if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->transition_level = (btScalar)rs->ceiling;
@@ -517,8 +517,8 @@ ClimbInfo Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 off
     up_founded = 0;
     test_height = (test_height >= ent->m_character->m_maxStepUpHeight)?(test_height):(ent->m_character->m_maxStepUpHeight);
     d = pos[2] + ent->m_bf.bb_max[2] - test_height;
-    std::copy(to.m_floats+0, to.m_floats+3, cast_ray+0);
-    std::copy(to.m_floats+0, to.m_floats+3, cast_ray+3);
+    std::copy(to+0, to+3, cast_ray+0);
+    std::copy(to+0, to+3, cast_ray+3);
     cast_ray[5] -= d;
     btVector3 n0, n1;
     do
@@ -616,7 +616,7 @@ ClimbInfo Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 off
                                   n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
     ret.edge_point[2] /= d;
     ret.point = ret.edge_point;
-    std::copy(ret.point.m_floats+0, ret.point.m_floats+3, cast_ray+3);
+    std::copy(ret.point+0, ret.point+3, cast_ray+3);
     /*
      * unclimbable edge slant %)
      */
@@ -1663,7 +1663,7 @@ int Character_MoveOnWater(std::shared_ptr<Entity> ent)
 int Character_FindTraverse(std::shared_ptr<Entity> ch)
 {
     RoomSector* ch_s, *obj_s = NULL;
-    ch_s = Room_GetSectorRaw(ch->m_self->room, ch->m_transform.getOrigin());
+    ch_s = ch->m_self->room->getSectorRaw(ch->m_transform.getOrigin());
 
     if(ch_s == NULL)
     {
@@ -1675,25 +1675,25 @@ int Character_FindTraverse(std::shared_ptr<Entity> ch)
     // OX move case
     if(ch->m_transform.getBasis()[1][0] > 0.9)
     {
-        obj_s = Room_GetSectorRaw(ch_s->owner_room, {(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
     else if(ch->m_transform.getBasis()[1][0] < -0.9)
     {
-        obj_s = Room_GetSectorRaw(ch_s->owner_room, {(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
     // OY move case
     else if(ch->m_transform.getBasis()[1][1] > 0.9)
     {
-        obj_s = Room_GetSectorRaw(ch_s->owner_room, {(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+        obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
     else if(ch->m_transform.getBasis()[1][1] < -0.9)
     {
-        obj_s = Room_GetSectorRaw(ch_s->owner_room, {(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+        obj_s = ch_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
 
     if(obj_s != NULL)
     {
-        obj_s = TR_Sector_CheckPortalPointer(obj_s);
+        obj_s = obj_s->checkPortalPointer();
         for(std::shared_ptr<EngineContainer>& cont : obj_s->owner_room->containers)
         {
             if(cont->object_type == OBJECT_ENTITY)
@@ -1768,29 +1768,29 @@ int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> 
 {
     RoomSector* ch_s, *obj_s;
 
-    ch_s = Room_GetSectorRaw(ch->m_self->room, ch->m_transform.getOrigin());
-    obj_s = Room_GetSectorRaw(obj->m_self->room, obj->m_transform.getOrigin());
+    ch_s = ch->m_self->room->getSectorRaw(ch->m_transform.getOrigin());
+    obj_s = obj->m_self->room->getSectorRaw(obj->m_transform.getOrigin());
 
     if(obj_s == ch_s)
     {
         if(ch->m_transform.getBasis()[1][0] > 0.8)
         {
-            ch_s = Room_GetSectorRaw(obj_s->owner_room, {(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
+            ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
         }
         else if(ch->m_transform.getBasis()[1][0] < -0.8)
         {
-            ch_s = Room_GetSectorRaw(obj_s->owner_room, {(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
+            ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
         }
         // OY move case
         else if(ch->m_transform.getBasis()[1][1] > 0.8)
         {
-            ch_s = Room_GetSectorRaw(obj_s->owner_room, {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+            ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
         }
         else if(ch->m_transform.getBasis()[1][1] < -0.8)
         {
-            ch_s = Room_GetSectorRaw(obj_s->owner_room, {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+            ch_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
         }
-        ch_s = TR_Sector_CheckPortalPointer(ch_s);
+        ch_s = ch_s->checkPortalPointer();
     }
 
     if((ch_s == NULL) || (obj_s == NULL))
@@ -1829,23 +1829,23 @@ int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> 
     // OX move case
     if(ch->m_transform.getBasis()[1][0] > 0.8)
     {
-        next_s = Room_GetSectorRaw(obj_s->owner_room, {(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
     }
     else if(ch->m_transform.getBasis()[1][0] < -0.8)
     {
-        next_s = Room_GetSectorRaw(obj_s->owner_room, {(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(obj_s->pos[1]), (btScalar)0.0});
     }
     // OY move case
     else if(ch->m_transform.getBasis()[1][1] > 0.8)
     {
-        next_s = Room_GetSectorRaw(obj_s->owner_room, {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
     else if(ch->m_transform.getBasis()[1][1] < -0.8)
     {
-        next_s = Room_GetSectorRaw(obj_s->owner_room, {(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(obj_s->pos[0]), (btScalar)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
 
-    next_s = TR_Sector_CheckPortalPointer(next_s);
+    next_s = next_s->checkPortalPointer();
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->m_self) == 0x01))
     {
         BtEngineClosestConvexResultCallback ccb(obj->m_self.get());
@@ -1875,23 +1875,23 @@ int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> 
     // OX move case
     if(ch->m_transform.getBasis()[1][0] > 0.8)
     {
-        next_s = Room_GetSectorRaw(ch_s->owner_room, {(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
     else if(ch->m_transform.getBasis()[1][0] < -0.8)
     {
-        next_s = Room_GetSectorRaw(ch_s->owner_room, {(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (btScalar)(ch_s->pos[1]), (btScalar)0.0});
     }
     // OY move case
     else if(ch->m_transform.getBasis()[1][1] > 0.8)
     {
-        next_s = Room_GetSectorRaw(ch_s->owner_room, {(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
     else if(ch->m_transform.getBasis()[1][1] < -0.8)
     {
-        next_s = Room_GetSectorRaw(ch_s->owner_room, {(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
+        next_s = obj_s->owner_room->getSectorRaw({(btScalar)(ch_s->pos[0]), (btScalar)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (btScalar)0.0});
     }
 
-    next_s = TR_Sector_CheckPortalPointer(next_s);
+    next_s = next_s->checkPortalPointer();
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, ch->m_self) == 0x01))
     {
         BtEngineClosestConvexResultCallback ccb(ch->m_self.get());
