@@ -201,7 +201,7 @@ void ent_crawl_to_climb(std::shared_ptr<Entity> ent, SSAnimation* ss_anim, int s
             ent->setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
         }
 
-        ent->m_bt.no_fix_all = 0x00;
+        ent->m_bt.no_fix_all = false;
         ent_to_edge_climb(ent, ss_anim, state);
         ss_anim->onFrame = NULL;
     }
@@ -429,7 +429,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
                             pos[2] = next_fc.floor_point[2] - 512.0;
                             climb->point = next_fc.floor_point;
                             ent->setAnimation(TR_ANIMATION_LARA_CLIMB_2CLICK, 0);
-                            ent->m_bt.no_fix_all = 0x01;
+                            ent->m_bt.no_fix_all = true;
                             ss_anim->onFrame = ent_set_on_floor_after_climb;
                             break;
                         }
@@ -439,7 +439,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
                             pos[2] = next_fc.floor_point[2] - 768.0;
                             climb->point = next_fc.floor_point;
                             ent->setAnimation(TR_ANIMATION_LARA_CLIMB_3CLICK, 0);
-                            ent->m_bt.no_fix_all = 0x01;
+                            ent->m_bt.no_fix_all = true;
                             ss_anim->onFrame = ent_set_on_floor_after_climb;
                             break;
                         }
@@ -1184,7 +1184,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
             }
             else if((next_fc.floor_normale[2] >= ent->m_character->m_criticalSlantZComponent) && (i == CHARACTER_STEP_DOWN_BIG))
             {
-                if(ent->m_bt.no_fix_all == 0x00)
+                if(!ent->m_bt.no_fix_all)
                 {
                     int frames_count = ss_anim->model->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].frames.size();
                     int frames_count2 = (frames_count + 1) / 2;
@@ -1193,14 +1193,14 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
                         ent->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, ss_anim->current_frame);
                         ent->m_dirFlag = ENT_MOVE_BACKWARD;
                         ent->m_transform.getOrigin()[2] -= (curr_fc->floor_point[2] - next_fc.floor_point[2]);
-                        ent->m_bt.no_fix_all = 0x01;
+                        ent->m_bt.no_fix_all = true;
                     }
                     else if((ss_anim->current_frame >= frames_count) && (ss_anim->current_frame <= frames_count + frames_count2))
                     {
                         ent->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, ss_anim->current_frame - frames_count);
                         ent->m_dirFlag = ENT_MOVE_BACKWARD;
                         ent->m_transform.getOrigin()[2] -= (curr_fc->floor_point[2] - next_fc.floor_point[2]);
-                        ent->m_bt.no_fix_all = 0x01;
+                        ent->m_bt.no_fix_all = true;
                     }
                     else
                     {
@@ -1366,7 +1366,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
              */
         case TR_STATE_LARA_PUSHABLE_GRAB:
             ent->m_moveType = MOVE_ON_FLOOR;
-            ent->m_bt.no_fix_all = 0x01;
+            ent->m_bt.no_fix_all = true;
             cmd->rot[0] = 0.0;
 
             if(cmd->action == 1)//If Lara is grabbing the block
@@ -1397,7 +1397,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_PUSHABLE_PUSH:
-            ent->m_bt.no_fix_all = 0x01;
+            ent->m_bt.no_fix_all = true;
             ss_anim->onFrame = ent_stop_traverse;
             cmd->rot[0] = 0.0;
             ent->m_character->m_camFollowCenter = 64;
@@ -1484,7 +1484,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_PUSHABLE_PULL:
-            ent->m_bt.no_fix_all = 0x01;
+            ent->m_bt.no_fix_all = true;
             ss_anim->onFrame = ent_stop_traverse;
             cmd->rot[0] = 0.0;
             ent->m_character->m_camFollowCenter = 64;
@@ -1760,7 +1760,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
         case TR_STATE_LARA_GRABBING:
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
-            ent->m_bt.no_fix_all = 0x01;
+            ent->m_bt.no_fix_all = true;
             ss_anim->onFrame = ent_set_on_floor_after_climb;
             break;
 
@@ -2158,7 +2158,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
 
         case TR_STATE_LARA_ONWATER_EXIT:
             cmd->rot[0] *= 0.0;
-            ent->m_bt.no_fix_all = 0x01;
+            ent->m_bt.no_fix_all = true;
             ss_anim->onFrame = ent_set_on_floor_after_climb;
             break;
 
@@ -2459,7 +2459,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
                 {
                     ent->m_dirFlag = ENT_STAY;
                     ent->m_moveType = MOVE_CLIMBING;
-                    ent->m_bt.no_fix_all = 0x01;
+                    ent->m_bt.no_fix_all = true;
                     ent->m_angles[0] = climb->edge_z_ang;
                     ent->updateRotation();
                     climb->point = climb->edge_point;
@@ -2470,7 +2470,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
             {
                 ent->m_speed.setZero();
                 cmd->rot[0] = 0.0;
-                ent->m_bt.no_fix_all = 0x01;
+                ent->m_bt.no_fix_all = true;
                 if(low_vertical_space)
                 {
                     ent->setAnimation(TR_ANIMATION_LARA_ONWATER_TO_LAND_LOW, 0);
@@ -2787,7 +2787,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
             break;
 
         case TR_STATE_LARA_CRAWL_TO_CLIMB:
-            ent->m_bt.no_fix_all = 0x01;
+            ent->m_bt.no_fix_all = true;
             ss_anim->onFrame = ent_crawl_to_climb;
             break;
 

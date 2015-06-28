@@ -72,22 +72,21 @@ struct RDSetup;
 
 struct EntityCollisionNode
 {
-    uint16_t                    obj_count;
-    btCollisionObject          *obj[MAX_OBJECTS_IN_COLLSION_NODE];
+    std::vector<btCollisionObject*> obj;
 };
 
 struct BtEntityData
 {
-    int8_t                              no_fix_all;
-    uint32_t                            no_fix_body_parts;
-    btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
-    btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
+    bool no_fix_all;
+    uint32_t no_fix_body_parts;
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> ghostObjects;           // like Bullet character controller for penetration resolving.
+    std::unique_ptr<btManifoldArray> manifoldArray;          // keep track of the contact manifolds
 
-    btCollisionShape                  **shapes;
+    std::vector<std::unique_ptr<btCollisionShape>> shapes;
     std::vector< std::shared_ptr<btRigidBody> > bt_body;
     std::vector<std::shared_ptr<btTypedConstraint>> bt_joints;              // Ragdoll joints
     
-    EntityCollisionNode     *last_collisions;
+    std::vector<EntityCollisionNode> last_collisions;
 };
 
 #define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original

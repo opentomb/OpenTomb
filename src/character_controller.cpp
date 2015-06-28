@@ -1161,7 +1161,7 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
             ent->updateRoomPos();
             return 2;
         }
-        if((pos[2] < ent->m_character->m_heightInfo.floor_point[2]) && (ent->m_bt.no_fix_all == 0x00))
+        if((pos[2] < ent->m_character->m_heightInfo.floor_point[2]) && !ent->m_bt.no_fix_all)
         {
             pos[2] = ent->m_character->m_heightInfo.floor_point[2];
             ent->fixPenetrations(nullptr);
