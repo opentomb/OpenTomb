@@ -25,7 +25,21 @@
 #define OBJECT_HAIR                             (0x0004)
 #define OBJECT_BULLET_MISC                      (0x7FFF)
 
-#define COLLISION_MASK_NONE                     (0x0000)
+#define COLLISION_SHAPE_BOX                     (0x0001)
+#define COLLISION_SHAPE_BOX_BASE                (0x0002)     // use single box collision
+#define COLLISION_SHAPE_SPHERE                  (0x0003)
+#define COLLISION_SHAPE_TRIMESH                 (0x0004)     // for static objects and room's!
+#define COLLISION_SHAPE_TRIMESH_CONVEX          (0x0005)     // for dynamic objects
+
+#define COLLISION_TYPE_NONE                     (0x0000)
+#define COLLISION_TYPE_STATIC                   (0x0001)     // static object - never moved
+#define COLLISION_TYPE_KINEMATIC                (0x0003)     // doors and other moveable statics
+#define COLLISION_TYPE_DYNAMIC                  (0x0005)     // hellow full physics interaction
+#define COLLISION_TYPE_ACTOR                    (0x0007)     // actor, enemies, NPC, animals
+#define COLLISION_TYPE_VEHICLE                  (0x0009)     // car, moto, bike
+#define COLLISION_TYPE_GHOST                    (0x000B)     // no fix character position, but works in collision callbacks and interacts with dynamic objects
+
+#define COLLISION_NONE                          (0x0000)
 #define COLLISION_MASK_ALL                      (0x7FFF)        // bullet uses signed short int for these flags!
 
 #define COLLISION_GROUP_ALL                     (0x7FFF)
@@ -47,7 +61,8 @@ struct lua_State;
 struct EngineContainer
 {
     uint16_t object_type = 0;
-    uint32_t collide_flag = 0;
+    uint16_t                     collision_type;
+    uint16_t                     collision_shape;
     std::shared_ptr<Object> object = nullptr;
     std::shared_ptr<Room> room = nullptr;
 };
@@ -131,9 +146,10 @@ extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    BtEngineClosestRayResultCallback(EngineContainer* cont) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    BtEngineClosestRayResultCallback(EngineContainer* cont, bool skipGhost = false) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
     {
         m_container = cont;
+        m_skip_ghost = skipGhost;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
@@ -144,7 +160,7 @@ public:
         c1 = (EngineContainer*)rayResult.m_collisionObject->getUserPointer();
         std::shared_ptr<Room> r1 = c1 ? c1->room : NULL;
 
-        if(c1 && c1 == m_container)
+        if(c1 && ((c1 == m_container) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
             return 1.0;
         }
@@ -170,15 +186,17 @@ public:
     }
 
     EngineContainer* m_container;
+    bool               m_skip_ghost;
 };
 
 
 class BtEngineClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    BtEngineClosestConvexResultCallback(EngineContainer* cont) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    BtEngineClosestConvexResultCallback(EngineContainer* cont, bool skipGhost = false) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
     {
         m_container = cont;
+        m_skip_ghost = skipGhost;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult,bool normalInWorldSpace)
@@ -189,7 +207,7 @@ public:
         c1 = (EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
         std::shared_ptr<Room> r1 = (c1)?(c1->room):(NULL);
 
-        if(c1 && c1 == m_container)
+        if(c1 && ((c1 == m_container) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
             return 1.0;
         }
@@ -216,6 +234,7 @@ public:
 
 protected:
     EngineContainer* m_container;
+    bool               m_skip_ghost;
 };
 
 int engine_lua_fputs(const char *str, FILE *f);
@@ -235,6 +254,7 @@ void Engine_Display();
 
 void Engine_BTInit();
 
+int lua_print(lua_State * lua);
 bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);

@@ -110,7 +110,7 @@ void Render::renderSkyBox(const btTransform& modelViewProjectionMatrix)
         GLfloat tint[] = { 1, 1, 1, 1 };
         glUniform4fvARB(shader->tint_mult, 1, tint);
 
-        renderer.renderMesh(m_world->sky_box->mesh_tree.front().mesh_base);
+        renderMesh(m_world->sky_box->mesh_tree.front().mesh_base);
         glDepthMask(GL_TRUE);
     }
 }
@@ -968,7 +968,7 @@ void Render::drawList()
         std::shared_ptr<Room> r = m_rList[i].room;
         if(r->mesh && !r->mesh->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(r->mesh->m_transparentPolygons, r->transform, r->frustum);
+            render_dBSP.addNewPolygonList(r->mesh->m_transparentPolygons, r->transform, {m_cam->frustum});
         }
     }
 
@@ -980,7 +980,7 @@ void Render::drawList()
         {
             if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, r))
             {
-                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, r->frustum);
+                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, {m_cam->frustum});
             }
         }
 
@@ -996,8 +996,8 @@ void Render::drawList()
                     {
                         if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
                         {
-                            btTransform tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, r->frustum);
+                            auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
+                            render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, {m_cam->frustum});
                         }
                     }
                 }
@@ -1012,8 +1012,8 @@ void Render::drawList()
         {
             if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
             {
-                btTransform tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
-                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, {});
+                auto tr = ent->m_transform * ent->m_bf.bone_tags[j].full_transform;
+                render_dBSP.addNewPolygonList(ent->m_bf.bone_tags[j].mesh_base->m_transparentPolygons, tr, {m_cam->frustum});
             }
         }
     }

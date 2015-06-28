@@ -237,7 +237,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
     int8_t low_vertical_space = (curr_fc->floor_hit && curr_fc->ceiling_hit && (curr_fc->ceiling_point[2] - curr_fc->floor_point[2] < ent->m_character->m_height - LARA_HANG_VERTICAL_EPSILON));
     int8_t last_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() <= ss_anim->current_frame + 1;
 
-    if(resp->kill)   // Stop any music, if Lara is dead.
+    if(resp->kill == 1)   // Stop any music, if Lara is dead.
     {
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
@@ -285,7 +285,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
                 ent->setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
                 ent->m_dirFlag = ENT_STAY;
             }
-            else if(resp->kill)
+            else if(resp->kill == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_DEATH;
             }
@@ -1094,7 +1094,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
                 ent->checkNextPenetration(move);
             }
 
-            if(resp->kill)
+            if(resp->kill == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
@@ -1811,7 +1811,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
                 break;
             }
 
-            if(cmd->action == 1)                                                // we have to update climb point every time so entity can move
+            if((resp->kill == 0) && (cmd->action == 1))                         // we have to update climb point every time so entity can move
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
                 global_offset = ent->m_transform.getBasis()[1] * t;
@@ -2482,7 +2482,7 @@ int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim)
                     ss_anim->onFrame = ent_climb_out_of_water;
                 }
             }
-            else if(resp->kill)
+            else if(resp->kill == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
             }

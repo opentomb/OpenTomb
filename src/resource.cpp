@@ -52,10 +52,11 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
             lua_pushinteger(objects_flags_conf, ent->m_bf.animations.model->id);      // entity model id
-            if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
+            if (lua_CallAndLog(objects_flags_conf, 2, 5, 0))
             {
-                ent->m_self->collide_flag = 0xff & lua_tointeger(objects_flags_conf, -4); // get collision flag
-                ent->m_bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3) != 0; // get info about model visibility
+                ent->m_self->collision_type = lua_tointeger(objects_flags_conf, -5);      // get collision type flag
+                ent->m_self->collision_shape = lua_tointeger(objects_flags_conf, -4);     // get collision shape flag
+                ent->m_bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3); // get info about model visibility
                 ent->m_typeFlags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
 
                 if(!lua_isnil(objects_flags_conf, -1))
@@ -76,11 +77,15 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
             lua_pushinteger(level_script, ent->m_bf.animations.model->id);        // entity model id
-            if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
+            if (lua_CallAndLog(level_script, 2, 5, 0))                          // call that function
             {
+                if(!lua_isnil(level_script, -5))
+                {
+                    ent->m_self->collision_type = lua_tointeger(level_script, -5);        // get collision type flag
+                }
                 if(!lua_isnil(level_script, -4))
                 {
-                    ent->m_self->collide_flag = 0xff & lua_tointeger(level_script, -4);   // get collision flag
+                    ent->m_self->collision_shape = lua_tointeger(level_script, -4);       // get collision shape flag
                 }
                 if(!lua_isnil(level_script, -3))
                 {
@@ -143,11 +148,15 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, r_static->object_id);
-            if(lua_CallAndLog(level_script, 1, 2, 0))
+            if(lua_CallAndLog(level_script, 1, 3, 0))
             {
+                if(!lua_isnil(level_script, -3))
+                {
+                    r_static->self->collision_type = lua_tointeger(level_script, -3);
+                }
                 if(!lua_isnil(level_script, -2))
                 {
-                    r_static->self->collide_flag = lua_tointeger(level_script, -2);
+                    r_static->self->collision_shape = lua_tointeger(level_script, -2);
                 }
                 if(!lua_isnil(level_script, -1))
                 {
@@ -1754,20 +1763,24 @@ void Res_ScriptsOpen(int engine_version)
     if(level_script != NULL)
     {
         luaL_openlibs(level_script);
+        lua_register(level_script, "print", lua_print);
         lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
         lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
-        int lua_err = luaL_dofile(level_script, temp_script_name);
 
-        if(lua_err)
+        if(Engine_FileFound(temp_script_name, false))
         {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(level_script, -1));
-            lua_pop(level_script, 1);
-            lua_close(level_script);
-            level_script = NULL;
+            int lua_err = luaL_dofile(level_script, temp_script_name);
+            if(lua_err)
+            {
+                Sys_DebugLog("lua_out.txt", "%s", lua_tostring(level_script, -1));
+                lua_pop(level_script, 1);
+                lua_close(level_script);
+                level_script = NULL;
+            }
         }
     }
 
@@ -1858,7 +1871,7 @@ void TR_GenWorld(World *world, class VT_Level *tr)
 
     TR_GenTextures(world, tr);          // Generate OGL textures
     Gui_DrawLoadScreen(300);
-    
+
     TR_GenAnimCommands(world, tr);      // Copy anim commands
     Gui_DrawLoadScreen(310);
 
@@ -1870,13 +1883,13 @@ void TR_GenWorld(World *world, class VT_Level *tr)
 
     TR_GenSprites(world, tr);           // Generate all sprites
     Gui_DrawLoadScreen(420);
-    
+
     TR_GenBoxes(world, tr);             // Generate boxes.
     Gui_DrawLoadScreen(440);
-    
+
     TR_GenCameras(world, tr);           // Generate cameras & sinks.
     Gui_DrawLoadScreen(460);
-    
+
     TR_GenRooms(world, tr);             // Build all rooms
     Gui_DrawLoadScreen(500);
 
@@ -1884,13 +1897,13 @@ void TR_GenWorld(World *world, class VT_Level *tr)
     Gui_DrawLoadScreen(520);
 
     // Build all skeletal models. Must be generated before TR_Sector_Calculate() function.
-    
+
     TR_GenSkeletalModels(world, tr);
     Gui_DrawLoadScreen(600);
 
     TR_GenEntities(world, tr);          // Build all moveables (entities)
     Gui_DrawLoadScreen(650);
-    
+
     Res_GenBaseItems(world);             // Generate inventory item entries.
     Gui_DrawLoadScreen(680);
 
@@ -1919,7 +1932,7 @@ void TR_GenWorld(World *world, class VT_Level *tr)
 
     Res_ScriptsClose();
     Gui_DrawLoadScreen(870);
-    
+
     // Generate VBOs for meshes.
 
     Res_GenVBOs(world);
@@ -1929,7 +1942,7 @@ void TR_GenWorld(World *world, class VT_Level *tr)
 
     Res_AutoexecOpen(world->version);
     Gui_DrawLoadScreen(960);
-    
+
     // Fix initial room states
 
     Res_FixRooms(world);
@@ -2055,11 +2068,11 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, World *world, cla
            ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
             (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])) )
         {
-            r_static->self->collide_flag = COLLISION_NONE;
+            r_static->self->collision_type = COLLISION_NONE;
         }
         else
         {
-            r_static->self->collide_flag = COLLISION_BOX;
+            r_static->self->collision_type = COLLISION_TYPE_STATIC;
         }
 
         // Set additional static mesh properties from level script override.
@@ -2067,19 +2080,23 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, World *world, cla
         Res_SetStaticMeshProperties(r_static);
 
         // Set static mesh collision.
-        if(r_static->self->collide_flag != COLLISION_NONE)
+        if(r_static->self->collision_type != COLLISION_NONE)
         {
-            switch(r_static->self->collide_flag)
+            switch(r_static->self->collision_shape)
             {
-                case COLLISION_BOX:
-                    cshape = BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max, true, true, false);
+                case COLLISION_SHAPE_BOX:
+                    cshape = BT_CSfromBBox(r_static->cbb_min, r_static->cbb_max, true, true);
                     break;
 
-                case COLLISION_BASE_BOX:
-                    cshape = BT_CSfromBBox(r_static->mesh->m_bbMin, r_static->mesh->m_bbMax, true, true, false);
+                case COLLISION_SHAPE_BOX_BASE:
+                    cshape = BT_CSfromBBox(r_static->mesh->m_bbMin, r_static->mesh->m_bbMax, true, true);
                     break;
 
-                case COLLISION_TRIMESH:
+                case COLLISION_SHAPE_TRIMESH:
+                    cshape = BT_CSfromMesh(r_static->mesh, true, true, true);
+                    break;
+
+                case COLLISION_SHAPE_TRIMESH_CONVEX:
                     cshape = BT_CSfromMesh(r_static->mesh, true, true, false);
                     break;
 
@@ -2422,7 +2439,8 @@ void Res_GenRoomCollision(World *world)
             r->bt_body->setUserPointer(r->self.get());
             r->bt_body->setRestitution(1.0);
             r->bt_body->setFriction(1.0);
-            r->self->collide_flag = COLLISION_TRIMESH;                          // meshtree
+            r->self->collision_type = COLLISION_TYPE_STATIC;                    // meshtree
+            r->self->collision_shape = COLLISION_SHAPE_TRIMESH;
         }
 
         delete[] room_tween;
@@ -3279,7 +3297,7 @@ void Res_GenVBOs(World *world)
 void Res_GenBaseItems(World* world)
 {
     lua_CallVoidFunc(engine_lua, "genBaseItems");
-    
+
     if(!world->items_tree.empty())
     {
         Res_EntityToItem(world->items_tree);
@@ -3298,7 +3316,7 @@ void Res_FixRooms(World *world)
 
         // Isolated rooms may be used for rolling ball trick (for ex., LEVEL4.PHD).
         // Hence, this part is commented.
-        
+
         /*
         if((r->portal_count == 0) && (world->room_count > 1))
         {
@@ -3896,7 +3914,8 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         entity->m_OCB             = tr_item->ocb;
         entity->m_timer           = 0.0;
 
-        entity->m_self->collide_flag = 0x00;
+        entity->m_self->collision_type = COLLISION_TYPE_KINEMATIC;
+        entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
         entity->m_moveType          = 0x0000;
         entity->m_inertiaLinear     = 0.0;
         entity->m_inertiaAngular[0] = 0.0;
@@ -3967,10 +3986,11 @@ void TR_GenEntities(World *world, class VT_Level *tr)
 
             entity->m_moveType = MOVE_ON_FLOOR;
             world->Character = entity;
-            entity->m_self->collide_flag = ENTITY_COLLISION_ACTOR;
-            entity->m_bf.animations.model->hide = false;
+            entity->m_self->collision_type = COLLISION_TYPE_ACTOR;
+            entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
+            entity->m_bf.animations.model->hide = 0;
             entity->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            LM = (SkeletalModel*)entity->m_bf.animations.model;
+            LM = entity->m_bf.animations.model;
 
             top = lua_gettop(engine_lua);
             lua_pushinteger(engine_lua, entity->m_id);
@@ -4046,7 +4066,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         world->addEntity(entity);
 
         Res_SetEntityModelProperties(entity);
-        if(entity->m_self->collide_flag == 0x00)
+        if((entity->m_self->collision_type & 0x0001) == 0)
             entity->disableCollision();
     }
 }
@@ -4228,7 +4248,7 @@ void TR_GenSamples(World *world, class VT_Level *tr)
                 break;
 
             case TR_II:
-            case TR_II_DEMO:                
+            case TR_II_DEMO:
                 switch(tr->sound_details[i].num_samples_and_flags_1 & 0x03)
                 {
                     case 0x02:

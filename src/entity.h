@@ -46,13 +46,6 @@ struct RDSetup;
 #define ENTITY_CALLBACK_STAND                       (0x00000008)
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
 
-#define ENTITY_COLLISION_GHOST                    0     // no one collisions
-#define ENTITY_COLLISION_DYNAMIC                  1     // hallo full physics interaction
-#define ENTITY_COLLISION_KINEMATIC                2     // doors and other moveable statics
-#define ENTITY_COLLISION_STATIC                   3     // static object - never moved
-#define ENTITY_COLLISION_ACTOR                    4     // actor, enemies, NPC, animals
-#define ENTITY_COLLISION_VEHICLE                  5     // car, moto, bike
-
 #define ENTITY_SUBSTANCE_NONE                     0
 #define ENTITY_SUBSTANCE_WATER_SHALLOW            1
 #define ENTITY_SUBSTANCE_WATER_WADE               2
@@ -89,7 +82,7 @@ struct BtEntityData
     uint32_t                            no_fix_body_parts;
     btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
-    
+
     btCollisionShape                  **shapes;
     std::vector< std::shared_ptr<btRigidBody> > bt_body;
     std::vector<std::shared_ptr<btTypedConstraint>> bt_joints;              // Ragdoll joints
@@ -116,6 +109,7 @@ struct Entity : public Object
 
     btScalar                            m_currentSpeed;      // current linear speed from animation info
     btVector3                           m_speed;              // speed of the entity XYZ
+    btScalar                            m_speedMult;
     
     btScalar                            m_inertiaLinear;     // linear inertia
     btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
@@ -181,8 +175,6 @@ struct Entity : public Object
     void moveVertical(btScalar dist);
 
     btScalar findDistance(const Entity& entity_2);
-    RoomSector* getLowestSector(RoomSector* sector);
-    RoomSector* getHighestSector(RoomSector* sector);
 
     // Constantly updates some specific parameters to keep hair aligned to entity.
     void updateHair();
@@ -205,3 +197,4 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
 struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim);
 struct StateChange *Anim_FindStateChangeByID(struct AnimationFrame *anim, uint32_t id);
+

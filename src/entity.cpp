@@ -94,7 +94,7 @@ void Entity::disable()
 void Entity::enableCollision()
 {
     if(!m_bt.bt_body.empty()) {
-        m_self->collide_flag = 0x01;
+        m_self->collision_type |= 0x01;
         for(const auto& b : m_bt.bt_body) {
             if(b && !b->isInWorld()) {
                 bt_engine_dynamicsWorld->addRigidBody(b.get());
@@ -102,7 +102,7 @@ void Entity::enableCollision()
         }
     }
     else {
-        m_self->collide_flag = COLLISION_TRIMESH;                            ///@TODO: order collision shape and entity collision type flags! it is a different things!
+        m_self->collision_type = COLLISION_TYPE_KINEMATIC;                            ///@TODO: order collision shape and entity collision type flags! it is a different things!
         genEntityRigidBody();
     }
 }
@@ -111,7 +111,7 @@ void Entity::enableCollision()
 void Entity::disableCollision()
 {
     if(!m_bt.bt_body.empty()) {
-        m_self->collide_flag = 0x00;
+        m_self->collision_type &= ~0x0001;
         for(const auto& b : m_bt.bt_body) {
             if(b && b->isInWorld()) {
                 bt_engine_dynamicsWorld->removeRigidBody(b.get());
@@ -135,7 +135,28 @@ void Entity::genEntityRigidBody()
 
     for(uint16_t i=0; i<m_bf.bone_tags.size(); i++)
     {
-        btCollisionShape *cshape = BT_CSfromMesh(m_bf.animations.model->mesh_tree[i].mesh_base, true, true, false);
+        std::shared_ptr<BaseMesh> mesh = m_bf.animations.model->mesh_tree[i].mesh_base;
+        btCollisionShape *cshape = NULL;
+        switch(m_self->collision_shape)
+        {
+            case COLLISION_SHAPE_TRIMESH_CONVEX:
+                cshape = BT_CSfromMesh(mesh, true, true, false);
+                break;
+
+            case COLLISION_SHAPE_TRIMESH:
+                cshape = BT_CSfromMesh(mesh, true, true, true);
+                break;
+
+            case COLLISION_SHAPE_BOX:
+                cshape = BT_CSfromBBox(mesh->m_bbMin, mesh->m_bbMax, true, true);
+                break;
+
+                ///@TODO: add other shapes implementation; may be change default;
+            default:
+                 cshape = BT_CSfromMesh(mesh, true, true, true);
+                 break;
+        };
+
         m_bt.bt_body.emplace_back();
 
         if(cshape)
@@ -202,6 +223,12 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
         {
             btPersistentManifold* manifold = (*manifoldArray)[j];
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
+            EngineContainer* cont0 = (EngineContainer*)manifold->getBody0()->getUserPointer();
+            EngineContainer* cont1 = (EngineContainer*)manifold->getBody1()->getUserPointer();
+            if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
+            {
+                continue;
+            }
             for(int k=0;k<manifold->getNumContacts();k++)
             {
                 const btManifoldPoint&pt = manifold->getContactPoint(k);
@@ -485,7 +512,7 @@ int Entity::checkNextPenetration(const btVector3& move)
                 t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                 if(t1 < m_character->m_criticalWallComponent)
                 {
-                    resp->horizontal_collide |= 0x01;
+                    m_character->m_response.horizontal_collide |= 0x01;
                 }
             }
         }
@@ -600,14 +627,22 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
 
 void Entity::updateRoomPos()
 {
-    RoomSector* new_sector;
-
-    auto v = (m_bf.bb_min + m_bf.bb_max)/2;
-    auto pos = m_transform * v;
-    std::shared_ptr<Room> new_room = Room_FindPosCogerrence(pos, m_self->room);
+    btVector3 pos;
+    if(m_character)
+    {
+        pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
+        pos[0] = m_transform.getOrigin()[0];
+        pos[1] = m_transform.getOrigin()[1];
+    }
+    else
+    {
+        btVector3 v = (m_bf.bb_min + m_bf.bb_max) / 2;
+        pos = m_transform * v;
+    }
+    auto new_room = Room_FindPosCogerrence(pos, m_self->room);
     if(new_room)
     {
-        new_sector = Room_GetSectorXYZ(new_room, pos);
+        auto new_sector = Room_GetSectorXYZ(new_room, pos);
         if(new_room != new_sector->owner_room)
         {
             new_room = new_sector->owner_room;
@@ -737,7 +772,7 @@ void Entity::updateRigidBody(bool force)
         }
 
         updateRoomPos();
-        if(m_self->collide_flag != 0x00)
+        if(m_self->collision_type & 0x00001)
         {
             for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
             {
@@ -838,7 +873,7 @@ void Entity::updateRotation()
 
 void Entity::updateCurrentSpeed(bool zeroVz)
 {
-    btScalar t  = m_currentSpeed * m_character->m_speedMult;
+    btScalar t  = m_currentSpeed * m_speedMult;
     btScalar vz = (zeroVz)?(0.0):(m_speed[2]);
 
     if(m_dirFlag & ENT_MOVE_FORWARD)
@@ -1224,28 +1259,6 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
 }
 
 
-RoomSector* Entity::getLowestSector(RoomSector* sector)
-{
-    RoomSector* lowest_sector = sector;
-
-    for(RoomSector* rs=sector;rs!=NULL;rs=rs->sector_below)
-    { lowest_sector = rs; }
-
-    return lowest_sector;
-}
-
-
-RoomSector* Entity::getHighestSector(RoomSector* sector)
-{
-    RoomSector* highest_sector = sector;
-
-    for(RoomSector* rs=sector;rs!=NULL;rs=rs->sector_above)
-    { highest_sector = rs; }
-
-    return highest_sector;
-}
-
-
 void Entity::processSector()
 {
     if(!m_currentSector) return;
@@ -1256,8 +1269,8 @@ void Entity::processSector()
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
-    RoomSector* highest_sector = getHighestSector(m_currentSector);
-    RoomSector* lowest_sector  = getLowestSector(m_currentSector);
+    RoomSector* highest_sector = m_currentSector->getHighestSector();
+    RoomSector* lowest_sector  = m_currentSector->getLowestSector();
 
     if(m_character)
     {
@@ -2106,7 +2119,7 @@ Entity::Entity()
     m_self->object = shared_from_this();
     m_self->object_type = OBJECT_ENTITY;
     m_self->room = NULL;
-    m_self->collide_flag = 0;
+    m_self->collision_type = 0;
     m_obb->transform = &m_transform;
     m_bt.bt_body.clear();
     m_bt.bt_joints.clear();

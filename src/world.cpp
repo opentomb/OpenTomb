@@ -327,6 +327,69 @@ int Sectors_Is2SidePortals(RoomSector* s1, RoomSector* s2)
     return 0;
 }
 
+bool Sectors_SimilarCeiling(RoomSector* s1, RoomSector* s2, bool ignore_doors)
+{
+    if(!s1 || !s2) return false;
+    if( s1 ==  s2) return true;
+
+    if( (s1->ceiling != s2->ceiling) ||
+        (s1->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (!ignore_doors && (s1->sector_above || s2->sector_above))       )
+          return false;
+
+    for(int i = 0; i < 4; i++)
+    {
+        if(s1->ceiling_corners->m_floats[2] != s2->ceiling_corners->m_floats[2]) return false;
+    }
+
+    return true;
+}
+
+bool Sectors_SimilarFloor(RoomSector* s1, RoomSector* s2, bool ignore_doors)
+{
+    if(!s1 || !s2) return false;
+    if( s1 ==  s2) return true;
+
+    if( (s1->floor != s2->floor) ||
+        (s1->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (!ignore_doors && (s1->sector_below || s2->sector_below))     )
+          return false;
+
+    for(int i = 0; i < 4; i++)
+    {
+        if(s1->floor_corners->m_floats[2] != s2->floor_corners->m_floats[2]) return false;
+    }
+
+    return true;
+}
+
+btVector3 Sector_HighestFloorCorner(RoomSector* rs)
+{
+    btVector3 r1 = (rs->floor_corners[0].m_floats[2] > rs->floor_corners[1].m_floats[2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
+    btVector3 r2 = (rs->floor_corners[2].m_floats[2] > rs->floor_corners[3].m_floats[2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
+
+    return (r1.m_floats[2] > r2.m_floats[2])?(r1):(r2);
+}
+
+btVector3 Sector_LowestCeilingCorner(RoomSector* rs)
+{
+    btVector3 r1 = (rs->ceiling_corners[0].m_floats[2] > rs->ceiling_corners[1].m_floats[2])?(rs->ceiling_corners[1]):(rs->ceiling_corners[0]);
+    btVector3 r2 = (rs->ceiling_corners[2].m_floats[2] > rs->ceiling_corners[3].m_floats[2])?(rs->ceiling_corners[3]):(rs->ceiling_corners[2]);
+
+    return (r1.m_floats[2] > r2.m_floats[2])?(r2):(r1);
+}
+
+btVector3 Sector_GetFloorPoint(RoomSector* rs)
+{
+    return Sector_HighestFloorCorner(rs->getLowestSector());
+}
+
+btVector3 Sector_GetCeilingPoint(RoomSector* rs)
+{
+    return Sector_LowestCeilingCorner(rs->getHighestSector());
+}
 
 int Room_IsOverlapped(std::shared_ptr<Room> r0, std::shared_ptr<Room> r1)
 {
@@ -562,7 +625,8 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3*
             ent->m_OCB            = 0x00;
             ent->m_timer          = 0.0;
 
-            ent->m_self->collide_flag = 0x00;
+            ent->m_self->collision_type = COLLISION_NONE;
+            ent->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
             ent->m_moveType          = 0x0000;
             ent->m_inertiaLinear     = 0.0;
             ent->m_inertiaAngular[0] = 0.0;
@@ -647,10 +711,28 @@ std::shared_ptr<Room> Room_FindPosCogerrence(const btVector3 &new_pos, std::shar
 
     if(room->active &&
        (new_pos[0] >= room->bb_min[0]) && (new_pos[0] < room->bb_max[0]) &&
-       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]) &&
-       (new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
+       (new_pos[1] >= room->bb_min[1]) && (new_pos[1] < room->bb_max[1]))
     {
-        return room;
+        if((new_pos[2] >= room->bb_min[2]) && (new_pos[2] < room->bb_max[2]))
+        {
+            return room;
+        }
+        else if(new_pos[2] >= room->bb_max[2])
+        {
+            RoomSector* orig_sector = Room_GetSectorRaw(room, new_pos);
+            if(orig_sector->sector_above != NULL)
+            {
+                return Room_CheckFlip(orig_sector->sector_above->owner_room);
+            }
+        }
+        else if(new_pos[2] < room->bb_min[2])
+        {
+            RoomSector* orig_sector = Room_GetSectorRaw(room, new_pos);
+            if(orig_sector->sector_below != NULL)
+            {
+                return Room_CheckFlip(orig_sector->sector_below->owner_room);
+            }
+        }
     }
 
     RoomSector* new_sector = Room_GetSectorRaw(room, new_pos);
@@ -1218,4 +1300,25 @@ void World::calculateWaterTint(std::array<float,4>* tint, bool fixed_colour)
             (*tint)[3] = 1.0f;
         }
     }
+}
+
+RoomSector* RoomSector::getLowestSector()
+{
+    RoomSector* lowest_sector = this;
+
+    for(RoomSector* rs=this;rs!=NULL;rs=rs->sector_below)
+    { lowest_sector = rs; }
+
+    return lowest_sector;
+}
+
+
+RoomSector* RoomSector::getHighestSector()
+{
+    RoomSector* highest_sector = this;
+
+    for(RoomSector* rs=this;rs!=NULL;rs=rs->sector_above)
+    { highest_sector = rs; }
+
+    return highest_sector;
 }

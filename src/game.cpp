@@ -111,23 +111,6 @@ int lua_debuginfo(lua_State * lua)
     return 0;
 }
 
-int lua_print(lua_State * lua)
-{
-     int top = lua_gettop(lua);
-
-     if(top == 0)
-     {
-        ConsoleInfo::instance().addLine("nil", FONTSTYLE_CONSOLE_EVENT);
-     }
-
-     for(int i=1;i<=top;i++)
-     {
-         ConsoleInfo::instance().addLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
-     }
-
-     return 0;
-}
-
 int lua_timescale(lua_State * lua)
 {
     if(lua_gettop(lua) == 0)
@@ -163,7 +146,6 @@ void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
     {
-        lua_register(lua, "print", lua_print);
         lua_register(lua, "debuginfo", lua_debuginfo);
         lua_register(lua, "mlook", lua_mlook);
         lua_register(lua, "freelook", lua_freelook);
@@ -259,7 +241,7 @@ void Save_Entity(FILE **f, std::shared_ptr<Entity> ent)
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->m_id, ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->m_id, ent->m_bf.animations.current_animation, ent->m_bf.animations.current_frame);
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->m_id, ent->m_bf.animations.next_state, ent->m_bf.animations.last_state);
-    fprintf(*f, "\nsetEntityCollision(%d, %d);", ent->m_id, ent->m_self->collide_flag);
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->m_id, ent->m_self->collision_type, ent->m_self->collision_shape);
 
     if(ent->m_stateFlags & ENTITY_STATE_ENABLED)
     {

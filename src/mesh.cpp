@@ -656,7 +656,7 @@ void BaseMesh::genFaces()
 }
 
 
-btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool useCompression, bool buildBvh, bool is_static)
+btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max, bool useCompression, bool buildBvh)
 {
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
@@ -681,20 +681,13 @@ btCollisionShape *BT_CSfromBBox(const btVector3& bb_min, const btVector3& bb_max
         cnt ++;
     }
 
-    if(cnt == 0)                                                        // fixed: without that condition engine may easily crash
+    if(cnt == 0)                                                                // fixed: without that condition engine may easily crash
     {
         delete trimesh;
         return NULL;
     }
 
-    if(is_static)
-    {
-        ret = new btBvhTriangleMeshShape(trimesh, useCompression, buildBvh);
-    }
-    else
-    {
-        ret = new btConvexTriangleMeshShape(trimesh, true);
-    }
+    ret = new btConvexTriangleMeshShape(trimesh, true);
 
     return ret;
 }

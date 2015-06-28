@@ -234,6 +234,9 @@ struct RoomSector
     uint8_t                     floor_penetration_config;
 
     int32_t                     portal_to_room;
+
+    RoomSector* getLowestSector();
+    RoomSector* getHighestSector();
 };
 
 
@@ -408,6 +411,10 @@ RoomSector* TR_Sector_CheckAlternateRoom(RoomSector* rs);
 RoomSector* TR_Sector_CheckPortalPointerRaw(RoomSector* rs);
 RoomSector* TR_Sector_CheckPortalPointer(RoomSector* rs);
 int Sectors_Is2SidePortals(RoomSector* s1, RoomSector* s2);
+bool Sectors_SimilarCeiling(RoomSector* s1, RoomSector* s2, bool ignore_doors);
+bool Sectors_SimilarFloor(RoomSector* s1, RoomSector* s2, bool ignore_doors);
+btVector3 Sector_GetFloorPoint(RoomSector* rs);
+btVector3 Sector_GetCeilingPoint(RoomSector* rs);
 
 
 #endif

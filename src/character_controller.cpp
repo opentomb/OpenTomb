@@ -799,7 +799,7 @@ void Character_SetToJump(std::shared_ptr<Entity> ent, btScalar v_vertical, btSca
     }
 
     // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * ent->m_character->m_speedMult;
+    t = v_horizontal * ent->m_speedMult;
 
     // Calculate the direction of jump by vector multiplication.
     if(ent->m_dirFlag & ENT_MOVE_FORWARD)
@@ -831,7 +831,7 @@ void Character_SetToJump(std::shared_ptr<Entity> ent, btScalar v_vertical, btSca
     ent->m_speed = spd;
 
     // Apply vertical speed.
-    ent->m_speed[2] = v_vertical * ent->m_character->m_speedMult;
+    ent->m_speed[2] = v_vertical * ent->m_speedMult;
     ent->m_moveType = MOVE_FREE_FALLING;
 }
 
@@ -945,7 +945,7 @@ btScalar Character_InertiaLinear(std::shared_ptr<Entity> ent, btScalar max_speed
         }
     }
 
-    return ent->m_inertiaLinear * ent->m_character->m_speedMult;
+    return ent->m_inertiaLinear * ent->m_speedMult;
 }
 
 /*
@@ -1054,7 +1054,7 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
         if(tv[2] > 0.02 && tv[2] < ent->m_character->m_criticalSlantZComponent)
         {
             tv[2] = -tv[2];
-            spd = tv * ent->m_character->m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
+            spd = tv * ent->m_speedMult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT; // slide down direction
             ang = 180.0 * atan2f(tv[0], -tv[1]) / M_PI;       // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
             t = tv[0] * ent->m_transform.getBasis()[0][1] + tv[1] * ent->m_transform.getBasis()[1][1];
@@ -1075,7 +1075,7 @@ int Character_MoveOnFloor(std::shared_ptr<Entity> ent)
         }
         else    // no slide - free to walk
         {
-            t = ent->m_currentSpeed * ent->m_character->m_speedMult;
+            t = ent->m_currentSpeed * ent->m_speedMult;
             ent->m_character->m_response.vertical_collide |= 0x01;
 
             ent->m_angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_LAND, 0);
@@ -1206,7 +1206,7 @@ int Character_FreeFalling(std::shared_ptr<Entity> ent)
 
     ent->updateRotation();                                                 // apply rotations
 
-    /*btScalar t = ent->current_speed * bf-> ent->character->speed_mult;        ///@TODO: fix speed update in Entity_Frame function and other;
+    /*btScalar t = ent->current_speed * bf-> ent->speed_mult;        ///@TODO: fix speed update in Entity_Frame function and other;
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
         ent->speed[0] = ent->transform.getBasis()[1][0] * t;
@@ -1333,7 +1333,7 @@ int Character_MonkeyClimbing(std::shared_ptr<Entity> ent)
     ent->m_character->m_response.horizontal_collide = 0x00;
     ent->m_character->m_response.vertical_collide = 0x00;
 
-    t = ent->m_currentSpeed * ent->m_character->m_speedMult;
+    t = ent->m_currentSpeed * ent->m_speedMult;
     ent->m_character->m_response.vertical_collide |= 0x01;
 
     ent->m_angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_MONKEYSWING, 0);
@@ -1437,7 +1437,7 @@ int Character_WallsClimbing(std::shared_ptr<Entity> ent)
     {
         spd /= t;
     }
-    ent->m_speed = spd * ent->m_currentSpeed * ent->m_character->m_speedMult;
+    ent->m_speed = spd * ent->m_currentSpeed * ent->m_speedMult;
     move = ent->m_speed * engine_frame_time;
 
     ent->ghostUpdate();
@@ -1469,7 +1469,7 @@ int Character_Climbing(std::shared_ptr<Entity> ent)
     ent->m_character->m_response.horizontal_collide = 0x00;
     ent->m_character->m_response.vertical_collide = 0x00;
 
-    t = ent->m_currentSpeed * ent->m_character->m_speedMult;
+    t = ent->m_currentSpeed * ent->m_speedMult;
     ent->m_character->m_response.vertical_collide |= 0x01;
     ent->m_angles[0] += ent->m_character->m_command.rot[0];
     ent->m_angles[1] = 0.0;

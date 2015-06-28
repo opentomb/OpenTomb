@@ -1196,9 +1196,9 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     AudioEffect*  effect = NULL;
     AudioSource    *source = NULL;
 
-    // If there are no audio buffers, don't process.
+    // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(engine_world.audio_buffers.size() < 1) return TR_AUDIO_SEND_IGNORED;
+    if(engine_world.audio_buffers.size() < 1 || effect_ID < 0) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
 
@@ -1471,9 +1471,9 @@ void Audio_Init(uint32_t num_Sources)
     // FX should be inited first, as source constructor checks for FX slot to be created.
 
     if(audio_settings.use_effects) Audio_InitFX();
-    
+
     // Generate new source array.
-    
+
     num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
     engine_world.audio_sources.resize(num_Sources);
 

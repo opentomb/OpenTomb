@@ -71,7 +71,6 @@ function checkPlayerRagdollConditions()
             ((anim == 139) and (frame >= 17)) or
             ((anim == 133) and (frame >= 18)) or
             ((anim == 145) and (frame >= 67)) or
-            ((anim == 149) and (frame >= 18)) or
             ((anim == 301) and (frame >= 57)) or
             ((anim == 138) and (((frame >= 60) and (version >= TR_II)) or ((frame >= 8) and (version < TR_II)))) ) then
                 addEntityRagdoll(player, RD_TYPE_LARA);

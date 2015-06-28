@@ -9,12 +9,6 @@
 #define ANIM_CMD_CHANGE_DIRECTION   0x02
 #define ANIM_CMD_JUMP               0x04
 
-#define COLLISION_NONE              (0x00)
-#define COLLISION_TRIMESH           (0x01)
-#define COLLISION_BOX               (0x02)
-#define COLLISION_SPHERE            (0x03)
-#define COLLISION_BASE_BOX          (0x04)
-
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
@@ -416,7 +410,7 @@ void SkeletonCopyMeshes(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 
 /* bullet collision model calculation */
-btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh, bool is_static);
+btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh);
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, SectorTween *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
