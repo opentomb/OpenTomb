@@ -373,7 +373,7 @@ int Character_MoveUnderWater(std::shared_ptr<Entity> ent);
 int Character_MoveOnWater(std::shared_ptr<Entity> ent);
 
 int Character_FindTraverse(std::shared_ptr<Entity> ch);
-int Sector_AllowTraverse(room_sector_s *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
+int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
 int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> obj);
 
 void Character_ApplyCommands(std::shared_ptr<Entity> ent);

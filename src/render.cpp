@@ -136,7 +136,7 @@ void Render::renderMesh(const std::shared_ptr<BaseMesh>& mesh)
             {
                 continue;
             }
-             AnimSeq* seq = engine_world.anim_sequences + p.anim_id - 1;
+             AnimSeq* seq = &engine_world.anim_sequences[ p.anim_id - 1 ];
 
             if (seq->uvrotate) {
                 printf("?");
@@ -471,7 +471,7 @@ std::shared_ptr<LitShaderDescription> Render::setupEntityLight(std::shared_ptr<E
         memset(innerRadiuses, 0, sizeof(innerRadiuses));
         memset(outerRadiuses, 0, sizeof(outerRadiuses));
 
-        for(uint32_t i = 0; i < room->light_count && current_light_number < MAX_NUM_LIGHTS; i++)
+        for(uint32_t i = 0; i < room->lights.size() && current_light_number < MAX_NUM_LIGHTS; i++)
         {
             current_light = &room->lights[i];
 
@@ -795,7 +795,7 @@ void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelView
 
 void Render::renderRoomSprites(std::shared_ptr<Room> room, const btTransform &modelViewMatrix, const btTransform &projectionMatrix)
 {
-    if (room->sprites_count > 0 && room->sprite_buffer)
+    if (!room->sprites.empty() && room->sprite_buffer)
     {
         std::shared_ptr<SpriteShaderDescription> shader = m_shaderManager->getSpriteShader();
         glUseProgramObjectARB(shader->program);
@@ -870,9 +870,9 @@ int Render::addRoom(std::shared_ptr<Room> room)
         };
     }
 
-    for(uint32_t i=0; i<room->sprites_count; i++)
+    for(RoomSprite& sp : room->sprites)
     {
-        room->sprites[i].was_rendered = false;
+        sp.was_rendered = false;
     }
 
     room->is_in_r_list = true;
@@ -1081,7 +1081,7 @@ void Render::drawListDebugLines()
         btScalar glMat[16];
         m_cam->m_glViewProjMat.getOpenGLMatrix(glMat);
         glUniformMatrix4fvARB(shader->model_view_projection, 1, false, glMat);
-        glBindTexture(GL_TEXTURE_2D, engine_world.textures[engine_world.tex_count - 1]);
+        glBindTexture(GL_TEXTURE_2D, engine_world.textures.back());
         glPointSize( 6.0f );
         glLineWidth( 3.0f );
         debugDrawer.render();
@@ -1167,7 +1167,7 @@ void Render::genWorldList()
 /**
  * Состыковка рендерера и "мира"
  */
-void Render::setWorld(world_s *world)
+void Render::setWorld(World *world)
 {
     uint32_t list_size = world->rooms.size() + 128;                               // magick 128 was added for debug and testing
 
@@ -1436,7 +1436,7 @@ void RenderDebugDrawer::drawEntityDebugLines(std::shared_ptr<Entity> entity, Ren
 }
 
 
-void RenderDebugDrawer::drawSectorDebugLines(room_sector_s *rs)
+void RenderDebugDrawer::drawSectorDebugLines(RoomSector *rs)
 {
     btVector3 bb_min = {(btScalar)(rs->pos[0] - TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] - TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->floor};
     btVector3 bb_max = {(btScalar)(rs->pos[0] + TR_METERING_SECTORSIZE / 2.0), (btScalar)(rs->pos[1] + TR_METERING_SECTORSIZE / 2.0), (btScalar)rs->ceiling};

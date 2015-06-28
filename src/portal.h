@@ -15,7 +15,7 @@
 #include "vmath.h"
 
 struct Room;
-struct room_sector_s;
+struct RoomSector;
 
 /*
  * пока геометрия текущего портала и портала назначения совпадают.
@@ -37,8 +37,8 @@ struct Portal
 
     ~Portal() = default;
 
-    bool isOnSectorTop(room_sector_s *sector) const;
-    bool isWayToSector(room_sector_s *sector) const;
+    bool isOnSectorTop(RoomSector *sector) const;
+    bool isWayToSector(RoomSector *sector) const;
     void move(const btVector3 &mv);
     bool rayIntersect(const btVector3 &dir, const btVector3 &dot);              // проверка на пересечение луча и портала
 

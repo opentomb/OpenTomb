@@ -184,7 +184,7 @@ struct RedBlackHeader_s;
 struct SSBoneFrame;
 
 
-typedef struct base_item_s
+struct BaseItem
 {
     uint32_t                    id;
     uint32_t                    world_model_id;
@@ -193,10 +193,10 @@ typedef struct base_item_s
     char                        name[64];
     std::unique_ptr<SSBoneFrame> bf;
 
-    ~base_item_s();
-}base_item_t, *base_item_p;
+    ~BaseItem();
+};
 
-typedef struct room_box_s
+struct RoomBox
 {
     int32_t     x_min;
     int32_t     x_max;
@@ -204,9 +204,9 @@ typedef struct room_box_s
     int32_t     y_max;
     int32_t     true_floor;
     int32_t     overlap_index;
-}room_box_t, *room_box_p;
+};
 
-typedef struct room_sector_s
+struct RoomSector
 {
     uint32_t                    trig_index; // Trigger function index.
     int32_t                     box_index;
@@ -217,8 +217,8 @@ typedef struct room_sector_s
     int32_t                     floor;
     int32_t                     ceiling;
 
-    room_sector_s        *sector_below;
-    room_sector_s        *sector_above;
+    RoomSector        *sector_below;
+    RoomSector        *sector_above;
     std::shared_ptr<Room> owner_room;    // Room that contain this sector
 
     int16_t                     index_x;
@@ -234,26 +234,26 @@ typedef struct room_sector_s
     uint8_t                     floor_penetration_config;
 
     int32_t                     portal_to_room;
-}room_sector_t, *room_sector_p;
+};
 
 
-typedef struct sector_tween_s
+struct SectorTween
 {
     btVector3                   floor_corners[4];
     uint8_t                     floor_tween_type;
 
     btVector3                   ceiling_corners[4];
     uint8_t                     ceiling_tween_type;
-}sector_tween_t, *sector_tween_p;
+};
 
 struct Sprite;
 
-typedef struct room_sprite_s
+struct RoomSprite
 {
     Sprite             *sprite;
     btVector3 pos;
     bool was_rendered;
-}room_Sprite, *room_sprite_p;
+};
 
 struct EngineContainer;
 struct SpriteBuffer;
@@ -277,8 +277,7 @@ struct Room : public Object
     SpriteBuffer *sprite_buffer;               // Render data for sprites
 
     std::vector<std::shared_ptr<StaticMesh>> static_mesh;
-    uint32_t                    sprites_count;
-    room_sprite_s       *sprites;
+    std::vector<RoomSprite> sprites;
 
     std::vector<std::shared_ptr<EngineContainer>> containers;                                     // engine containers with moveables objects
 
@@ -287,17 +286,15 @@ struct Room : public Object
     btTransform transform;                                  // GL transformation matrix
     btScalar                    ambient_lighting[3];
 
-    uint32_t                    light_count;
-    Light             *lights;
+    std::vector<Light> lights;
 
     std::vector<Portal> portals;                                        // room portals array
     std::shared_ptr<Room> alternate_room;                                 // alternative room pointer
     std::shared_ptr<Room> base_room;                                      // base room == room->alternate_room->base_room
 
-    uint32_t                    sectors_count;
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;
-    room_sector_s       *sectors;
+    std::vector<RoomSector> sectors;
 
     uint16_t                    active_frustums;                                // current number of this room active frustums
     std::vector<std::shared_ptr<Frustum>> frustum;
@@ -309,11 +306,11 @@ struct Room : public Object
     std::shared_ptr<Room> overlapped_room_list[32];
     btRigidBody                *bt_body;
 
-    EngineContainer* self;
+    std::unique_ptr<EngineContainer> self;
 };
 
 
-typedef struct world_s
+struct World
 {
     char                       *name;
     uint32_t                    id;
@@ -321,40 +318,34 @@ typedef struct world_s
 
     std::vector< std::shared_ptr<Room> > rooms;
 
-    uint32_t                    room_box_count;
-    room_box_s          *room_boxes;
+    std::vector<RoomBox> room_boxes;
 
     uint32_t                    flip_count;             // Number of flips
     uint8_t                    *flip_map;               // Flipped room activity array.
     uint8_t                    *flip_state;             // Flipped room state array.
 
     BorderedTextureAtlas     *tex_atlas;
-    uint32_t                    tex_count;              // Number of textures
-    GLuint                     *textures;               // OpenGL textures indexes
+    std::vector<GLuint> textures;               // OpenGL textures indexes
 
-    uint32_t                    anim_sequences_count;   // Animated texture sequence count
-    AnimSeq          *anim_sequences;         // Animated textures
+    std::vector<AnimSeq> anim_sequences;         // Animated textures
 
     std::vector<std::shared_ptr<BaseMesh>> meshes;                 // Base meshes data
 
-    uint32_t                    sprites_count;          // Base sprites count
-    Sprite            *sprites;                // Base sprites data
+    std::vector<Sprite> sprites;                // Base sprites data
 
-    uint32_t                    skeletal_model_count;   // number of base skeletal models
-    SkeletalModel    *skeletal_models;        // base skeletal models data
+    std::vector<SkeletalModel> skeletal_models;        // base skeletal models data
 
     std::shared_ptr<Entity>   Character;              // this is an unique Lara's pointer =)
     SkeletalModel    *sky_box;                // global skybox
 
     std::map<uint32_t, std::shared_ptr<Entity> > entity_tree;            // tree of world active objects
-    std::map<uint32_t, std::shared_ptr<base_item_s> > items_tree;             // tree of world items
+    std::map<uint32_t, std::shared_ptr<BaseItem> > items_tree;             // tree of world items
 
     uint32_t                    type;
 
     std::vector<StatCameraSink> cameras_sinks;          // Cameras and sinks.
 
-    uint32_t                    anim_commands_count;
-    int16_t                    *anim_commands;
+    std::vector<int16_t> anim_commands;
 
     std::vector<AudioEmitter> audio_emitters;         // Audio emitters.
     std::vector<int16_t> audio_map;              // Effect indexes.
@@ -367,15 +358,15 @@ typedef struct world_s
 
     void updateAnimTextures();
     void calculateWaterTint(std::array<float,4> *tint, bool fixed_colour);
-}world_t, *world_p;
+};
 
-void World_Prepare(world_p world);
-void World_Empty(world_p world);
+void World_Prepare(World* world);
+void World_Empty(World* world);
 int compEntityEQ(void *x, void *y);
 int compEntityLT(void *x, void *y);
 uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3 *pos, const btVector3 *ang, int32_t id);
-std::shared_ptr<Entity> World_GetEntityByID(world_p world, uint32_t id);
-std::shared_ptr<base_item_s> World_GetBaseItemByID(world_p world, uint32_t id);
+std::shared_ptr<Entity> World_GetEntityByID(World* world, uint32_t id);
+std::shared_ptr<BaseItem> World_GetBaseItemByID(World* world, uint32_t id);
 
 void Room_Empty(std::shared_ptr<Room> room);
 void Room_AddEntity(std::shared_ptr<Room> room, std::shared_ptr<Entity> entity);
@@ -386,11 +377,11 @@ int Room_IsPointIn(std::shared_ptr<Room> room, btScalar dot[3]);
 
 std::shared_ptr<Room> Room_FindPos(const btVector3 &pos);
 std::shared_ptr<Room> Room_FindPosCogerrence(const btVector3& new_pos, std::shared_ptr<Room> room);
-std::shared_ptr<Room> Room_GetByID(world_p w, unsigned int ID);
-room_sector_p Room_GetSectorRaw(std::shared_ptr<Room> room, const btVector3 &pos);
-room_sector_p Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3]);
-room_sector_p Sector_CheckFlip(room_sector_p rs);
-room_sector_p Room_GetSectorXYZ(std::shared_ptr<Room> room, const btVector3 &pos);
+std::shared_ptr<Room> Room_GetByID(World* w, unsigned int ID);
+RoomSector* Room_GetSectorRaw(std::shared_ptr<Room> room, const btVector3 &pos);
+RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3]);
+RoomSector* Sector_CheckFlip(RoomSector* rs);
+RoomSector* Room_GetSectorXYZ(std::shared_ptr<Room> room, const btVector3 &pos);
 
 void Room_Enable(std::shared_ptr<Room> room);
 void Room_Disable(std::shared_ptr<Room> room);
@@ -406,17 +397,17 @@ bool Room_IsJoined(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2);
 int Room_IsOverlapped(std::shared_ptr<Room> r0, std::shared_ptr<Room> r1);
 int Room_IsInNearRoomsList(std::shared_ptr<Room> room, std::shared_ptr<Room> r);
 int Room_HasSector(std::shared_ptr<Room> room, int x, int y);//If this room contains a sector
-room_sector_p TR_Sector_CheckBaseRoom(room_sector_p rs);
-room_sector_p TR_Sector_CheckAlternateRoom(room_sector_p rs);
-room_sector_p TR_Sector_CheckPortalPointerRaw(room_sector_p rs);
-room_sector_p TR_Sector_CheckPortalPointer(room_sector_p rs);
-int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2);
+RoomSector* TR_Sector_CheckBaseRoom(RoomSector* rs);
+RoomSector* TR_Sector_CheckAlternateRoom(RoomSector* rs);
+RoomSector* TR_Sector_CheckPortalPointerRaw(RoomSector* rs);
+RoomSector* TR_Sector_CheckPortalPointer(RoomSector* rs);
+int Sectors_Is2SidePortals(RoomSector* s1, RoomSector* s2);
 
-int World_AddEntity(world_p world, std::shared_ptr<Entity> entity);
-int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
-int World_DeleteItem(world_p world, uint32_t item_id);
-Sprite* World_GetSpriteByID(unsigned int ID, world_p world);
-SkeletalModel* World_GetModelByID(world_p w, uint32_t id);           // binary search the model by ID
+int World_AddEntity(World* world, std::shared_ptr<Entity> entity);
+int World_CreateItem(World* world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
+int World_DeleteItem(World* world, uint32_t item_id);
+Sprite* World_GetSpriteByID(unsigned int ID, World* world);
+SkeletalModel* World_GetModelByID(World* w, uint32_t id);           // binary search the model by ID
 
 
 #endif

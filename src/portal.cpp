@@ -20,7 +20,7 @@
 /*
  * Есть ли портал над сектором
  */
-bool Portal::isOnSectorTop(room_sector_s *sector) const
+bool Portal::isOnSectorTop(RoomSector *sector) const
 {
     /*
      * Если портал вертикальный, то
@@ -62,7 +62,7 @@ bool Portal::isOnSectorTop(room_sector_s *sector) const
  * Ведет ли портал непосредственно в данный сектор.
  * Сектор должен "прилегать" к порталу.
  */
-bool Portal::isWayToSector(room_sector_s *sector) const
+bool Portal::isWayToSector(RoomSector *sector) const
 {
 
     btScalar bb_min[2], bb_max[2];

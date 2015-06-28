@@ -16,7 +16,7 @@ class btCollisionShape;
 class btRigidBody;
 
 struct Room;
-struct room_sector_s;
+struct RoomSector;
 struct OBB;
 struct Character;
 struct SSAnimation;
@@ -127,8 +127,8 @@ struct Entity : public Object
 
     std::unique_ptr<OBB> m_obb;                // oriented bounding box
 
-    room_sector_s* m_currentSector;
-    room_sector_s* m_lastSector;
+    RoomSector* m_currentSector;
+    RoomSector* m_lastSector;
 
     std::shared_ptr<EngineContainer> m_self;
 
@@ -181,8 +181,8 @@ struct Entity : public Object
     void moveVertical(btScalar dist);
 
     btScalar findDistance(const Entity& entity_2);
-    room_sector_s* getLowestSector(room_sector_s* sector);
-    room_sector_s* getHighestSector(room_sector_s* sector);
+    RoomSector* getLowestSector(RoomSector* sector);
+    RoomSector* getHighestSector(RoomSector* sector);
 
     // Constantly updates some specific parameters to keep hair aligned to entity.
     void updateHair();

@@ -1355,7 +1355,7 @@ int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
 }
 
 
-void Audio_LoadOverridedSamples(struct world_s *world)
+void Audio_LoadOverridedSamples(struct World *world)
 {
     int  num_samples, num_sounds;
     int  sample_index, sample_count;

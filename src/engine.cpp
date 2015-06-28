@@ -61,7 +61,7 @@ AudioSettings                 audio_settings = {0};
 btScalar                                engine_frame_time = 0.0;
 
 Camera                         engine_camera;
-world_s                          engine_world;
+World                          engine_world;
 
 static btScalar                        *frame_vertex_buffer = NULL;
 static size_t                           frame_vertex_buffer_size = 0;
@@ -276,12 +276,11 @@ int lua_DumpRoom(lua_State * lua)
 
     if(r != NULL)
     {
-        room_sector_p rs = r->sectors;
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform.getOrigin()[0], r->transform.getOrigin()[1]);
         Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL)?(r->alternate_room->id):(-1), (r->base_room != NULL)?(r->base_room->id):(-1));
-        for(uint32_t i=0;i<r->sectors_count;i++,rs++)
+        for(const RoomSector& rs : r->sectors)
         {
-            Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, rs->portal_to_room);
+            Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs.index_x, rs.index_y, rs.floor, rs.ceiling, rs.portal_to_room);
         }
         for(auto sm : r->static_mesh)
         {
@@ -3700,9 +3699,8 @@ int lua_genUVRotateAnimation(lua_State *lua)
     if(firstPolygon.anim_id != 0)
         return 0;
 
-    engine_world.anim_sequences_count++;
-    engine_world.anim_sequences = (AnimSeq*)realloc(engine_world.anim_sequences, engine_world.anim_sequences_count * sizeof(AnimSeq));
-    AnimSeq* seq = engine_world.anim_sequences + engine_world.anim_sequences_count - 1;
+    engine_world.anim_sequences.emplace_back();
+    AnimSeq* seq = &engine_world.anim_sequences.back();
 
     // Fill up new sequence with frame list.
     seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
@@ -3744,7 +3742,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
     }
 
     for(Polygon& p : model->mesh_tree.front().mesh_base->m_transparencyPolygons) {
-        p.anim_id = engine_world.anim_sequences_count;
+        p.anim_id = engine_world.anim_sequences.size();
         for(Vertex& v : p.vertices) {
             v.tex_coord[1] = v_min + 0.5 * (v.tex_coord[1] - v_min) + seq->uvrotate_max;
         }
@@ -4444,7 +4442,7 @@ int Engine_ExecCmd(const char *ch)
     char buf[ConsoleInfo::instance().lineSize() + 32];
     const char *pch;
     int val;
-    room_sector_p sect;
+    RoomSector* sect;
     FILE *f;
 
     while(ch!=NULL)

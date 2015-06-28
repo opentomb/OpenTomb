@@ -407,8 +407,8 @@ struct SkeletalModel
     void fillSkinnedMeshMap();
 };
 
-struct room_sector_s;
-struct sector_tween_s;
+struct RoomSector;
+struct SectorTween;
 
 void BoneFrame_Copy(BoneFrame* dst, BoneFrame* src);
 MeshTreeTag* SkeletonClone(MeshTreeTag* src, int tags_count);
@@ -418,6 +418,6 @@ void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 /* bullet collision model calculation */
 btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh, bool is_static);
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
-btCollisionShape* BT_CSfromHeightmap(room_sector_s *heightmap, sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, SectorTween *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
 #endif

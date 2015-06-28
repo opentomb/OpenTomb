@@ -224,7 +224,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 void Hair::createHairMesh(const SkeletalModel *model)
 {
     m_mesh = std::make_shared<BaseMesh>();
-    m_mesh->m_elementsPerTexture.resize(engine_world.tex_count, 0);
+    m_mesh->m_elementsPerTexture.resize(engine_world.textures.size(), 0);
     size_t totalElements = 0;
 
     // Gather size information

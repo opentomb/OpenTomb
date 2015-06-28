@@ -174,7 +174,7 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
  */
 
 
-void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
+void Res_Sector_SetTweenFloorConfig(SectorTween *tween)
 {
     if(tween->floor_corners[0][2] > tween->floor_corners[1][2])
     {
@@ -205,7 +205,7 @@ void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
     }
 }
 
-void Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
+void Res_Sector_SetTweenCeilingConfig(SectorTween *tween)
 {
     if(tween->ceiling_corners[0][2] > tween->ceiling_corners[1][2])
     {
@@ -236,7 +236,7 @@ void Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
     }
 }
 
-int Res_Sector_IsWall(room_sector_p ws, room_sector_p ns)
+int Res_Sector_IsWall(RoomSector* ws, RoomSector* ns)
 {
     if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
     {
@@ -256,7 +256,7 @@ int Res_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 }
 
 ///@TODO: resolve floor >> ceiling case
-void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *room_tween)
+void Res_Sector_GenTweens(std::shared_ptr<Room> room, SectorTween *room_tween)
 {
     for(uint16_t h = 0; h < room->sectors_y-1; h++)
     {
@@ -264,8 +264,8 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
         {
             // Init X-plane tween [ | ]
 
-            room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
-            room_sector_p next_heightmap    = current_heightmap + 1;
+            RoomSector* current_heightmap = &room->sectors[(w * room->sectors_y + h) ];
+            RoomSector* next_heightmap    = current_heightmap + 1;
             char joined_floors = 0;
             char joined_ceilings = 0;
 
@@ -346,7 +346,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                     }
                 }
 
-                current_heightmap = room->sectors + (w * room->sectors_y + h);
+                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
                 next_heightmap    = current_heightmap + 1;
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
@@ -360,7 +360,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            RoomSector* rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -377,7 +377,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            RoomSector* rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -395,7 +395,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                     }
                 }
 
-                current_heightmap = room->sectors + (w * room->sectors_y + h);
+                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
                 next_heightmap    = current_heightmap + 1;
                 if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
@@ -409,7 +409,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            RoomSector* rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -426,7 +426,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            RoomSector* rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -450,8 +450,8 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
              *****************************************************************************************************/
 
             room_tween++;
-            current_heightmap = room->sectors + (w * room->sectors_y + h);
-            next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
+            current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
+            next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
             room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
             room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
             room_tween->floor_corners[2][0] = room_tween->floor_corners[0][0];
@@ -532,8 +532,8 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                     }
                 }
 
-                current_heightmap = room->sectors + (w * room->sectors_y + h);
-                next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
+                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
+                next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
@@ -546,7 +546,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            RoomSector* rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -563,7 +563,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            RoomSector* rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -581,8 +581,8 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                     }
                 }
 
-                current_heightmap = room->sectors + (w * room->sectors_y + h);
-                next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
+                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
+                next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
                 if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
@@ -595,7 +595,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            RoomSector* rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -612,7 +612,7 @@ void Res_Sector_GenTweens(std::shared_ptr<Room> room, struct sector_tween_s *roo
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            RoomSector* rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -661,7 +661,7 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
     return false;
 }
 
-int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
+int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 {
     if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size) || !engine_lua)
     {
@@ -1386,7 +1386,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
 void GenerateAnimCommandsTransform(SkeletalModel* model)
 {
-    if(engine_world.anim_commands_count == 0)
+    if(engine_world.anim_commands.empty())
     {
         return;
     }
@@ -1399,7 +1399,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
         }
 
         AnimationFrame* af  = &model->animations[anim];
-        int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+        int16_t *pointer      = &engine_world.anim_commands[af->anim_command];
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++, pointer++)
         {
@@ -1450,7 +1450,7 @@ void GenerateAnimCommandsTransform(SkeletalModel* model)
 }
 
 
-bool TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, const Portal& p)
+bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p)
 {
     if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p.norm[1]) > 0.99))
     {
@@ -1518,9 +1518,8 @@ bool TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, const Porta
     return false;
 }
 
-void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index)
+void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
 {
-    room_sector_p sector;
     std::shared_ptr<Room> room = world->rooms[room_index];
     tr5_room_t *tr_room = &tr->rooms[room_index];
 
@@ -1528,8 +1527,8 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
      * Sectors loading
      */
 
-    sector = room->sectors;
-    for(uint32_t i=0;i<room->sectors_count;i++,sector++)
+    RoomSector* sector = room->sectors.data();
+    for(uint32_t i=0;i<room->sectors.size();i++,sector++)
     {
         /*
          * Let us fill pointers to sectors above and sectors below
@@ -1548,7 +1547,7 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
             sector->sector_above = Room_GetSectorRaw(world->rooms[rp], sector->pos);
         }
 
-        room_sector_p near_sector = NULL;
+        RoomSector* near_sector = NULL;
 
         /**** OX *****/
         if((sector->index_y > 0) && (sector->index_y < room->sectors_y - 1) && (sector->index_x == 0))
@@ -1575,8 +1574,8 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
             {
                 if((p.norm[2] < 0.01) && ((p.norm[2] > -0.01)))
                 {
-                    room_sector_p dst = Room_GetSectorRaw(p.dest_room, sector->pos);
-                    room_sector_p orig_dst = Room_GetSectorRaw(engine_world.rooms[sector->portal_to_room], sector->pos);
+                    RoomSector* dst = Room_GetSectorRaw(p.dest_room, sector->pos);
+                    RoomSector* orig_dst = Room_GetSectorRaw(engine_world.rooms[sector->portal_to_room], sector->pos);
                     if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
                         sector->portal_to_room = p.dest_room->id;
@@ -1603,7 +1602,7 @@ void TR_color_to_arr(std::array<GLfloat,4>& v, const tr5_colour_t& tr_c)
     v[3] = tr_c.a * 2;
 }
 
-room_sector_p TR_GetRoomSector(uint32_t room_id, int sx, int sy)
+RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
 {
     if(room_id >= engine_world.rooms.size())
     {
@@ -1616,7 +1615,7 @@ room_sector_p TR_GetRoomSector(uint32_t room_id, int sx, int sy)
         return NULL;
     }
 
-    return room->sectors + sx * room->sectors_y + sy;
+    return &room->sectors[ sx * room->sectors_y + sy ];
 }
 
 int lua_SetSectorFloorConfig(lua_State * lua)
@@ -1634,7 +1633,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
     id = lua_tointeger(lua, 1);
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
@@ -1667,7 +1666,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
     id = lua_tointeger(lua, 1);
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
@@ -1700,7 +1699,7 @@ int lua_SetSectorPortal(lua_State * lua)
     id = lua_tointeger(lua, 1);
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
@@ -1731,7 +1730,7 @@ int lua_SetSectorFlags(lua_State * lua)
     id = lua_tointeger(lua, 1);
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
@@ -1847,7 +1846,7 @@ void Res_AutoexecOpen(int engine_version)
     luaL_dofile(engine_lua, temp_script_name);          // do level-specific autoexec
 }
 
-void TR_GenWorld(struct world_s *world, class VT_Level *tr)
+void TR_GenWorld(World *world, class VT_Level *tr)
 {
     world->version = tr->game_version;
 
@@ -1938,14 +1937,14 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Res_GenRBTrees(struct world_s *world)
+void Res_GenRBTrees(World *world)
 {
     world->entity_tree.clear();
     world->items_tree.clear();
 }
 
 
-void TR_GenRooms(struct world_s *world, class VT_Level *tr)
+void TR_GenRooms(World *world, class VT_Level *tr)
 {
     world->rooms.resize(tr->rooms_count);
     for(uint32_t i=0; i<world->rooms.size(); i++)
@@ -1954,13 +1953,13 @@ void TR_GenRooms(struct world_s *world, class VT_Level *tr)
     }
 }
 
-void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *world, class VT_Level *tr)
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, World *world, class VT_Level *tr)
 {
     Portal* p;
     tr5_room_t *tr_room = &tr->rooms[room_index];
     tr_staticmesh_t *tr_static;
     tr_room_portal_t *tr_portal;
-    room_sector_p sector;
+    RoomSector* sector;
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
@@ -1981,7 +1980,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
-    room->self = new EngineContainer();
+    room->self.reset( new EngineContainer() );
     room->self->room = room;
     room->self->object = room;
     room->self->object_type = OBJECT_ROOM_BASE;
@@ -2103,18 +2102,14 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     /*
      * sprites loading section
      */
-    room->sprites_count = tr_room->num_sprites;
-    if(room->sprites_count != 0)
+    for(uint32_t i=0;i<tr_room->num_sprites;i++)
     {
-        room->sprites = (room_sprite_p)calloc(room->sprites_count, sizeof(room_Sprite));
-        for(uint32_t i=0;i<room->sprites_count;i++)
+        room->sprites.emplace_back();
+        if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites.size()))
         {
-            if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites_count))
-            {
-                room->sprites[i].sprite = world->sprites + tr_room->sprites[i].texture;
-                TR_vertex_to_arr(room->sprites[i].pos, tr_room->vertices[tr_room->sprites[i].vertex].vertex);
-                room->sprites[i].pos += room->transform.getOrigin();
-            }
+            room->sprites[i].sprite = &world->sprites[tr_room->sprites[i].texture];
+            TR_vertex_to_arr(room->sprites[i].pos, tr_room->vertices[tr_room->sprites[i].vertex].vertex);
+            room->sprites[i].pos += room->transform.getOrigin();
         }
     }
 
@@ -2123,8 +2118,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
      */
     room->sectors_x = tr_room->num_xsectors;
     room->sectors_y = tr_room->num_zsectors;
-    room->sectors_count = room->sectors_x * room->sectors_y;
-    room->sectors = (room_sector_p)malloc(room->sectors_count * sizeof(room_sector_t));
+    room->sectors.resize(room->sectors_x * room->sectors_y);
 
     /*
      * base sectors information loading and collisional mesh creation
@@ -2137,8 +2131,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     // quickly detect slopes for pushable blocks and other entities that rely on
     // floor level.
 
-    sector = room->sectors;
-    for(uint32_t i=0;i<room->sectors_count;i++,sector++)
+    sector = room->sectors.data();
+    for(uint32_t i=0;i<room->sectors.size();i++,sector++)
     {
         // Filling base sectors information.
 
@@ -2257,12 +2251,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
     /*
      *  load lights
      */
-    room->light_count = tr_room->num_lights;
-    room->lights = NULL;
-    if(room->light_count)
-    {
-        room->lights = (Light*)malloc(room->light_count * sizeof(Light));
-    }
+    room->lights.resize( tr_room->num_lights );
 
     for(uint16_t i=0;i<tr_room->num_lights;i++)
     {
@@ -2384,7 +2373,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, struct world_s *w
 }
 
 
-void Res_GenRoomCollision(struct world_s *world)
+void Res_GenRoomCollision(World *world)
 {
     /*
     if(level_script != NULL)
@@ -2406,7 +2395,7 @@ void Res_GenRoomCollision(struct world_s *world)
 
         int num_heightmaps = (r->sectors_x * r->sectors_y);
         int num_tweens = (num_heightmaps * 4);
-        sector_tween_s *room_tween   = new sector_tween_s[num_tweens];
+        SectorTween *room_tween   = new SectorTween[num_tweens];
 
         // Clear tween array.
 
@@ -2430,7 +2419,7 @@ void Res_GenRoomCollision(struct world_s *world)
             btDefaultMotionState* motionState = new btDefaultMotionState(r->transform);
             r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
             bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-            r->bt_body->setUserPointer(r->self);
+            r->bt_body->setUserPointer(r->self.get());
             r->bt_body->setRestitution(1.0);
             r->bt_body->setFriction(1.0);
             r->self->collide_flag = COLLISION_TRIMESH;                          // meshtree
@@ -2441,7 +2430,7 @@ void Res_GenRoomCollision(struct world_s *world)
 }
 
 
-void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
+void TR_GenRoomProperties(World *world, class VT_Level *tr)
 {
     for(uint32_t i=0;i<world->rooms.size();i++)
     {
@@ -2452,9 +2441,9 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
         }
 
         // Fill heightmap and translate floordata.
-        for(uint32_t j=0;j<r->sectors_count;j++)
+        for(RoomSector& sector : r->sectors)
         {
-            TR_Sector_TranslateFloorData(r->sectors + j, tr);
+            TR_Sector_TranslateFloorData(&sector, tr);
         }
 
         // Generate links to the near rooms.
@@ -2468,7 +2457,7 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Res_GenRoomFlipMap(struct world_s *world)
+void Res_GenRoomFlipMap(World *world)
 {
     // Flipmap count is hardcoded, as no original levels contain such info.
 
@@ -2482,27 +2471,24 @@ void Res_GenRoomFlipMap(struct world_s *world)
 }
 
 
-void TR_GenBoxes(struct world_s *world, class VT_Level *tr)
+void TR_GenBoxes(World *world, class VT_Level *tr)
 {
-    world->room_boxes = NULL;
-    world->room_box_count = tr->boxes_count;
+    world->room_boxes.clear();
     
-    if(world->room_box_count)
+    for(uint32_t i=0;i<tr->boxes_count;i++)
     {
-        world->room_boxes = (room_box_p)malloc(world->room_box_count * sizeof(room_box_t));
-        for(uint32_t i=0;i<world->room_box_count;i++)
-        {
-            world->room_boxes[i].overlap_index = tr->boxes[i].overlap_index;
-            world->room_boxes[i].true_floor =-tr->boxes[i].true_floor;
-            world->room_boxes[i].x_min = tr->boxes[i].xmin;
-            world->room_boxes[i].x_max = tr->boxes[i].xmax;
-            world->room_boxes[i].y_min =-tr->boxes[i].zmax;
-            world->room_boxes[i].y_max =-tr->boxes[i].zmin;
-        }
+        world->room_boxes.emplace_back();
+        auto& room = world->room_boxes.back();
+        room.overlap_index = tr->boxes[i].overlap_index;
+        room.true_floor =-tr->boxes[i].true_floor;
+        room.x_min = tr->boxes[i].xmin;
+        room.x_max = tr->boxes[i].xmax;
+        room.y_min =-tr->boxes[i].zmax;
+        room.y_max =-tr->boxes[i].zmin;
     }
 }
 
-void TR_GenCameras(struct world_s *world, class VT_Level *tr)
+void TR_GenCameras(World *world, class VT_Level *tr)
 {
     world->cameras_sinks.clear();
     
@@ -2519,24 +2505,21 @@ void TR_GenCameras(struct world_s *world, class VT_Level *tr)
 /**
  * sprites loading, works correct in TR1 - TR5
  */
-void TR_GenSprites(struct world_s *world, class VT_Level *tr)
+void TR_GenSprites(World *world, class VT_Level *tr)
 {
-    Sprite* s;
-    tr_Spriteexture_t *tr_st;
-
     if(tr->Spriteextures_count == 0)
     {
-        world->sprites = NULL;
-        world->sprites_count = 0;
+        world->sprites.clear();
         return;
     }
 
-    world->sprites_count = tr->Spriteextures_count;
-    s = world->sprites = (Sprite*)calloc(world->sprites_count, sizeof(Sprite));
 
-    for(uint32_t i=0;i<world->sprites_count;i++,s++)
+    for(uint32_t i=0;i<tr->Spriteextures_count;i++)
     {
-        tr_st = &tr->Spriteextures[i];
+        world->sprites.emplace_back();
+        auto s = &world->sprites.back();
+
+        auto tr_st = &tr->Spriteextures[i];
 
         s->left = tr_st->left_side;
         s->right = tr_st->right_side;
@@ -2548,20 +2531,20 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
 
     for(uint32_t i=0;i<tr->sprite_sequences_count;i++)
     {
-        if((tr->sprite_sequences[i].offset >= 0) && ((uint32_t)tr->sprite_sequences[i].offset < world->sprites_count))
+        if((tr->sprite_sequences[i].offset >= 0) && ((uint32_t)tr->sprite_sequences[i].offset < world->sprites.size()))
         {
             world->sprites[tr->sprite_sequences[i].offset].id = tr->sprite_sequences[i].object_id;
         }
     }
 }
 
-void Res_GenSpritesBuffer(struct world_s *world)
+void Res_GenSpritesBuffer(World *world)
 {
     for (uint32_t i = 0; i < world->rooms.size(); i++)
         Res_GenRoomSpritesBuffer(world->rooms[i]);
 }
 
-void TR_GenTextures(struct world_s* world, class VT_Level *tr)
+void TR_GenTextures(World* world, class VT_Level *tr)
 {
     int border_size = renderer.settings().texture_border;
     border_size = (border_size < 0)?(0):(border_size);
@@ -2574,12 +2557,11 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
                                                   tr->Spriteextures_count,
                                                   tr->Spriteextures);
 
-    world->tex_count = (uint32_t) world->tex_atlas->getNumAtlasPages() + 1;
-    world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
+    world->textures.resize(world->tex_atlas->getNumAtlasPages() + 1);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelZoom(1, 1);
-    world->tex_atlas->createTextures(world->textures, 1);
+    world->tex_atlas->createTextures(world->textures.data(), 1);
 
     // white texture data for coloured polygons and debug lines.
     GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -2620,7 +2602,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings().lod_bias);
 
 
-    glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
+    glBindTexture(GL_TEXTURE_2D, world->textures.back());          // solid color =)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
@@ -2635,7 +2617,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
   *   is then parsed on the fly. What we do is parse this stream to the
   *   proper structures to be used later within renderer.
   */
-void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
+void TR_GenAnimTextures(World *world, class VT_Level *tr)
 {
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
@@ -2650,10 +2632,9 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
 
-    world->anim_sequences_count = num_sequences;
-    world->anim_sequences = (AnimSeq*)calloc(num_sequences, sizeof(AnimSeq));
+    world->anim_sequences.resize(num_sequences);
 
-    AnimSeq* seq = world->anim_sequences;
+    AnimSeq* seq = world->anim_sequences.data();
     for(uint16_t i = 0; i < num_sequences; i++,seq++)
     {
         seq->frames.resize(*(pointer++) + 1);
@@ -2779,11 +2760,11 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
   *   same TexInfo index that is applied to polygon, and if corresponding
   *   animation list is found, we assign it to polygon.
   */
-bool SetAnimTexture(Polygon* polygon, uint32_t tex_index, world_s *world)
+bool SetAnimTexture(Polygon* polygon, uint32_t tex_index, World *world)
 {
     polygon->anim_id = 0;                           // Reset to 0 by default.
 
-    for(uint32_t i = 0; i < world->anim_sequences_count; i++)
+    for(uint32_t i = 0; i < world->anim_sequences.size(); i++)
     {
         for(uint16_t j = 0; j < world->anim_sequences[i].frames.size(); j++)
         {
@@ -2802,7 +2783,7 @@ bool SetAnimTexture(Polygon* polygon, uint32_t tex_index, world_s *world)
     return false;   // No such TexInfo found in animation textures lists.
 }
 
-void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
+void TR_GenMeshes(World *world, class VT_Level *tr)
 {
     world->meshes.resize( tr->meshes_count );
     size_t i=0;
@@ -2877,7 +2858,7 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *v
     }
 }
 
-void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, class VT_Level *tr)
+void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, class VT_Level *tr)
 {
     const uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
@@ -3052,7 +3033,7 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, std::shared_ptr<BaseMe
     mesh->polySortInMesh();
 }
 
-void tr_setupRoomVertices(world_s *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, Polygon* p)
+void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, Polygon* p)
 {
     p->vertices.resize(numCorners);
 
@@ -3077,7 +3058,7 @@ void tr_setupRoomVertices(world_s *world, VT_Level *tr, tr5_room_t *tr_room, con
 
 }
 
-void TR_GenRoomMesh(struct world_s *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr)
+void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr)
 {
     const uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
@@ -3160,12 +3141,12 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     // Find the number of different texture pages used and the number of non-null sprites
     uint32_t highestTexturePageFound = 0;
     int actualSpritesFound = 0;
-    for (uint32_t i = 0; i < room->sprites_count; i++)
+    for(RoomSprite& sp : room->sprites)
     {
-        if (room->sprites[i].sprite)
+        if (sp.sprite)
         {
             actualSpritesFound += 1;
-            highestTexturePageFound = std::max(highestTexturePageFound, room->sprites[i].sprite->texture);
+            highestTexturePageFound = std::max(highestTexturePageFound, sp.sprite->texture);
         }
     }
     if (actualSpritesFound == 0)
@@ -3174,7 +3155,7 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
         return;
     }
 
-    room->sprite_buffer = (struct SpriteBuffer *) calloc(sizeof(struct SpriteBuffer), 1);
+    room->sprite_buffer = (SpriteBuffer *) calloc(sizeof(SpriteBuffer), 1);
     room->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
     room->sprite_buffer->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), room->sprite_buffer->num_texture_pages);
 
@@ -3184,9 +3165,8 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     GLfloat *spriteData = (GLfloat *) calloc(sizeof(GLfloat [7]), actualSpritesFound * 4);
 
     int writeIndex = 0;
-    for (int i = 0; i < room->sprites_count; i++)
+    for (const RoomSprite& room_sprite : room->sprites)
     {
-        const struct room_sprite_s &room_sprite = room->sprites[i];
         if (room_sprite.sprite)
         {
             int vertexStart = writeIndex;
@@ -3268,7 +3248,7 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
 
-    struct VertexArrayAttribute attribs[3] = {
+    VertexArrayAttribute attribs[3] = {
         VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
         VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
         VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
@@ -3277,7 +3257,7 @@ void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
     room->sprite_buffer->data.reset( new VertexArray(elementBuffer, 3, attribs) );
 }
 
-void Res_GenVBOs(struct world_s *world)
+void Res_GenVBOs(World *world)
 {
     for(uint32_t i=0; i<world->meshes.size(); i++)
     {
@@ -3296,7 +3276,7 @@ void Res_GenVBOs(struct world_s *world)
     }
 }
 
-void Res_GenBaseItems(struct world_s* world)
+void Res_GenBaseItems(World* world)
 {
     lua_CallVoidFunc(engine_lua, "genBaseItems");
     
@@ -3306,7 +3286,7 @@ void Res_GenBaseItems(struct world_s* world)
     }
 }
 
-void Res_FixRooms(struct world_s *world)
+void Res_FixRooms(World *world)
 {
     for(uint32_t i=0;i<world->rooms.size();i++)
     {
@@ -3356,7 +3336,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
     return tr_animation->frame_offset;
 }
 
-struct SkeletalModel* Res_GetSkybox(struct world_s *world, uint32_t engine_version)
+SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version)
 {
     switch(engine_version)
     {
@@ -3379,15 +3359,14 @@ struct SkeletalModel* Res_GetSkybox(struct world_s *world, uint32_t engine_versi
     }
 }
 
-void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr)
+void TR_GenAnimCommands(World *world, class VT_Level *tr)
 {
-    world->anim_commands_count = tr->anim_commands_count;
-    world->anim_commands = tr->anim_commands;
-    tr->anim_commands = NULL;
+    world->anim_commands.assign( tr->anim_commands+0, tr->anim_commands+tr->anim_commands_count );
+    free(tr->anim_commands);
     tr->anim_commands_count = 0;
 }
 
-void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct SkeletalModel *model, class VT_Level *tr)
+void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, class VT_Level *tr)
 {
     tr_moveable_t *tr_moveable;
     tr_animation_t *tr_animation;
@@ -3527,7 +3506,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct Skeleta
         if( (anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255) )
         {
             // Calculate current animation anim command block offset.
-            int16_t *pointer = world->anim_commands + anim->anim_command;
+            int16_t *pointer = &world->anim_commands[ anim->anim_command ];
 
             for(uint32_t count = 0; count < anim->num_anim_commands; count++, pointer++)
             {
@@ -3870,17 +3849,14 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone
     bone_frame->centre[2] = (bone_frame->bb_min[2] + bone_frame->bb_max[2]) / 2.0;
 }
 
-void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
+void TR_GenSkeletalModels(World *world, class VT_Level *tr)
 {
-    SkeletalModel* smodel;
-    tr_moveable_t *tr_moveable;
+    world->skeletal_models.resize(tr->moveables_count);
 
-    world->skeletal_model_count = tr->moveables_count;
-    smodel = world->skeletal_models = (SkeletalModel*)calloc(world->skeletal_model_count, sizeof(SkeletalModel));
-
-    for(uint32_t i=0;i<world->skeletal_model_count;i++,smodel++)
+    for(uint32_t i=0;i<tr->moveables_count;i++)
     {
-        tr_moveable = &tr->moveables[i];
+        auto tr_moveable = &tr->moveables[i];
+        auto smodel = &world->skeletal_models[i];
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
         TR_GenSkeletalModel(world, i, smodel, tr);
@@ -3889,7 +3865,7 @@ void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
 }
 
 
-void TR_GenEntities(struct world_s *world, class VT_Level *tr)
+void TR_GenEntities(World *world, class VT_Level *tr)
 {
     int top;
 
@@ -3967,13 +3943,11 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
             Sprite* sp = World_GetSpriteByID(tr_item->object_id, world);
             if(sp && entity->m_self->room)
             {
-                room_sprite_p rsp;
-                int sz = ++entity->m_self->room->sprites_count;
-                entity->m_self->room->sprites = (room_sprite_p)realloc(entity->m_self->room->sprites, sz * sizeof(room_Sprite));
-                rsp = entity->m_self->room->sprites + sz - 1;
-                rsp->sprite = sp;
-                rsp->pos = entity->m_transform.getOrigin();
-                rsp->was_rendered = false;
+                entity->m_self->room->sprites.emplace_back();
+                RoomSprite& rsp = entity->m_self->room->sprites.back();
+                rsp.sprite = sp;
+                rsp.pos = entity->m_transform.getOrigin();
+                rsp.was_rendered = false;
             }
 
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
@@ -4078,7 +4052,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
 }
 
 
-void TR_GenSamples(struct world_s *world, class VT_Level *tr)
+void TR_GenSamples(World *world, class VT_Level *tr)
 {
     uint8_t      *pointer = tr->samples_data;
     int8_t        flag;
@@ -4324,13 +4298,13 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<base_item_s> >& map)
+void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
 {
-    for(std::map<uint32_t, std::shared_ptr<base_item_s> >::iterator it = map.begin();
+    for(std::map<uint32_t, std::shared_ptr<BaseItem> >::iterator it = map.begin();
         it != map.end();
         ++it)
     {
-        std::shared_ptr<base_item_s> item = it->second;
+        std::shared_ptr<BaseItem> item = it->second;
 
         for(uint32_t i=0;i<engine_world.rooms.size();i++)
         {

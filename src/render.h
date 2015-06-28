@@ -19,7 +19,7 @@
 
 struct Portal;
 struct Frustum;
-struct world_s;
+struct World;
 struct Room;
 struct Camera;
 struct Entity;
@@ -28,7 +28,7 @@ struct BaseMesh;
 struct OBB;
 struct LitShaderDescription;
 struct SSBoneFrame;
-struct room_sector_s;
+struct RoomSector;
 struct Render;
 
 class RenderDebugDrawer : public btIDebugDraw
@@ -71,7 +71,7 @@ public:
     void drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
     void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform, Render *render);
     void drawEntityDebugLines(std::shared_ptr<Entity> entity, Render *render);
-    void drawSectorDebugLines(room_sector_s *rs);
+    void drawSectorDebugLines(RoomSector *rs);
     void drawRoomDebugLines(std::shared_ptr<Room> room, Render *render);
 
     // bullet's debug interface
@@ -143,7 +143,7 @@ class Render
     friend class RenderDebugDrawer;
 private:
     bool m_blocked = true;
-    world_s* m_world = nullptr;
+    World* m_world = nullptr;
     Camera* m_cam = nullptr;
     RenderSettings m_settings;
     std::unique_ptr<ShaderManager> m_shaderManager;
@@ -176,7 +176,7 @@ public:
     void init();
     void empty();
     int addRoom(std::shared_ptr<Room> room);
-    void setWorld(world_s* m_world);
+    void setWorld(World* m_world);
     void resetWorld() {
         m_world = nullptr;
     }
@@ -195,7 +195,7 @@ public:
         m_cam = cam;
     }
 
-    world_s* world() {
+    World* world() {
         return m_world;
     }
     const RenderSettings& settings() const {

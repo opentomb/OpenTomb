@@ -8,11 +8,11 @@ class VT_Level;
 struct Polygon;
 struct BaseMesh;
 struct Room;
-struct world_s;
+struct World;
 struct Camera;
 struct SSAnimation;
 struct Entity;
-struct room_sector_s;
+struct RoomSector;
 struct CharacterCommand;
 
 /*

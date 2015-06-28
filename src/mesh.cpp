@@ -743,14 +743,14 @@ btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useC
 }
 
 ///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
-btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
+btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, SectorTween *tweens, int tweens_size, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
-    std::shared_ptr<Room> r = heightmap->owner_room;
+    std::shared_ptr<Room> r = heightmap.front().owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret;
 
-    for(uint32_t i = 0; i < r->sectors_count; i++)
+    for(uint32_t i = 0; i < r->sectors.size(); i++)
     {
         if( (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
             (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
@@ -958,8 +958,8 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 void BaseMesh::polySortInMesh()
 {
     for(Polygon& p : m_polygons) {
-        if(p.anim_id > 0 && p.anim_id <= engine_world.anim_sequences_count) {
-            AnimSeq* seq = engine_world.anim_sequences + (p.anim_id - 1);
+        if(p.anim_id > 0 && p.anim_id <= engine_world.anim_sequences.size()) {
+            AnimSeq* seq = &engine_world.anim_sequences[p.anim_id - 1];
             // set tex coordinates to the first frame for correct texture transform in renderer
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0, seq->uvrotate);
         }

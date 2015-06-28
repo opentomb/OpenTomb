@@ -600,7 +600,7 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
 
 void Entity::updateRoomPos()
 {
-    room_sector_p new_sector;
+    RoomSector* new_sector;
 
     auto v = (m_bf.bb_min + m_bf.bb_max)/2;
     auto pos = m_transform * v;
@@ -1011,7 +1011,7 @@ btScalar Entity::findDistance(const Entity& other)
 
 void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
 {
-    if((engine_world.anim_commands_count == 0) || (ss_anim->model == NULL))
+    if(engine_world.anim_commands.empty() || (ss_anim->model == NULL))
     {
         return;  // If no anim commands
     }
@@ -1020,7 +1020,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
     if(af->num_anim_commands <= 255)
     {
         uint32_t count        = af->num_anim_commands;
-        int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+        int16_t *pointer      = &engine_world.anim_commands[af->anim_command];
         int8_t   random_value = 0;
 
         for(uint32_t i = 0; i < count; i++, pointer++)
@@ -1224,22 +1224,22 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
 }
 
 
-room_sector_s* Entity::getLowestSector(room_sector_s* sector)
+RoomSector* Entity::getLowestSector(RoomSector* sector)
 {
-    room_sector_p lowest_sector = sector;
+    RoomSector* lowest_sector = sector;
 
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_below)
+    for(RoomSector* rs=sector;rs!=NULL;rs=rs->sector_below)
     { lowest_sector = rs; }
 
     return lowest_sector;
 }
 
 
-room_sector_s* Entity::getHighestSector(room_sector_s* sector)
+RoomSector* Entity::getHighestSector(RoomSector* sector)
 {
-    room_sector_p highest_sector = sector;
+    RoomSector* highest_sector = sector;
 
-    for(room_sector_p rs=sector;rs!=NULL;rs=rs->sector_above)
+    for(RoomSector* rs=sector;rs!=NULL;rs=rs->sector_above)
     { highest_sector = rs; }
 
     return highest_sector;
@@ -1256,8 +1256,8 @@ void Entity::processSector()
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
-    room_sector_p highest_sector = getHighestSector(m_currentSector);
-    room_sector_p lowest_sector  = getLowestSector(m_currentSector);
+    RoomSector* highest_sector = getHighestSector(m_currentSector);
+    RoomSector* lowest_sector  = getLowestSector(m_currentSector);
 
     if(m_character)
     {

@@ -117,7 +117,7 @@ extern AudioSettings                  audio_settings;
 
 extern btScalar                                 engine_frame_time;
 extern Camera                          engine_camera;
-extern world_s                           engine_world;
+extern World                           engine_world;
 
 
 extern btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;

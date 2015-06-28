@@ -235,7 +235,7 @@ void Character_GetHeightInfo(const btVector3& pos, struct HeightInfo *fc, btScal
     btVector3 from, to;
     auto cb = fc->cb;
     std::shared_ptr<Room> r = (cb->m_container)?(cb->m_container->room):(NULL);
-    room_sector_p rs;
+    RoomSector* rs;
 
     fc->floor_hit = 0x00;
     fc->ceiling_hit = 0x00;
@@ -1662,7 +1662,7 @@ int Character_MoveOnWater(std::shared_ptr<Entity> ent)
 
 int Character_FindTraverse(std::shared_ptr<Entity> ch)
 {
-    room_sector_p ch_s, obj_s = NULL;
+    RoomSector* ch_s, *obj_s = NULL;
     ch_s = Room_GetSectorRaw(ch->m_self->room, ch->m_transform.getOrigin());
 
     if(ch_s == NULL)
@@ -1720,7 +1720,7 @@ int Character_FindTraverse(std::shared_ptr<Entity> ch)
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
  */
-int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, const std::shared_ptr<EngineContainer>& cont)
+int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer>& cont)
 {
     btScalar f0 = rs->floor_corners[0][2];
     if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
@@ -1766,7 +1766,7 @@ int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, const std::sh
  */
 int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> obj)
 {
-    room_sector_p ch_s, obj_s;
+    RoomSector* ch_s, *obj_s;
 
     ch_s = Room_GetSectorRaw(ch->m_self->room, ch->m_transform.getOrigin());
     obj_s = Room_GetSectorRaw(obj->m_self->room, obj->m_transform.getOrigin());
@@ -1821,7 +1821,7 @@ int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> 
     }
 
     int ret = 0x00;
-    room_sector_p next_s = NULL;
+    RoomSector* next_s = NULL;
 
     /*
      * PUSH MOVE CHECK
