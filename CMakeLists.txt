@@ -23,6 +23,9 @@ find_package(OpenAL REQUIRED)
 add_definitions(-DAL_ALEXT_PROTOTYPES)
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIRS})
 
+find_package(Boost REQUIRED)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+
 function(trylinklib LIBNAME ATTRIBS)
         find_library(
                 "${LIBNAME}_LIB"
