@@ -868,7 +868,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(int model_id)
 {
-    SkeletalModel* sm = World_GetModelByID(&engine_world, model_id);
+    SkeletalModel* sm = engine_world.getModelByID(model_id);
 
     if((sm != NULL) && (sm->mesh_count == m_bf.bone_tags.size()))
     {
@@ -1322,7 +1322,7 @@ void Entity::setAnimation(int animation, int frame, int another_model)
 
     if(another_model >= 0)
     {
-        SkeletalModel* model = World_GetModelByID(&engine_world, another_model);
+        SkeletalModel* model = engine_world.getModelByID(another_model);
         if((!model) || (animation >= model->animations.size())) return;
         m_bf.animations.model = model;
     }

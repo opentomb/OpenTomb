@@ -358,6 +358,12 @@ struct World
 
     void updateAnimTextures();
     void calculateWaterTint(std::array<float,4> *tint, bool fixed_colour);
+
+    int addEntity(std::shared_ptr<Entity> entity);
+    int createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
+    int deleteItem(uint32_t item_id);
+    Sprite* getSpriteByID(unsigned int ID);
+    SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
 };
 
 void World_Prepare(World* world);
@@ -402,12 +408,6 @@ RoomSector* TR_Sector_CheckAlternateRoom(RoomSector* rs);
 RoomSector* TR_Sector_CheckPortalPointerRaw(RoomSector* rs);
 RoomSector* TR_Sector_CheckPortalPointer(RoomSector* rs);
 int Sectors_Is2SidePortals(RoomSector* s1, RoomSector* s2);
-
-int World_AddEntity(World* world, std::shared_ptr<Entity> entity);
-int World_CreateItem(World* world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
-int World_DeleteItem(World* world, uint32_t item_id);
-Sprite* World_GetSpriteByID(unsigned int ID, World* world);
-SkeletalModel* World_GetModelByID(World* w, uint32_t id);           // binary search the model by ID
 
 
 #endif

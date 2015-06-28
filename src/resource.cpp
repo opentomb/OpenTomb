@@ -3342,17 +3342,17 @@ SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version)
     {
         case TR_II:
         case TR_II_DEMO:
-            return World_GetModelByID(world, TR_ITEM_SKYBOX_TR2);
+            return world->getModelByID(TR_ITEM_SKYBOX_TR2);
 
         case TR_III:
-            return World_GetModelByID(world, TR_ITEM_SKYBOX_TR3);
+            return world->getModelByID(TR_ITEM_SKYBOX_TR3);
 
         case TR_IV:
         case TR_IV_DEMO:
-            return World_GetModelByID(world, TR_ITEM_SKYBOX_TR4);
+            return world->getModelByID(TR_ITEM_SKYBOX_TR4);
 
         case TR_V:
-            return World_GetModelByID(world, TR_ITEM_SKYBOX_TR5);
+            return world->getModelByID(TR_ITEM_SKYBOX_TR5);
 
         default:
             return NULL;
@@ -3903,7 +3903,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         entity->m_inertiaAngular[1] = 0.0;
         entity->m_moveType          = 0;
 
-        entity->m_bf.animations.model = World_GetModelByID(world, tr_item->object_id);
+        entity->m_bf.animations.model = world->getModelByID(tr_item->object_id);
 
         if(ent_ID_override != NULL)
         {
@@ -3915,7 +3915,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
                 lua_pushinteger(ent_ID_override, tr_item->object_id);           // add to stack second argument
                 if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                   // call that function
                 {
-                    entity->m_bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
+                    entity->m_bf.animations.model = world->getModelByID(lua_tointeger(ent_ID_override, -1));
                 }
                 lua_settop(ent_ID_override, top);                               // restore LUA stack
             }
@@ -3929,7 +3929,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
                 int replace_anim_id = lua_tointeger(ent_ID_override, -1);
                 if(replace_anim_id > 0)
                 {
-                    SkeletalModel* replace_anim_model = World_GetModelByID(world, replace_anim_id);
+                    SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
                     std::swap(entity->m_bf.animations.model->animations, replace_anim_model->animations);
                 }
             }
@@ -3940,7 +3940,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         if(entity->m_bf.animations.model == NULL)
         {
             // SPRITE LOADING
-            Sprite* sp = World_GetSpriteByID(tr_item->object_id, world);
+            Sprite* sp = world->getSpriteByID(tr_item->object_id);
             if(sp && entity->m_self->room)
             {
                 entity->m_self->room->sprites.emplace_back();
@@ -3982,7 +3982,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
                 case TR_I:
                     if(gameflow_manager.CurrentLevelID == 0)
                     {
-                        LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
+                        LM = world->getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
                         if(LM)
                         {
                             // In TR1, Lara has unified head mesh for all her alternate skins.
@@ -3993,11 +3993,11 @@ void TR_GenEntities(World *world, class VT_Level *tr)
                     break;
 
                 case TR_III:
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR3);
+                    LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR3);
                     if(LM)
                     {
                         SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
-                        tmp = World_GetModelByID(world, 11);                   // moto / quadro cycle animations
+                        tmp = world->getModelByID(11);                   // moto / quadro cycle animations
                         if(tmp)
                         {
                             SkeletonCopyMeshes(tmp->mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
@@ -4008,12 +4008,12 @@ void TR_GenEntities(World *world, class VT_Level *tr)
                 case TR_IV:
                 case TR_IV_DEMO:
                 case TR_V:
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
+                    LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
                     if(LM)
                     {
                         SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
                     }
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_JOINTS_TR45);                         // skin skeleton meshes
+                    LM = world->getModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45);                         // skin skeleton meshes
                     if(LM)
                     {
                         SkeletonCopyMeshes2(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
@@ -4043,7 +4043,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
 
         entity->rebuildBV();
         Room_AddEntity(entity->m_self->room, entity);
-        World_AddEntity(world, entity);
+        world->addEntity(entity);
 
         Res_SetEntityModelProperties(entity);
         if(entity->m_self->collide_flag == 0x00)

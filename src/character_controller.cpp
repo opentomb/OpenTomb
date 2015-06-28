@@ -2104,7 +2104,7 @@ int Character_ChangeParam(std::shared_ptr<Entity> ent, int parameter, float valu
 ///@TODO: separate mesh replacing control and animation disabling / enabling
 int Character_SetWeaponModel(std::shared_ptr<Entity> ent, int weapon_model, int armed)
 {
-    SkeletalModel* sm = World_GetModelByID(&engine_world, weapon_model);
+    SkeletalModel* sm = engine_world.getModelByID(weapon_model);
 
     if((sm != NULL) && (ent->m_bf.bone_tags.size() == sm->mesh_count) && (sm->animations.size() >= 4))
     {

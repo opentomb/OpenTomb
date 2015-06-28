@@ -496,7 +496,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3*
 {
     if(!engine_world.entity_tree.empty())
     {
-        SkeletalModel* model = World_GetModelByID(&engine_world, model_id);
+        SkeletalModel* model = engine_world.getModelByID(model_id);
         if(model != NULL)
         {
             std::shared_ptr<Entity> ent = World_GetEntityByID(&engine_world, id);
@@ -578,7 +578,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, const btVector3*
             {
                 Room_AddEntity(ent->m_self->room, ent);
             }
-            World_AddEntity(&engine_world, ent);
+            engine_world.addEntity(ent);
 
             return ent->m_id;
         }
@@ -960,19 +960,19 @@ void Room_SwapItems(std::shared_ptr<Room> room, std::shared_ptr<Room> dest_room)
     std::swap(room->containers, dest_room->containers);
 }
 
-int World_AddEntity(World* world, std::shared_ptr<Entity> entity)
+int World::addEntity(std::shared_ptr<Entity> entity)
 {
-    if(world->entity_tree.find(entity->m_id) != world->entity_tree.end())
+    if(entity_tree.find(entity->m_id) != entity_tree.end())
         return 1;
-    world->entity_tree[entity->m_id] = entity;
+    entity_tree[entity->m_id] = entity;
     return 1;
 }
 
 
-int World_CreateItem(World* world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
+int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
-    SkeletalModel* model = World_GetModelByID(world, model_id);
-    if((model == NULL) || (world->items_tree.empty()))
+    SkeletalModel* model = getModelByID(model_id);
+    if((model == NULL) || (items_tree.empty()))
     {
         return 0;
     }
@@ -992,38 +992,38 @@ int World_CreateItem(World* world, uint32_t item_id, uint32_t model_id, uint32_t
     }
     item->bf = std::move(bf);
 
-    world->items_tree[item->id] = item;
+    items_tree[item->id] = item;
 
     return 1;
 }
 
 
-int World_DeleteItem(World* world, uint32_t item_id)
+int World::deleteItem(uint32_t item_id)
 {
-    world->items_tree.erase(world->items_tree.find(item_id));
+    items_tree.erase(items_tree.find(item_id));
     return 1;
 }
 
 
-struct SkeletalModel* World_GetModelByID(World* w, uint32_t id)
+SkeletalModel* World::getModelByID(uint32_t id)
 {
-    if(w->skeletal_models.front().id == id) {
-        return &w->skeletal_models.front();
+    if(skeletal_models.front().id == id) {
+        return &skeletal_models.front();
     }
-    if(w->skeletal_models.back().id == id) {
-        return &w->skeletal_models.back();
+    if(skeletal_models.back().id == id) {
+        return &skeletal_models.back();
     }
 
     size_t min = 0;
-    size_t max = w->skeletal_models.size()-1;
+    size_t max = skeletal_models.size()-1;
     do {
         auto i = (min + max) / 2;
-        if(w->skeletal_models[i].id == id)
+        if(skeletal_models[i].id == id)
         {
-            return &w->skeletal_models[i];
+            return &skeletal_models[i];
         }
 
-        if(w->skeletal_models[i].id < id)
+        if(skeletal_models[i].id < id)
             min = i;
         else
             max = i;
@@ -1037,9 +1037,9 @@ struct SkeletalModel* World_GetModelByID(World* w, uint32_t id)
  * find sprite by ID.
  * not a binary search - sprites may be not sorted by ID
  */
-struct Sprite* World_GetSpriteByID(unsigned int ID, World* world)
+Sprite* World::getSpriteByID(unsigned int ID)
 {
-    for(Sprite& sp : world->sprites)
+    for(Sprite& sp : sprites)
     {
         if(sp.id == ID)
         {

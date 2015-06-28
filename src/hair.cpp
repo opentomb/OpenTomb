@@ -13,7 +13,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         (setup->m_linkBody >= parent_entity->m_bf.bone_tags.size()) ||
         (!(parent_entity->m_bt.bt_body[setup->m_linkBody]))         ) return false;
 
-    SkeletalModel* model = World_GetModelByID(&engine_world, setup->m_model);
+    SkeletalModel* model = engine_world.getModelByID(setup->m_model);
 
     // No model to link to - bypass function.
 

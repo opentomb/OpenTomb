@@ -240,7 +240,7 @@ int lua_DumpModel(lua_State * lua)
         id = lua_tointeger(lua, 1);
     }
 
-    SkeletalModel* sm = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm = engine_world.getModelByID(id);
     if(sm == NULL)
     {
         ConsoleInfo::instance().printf("wrong model id = %d", id);
@@ -339,8 +339,8 @@ int lua_SetModelCollisionMapSize(lua_State * lua)
         return 0;
     }
 
-    /// engine_world.skeletal_models[id] != World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
-    SkeletalModel* model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
+    /// engine_world.skeletal_models[id] != engine_world.getModelByID(lua_tointeger(lua, 1));
+    SkeletalModel* model = engine_world.getModelByID(lua_tointeger(lua, 1));
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
@@ -365,8 +365,8 @@ int lua_SetModelCollisionMap(lua_State * lua)
         return 0;
     }
 
-    /// engine_world.skeletal_models[id] != World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
-    SkeletalModel* model = World_GetModelByID(&engine_world, lua_tointeger(lua, 1));
+    /// engine_world.skeletal_models[id] != engine_world.getModelByID(lua_tointeger(lua, 1));
+    SkeletalModel* model = engine_world.getModelByID(lua_tointeger(lua, 1));
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_MODELID_OVERFLOW, lua_tointeger(lua, 1));
@@ -1225,7 +1225,7 @@ int lua_CreateBaseItem(lua_State * lua)
     int type            = lua_tointeger(lua, 4);
     int count           = lua_tointeger(lua, 5);
 
-    World_CreateItem(&engine_world, item_id, model_id, world_model_id, type, count, lua_tostring(lua, 6));
+    engine_world.createItem(item_id, model_id, world_model_id, type, count, lua_tostring(lua, 6));
 
     return 0;
 }
@@ -1239,7 +1239,7 @@ int lua_DeleteBaseItem(lua_State * lua)
     }
     else
     {
-        World_DeleteItem(&engine_world, lua_tointeger(lua, 1));
+        engine_world.deleteItem(lua_tointeger(lua, 1));
     }
     return 0;
 }
@@ -1283,7 +1283,7 @@ int lua_SetStateChangeRange(lua_State * lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    SkeletalModel* model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = engine_world.getModelByID(id);
 
     if(model == NULL)
     {
@@ -1341,7 +1341,7 @@ int lua_GetAnimCommandTransform(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     int anim = lua_tointeger(lua, 2);
     int frame = lua_tointeger(lua, 3);
-    SkeletalModel* model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = engine_world.getModelByID(id);
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
@@ -1387,7 +1387,7 @@ int lua_SetAnimCommandTransform(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     int anim = lua_tointeger(lua, 2);
     int frame = lua_tointeger(lua, 3);
-    SkeletalModel* model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = engine_world.getModelByID(id);
     if(model == NULL)
     {
         ConsoleInfo::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
@@ -1945,7 +1945,7 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    SkeletalModel* model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = engine_world.getModelByID(id);
 
     if(model == NULL)
     {
@@ -2918,7 +2918,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
     SkeletalModel* model_src;
 
     ent_dest   = World_GetEntityByID(&engine_world, id_dest);
-    model_src  = World_GetModelByID(&engine_world, id_src);
+    model_src  = engine_world.getModelByID(id_src);
 
     int meshes_to_copy = (ent_dest->m_bf.bone_tags.size() > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->m_bf.bone_tags.size());
 
@@ -2940,7 +2940,7 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    SkeletalModel* sm = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm = engine_world.getModelByID(id);
     if(sm != NULL)
     {
         int bone = lua_tointeger(lua, 2);
@@ -2970,7 +2970,7 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    SkeletalModel* sm = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm = engine_world.getModelByID(id);
     if(sm != NULL)
     {
         int bone = lua_tointeger(lua, 2);
@@ -3000,7 +3000,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    SkeletalModel* sm1 = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm1 = engine_world.getModelByID(id);
     if(sm1 == NULL)
     {
         ConsoleInfo::instance().printf("can not find model with id = %d", id);
@@ -3008,7 +3008,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     }
 
     id = lua_tointeger(lua, 2);
-    SkeletalModel* sm2 = World_GetModelByID(&engine_world, id);
+    SkeletalModel* sm2 = engine_world.getModelByID(id);
     if(sm2 == NULL)
     {
         ConsoleInfo::instance().printf("can not find model with id = %d", id);
@@ -3688,7 +3688,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    SkeletalModel* model = World_GetModelByID(&engine_world, id);
+    SkeletalModel* model = engine_world.getModelByID(id);
 
     if(!model)
         return 0;
