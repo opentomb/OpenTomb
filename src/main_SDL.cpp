@@ -427,10 +427,10 @@ void Engine_Display()
 
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);
-        /*if(engine_world.Character)
+        /*if(engine_world.character)
         {
             glPushMatrix();
-            glTranslatef(engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+            glTranslatef(engine_world.character->transform[12], engine_world.character->transform[13], engine_world.character->transform[14]);
             Render_DrawAxis(1000.0);
             glPopMatrix();
         }*/
@@ -440,7 +440,7 @@ void Engine_Display()
             glEnable(GL_ALPHA_TEST);
 
             Gui_DrawNotifier();
-            if(engine_world.Character && engine_world.Character->m_character && main_inventory_manager)
+            if(engine_world.character && main_inventory_manager)
             {
                 Gui_DrawInventory();
             }
@@ -516,8 +516,8 @@ void ShowDebugInfo()
     glColorPointer(3, GL_FLOAT, 0, color_array);
     glDrawArrays(GL_LINES, 0, 2);
 
-    std::shared_ptr<Entity> ent = engine_world.Character;
-    if(ent && ent->m_character)
+    std::shared_ptr<Character> ent = engine_world.character;
+    if(ent)
     {
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
@@ -525,7 +525,7 @@ void ShowDebugInfo()
 
         Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->m_bf.animations.last_animation, ent->m_bf.animations.current_animation, ent->m_bf.animations.next_animation, ent->m_bf.animations.last_state, ent->m_bf.animations.next_state);
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+        //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.character->transform[12], engine_world.character->transform[13], engine_world.character->transform[14]);
     }
 
     if(last_cont != NULL)

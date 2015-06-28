@@ -410,7 +410,7 @@ void World::prepare()
     textures.clear();
     entity_tree.clear();
     items_tree.clear();
-    Character = NULL;
+    character.reset();
 
     audio_sources.clear();
     audio_buffers.clear();
@@ -442,10 +442,10 @@ void World::empty()
         main_inventory_manager->setItemsType(1);                                // see base items
     }
 
-    if(Character != NULL)
+    if(character)
     {
-        Character->m_self->room.reset();
-        Character->m_currentSector = nullptr;
+        character->m_self->room.reset();
+        character->m_currentSector = nullptr;
     }
 
     /* entity empty must be done before rooms destroy */
@@ -504,7 +504,7 @@ void World::empty()
     /*items empty*/
     items_tree.clear();
 
-    Character.reset();
+    character.reset();
 
     skeletal_models.clear();
 
@@ -625,6 +625,10 @@ std::shared_ptr<Entity> World::getEntityByID(uint32_t id)
         return nullptr;
     else
         return it->second;
+}
+
+std::shared_ptr<Character> World::getCharacterByID(uint32_t id) {
+    return std::dynamic_pointer_cast<Character>(getEntityByID(id));
 }
 
 

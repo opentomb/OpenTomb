@@ -257,6 +257,7 @@ struct SSBoneTag
 
 
 struct SkeletalModel;
+struct Character;
 
 struct SSAnimation
 {
@@ -274,7 +275,7 @@ struct SSAnimation
     btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
 
-    void                      (*onFrame)(std::shared_ptr<Entity> ent, SSAnimation *ss_anim, int state);
+    void                      (*onFrame)(std::shared_ptr<Character> ent, SSAnimation *ss_anim, int state);
 
     SkeletalModel    *model;                                          // pointer to the base model
     SSAnimation      *next;

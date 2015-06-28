@@ -1,6 +1,4 @@
-
-#ifndef CHARACTER_CONTROLLER_H
-#define CHARACTER_CONTROLLER_H
+#pragma once
 
 #include <bullet/LinearMath/btScalar.h>
 #include <bullet/LinearMath/btVector3.h>
@@ -18,6 +16,7 @@
 #include <list>
 
 #include "engine.h"
+#include "entity.h"
 
 /*------ Lara's model-------
              .=.
@@ -307,9 +306,8 @@ enum class WeaponState {
     IdleToHide
 };
 
-struct Character
+struct Character : public Entity
 {
-    std::shared_ptr<Entity> m_entity = nullptr;                    // actor entity
     CharacterCommand   m_command;                    // character control commands
     CharacterResponse  m_response;                   // character response info (collides, slide, next steps, drops, e.t.c.)
     
@@ -322,7 +320,7 @@ struct Character
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
     
-    int (*state_func)(std::shared_ptr<Entity> entity, SSAnimation *ssAnim) = nullptr;
+    int (*state_func)(std::shared_ptr<Character> entity, SSAnimation *ssAnim) = nullptr;
     
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -349,51 +347,82 @@ struct Character
     std::shared_ptr<BtEngineClosestRayResultCallback> m_rayCb;
     std::shared_ptr<BtEngineClosestConvexResultCallback> m_convexCb;
 
-    Character(std::shared_ptr<Entity> entity);
+    Character();
+    ~Character();
+
+    int checkNextPenetration(const btVector3& move);
+
+    void doWeaponFrame(btScalar time);
+
+    void fixPenetrations(btVector3* move) override;
+    btVector3 getRoomPos() const override
+    {
+        btVector3 pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
+        pos[0] = m_transform.getOrigin()[0];
+        pos[1] = m_transform.getOrigin()[1];
+        return pos;
+    }
+    void transferToRoom(std::shared_ptr<Room> room) override {
+    }
+    void updateHair() override;
+    void frameImpl(btScalar time, int16_t frame, int state) override;
+    void processSectorImpl() override;
+    void jump(btScalar vert, btScalar hor) override;
+    void kill() override {
+        m_response.kill = 1;
+    }
+    virtual Substance getSubstanceState() const override;
+    void updateRotation() override {
+        ghostUpdate();
+        Entity::updateRotation();
+    }
+    void updateGhostRigidBody() override;
+    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const override {
+        return m_convexCb;
+    }
+    btVector3 camPosForFollowing(btScalar dz) override;
 };
 
-int32_t Character_AddItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
-int32_t Character_RemoveItem(std::shared_ptr<Entity> ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
-int32_t Character_RemoveAllItems(std::shared_ptr<Entity> ent);
-int32_t Character_GetItemsCount(std::shared_ptr<Entity> ent, uint32_t item_id);                // returns items count
+int32_t Character_AddItem(std::shared_ptr<Character> ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
+int32_t Character_RemoveItem(std::shared_ptr<Character> ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
+int32_t Character_RemoveAllItems(std::shared_ptr<Character> ent);
+int32_t Character_GetItemsCount(std::shared_ptr<Character> ent, uint32_t item_id);                // returns items count
 
 void Character_GetHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
-int Character_CheckNextStep(std::shared_ptr<Entity> ent, const btVector3 &offset, HeightInfo *nfc);
-int Character_HasStopSlant(std::shared_ptr<Entity> ent, HeightInfo* next_fc);
-ClimbInfo Character_CheckClimbability(std::shared_ptr<Entity> ent, btVector3 offset, HeightInfo *nfc, btScalar test_height);
-ClimbInfo Character_CheckWallsClimbability(std::shared_ptr<Entity> ent);
+int Character_CheckNextStep(std::shared_ptr<Character> ent, const btVector3 &offset, HeightInfo *nfc);
+int Character_HasStopSlant(std::shared_ptr<Character> ent, HeightInfo* next_fc);
+ClimbInfo Character_CheckClimbability(std::shared_ptr<Character> ent, btVector3 offset, HeightInfo *nfc, btScalar test_height);
+ClimbInfo Character_CheckWallsClimbability(std::shared_ptr<Character> ent);
 
-void Character_UpdateCurrentHeight(std::shared_ptr<Entity> ent);
-void Character_UpdatePlatformPreStep(std::shared_ptr<Entity> ent);
-void Character_UpdatePlatformPostStep(std::shared_ptr<Entity> ent);
+void Character_UpdateCurrentHeight(std::shared_ptr<Character> ent);
+void Character_UpdatePlatformPreStep(std::shared_ptr<Character> ent);
+void Character_UpdatePlatformPostStep(std::shared_ptr<Character> ent);
 
-void Character_SetToJump(std::shared_ptr<Entity> ent, btScalar v_vertical, btScalar v_horizontal);
-void Character_Lean(std::shared_ptr<Entity> ent, CharacterCommand* cmd, btScalar max_lean);
-btScalar Character_InertiaLinear(std::shared_ptr<Entity> ent, btScalar max_speed, btScalar accel, int8_t command);
-btScalar Character_InertiaAngular(std::shared_ptr<Entity> ent, btScalar max_angle, btScalar accel, uint8_t axis);
+void Character_SetToJump(std::shared_ptr<Character> ent, btScalar v_vertical, btScalar v_horizontal);
+void Character_Lean(std::shared_ptr<Character> ent, CharacterCommand* cmd, btScalar max_lean);
+btScalar Character_InertiaLinear(std::shared_ptr<Character> ent, btScalar max_speed, btScalar accel, int8_t command);
+btScalar Character_InertiaAngular(std::shared_ptr<Character> ent, btScalar max_angle, btScalar accel, uint8_t axis);
 
-int Character_MoveOnFloor(std::shared_ptr<Entity> ent);
-int Character_FreeFalling(std::shared_ptr<Entity> ent);
-int Character_MonkeyClimbing(std::shared_ptr<Entity> ent);
-int Character_WallsClimbing(std::shared_ptr<Entity> ent);
-int Character_Climbing(std::shared_ptr<Entity> ent);
-int Character_MoveUnderWater(std::shared_ptr<Entity> ent);
-int Character_MoveOnWater(std::shared_ptr<Entity> ent);
+int Character_MoveOnFloor(std::shared_ptr<Character> ent);
+int Character_FreeFalling(std::shared_ptr<Character> ent);
+int Character_MonkeyClimbing(std::shared_ptr<Character> ent);
+int Character_WallsClimbing(std::shared_ptr<Character> ent);
+int Character_Climbing(std::shared_ptr<Character> ent);
+int Character_MoveUnderWater(std::shared_ptr<Character> ent);
+int Character_MoveOnWater(std::shared_ptr<Character> ent);
 
-int Character_FindTraverse(std::shared_ptr<Entity> ch);
+int Character_FindTraverse(std::shared_ptr<Character> ch);
 int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
-int Character_CheckTraverse(std::shared_ptr<Entity> ch, std::shared_ptr<Entity> obj);
+int Character_CheckTraverse(std::shared_ptr<Character> ch, std::shared_ptr<Entity> obj);
 
-void Character_ApplyCommands(std::shared_ptr<Entity> ent);
-void Character_UpdateParams(std::shared_ptr<Entity> ent);
+void Character_ApplyCommands(std::shared_ptr<Character> ent);
+void Character_UpdateParams(std::shared_ptr<Character> ent);
 
-float Character_GetParam(std::shared_ptr<Entity> ent, int parameter);
-int   Character_SetParam(std::shared_ptr<Entity> ent, int parameter, float value);
-int   Character_ChangeParam(std::shared_ptr<Entity> ent, int parameter, float value);
-int   Character_SetParamMaximum(std::shared_ptr<Entity> ent, int parameter, float max_value);
+float Character_GetParam(std::shared_ptr<Character> ent, int parameter);
+int   Character_SetParam(std::shared_ptr<Character> ent, int parameter, float value);
+int   Character_ChangeParam(std::shared_ptr<Character> ent, int parameter, float value);
+int   Character_SetParamMaximum(std::shared_ptr<Character> ent, int parameter, float max_value);
 
-int   Character_SetWeaponModel(std::shared_ptr<Entity> ent, int weapon_model, int armed);
+int   Character_SetWeaponModel(std::shared_ptr<Character> ent, int weapon_model, int armed);
 
 bool IsCharacter(std::shared_ptr<Entity> ent);
-
-#endif  // CHARACTER_CONTROLLER_H

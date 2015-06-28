@@ -137,6 +137,7 @@ struct BSPNode;
 struct UnlitTintedShaderDescription;
 struct SSBoneFrame;
 struct BSPFaceRef;
+struct Character;
 
 class Render
 {
@@ -250,7 +251,7 @@ public:
     void renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix);
     void renderSkeletalModel(const std::shared_ptr<LitShaderDescription> &shader, SSBoneFrame* bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
     void renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> ent, const btTransform &mvMatrix, const btTransform &pMatrix);
-    void renderHair(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix);
+    void renderHair(std::shared_ptr<Character> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix);
     void renderSkyBox(const btTransform &matrix);
     void renderMesh(const std::shared_ptr<BaseMesh> &mesh);
     void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef &p, const std::shared_ptr<UnlitTintedShaderDescription> &shader);

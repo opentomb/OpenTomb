@@ -394,12 +394,6 @@ void Entity::fixPenetrations(btVector3* move)
     if(m_bt.ghostObjects.empty())
         return;
 
-    if((move != NULL) && (m_character != NULL))
-    {
-        m_character->m_response.horizontal_collide    = 0x00;
-        m_character->m_response.vertical_collide      = 0x00;
-    }
-
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
     {
         return;
@@ -412,85 +406,25 @@ void Entity::fixPenetrations(btVector3* move)
     }
 
     btVector3 reaction;
-    int numPenetrationLoops = getPenetrationFixVector(&reaction, move!=nullptr);
+    getPenetrationFixVector(&reaction, move!=nullptr);
     m_transform.getOrigin() += reaction;
-
-    if(m_character != NULL)
-    {
-        Character_UpdateCurrentHeight(std::static_pointer_cast<Entity>(shared_from_this()));
-        if((move != NULL) && (numPenetrationLoops > 0))
-        {
-            btScalar t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
-            btScalar t2 = move->x() * move->x() + move->y() * move->y();
-            if((reaction[2] * reaction[2] < t1) && (move->z() * move->z() < t2))    // we have horizontal move and horizontal correction
-            {
-                t2 *= t1;
-                t1 = (reaction[0] * move->x() + reaction[1] * move->y()) / sqrtf(t2);
-                if(t1 < m_character->m_criticalWallComponent)
-                {
-                    m_character->m_response.horizontal_collide |= 0x01;
-                }
-            }
-            else if((reaction[2] * reaction[2] > t1) && (move->z() * move->z() > t2))
-            {
-                if((reaction[2] > 0.0) && (move->z() < 0.0))
-                {
-                    m_character->m_response.vertical_collide |= 0x01;
-                }
-                else if((reaction[2] < 0.0) && (move->z() > 0.0))
-                {
-                    m_character->m_response.vertical_collide |= 0x02;
-                }
-            }
-        }
-
-        if(m_character->m_heightInfo.ceiling_hit && (reaction[2] < -0.1))
-        {
-            m_character->m_response.vertical_collide |= 0x02;
-        }
-
-        if(m_character->m_heightInfo.floor_hit && (reaction[2] > 0.1))
-        {
-            m_character->m_response.vertical_collide |= 0x01;
-        }
-    }
 
     ghostUpdate();
 }
 
-/**
- * we check walls and other collision objects reaction. if reaction more then critacal
- * then cmd->horizontal_collide |= 0x01;
- * @param ent - cheked entity
- * @param cmd - here we fill cmd->horizontal_collide field
- * @param move - absolute 3d move vector
- */
-int Entity::checkNextPenetration(const btVector3& move)
-{
-    if(m_bt.ghostObjects.empty())
-        return 0;
-
-    ghostUpdate();
-    m_transform.getOrigin() += move;
-    //resp->horizontal_collide = 0x00;
-    btVector3 reaction;
-    int ret = getPenetrationFixVector(&reaction, true);
-    if((ret > 0) && (m_character != NULL)) {
-        btScalar t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
-        btScalar t2 = move[0] * move[0] + move[1] * move[1];
-        if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2)) {
-            t2 *= t1;
-            t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
-            if(t1 < m_character->m_criticalWallComponent) {
-                m_character->m_response.horizontal_collide |= 0x01;
-            }
-        }
+void Entity::transferToRoom(std::shared_ptr<Room> room) {
+    if(m_self->room && !m_self->room->isOverlapped(room)) {
+        if(m_self->room)
+            m_self->room->removeEntity(std::static_pointer_cast<Entity>(shared_from_this()));
+        if(room)
+            room->addEntity(std::static_pointer_cast<Entity>(shared_from_this()));
     }
-    m_transform.getOrigin() -= move;
-    ghostUpdate();
-    cleanCollisionAllBodyParts();
+}
 
-    return ret;
+std::shared_ptr<BtEngineClosestConvexResultCallback> Entity::callbackForCamera() const {
+    auto cb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self.get());
+    cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    return cb;
 }
 
 
@@ -590,50 +524,26 @@ btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uin
 
 void Entity::updateRoomPos()
 {
-    btVector3 pos;
-    if(m_character)
-    {
-        pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
-        pos[0] = m_transform.getOrigin()[0];
-        pos[1] = m_transform.getOrigin()[1];
-    }
-    else
-    {
-        btVector3 v = (m_bf.bb_min + m_bf.bb_max) / 2;
-        pos = m_transform * v;
-    }
+    btVector3 pos = getRoomPos();
     auto new_room = Room_FindPosCogerrence(pos, m_self->room);
-    if(new_room)
+    if(!new_room)
+        return;
+
+    auto new_sector = new_room->getSectorXYZ(pos);
+    if(new_room != new_sector->owner_room)
     {
-        auto new_sector = new_room->getSectorXYZ(pos);
-        if(new_room != new_sector->owner_room)
-        {
-            new_room = new_sector->owner_room;
-        }
+        new_room = new_sector->owner_room;
+    }
 
-        if(!m_character && (m_self->room != new_room))
-        {
-            if((m_self->room != NULL) && !m_self->room->isOverlapped(new_room))
-            {
-                if(m_self->room)
-                {
-                    m_self->room->removeEntity(std::static_pointer_cast<Entity>(shared_from_this()));
-                }
-                if(new_room)
-                {
-                    new_room->addEntity(std::static_pointer_cast<Entity>(shared_from_this()));
-                }
-            }
-        }
+    transferToRoom(new_room);
 
-        m_self->room = new_room;
-        m_lastSector = m_currentSector;
+    m_self->room = new_room;
+    m_lastSector = m_currentSector;
 
-        if(m_currentSector != new_sector)
-        {
-            m_triggerLayout &= (uint8_t)(~ENTITY_TLAYOUT_SSTATUS); // Reset sector status.
-            m_currentSector = new_sector;
-        }
+    if(m_currentSector != new_sector)
+    {
+        m_triggerLayout &= (uint8_t)(~ENTITY_TLAYOUT_SSTATUS); // Reset sector status.
+        m_currentSector = new_sector;
     }
 }
 
@@ -665,14 +575,7 @@ void Entity::updateRigidBody(bool force)
             }
         }
 
-        if(m_character && !m_bt.ghostObjects.empty()) {
-            for(size_t i=0; i<m_bf.bone_tags.size(); i++) {
-                auto tr = m_bt.bt_body[i]->getWorldTransform();
-                auto v = tr * m_bf.bone_tags[i].mesh_base->m_center;
-                tr.setOrigin(v);
-                m_bt.ghostObjects[i]->getWorldTransform() = tr;
-            }
-        }
+        updateGhostRigidBody();
 
         if(m_bf.bone_tags.size() == 1)
         {
@@ -750,33 +653,20 @@ void Entity::updateRigidBody(bool force)
 
 void Entity::updateRotation()
 {
+    for(int i=0; i<3; ++i) {
+        m_angles[i] = std::fmod(m_angles[i], 360);
+        while(m_angles[i] < 0)
+            m_angles[i] += 360;
+    }
+
     auto& up_dir = m_transform.getBasis()[2];                                   // OZ
     auto& view_dir = m_transform.getBasis()[1];                                 // OY
     auto& right_dir = m_transform.getBasis()[0];                                // OX
 
-    if(m_character != NULL)
-        ghostUpdate();
-
-    int i = m_angles[0] / 360.0;
-    i = (m_angles[0] < 0.0)?(i-1):(i);
-    m_angles[0] -= 360.0 * i;
-
-    i = m_angles[1] / 360.0;
-    i = (m_angles[1] < 0.0)?(i-1):(i);
-    m_angles[1] -= 360.0 * i;
-
-    i = m_angles[2] / 360.0;
-    i = (m_angles[2] < 0.0)?(i-1):(i);
-    m_angles[2] -= 360.0 * i;
-
-    btScalar t = m_angles[0] * M_PI / 180.0;
-    btScalar sin_t2 = sin(t);
-    btScalar cos_t2 = cos(t);
-
     /*
      * LEFT - RIGHT INIT
      */
-
+    btScalar t = m_angles[0] * M_PI / 180.0;
     up_dir = {0,0,1};
     view_dir = btVector3(0,1,0).rotate(up_dir, t);
     right_dir = btVector3(1,0,0).rotate(up_dir, t);
@@ -795,8 +685,7 @@ void Entity::updateRotation()
         up_dir = up_dir.rotate(view_dir, t);
     }
 
-    if(m_character != NULL)
-        fixPenetrations(nullptr);
+    fixPenetrations(nullptr);
 }
 
 
@@ -929,45 +818,6 @@ void Entity::updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform* etr)
 }
 
 
-Substance Entity::getSubstanceState()
-{
-    if(!m_character)
-    {
-        return Substance::None;
-    }
-
-    if(m_self->room->flags & TR_ROOM_FLAG_QUICKSAND)
-    {
-        if(m_character->m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_character->m_height)
-        {
-            return Substance::QuicksandConsumed;
-        }
-        else
-        {
-            return Substance::QuicksandShallow;
-        }
-    }
-    else if(!m_character->m_heightInfo.water)
-    {
-        return Substance::None;
-    }
-    else if( m_character->m_heightInfo.water &&
-             (m_character->m_heightInfo.transition_level > m_transform.getOrigin()[2]) &&
-             (m_character->m_heightInfo.transition_level < m_transform.getOrigin()[2] + m_character->m_wadeDepth) )
-    {
-        return Substance::WaterShallow;
-    }
-    else if( m_character->m_heightInfo.water &&
-             (m_character->m_heightInfo.transition_level > m_transform.getOrigin()[2] + m_character->m_wadeDepth) )
-    {
-        return Substance::WaterWade;
-    }
-    else
-    {
-        return Substance::WaterSwim;
-    }
-}
-
 btScalar Entity::findDistance(const Entity& other)
 {
     return (m_transform.getOrigin() - other.m_transform.getOrigin()).length();
@@ -1009,10 +859,7 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
                 // This command executes ONLY at the end of animation.
                 if(ss_anim->current_frame == af->frames.size() - 1)
                 {
-                    if(m_character)
-                    {
-                        m_character->m_response.kill = 1;
-                    }
+                    kill();
                 }
 
                 break;
@@ -1062,9 +909,9 @@ void Entity::doAnimCommands(struct SSAnimation *ss_anim, int changing)
                     switch(*++pointer & 0x3FFF)
                     {
                     case TR_EFFECT_SHAKESCREEN:
-                        if(engine_world.Character)
+                        if(engine_world.character)
                         {
-                            btScalar dist = engine_world.Character->findDistance(*this);
+                            btScalar dist = engine_world.character->findDistance(*this);
                             dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
                             if(dist > 0)
                                 renderer.camera()->shake(dist * TR_CAM_DEFAULT_SHAKE_POWER, 0.5);
@@ -1198,38 +1045,9 @@ void Entity::processSector()
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
-    RoomSector* highest_sector = m_currentSector->getHighestSector();
     RoomSector* lowest_sector  = m_currentSector->getLowestSector();
 
-    if(m_character)
-    {
-        m_character->m_heightInfo.walls_climb_dir  = 0;
-        m_character->m_heightInfo.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
-                                                                             SECTOR_FLAG_CLIMB_EAST  |
-                                                                             SECTOR_FLAG_CLIMB_NORTH |
-                                                                             SECTOR_FLAG_CLIMB_SOUTH );
-
-        m_character->m_heightInfo.walls_climb     = (m_character->m_heightInfo.walls_climb_dir > 0);
-        m_character->m_heightInfo.ceiling_climb   = 0x00;
-
-        if((highest_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (lowest_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
-        {
-            m_character->m_heightInfo.ceiling_climb = 0x01;
-        }
-
-        if(lowest_sector->flags & SECTOR_FLAG_DEATH)
-        {
-            if((m_moveType == MOVE_ON_FLOOR)    ||
-                    (m_moveType == MOVE_UNDERWATER) ||
-                    (m_moveType == MOVE_WADE)        ||
-                    (m_moveType == MOVE_ON_WATER)    ||
-                    (m_moveType == MOVE_QUICKSAND))
-            {
-                Character_SetParam(std::static_pointer_cast<Entity>(shared_from_this()), PARAM_HEALTH, 0.0);
-                m_character->m_response.kill = 1;
-            }
-        }
-    }
+    processSectorImpl();
 
     // If entity either marked as trigger activator (Lara) or heavytrigger activator (other entities),
     // we try to execute a trigger for this sector.
@@ -1430,7 +1248,7 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
 
         if(curr_bf->command & ANIM_CMD_JUMP)
         {
-            Character_SetToJump(std::static_pointer_cast<Entity>(shared_from_this()), -curr_bf->v_Vertical, curr_bf->v_Horizontal);
+            jump(-curr_bf->v_Vertical, curr_bf->v_Horizontal);
         }
         if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
         {
@@ -1486,24 +1304,24 @@ int Entity::frame(btScalar time)
     ghostUpdate();
 
     m_bf.animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(&ss_anim->model->animations[ss_anim->current_animation], ss_anim->next_state);
-    getNextFrame(&m_bf, time, stc, &frame, &anim, ss_anim->anim_flags);
-    if(ss_anim->current_animation != anim)
+    stc = Anim_FindStateChangeByID(&m_bf.animations.model->animations[m_bf.animations.current_animation], m_bf.animations.next_state);
+    getNextFrame(&m_bf, time, stc, &frame, &anim, m_bf.animations.anim_flags);
+    if(m_bf.animations.current_animation != anim)
     {
-        ss_anim->last_animation = ss_anim->current_animation;
+        m_bf.animations.last_animation = m_bf.animations.current_animation;
 
         ret = 0x02;
         doAnimCommands(&m_bf.animations, ret);
         doAnimMove(&anim, &frame);
 
         setAnimation(anim, frame);
-        stc = Anim_FindStateChangeByID(&ss_anim->model->animations[ss_anim->current_animation], ss_anim->next_state);
+        stc = Anim_FindStateChangeByID(&m_bf.animations.model->animations[m_bf.animations.current_animation], m_bf.animations.next_state);
     }
-    else if(ss_anim->current_frame != frame)
+    else if(m_bf.animations.current_frame != frame)
     {
-        if(ss_anim->current_frame == 0)
+        if(m_bf.animations.current_frame == 0)
         {
-            ss_anim->last_animation = ss_anim->current_animation;
+            m_bf.animations.last_animation = m_bf.animations.current_animation;
         }
 
         ret = 0x01;
@@ -1520,40 +1338,10 @@ int Entity::frame(btScalar time)
     m_bf.animations.lerp = dt / m_bf.animations.period;
     getNextFrame(&m_bf, m_bf.animations.period, stc, &m_bf.animations.next_frame, &m_bf.animations.next_animation, ss_anim->anim_flags);
 
-    // Update acceleration.
-    // With variable framerate, we don't know when we'll reach final
-    // frame for sure, so we use native frame number check to increase acceleration.
-
-    if((m_character) && (ss_anim->current_frame != frame))
-    {
-
-        // NB!!! For Lara, we update ONLY X-axis speed/accel.
-
-        if((af->accel_x == 0) || (frame < m_bf.animations.current_frame))
-        {
-            m_currentSpeed  = af->speed_x;
-        }
-        else
-        {
-            m_currentSpeed += af->accel_x;
-        }
-    }
-
-    m_bf.animations.current_frame = frame;
-
-
-    doWeaponFrame(time);
-
-    if(m_bf.animations.onFrame != NULL)
-    {
-        m_bf.animations.onFrame(std::static_pointer_cast<Entity>(shared_from_this()), &m_bf.animations, ret);
-    }
+    frameImpl(time, frame, ret);
 
     updateCurrentBoneFrame(&m_bf, &m_transform);
-    if(m_character != NULL)
-    {
-        fixPenetrations(nullptr);
-    }
+    fixPenetrations(nullptr);
 
     return ret;
 }
@@ -1626,409 +1414,6 @@ void Entity::moveVertical(btScalar dist)
     m_transform.getOrigin() += m_transform.getBasis()[2] * dist;
 }
 
-
-/* There are stick code for multianimation (weapon mode) testing
- * Model replacing will be upgraded too, I have to add override
- * flags to model manually in the script*/
-void Entity::doWeaponFrame(btScalar time)
-{
-    if(m_character != NULL)
-    {
-        /* anims (TR_I - TR_V):
-         * pistols:
-         * 0: idle to fire;
-         * 1: draw weapon (short?);
-         * 2: draw weapon (full);
-         * 3: fire process;
-         *
-         * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons):
-         * 0: idle to fire;
-         * 1: draw weapon;
-         * 2: fire process;
-         * 3: hide weapon;
-         * 4: idle to fire (targeted);
-         */
-        if((m_character->m_command.ready_weapon != 0x00) && (m_character->m_currentWeapon > 0) && (m_character->m_weaponCurrentState == WeaponState::Hide))
-        {
-            Character_SetWeaponModel(std::static_pointer_cast<Entity>(shared_from_this()), m_character->m_currentWeapon, 1);
-        }
-
-        btScalar dt;
-        int t;
-
-        for(SSAnimation* ss_anim=m_bf.animations.next;ss_anim!=NULL;ss_anim=ss_anim->next)
-        {
-            if((ss_anim->model != NULL) && (ss_anim->model->animations.size() > 4))
-            {
-                switch(m_character->m_weaponCurrentState)
-                {
-                case WeaponState::Hide:
-                    if(m_character->m_command.ready_weapon)   // ready weapon
-                    {
-                        ss_anim->current_animation = 1;
-                        ss_anim->next_animation = 1;
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
-                        m_character->m_weaponCurrentState = WeaponState::HideToReady;
-                    }
-                    break;
-
-                case WeaponState::HideToReady:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
-                    {
-                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                    }
-                    else
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                        ss_anim->frame_time = 0.0;
-                        m_character->m_weaponCurrentState = WeaponState::Idle;
-                    }
-                    break;
-
-                case WeaponState::Idle:
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
-                    ss_anim->frame_time = 0.0;
-                    if(m_character->m_command.ready_weapon)
-                    {
-                        ss_anim->current_animation = 3;
-                        ss_anim->next_animation = 3;
-                        ss_anim->current_frame = ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
-                        m_character->m_weaponCurrentState = WeaponState::IdleToHide;
-                    }
-                    else if(m_character->m_command.action)
-                    {
-                        m_character->m_weaponCurrentState = WeaponState::IdleToFire;
-                    }
-                    else
-                    {
-                        // do nothing here, may be;
-                    }
-                    break;
-
-                case WeaponState::FireToIdle:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_character->m_weaponCurrentState = WeaponState::Idle;
-                    }
-                    break;
-
-                case WeaponState::IdleToFire:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 2;
-                    }
-                    else if(m_character->m_command.action)
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_character->m_weaponCurrentState = WeaponState::Fire;
-                    }
-                    else
-                    {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        m_character->m_weaponCurrentState = WeaponState::FireToIdle;
-                    }
-                    break;
-
-                case WeaponState::Fire:
-                    if(m_character->m_command.action)
-                    {
-                        // inc time, loop;
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                        if(ss_anim->current_frame < t - 1)
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else if(ss_anim->current_frame < t)
-                        {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->frame_time = dt;
-                            ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 1;
-                        }
-                    }
-                    else
-                    {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
-                        m_character->m_weaponCurrentState = WeaponState::FireToIdle;
-                    }
-                    break;
-
-                case WeaponState::IdleToHide:
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    if(ss_anim->current_frame < t - 1)
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_character->m_weaponCurrentState = WeaponState::Hide;
-                        Character_SetWeaponModel(std::static_pointer_cast<Entity>(shared_from_this()), m_character->m_currentWeapon, 0);
-                    }
-                    break;
-                };
-            }
-            else if((ss_anim->model != NULL) && (ss_anim->model->animations.size() == 4))
-            {
-                switch(m_character->m_weaponCurrentState)
-                {
-                case WeaponState::Hide:
-                    if(m_character->m_command.ready_weapon)   // ready weapon
-                    {
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = 2;
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->frame_time = 0.0;
-                        m_character->m_weaponCurrentState = WeaponState::HideToReady;
-                    }
-                    break;
-
-                case WeaponState::HideToReady:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
-                    {
-                        ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                    }
-                    else
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 0;
-                        ss_anim->frame_time = 0.0;
-                        m_character->m_weaponCurrentState = WeaponState::Idle;
-                    }
-                    break;
-
-                case WeaponState::Idle:
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->next_frame = 0;
-                    ss_anim->next_animation = 0;
-                    ss_anim->frame_time = 0.0;
-                    if(m_character->m_command.ready_weapon)
-                    {
-                        ss_anim->current_animation = 2;
-                        ss_anim->next_animation = 2;
-                        ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->frame_time = 0.0;
-                        m_character->m_weaponCurrentState = WeaponState::IdleToHide;
-                    }
-                    else if(m_character->m_command.action)
-                    {
-                        m_character->m_weaponCurrentState = WeaponState::IdleToFire;
-                    }
-                    else
-                    {
-                        // do nothing here, may be;
-                    }
-                    break;
-
-                case WeaponState::FireToIdle:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_character->m_weaponCurrentState = WeaponState::Idle;
-                    }
-                    break;
-
-                case WeaponState::IdleToFire:
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                    if(ss_anim->current_frame < t - 1)
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame + 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else if(ss_anim->current_frame < t)
-                    {
-                        ss_anim->next_frame = 0;
-                        ss_anim->next_animation = 3;
-                    }
-                    else if(m_character->m_command.action)
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->next_frame = 1;
-                        ss_anim->current_animation = 3;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_character->m_weaponCurrentState = WeaponState::Fire;
-                    }
-                    else
-                    {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        m_character->m_weaponCurrentState = WeaponState::FireToIdle;
-                    }
-                    break;
-
-                case WeaponState::Fire:
-                    if(m_character->m_command.action)
-                    {
-                        // inc time, loop;
-                        ss_anim->frame_time += time;
-                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                        dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                        ss_anim->lerp = dt / ss_anim->period;
-                        t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-
-                        if(ss_anim->current_frame < t - 1)
-                        {
-                            ss_anim->next_frame = ss_anim->current_frame + 1;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else if(ss_anim->current_frame < t)
-                        {
-                            ss_anim->next_frame = 0;
-                            ss_anim->next_animation = ss_anim->current_animation;
-                        }
-                        else
-                        {
-                            ss_anim->frame_time = dt;
-                            ss_anim->current_frame = 0;
-                            ss_anim->next_frame = 1;
-                        }
-                    }
-                    else
-                    {
-                        ss_anim->frame_time = 0.0;
-                        ss_anim->current_animation = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames.size() - 1;
-                        ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
-                        m_character->m_weaponCurrentState = WeaponState::FireToIdle;
-                    }
-                    break;
-
-                case WeaponState::IdleToHide:
-                    // Yes, same animation, reverse frames order;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames.size();
-                    ss_anim->frame_time += time;
-                    ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (btScalar)ss_anim->current_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    ss_anim->current_frame = t - 1 - ss_anim->current_frame;
-                    if(ss_anim->current_frame > 0)
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame - 1;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                    }
-                    else
-                    {
-                        ss_anim->next_frame = ss_anim->current_frame = 0;
-                        ss_anim->next_animation = ss_anim->current_animation;
-                        m_character->m_weaponCurrentState = WeaponState::Hide;
-                        Character_SetWeaponModel(std::static_pointer_cast<Entity>(shared_from_this()), m_character->m_currentWeapon, 0);
-                    }
-                    break;
-                };
-            }
-
-            doAnimCommands(ss_anim, 0);
-        }
-    }
-}
-
-
 Entity::Entity()
     : m_moveType(MOVE_ON_FLOOR)
     , m_obb(new OBB())
@@ -2069,11 +1454,6 @@ Entity::Entity()
 }
 
 Entity::~Entity() {
-    if((m_self->room != NULL) && (this != engine_world.Character.get()))
-    {
-        m_self->room->removeEntity(std::static_pointer_cast<Entity>(shared_from_this()));
-    }
-
     m_bt.last_collisions.clear();
 
     if(!m_bt.bt_joints.empty())
@@ -2090,8 +1470,6 @@ Entity::~Entity() {
     m_bt.shapes.clear();
 
     m_bt.manifoldArray.reset();
-
-    m_character.reset();
 
     if(!m_bt.bt_body.empty()) {
         for(const auto& body : m_bt.bt_body) {
@@ -2126,59 +1504,6 @@ Entity::~Entity() {
         ss_anim = ss_anim_next;
     }
     m_bf.animations.next = NULL;
-}
-
-void Entity::updateHair()
-{
-    if((!IsCharacter(std::static_pointer_cast<Entity>(shared_from_this()))) || m_character->m_hairs.empty())
-        return;
-
-    for(std::shared_ptr<Hair> hair : m_character->m_hairs)
-    {
-        if(!hair || hair->m_elements.empty())
-            continue;
-
-        /*btScalar new_transform[16];
-
-        new_transform = transform * bf.bone_tags[hair->owner_body].full_transform;
-
-        // Calculate mixed velocities.
-        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
-                          new_transform[12+1] - hair->owner_body_transform[12+1],
-                          new_transform[12+2] - hair->owner_body_transform[12+2]);
-        mix_vel *= 1.0 / engine_frame_time;
-
-        if(0)
-        {
-            btScalar sub_tr[16];
-            btTransform ang_tr;
-            btVector3 mix_ang;
-            sub_tr = hair->owner_body_transform.inverse() * new_transform;
-            ang_tr.setFromOpenGLMatrix(sub_tr);
-            ang_tr.getBasis().getEulerYPR(mix_ang[2], mix_ang[1], mix_ang[0]);
-            mix_ang *= 1.0 / engine_frame_time;
-
-            // Looks like angular velocity breaks up constraints on VERY fast moves,
-            // like mid-air turn. Probably, I've messed up with multiplier value...
-
-            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
-        }
-        Mat4_Copy(hair->owner_body_transform, new_transform);*/
-
-        // Set mixed velocities to both parent body and first hair body.
-
-        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
-        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
-
-        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
-        for(int j=0;j<hair->element_count;j++)
-        {
-            hair->elements[j].body->applyCentralForce(mix_vel);
-        }*/
-
-        hair->m_container->room = hair->m_ownerChar->m_self->room;
-    }
 }
 
 bool Entity::createRagdoll(RDSetup* setup)

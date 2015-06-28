@@ -79,6 +79,8 @@ struct BtEntityData
 
 #define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 
+class BtEngineClosestConvexResultCallback;
+
 struct Entity : public Object
 {
     uint32_t                            m_id = 0;                 // Unique entity ID
@@ -120,8 +122,6 @@ struct Entity : public Object
     btVector3 m_activationOffset = {0,256,0};   // where we can activate object (dx, dy, dz)
     btScalar m_activationRadius = 128;
     
-    std::shared_ptr<Character> m_character = nullptr;
-
     Entity();
     ~Entity();
 
@@ -135,8 +135,6 @@ struct Entity : public Object
     void ghostUpdate();
     void updateCurrentCollisions();
     int getPenetrationFixVector(btVector3 *reaction, bool hasMove);
-    void fixPenetrations(btVector3 *move);
-    int checkNextPenetration(const btVector3& move);
     void checkCollisionCallbacks();
     bool wasCollisionBodyParts(uint32_t parts_flags);
     void cleanCollisionAllBodyParts();
@@ -150,12 +148,14 @@ struct Entity : public Object
     static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
     int  frame(btScalar time);  // process frame + trying to change state
 
-    void updateRotation();
+    virtual void updateRotation();
     void updateCurrentSpeed(bool zeroVz = 0);
     void addOverrideAnim(int model_id);
     void checkActivators();
 
-    Substance getSubstanceState();
+    virtual Substance getSubstanceState() const {
+        return Substance::None;
+    }
 
     static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
     void doAnimCommands(SSAnimation *ss_anim, int changing);
@@ -168,14 +168,40 @@ struct Entity : public Object
     btScalar findDistance(const Entity& entity_2);
 
     // Constantly updates some specific parameters to keep hair aligned to entity.
-    void updateHair();
+    virtual void updateHair() {
+    }
 
     bool createRagdoll(RDSetup* setup);
     bool deleteRagdoll();
 
+    virtual void fixPenetrations(btVector3* move);
+    virtual btVector3 getRoomPos() const
+    {
+        btVector3 v = (m_bf.bb_min + m_bf.bb_max) / 2;
+        return m_transform * v;
+    }
+    virtual void transferToRoom(std::shared_ptr<Room> room);
+    virtual void frameImpl(btScalar time, int16_t frame, int state) {
+    }
+
+    virtual void processSectorImpl() {
+    }
+    virtual void jump(btScalar vert, btScalar hor) {
+    }
+    virtual void kill() {
+    }
+    virtual void updateGhostRigidBody() {
+    }
+    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const;
+
+    virtual btVector3 camPosForFollowing(btScalar dz) {
+        auto cam_pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
+        cam_pos[2] += dz;
+        return cam_pos;
+    }
+
 private:
     void doAnimMove(int16_t *anim, int16_t *frame);
-    void doWeaponFrame(btScalar time);
 
     static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
     {

@@ -273,6 +273,7 @@ struct EngineContainer;
 struct SpriteBuffer;
 struct Light;
 struct AnimSeq;
+struct Character;
 
 struct Room : public Object
 {
@@ -380,7 +381,7 @@ struct World
 
     std::vector<SkeletalModel> skeletal_models;        // base skeletal models data
 
-    std::shared_ptr<Entity>   Character;              // this is an unique Lara's pointer =)
+    std::shared_ptr<Character> character;              // this is an unique Lara's pointer =)
     SkeletalModel    *sky_box = nullptr;                // global skybox
 
     std::map<uint32_t, std::shared_ptr<Entity> > entity_tree;            // tree of world active objects
@@ -414,6 +415,8 @@ struct World
     void empty();
     uint32_t spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3 *pos, const btVector3 *ang, int32_t id);
     std::shared_ptr<Entity> getEntityByID(uint32_t id);
+    std::shared_ptr<Character> getCharacterByID(uint32_t id);
+
     std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);
     std::shared_ptr<Room> findRoomByPosition(const btVector3& pos);
     std::shared_ptr<Room> getByID(unsigned int ID);

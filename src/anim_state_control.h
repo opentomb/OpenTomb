@@ -753,7 +753,8 @@ struct CharacterCommand;
 #define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
 
-int State_Control_Lara(std::shared_ptr<Entity> ent, struct SSAnimation *ss_anim);
+struct Character;
+int State_Control_Lara(std::shared_ptr<Character> ent, struct SSAnimation *ss_anim);
 
 #endif
 

@@ -1171,15 +1171,15 @@ void Gui_DrawFaders()
 
 void Gui_DrawBars()
 {
-    if(engine_world.Character && engine_world.Character->m_character)
+    if(engine_world.character)
     {
-        if(engine_world.Character->m_character->m_weaponCurrentState > WeaponState::HideToReady)
+        if(engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
             Bar[BAR_HEALTH].Forced = true;
 
-        Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));
-        Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
-        Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
-        Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
+        Bar[BAR_AIR].Show    (Character_GetParam(engine_world.character, PARAM_AIR    ));
+        Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.character, PARAM_STAMINA));
+        Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.character, PARAM_HEALTH ));
+        Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.character, PARAM_WARMTH ));
     }
 }
 
@@ -1219,7 +1219,7 @@ void Gui_DrawInventory()
     //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
 
     Gui_SwitchGLMode(0);
-    //main_inventory_menu->Render(); //engine_world.Character->character->inventory
+    //main_inventory_menu->Render(); //engine_world.character->character->inventory
     main_inventory_manager->render();
     Gui_SwitchGLMode(1);
 }

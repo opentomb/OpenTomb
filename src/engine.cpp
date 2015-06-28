@@ -759,7 +759,7 @@ int lua_GetCharacterParam(lua_State * lua)
 
     int id         = lua_tointeger(lua, 1);
     int parameter  = lua_tointeger(lua, 2);
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
     if(parameter >= PARAM_SENTINEL)
     {
@@ -792,7 +792,7 @@ int lua_SetCharacterParam(lua_State * lua)
 
     int id           = lua_tointeger(lua, 1);
     int parameter    = lua_tointeger(lua, 2);
-    std::shared_ptr<Entity> ent     = engine_world.getEntityByID(id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
     if(parameter >= PARAM_SENTINEL)
     {
@@ -811,8 +811,8 @@ int lua_SetCharacterParam(lua_State * lua)
     }
     else
     {
-        ent->m_character->m_parameters.param[parameter] = lua_tonumber(lua, 3);
-        ent->m_character->m_parameters.maximum[parameter] = lua_tonumber(lua, 4);
+        ent->m_parameters.param[parameter] = lua_tonumber(lua, 3);
+        ent->m_parameters.maximum[parameter] = lua_tonumber(lua, 4);
     }
 
     return 0;
@@ -821,11 +821,11 @@ int lua_SetCharacterParam(lua_State * lua)
 int lua_GetCharacterCombatMode(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(lua_tointeger(lua, 1));
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(lua_tointeger(lua, 1));
 
     if(IsCharacter(ent))
     {
-        lua_pushnumber(lua, static_cast<int>(ent->m_character->m_weaponCurrentState));
+        lua_pushnumber(lua, static_cast<int>(ent->m_weaponCurrentState));
         return 1;
     }
 
@@ -843,7 +843,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
     int id         = lua_tointeger(lua, 1);
     int parameter  = lua_tointeger(lua, 2);
     int value      = lua_tonumber(lua, 3);
-    std::shared_ptr<Entity> ent   = engine_world.getEntityByID(id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
     if(parameter >= PARAM_SENTINEL)
     {
@@ -874,7 +874,7 @@ int lua_AddCharacterHair(lua_State *lua)
         int ent_id       = lua_tointeger(lua, 1);
         int setup_index  = lua_tointeger(lua, 2);
 
-        std::shared_ptr<Entity> ent   = engine_world.getEntityByID(ent_id);
+        std::shared_ptr<Character> ent = engine_world.getCharacterByID(ent_id);
 
         if(IsCharacter(ent))
         {
@@ -887,9 +887,9 @@ int lua_AddCharacterHair(lua_State *lua)
             }
             else
             {
-                ent->m_character->m_hairs.emplace_back();
+                ent->m_hairs.emplace_back();
 
-                if(!ent->m_character->m_hairs.back()->create(&hair_setup, ent))
+                if(!ent->m_hairs.back()->create(&hair_setup, ent))
                 {
                     ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
                 }
@@ -913,13 +913,13 @@ int lua_ResetCharacterHair(lua_State *lua)
     else
     {
         int ent_id   = lua_tointeger(lua, 1);
-        std::shared_ptr<Entity> ent = engine_world.getEntityByID(ent_id);
+        std::shared_ptr<Character> ent = engine_world.getCharacterByID(ent_id);
 
         if(IsCharacter(ent))
         {
-            if(!ent->m_character->m_hairs.empty())
+            if(!ent->m_hairs.empty())
             {
-                ent->m_character->m_hairs.clear();
+                ent->m_hairs.clear();
             }
             else
             {
@@ -1212,7 +1212,7 @@ int lua_AddItem(lua_State * lua)
     int entity_id = lua_tointeger(lua, 1);
     int item_id = lua_tointeger(lua, 2);
 
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -1239,7 +1239,7 @@ int lua_RemoveItem(lua_State * lua)
     int item_id = lua_tointeger(lua, 2);
     int count = lua_tointeger(lua, 3);
 
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -1263,7 +1263,7 @@ int lua_RemoveAllItems(lua_State * lua)
     }
 
     int entity_id = lua_tointeger(lua, 1);
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -1288,7 +1288,7 @@ int lua_GetItemsCount(lua_State * lua)
     int entity_id = lua_tointeger(lua, 1);
     int item_id = lua_tointeger(lua, 2);
 
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -1354,9 +1354,10 @@ int lua_PrintItems(lua_State * lua)
         return 0;
     }
 
-    if(ent->m_character)
+    if(IsCharacter(ent))
     {
-        for(const InventoryNode& i : ent->m_character->m_inventory)
+        auto ch = std::dynamic_pointer_cast<Character>(ent);
+        for(const InventoryNode& i : ch->m_inventory)
         {
             ConsoleInfo::instance().printf("item[id = %d]: count = %d, type = %d", i.id, i.count);
         }
@@ -1795,9 +1796,9 @@ int lua_SetEntityPosition(lua_State * lua)
         ent->m_transform.getOrigin()[0] = lua_tonumber(lua, 2);
         ent->m_transform.getOrigin()[1] = lua_tonumber(lua, 3);
         ent->m_transform.getOrigin()[2] = lua_tonumber(lua, 4);
-        if(ent->m_character)
+        if(IsCharacter(ent))
         {
-            Character_UpdatePlatformPreStep(ent);
+            Character_UpdatePlatformPreStep(std::dynamic_pointer_cast<Character>(ent));
         }
     }
         return 0;
@@ -1818,9 +1819,9 @@ int lua_SetEntityPosition(lua_State * lua)
         ent->m_angles[1] = lua_tonumber(lua, 6);
         ent->m_angles[2] = lua_tonumber(lua, 7);
         ent->updateRotation();
-        if(ent->m_character)
+        if(IsCharacter(ent))
         {
-            Character_UpdatePlatformPreStep(ent);
+            Character_UpdatePlatformPreStep(std::dynamic_pointer_cast<Character>(ent));
         }
     }
         return 0;
@@ -2000,7 +2001,8 @@ int lua_MoveEntityToEntity(lua_State * lua)
     bool ignore_z = (top > 3)?(lua_toboolean(lua, 4)):(false);
     if(!ignore_z)
         ent1->m_transform.getOrigin()[2] += speed[2];
-    if(ent1->m_character) Character_UpdatePlatformPreStep(ent1);
+    if(IsCharacter(ent1))
+        Character_UpdatePlatformPreStep(std::dynamic_pointer_cast<Character>(ent1));
     ent1->updateRigidBody(true);
 
     return 0;
@@ -2273,8 +2275,8 @@ int lua_CanTriggerEntity(lua_State * lua)
     }
 
     id = lua_tointeger(lua, 1);
-    std::shared_ptr<Entity> e1 = engine_world.getEntityByID(id);
-    if(e1 == NULL || !e1->m_character || !e1->m_character->m_command.action)
+    std::shared_ptr<Character> e1 = engine_world.getCharacterByID(id);
+    if(!e1 || !e1->m_command.action)
     {
         lua_pushinteger(lua, 0);
         return 1;
@@ -2944,23 +2946,23 @@ int lua_GetEntityResponse(lua_State * lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
     if(IsCharacter(ent))
     {
         switch(lua_tointeger(lua, 2))
         {
         case 0:
-            lua_pushinteger(lua, ent->m_character->m_response.kill);
+            lua_pushinteger(lua, ent->m_response.kill);
             break;
         case 1:
-            lua_pushinteger(lua, ent->m_character->m_response.vertical_collide);
+            lua_pushinteger(lua, ent->m_response.vertical_collide);
             break;
         case 2:
-            lua_pushinteger(lua, ent->m_character->m_response.horizontal_collide);
+            lua_pushinteger(lua, ent->m_response.horizontal_collide);
             break;
         case 3:
-            lua_pushinteger(lua, ent->m_character->m_response.slide);
+            lua_pushinteger(lua, ent->m_response.slide);
             break;
         default:
             lua_pushinteger(lua, 0);
@@ -2985,7 +2987,7 @@ int lua_SetEntityResponse(lua_State * lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
     if(IsCharacter(ent))
     {
@@ -2994,16 +2996,16 @@ int lua_SetEntityResponse(lua_State * lua)
         switch(lua_tointeger(lua, 2))
         {
         case 0:
-            ent->m_character->m_response.kill = value;
+            ent->m_response.kill = value;
             break;
         case 1:
-            ent->m_character->m_response.vertical_collide = value;
+            ent->m_response.vertical_collide = value;
             break;
         case 2:
-            ent->m_character->m_response.horizontal_collide = value;
+            ent->m_response.horizontal_collide = value;
             break;
         case 3:
-            ent->m_character->m_response.slide = value;
+            ent->m_response.slide = value;
             break;
         default:
             break;
@@ -3107,7 +3109,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
     if(!lua_isnil(lua, 2) && (room < engine_world.rooms.size()))
     {
         std::shared_ptr<Room> r = engine_world.rooms[room];
-        if(ent == engine_world.Character)
+        if(ent == engine_world.character)
         {
             ent->m_self->room = r;
         }
@@ -3453,7 +3455,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
     if(IsCharacter(ent))
     {
@@ -3476,11 +3478,11 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
     if(IsCharacter(ent))
     {
-        lua_pushinteger(lua, ent->m_character->m_currentWeapon);
+        lua_pushinteger(lua, ent->m_currentWeapon);
         return 1;
     }
     else
@@ -3499,11 +3501,11 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
     }
 
     int id = lua_tointeger(lua, 1);
-    std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
+    std::shared_ptr<Character> ent = engine_world.getCharacterByID(id);
 
     if(IsCharacter(ent))
     {
-        ent->m_character->m_currentWeapon = lua_tointeger(lua, 2);
+        ent->m_currentWeapon = lua_tointeger(lua, 2);
     }
     else
     {

@@ -588,20 +588,20 @@ void Render::renderDynamicEntity(const std::shared_ptr<LitShaderDescription>& sh
 }
 
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
-void Render::renderHair(std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &projection)
+void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &modelViewMatrix, const btTransform &projection)
 {
-    if(!entity || !entity->m_character || entity->m_character->m_hairs.empty())
+    if(!entity || entity->m_hairs.empty())
         return;
 
     // Calculate lighting
     std::shared_ptr<LitShaderDescription> shader = setupEntityLight(entity, modelViewMatrix, true);
 
 
-    for(size_t h=0; h<entity->m_character->m_hairs.size(); h++)
+    for(size_t h=0; h<entity->m_hairs.size(); h++)
     {
         // First: Head attachment
-        btTransform globalHead = entity->m_transform * entity->m_bf.bone_tags[entity->m_character->m_hairs[h]->m_ownerBody].full_transform;
-        btTransform globalAttachment = globalHead * entity->m_character->m_hairs[h]->m_ownerBodyHairRoot;
+        btTransform globalHead = entity->m_transform * entity->m_bf.bone_tags[entity->m_hairs[h]->m_ownerBody].full_transform;
+        btTransform globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
 
         static constexpr int MatrixCount = 10;
 
@@ -609,7 +609,7 @@ void Render::renderHair(std::shared_ptr<Entity> entity, const btTransform &model
         (modelViewMatrix * globalAttachment).getOpenGLMatrix(hairModelToGlobalMatrices[0]);
 
         // Then: Individual hair pieces
-        for(size_t i=0; i<entity->m_character->m_hairs[h]->m_elements.size(); i++)
+        for(size_t i=0; i<entity->m_hairs[h]->m_elements.size(); i++)
         {
             /*
              * Definitions: x_o - as in original file. x_h - as in hair model
@@ -633,21 +633,21 @@ void Render::renderHair(std::shared_ptr<Entity> entity, const btTransform &model
             btTransform invOriginToHairModel;
             invOriginToHairModel.setIdentity();
             // Simplification: Always translation matrix, no invert needed
-            invOriginToHairModel.getOrigin() -= entity->m_character->m_hairs[h]->m_elements[i].position;
+            invOriginToHairModel.getOrigin() -= entity->m_hairs[h]->m_elements[i].position;
 
-            const btTransform &bt_tr = entity->m_character->m_hairs[h]->m_elements[i].body->getWorldTransform();
+            const btTransform &bt_tr = entity->m_hairs[h]->m_elements[i].body->getWorldTransform();
 
             btTransform globalFromHair = bt_tr * invOriginToHairModel;
 
             (modelViewMatrix * globalFromHair).getOpenGLMatrix(hairModelToGlobalMatrices[i+1]);
         }
 
-        glUniformMatrix4fvARB(shader->model_view, entity->m_character->m_hairs[h]->m_elements.size()+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
+        glUniformMatrix4fvARB(shader->model_view, entity->m_hairs[h]->m_elements.size()+1, GL_FALSE, reinterpret_cast<btScalar*>(hairModelToGlobalMatrices));
 
         projection.getOpenGLMatrix(hairModelToGlobalMatrices[0]);
         glUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, hairModelToGlobalMatrices[0]);
 
-        renderMesh(entity->m_character->m_hairs[h]->m_mesh);
+        renderMesh(entity->m_hairs[h]->m_mesh);
     }
 }
 
@@ -883,10 +883,10 @@ int Render::addRoom(std::shared_ptr<Room> room)
 
 void Render::cleanList()
 {
-    if(m_world->Character)
+    if(m_world->character)
     {
-        m_world->Character->m_wasRendered = false;
-        m_world->Character->m_wasRenderedLines = false;
+        m_world->character->m_wasRendered = false;
+        m_world->character->m_wasRenderedLines = false;
     }
 
     for(size_t i=0; i<m_rListActiveCount; i++)
@@ -936,10 +936,10 @@ void Render::drawList()
 
     renderSkyBox(m_cam->m_glViewProjMat);
 
-    if(m_world->Character)
+    if(m_world->character)
     {
-        renderEntity(m_world->Character, m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
-        renderHair(m_world->Character, m_cam->m_glViewMat, m_cam->m_glProjMat);
+        renderEntity(m_world->character, m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
+        renderHair(m_world->character, m_cam->m_glViewMat, m_cam->m_glProjMat);
     }
 
     /*
@@ -1005,9 +1005,9 @@ void Render::drawList()
         }
     }
 
-    if((engine_world.Character != NULL) && (engine_world.Character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
+    if((engine_world.character != NULL) && (engine_world.character->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
-        std::shared_ptr<Entity> ent = engine_world.Character;
+        std::shared_ptr<Entity> ent = engine_world.character;
         for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
         {
             if(!ent->m_bf.bone_tags[j].mesh_base->m_transparencyPolygons.empty())
@@ -1046,9 +1046,9 @@ void Render::drawListDebugLines()
         return;
     }
 
-    if(m_world->Character)
+    if(m_world->character)
     {
-        debugDrawer.drawEntityDebugLines(m_world->Character, this);
+        debugDrawer.drawEntityDebugLines(m_world->character, this);
     }
 
     /*

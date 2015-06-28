@@ -3885,7 +3885,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
     for(uint32_t i=0;i<tr->items_count;i++)
     {
         tr_item = &tr->items[i];
-        std::shared_ptr<Entity> entity = std::make_shared<Entity>();
+        std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>() : std::make_shared<Entity>();
         entity->m_id = i;
         entity->m_transform.getOrigin()[0] = tr_item->pos.x;
         entity->m_transform.getOrigin()[1] =-tr_item->pos.z;
@@ -3975,18 +3975,19 @@ void TR_GenEntities(World *world, class VT_Level *tr)
 
         if(0 == tr_item->object_id)                                             // Lara is unical model
         {
-            SkeletalModel* tmp, *LM;                                           // LM - Lara Model
+            std::shared_ptr<Character> lara = std::dynamic_pointer_cast<Character>(entity);
+            assert(lara != nullptr);
 
-            entity->m_moveType = MOVE_ON_FLOOR;
-            world->Character = entity;
-            entity->m_self->collision_type = COLLISION_TYPE_ACTOR;
-            entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
-            entity->m_bf.animations.model->hide = 0;
-            entity->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            LM = entity->m_bf.animations.model;
+            lara->m_moveType = MOVE_ON_FLOOR;
+            world->character = lara;
+            lara->m_self->collision_type = COLLISION_TYPE_ACTOR;
+            lara->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
+            lara->m_bf.animations.model->hide = 0;
+            lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
+            SkeletalModel* LM = lara->m_bf.animations.model;
 
             top = lua_gettop(engine_lua);
-            lua_pushinteger(engine_lua, entity->m_id);
+            lua_pushinteger(engine_lua, lara->m_id);
             lua_setglobal(engine_lua, "player");
             lua_settop(engine_lua, top);
 
@@ -4010,7 +4011,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
                     if(LM)
                     {
                         SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
-                        tmp = world->getModelByID(11);                   // moto / quadro cycle animations
+                        auto tmp = world->getModelByID(11);                   // moto / quadro cycle animations
                         if(tmp)
                         {
                             SkeletonCopyMeshes(tmp->mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
@@ -4035,18 +4036,16 @@ void TR_GenEntities(World *world, class VT_Level *tr)
                     break;
             };
 
-            for(uint16_t j=0;j<entity->m_bf.bone_tags.size();j++)
+            for(uint16_t j=0;j<lara->m_bf.bone_tags.size();j++)
             {
-                entity->m_bf.bone_tags[j].mesh_base = entity->m_bf.animations.model->mesh_tree[j].mesh_base;
-                entity->m_bf.bone_tags[j].mesh_skin = entity->m_bf.animations.model->mesh_tree[j].mesh_skin;
-                entity->m_bf.bone_tags[j].mesh_slot = NULL;
+                lara->m_bf.bone_tags[j].mesh_base = lara->m_bf.animations.model->mesh_tree[j].mesh_base;
+                lara->m_bf.bone_tags[j].mesh_skin = lara->m_bf.animations.model->mesh_tree[j].mesh_skin;
+                lara->m_bf.bone_tags[j].mesh_slot = NULL;
             }
-            world->Character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
-            entity->genEntityRigidBody();
-            if(!entity->m_character)
-                entity->m_character = std::make_shared<Character>(entity);
-            entity->m_character->m_height = 768.0;
-            entity->m_character->state_func = State_Control_Lara;
+            world->character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+            lara->genEntityRigidBody();
+            lara->m_height = 768.0;
+            lara->state_func = State_Control_Lara;
 
             continue;
         }
