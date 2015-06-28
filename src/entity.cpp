@@ -83,7 +83,7 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf.pos);
     vec3_set_zero(ret->angles);
     vec4_set_zero(ret->speed.m_floats);
-    vec3_set_one(ret->scaling.m_floats);
+    vec3_set_one(ret->scaling);
 
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->current_speed = 0.0;
