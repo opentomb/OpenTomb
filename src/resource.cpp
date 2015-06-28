@@ -4224,7 +4224,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         Res_SetEntityModelProperties(entity);
         BT_GenEntityRigidBody(entity);
 
-        if(entity->self->collision_type == COLLISION_TYPE_NONE)
+        if(!(entity->state_flags & ENTITY_STATE_ENABLED) || !(entity->self->collision_type & 0x0001))
         {
             Entity_DisableCollision(entity);
         }

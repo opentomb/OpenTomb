@@ -81,7 +81,9 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf.bb_min);
     vec3_set_zero(ret->bf.centre);
     vec3_set_zero(ret->bf.pos);
+    vec3_set_zero(ret->angles);
     vec4_set_zero(ret->speed.m_floats);
+    vec3_set_one(ret->scaling.m_floats);
 
     ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     ret->current_speed = 0.0;
@@ -253,17 +255,7 @@ void Entity_Enable(entity_p ent)
 {
     if(!(ent->state_flags & ENTITY_STATE_ENABLED))
     {
-        if(ent->bt.bt_body != NULL)
-        {
-            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
-            {
-                btRigidBody *b = ent->bt.bt_body[i];
-                if((b != NULL) && !b->isInWorld())
-                {
-                    bt_engine_dynamicsWorld->addRigidBody(b);
-                }
-            }
-        }
+        Entity_EnableCollision(ent);
         ent->state_flags |= ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
     }
 }
@@ -273,17 +265,7 @@ void Entity_Disable(entity_p ent)
 {
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
-        if(ent->bt.bt_body != NULL)
-        {
-            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
-            {
-                btRigidBody *b = ent->bt.bt_body[i];
-                if((b != NULL) && b->isInWorld())
-                {
-                    bt_engine_dynamicsWorld->removeRigidBody(b);
-                }
-            }
-        }
+        Entity_DisableCollision(ent);
         ent->state_flags = 0x0000;
     }
 }
