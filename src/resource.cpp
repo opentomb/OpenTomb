@@ -4050,7 +4050,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->angles[0] = tr_item->rotation;
         entity->angles[1] = 0.0;
         entity->angles[2] = 0.0;
-        Entity_UpdateRotation(entity);
+        Entity_UpdateTransform(entity);
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->room_count))
         {
             entity->self->room = world->rooms + tr_item->room;
@@ -4224,7 +4224,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
         Res_SetEntityModelProperties(entity);
         BT_GenEntityRigidBody(entity);
 
-        if((entity->self->collision_type & 0x0001) == 0)
+        if(entity->self->collision_type == COLLISION_TYPE_NONE)
         {
             Entity_DisableCollision(entity);
         }

@@ -57,6 +57,8 @@ entity_p Entity_Create()
     ret->bt.ghostObjects = NULL;
     ret->bt.last_collisions = NULL;
 
+    ret->scaling = btVector3(1.0, 1.0, 1.0);
+
     ret->character = NULL;
     ret->current_sector = NULL;
 
@@ -293,7 +295,7 @@ void Entity_EnableCollision(entity_p ent)
 {
     if(ent->bt.bt_body != NULL)
     {
-        ent->self->collision_type |= 0x0001;
+        //ent->self->collision_type |= 0x0001;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt.bt_body[i];
@@ -315,7 +317,7 @@ void Entity_DisableCollision(entity_p ent)
 {
     if(ent->bt.bt_body != NULL)
     {
-        ent->self->collision_type &= ~0x0001;
+        //ent->self->collision_type &= ~0x0001;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt.bt_body[i];
@@ -1011,7 +1013,8 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         }
 
         Entity_UpdateRoomPos(ent);
-        if(ent->self->collision_type & 0x0001)
+
+        if(ent->self->collision_type != COLLISION_TYPE_STATIC)
         {
             btScalar tr[16];
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
@@ -1028,7 +1031,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
 }
 
 
-void Entity_UpdateRotation(entity_p entity)
+void Entity_UpdateTransform(entity_p entity)
 {
     btScalar R[4], Rt[4], temp[4];
     btScalar sin_t2, cos_t2, t;
@@ -1041,6 +1044,7 @@ void Entity_UpdateRotation(entity_p entity)
     {
         Entity_GhostUpdate(entity);
     }
+
     i = entity->angles[0] / 360.0;
     i = (entity->angles[0] < 0.0)?(i-1):(i);
     entity->angles[0] -= 360.0 * i;
@@ -1777,7 +1781,7 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
             {
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
-            Entity_UpdateRotation(entity);
+            Entity_UpdateTransform(entity);
             Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_frame);
             *anim = entity->bf.animations.current_animation;
             *frame = entity->bf.animations.current_frame;

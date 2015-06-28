@@ -445,7 +445,7 @@ void Game_ApplyControls(struct entity_s *ent)
         pos.m_floats[1] = renderer.cam->pos[1] + renderer.cam->view_dir[1] * control_states.cam_distance;
         pos.m_floats[2] = renderer.cam->pos[2] + renderer.cam->view_dir[2] * control_states.cam_distance - 512.0;
         vec3_copy(ent->transform+12, pos.m_floats);
-        Entity_UpdateRotation(ent);
+        Entity_UpdateTransform(ent);
     }
     else
     {

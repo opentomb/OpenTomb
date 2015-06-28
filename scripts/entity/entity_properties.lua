@@ -1359,7 +1359,7 @@ tr5_entity_tbl[131] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_
 
 tr5_entity_tbl[132] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- One block platform - UNUSED?
 tr5_entity_tbl[133] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Two block platform - UNUSED?
-tr5_entity_tbl[134] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Box 2 (Ex-RAISING_BLOCK1?)
+tr5_entity_tbl[134] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX};     -- Raising block
 
 tr5_entity_tbl[135] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01}; -- Teleport (Ex-RAISING_BLOCK2?)
 tr5_entity_tbl[136] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX, hide = 0x01}; -- Headset talk point (Ex-EXPANDING_PLATFORM?)
