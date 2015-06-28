@@ -728,18 +728,18 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
     
     disableEntity(id);
     
-    entity_funcs[id].interval        = 150;     -- 150 frames
+    entity_funcs[id].interval        = 150;     -- 150 frames = 2.5 seconds
     entity_funcs[id].curr_timer      = entity_funcs[id].interval;   -- This activates spikes on first call.
     
     entity_funcs[id].curr_scaling    = 0.0;     -- Scaling is done via linear function.
     entity_funcs[id].curr_subscaling = 0.0;     -- Subscaling is done via trigonometric function.
     
+    entity_funcs[id].mode            = 0;       -- Movement mode.
     entity_funcs[id].waiting         = false;   -- Non-active state flag.
     
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
     
-        
         -- This is case for spikes which were already activated before, but were set to idle state
         -- after activation - that is, it means if we're activating it again, they should be
         -- disabled. On the next activation event, however, they will be activated again.
@@ -887,6 +887,16 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
                 changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 512.0));
             end;
         end;
+    end
+    
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].interval        = nil;
+        entity_funcs[object_id].curr_timer      = nil;
+        entity_funcs[object_id].curr_scaling    = nil;
+        entity_funcs[object_id].curr_subscaling = nil;
+        entity_funcs[object_id].waiting         = nil;
+        entity_funcs[object_id].mode            = nil;
     end
     
     prepareEntity(id);
