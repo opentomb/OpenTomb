@@ -53,7 +53,6 @@ function door_init(id)   -- NORMAL doors only!
     setEntityActivity(object_id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil) then return end;
         swapEntityState(object_id, 0, 1);
     end;
     
@@ -373,26 +372,47 @@ function tallblock_init(id)    -- Tall moving block (TR1)
     prepareEntity(id);
 end
 
-function slamdoor_init(id)      -- Slamming doors (TR1-TR2)
+function gen_trap_init(id)      -- Slamming doors (TR1-TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityState(object_id, 1);
-    end    
+        swapEntityState(object_id, 0, 1);
+    end;
     
-    entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityState(object_id, 0);
-    end
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -50);
+        if(getEntityState(object_id) == 1) then changeCharacterParam(activator_id, PARAM_HEALTH, -35) end;
+    end
+    
+    prepareEntity(id);
+end
+
+function propeller_init(id)      -- Slamming doors (TR1-TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityActivity(id, 1);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        swapEntityState(object_id, 0, 1);
+    end;
+    
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
+    end
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(getEntityState(object_id) == 0) then changeCharacterParam(activator_id, PARAM_HEALTH, -100) end;
     end
     
     prepareEntity(id);
@@ -659,12 +679,15 @@ function oldspike_init(id)  -- Teeth spikes
             local ls = getEntitySpeedLinear(activator_id);
                 
             if(lz > (pz + 256.0)) then
-                setEntityCollision(object_id, 0);   -- Temporary, must use ghost collision instead.
-                setEntityPos(activator_id, lx, ly, pz);
-                setEntityAnim(activator_id, 149, 0);
-                setCharacterParam(activator_id, PARAM_HEALTH, 0);
+                local sx,sy,sz = getEntitySpeed(activator_id);
+                if(sz < -256.0) then
+                    setEntityCollision(object_id, 0);
+                    setEntityAnim(activator_id, 149, 0);
+                    setEntityPos(activator_id, lx, ly, pz);
+                    setCharacterParam(activator_id, PARAM_HEALTH, 0);
+                end;
             elseif(ls > 512.0) then
-                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 256.0));
+                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 512.0));
             end;
         end;
     end
@@ -706,9 +729,11 @@ function spikewall_init(id)      -- Spike wall
             if((curr_st == MOVE_CLIMBING) or (curr_st == MOVE_MONKEYSWING)) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
                 setEntityAnim(activator_id, 28, 0);
+                playSound(SOUND_LARAINJURY, activator_id);
             elseif(curr_st == MOVE_WALLS_CLIMB) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
                 setEntityAnim(activator_id, 30, 0);
+                playSound(SOUND_LARAINJURY, activator_id);
             end;
             
             if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
@@ -758,9 +783,11 @@ function spikeceiling_init(id)
             if((curr_st == MOVE_CLIMBING) or (curr_st == MOVE_MONKEYSWING)) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
                 setEntityAnim(activator_id, 28, 0);
+                playSound(SOUND_LARAINJURY, activator_id);
             elseif(curr_st == MOVE_WALLS_CLIMB) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
                 setEntityAnim(activator_id, 30, 0);
+                playSound(SOUND_LARAINJURY, activator_id);
             end;
         
             local px,py,pz = getEntityPos(object_id);

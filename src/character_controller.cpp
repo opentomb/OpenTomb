@@ -45,6 +45,7 @@ void Character_Create(struct entity_s *ent)
     ret->resp.vertical_collide = 0x00;
     ret->resp.horizontal_collide = 0x00;
     ret->resp.kill = 0x00;
+    ret->resp.burn = 0x00;
     ret->resp.slide = 0x00;
 
     ret->cmd.action = 0x00;
@@ -1243,7 +1244,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
                 ent->angles[0] = ang;
                 // back forward slide down
             }
-            Entity_UpdateRotation(ent);
+            Entity_UpdateTransform(ent);
             ent->character->resp.vertical_collide |= 0x01;
         }
         else    // no slide - free to walk
@@ -1253,7 +1254,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
             ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_LAND, 0);
 
-            Entity_UpdateRotation(ent); // apply rotations
+            Entity_UpdateTransform(ent); // apply rotations
 
             if(ent->dir_flag & ENT_MOVE_FORWARD)
             {
@@ -1377,7 +1378,7 @@ int Character_FreeFalling(struct entity_s *ent)
     ent->angles[0] += rot;
     ent->angles[1] = 0.0;
 
-    Entity_UpdateRotation(ent);                                                 // apply rotations
+    Entity_UpdateTransform(ent);                                                 // apply rotations
 
     /*btScalar t = ent->current_speed * bf-> ent->character->speed_mult;        ///@TODO: fix speed update in Entity_Frame function and other;
     if(ent->dir_flag & ENT_MOVE_FORWARD)
@@ -1511,7 +1512,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_MONKEYSWING, 0);
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
-    Entity_UpdateRotation(ent);                                                 // apply rotations
+    Entity_UpdateTransform(ent);                                                 // apply rotations
 
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
@@ -1583,7 +1584,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     }
 
     ent->angles[0] = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
-    Entity_UpdateRotation(ent);
+    Entity_UpdateTransform(ent);
     pos[0] = climb->point[0] - ent->transform[4 + 0] * ent->bf.bb_max[1];
     pos[1] = climb->point[1] - ent->transform[4 + 1] * ent->bf.bb_max[1];
 
@@ -1644,7 +1645,7 @@ int Character_Climbing(struct entity_s *ent)
     ent->angles[0] += ent->character->cmd.rot[0];
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
-    Entity_UpdateRotation(ent);                                                 // apply rotations
+    Entity_UpdateTransform(ent);                                                 // apply rotations
 
     if(ent->dir_flag == ENT_MOVE_FORWARD)
     {
@@ -1725,7 +1726,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
             ent->angles[1] = 270.0;
         }
 
-        Entity_UpdateRotation(ent);                                             // apply rotations
+        Entity_UpdateTransform(ent);                                             // apply rotations
 
         vec3_mul_scalar(spd.m_floats, ent->transform+4, t);                     // OY move only!
         ent->speed = spd;
@@ -1768,7 +1769,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_ONWATER, 0);
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
-    Entity_UpdateRotation(ent);     // apply rotations
+    Entity_UpdateTransform(ent);     // apply rotations
 
     // Calculate current speed.
 
@@ -1878,7 +1879,7 @@ int Character_FindTraverse(struct entity_s *ch)
                     int oz = (ch->angles[0] + 45.0) / 90.0;
                     ch->angles[0] = oz * 90.0;
                     ch->character->traversed_object = e;
-                    Entity_UpdateRotation(ch);
+                    Entity_UpdateTransform(ch);
                     return 1;
                 }
             }

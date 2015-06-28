@@ -132,7 +132,7 @@ void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim, int state)
     if(state == 0x02)
     {
         ent->angles[1] = -45.0;
-        Entity_UpdateRotation(ent);
+        Entity_UpdateTransform(ent);
         ss_anim->onFrame = NULL;
     }
 }
@@ -1610,7 +1610,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     vec3_copy(climb->point, climb->edge_point.m_floats);
                     ent->angles[0] = climb->edge_z_ang;
-                    Entity_UpdateRotation(ent);
+                    Entity_UpdateTransform(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
                     vec3_set_zero(ent->speed.m_floats);
 
@@ -1658,7 +1658,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
-                Entity_UpdateRotation(ent);
+                Entity_UpdateTransform(ent);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
             else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + ent->bf.bb_max[2] > curr_fc->ceiling_point.m_floats[2] - 64.0))
@@ -1692,7 +1692,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
-                Entity_UpdateRotation(ent);
+                Entity_UpdateTransform(ent);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 break;
             }
@@ -1707,7 +1707,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     vec3_copy(climb->point, climb->edge_point.m_floats);
                     ent->angles[0] = climb->edge_z_ang;
-                    Entity_UpdateRotation(ent);
+                    Entity_UpdateTransform(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
                     vec3_set_zero(ent->speed.m_floats);
                 }
@@ -1822,7 +1822,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     vec3_copy(climb->point, climb->edge_point.m_floats);
                     ent->angles[0] = climb->edge_z_ang;
-                    Entity_UpdateRotation(ent);
+                    Entity_UpdateTransform(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
                 }
             }
@@ -2068,7 +2068,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     vec3_copy(climb->point, climb->edge_point.m_floats);
                     ent->angles[0] = climb->edge_z_ang;
-                    Entity_UpdateRotation(ent);
+                    Entity_UpdateTransform(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
                     pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                     pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
@@ -2128,7 +2128,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     vec3_copy(climb->point, climb->edge_point.m_floats);
                     ent->angles[0] = climb->edge_z_ang;
-                    Entity_UpdateRotation(ent);
+                    Entity_UpdateTransform(ent);
                     ent->move_type = MOVE_CLIMBING;                             // hang on
                     pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                     pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
@@ -2188,7 +2188,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
-                Entity_UpdateRotation(ent);
+                Entity_UpdateTransform(ent);
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
             else if(resp->horizontal_collide & 0x01)
@@ -2225,7 +2225,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_UNDERWATER_DIVING:
             ent->angles[1] = -45.0;
             cmd->rot[1] = 0.0;
-            Entity_UpdateRotation(ent);
+            Entity_UpdateTransform(ent);
             ss_anim->onFrame = ent_correct_diving_angle;
             break;
 
@@ -2249,7 +2249,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
-                Entity_UpdateRotation(ent);                                     // needed here to fix underwater in wall collision bug
+                Entity_UpdateTransform(ent);                                     // needed here to fix underwater in wall collision bug
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->id);       // Stop scream
 
@@ -2462,7 +2462,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ent->move_type = MOVE_CLIMBING;
                     ent->bt.no_fix_all = 0x01;
                     ent->angles[0] = climb->edge_z_ang;
-                    Entity_UpdateRotation(ent);
+                    Entity_UpdateTransform(ent);
                     vec3_copy(climb->point, climb->edge_point.m_floats);
                 }
             }

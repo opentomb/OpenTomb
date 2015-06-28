@@ -254,6 +254,7 @@ typedef struct character_command_s
 typedef struct character_response_s
 {
     int8_t      kill;
+    int8_t      burn;
     int8_t      vertical_collide;
     int8_t      horizontal_collide;
     int8_t      slide;

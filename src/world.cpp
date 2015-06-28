@@ -727,7 +727,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
                 if(ang != NULL)
                 {
                     vec3_copy(ent->angles, ang);
-                    Entity_UpdateRotation(ent);
+                    Entity_UpdateTransform(ent);
                 }
                 if(room_id < engine_world.room_count)
                 {
@@ -765,7 +765,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
             if(ang != NULL)
             {
                 vec3_copy(ent->angles, ang);
-                Entity_UpdateRotation(ent);
+                Entity_UpdateTransform(ent);
             }
             if(room_id < engine_world.room_count)
             {

@@ -1745,6 +1745,74 @@ int lua_GetEntityAngles(lua_State * lua)
     return 3;
 }
 
+int lua_GetEntityScaling(lua_State * lua)
+{
+    if(lua_gettop(lua) != 1)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[id]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+        return 0;
+    }
+
+    lua_pushnumber(lua, ent->scaling[0]);
+    lua_pushnumber(lua, ent->scaling[1]);
+    lua_pushnumber(lua, ent->scaling[2]);
+
+    return 3;
+}
+
+int lua_SetEntityScaling(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 4)
+    {
+        Con_Warning(SYSWARN_WRONG_ARGS, "[entity_id, x_scaling, y_scaling, z_scaling]");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(&engine_world, id);
+
+    if(ent == NULL)
+    {
+        Con_Warning(SYSWARN_NO_ENTITY, id);
+    }
+    else
+    {
+        ent->scaling[0] = lua_tonumber(lua, 2);
+        ent->scaling[1] = lua_tonumber(lua, 3);
+        ent->scaling[2] = lua_tonumber(lua, 4);
+
+        if((ent->bf.bone_tag_count > 0) && (ent->bt.bt_body))
+        {
+            for(int i=0; i<ent->bf.bone_tag_count; i++)
+            {
+                if(ent->bt.bt_body[i] != NULL)
+                {
+                    bt_engine_dynamicsWorld->removeRigidBody(ent->bt.bt_body[i]);
+                        ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(ent->scaling[0], ent->scaling[1], ent->scaling[2]));
+                    bt_engine_dynamicsWorld->addRigidBody(ent->bt.bt_body[i]);
+
+                    ent->bt.bt_body[i]->activate();
+                }
+            }
+        }
+
+        Entity_UpdateRigidBody(ent, 1);
+    }
+
+    return 0;
+}
+
 int lua_SimilarSector(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -1876,7 +1944,7 @@ int lua_SetEntityPosition(lua_State * lua)
                 ent->angles[0] = lua_tonumber(lua, 5);
                 ent->angles[1] = lua_tonumber(lua, 6);
                 ent->angles[2] = lua_tonumber(lua, 7);
-                Entity_UpdateRotation(ent);
+                Entity_UpdateTransform(ent);
                 if(ent->character)
                 {
                     Character_UpdatePlatformPreStep(ent);
@@ -2093,7 +2161,7 @@ int lua_RotateEntity(lua_State *lua)
              ent->angles[2] += lua_tonumber(lua, 4);
         }
 
-        Entity_UpdateRotation(ent);
+        Entity_UpdateTransform(ent);
         Entity_UpdateRigidBody(ent, 1);
     }
 
@@ -3446,7 +3514,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
                     ent->bt.bt_body[i]->updateInertiaTensor();
                     ent->bt.bt_body[i]->clearForces();
 
-                    ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(1.0, 1.0, 1.0));
+                    ent->bt.bt_body[i]->getCollisionShape()->setLocalScaling(ent->scaling);
 
                     btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
                     ent->bt.bt_body[i]->setLinearFactor (factor);
@@ -4229,6 +4297,8 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "getEntityAngles", lua_GetEntityAngles);
     lua_register(lua, "setEntityAngles", lua_SetEntityAngles);
+    lua_register(lua, "getEntityScaling", lua_GetEntityScaling);
+    lua_register(lua, "setEntityScaling", lua_SetEntityScaling);
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
     lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
