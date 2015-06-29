@@ -111,6 +111,7 @@ struct Entity : public Object
     BtEntityData m_bt;
     btVector3 m_angles;
     btTransform m_transform; // GL transformation matrix
+    btVector3 m_scaling = {1,1,1};
 
     std::unique_ptr<OBB> m_obb;                // oriented bounding box
 
@@ -148,7 +149,7 @@ struct Entity : public Object
     static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
     int  frame(btScalar time);  // process frame + trying to change state
 
-    virtual void updateRotation();
+    virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
     void addOverrideAnim(int model_id);
     void checkActivators();

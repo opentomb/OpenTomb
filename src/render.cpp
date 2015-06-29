@@ -549,11 +549,12 @@ void Render::renderEntity(std::shared_ptr<Entity> entity, const btTransform& mod
         }
         else
         {
-            btTransform subModelView = modelViewMatrix * entity->m_transform;
-            btTransform subModelViewProjection = modelViewProjectionMatrix * entity->m_transform;
+            btTransform scaledTransform = entity->m_transform;
+            Mat4_Scale(scaledTransform, entity->m_scaling.x(), entity->m_scaling.y(), entity->m_scaling.z());
+            btTransform subModelView = modelViewMatrix * scaledTransform;
+            btTransform subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
             renderSkeletalModel(shader, &entity->m_bf, subModelView, subModelViewProjection);
-            if (entity->m_bf.bone_tags[0].mesh_skin)
-            {
+            if (entity->m_bf.bone_tags[0].mesh_skin) {
                 std::shared_ptr<LitShaderDescription> skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderSkeletalModelSkin(skinShader, entity, subModelView, projection);
             }

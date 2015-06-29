@@ -1054,7 +1054,7 @@ int Character::moveOnFloor()
                 m_angles[0] = ang;
                 // back forward slide down
             }
-            updateRotation();
+            updateTransform();
             m_response.vertical_collide |= 0x01;
         }
         else    // no slide - free to walk
@@ -1064,7 +1064,7 @@ int Character::moveOnFloor()
 
             m_angles[0] += inertiaAngular(1.0, ROT_SPEED_LAND, 0);
 
-            updateRotation(); // apply rotations
+            updateTransform(); // apply rotations
 
             if(m_dirFlag & ENT_MOVE_FORWARD)
             {
@@ -1183,7 +1183,7 @@ int Character::freeFalling()
     m_angles[0] += rot;
     m_angles[1] = 0.0;
 
-    updateRotation();                                                 // apply rotations
+    updateTransform();                                                 // apply rotations
 
     /*btScalar t = current_speed * bf-> speed_mult;        ///@TODO: fix speed update in Entity_Frame function and other;
     if(dir_flag & ENT_MOVE_FORWARD)
@@ -1318,7 +1318,7 @@ int Character::monkeyClimbing()
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_MONKEYSWING, 0);
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
-    updateRotation();                                                 // apply rotations
+    updateTransform();                                                 // apply rotations
 
     if(m_dirFlag & ENT_MOVE_FORWARD)
     {
@@ -1391,7 +1391,7 @@ int Character::wallsClimbing()
     }
 
     m_angles[0] = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
-    updateRotation();
+    updateTransform();
     pos[0] = climb->point[0] - m_transform.getBasis()[1][0] * m_bf.bb_max[1];
     pos[1] = climb->point[1] - m_transform.getBasis()[1][1] * m_bf.bb_max[1];
 
@@ -1453,7 +1453,7 @@ int Character::climbing()
     m_angles[0] += m_command.rot[0];
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
-    updateRotation();                                                 // apply rotations
+    updateTransform();                                                 // apply rotations
 
     if(m_dirFlag == ENT_MOVE_FORWARD)
     {
@@ -1534,7 +1534,7 @@ int Character::moveUnderWater()
             m_angles[1] = 270.0;
         }
 
-        updateRotation();                                             // apply rotations
+        updateTransform();                                             // apply rotations
 
         spd = m_transform.getBasis()[1] * t;                     // OY move only!
         m_speed = spd;
@@ -1577,7 +1577,7 @@ int Character::moveOnWater()
     m_angles[0] += inertiaAngular(1.0, ROT_SPEED_ONWATER, 0);
     m_angles[1] = 0.0;
     m_angles[2] = 0.0;
-    updateRotation();     // apply rotations
+    updateTransform();     // apply rotations
 
     // Calculate current speed.
 
@@ -1683,7 +1683,7 @@ int Character::findTraverse()
                     int oz = (m_angles[0] + 45.0) / 90.0;
                     m_angles[0] = oz * 90.0;
                     m_traversedObject = e;
-                    updateRotation();
+                    updateTransform();
                     return 1;
                 }
             }

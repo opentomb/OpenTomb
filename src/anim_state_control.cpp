@@ -130,7 +130,7 @@ void ent_correct_diving_angle(std::shared_ptr<Character> ent, SSAnimation* ss_an
     if(state == 0x02)
     {
         ent->m_angles[1] = -45.0;
-        ent->updateRotation();
+        ent->updateTransform();
         ss_anim->onFrame = NULL;
     }
 }
@@ -1609,7 +1609,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
                 {
                     climb->point = climb->edge_point;
                     character->m_angles[0] = climb->edge_z_ang;
-                    character->updateRotation();
+                    character->updateTransform();
                     character->m_moveType = MOVE_CLIMBING;                             // hang on
                     character->m_speed.setZero();
 
@@ -1657,7 +1657,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
             {
                 character->m_angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
-                character->updateRotation();
+                character->updateTransform();
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
             else if((cmd->action == 1) && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit) && (pos[2] + character->m_bf.bb_max[2] > curr_fc->ceiling_point[2] - 64.0))
@@ -1691,7 +1691,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
             {
                 character->m_angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
-                character->updateRotation();
+                character->updateTransform();
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 break;
             }
@@ -1706,7 +1706,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
                 {
                     climb->point = climb->edge_point;
                     character->m_angles[0] = climb->edge_z_ang;
-                    character->updateRotation();
+                    character->updateTransform();
                     character->m_moveType = MOVE_CLIMBING;                             // hang on
                     character->m_speed.setZero();
                 }
@@ -1821,7 +1821,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
                 {
                     climb->point = climb->edge_point;
                     character->m_angles[0] = climb->edge_z_ang;
-                    character->updateRotation();
+                    character->updateTransform();
                     character->m_moveType = MOVE_CLIMBING;                             // hang on
                 }
             }
@@ -2067,7 +2067,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
                 {
                     climb->point = climb->edge_point;
                     character->m_angles[0] = climb->edge_z_ang;
-                    character->updateRotation();
+                    character->updateTransform();
                     character->m_moveType = MOVE_CLIMBING;                             // hang on
                     pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE) * character->m_transform.getBasis()[1][0];
                     pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE) * character->m_transform.getBasis()[1][1];
@@ -2127,7 +2127,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
                 {
                     climb->point = climb->edge_point;
                     character->m_angles[0] = climb->edge_z_ang;
-                    character->updateRotation();
+                    character->updateTransform();
                     character->m_moveType = MOVE_CLIMBING;                             // hang on
                     pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE) * character->m_transform.getBasis()[1][0];
                     pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE) * character->m_transform.getBasis()[1][1];
@@ -2187,7 +2187,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
             {
                 character->m_angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
-                character->updateRotation();
+                character->updateTransform();
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
             }
             else if(resp->horizontal_collide & 0x01)
@@ -2224,7 +2224,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
         case TR_STATE_LARA_UNDERWATER_DIVING:
             character->m_angles[1] = -45.0;
             cmd->rot[1] = 0.0;
-            character->updateRotation();
+            character->updateTransform();
             ss_anim->onFrame = ent_correct_diving_angle;
             break;
 
@@ -2248,7 +2248,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
             {
                 character->m_angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
-                character->updateRotation();                                     // needed here to fix underwater in wall collision bug
+                character->updateTransform();                                     // needed here to fix underwater in wall collision bug
                 character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
                 Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, character->m_id);       // Stop scream
 
@@ -2461,7 +2461,7 @@ int State_Control_Lara(std::shared_ptr<Character> character, struct SSAnimation 
                     character->m_moveType = MOVE_CLIMBING;
                     character->m_bt.no_fix_all = true;
                     character->m_angles[0] = climb->edge_z_ang;
-                    character->updateRotation();
+                    character->updateTransform();
                     climb->point = climb->edge_point;
                 }
             }

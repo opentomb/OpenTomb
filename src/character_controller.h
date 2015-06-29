@@ -372,9 +372,9 @@ struct Character : public Entity
         m_response.kill = 1;
     }
     virtual Substance getSubstanceState() const override;
-    void updateRotation() override {
+    void updateTransform() override {
         ghostUpdate();
-        Entity::updateRotation();
+        Entity::updateTransform();
     }
     void updateGhostRigidBody() override;
     virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const override {
@@ -426,3 +426,4 @@ struct Character : public Entity
 
 bool IsCharacter(std::shared_ptr<Entity> ent);
 int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
+

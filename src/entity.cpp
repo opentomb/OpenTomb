@@ -59,11 +59,7 @@ void Entity::createGhosts()
 void Entity::enable()
 {
     if(!m_enabled) {
-        for(const auto& b : m_bt.bt_body) {
-            if(b && !b->isInWorld()) {
-                bt_engine_dynamicsWorld->addRigidBody(b.get());
-            }
-        }
+        enableCollision();
         m_enabled = m_active = m_visible = true;
     }
 }
@@ -72,11 +68,7 @@ void Entity::enable()
 void Entity::disable()
 {
     if(m_enabled) {
-        for(const auto& b : m_bt.bt_body) {
-            if(b && b->isInWorld()) {
-                bt_engine_dynamicsWorld->removeRigidBody(b.get());
-            }
-        }
+        disableCollision();
         m_active = m_enabled = m_visible = false;
     }
 }
@@ -89,7 +81,6 @@ void Entity::disable()
 void Entity::enableCollision()
 {
     if(!m_bt.bt_body.empty()) {
-        m_self->collision_type |= 0x01;
         for(const auto& b : m_bt.bt_body) {
             if(b && !b->isInWorld()) {
                 bt_engine_dynamicsWorld->addRigidBody(b.get());
@@ -106,7 +97,6 @@ void Entity::enableCollision()
 void Entity::disableCollision()
 {
     if(!m_bt.bt_body.empty()) {
-        m_self->collision_type &= ~0x0001;
         for(const auto& b : m_bt.bt_body) {
             if(b && b->isInWorld()) {
                 bt_engine_dynamicsWorld->removeRigidBody(b.get());
@@ -636,7 +626,7 @@ void Entity::updateRigidBody(bool force)
         }
 
         updateRoomPos();
-        if(m_self->collision_type & 0x00001)
+        if(m_self->collision_type != COLLISION_TYPE_STATIC)
         {
             for(uint16_t i=0;i<m_bf.bone_tags.size();i++)
             {
@@ -651,14 +641,13 @@ void Entity::updateRigidBody(bool force)
 }
 
 
-void Entity::updateRotation()
+void Entity::updateTransform()
 {
     for(int i=0; i<3; ++i) {
         m_angles[i] = std::fmod(m_angles[i], 360);
         while(m_angles[i] < 0)
             m_angles[i] += 360;
     }
-
     auto& up_dir = m_transform.getBasis()[2];                                   // OZ
     auto& view_dir = m_transform.getBasis()[1];                                 // OY
     auto& right_dir = m_transform.getBasis()[0];                                // OX
@@ -1265,7 +1254,7 @@ void Entity::doAnimMove(int16_t *anim, int16_t *frame)
             {
                 m_dirFlag = ENT_MOVE_BACKWARD;
             }
-            updateRotation();
+            updateTransform();
             setAnimation(curr_af->next_anim->id, curr_af->next_frame);
             *anim = m_bf.animations.current_animation;
             *frame = m_bf.animations.current_frame;

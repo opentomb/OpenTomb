@@ -3893,7 +3893,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         entity->m_angles[0] = tr_item->rotation;
         entity->m_angles[1] = 0.0;
         entity->m_angles[2] = 0.0;
-        entity->updateRotation();
+        entity->updateTransform();
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms.size()))
         {
             entity->m_self->room = world->rooms[ tr_item->room ];
@@ -4053,12 +4053,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
         entity->genEntityRigidBody();
 
-        entity->rebuildBV();
-        entity->m_self->room->addEntity(entity);
-        world->addEntity(entity);
-
-        Res_SetEntityModelProperties(entity);
-        if((entity->m_self->collision_type & 0x0001) == 0)
+        if(!entity->m_enabled || (entity->m_self->collision_type & 0x0001) == 0)
             entity->disableCollision();
     }
 }

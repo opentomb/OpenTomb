@@ -539,7 +539,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
                 if(ang != NULL)
                 {
                     ent->m_angles = *ang;
-                    ent->updateRotation();
+                    ent->updateTransform();
                 }
                 if(room_id < rooms.size())
                 {
@@ -573,7 +573,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             if(ang != NULL)
             {
                 ent->m_angles = *ang;
-                ent->updateRotation();
+                ent->updateTransform();
             }
             if(room_id < rooms.size())
             {

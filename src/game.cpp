@@ -435,7 +435,7 @@ void Game_ApplyControls(std::shared_ptr<Entity> ent)
         pos[1] = renderer.camera()->m_pos[1] + renderer.camera()->m_viewDir[1] * control_states.cam_distance;
         pos[2] = renderer.camera()->m_pos[2] + renderer.camera()->m_viewDir[2] * control_states.cam_distance - 512.0;
         ent->m_transform.getOrigin() = pos;
-        ent->updateRotation();
+        ent->updateTransform();
     }
     else
     {
