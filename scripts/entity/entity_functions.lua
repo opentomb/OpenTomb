@@ -703,12 +703,12 @@ function rblock_init(id)        -- Raising block (generic)
     if(entity_funcs[id].dummy == true) then
         setEntityScaling(id, 1.0, 1.0, 1.0);
         setEntityVisibility(id, 0);
-        entity_funcs[id].curr_height = 0.0;
-        entity_funcs[id].direction   = 1;
-    else
-        setEntityScaling(id, 1.0, 1.0, 0.0);
         entity_funcs[id].curr_height = entity_funcs[id].max_height;
         entity_funcs[id].direction   = 2;
+    else
+        setEntityScaling(id, 1.0, 1.0, 0.0);
+        entity_funcs[id].curr_height = 0.0;
+        entity_funcs[id].direction   = 1;
     end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -719,7 +719,7 @@ function rblock_init(id)        -- Raising block (generic)
     
     entity_funcs[id].onLoop = function(object_id, activator_id)
         if(entity_funcs[object_id].direction == 1) then
-            if((entity_funcs[object_id].dummy == false) and (entity_funcs[object_id].curr_height <= entity_funcs[object_id].max_height)) then
+            if((entity_funcs[object_id].dummy == false) and (entity_funcs[object_id].curr_height < entity_funcs[object_id].max_height)) then
                 entity_funcs[object_id].curr_height = entity_funcs[object_id].curr_height + entity_funcs[object_id].move_speed;
                 camShake(125.0, 0.2, object_id);
             else
@@ -728,7 +728,7 @@ function rblock_init(id)        -- Raising block (generic)
                 setEntityActivity(object_id, 0);
             end;
         else
-            if((entity_funcs[object_id].dummy == false) and (entity_funcs[object_id].curr_height >= 0.0)) then
+            if((entity_funcs[object_id].dummy == false) and (entity_funcs[object_id].curr_height > 0.0)) then
                 entity_funcs[object_id].curr_height = entity_funcs[object_id].curr_height - entity_funcs[object_id].move_speed;
                 camShake(125.0, 0.2, object_id);
             else
@@ -757,6 +757,58 @@ function rblock2_init(id)   -- Raising block x2 - same as RB1, only max height /
     rblock_init(id);
     entity_funcs[id].max_height = 2048.0;
     entity_funcs[id].move_speed = 16.0;
+end
+
+function expplatform_init(id)        -- Expanding platform
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].max_width  = 1024.0;
+    entity_funcs[id].move_speed = 8.0;
+    entity_funcs[id].curr_width = 0.0;
+    entity_funcs[id].direction  = 1;
+    
+    setEntityScaling(id, 1.0, 0.0, 1.0);
+    moveEntityLocal(id, 0.0, entity_funcs[id].max_width / 2, 0.0);  -- Fix position
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, 1);
+    end
+    
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    
+    entity_funcs[id].onLoop = function(object_id, activator_id)
+        if(entity_funcs[object_id].direction == 1) then
+            if(entity_funcs[object_id].curr_width < entity_funcs[object_id].max_width) then
+                entity_funcs[object_id].curr_width = entity_funcs[object_id].curr_width + entity_funcs[object_id].move_speed;
+            else
+                entity_funcs[object_id].curr_width = entity_funcs[object_id].max_width;
+                entity_funcs[object_id].direction = 2;
+                setEntityActivity(object_id, 0);
+            end;
+        else
+            if(entity_funcs[object_id].curr_width > 0.0) then
+                entity_funcs[object_id].curr_width = entity_funcs[object_id].curr_width - entity_funcs[object_id].move_speed;
+            else
+                entity_funcs[object_id].curr_width = 0.0;
+                entity_funcs[object_id].direction = 1;
+                setEntityActivity(object_id, 0);
+            end;
+        end;
+        
+        setEntityScaling(object_id, 1.0, (entity_funcs[object_id].curr_width / entity_funcs[object_id].max_width), 1.0);
+        
+    end;
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].curr_width = nil;
+        entity_funcs[object_id].max_width  = nil;
+        entity_funcs[object_id].move_speed  = nil;
+        entity_funcs[object_id].direction   = nil;
+    end
+    
+    prepareEntity(id);
+    
 end
 
 function oldspike_init(id)  -- Teeth spikes
