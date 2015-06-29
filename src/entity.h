@@ -107,6 +107,7 @@ typedef struct entity_s
     uint8_t                             was_rendered_lines; // same for debug lines
 
     btScalar                            current_speed;      // current linear speed from animation info
+    btScalar                            speed_mult;
     btVector3                           speed;              // speed of the entity XYZ
 
     btScalar                            inertia_linear;     // linear inertia
@@ -114,6 +115,8 @@ typedef struct entity_s
 
     struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
     struct bt_entity_data_s             bt;
+
+    btScalar                            scaling[3];         // entity scaling
     btScalar                            angles[3];
     btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
 
@@ -162,7 +165,7 @@ void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state
 int  Entity_Frame(entity_p entity, btScalar time);  // process frame + trying to change state
 
 void Entity_RebuildBV(entity_p ent);
-void Entity_UpdateRotation(entity_p entity);
+void Entity_UpdateTransform(entity_p entity);
 void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz = 0);
 void Entity_AddOverrideAnim(struct entity_s *ent, int model_id);
 void Entity_CheckActivators(struct entity_s *ent);

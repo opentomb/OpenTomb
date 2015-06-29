@@ -627,10 +627,15 @@ void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], 
         }
         else
         {
+            btScalar scaledTransform[16];
             btScalar subModelView[16];
             btScalar subModelViewProjection[16];
-            Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
-            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
+
+            memcpy(scaledTransform, entity->transform, sizeof(btScalar) * 16);
+            Mat4_Scale(scaledTransform, entity->scaling[0], entity->scaling[1], entity->scaling[2]);
+
+            Mat4_Mat4_mul(subModelView, modelViewMatrix, scaledTransform);
+            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, scaledTransform);
             Render_SkeletalModel(shader, &entity->bf, subModelView, subModelViewProjection);
             if (entity->bf.bone_tags[0].mesh_skin)
             {

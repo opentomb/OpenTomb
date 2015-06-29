@@ -49,7 +49,7 @@
 #define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
 #define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
 #define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_QUAD               3   // 
+#define TR_SECTOR_TWEEN_TYPE_QUAD               3   //
 #define TR_SECTOR_TWEEN_TYPE_2TRIANGLES         4   // it looks like a butterfly
 
 ///@FIXME: Move skybox item IDs to script!
@@ -103,7 +103,9 @@ struct   skeletal_model_s* Res_GetSkybox(struct world_s *world, uint32_t engine_
 
 // Create entity function from script, if exists.
 
+void Res_SetEntityFunction(struct entity_s *ent);
 bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
+void Res_GenEntityFunctions(struct RedBlackNode_s *x);
 
 // Assign pickup functions to previously created base items.
 

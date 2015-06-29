@@ -254,9 +254,9 @@ typedef struct character_command_s
 typedef struct character_response_s
 {
     int8_t      kill;
+    int8_t      burn;
     int8_t      vertical_collide;
     int8_t      horizontal_collide;
-    //int8_t      step_up;
     int8_t      slide;
 }character_response_t, *character_response_p;
 
@@ -292,21 +292,20 @@ typedef struct character_s
     struct entity_s             *ent;                    // actor entity
     struct character_command_s   cmd;                    // character control commands
     struct character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
-    
+
     struct inventory_node_s     *inventory;
     struct character_param_s     parameters;
     struct character_stats_s     statistics;
-    
+
     int8_t                       hair_count;
     struct hair_s               *hairs;
-    
+
     int                          current_weapon;
     int                          weapon_current_state;
-    
+
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
-    
+
     int8_t                       cam_follow_center;
-    btScalar                     speed_mult;
     btScalar                     min_step_up_height;
     btScalar                     max_step_up_height;
     btScalar                     max_climb_height;
@@ -319,7 +318,7 @@ typedef struct character_s
     btScalar                     Height;                 // base character height
     btScalar                     wade_depth;             // water depth that enable wade walk
     btScalar                     swim_depth;             // depth offset for starting to swim
-    
+
     btSphereShape               *sphere;                 // needs to height calculation
     btSphereShape               *climb_sensor;
 
@@ -327,7 +326,7 @@ typedef struct character_s
     struct climb_info_s          climb;
 
     struct entity_s             *traversed_object;
-    
+
     bt_engine_ClosestRayResultCallback                  *ray_cb;
     bt_engine_ClosestConvexResultCallback               *convex_cb;
 }character_t, *character_p;

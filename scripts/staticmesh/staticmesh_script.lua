@@ -33,7 +33,7 @@ static_tbl = {};    -- Define static mesh property table.
 
 function getStaticMeshProperties(id)
     if((static_tbl == nil) or (static_tbl[id] == nil)) then
-        return nil, nil, nil;
+        return COLLISION_TYPE_STATIC, COLLISION_SHAPE_BOX, nil;
     else
         local coll, shape, hide;
         if(static_tbl[id].hide ~= nil) then hide = static_tbl[id].hide else hide = 0 end;

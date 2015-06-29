@@ -57,6 +57,10 @@ entity_p Entity_Create()
     ret->bt.ghostObjects = NULL;
     ret->bt.last_collisions = NULL;
 
+    ret->scaling[0] = 1.0;
+    ret->scaling[1] = 1.0;
+    ret->scaling[2] = 1.0;
+
     ret->character = NULL;
     ret->current_sector = NULL;
 
@@ -77,7 +81,12 @@ entity_p Entity_Create()
     vec3_set_zero(ret->bf.bb_min);
     vec3_set_zero(ret->bf.centre);
     vec3_set_zero(ret->bf.pos);
+    vec3_set_zero(ret->angles);
     vec4_set_zero(ret->speed.m_floats);
+    vec3_set_one(ret->scaling);
+
+    ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
+    ret->current_speed = 0.0;
 
     ret->activation_offset[0] = 0.0;
     ret->activation_offset[1] = 256.0;
@@ -246,17 +255,7 @@ void Entity_Enable(entity_p ent)
 {
     if(!(ent->state_flags & ENTITY_STATE_ENABLED))
     {
-        if(ent->bt.bt_body != NULL)
-        {
-            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
-            {
-                btRigidBody *b = ent->bt.bt_body[i];
-                if((b != NULL) && !b->isInWorld())
-                {
-                    bt_engine_dynamicsWorld->addRigidBody(b);
-                }
-            }
-        }
+        Entity_EnableCollision(ent);
         ent->state_flags |= ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
     }
 }
@@ -266,17 +265,7 @@ void Entity_Disable(entity_p ent)
 {
     if(ent->state_flags & ENTITY_STATE_ENABLED)
     {
-        if(ent->bt.bt_body != NULL)
-        {
-            for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
-            {
-                btRigidBody *b = ent->bt.bt_body[i];
-                if((b != NULL) && b->isInWorld())
-                {
-                    bt_engine_dynamicsWorld->removeRigidBody(b);
-                }
-            }
-        }
+        Entity_DisableCollision(ent);
         ent->state_flags = 0x0000;
     }
 }
@@ -290,7 +279,7 @@ void Entity_EnableCollision(entity_p ent)
 {
     if(ent->bt.bt_body != NULL)
     {
-        ent->self->collision_type |= 0x0001;
+        //ent->self->collision_type |= 0x0001;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt.bt_body[i];
@@ -312,7 +301,7 @@ void Entity_DisableCollision(entity_p ent)
 {
     if(ent->bt.bt_body != NULL)
     {
-        ent->self->collision_type &= ~0x0001;
+        //ent->self->collision_type &= ~0x0001;
         for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
         {
             btRigidBody *b = ent->bt.bt_body[i];
@@ -341,7 +330,27 @@ void BT_GenEntityRigidBody(entity_p ent)
     for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
     {
         base_mesh_p mesh = ent->bf.animations.model->mesh_tree[i].mesh_base;
-        btCollisionShape *cshape = BT_CSfromMesh(mesh, true, true, !(ent->self->collision_shape & COLLISION_SHAPE_TRIMESH_CONVEX));
+        btCollisionShape *cshape = NULL;
+        switch(ent->self->collision_shape)
+        {
+            case COLLISION_SHAPE_TRIMESH_CONVEX:
+                cshape = BT_CSfromMesh(mesh, true, true, false);
+                break;
+
+            case COLLISION_SHAPE_TRIMESH:
+                cshape = BT_CSfromMesh(mesh, true, true, true);
+                break;
+
+            case COLLISION_SHAPE_BOX:
+                cshape = BT_CSfromBBox(mesh->bb_min, mesh->bb_max, true, true);
+                break;
+
+                ///@TODO: add other shapes implementation; may be change default;
+            default:
+                 cshape = BT_CSfromMesh(mesh, true, true, true);
+                 break;
+        };
+
         ent->bt.bt_body[i] = NULL;
 
         if(cshape)
@@ -408,6 +417,12 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
         {
             btPersistentManifold* manifold = (*manifoldArray)[j];
             btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
+            engine_container_p cont0 = (engine_container_p)manifold->getBody0()->getUserPointer();
+            engine_container_p cont1 = (engine_container_p)manifold->getBody1()->getUserPointer();
+            if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
+            {
+                continue;
+            }
             for(int k=0;k<manifold->getNumContacts();k++)
             {
                 const btManifoldPoint&pt = manifold->getContactPoint(k);
@@ -982,7 +997,8 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
         }
 
         Entity_UpdateRoomPos(ent);
-        if(ent->self->collision_type & 0x0001)
+
+        if(ent->self->collision_type != COLLISION_TYPE_STATIC)
         {
             btScalar tr[16];
             for(uint16_t i=0;i<ent->bf.bone_tag_count;i++)
@@ -999,7 +1015,7 @@ void Entity_UpdateRigidBody(entity_p ent, int force)
 }
 
 
-void Entity_UpdateRotation(entity_p entity)
+void Entity_UpdateTransform(entity_p entity)
 {
     btScalar R[4], Rt[4], temp[4];
     btScalar sin_t2, cos_t2, t;
@@ -1012,6 +1028,7 @@ void Entity_UpdateRotation(entity_p entity)
     {
         Entity_GhostUpdate(entity);
     }
+
     i = entity->angles[0] / 360.0;
     i = (entity->angles[0] < 0.0)?(i-1):(i);
     entity->angles[0] -= 360.0 * i;
@@ -1094,7 +1111,7 @@ void Entity_UpdateRotation(entity_p entity)
 
 void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
 {
-    btScalar t  = entity->current_speed * entity->character->speed_mult;
+    btScalar t  = entity->current_speed * entity->speed_mult;
     btScalar vz = (zeroVz)?(0.0):(entity->speed.m_floats[2]);
 
     if(entity->dir_flag & ENT_MOVE_FORWARD)
@@ -1748,7 +1765,7 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
             {
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
-            Entity_UpdateRotation(entity);
+            Entity_UpdateTransform(entity);
             Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_frame);
             *anim = entity->bf.animations.current_animation;
             *frame = entity->bf.animations.current_frame;
