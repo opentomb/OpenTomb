@@ -878,7 +878,7 @@ tr4_entity_tbl[149] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr4_entity_tbl[150] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Two block platform
 tr4_entity_tbl[151] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "rblock"}; -- Raising block 1 - RESIZABLE MESH!
 tr4_entity_tbl[152] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "rblock2"}; -- Raising block 2 - RESIZABLE MESH!
-tr4_entity_tbl[153] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Expanding platform - RESIZABLE MESH!
+tr4_entity_tbl[153] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "expplatform"}; -- Expanding platform - RESIZABLE MESH!
 tr4_entity_tbl[154] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Squishy block 1
 tr4_entity_tbl[155] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Squishy block 2
 
