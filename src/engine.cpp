@@ -3673,11 +3673,27 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 
 int lua_CamShake(lua_State *lua)
 {
-    if(lua_gettop(lua) != 2) return 0;
+    int top = lua_gettop(lua);
+
+    if(top < 2) return 0;
 
     float power = lua_tonumber(lua, 1);
     float time  = lua_tonumber(lua, 2);
-    Cam_Shake(renderer.cam, power, time);
+
+    if(top > 2)
+    {
+        int id = lua_tointeger(lua, 3);
+        entity_p ent = World_GetEntityByID(&engine_world, id);
+
+        btScalar cam_pos[3] = {renderer.cam->pos[0], renderer.cam->pos[1], renderer.cam->pos[2]};
+
+        btScalar dist = vec3_dist(ent->transform+12, cam_pos);
+        dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):(1.0 - (dist / TR_CAM_MAX_SHAKE_DISTANCE));
+
+        power *= dist;
+    }
+
+    if(power > 0.0) Cam_Shake(renderer.cam, power, time);
 
     return 0;
 }

@@ -57,17 +57,12 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
             lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
-            if (lua_CallAndLog(objects_flags_conf, 2, 5, 0))
+            if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
-                ent->self->collision_type = lua_tointeger(objects_flags_conf, -5);      // get collision type flag
-                ent->self->collision_shape = lua_tointeger(objects_flags_conf, -4);     // get collision shape flag
-                ent->bf.animations.model->hide = lua_tointeger(objects_flags_conf, -3); // get info about model visibility
-                ent->type_flags |= lua_tointeger(objects_flags_conf, -2);               // get traverse information
-
-                if(!lua_isnil(objects_flags_conf, -1))
-                {
-                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id);
-                }
+                ent->self->collision_type = lua_tointeger(objects_flags_conf, -4);      // get collision type flag
+                ent->self->collision_shape = lua_tointeger(objects_flags_conf, -3);     // get collision shape flag
+                ent->bf.animations.model->hide = lua_tointeger(objects_flags_conf, -2); // get info about model visibility
+                ent->type_flags |= lua_tointeger(objects_flags_conf, -1);               // get traverse information
             }
         }
         lua_settop(objects_flags_conf, top);
@@ -82,35 +77,55 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
             lua_pushinteger(level_script, ent->bf.animations.model->id);        // entity model id
-            if (lua_CallAndLog(level_script, 2, 5, 0))                          // call that function
+            if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
-                if(!lua_isnil(level_script, -5))
-                {
-                    ent->self->collision_type = lua_tointeger(level_script, -5);        // get collision type flag
-                }
                 if(!lua_isnil(level_script, -4))
                 {
-                    ent->self->collision_shape = lua_tointeger(level_script, -4);       // get collision shape flag
+                    ent->self->collision_type = lua_tointeger(level_script, -4);        // get collision type flag
                 }
                 if(!lua_isnil(level_script, -3))
                 {
-                    ent->bf.animations.model->hide = lua_tointeger(level_script, -3);   // get info about model visibility
+                    ent->self->collision_shape = lua_tointeger(level_script, -3);       // get collision shape flag
                 }
                 if(!lua_isnil(level_script, -2))
                 {
-                    ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-                    ent->type_flags |= lua_tointeger(level_script, -2);                 // get traverse information
+                    ent->bf.animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
                 }
                 if(!lua_isnil(level_script, -1))
                 {
-                    size_t string_length;
-                    Res_CreateEntityFunc(engine_lua, lua_tolstring(level_script, -1, &string_length), ent->id);
+                    ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
+                    ent->type_flags |= lua_tointeger(level_script, -1);                 // get traverse information
                 }
             }
         }
         lua_settop(level_script, top);
     }
 }
+
+
+void Res_SetEntityFunction(struct entity_s *ent)
+{
+    if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
+    {
+        int top = lua_gettop(objects_flags_conf);
+        assert(top >= 0);
+        lua_getglobal(objects_flags_conf, "getEntityFunction");
+        if(lua_isfunction(objects_flags_conf, -1))
+        {
+            lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
+            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
+            if (lua_CallAndLog(objects_flags_conf, 2, 1, 0))
+            {
+                if(!lua_isnil(objects_flags_conf, -1))
+                {
+                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id);
+                }
+            }
+        }
+        lua_settop(objects_flags_conf, top);
+    }
+}
+
 
 bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
 {
@@ -142,6 +157,22 @@ bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
         }
     }
     return false;
+}
+
+void Res_GenEntityFunctions(struct RedBlackNode_s *x)
+{
+    entity_p entity = (entity_p)x->data;
+
+    Res_SetEntityFunction(entity);
+
+    if(x->left != NULL)
+    {
+        Res_GenEntityFunctions(x->left);
+    }
+    if(x->right != NULL)
+    {
+        Res_GenEntityFunctions(x->right);
+    }
 }
 
 void Res_SetStaticMeshProperties(struct static_mesh_s *r_static)
@@ -1940,10 +1971,15 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
     world->sky_box = Res_GetSkybox(world, world->version);
     Gui_DrawLoadScreen(860);
 
+    // Generate entity functions.
+
+    Res_GenEntityFunctions(world->entity_tree->root);
+    Gui_DrawLoadScreen(910);
+
     // Load entity collision flags and ID overrides from script.
 
     Res_ScriptsClose();
-    Gui_DrawLoadScreen(870);
+    Gui_DrawLoadScreen(940);
 
     // Generate VBOs for meshes.
 
