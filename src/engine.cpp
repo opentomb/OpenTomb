@@ -2606,9 +2606,27 @@ void lua_SetCharacterCurrentWeapon(int id, int weapon)
  * Camera functions
  */
 
-void lua_CamShake(float power, float time)
+void lua_CamShake2(float power, float time, lua::Int id)
 {
-    renderer.camera()->shake(power, time);
+    if(id)
+    {
+        std::shared_ptr<Entity> ent = engine_world.getEntityByID(*id);
+
+        btVector3 cam_pos = renderer.camera()->m_pos;
+
+        btScalar dist = ent->m_transform.getOrigin().distance(cam_pos);
+        dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):(1.0 - (dist / TR_CAM_MAX_SHAKE_DISTANCE));
+
+        power *= dist;
+    }
+
+    if(power > 0.0)
+        renderer.camera()->shake(power, time);
+}
+
+void lua_CamShake1(float power, float time, lua::Int id)
+{
+    lua_CamShake2(power, time, lua::None);
 }
 
 void lua_FlashSetup(uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, uint16_t fadeinSpeed, uint16_t fadeoutSpeed)
@@ -3056,7 +3074,7 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_registerc(lua, "setGame", WRAP_FOR_LUA(lua_SetGame1, lua_SetGame2));
     lua_registerc(lua, "loadMap", WRAP_FOR_LUA(lua_LoadMap1, lua_LoadMap2, lua_LoadMap3));
 
-    lua_register(lua, "camShake", WRAP_FOR_LUA(lua_CamShake));
+    lua_register(lua, "camShake", WRAP_FOR_LUA(lua_CamShake2, lua_CamShake1));
 
     lua_register(lua, "fadeOut", WRAP_FOR_LUA(lua_FadeOut));
     lua_register(lua, "fadeIn", WRAP_FOR_LUA(lua_FadeIn));
