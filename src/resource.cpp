@@ -36,6 +36,8 @@
 #include "bsp_tree.h"
 #include "shader_description.h"
 
+#include "luahelper.h"
+
 lua_State *objects_flags_conf = NULL;
 lua_State *ent_ID_override = NULL;
 lua_State *level_script = NULL;
@@ -1627,131 +1629,66 @@ RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
     return &room->sectors[ sx * room->sectors_y + sy ];
 }
 
-int lua_SetSectorFloorConfig(lua_State * lua)
+void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 floor, float z0, float z1, float z2, float z3)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 10)
-    {
-        ConsoleInfo::instance().addLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->floor = lua_tonumber(lua, 6);
-    rs->floor_corners[0][2] = lua_tonumber(lua, 7);
-    rs->floor_corners[1][2] = lua_tonumber(lua, 8);
-    rs->floor_corners[2][2] = lua_tonumber(lua, 9);
-    rs->floor_corners[3][2] = lua_tonumber(lua, 10);
-
-    return 0;
+    if(pen)   rs->floor_penetration_config = *pen;
+    if(diag)  rs->floor_diagonal_type = *diag;
+    if(floor) rs->floor = *floor;
+    rs->floor_corners[0] = {z0,z1,z2};
+    rs->floor_corners[0][3] = z3;
 }
 
-int lua_SetSectorCeilingConfig(lua_State * lua)
+void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 ceil, float z0, float z1, float z2, float z3)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 10)
-    {
-        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->ceiling_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->ceiling = lua_tonumber(lua, 6);
-    rs->ceiling_corners[0][2] = lua_tonumber(lua, 7);
-    rs->ceiling_corners[1][2] = lua_tonumber(lua, 8);
-    rs->ceiling_corners[2][2] = lua_tonumber(lua, 9);
-    rs->ceiling_corners[3][2] = lua_tonumber(lua, 10);
-
-    return 0;
+    if(pen)   rs->ceiling_penetration_config = *pen;
+    if(diag)  rs->ceiling_diagonal_type = *diag;
+    if(floor) rs->ceiling = *ceil;
+    rs->ceiling_corners[0] = {z0,z1,z2};
+    rs->ceiling_corners[0][3] = z3;
 }
 
-int lua_SetSectorPortal(lua_State * lua)
+void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 4)
-    {
-        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        return;
     }
 
-    uint32_t p = lua_tointeger(lua, 4);
     if(p < engine_world.rooms.size())
     {
         rs->portal_to_room = p;
     }
-
-    return 0;
 }
 
-int lua_SetSectorFlags(lua_State * lua)
+void lua_SetSectorFlags(int id, int sx, int sy, lua::UInt8 fpflag, lua::UInt8 ftflag, lua::UInt8 cpflag, lua::UInt8 ctflag)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 7)
-    {
-        ConsoleInfo::instance().addLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
     RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
         ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->ceiling_penetration_config = lua_tointeger(lua, 6);
-    if(!lua_isnil(lua, 7))  rs->ceiling_diagonal_type = lua_tointeger(lua, 7);
-
-    return 0;
+    if(fpflag)  rs->floor_penetration_config = *fpflag;
+    if(ftflag)  rs->floor_diagonal_type = *ftflag;
+    if(cpflag)  rs->ceiling_penetration_config = *cpflag;
+    if(ctflag)  rs->ceiling_diagonal_type = *ctflag;
 }
 
 void Res_ScriptsOpen(int engine_version)
@@ -1763,11 +1700,11 @@ void Res_ScriptsOpen(int engine_version)
     if(level_script != NULL)
     {
         luaL_openlibs(level_script);
-        lua_register(level_script, "print", lua_print);
-        lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
-        lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
-        lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
-        lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
+        lua_register(level_script, "print", WRAP_FOR_LUA(lua_print));
+        lua_register(level_script, "setSectorFloorConfig", WRAP_FOR_LUA(lua_SetSectorFloorConfig));
+        lua_register(level_script, "setSectorCeilingConfig", WRAP_FOR_LUA(lua_SetSectorCeilingConfig));
+        lua_register(level_script, "setSectorPortal", WRAP_FOR_LUA(lua_SetSectorPortal));
+        lua_register(level_script, "setSectorFlags", WRAP_FOR_LUA(lua_SetSectorFlags));
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
 

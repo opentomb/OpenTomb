@@ -254,7 +254,7 @@ void Engine_Display();
 
 void Engine_BTInit();
 
-int lua_print(lua_State * lua);
+void lua_print();
 bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);
