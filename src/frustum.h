@@ -29,7 +29,7 @@ struct Frustum
     bool isPolyVisible(Polygon *p);
     bool isAABBVisible(const btVector3 &bbmin, const btVector3 &bbmax);
     bool isOBBVisible(OBB *obb);
-    static bool isOBBVisibleInRoom(OBB *obb, std::shared_ptr<Room> room);
+    static bool isOBBVisibleInRoom(OBB *obb, const Room &room);
 
     static std::shared_ptr<Frustum> portalFrustumIntersect(Portal* portal, const std::shared_ptr<Frustum> &emitter, Render *render);         // Основная функция для работы с порталами.
     void splitPrepare(struct Portal *p);// подготовка фрустума к сплиту

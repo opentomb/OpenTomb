@@ -153,15 +153,15 @@ void OBB::doTransform()
 /*
  * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
  */
-int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2)
+int OBB_OBB_Test(const Entity& e1, const Entity& e2)
 {
     //translation, in parent frame
-    auto v = e2->m_obb->centre - e1->m_obb->centre;
+    auto v = e2.m_obb->centre - e1.m_obb->centre;
     //translation, in A's frame
-    btVector3 T = e1->m_transform.getBasis() * v;
+    btVector3 T = e1.m_transform.getBasis() * v;
 
-    btScalar *a = e1->m_obb->extent;
-    btScalar *b = e2->m_obb->extent;
+    btScalar *a = e1.m_obb->extent;
+    btScalar *b = e2.m_obb->extent;
 
     //B's basis with respect to A's local frame
     btScalar R[3][3];
@@ -173,8 +173,8 @@ int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2)
     {
         for(k=0 ; k<3 ; k++)
         {
-            btVector3& e1b = e1->m_transform.getBasis()[i];
-            btVector3& e2b = e2->m_transform.getBasis()[k];
+            const btVector3& e1b = e1.m_transform.getBasis()[i];
+            const btVector3& e2b = e2.m_transform.getBasis()[k];
             R[i][k] = e1b.dot(e2b);
         }
     }

@@ -358,7 +358,7 @@ void Render::renderSkeletalModel(const std::shared_ptr<LitShaderDescription>& sh
     }
 }
 
-void Render::renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription>& shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix)
+void Render::renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription>& shader, Entity* ent, const btTransform& mvMatrix, const btTransform& pMatrix)
 {
     SSBoneTag* btag = ent->m_bf.bone_tags.data();
 
@@ -392,7 +392,7 @@ void Render::renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription>
     }
 }
 
-void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>& shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix)
+void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>& shader, Entity* ent, const btTransform& mvMatrix, const btTransform& pMatrix)
 {
     btScalar glMatrix[16+16];
     pMatrix.getOpenGLMatrix(glMatrix);
@@ -443,11 +443,11 @@ void Render::renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription>
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-std::shared_ptr<LitShaderDescription> Render::setupEntityLight(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, bool skin)
+std::shared_ptr<LitShaderDescription> Render::setupEntityLight(Entity* entity, const btTransform& modelViewMatrix, bool skin)
 {
     // Calculate lighting
 
-    if(std::shared_ptr<Room> room = entity->m_self->room) {
+    if(Room* room = entity->m_self->room) {
         std::array<GLfloat,4> ambient_component;
 
         ambient_component[0] = room->ambient_lighting[0];
@@ -512,7 +512,7 @@ std::shared_ptr<LitShaderDescription> Render::setupEntityLight(std::shared_ptr<E
         glUseProgramObjectARB(shader->program);
         glUniform4fvARB(shader->light_ambient, 1, ambient_component.data());
         glUniform4fvARB(shader->light_color, current_light_number, reinterpret_cast<const GLfloat*>(colors));
-        glUniform3fvARB(shader->Lightosition, current_light_number, reinterpret_cast<const GLfloat*>(positions));
+        glUniform3fvARB(shader->light_position, current_light_number, reinterpret_cast<const GLfloat*>(positions));
         glUniform1fvARB(shader->light_inner_radius, current_light_number, innerRadiuses);
         glUniform1fvARB(shader->light_outer_radius, current_light_number, outerRadiuses);
         return shader;
@@ -524,7 +524,7 @@ std::shared_ptr<LitShaderDescription> Render::setupEntityLight(std::shared_ptr<E
     }
 }
 
-void Render::renderEntity(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection)
+void Render::renderEntity(Entity* entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection)
 {
     if(entity->m_wasRendered || !entity->m_visible || (entity->m_bf.animations.model->hide && !m_drawNullMeshes))
     {
@@ -562,7 +562,7 @@ void Render::renderEntity(std::shared_ptr<Entity> entity, const btTransform& mod
     }
 }
 
-void Render::renderDynamicEntity(const std::shared_ptr<LitShaderDescription>& shader, std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix)
+void Render::renderDynamicEntity(const std::shared_ptr<LitShaderDescription>& shader, Entity* entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix)
 {
     SSBoneTag* btag = entity->m_bf.bone_tags.data();
 
@@ -595,7 +595,7 @@ void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &mo
         return;
 
     // Calculate lighting
-    std::shared_ptr<LitShaderDescription> shader = setupEntityLight(entity, modelViewMatrix, true);
+    std::shared_ptr<LitShaderDescription> shader = setupEntityLight(entity.get(), modelViewMatrix, true);
 
 
     for(size_t h=0; h<entity->m_hairs.size(); h++)
@@ -655,7 +655,7 @@ void Render::renderHair(std::shared_ptr<Character> entity, const btTransform &mo
 /**
  * drawing world models.
  */
-void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection)
+void Render::renderRoom(Room* room, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection)
 {
     btScalar glMat[16];
 
@@ -738,7 +738,7 @@ void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelView
         glUseProgramObjectARB(m_shaderManager->getStaticMeshShader()->program);
         for(auto sm : room->static_mesh)
         {
-            if(sm->was_rendered || !Frustum::isOBBVisibleInRoom(sm->obb, room))
+            if(sm->was_rendered || !Frustum::isOBBVisibleInRoom(sm->obb, *room))
             {
                 continue;
             }
@@ -772,10 +772,10 @@ void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelView
             switch(cont->object_type)
             {
             case OBJECT_ENTITY:
-                std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
+                Entity* ent = static_cast<Entity*>(cont->object);
                 if(!ent->m_wasRendered)
                 {
-                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), room))
+                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room))
                     {
                         renderEntity(ent, modelViewMatrix, modelViewProjectionMatrix, projection);
                     }
@@ -794,7 +794,7 @@ void Render::renderRoom(std::shared_ptr<Room> room, const btTransform &modelView
 }
 
 
-void Render::renderRoomSprites(std::shared_ptr<Room> room, const btTransform &modelViewMatrix, const btTransform &projectionMatrix)
+void Render::renderRoomSprites(Room* room, const btTransform &modelViewMatrix, const btTransform &projectionMatrix)
 {
     if (!room->sprites.empty() && room->sprite_buffer)
     {
@@ -830,7 +830,7 @@ void Render::renderRoomSprites(std::shared_ptr<Room> room, const btTransform &mo
  * Если комната уже есть в списке - возвращается ноль и комната повторно не добавляется.
  * Если список полон, то ничего не добавляется
  */
-int Render::addRoom(std::shared_ptr<Room> room)
+int Render::addRoom(Room* room)
 {
     int ret = 0;
 
@@ -865,8 +865,8 @@ int Render::addRoom(std::shared_ptr<Room> room)
         switch(cont->object_type)
         {
         case OBJECT_ENTITY:
-            std::static_pointer_cast<Entity>(cont->object)->m_wasRendered = false;
-            std::static_pointer_cast<Entity>(cont->object)->m_wasRenderedLines = false;
+            static_cast<Entity*>(cont->object)->m_wasRendered = false;
+            static_cast<Entity*>(cont->object)->m_wasRenderedLines = false;
             break;
         };
     }
@@ -894,7 +894,7 @@ void Render::cleanList()
     {
         m_rList[i].active = false;
         m_rList[i].dist = 0.0;
-        std::shared_ptr<Room> r = m_rList[i].room;
+        Room* r = m_rList[i].room;
         m_rList[i].room = NULL;
 
         r->is_in_r_list = false;
@@ -939,7 +939,7 @@ void Render::drawList()
 
     if(m_world->character)
     {
-        renderEntity(m_world->character, m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
+        renderEntity(m_world->character.get(), m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
         renderHair(m_world->character, m_cam->m_glViewMat, m_cam->m_glProjMat);
     }
 
@@ -966,7 +966,7 @@ void Render::drawList()
     /*First generate BSP from base room mesh - it has good for start splitter polygons*/
     for(uint32_t i=0;i<m_rListActiveCount;i++)
     {
-        std::shared_ptr<Room> r = m_rList[i].room;
+        Room* r = m_rList[i].room;
         if(r->mesh && !r->mesh->m_transparencyPolygons.empty())
         {
             render_dBSP.addNewPolygonList(r->mesh->m_transparentPolygons, r->transform, {m_cam->frustum});
@@ -975,11 +975,11 @@ void Render::drawList()
 
     for(uint32_t i=0;i<m_rListActiveCount;i++)
     {
-        std::shared_ptr<Room> r = m_rList[i].room;
+        Room* r = m_rList[i].room;
         // Add transparency polygons from static meshes (if they exists)
         for(auto sm : r->static_mesh)
         {
-            if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, r))
+            if(!sm->mesh->m_transparentPolygons.empty() && Frustum::isOBBVisibleInRoom(sm->obb, *r))
             {
                 render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, {m_cam->frustum});
             }
@@ -990,8 +990,8 @@ void Render::drawList()
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
-                std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
-                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), r)))
+                Entity* ent = static_cast<Entity*>(cont->object);
+                if((ent->m_bf.animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && ent->m_visible && (Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *r)))
                 {
                     for(uint16_t j=0;j<ent->m_bf.bone_tags.size();j++)
                     {
@@ -1049,7 +1049,7 @@ void Render::drawListDebugLines()
 
     if(m_world->character)
     {
-        debugDrawer.drawEntityDebugLines(m_world->character, this);
+        debugDrawer.drawEntityDebugLines(m_world->character.get(), this);
     }
 
     /*
@@ -1113,7 +1113,7 @@ int Render::processRoom(Portal *portal, const std::shared_ptr<Frustum>& frus)
             auto gen_frus = Frustum::portalFrustumIntersect(&p, frus, this);             // Главная ф-я портального рендерера. Тут и проверка
             if(gen_frus) {
                 ret++;
-                addRoom(p.dest_room);
+                addRoom(p.dest_room.get());
                 processRoom(&p, gen_frus);
             }
         }
@@ -1135,7 +1135,7 @@ void Render::genWorldList()
     debugDrawer.reset();
     //cam->frustum->next = NULL;
 
-    std::shared_ptr<Room> curr_room = Room_FindPosCogerrence(m_cam->m_pos, m_cam->m_currentRoom);                // find room that contains camera
+    Room* curr_room = Room_FindPosCogerrence(m_cam->m_pos, m_cam->m_currentRoom);                // find room that contains camera
 
     m_cam->m_currentRoom = curr_room;                                     // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
@@ -1147,7 +1147,7 @@ void Render::genWorldList()
         {
             auto last_frus = Frustum::portalFrustumIntersect(&p, m_cam->frustum, this);
             if(last_frus) {
-                addRoom(p.dest_room);                                   // portal destination room
+                addRoom(p.dest_room.get());                                   // portal destination room
                 last_frus->parents_count = 1;                                   // created by camera
                 processRoom(&p, last_frus);                               // next start reccursion algorithm
             }
@@ -1159,7 +1159,7 @@ void Render::genWorldList()
         {
             if(m_cam->frustum->isAABBVisible(r->bb_min, r->bb_max))
             {
-                addRoom(r);
+                addRoom(r.get());
             }
         }
     }
@@ -1408,7 +1408,7 @@ void RenderDebugDrawer::drawSkeletalModelDebugLines(SSBoneFrame *bframe, const b
     }
 }
 
-void RenderDebugDrawer::drawEntityDebugLines(std::shared_ptr<Entity> entity, Render* render)
+void RenderDebugDrawer::drawEntityDebugLines(Entity* entity, Render* render)
 {
     if(entity->m_wasRenderedLines || !(render->m_drawAxis || render->m_drawNormals || render->m_drawBoxes) ||
        !entity->m_visible || (entity->m_bf.animations.model->hide && !(render->m_drawNullMeshes)))
@@ -1446,7 +1446,7 @@ void RenderDebugDrawer::drawSectorDebugLines(RoomSector *rs)
 }
 
 
-void RenderDebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, Render* render)
+void RenderDebugDrawer::drawRoomDebugLines(Room* room, Render* render)
 {
     if(render->m_drawRoomBoxes)
     {
@@ -1482,7 +1482,7 @@ void RenderDebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, Render* r
 
     for(auto sm : room->static_mesh)
     {
-        if(sm->was_rendered_lines || !Frustum::isOBBVisibleInRoom(sm->obb, room) ||
+        if(sm->was_rendered_lines || !Frustum::isOBBVisibleInRoom(sm->obb, *room) ||
           (sm->hide && !render->m_drawDummyStatics))
         {
             continue;
@@ -1509,10 +1509,10 @@ void RenderDebugDrawer::drawRoomDebugLines(std::shared_ptr<Room> room, Render* r
         switch(cont->object_type)
         {
             case OBJECT_ENTITY: {
-                std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
+                Entity* ent = static_cast<Entity*>(cont->object);
                 if(!ent->m_wasRenderedLines)
                 {
-                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), room))
+                    if(Frustum::isOBBVisibleInRoom(ent->m_obb.get(), *room))
                     {
                         debugDrawer.drawEntityDebugLines(ent, render);
                     }

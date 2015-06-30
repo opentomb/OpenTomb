@@ -1,6 +1,5 @@
-
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #if defined(__MACOSX__)
@@ -16,6 +15,8 @@
 #include "shader_manager.h"
 #include "gui.h"
 #include "vmath.h"
+
+#include <iostream>
 
 void ConsoleInfo::init()
 {
@@ -263,6 +264,7 @@ void ConsoleInfo::addLog(const std::string &text) {
 
 void ConsoleInfo::addLine(const std::string &text, font_Style style) {
     if(inited && !text.empty()) {
+        std::cout << "LOG: " << text << std::endl;
         m_lines.emplace_front(text, style);
         m_historyPos = 0;
     }

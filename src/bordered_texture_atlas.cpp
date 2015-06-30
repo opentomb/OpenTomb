@@ -110,7 +110,7 @@ void BorderedTextureAtlas::layOutTextures()
 
         // Try to find space in an existing page.
         bool found_place = 0;
-        for (unsigned long page = 0; page < m_resultPageHeights.size(); page++)
+        for (size_t page = 0; page < m_resultPageHeights.size(); page++)
         {
             found_place = result_pages[page].findSpaceFor(canonical.width + 2*m_borderWidth,
                                                          canonical.height + 2*m_borderWidth,
@@ -132,13 +132,14 @@ void BorderedTextureAtlas::layOutTextures()
         if (!found_place)
         {
             result_pages.emplace_back(0, 0, m_resultPageWidth, m_resultPageWidth);
-            m_resultPageHeights.resize(result_pages.size());
+            m_resultPageHeights.emplace_back();
 
             result_pages.back().findSpaceFor(
                                    canonical.width + 2*m_borderWidth,
                                    canonical.height + 2*m_borderWidth,
                                    &(canonical.new_x_with_border),
                                    &(canonical.new_y_with_border));
+            assert(!m_resultPageHeights.empty());
             canonical.new_page = m_resultPageHeights.size() - 1;
 
             unsigned highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
@@ -158,7 +159,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
                                                const tr4_textile32_t *pages,
                                                size_t object_texture_count,
                                                const tr4_object_texture_t *object_textures,
-                                               size_t Spriteexture_count,
+                                               size_t sprite_texture_count,
                                                const tr_Spriteexture_t *Spriteextures)
 : m_borderWidth(border),
 m_resultPageWidth(0),
@@ -179,7 +180,7 @@ m_canonicalObjectTextures()
         addObjectTexture(object_textures[i]);
     }
     
-    for (size_t i = 0; i < Spriteexture_count; i++)
+    for (size_t i = 0; i < sprite_texture_count; i++)
     {
         addSpriteTexture(Spriteextures[i]);
     }
@@ -207,7 +208,7 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
     uint8_t height = max[1] - min[1];
 
     // See whether it already exists
-    long canonical_index = -1;
+    size_t canonical_index = std::numeric_limits<size_t>::max();
     for (size_t i = 0; i < m_canonicalObjectTextures.size(); i++)
     {
         CanonicalObjectTexture *canonical_candidate = &m_canonicalObjectTextures[i];
@@ -224,7 +225,7 @@ void BorderedTextureAtlas::addObjectTexture(const tr4_object_texture_t &texture)
     }
 
     // Create it if not.
-    if (canonical_index < 0)
+    if (canonical_index == std::numeric_limits<size_t>::max())
     {
         canonical_index = m_canonicalObjectTextures.size();
         m_canonicalObjectTextures.emplace_back();
@@ -270,7 +271,7 @@ void BorderedTextureAtlas::addSpriteTexture(const tr_Spriteexture_t &texture)
     unsigned height = texture.y1 - texture.y0;
 
     // See whether it already exists
-    long canonical_index = -1;
+    size_t canonical_index = std::numeric_limits<size_t>::max();
     for (size_t i = 0; i < m_canonicalObjectTextures.size(); i++)
     {
         CanonicalObjectTexture *canonical_candidate = &m_canonicalObjectTextures[i];
@@ -287,8 +288,9 @@ void BorderedTextureAtlas::addSpriteTexture(const tr_Spriteexture_t &texture)
     }
 
     // Create it if not.
-    if (canonical_index < 0)
+    if (canonical_index == std::numeric_limits<size_t>::max())
     {
+        canonical_index = m_canonicalObjectTextures.size();
         m_canonicalObjectTextures.emplace_back();
 
         CanonicalObjectTexture &canonical = m_canonicalObjectTextures[canonical_index];

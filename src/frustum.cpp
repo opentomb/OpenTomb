@@ -518,9 +518,9 @@ bool Frustum::isOBBVisible(OBB *obb)
     return ins;
 }
 
-bool Frustum::isOBBVisibleInRoom(OBB *obb, std::shared_ptr<Room> room)
+bool Frustum::isOBBVisibleInRoom(OBB *obb, const Room& room)
 {
-    if(room->frustum.empty())                                                         // В комнате нет активного фрустума, значит применяем фрустум камеры
+    if(room.frustum.empty())                                                         // В комнате нет активного фрустума, значит применяем фрустум камеры
     {
         bool ins = true;                                                                // считаем, что камера внутри OBB
         auto p = obb->polygons;
@@ -539,7 +539,7 @@ bool Frustum::isOBBVisibleInRoom(OBB *obb, std::shared_ptr<Room> room)
         return ins;                                                             // если камера внутри OBB объекта, то объект виден
     }
 
-    for(const auto& frustum : room->frustum) {
+    for(const auto& frustum : room.frustum) {
         auto p = obb->polygons;
         for(int i=0;i<6;i++,p++) {
             auto t = planeDist(p->plane, *frustum->cam_pos);

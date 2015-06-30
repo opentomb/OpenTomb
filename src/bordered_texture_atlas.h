@@ -118,7 +118,7 @@ public:
                            const tr4_textile32_t *pages,
                            size_t object_texture_count,
                            const tr4_object_texture_t *object_textures,
-                           size_t Spriteexture_count,
+                           size_t sprite_texture_count,
                            const tr_Spriteexture_t *Spriteextures);
     
     /*!

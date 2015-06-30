@@ -133,8 +133,10 @@ void Controls_Key(int32_t button, int state)
                         else
                         {
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+#ifdef NDEBUG
                             SDL_ShowCursor(0);
                             SDL_SetRelativeMouseMode(SDL_TRUE);
+#endif
                             SDL_StopTextInput();
                         }
                     }
@@ -481,7 +483,9 @@ void Controls_PollSDLInput()
                        (event.motion.y < ((screen_info.h/2)-(screen_info.h/4))) ||
                        (event.motion.y > ((screen_info.h/2)+(screen_info.h/4))))
                     {
+#ifdef NDEBUG
                         SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+#endif
                     }
                 }
                 mouse_setup = 1;
@@ -682,10 +686,10 @@ void Controls_SecondaryMouseDown()
     from = engine_camera.m_pos;
     to = from + btVector3(engine_camera.m_viewDir[0], engine_camera.m_viewDir[1], engine_camera.m_viewDir[2]) * 32768.0;
 
-    EngineContainer cam_cont;
-    cam_cont.room = engine_camera.m_currentRoom;
+    std::shared_ptr<EngineContainer> cam_cont = std::make_shared<EngineContainer>();
+    cam_cont->room = engine_camera.m_currentRoom;
 
-    BtEngineClosestRayResultCallback cbc(&cam_cont);
+    BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     bt_engine_dynamicsWorld->rayTest(from, to, cbc);
     if(cbc.hasHit())

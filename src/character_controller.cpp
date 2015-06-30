@@ -20,17 +20,19 @@
 #include "string.h"
 
 Character::Character()
-    : m_climbSensor(new btSphereShape(m_climbR))
-    , m_rayCb(std::make_shared<BtEngineClosestRayResultCallback>(m_self.get()))
-    , m_convexCb(std::make_shared<BtEngineClosestConvexResultCallback>(m_self.get()))
+    : Entity()
 {
+    m_climbSensor.reset( new btSphereShape(m_climbR) );
+
+    m_rayCb = std::make_shared<BtEngineClosestRayResultCallback>(m_self);
     m_rayCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    m_heightInfo.cb = m_rayCb;
+
+    m_convexCb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self);
     m_convexCb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    m_heightInfo.ccb = m_convexCb;
 
     m_dirFlag = ENT_STAY;
-
-    m_heightInfo.cb = m_rayCb;
-    m_heightInfo.ccb = m_convexCb;
 
     createGhosts();
 }
@@ -38,7 +40,7 @@ Character::Character()
 Character::~Character() {
     if((m_self->room != NULL) && (this != engine_world.character.get()))
     {
-        m_self->room->removeEntity(std::static_pointer_cast<Entity>(shared_from_this()));
+        m_self->room->removeEntity(this);
     }
 }
 
@@ -230,7 +232,7 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
 {
     btVector3 from, to;
     auto cb = fc->cb;
-    std::shared_ptr<Room> r = (cb->m_container)?(cb->m_container->room):(NULL);
+    Room* r = (cb->m_container)?(cb->m_container->room):(NULL);
     RoomSector* rs;
 
     fc->floor_hit = 0x00;
@@ -1010,7 +1012,7 @@ int Character::moveOnFloor()
         EngineContainer* cont = (EngineContainer*)m_heightInfo.floor_obj->getUserPointer();
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
         {
-            std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
+            Entity* e = static_cast<Entity*>(cont->object);
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
             {
                 lua_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->m_id, m_id);
@@ -1677,8 +1679,8 @@ int Character::findTraverse()
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
-                std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(e, std::dynamic_pointer_cast<Entity>(shared_from_this())) && (fabs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
+                Entity* e = static_cast<Entity*>(cont->object);
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == OBB_OBB_Test(*e, *this) && (fabs(e->m_transform.getOrigin()[2] - m_transform.getOrigin()[2]) < 1.1)))
                 {
                     int oz = (m_angles[0] + 45.0) / 90.0;
                     m_angles[0] = oz * 90.0;
@@ -1713,7 +1715,7 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
         return 0x01;
     }
 
-    BtEngineClosestRayResultCallback cb(cont.get());
+    BtEngineClosestRayResultCallback cb(cont);
     btVector3 from, to;
     to[0] = from[0] = rs->pos[0];
     to[1] = from[1] = rs->pos[1];
@@ -1727,7 +1729,7 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
         if(fabs(v[2] - floor) < 1.1)
         {
             EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
-            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((std::static_pointer_cast<Entity>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
+            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
             }
@@ -1743,7 +1745,7 @@ int Sector_AllowTraverse(struct RoomSector *rs, btScalar floor, const std::share
  * @param obj: traversed object pointer
  * @return: 0x01 if can traverse forvard; 0x02 if can traverse backvard; 0x03 can traverse in both directions; 0x00 - can't traverse
  */
-int Character::checkTraverse(std::shared_ptr<Entity> obj)
+int Character::checkTraverse(Entity* obj)
 {
     RoomSector* ch_s, *obj_s;
 
@@ -1783,7 +1785,7 @@ int Character::checkTraverse(std::shared_ptr<Entity> obj)
         return 0x00;
     }
 
-    BtEngineClosestRayResultCallback cb(obj->m_self.get());
+    BtEngineClosestRayResultCallback cb(obj->m_self);
     btVector3 v0, v1;
     v1[0] = v0[0] = obj_s->pos[0];
     v1[1] = v0[1] = obj_s->pos[1];
@@ -1793,7 +1795,7 @@ int Character::checkTraverse(std::shared_ptr<Entity> obj)
     if(cb.hasHit())
     {
         EngineContainer* cont = (EngineContainer*)cb.m_collisionObject->getUserPointer();
-        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((std::static_pointer_cast<Entity>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
+        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY) && ((static_cast<Entity*>(cont->object))->m_typeFlags & ENTITY_TYPE_TRAVERSE))
         {
             return 0x00;
         }
@@ -1827,7 +1829,7 @@ int Character::checkTraverse(std::shared_ptr<Entity> obj)
     next_s = next_s->checkPortalPointer();
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
     {
-        BtEngineClosestConvexResultCallback ccb(obj->m_self.get());
+        BtEngineClosestConvexResultCallback ccb(obj->m_self);
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
         btVector3 v;
         btTransform from, to;
@@ -1873,7 +1875,7 @@ int Character::checkTraverse(std::shared_ptr<Entity> obj)
     next_s = next_s->checkPortalPointer();
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor, m_self) == 0x01))
     {
-        BtEngineClosestConvexResultCallback ccb(m_self.get());
+        BtEngineClosestConvexResultCallback ccb(m_self);
         btSphereShape sp(0.48 * TR_METERING_SECTORSIZE);
         btVector3 v;
         btTransform from, to;
@@ -1910,7 +1912,7 @@ void Character::applyCommands()
 
     if(state_func)
     {
-        state_func(std::dynamic_pointer_cast<Character>(shared_from_this()), &m_bf.animations);
+        state_func(this, &m_bf.animations);
     }
 
     switch(m_moveType)
@@ -2334,7 +2336,7 @@ void Character::frameImpl(btScalar time, int16_t frame, int state) {
 
     if(m_bf.animations.onFrame != NULL)
     {
-        m_bf.animations.onFrame(std::static_pointer_cast<Character>(shared_from_this()), &m_bf.animations, state);
+        m_bf.animations.onFrame(this, &m_bf.animations, state);
     }
 }
 

@@ -68,10 +68,10 @@ ALCcontext             *al_context     = NULL;
 int done = 0;
 btScalar time_scale = 1.0;
 
-btVector3 Lightosition = {255.0, 255.0, 8.0};
+btVector3 light_position = {255.0, 255.0, 8.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-EngineContainer* last_cont = NULL;
+std::shared_ptr<EngineContainer> last_cont = nullptr;
 
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
 /*
@@ -214,7 +214,11 @@ void Engine_InitSDLControls()
 
 void Engine_InitSDLVideo()
 {
+#ifdef NDEBUG
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
+#else
+    Uint32 video_flags = SDL_WINDOW_OPENGL;
+#endif
 
     if(screen_info.FS_flag)
     {
@@ -394,9 +398,11 @@ void Engine_Start()
     engine_world.prepare();
 
     // Setting up mouse.
+#ifdef NDEBUG
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
     SDL_ShowCursor(0);
+#endif
 
     // Make splash screen.
     Gui_FadeAssignPic(FADER_LOADSCREEN, "resource/graphics/legal.png");
@@ -507,7 +513,7 @@ void ShowDebugInfo()
 {
     GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
-    Lightosition = engine_camera.m_pos;
+    light_position = engine_camera.m_pos;
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -533,15 +539,15 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", std::static_pointer_cast<Entity>(last_cont->object)->m_id, std::static_pointer_cast<Entity>(last_cont->object)->m_bf.animations.model->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", static_cast<Entity*>(last_cont->object)->m_id, static_cast<Entity*>(last_cont->object)->m_bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
-                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", std::static_pointer_cast<StaticMesh>(last_cont->object)->object_id);
+                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", static_cast<StaticMesh*>(last_cont->object)->object_id);
                 break;
 
             case OBJECT_ROOM_BASE:
-                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", std::static_pointer_cast<Room>(last_cont->object)->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", static_cast<Room*>(last_cont->object)->id);
                 break;
         }
 

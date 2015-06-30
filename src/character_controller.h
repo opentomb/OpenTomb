@@ -320,7 +320,7 @@ struct Character : public Entity
     int                          m_currentWeapon = 0;
     WeaponState m_weaponCurrentState = WeaponState::Hide;
     
-    int (*state_func)(std::shared_ptr<Character> entity, SSAnimation *ssAnim) = nullptr;
+    int (*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
     
     int8_t                       m_camFollowCenter = 0;
     btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
@@ -342,7 +342,7 @@ struct Character : public Entity
     HeightInfo         m_heightInfo{};
     ClimbInfo          m_climb{};
 
-    std::shared_ptr<Entity> m_traversedObject = nullptr;
+    Entity* m_traversedObject = nullptr;
     
     std::shared_ptr<BtEngineClosestRayResultCallback> m_rayCb;
     std::shared_ptr<BtEngineClosestConvexResultCallback> m_convexCb;
@@ -362,7 +362,7 @@ struct Character : public Entity
         pos[1] = m_transform.getOrigin()[1];
         return pos;
     }
-    void transferToRoom(std::shared_ptr<Room> room) override {
+    void transferToRoom(Room* room) override {
     }
     void updateHair() override;
     void frameImpl(btScalar time, int16_t frame, int state) override;
@@ -411,7 +411,7 @@ struct Character : public Entity
     int moveOnWater();
 
     int findTraverse();
-    int checkTraverse(std::shared_ptr<Entity> obj);
+    int checkTraverse(Entity *obj);
 
     void applyCommands();
     void updateParams();

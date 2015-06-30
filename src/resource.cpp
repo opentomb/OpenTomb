@@ -1606,7 +1606,7 @@ void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
             {
                 if((p.norm[2] < 0.01) && ((p.norm[2] > -0.01)))
                 {
-                    RoomSector* dst = p.dest_room->getSectorRaw(sector->pos);
+                    RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->pos) : nullptr;
                     RoomSector* orig_dst = engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
                     if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
@@ -1929,8 +1929,10 @@ void TR_GenRooms(World *world, class VT_Level *tr)
     }
 }
 
-void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, World *world, class VT_Level *tr)
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, class VT_Level *tr)
 {
+    room = std::make_shared<Room>();
+
     Portal* p;
     tr5_room_t *tr_room = &tr->rooms[room_index];
     tr_staticmesh_t *tr_static;
@@ -1957,8 +1959,8 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, World *world, cla
     room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
     room->self.reset( new EngineContainer() );
-    room->self->room = room;
-    room->self->object = room;
+    room->self->room = room.get();
+    room->self->object = room.get();
     room->self->object_type = OBJECT_ROOM_BASE;
     room->near_room_list.clear();
     room->overlapped_room_list.clear();
@@ -1980,9 +1982,9 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, World *world, cla
         }
         room->static_mesh.emplace_back( std::make_shared<StaticMesh>() );
         std::shared_ptr<StaticMesh> r_static = room->static_mesh.back();
-        r_static->self = new EngineContainer();
-        r_static->self->room = room;
-        r_static->self->object = room->static_mesh[i];
+        r_static->self = std::make_shared<EngineContainer>();
+        r_static->self->room = room.get();
+        r_static->self->object = room->static_mesh[i].get();
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = world->meshes[ tr->mesh_indices[tr_static->mesh] ];
@@ -2074,7 +2076,7 @@ void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, World *world, cla
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
                 bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-                r_static->bt_body->setUserPointer(r_static->self);
+                r_static->bt_body->setUserPointer(r_static->self.get());
             }
         }
     }
@@ -3859,7 +3861,7 @@ void TR_GenEntities(World *world, class VT_Level *tr)
         entity->updateTransform();
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms.size()))
         {
-            entity->m_self->room = world->rooms[ tr_item->room ];
+            entity->m_self->room = world->rooms[tr_item->room].get();
         }
         else
         {
@@ -4282,7 +4284,7 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
             {
                 if(cont->object_type == OBJECT_ENTITY)
                 {
-                    std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
+                    Entity* ent = static_cast<Entity*>(cont->object);
                     if(ent->m_bf.animations.model->id == item->world_model_id)
                     {
                         char buf[64] = {0};

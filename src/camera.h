@@ -68,7 +68,7 @@ struct Camera
 
     int8_t m_targetDir;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
-    std::shared_ptr<Room> m_currentRoom = nullptr;
+    Room* m_currentRoom = nullptr;
 
     Camera();
 

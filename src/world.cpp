@@ -70,8 +70,7 @@ void Room::empty()
             if(static_mesh[i]->self)
             {
                 static_mesh[i]->self->room = NULL;
-                free(static_mesh[i]->self);
-                static_mesh[i]->self = NULL;
+                static_mesh[i]->self.reset();
             }
         }
         static_mesh.clear();
@@ -112,7 +111,7 @@ void Room::empty()
 }
 
 
-void Room::addEntity(std::shared_ptr<Entity> entity)
+void Room::addEntity(Entity* entity)
 {
     for(const std::shared_ptr<EngineContainer>& curr : containers)
     {
@@ -122,12 +121,12 @@ void Room::addEntity(std::shared_ptr<Entity> entity)
         }
     }
 
-    entity->m_self->room = std::static_pointer_cast<Room>(shared_from_this());
+    entity->m_self->room = this;
     containers.insert(containers.begin(), entity->m_self);
 }
 
 
-bool Room::removeEntity(std::shared_ptr<Entity> entity)
+bool Room::removeEntity(Entity* entity)
 {
     if(!entity || containers.empty())
         return false;
@@ -135,15 +134,15 @@ bool Room::removeEntity(std::shared_ptr<Entity> entity)
     auto it = std::find( containers.begin(), containers.end(), entity->m_self );
     if(it != containers.end()) {
         containers.erase(it);
-        entity->m_self->room.reset();
+        entity->m_self->room = nullptr;
         return true;
     }
 
     if(containers.front() == entity->m_self)
     {
         containers.erase(containers.begin());
-        entity->m_self->room.reset();
-        return 1;
+        entity->m_self->room = nullptr;
+        return true;
     }
 
     return false;
@@ -152,45 +151,41 @@ bool Room::removeEntity(std::shared_ptr<Entity> entity)
 
 void Room::addToNearRoomsList(std::shared_ptr<Room> r)
 {
-    if(r && !isInNearRoomsList(r) && id != r->id && !isOverlapped(r))
+    if(r && !isInNearRoomsList(*r) && id != r->id && !isOverlapped(r.get()))
     {
         near_room_list.push_back(r);
     }
 }
 
 
-int Room::isInNearRoomsList(std::shared_ptr<Room> r1)
+bool Room::isInNearRoomsList(const Room& r1)
 {
-    if(r1)
+    if(id == r1.id)
     {
-        if(id == r1->id)
-        {
-            return 1;
-        }
+        return true;
+    }
 
-        if(r1->near_room_list.size() >= near_room_list.size())
+    if(r1.near_room_list.size() >= near_room_list.size())
+    {
+        for(const std::shared_ptr<Room>& r : near_room_list)
         {
-            for(const std::shared_ptr<Room>& r : near_room_list)
+            if(r->id == r1.id)
             {
-                if(r->id == r1->id)
-                {
-                    return 1;
-                }
-            }
-        }
-        else
-        {
-            for(const std::shared_ptr<Room>& r : r1->near_room_list)
-            {
-                if(r->id == id)
-                {
-                    return 1;
-                }
+                return true;
             }
         }
     }
-
-    return 0;
+    else
+    {
+        for(const std::shared_ptr<Room>& r : r1.near_room_list)
+        {
+            if(r->id == id)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 
@@ -380,9 +375,9 @@ btVector3 RoomSector::getCeilingPoint()
     return Sector_LowestCeilingCorner(getHighestSector());
 }
 
-bool Room::isOverlapped(std::shared_ptr<Room> r1)
+bool Room::isOverlapped(Room* r1)
 {
-    if((this == r1.get()) || (this == r1->alternate_room.get()) || (alternate_room == r1))
+    if((this == r1) || (this == r1->alternate_room.get()) || (alternate_room.get() == r1))
     {
         return false;
     }
@@ -444,7 +439,7 @@ void World::empty()
 
     if(character)
     {
-        character->m_self->room.reset();
+        character->m_self->room = nullptr;
         character->m_currentSector = nullptr;
     }
 
@@ -543,7 +538,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
                 }
                 if(room_id < rooms.size())
                 {
-                    ent->m_self->room = rooms[ room_id ];
+                    ent->m_self->room = rooms[ room_id ].get();
                     ent->m_currentSector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
                 }
                 else
@@ -577,7 +572,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             }
             if(room_id < rooms.size())
             {
-                ent->m_self->room = rooms[ room_id ];
+                ent->m_self->room = rooms[ room_id ].get();
                 ent->m_currentSector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
             }
             else
@@ -606,7 +601,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3
             ent->rebuildBV();
             if(ent->m_self->room != NULL)
             {
-                ent->m_self->room->addEntity(ent);
+                ent->m_self->room->addEntity(ent.get());
             }
             addEntity(ent);
 
@@ -661,11 +656,11 @@ std::shared_ptr<Room> World::findRoomByPosition(const btVector3& pos)
 }
 
 
-std::shared_ptr<Room> Room_FindPosCogerrence(const btVector3 &new_pos, std::shared_ptr<Room> room)
+Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
 {
-    if(room == NULL)
+    if(room == nullptr)
     {
-        return engine_world.findRoomByPosition(new_pos);
+        return engine_world.findRoomByPosition(new_pos).get();
     }
 
     if(room->active &&
@@ -707,11 +702,11 @@ std::shared_ptr<Room> Room_FindPosCogerrence(const btVector3 &new_pos, std::shar
            (new_pos[1] >= r->bb_min[1]) && (new_pos[1] < r->bb_max[1]) &&
            (new_pos[2] >= r->bb_min[2]) && (new_pos[2] < r->bb_max[2]))
         {
-            return r;
+            return r.get();
         }
     }
 
-    return engine_world.findRoomByPosition(new_pos);
+    return engine_world.findRoomByPosition(new_pos).get();
 }
 
 
@@ -815,7 +810,7 @@ RoomSector* RoomSector::checkFlip()
 
 RoomSector* Room::getSectorXYZ(const btVector3& pos)
 {
-    std::shared_ptr<Room> room = checkFlip();
+    Room* room = checkFlip();
 
     if(!room->active)
     {
@@ -876,7 +871,7 @@ void Room::enable()
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                std::static_pointer_cast<Entity>(cont->object)->enable();
+                static_cast<Entity*>(cont->object)->enable();
                 break;
         }
     }
@@ -910,7 +905,7 @@ void Room::disable()
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                std::static_pointer_cast<Entity>(cont->object)->disable();
+                static_cast<Entity*>(cont->object)->disable();
                 break;
         }
     }
@@ -944,21 +939,21 @@ void Room::swapToAlternate()
     }
 }
 
-std::shared_ptr<Room> Room::checkFlip()
+Room* Room::checkFlip()
 {
     if(!active)
     {
         if((base_room != NULL) && (base_room->active))
         {
-            return base_room;
+            return base_room.get();
         }
         else if((alternate_room != NULL) && (alternate_room->active))
         {
-            return alternate_room;
+            return alternate_room.get();
         }
     }
 
-    return std::static_pointer_cast<Room>(shared_from_this());
+    return this;
 }
 
 void Room::swapPortals(std::shared_ptr<Room> dest_room)
@@ -982,12 +977,12 @@ void Room::swapItems(std::shared_ptr<Room> dest_room)
 {
     for(std::shared_ptr<EngineContainer> t : containers)
     {
-        t->room = dest_room;
+        t->room = dest_room.get();
     }
 
     for(std::shared_ptr<EngineContainer> t : dest_room->containers)
     {
-        t->room = std::static_pointer_cast<Room>(shared_from_this());
+        t->room = this;
     }
 
     std::swap(containers, dest_room->containers);
@@ -1087,11 +1082,11 @@ Sprite* World::getSpriteByID(unsigned int ID)
 /*
  * Check for join portals existing
  */
-bool Room::isJoined(std::shared_ptr<Room> r2)
+bool Room::isJoined(Room* r2)
 {
     for(const Portal& p : portals)
     {
-        if(p.dest_room->id == r2->id)
+        if(p.dest_room && p.dest_room->id == r2->id)
         {
             return true;
         }
@@ -1099,7 +1094,7 @@ bool Room::isJoined(std::shared_ptr<Room> r2)
 
     for(const Portal& p : r2->portals)
     {
-        if(p.dest_room->id == id)
+        if(p.dest_room && p.dest_room->id == id)
         {
             return true;
         }
@@ -1119,6 +1114,9 @@ void Room::buildNearRoomsList()
 
     for(const std::shared_ptr<Room>& r : near_room_list)
     {
+        if(!r)
+            continue;
+
         for(const Portal& p : r->portals)
         {
             addToNearRoomsList(p.dest_room);
@@ -1132,7 +1130,7 @@ void Room::buildOverlappedRoomsList()
 
     for(auto r : engine_world.rooms)
     {
-        if(isOverlapped(r))
+        if(isOverlapped(r.get()))
         {
             overlapped_room_list.push_back(r);
         }

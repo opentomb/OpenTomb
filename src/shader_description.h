@@ -105,7 +105,7 @@ struct LitShaderDescription : public UnlitShaderDescription
     GLint model_view;
     GLint projection;
     GLint number_of_lights;
-    GLint Lightosition;
+    GLint light_position;
     GLint light_color;
     GLint light_inner_radius;
     GLint light_outer_radius;

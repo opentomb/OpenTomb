@@ -1,14 +1,6 @@
-#ifndef OBJECT_H
-#define OBJECT_H
+#pragma once
 
-#include <memory>
-
-struct Object : public std::enable_shared_from_this<Object>
+struct Object
 {
-    virtual ~Object()
-    {
-    }
+    virtual ~Object() = default;
 };
-
-#endif // OBJECT_H
-

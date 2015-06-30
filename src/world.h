@@ -325,19 +325,19 @@ struct Room : public Object
     void disable();
     void swapToAlternate();
     void swapToBase();
-    std::shared_ptr<Room> checkFlip();
+    Room *checkFlip();
     void swapPortals(std::shared_ptr<Room> dest_room); //Swap room portals of input room to destination room
     void swapItems(std::shared_ptr<Room> dest_room);   //Swap room items of input room to destination room
     void buildNearRoomsList();
     void buildOverlappedRoomsList();
 
-    bool isJoined(std::shared_ptr<Room> r2);
-    bool isOverlapped(std::shared_ptr<Room> r1);
-    int isInNearRoomsList(std::shared_ptr<Room> r);
+    bool isJoined(Room *r2);
+    bool isOverlapped(Room *r1);
+    bool isInNearRoomsList(const Room &r);
     bool hasSector(int x, int y);//If this room contains a sector
     void empty();
-    void addEntity(std::shared_ptr<Entity> entity);
-    bool removeEntity(std::shared_ptr<Entity> entity);
+    void addEntity(Entity *entity);
+    bool removeEntity(Entity* entity);
     void addToNearRoomsList(std::shared_ptr<Room> r);
 
     bool isPointIn(const btVector3& dot)
@@ -422,6 +422,6 @@ struct World
     std::shared_ptr<Room> getByID(unsigned int ID);
 };
 
-std::shared_ptr<Room> Room_FindPosCogerrence(const btVector3& new_pos, std::shared_ptr<Room> room);
+Room *Room_FindPosCogerrence(const btVector3& new_pos, Room *room);
 
 #endif

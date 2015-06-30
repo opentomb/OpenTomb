@@ -70,9 +70,9 @@ public:
     void drawOBB(OBB *obb);
     void drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
     void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform, Render *render);
-    void drawEntityDebugLines(std::shared_ptr<Entity> entity, Render *render);
+    void drawEntityDebugLines(Entity *entity, Render *render);
     void drawSectorDebugLines(RoomSector *rs);
-    void drawRoomDebugLines(std::shared_ptr<Room> room, Render *render);
+    void drawRoomDebugLines(Room *room, Render *render);
 
     // bullet's debug interface
     virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color);
@@ -112,7 +112,7 @@ enum BlendingMode
 struct RenderList
 {
     bool active = false;
-    std::shared_ptr<Room> room{};
+    Room* room = nullptr;
     btScalar dist = 0;
 };
 
@@ -176,7 +176,7 @@ public:
     void initGlobals();
     void init();
     void empty();
-    int addRoom(std::shared_ptr<Room> room);
+    int addRoom(Room *room);
     void setWorld(World* m_world);
     void resetWorld() {
         m_world = nullptr;
@@ -246,26 +246,26 @@ public:
         m_skipRoom = !m_skipRoom;
     }
 
-    void renderEntity(std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection);
-    void renderDynamicEntity(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix);
-    void renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix);
+    void renderEntity(Entity *entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection);
+    void renderDynamicEntity(const std::shared_ptr<LitShaderDescription> &shader, Entity *entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix);
+    void renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription> &shader, Entity *ent, const btTransform& mvMatrix, const btTransform& pMatrix);
     void renderSkeletalModel(const std::shared_ptr<LitShaderDescription> &shader, SSBoneFrame* bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
-    void renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> ent, const btTransform &mvMatrix, const btTransform &pMatrix);
+    void renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription> &shader, Entity *ent, const btTransform &mvMatrix, const btTransform &pMatrix);
     void renderHair(std::shared_ptr<Character> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix);
     void renderSkyBox(const btTransform &matrix);
     void renderMesh(const std::shared_ptr<BaseMesh> &mesh);
     void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef &p, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
     void renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription>& shader);
     void renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
-    void renderRoom(std::shared_ptr<Room> room, const btTransform& matrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection);
-    void renderRoomSprites(std::shared_ptr<Room> room, const btTransform& modelViewMatrix, const btTransform& projectionMatrix);
+    void renderRoom(Room *room, const btTransform& matrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection);
+    void renderRoomSprites(Room *room, const btTransform& modelViewMatrix, const btTransform& projectionMatrix);
 
     int haveFrustumParent(Room *room, Frustum *frus);
     int processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus);
     void renderSkyBoxDebugLines();
 
 private:
-    std::shared_ptr<LitShaderDescription> setupEntityLight(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, bool skin);
+    std::shared_ptr<LitShaderDescription> setupEntityLight(Entity *entity, const btTransform& modelViewMatrix, bool skin);
 };
 
 extern Render renderer;

@@ -27,7 +27,7 @@
 
 void Entity::createGhosts()
 {
-    if(m_bf.animations.model->mesh_count <= 0)
+    if(!m_bf.animations.model || m_bf.animations.model->mesh_count <= 0)
         return;
 
     m_bt.manifoldArray.reset( new btManifoldArray() );
@@ -148,14 +148,12 @@ void Entity::genEntityRigidBody()
         {
             cshape->calculateLocalInertia(0.0, localInertia);
 
-            auto tr = m_transform * m_bf.bone_tags[i].full_transform;
-            startTransform = tr;
+            startTransform = m_transform * m_bf.bone_tags[i].full_transform;
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             m_bt.bt_body.back().reset( new btRigidBody(0.0, motionState, cshape, localInertia) );
             //bt.bt_body[i]->setCollisionFlags(bt.bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
             bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             m_bt.bt_body.back()->setUserPointer(m_self.get());
-            m_bt.bt_body.back()->setUserIndex(i);
         }
     }
 }
@@ -402,17 +400,17 @@ void Entity::fixPenetrations(btVector3* move)
     ghostUpdate();
 }
 
-void Entity::transferToRoom(std::shared_ptr<Room> room) {
+void Entity::transferToRoom(Room* room) {
     if(m_self->room && !m_self->room->isOverlapped(room)) {
         if(m_self->room)
-            m_self->room->removeEntity(std::static_pointer_cast<Entity>(shared_from_this()));
+            m_self->room->removeEntity(this);
         if(room)
-            room->addEntity(std::static_pointer_cast<Entity>(shared_from_this()));
+            room->addEntity(this);
     }
 }
 
 std::shared_ptr<BtEngineClosestConvexResultCallback> Entity::callbackForCamera() const {
-    auto cb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self.get());
+    auto cb = std::make_shared<BtEngineClosestConvexResultCallback>(m_self);
     cb->m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     return cb;
 }
@@ -438,13 +436,13 @@ void Entity::checkCollisionCallbacks()
 
         if(type == OBJECT_ENTITY)
         {
-            std::shared_ptr<Entity> activator = std::static_pointer_cast<Entity>(cont->object);
+            Entity* activator = static_cast<Entity*>(cont->object);
 
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
                 lua_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->m_id, m_id);
-                ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_bone_index = %d, collider_type = %d", curr_flag, cobj->getUserIndex(), type);
+                ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
     }
@@ -520,9 +518,9 @@ void Entity::updateRoomPos()
         return;
 
     auto new_sector = new_room->getSectorXYZ(pos);
-    if(new_room != new_sector->owner_room)
+    if(new_room != new_sector->owner_room.get())
     {
-        new_room = new_sector->owner_room;
+        new_room = new_sector->owner_room.get();
     }
 
     transferToRoom(new_room);
@@ -1360,13 +1358,13 @@ void Entity::checkActivators()
         {
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {
-                std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
+                Entity* e = static_cast<Entity*>(cont->object);
                 btScalar r = e->m_activationRadius;
                 r *= r;
                 if((e->m_typeFlags & ENTITY_TYPE_INTERACTIVE) && e->m_enabled)
                 {
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e.get() != this) && (OBB_OBB_Test(e, std::static_pointer_cast<Entity>(shared_from_this())) == 1))//(vec3_dist_sq(transform+12, pos) < r))
+                    if((e != this) && (OBB_OBB_Test(*e, *this) == 1))//(vec3_dist_sq(transform+12, pos) < r))
                     {
                         lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
                     }
@@ -1374,7 +1372,7 @@ void Entity::checkActivators()
                 else if((e->m_typeFlags & ENTITY_TYPE_PICKABLE) && e->m_enabled)
                 {
                     const btVector3& v = e->m_transform.getOrigin();
-                    if((e.get() != this) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
+                    if((e != this) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                             (v[2] + 32.0 > m_transform.getOrigin()[2] + m_bf.bb_min[2]) && (v[2] - 32.0 < m_transform.getOrigin()[2] + m_bf.bb_max[2]))
                     {
                         lua_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->m_id, m_id);
@@ -1409,7 +1407,7 @@ Entity::Entity()
     , m_self(new EngineContainer())
 {
     m_transform.setIdentity();
-    m_self->object = shared_from_this();
+    m_self->object = this;
     m_self->object_type = OBJECT_ENTITY;
     m_self->room = NULL;
     m_self->collision_type = 0;

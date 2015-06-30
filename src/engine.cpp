@@ -89,9 +89,9 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
     EngineContainer* c0, *c1;
 
     c0 = (EngineContainer*)((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->getUserPointer();
-    std::shared_ptr<Room> r0 = (c0)?(c0->room):(NULL);
+    Room* r0 = c0 ? c0->room : nullptr;
     c1 = (EngineContainer*)((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->getUserPointer();
-    std::shared_ptr<Room> r1 = (c1)?(c1->room):(NULL);
+    Room* r1 = c1 ? c1->room : nullptr;
 
     if(c1 && c1 == c0)
     {
@@ -112,7 +112,7 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
 
     if(r0 && r1)
     {
-        if(r0->isInNearRoomsList(r1))
+        if(r0->isInNearRoomsList(*r1))
         {
             dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
             return;
@@ -263,9 +263,9 @@ void lua_DumpModel(int id)
     }
 }
 
-void dumpRoom(std::shared_ptr<Room> r)
+void dumpRoom(Room* r)
 {
-    if(r != NULL)
+    if(r != nullptr)
     {
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform.getOrigin()[0], r->transform.getOrigin()[1]);
         Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL)?(r->alternate_room->id):(-1), (r->base_room != NULL)?(r->base_room->id):(-1));
@@ -281,7 +281,7 @@ void dumpRoom(std::shared_ptr<Room> r)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
-                std::shared_ptr<Entity> ent = std::static_pointer_cast<Entity>(cont->object);
+                Entity* ent = static_cast<Entity*>(cont->object);
                 Sys_DebugLog("room_dump.txt", "entity: id = %d, model = %d", ent->m_id, ent->m_bf.animations.model->id);
             }
         }
@@ -301,7 +301,7 @@ void lua_dumpRoom2(uint32_t id)
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ROOM, id);
         return;
     }
-    dumpRoom(engine_world.rooms[id]);
+    dumpRoom(engine_world.rooms[id].get());
 }
 
 void lua_SetRoomEnabled(int id, bool value)
@@ -515,7 +515,7 @@ lua::Bool lua_DropEntity2(int id, float time, lua::Bool optOnlyRoom)
     move += g * 0.5 * time * time;
     ent->m_speed += g * time;
 
-    BtEngineClosestRayResultCallback cb(ent->m_self.get());
+    BtEngineClosestRayResultCallback cb(ent->m_self);
     btVector3 from, to;
     from = ent->m_transform * ent->m_bf.centre;
     from[2] = ent->m_transform.getOrigin()[2];
@@ -1657,7 +1657,7 @@ void lua_SetModelBodyPartFlag(int id, int bone_id, int body_part_flag)
     model->mesh_tree[bone_id].body_part = body_part_flag;
 }
 
-lua::OptionalTuple<int,int,int> lua_GetEntityAnim(int id)
+lua::OptionalTuple<int16_t,int16_t,uint32_t> lua_GetEntityAnim(int id)
 {
     std::shared_ptr<Entity> ent = engine_world.getEntityByID(id);
 
@@ -1667,11 +1667,11 @@ lua::OptionalTuple<int,int,int> lua_GetEntityAnim(int id)
         return lua::None;
     }
 
-    return lua::Tuple<int,int,int>
+    return lua::Tuple<int16_t,int16_t,uint32_t>
     {
         ent->m_bf.animations.current_animation,
         ent->m_bf.animations.current_frame,
-        ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames.size()
+        static_cast<uint32_t>(ent->m_bf.animations.model->animations[ent->m_bf.animations.current_animation].frames.size())
     };
 }
 
@@ -2299,15 +2299,15 @@ void lua_SetEntityRoomMove(int id, lua::Int room, lua::UInt16 moveType, lua::UIn
         std::shared_ptr<Room> r = engine_world.rooms[*room];
         if(ent == engine_world.character)
         {
-            ent->m_self->room = r;
+            ent->m_self->room = r.get();
         }
-        else if(ent->m_self->room != r)
+        else if(ent->m_self->room != r.get())
         {
             if(ent->m_self->room != NULL)
             {
-                ent->m_self->room->removeEntity(ent);
+                ent->m_self->room->removeEntity(ent.get());
             }
-            r->addEntity(ent);
+            r->addEntity(ent.get());
         }
     }
     ent->updateRoomPos();
@@ -2804,6 +2804,7 @@ void lua_SetGame1(int gameId)
 
 void lua_LoadMap3(const std::string& mapName, lua::Int gameId, lua::Int mapId)
 {
+    ConsoleInfo::instance().printf("Loading map %s", mapName.c_str());
     if(!mapName.empty() && mapName != gameflow_manager.CurrentLevelPath)
     {
         if(gameId)
@@ -3846,7 +3847,7 @@ int Engine_ExecCmd(const char *ch)
         }
         else if(!strcmp(token, "room_info"))
         {
-            if(std::shared_ptr<Room> r = renderer.camera()->m_currentRoom)
+            if(Room* r = renderer.camera()->m_currentRoom)
             {
                 sect = r->getSectorXYZ(renderer.camera()->m_pos);
                 ConsoleInfo::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
@@ -3862,7 +3863,7 @@ int Engine_ExecCmd(const char *ch)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {
-                            std::shared_ptr<Entity> e = std::static_pointer_cast<Entity>(cont->object);
+                            Entity* e = static_cast<Entity*>(cont->object);
                             ConsoleInfo::instance().printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->m_transform.getOrigin()[0], (int)e->m_transform.getOrigin()[1], (int)e->m_transform.getOrigin()[2], e->m_id);
                         }
                     }

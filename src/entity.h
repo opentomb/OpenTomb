@@ -181,7 +181,7 @@ struct Entity : public Object
         btVector3 v = (m_bf.bb_min + m_bf.bb_max) / 2;
         return m_transform * v;
     }
-    virtual void transferToRoom(std::shared_ptr<Room> room);
+    virtual void transferToRoom(Room *room);
     virtual void frameImpl(btScalar time, int16_t frame, int state) {
     }
 

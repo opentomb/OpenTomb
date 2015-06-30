@@ -36,7 +36,7 @@ struct OBB
     void rebuild(const btVector3 &bb_min, const btVector3 &bb_max);
 };
 
-int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2);
+int OBB_OBB_Test(const Entity &e1, const Entity &e2);
 
 #endif /* OBB_H */
 

@@ -142,7 +142,7 @@ void TR_GenTextures(World *world, class VT_Level *tr);
 void TR_GenAnimCommands(World *world, class VT_Level *tr);
 void TR_GenAnimTextures(World *world, class VT_Level *tr);
 void TR_GenRooms(World *world, class VT_Level *tr);
-void TR_GenRoom(size_t room_index, std::shared_ptr<Room> room, World *world, class VT_Level *tr);
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, class VT_Level *tr);
 void TR_GenRoomProperties(World *world, class VT_Level *tr);
 void TR_GenBoxes(World *world, class VT_Level *tr);
 void TR_GenCameras(World *world, class VT_Level *tr);

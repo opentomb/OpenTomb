@@ -223,7 +223,7 @@ struct StaticMesh : public Object
 
     btTransform transform;                                  // gl transformation matrix
     OBB               *obb;
-    EngineContainer  *self;
+    std::shared_ptr<EngineContainer> self;
 
     std::shared_ptr<BaseMesh> mesh;                                           // base model
     btRigidBody                *bt_body;
@@ -275,7 +275,7 @@ struct SSAnimation
     btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
 
-    void                      (*onFrame)(std::shared_ptr<Character> ent, SSAnimation *ss_anim, int state);
+    void                      (*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
 
     SkeletalModel    *model;                                          // pointer to the base model
     SSAnimation      *next;

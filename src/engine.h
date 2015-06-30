@@ -63,8 +63,8 @@ struct EngineContainer
     uint16_t object_type = 0;
     uint16_t                     collision_type;
     uint16_t                     collision_shape;
-    std::shared_ptr<Object> object = nullptr;
-    std::shared_ptr<Room> room = nullptr;
+    Object* object = nullptr;
+    Room* room = nullptr;
 };
 
 struct EngineControlState
@@ -146,7 +146,7 @@ extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    BtEngineClosestRayResultCallback(EngineContainer* cont, bool skipGhost = false) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    BtEngineClosestRayResultCallback(std::shared_ptr<EngineContainer> cont, bool skipGhost = false) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
     {
         m_container = cont;
         m_skip_ghost = skipGhost;
@@ -154,13 +154,11 @@ public:
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
     {
-        EngineContainer* c1;
+        Room* r0 = m_container ? m_container->room : nullptr;
+        EngineContainer* c1 = (EngineContainer*)rayResult.m_collisionObject->getUserPointer();
+        Room* r1 = c1 ? c1->room : nullptr;
 
-        std::shared_ptr<Room> r0 = m_container ? m_container->room : NULL;
-        c1 = (EngineContainer*)rayResult.m_collisionObject->getUserPointer();
-        std::shared_ptr<Room> r1 = c1 ? c1->room : NULL;
-
-        if(c1 && ((c1 == m_container) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
+        if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
             return 1.0;
         }
@@ -172,7 +170,7 @@ public:
 
         if(r0 && r1)
         {
-            if(r0->isInNearRoomsList(r1))
+            if(r0->isInNearRoomsList(*r1))
             {
                 return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
             }
@@ -185,7 +183,7 @@ public:
         return 1.0;
     }
 
-    EngineContainer* m_container;
+    std::shared_ptr<EngineContainer> m_container;
     bool               m_skip_ghost;
 };
 
@@ -193,7 +191,7 @@ public:
 class BtEngineClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    BtEngineClosestConvexResultCallback(EngineContainer* cont, bool skipGhost = false) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    BtEngineClosestConvexResultCallback(std::shared_ptr<EngineContainer> cont, bool skipGhost = false) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
     {
         m_container = cont;
         m_skip_ghost = skipGhost;
@@ -203,11 +201,11 @@ public:
     {
         EngineContainer* c1;
 
-        std::shared_ptr<Room> r0 = (m_container)?(m_container->room):(NULL);
+        Room* r0 = m_container ? m_container->room : nullptr;
         c1 = (EngineContainer*)convexResult.m_hitCollisionObject->getUserPointer();
-        std::shared_ptr<Room> r1 = (c1)?(c1->room):(NULL);
+        Room* r1 = c1 ? c1->room : nullptr;
 
-        if(c1 && ((c1 == m_container) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
+        if(c1 && ((c1 == m_container.get()) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
             return 1.0;
         }
@@ -219,7 +217,7 @@ public:
 
         if(r0 && r1)
         {
-            if(r0->isInNearRoomsList(r1))
+            if(r0->isInNearRoomsList(*r1))
             {
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
             }
@@ -233,7 +231,7 @@ public:
     }
 
 protected:
-    EngineContainer* m_container;
+    std::shared_ptr<EngineContainer> m_container;
     bool               m_skip_ghost;
 };
 
