@@ -140,8 +140,8 @@ typedef struct {
 typedef struct {
     int16_t vertex;                 // offset into vertex list
     int16_t texture;                // offset into sprite texture list
-} tr_room_sprite_t;
-//typedef prtl::array < tr_room_sprite_t > tr_room_sprite_array_t;
+} tr_room_Sprite;
+//typedef prtl::array < tr_room_Sprite > tr_room_sprite_array_t;
 
 /** \brief Room layer (TR5).
   */
@@ -214,7 +214,7 @@ typedef struct {
     uint32_t num_triangles;         // number of textured triangles
     tr4_face3_t *triangles;         // [NumTriangles] list of textured triangles
     uint32_t num_sprites;           // number of sprites
-    tr_room_sprite_t *sprites;      // [NumSprites] list of sprites
+    tr_room_Sprite *sprites;      // [NumSprites] list of sprites
     uint16_t num_portals;           // number of visibility portals to other rooms
     tr_room_portal_t *portals;      // [NumPortals] list of visibility portals
     uint16_t num_zsectors;          // "width" of sector list
@@ -404,8 +404,8 @@ typedef struct {               // 16 bytes
     int16_t         top_side;
     int16_t         right_side;
     int16_t         bottom_side;
-} tr_sprite_texture_t;
-//typedef prtl::array < tr_sprite_texture_t > tr_sprite_texture_array_t;
+} tr_Spriteexture_t;
+//typedef prtl::array < tr_Spriteexture_t > tr_Spriteexture_array_t;
 
 /** \brief Sprite sequence.
   */

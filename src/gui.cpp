@@ -1,5 +1,5 @@
 
-#include <stdint.h>
+#include <cstdint>
 #ifdef __APPLE_CC__
 #include <ImageIO/ImageIO.h>
 #include <OpenGL/OpenGL.h>
@@ -37,9 +37,9 @@ gui_FontManager       *FontManager = NULL;
 gui_InventoryManager  *main_inventory_manager = NULL;
 
 GLuint crosshairBuffer;
-vertex_array *crosshairArray;
+std::unique_ptr<VertexArray> crosshairArray;
 
-GLfloat guiProjectionMatrix[16];
+btTransform guiProjectionMatrix;
 
 void Gui_Init()
 {
@@ -392,7 +392,7 @@ void Gui_Resize()
     }
 
     /* let us update console too */
-    Con_SetLineInterval(con_base.spacing);
+    ConsoleInfo::instance().setLineInterval(ConsoleInfo::instance().spacing());
     Gui_FillCrosshairBuffer();
 }
 
@@ -414,7 +414,7 @@ void Gui_Render()
     Gui_DrawBars();
     Gui_DrawFaders();
     Gui_RenderStrings();
-    Con_Draw();
+    ConsoleInfo::instance().draw();
 
     glDepthMask(GL_TRUE);
     glPopAttrib();
@@ -496,7 +496,7 @@ void Gui_RenderStringLine(gui_text_line_p l)
                        l->text);
     }
 
-    vec4_copy(gl_font->gl_font_color, style->real_color);
+    std::copy(style->real_color+0, style->real_color+4, gl_font->gl_font_color);
     glf_render_str(gl_font, real_x, real_y, l->text);
 }
 
@@ -508,7 +508,7 @@ void Gui_RenderStrings()
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        const text_shader_description *shader = renderer.shader_manager->getTextShader();
+        std::shared_ptr<TextShaderDescription> shader = renderer.shaderManager()->getTextShader();
         glUseProgramObjectARB(shader->program);
         GLfloat screenSize[2] = {
             (GLfloat) screen_info.w,
@@ -542,21 +542,21 @@ void Gui_RenderStrings()
  * That function updates item animation and rebuilds skeletal matrices;
  * @param bf - extended bone frame of the item;
  */
-void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
+void Item_Frame(struct SSBoneFrame *bf, btScalar time)
 {
     int16_t frame, anim;
     long int t;
     btScalar dt;
-    state_change_p stc;
+    StateChange* stc;
 
     bf->animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
-    Entity_GetNextFrame(bf, time, stc, &frame, &anim, 0x00);
+    stc = Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
+    Entity::getNextFrame(bf, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
         bf->animations.last_animation = bf->animations.current_animation;
-        /*frame %= bf->model->animations[anim].frames_count;
-        frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames_count - 1 + frame);
+        /*frame %= bf->model->animations[anim].frames.size();
+        frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames.size() - 1 + frame);
 
         bf->last_state = bf->model->animations[anim].state_id;
         bf->next_state = bf->model->animations[anim].state_id;
@@ -564,7 +564,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
         bf->current_frame = frame;
         bf->next_animation = anim;
         bf->next_frame = frame;*/
-        stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
+        stc = Anim_FindStateChangeByID(&bf->animations.model->animations[bf->animations.current_animation], bf->animations.next_state);
     }
     else if(bf->animations.current_frame != frame)
     {
@@ -581,8 +581,8 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
     dt = bf->animations.frame_time - (btScalar)t * bf->animations.period;
     bf->animations.frame_time = (btScalar)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
-    Entity_GetNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    Entity_UpdateCurrentBoneFrame(bf, NULL);
+    Entity::getNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
+    Entity::updateCurrentBoneFrame(bf, nullptr);
 }
 
 
@@ -593,17 +593,16 @@ void Item_Frame(struct ss_bone_frame_s *bf, btScalar time)
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix)
+void Gui_RenderItem(SSBoneFrame *bf, btScalar size, const btTransform& mvMatrix)
 {
-    const lit_shader_description *shader = renderer.shader_manager->getEntityShader(0, false);
+    const std::shared_ptr<LitShaderDescription>& shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->number_of_lights, 0);
     glUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
 
     if(size != 0.0)
     {
-        btScalar bb[3];
-        vec3_sub(bb, bf->bb_max, bf->bb_min);
+        auto bb = bf->bb_max - bf->bb_min;
         if(bb[0] >= bb[1])
         {
             size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
@@ -614,26 +613,23 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *m
         }
         size *= 0.8;
 
-        btScalar scaledMatrix[16];
-        Mat4_E(scaledMatrix);
+        btTransform scaledMatrix;
+        scaledMatrix.setIdentity();
         if(size < 1.0)          // only reduce items size...
         {
             Mat4_Scale(scaledMatrix, size, size, size);
         }
-        btScalar scaledMvMatrix[16];
-        Mat4_Mat4_mul(scaledMvMatrix, mvMatrix, scaledMatrix);
-        btScalar mvpMatrix[16];
-        Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, scaledMvMatrix);
+        btTransform scaledMvMatrix = mvMatrix * scaledMatrix;
+        btTransform mvpMatrix = guiProjectionMatrix * scaledMvMatrix;
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
-        btScalar mvpMatrix[16];
-        Mat4_Mat4_mul(mvpMatrix, guiProjectionMatrix, mvMatrix);
-        Render_SkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        btTransform mvpMatrix = guiProjectionMatrix * mvMatrix;
+        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 
@@ -705,10 +701,10 @@ gui_InventoryManager::~gui_InventoryManager()
 int gui_InventoryManager::getItemsTypeCount(int type)
 {
     int ret = 0;
-    for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+    for(const InventoryNode& i : *mInventory)
     {
-        base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
-        if((bi != NULL) && (bi->type == type))
+        auto bi = engine_world.getBaseItemByID(i.id);
+        if(bi && bi->type == type)
         {
             ret++;
         }
@@ -739,7 +735,7 @@ void gui_InventoryManager::restoreItemAngle(float time)
     }
 }
 
-void gui_InventoryManager::setInventory(struct inventory_node_s **i)
+void gui_InventoryManager::setInventory(std::list<InventoryNode> *i)
 {
     mInventory = i;
     mCurrentState = INVENTORY_DISABLED;
@@ -771,7 +767,7 @@ void gui_InventoryManager::setTitle(int items_type)
 
 int gui_InventoryManager::setItemsType(int type)
 {
-    if((mInventory == NULL) || (*mInventory == NULL))
+    if(!mInventory || mInventory->empty())
     {
         mCurrentItemsType = type;
         return type;
@@ -780,10 +776,9 @@ int gui_InventoryManager::setItemsType(int type)
     int count = this->getItemsTypeCount(type);
     if(count == 0)
     {
-        for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+        for(const InventoryNode& i : *mInventory)
         {
-            base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
-            if(bi != NULL)
+            if(auto bi = engine_world.getBaseItemByID(i.id))
             {
                 type = bi->type;
                 count = this->getItemsTypeCount(mCurrentItemsType);
@@ -808,7 +803,7 @@ int gui_InventoryManager::setItemsType(int type)
 
 void gui_InventoryManager::frame(float time)
 {
-    if((mInventory == NULL) || (*mInventory == NULL))
+    if(!mInventory || mInventory->empty())
     {
         mCurrentState = INVENTORY_DISABLED;
         mNextState = INVENTORY_DISABLED;
@@ -1050,19 +1045,19 @@ void gui_InventoryManager::frame(float time)
 
 void gui_InventoryManager::render()
 {
-    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL) && (FontManager != NULL))
+    if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && !mInventory->empty() && (FontManager != NULL))
     {
         int num = 0;
-        for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+        for(InventoryNode& i : *mInventory)
         {
-            base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
-            if((bi == NULL) || (bi->type != mCurrentItemsType))
+            auto bi = engine_world.getBaseItemByID(i.id);
+            if(!bi || bi->type != mCurrentItemsType)
             {
                 continue;
             }
 
-            btScalar matrix[16];
-            Mat4_E_macro(matrix);
+            btTransform matrix;
+            matrix.setIdentity();
             Mat4_Translate(matrix, 0.0, 0.0, - mBaseRingRadius * 2.0);
             //Mat4_RotateX(matrix, 25.0);
             Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
@@ -1077,25 +1072,25 @@ void gui_InventoryManager::render()
                 {
                     strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
 
-                    if(i->count > 1)
+                    if(i.count > 1)
                     {
                         char counter[32];
                         lua_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
-                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i->count);
+                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i.count);
 
                     }
                 }
                 Mat4_RotateZ(matrix, 90.0 + mItemAngle - ang);
-                Item_Frame(bi->bf, 0.0);                            // here will be time != 0 for using items animation
+                Item_Frame(bi->bf.get(), 0.0);                            // here will be time != 0 for using items animation
             }
             else
             {
                 Mat4_RotateZ(matrix, 90.0 - ang);
-                Item_Frame(bi->bf, 0.0);
+                Item_Frame(bi->bf.get(), 0.0);
             }
             Mat4_Translate(matrix, -0.5 * bi->bf->centre[0], -0.5 * bi->bf->centre[1], -0.5 * bi->bf->centre[2]);
             Mat4_Scale(matrix, 0.7, 0.7, 0.7);
-            Gui_RenderItem(bi->bf, 0.0, matrix);
+            Gui_RenderItem(bi->bf.get(), 0.0, matrix);
 
             num++;
         }
@@ -1112,17 +1107,15 @@ void Gui_SwitchGLMode(char is_gui)
         const GLfloat far_dist = 4096.0f;
         const GLfloat near_dist = -1.0f;
 
-        Mat4_E_macro(guiProjectionMatrix);
-        guiProjectionMatrix[0 * 4 + 0] = 2.0 / ((GLfloat)screen_info.w);
-        guiProjectionMatrix[1 * 4 + 1] = 2.0 / ((GLfloat)screen_info.h);
-        guiProjectionMatrix[2 * 4 + 2] =-2.0 / (far_dist - near_dist);
-        guiProjectionMatrix[3 * 4 + 0] =-1.0;
-        guiProjectionMatrix[3 * 4 + 1] =-1.0;
-        guiProjectionMatrix[3 * 4 + 2] =-(far_dist + near_dist) / (far_dist - near_dist);
+        guiProjectionMatrix.setIdentity();
+        guiProjectionMatrix.getBasis()[0][0] = 2.0 / screen_info.w;
+        guiProjectionMatrix.getBasis()[1][1] = 2.0 / screen_info.h;
+        guiProjectionMatrix.getBasis()[2][2] =-2.0 / (far_dist - near_dist);
+        guiProjectionMatrix.getOrigin() = {-1, -1, -(far_dist + near_dist) / (far_dist - near_dist)};
     }
     else                                                                        // set camera coordinate system
     {
-        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(btScalar [16]));
+        guiProjectionMatrix = engine_camera.m_glProjMat;
     }
 }
 
@@ -1143,16 +1136,16 @@ void Gui_FillCrosshairBuffer()
     glBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
     glBufferDataARB(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
     
-    vertex_array_attribute attribs[] = {
-        vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
-        vertex_array_attribute(gui_shader_description::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
+    VertexArrayAttribute attribs[] = {
+        VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, position)),
+        VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(gui_buffer_entry_s), offsetof(gui_buffer_entry_s, color))
     };
-    crosshairArray = renderer.vertex_array_manager->createArray(0, 2, attribs);
+    crosshairArray.reset( new VertexArray(0, 2, attribs) );
 }
 
 void Gui_DrawCrosshair()
 {
-    const gui_shader_description *shader = renderer.shader_manager->getGuiShader(false);
+    std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(false);
 
     glUseProgramObjectARB(shader->program);
     GLfloat factor[2] = {
@@ -1163,7 +1156,7 @@ void Gui_DrawCrosshair()
     GLfloat offset[2] = { -1.f, -1.f };
     glUniform2fvARB(shader->offset, 1, offset);
 
-    crosshairArray->use();
+    crosshairArray->bind();
     
     glDrawArrays(GL_LINES, 0, 4);
 }
@@ -1178,15 +1171,15 @@ void Gui_DrawFaders()
 
 void Gui_DrawBars()
 {
-    if(engine_world.Character && engine_world.Character->character)
+    if(engine_world.character)
     {
-        if(engine_world.Character->character->weapon_current_state > WEAPON_STATE_HIDE_TO_READY)
+        if(engine_world.character->m_weaponCurrentState > WeaponState::HideToReady)
             Bar[BAR_HEALTH].Forced = true;
 
-        Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));
-        Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
-        Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
-        Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
+        Bar[BAR_AIR].Show    (engine_world.character->getParam( PARAM_AIR    ));
+        Bar[BAR_STAMINA].Show(engine_world.character->getParam( PARAM_STAMINA));
+        Bar[BAR_HEALTH].Show (engine_world.character->getParam( PARAM_HEALTH ));
+        Bar[BAR_WARMTH].Show (engine_world.character->getParam( PARAM_WARMTH ));
     }
 }
 
@@ -1226,7 +1219,7 @@ void Gui_DrawInventory()
     //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
 
     Gui_SwitchGLMode(0);
-    //main_inventory_menu->Render(); //engine_world.Character->character->inventory
+    //main_inventory_menu->Render(); //engine_world.character->character->inventory
     main_inventory_manager->render();
     Gui_SwitchGLMode(1);
 }
@@ -1274,9 +1267,12 @@ void Gui_DrawLoadScreen(int value)
     SDL_GL_SwapWindow(sdl_window);
 }
 
+namespace
+{
 GLuint rectanglePositionBuffer = 0;
 GLuint rectangleColorBuffer = 0;
-vertex_array *rectangleArray = 0;
+std::unique_ptr<VertexArray> rectangleArray = 0;
+}
 
 /**
  * Draws simple colored rectangle with given parameters.
@@ -1321,11 +1317,11 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
         
         glGenBuffersARB(1, &rectangleColorBuffer);
         
-        vertex_array_attribute attribs[] = {
-            vertex_array_attribute(gui_shader_description::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
-            vertex_array_attribute(gui_shader_description::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
+        VertexArrayAttribute attribs[] = {
+            VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat [2]), 0),
+            VertexArrayAttribute(GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat [4]), 0),
         };
-        rectangleArray = renderer.vertex_array_manager->createArray(0, 2, attribs);
+        rectangleArray.reset( new VertexArray(0, 2, attribs) );
     }
     
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, rectangleColorBuffer);
@@ -1340,7 +1336,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
     const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
 
-    const gui_shader_description *shader = renderer.shader_manager->getGuiShader(texture != 0);
+    std::shared_ptr<GuiShaderDescription> shader = renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgramObjectARB(shader->program);
     glUniform1iARB(shader->sampler, 0);
     if (texture)
@@ -1351,7 +1347,7 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
     glUniform2fvARB(shader->offset, 1, offset);
     glUniform2fvARB(shader->factor, 1, factor);
 
-    rectangleArray->use();
+    rectangleArray->bind();
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
@@ -1673,7 +1669,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
         }
         else
         {
-            Con_Warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
+            ConsoleInfo::instance().warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
             SDL_FreeSurface(surface);
             return false;
         }
@@ -1697,7 +1693,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
     }
     else
     {
-        Con_Warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
+        ConsoleInfo::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
         return false;
     }
 
@@ -1713,7 +1709,7 @@ bool gui_Fader::SetTexture(const char *texture_path)
 
         SetAspect();
 
-        Con_Notify(SYSNOTE_LOADED_FADER, texture_path);
+        ConsoleInfo::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
         SDL_FreeSurface(surface);
         return true;
     }
@@ -2532,32 +2528,32 @@ void gui_ItemNotifier::Reset()
 
 void gui_ItemNotifier::Draw()
 {
-    if(mActive)
-    {
-        base_item_p item = World_GetBaseItemByID(&engine_world, mItem);
-        if(item)
-        {
-            int anim = item->bf->animations.current_animation;
-            int frame = item->bf->animations.current_frame;
-            btScalar time = item->bf->animations.frame_time;
+    if(!mActive)
+        return;
 
-            item->bf->animations.current_animation = 0;
-            item->bf->animations.current_frame = 0;
-            item->bf->animations.frame_time = 0.0;
+    auto item = engine_world.getBaseItemByID(mItem);
+    if(!item)
+        return;
 
-            Item_Frame(item->bf, 0.0);
-            btScalar matrix[16];
-            Mat4_E_macro(matrix);
-            Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
-            Mat4_RotateY(matrix, mCurrRotX + mRotX);
-            Mat4_RotateX(matrix, mCurrRotY + mRotY);
-            Gui_RenderItem(item->bf, mSize, matrix);
+    int anim = item->bf->animations.current_animation;
+    int frame = item->bf->animations.current_frame;
+    btScalar time = item->bf->animations.frame_time;
 
-            item->bf->animations.current_animation = anim;
-            item->bf->animations.current_frame = frame;
-            item->bf->animations.frame_time = time;
-        }
-    }
+    item->bf->animations.current_animation = 0;
+    item->bf->animations.current_frame = 0;
+    item->bf->animations.frame_time = 0.0;
+
+    Item_Frame(item->bf.get(), 0.0);
+    btTransform matrix;
+    matrix.setIdentity();
+    Mat4_Translate(matrix, mCurrPosX, mPosY, -2048.0);
+    Mat4_RotateY(matrix, mCurrRotX + mRotX);
+    Mat4_RotateX(matrix, mCurrRotY + mRotY);
+    Gui_RenderItem(item->bf.get(), mSize, matrix);
+
+    item->bf->animations.current_animation = anim;
+    item->bf->animations.current_frame = frame;
+    item->bf->animations.frame_time = time;
 }
 
 void gui_ItemNotifier::SetPos(float X, float Y)

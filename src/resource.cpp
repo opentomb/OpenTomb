@@ -1,20 +1,16 @@
 
 #include <algorithm>
-#include <assert.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
 #include <SDL2/SDL.h>
 #include "gl_util.h"
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-}
+#include <lua.hpp>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 #include "vt/vt_level.h"
 #include "audio.h"
@@ -37,18 +33,19 @@ extern "C" {
 #include "engine.h"
 #include "bordered_texture_atlas.h"
 #include "render.h"
-#include "redblack.h"
 #include "bsp_tree.h"
 #include "shader_description.h"
+
+#include "luahelper.h"
 
 lua_State *objects_flags_conf = NULL;
 lua_State *ent_ID_override = NULL;
 lua_State *level_script = NULL;
 
 
-void Res_SetEntityModelProperties(struct entity_s *ent)
+void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
 {
-    if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
+    if((objects_flags_conf != NULL) && (ent->m_bf.animations.model != NULL))
     {
         int top = lua_gettop(objects_flags_conf);
         assert(top >= 0);
@@ -56,19 +53,19 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
+            lua_pushinteger(objects_flags_conf, ent->m_bf.animations.model->id);      // entity model id
             if (lua_CallAndLog(objects_flags_conf, 2, 4, 0))
             {
-                ent->self->collision_type = lua_tointeger(objects_flags_conf, -4);      // get collision type flag
-                ent->self->collision_shape = lua_tointeger(objects_flags_conf, -3);     // get collision shape flag
-                ent->bf.animations.model->hide = lua_tointeger(objects_flags_conf, -2); // get info about model visibility
-                ent->type_flags |= lua_tointeger(objects_flags_conf, -1);               // get traverse information
+                ent->m_self->collision_type = lua_tointeger(objects_flags_conf, -4);      // get collision type flag
+                ent->m_self->collision_shape = lua_tointeger(objects_flags_conf, -3);     // get collision shape flag
+                ent->m_bf.animations.model->hide = lua_tointeger(objects_flags_conf, -2); // get info about model visibility
+                ent->m_typeFlags |= lua_tointeger(objects_flags_conf, -1);               // get traverse information
             }
         }
         lua_settop(objects_flags_conf, top);
     }
 
-    if((level_script != NULL) && (ent->bf.animations.model != NULL))
+    if((level_script != NULL) && (ent->m_bf.animations.model != NULL))
     {
         int top = lua_gettop(level_script);
         assert(top >= 0);
@@ -76,25 +73,25 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->bf.animations.model->id);        // entity model id
+            lua_pushinteger(level_script, ent->m_bf.animations.model->id);        // entity model id
             if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
                 {
-                    ent->self->collision_type = lua_tointeger(level_script, -4);        // get collision type flag
+                    ent->m_self->collision_type = lua_tointeger(level_script, -4);        // get collision type flag
                 }
                 if(!lua_isnil(level_script, -3))
                 {
-                    ent->self->collision_shape = lua_tointeger(level_script, -3);       // get collision shape flag
+                    ent->m_self->collision_shape = lua_tointeger(level_script, -3);       // get collision shape flag
                 }
                 if(!lua_isnil(level_script, -2))
                 {
-                    ent->bf.animations.model->hide = lua_tointeger(level_script, -2);   // get info about model visibility
+                    ent->m_bf.animations.model->hide = lua_tointeger(level_script, -2)!=0;   // get info about model visibility
                 }
                 if(!lua_isnil(level_script, -1))
                 {
-                    ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-                    ent->type_flags |= lua_tointeger(level_script, -1);                 // get traverse information
+                    ent->m_typeFlags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
+                    ent->m_typeFlags |= lua_tointeger(level_script, -1);                 // get traverse information
                 }
             }
         }
@@ -103,9 +100,9 @@ void Res_SetEntityModelProperties(struct entity_s *ent)
 }
 
 
-void Res_SetEntityFunction(struct entity_s *ent)
+void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
 {
-    if((objects_flags_conf != NULL) && (ent->bf.animations.model != NULL))
+    if((objects_flags_conf != NULL) && ent->m_bf.animations.model)
     {
         int top = lua_gettop(objects_flags_conf);
         assert(top >= 0);
@@ -113,12 +110,12 @@ void Res_SetEntityFunction(struct entity_s *ent)
         if(lua_isfunction(objects_flags_conf, -1))
         {
             lua_pushinteger(objects_flags_conf, engine_world.version);              // engine version
-            lua_pushinteger(objects_flags_conf, ent->bf.animations.model->id);      // entity model id
+            lua_pushinteger(objects_flags_conf, ent->m_bf.animations.model->id);      // entity model id
             if (lua_CallAndLog(objects_flags_conf, 2, 1, 0))
             {
                 if(!lua_isnil(objects_flags_conf, -1))
                 {
-                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->id);
+                    Res_CreateEntityFunc(engine_lua, lua_tolstring(objects_flags_conf, -1, 0), ent->m_id);
                 }
             }
         }
@@ -159,23 +156,13 @@ bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
     return false;
 }
 
-void Res_GenEntityFunctions(struct RedBlackNode_s *x)
+void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity> > &entities)
 {
-    entity_p entity = (entity_p)x->data;
-
-    Res_SetEntityFunction(entity);
-
-    if(x->left != NULL)
-    {
-        Res_GenEntityFunctions(x->left);
-    }
-    if(x->right != NULL)
-    {
-        Res_GenEntityFunctions(x->right);
-    }
+    for(const auto& pair : entities)
+        Res_SetEntityFunction(pair.second);
 }
 
-void Res_SetStaticMeshProperties(struct static_mesh_s *r_static)
+void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
     if(level_script != NULL)
     {
@@ -196,7 +183,7 @@ void Res_SetStaticMeshProperties(struct static_mesh_s *r_static)
                 }
                 if(!lua_isnil(level_script, -1))
                 {
-                    r_static->hide = lua_tointeger(level_script, -1);
+                    r_static->hide = lua_tointeger(level_script, -1)!=0;
                 }
             }
         }
@@ -219,29 +206,28 @@ void Res_SetStaticMeshProperties(struct static_mesh_s *r_static)
  */
 
 
-void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
+void Res_Sector_SetTweenFloorConfig(SectorTween *tween)
 {
-    if(tween->floor_corners[0].m_floats[2] > tween->floor_corners[1].m_floats[2])
+    if(tween->floor_corners[0][2] > tween->floor_corners[1][2])
     {
-        btScalar t;
-        SWAPT(tween->floor_corners[0].m_floats[2], tween->floor_corners[1].m_floats[2], t);
-        SWAPT(tween->floor_corners[2].m_floats[2], tween->floor_corners[3].m_floats[2], t);
+        std::swap(tween->floor_corners[0][2], tween->floor_corners[1][2]);
+        std::swap(tween->floor_corners[2][2], tween->floor_corners[3][2]);
     }
 
-    if(tween->floor_corners[3].m_floats[2] > tween->floor_corners[2].m_floats[2])
+    if(tween->floor_corners[3][2] > tween->floor_corners[2][2])
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;              // like a butterfly
     }
-    else if((tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2]) &&
-       (tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2]))
+    else if((tween->floor_corners[0][2] != tween->floor_corners[1][2]) &&
+       (tween->floor_corners[2][2] != tween->floor_corners[3][2]))
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
     }
-    else if(tween->floor_corners[0].m_floats[2] != tween->floor_corners[1].m_floats[2])
+    else if(tween->floor_corners[0][2] != tween->floor_corners[1][2])
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT;
     }
-    else if(tween->floor_corners[2].m_floats[2] != tween->floor_corners[3].m_floats[2])
+    else if(tween->floor_corners[2][2] != tween->floor_corners[3][2])
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT;
     }
@@ -251,29 +237,28 @@ void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
     }
 }
 
-void Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
+void Res_Sector_SetTweenCeilingConfig(SectorTween *tween)
 {
-    if(tween->ceiling_corners[0].m_floats[2] > tween->ceiling_corners[1].m_floats[2])
+    if(tween->ceiling_corners[0][2] > tween->ceiling_corners[1][2])
     {
-        btScalar t;
-        SWAPT(tween->ceiling_corners[0].m_floats[2], tween->ceiling_corners[1].m_floats[2], t);
-        SWAPT(tween->ceiling_corners[2].m_floats[2], tween->ceiling_corners[3].m_floats[2], t);
+        std::swap(tween->ceiling_corners[0][2], tween->ceiling_corners[1][2]);
+        std::swap(tween->ceiling_corners[2][2], tween->ceiling_corners[3][2]);
     }
 
-    if(tween->ceiling_corners[3].m_floats[2] > tween->ceiling_corners[2].m_floats[2])
+    if(tween->ceiling_corners[3][2] > tween->ceiling_corners[2][2])
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;            // like a butterfly
     }
-    else if((tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2]) &&
-       (tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2]))
+    else if((tween->ceiling_corners[0][2] != tween->ceiling_corners[1][2]) &&
+       (tween->ceiling_corners[2][2] != tween->ceiling_corners[3][2]))
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_QUAD;
     }
-    else if(tween->ceiling_corners[0].m_floats[2] != tween->ceiling_corners[1].m_floats[2])
+    else if(tween->ceiling_corners[0][2] != tween->ceiling_corners[1][2])
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT;
     }
-    else if(tween->ceiling_corners[2].m_floats[2] != tween->ceiling_corners[3].m_floats[2])
+    else if(tween->ceiling_corners[2][2] != tween->ceiling_corners[3][2])
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT;
     }
@@ -283,7 +268,7 @@ void Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
     }
 }
 
-int Res_Sector_IsWall(room_sector_p ws, room_sector_p ns)
+int Res_Sector_IsWall(RoomSector* ws, RoomSector* ns)
 {
     if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
     {
@@ -292,8 +277,8 @@ int Res_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 
     if((ns->portal_to_room < 0) && (ns->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (ws->portal_to_room >= 0))
     {
-        ws = Sector_CheckPortalPointer(ws);
-        if((ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || (0 == Sectors_Is2SidePortals(ns, ws)))
+        ws = ws->checkPortalPointer();
+        if((ws->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || !ns->is2SidePortals(ws))
         {
             return 1;
         }
@@ -303,7 +288,7 @@ int Res_Sector_IsWall(room_sector_p ws, room_sector_p ns)
 }
 
 ///@TODO: resolve floor >> ceiling case
-void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
+void Res_Sector_GenTweens(std::shared_ptr<Room> room, SectorTween *room_tween)
 {
     for(uint16_t h = 0; h < room->sectors_y-1; h++)
     {
@@ -311,29 +296,29 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
         {
             // Init X-plane tween [ | ]
 
-            room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
-            room_sector_p next_heightmap    = current_heightmap + 1;
+            RoomSector* current_heightmap = &room->sectors[(w * room->sectors_y + h) ];
+            RoomSector* next_heightmap    = current_heightmap + 1;
             char joined_floors = 0;
             char joined_ceilings = 0;
 
             /* XY corners coordinates must be calculated from native room sector */
-            room_tween->floor_corners[0].m_floats[1] = current_heightmap->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[1].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[2].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[3].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[0].m_floats[0] = current_heightmap->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[1].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[2].m_floats[0] = current_heightmap->floor_corners[1].m_floats[0];
-            room_tween->floor_corners[3].m_floats[0] = room_tween->floor_corners[2].m_floats[0];
+            room_tween->floor_corners[0][1] = current_heightmap->floor_corners[0][1];
+            room_tween->floor_corners[1][1] = room_tween->floor_corners[0][1];
+            room_tween->floor_corners[2][1] = room_tween->floor_corners[0][1];
+            room_tween->floor_corners[3][1] = room_tween->floor_corners[0][1];
+            room_tween->floor_corners[0][0] = current_heightmap->floor_corners[0][0];
+            room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
+            room_tween->floor_corners[2][0] = current_heightmap->floor_corners[1][0];
+            room_tween->floor_corners[3][0] = room_tween->floor_corners[2][0];
 
-            room_tween->ceiling_corners[0].m_floats[1] = current_heightmap->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[1].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[2].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[3].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[0].m_floats[0] = current_heightmap->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[1].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[2].m_floats[0] = current_heightmap->ceiling_corners[1].m_floats[0];
-            room_tween->ceiling_corners[3].m_floats[0] = room_tween->ceiling_corners[2].m_floats[0];
+            room_tween->ceiling_corners[0][1] = current_heightmap->ceiling_corners[0][1];
+            room_tween->ceiling_corners[1][1] = room_tween->ceiling_corners[0][1];
+            room_tween->ceiling_corners[2][1] = room_tween->ceiling_corners[0][1];
+            room_tween->ceiling_corners[3][1] = room_tween->ceiling_corners[0][1];
+            room_tween->ceiling_corners[0][0] = current_heightmap->ceiling_corners[0][0];
+            room_tween->ceiling_corners[1][0] = room_tween->ceiling_corners[0][0];
+            room_tween->ceiling_corners[2][0] = current_heightmap->ceiling_corners[1][0];
+            room_tween->ceiling_corners[3][0] = room_tween->ceiling_corners[2][0];
 
             if(w > 0)
             {
@@ -341,10 +326,10 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                 {
                     if(Res_Sector_IsWall(next_heightmap, current_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
+                        room_tween->floor_corners[1][2] = current_heightmap->ceiling_corners[0][2];
+                        room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[1][2];
+                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
@@ -352,10 +337,10 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                     }
                     else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[0][2] = next_heightmap->floor_corners[3][2];
+                        room_tween->floor_corners[1][2] = next_heightmap->ceiling_corners[3][2];
+                        room_tween->floor_corners[2][2] = next_heightmap->ceiling_corners[2][2];
+                        room_tween->floor_corners[3][2] = next_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
@@ -364,27 +349,27 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                     else
                     {
                         /************************** SECTION WITH DROPS CALCULATIONS **********************/
-                        if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
+                        if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || current_heightmap->is2SidePortals(next_heightmap))
                         {
-                            current_heightmap = Sector_CheckPortalPointer(current_heightmap);
-                            next_heightmap    = Sector_CheckPortalPointer(next_heightmap);
+                            current_heightmap = current_heightmap->checkPortalPointer();
+                            next_heightmap    = next_heightmap->checkPortalPointer();
                             if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
-                                    room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
-                                    room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                                    room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
-                                    room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                                    room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
+                                    room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
+                                    room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
+                                    room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                                     Res_Sector_SetTweenFloorConfig(room_tween);
                                     joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
-                                    room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
-                                    room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                                    room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
-                                    room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                                    room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
+                                    room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
+                                    room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[2][2];
+                                    room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[1][2];
                                     Res_Sector_SetTweenCeilingConfig(room_tween);
                                     joined_ceilings = 1;
                                 }
@@ -393,21 +378,21 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                     }
                 }
 
-                current_heightmap = room->sectors + (w * room->sectors_y + h);
+                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
                 next_heightmap    = current_heightmap + 1;
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = Sector_CheckPortalPointer(next_heightmap);
+                        next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -417,14 +402,14 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
 
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = Sector_CheckPortalPointer(current_heightmap);
+                        current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -434,29 +419,29 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
 
                     if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[2].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
+                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
+                        room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
+                        room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
+                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
 
-                current_heightmap = room->sectors + (w * room->sectors_y + h);
+                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
                 next_heightmap    = current_heightmap + 1;
                 if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = Sector_CheckPortalPointer(next_heightmap);
+                        next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -466,14 +451,14 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
 
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = Sector_CheckPortalPointer(current_heightmap);
+                        current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -483,10 +468,10 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
 
                     if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                     {
-                        room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[2].m_floats[2];
-                        room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
+                        room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
+                        room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
+                        room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[2][2];
+                        room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[1][2];
                         Res_Sector_SetTweenCeilingConfig(room_tween);
                     }
                 }
@@ -497,25 +482,25 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
              *****************************************************************************************************/
 
             room_tween++;
-            current_heightmap = room->sectors + (w * room->sectors_y + h);
-            next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
-            room_tween->floor_corners[0].m_floats[0] = current_heightmap->floor_corners[1].m_floats[0];
-            room_tween->floor_corners[1].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[2].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[3].m_floats[0] = room_tween->floor_corners[0].m_floats[0];
-            room_tween->floor_corners[0].m_floats[1] = current_heightmap->floor_corners[1].m_floats[1];
-            room_tween->floor_corners[1].m_floats[1] = room_tween->floor_corners[0].m_floats[1];
-            room_tween->floor_corners[2].m_floats[1] = current_heightmap->floor_corners[2].m_floats[1];
-            room_tween->floor_corners[3].m_floats[1] = room_tween->floor_corners[2].m_floats[1];
+            current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
+            next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
+            room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
+            room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
+            room_tween->floor_corners[2][0] = room_tween->floor_corners[0][0];
+            room_tween->floor_corners[3][0] = room_tween->floor_corners[0][0];
+            room_tween->floor_corners[0][1] = current_heightmap->floor_corners[1][1];
+            room_tween->floor_corners[1][1] = room_tween->floor_corners[0][1];
+            room_tween->floor_corners[2][1] = current_heightmap->floor_corners[2][1];
+            room_tween->floor_corners[3][1] = room_tween->floor_corners[2][1];
 
-            room_tween->ceiling_corners[0].m_floats[0] = current_heightmap->ceiling_corners[1].m_floats[0];
-            room_tween->ceiling_corners[1].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[2].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[3].m_floats[0] = room_tween->ceiling_corners[0].m_floats[0];
-            room_tween->ceiling_corners[0].m_floats[1] = current_heightmap->ceiling_corners[1].m_floats[1];
-            room_tween->ceiling_corners[1].m_floats[1] = room_tween->ceiling_corners[0].m_floats[1];
-            room_tween->ceiling_corners[2].m_floats[1] = current_heightmap->ceiling_corners[2].m_floats[1];
-            room_tween->ceiling_corners[3].m_floats[1] = room_tween->ceiling_corners[2].m_floats[1];
+            room_tween->ceiling_corners[0][0] = current_heightmap->ceiling_corners[1][0];
+            room_tween->ceiling_corners[1][0] = room_tween->ceiling_corners[0][0];
+            room_tween->ceiling_corners[2][0] = room_tween->ceiling_corners[0][0];
+            room_tween->ceiling_corners[3][0] = room_tween->ceiling_corners[0][0];
+            room_tween->ceiling_corners[0][1] = current_heightmap->ceiling_corners[1][1];
+            room_tween->ceiling_corners[1][1] = room_tween->ceiling_corners[0][1];
+            room_tween->ceiling_corners[2][1] = current_heightmap->ceiling_corners[2][1];
+            room_tween->ceiling_corners[3][1] = room_tween->ceiling_corners[2][1];
 
             joined_floors = 0;
             joined_ceilings = 0;
@@ -527,10 +512,10 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                     // Init Y-plane tween  [ - ]
                     if(Res_Sector_IsWall(next_heightmap, current_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
+                        room_tween->floor_corners[1][2] = current_heightmap->ceiling_corners[1][2];
+                        room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[2][2];
+                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
@@ -538,10 +523,10 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                     }
                     else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
+                        room_tween->floor_corners[0][2] = next_heightmap->floor_corners[0][2];
+                        room_tween->floor_corners[1][2] = next_heightmap->ceiling_corners[0][2];
+                        room_tween->floor_corners[2][2] = next_heightmap->ceiling_corners[3][2];
+                        room_tween->floor_corners[3][2] = next_heightmap->floor_corners[3][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
@@ -550,27 +535,27 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                     else
                     {
                         /************************** BIG SECTION WITH DROPS CALCULATIONS **********************/
-                        if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
+                        if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || current_heightmap->is2SidePortals(next_heightmap))
                         {
-                            current_heightmap = Sector_CheckPortalPointer(current_heightmap);
-                            next_heightmap    = Sector_CheckPortalPointer(next_heightmap);
+                            current_heightmap = current_heightmap->checkPortalPointer();
+                            next_heightmap    = next_heightmap->checkPortalPointer();
                             if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
-                                    room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                                    room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
-                                    room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                                    room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                                    room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
+                                    room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
+                                    room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
+                                    room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                                     Res_Sector_SetTweenFloorConfig(room_tween);
                                     joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                                 {
-                                    room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                                    room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
-                                    room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                                    room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
+                                    room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
+                                    room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
+                                    room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[3][2];
+                                    room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[2][2];
                                     Res_Sector_SetTweenCeilingConfig(room_tween);
                                     joined_ceilings = 1;
                                 }
@@ -579,21 +564,21 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                     }
                 }
 
-                current_heightmap = room->sectors + (w * room->sectors_y + h);
-                next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
+                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
+                next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
                 if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = Sector_CheckPortalPointer(next_heightmap);
+                        next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -603,14 +588,14 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
 
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = Sector_CheckPortalPointer(current_heightmap);
+                        current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -620,29 +605,29 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
 
                     if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                     {
-                        room_tween->floor_corners[0].m_floats[2] = current_heightmap->floor_corners[1].m_floats[2];
-                        room_tween->floor_corners[1].m_floats[2] = next_heightmap->floor_corners[0].m_floats[2];
-                        room_tween->floor_corners[2].m_floats[2] = next_heightmap->floor_corners[3].m_floats[2];
-                        room_tween->floor_corners[3].m_floats[2] = current_heightmap->floor_corners[2].m_floats[2];
+                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
+                        room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
+                        room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
+                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                     }
                 }
 
-                current_heightmap = room->sectors + (w * room->sectors_y + h);
-                next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
+                current_heightmap = &room->sectors[ (w * room->sectors_y + h) ];
+                next_heightmap    = &room->sectors[ ((w + 1) * room->sectors_y + h) ];
                 if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                 {
                     char valid = 0;
                     if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = Sector_CheckPortalPointer(next_heightmap);
+                        next_heightmap = next_heightmap->checkPortalPointer();
                         if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == next_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -652,14 +637,14 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
 
                     if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = Sector_CheckPortalPointer(current_heightmap);
+                        current_heightmap = current_heightmap->checkPortalPointer();
                         if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->pos);
                             if(rs && ((uint32_t)rs->portal_to_room == current_heightmap->owner_room->id))
                             {
                                 valid = 1;
@@ -669,10 +654,10 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
 
                     if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                     {
-                        room_tween->ceiling_corners[0].m_floats[2] = current_heightmap->ceiling_corners[1].m_floats[2];
-                        room_tween->ceiling_corners[1].m_floats[2] = next_heightmap->ceiling_corners[0].m_floats[2];
-                        room_tween->ceiling_corners[2].m_floats[2] = next_heightmap->ceiling_corners[3].m_floats[2];
-                        room_tween->ceiling_corners[3].m_floats[2] = current_heightmap->ceiling_corners[2].m_floats[2];
+                        room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
+                        room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
+                        room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[3][2];
+                        room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[2][2];
                         Res_Sector_SetTweenCeilingConfig(room_tween);
                     }
                 }
@@ -694,7 +679,7 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
     // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
     // entity #256 occurences in original games (primarily TR4-5).
 
-    if(!World_GetEntityByID(&engine_world, entity_index)) return true;
+    if(!engine_world.getEntityByID(entity_index)) return true;
 
     int32_t *curr_table_index = lookup_table;
 
@@ -708,7 +693,7 @@ bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
     return false;
 }
 
-int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
+int TR_Sector_TranslateFloorData(RoomSector* sector, class VT_Level *tr)
 {
     if(!sector || (sector->trig_index <= 0) || (sector->trig_index >= tr->floor_data_size) || !engine_lua)
     {
@@ -747,7 +732,7 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
-                    if((*entry >= 0) && (*entry < engine_world.room_count))
+                    if((*entry >= 0) && (*entry < engine_world.rooms.size()))
                     {
                         sector->portal_to_room = *entry;
                         sector->floor_penetration_config   = TR_PENETRATION_CONFIG_GHOST;
@@ -768,24 +753,24 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
                     if(raw_x_slant > 0)
                     {
-                        sector->floor_corners[2].m_floats[2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
-                        sector->floor_corners[3].m_floats[2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= ((btScalar)raw_x_slant * TR_METERING_STEP);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0].m_floats[2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[1].m_floats[2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->floor_corners[0].m_floats[2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
-                        sector->floor_corners[3].m_floats[2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= ((btScalar)raw_y_slant * TR_METERING_STEP);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1].m_floats[2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[2].m_floats[2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -803,24 +788,24 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 
                     if(raw_x_slant > 0)
                     {
-                        sector->ceiling_corners[3].m_floats[2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
-                        sector->ceiling_corners[2].m_floats[2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += ((btScalar)raw_x_slant * TR_METERING_STEP);
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1].m_floats[2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[0].m_floats[2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
                     {
-                        sector->ceiling_corners[1].m_floats[2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
-                        sector->ceiling_corners[2].m_floats[2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += ((btScalar)raw_y_slant * TR_METERING_STEP);
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0].m_floats[2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[3].m_floats[2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (abs((btScalar)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -1317,10 +1302,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->floor_corners[0].m_floats[2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1].m_floats[2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2].m_floats[2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3].m_floats[2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1341,10 +1326,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->floor_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->floor_corners[0].m_floats[2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
-                        sector->floor_corners[1].m_floats[2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
-                        sector->floor_corners[2].m_floats[2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
-                        sector->floor_corners[3].m_floats[2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= overall_adjustment - ((btScalar)slope_t12 * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= overall_adjustment - ((btScalar)slope_t13 * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= overall_adjustment - ((btScalar)slope_t10 * TR_METERING_STEP);
+                        sector->floor_corners[3][2] -= overall_adjustment - ((btScalar)slope_t11 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1365,10 +1350,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NW;
 
-                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NW_PORTAL_SW)
                         {
@@ -1389,10 +1374,10 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
                     {
                         sector->ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NE;
 
-                        sector->ceiling_corners[0].m_floats[2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
-                        sector->ceiling_corners[1].m_floats[2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
-                        sector->ceiling_corners[2].m_floats[2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
-                        sector->ceiling_corners[3].m_floats[2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += overall_adjustment - (btScalar)(slope_t11 * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += overall_adjustment - (btScalar)(slope_t10 * TR_METERING_STEP);
+                        sector->ceiling_corners[2][2] += overall_adjustment - (btScalar)(slope_t13 * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += overall_adjustment - (btScalar)(slope_t12 * TR_METERING_STEP);
 
                         if(function == TR_FD_FUNC_CEILINGTRIANGLE_NE_PORTAL_NW)
                         {
@@ -1431,22 +1416,22 @@ int TR_Sector_TranslateFloorData(room_sector_p sector, class VT_Level *tr)
 }
 
 
-void GenerateAnimCommandsTransform(skeletal_model_p model)
+void GenerateAnimCommandsTransform(SkeletalModel* model)
 {
-    if(engine_world.anim_commands_count == 0)
+    if(engine_world.anim_commands.empty())
     {
         return;
     }
     //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model->id);
-    for(uint16_t anim = 0;anim < model->animation_count;anim++)
+    for(uint16_t anim = 0;anim < model->animations.size();anim++)
     {
         if(model->animations[anim].num_anim_commands > 255)
         {
             continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
         }
 
-        animation_frame_p af  = model->animations + anim;
-        int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+        AnimationFrame* af  = &model->animations[anim];
+        int16_t *pointer      = &engine_world.anim_commands[af->anim_command];
 
         for(uint32_t i = 0; i < af->num_anim_commands; i++, pointer++)
         {
@@ -1454,17 +1439,17 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
                     // This command executes ONLY at the end of animation.
-                    af->frames[af->frames_count-1].move[0] = (btScalar)(*++pointer);                          // x = x;
-                    af->frames[af->frames_count-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
-                    af->frames[af->frames_count-1].move[1] = (btScalar)(*++pointer);                          // y = z
-                    af->frames[af->frames_count-1].command |= ANIM_CMD_MOVE;
-                    //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames_count-1, af->frames_count);
+                    af->frames[af->frames.size()-1].move[0] = (btScalar)(*++pointer);                          // x = x;
+                    af->frames[af->frames.size()-1].move[2] =-(btScalar)(*++pointer);                          // z =-y
+                    af->frames[af->frames.size()-1].move[1] = (btScalar)(*++pointer);                          // y = z
+                    af->frames[af->frames.size()-1].command |= ANIM_CMD_MOVE;
+                    //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames.size()-1, af->frames.size());
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    af->frames[af->frames_count-1].v_Vertical   = *++pointer;
-                    af->frames[af->frames_count-1].v_Horizontal = *++pointer;
-                    af->frames[af->frames_count-1].command |= ANIM_CMD_JUMP;
+                    af->frames[af->frames.size()-1].v_Vertical   = *++pointer;
+                    af->frames[af->frames.size()-1].v_Horizontal = *++pointer;
+                    af->frames[af->frames.size()-1].command |= ANIM_CMD_JUMP;
                     break;
 
                 case TR_ANIMCOMMAND_EMPTYHANDS:
@@ -1485,8 +1470,8 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
                                 af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
-                                Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
-                                //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
+                                ConsoleInfo::instance().printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames.size());
+                                //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames.size());
                                 break;
                         }
                     }
@@ -1497,22 +1482,21 @@ void GenerateAnimCommandsTransform(skeletal_model_p model)
 }
 
 
-int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
+bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p)
 {
-    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p->norm[1]) > 0.99))
+    if((s1->pos[0] == s2->pos[0]) && (s1->pos[1] != s2->pos[1]) && (fabs(p.norm[1]) > 0.99))
     {
-        btScalar min_x, max_x, min_y, max_y, x;
-        max_x = min_x = p->vertex[0];
-        for(uint16_t i=1;i<p->vertex_count;i++)
+        btScalar min_x, max_x, min_y, max_y;
+        max_x = min_x = p.vertices.front().x();
+        for(const auto& v : p.vertices)
         {
-            x = p->vertex[3 * i + 0];
-            if(x > max_x)
+            if(v.x() > max_x)
             {
-                max_x = x;
+                max_x = v.x();
             }
-            if(x < min_x)
+            if(v.x() < min_x)
             {
-                min_x = x;
+                min_x = v.x();
             }
         }
         if(s1->pos[1] > s2->pos[1])
@@ -1526,25 +1510,24 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
             max_y = s2->pos[1];
         }
 
-        if((s1->pos[0] < max_x) && (s1->pos[0] > min_x) && (p->centre[1] < max_y) && (p->centre[1] > min_y))
+        if((s1->pos[0] < max_x) && (s1->pos[0] > min_x) && (p.centre[1] < max_y) && (p.centre[1] > min_y))
         {
-            return 1;
+            return true;
         }
     }
-    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p->norm[0]) > 0.99))
+    else if((s1->pos[0] != s2->pos[0]) && (s1->pos[1] == s2->pos[1]) && (fabs(p.norm[0]) > 0.99))
     {
-        btScalar min_x, max_x, min_y, max_y, y;
-        max_y = min_y = p->vertex[1];
-        for(uint16_t i=1;i<p->vertex_count;i++)
+        btScalar min_x, max_x, min_y, max_y;
+        max_y = min_y = p.vertices.front().y();
+        for(const auto& v : p.vertices)
         {
-            y = p->vertex[3 * i + 1];
-            if(y > max_y)
+            if(v.y() > max_y)
             {
-                max_y = y;
+                max_y = v.y();
             }
-            if(y < min_y)
+            if(v.y() < min_y)
             {
-                min_y = y;
+                min_y = v.y();
             }
         }
         if(s1->pos[0] > s2->pos[0])
@@ -1558,27 +1541,26 @@ int TR_IsSectorsIn2SideOfPortal(room_sector_p s1, room_sector_p s2, portal_p p)
             max_x = s2->pos[0];
         }
 
-        if((p->centre[0] < max_x) && (p->centre[0] > min_x) && (s1->pos[1] < max_y) && (s1->pos[1] > min_y))
+        if((p.centre[0] < max_x) && (p.centre[0] > min_x) && (s1->pos[1] < max_y) && (s1->pos[1] > min_y))
         {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
-void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int room_index)
+void TR_Sector_Calculate(World *world, class VT_Level *tr, long int room_index)
 {
-    room_sector_p sector;
-    room_p room = world->rooms + room_index;
+    std::shared_ptr<Room> room = world->rooms[room_index];
     tr5_room_t *tr_room = &tr->rooms[room_index];
 
     /*
      * Sectors loading
      */
 
-    sector = room->sectors;
-    for(uint32_t i=0;i<room->sectors_count;i++,sector++)
+    RoomSector* sector = room->sectors.data();
+    for(uint32_t i=0;i<room->sectors.size();i++,sector++)
     {
         /*
          * Let us fill pointers to sectors above and sectors below
@@ -1586,18 +1568,18 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
 
         uint8_t rp = tr_room->sector_list[i].room_below;
         sector->sector_below = NULL;
-        if(rp >= 0 && rp < world->room_count && rp != 255)
+        if(rp >= 0 && rp < world->rooms.size() && rp != 255)
         {
-            sector->sector_below = Room_GetSectorRaw(world->rooms + rp, sector->pos);
+            sector->sector_below = world->rooms[rp]->getSectorRaw(sector->pos);
         }
         rp = tr_room->sector_list[i].room_above;
         sector->sector_above = NULL;
-        if(rp >= 0 && rp < world->room_count && rp != 255)
+        if(rp >= 0 && rp < world->rooms.size() && rp != 255)
         {
-            sector->sector_above = Room_GetSectorRaw(world->rooms + rp, sector->pos);
+            sector->sector_above = world->rooms[rp]->getSectorRaw(sector->pos);
         }
 
-        room_sector_p near_sector = NULL;
+        RoomSector* near_sector = NULL;
 
         /**** OX *****/
         if((sector->index_y > 0) && (sector->index_y < room->sectors_y - 1) && (sector->index_x == 0))
@@ -1620,16 +1602,15 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
 
         if((near_sector != NULL) && (sector->portal_to_room >= 0))
         {
-            portal_p p = room->portals;
-            for(uint16_t j=0;j<room->portal_count;j++,p++)
+            for(const Portal& p : room->portals)
             {
-                if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
+                if((p.norm[2] < 0.01) && ((p.norm[2] > -0.01)))
                 {
-                    room_sector_p dst = Room_GetSectorRaw(p->dest_room, sector->pos);
-                    room_sector_p orig_dst = Room_GetSectorRaw(engine_world.rooms + sector->portal_to_room, sector->pos);
-                    if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p->dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
+                    RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->pos) : nullptr;
+                    RoomSector* orig_dst = engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->pos);
+                    if((dst != NULL) && (dst->portal_to_room < 0) && (dst->floor != TR_METERING_WALLHEIGHT) && (dst->ceiling != TR_METERING_WALLHEIGHT) && ((uint32_t)sector->portal_to_room != p.dest_room->id) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                     {
-                        sector->portal_to_room = p->dest_room->id;
+                        sector->portal_to_room = p.dest_room->id;
                         orig_dst = dst;
                     }
                 }
@@ -1638,163 +1619,97 @@ void TR_Sector_Calculate(struct world_s *world, class VT_Level *tr, long int roo
     }
 }
 
-void TR_vertex_to_arr(btScalar v[3], tr5_vertex_t *tr_v)
+void TR_vertex_to_arr(btVector3& v, const tr5_vertex_t& tr_v)
 {
-    v[0] = tr_v->x;
-    v[1] =-tr_v->z;
-    v[2] = tr_v->y;
+    v[0] = tr_v.x;
+    v[1] =-tr_v.z;
+    v[2] = tr_v.y;
 }
 
-void TR_color_to_arr(btScalar v[4], tr5_colour_t *tr_c)
+void TR_color_to_arr(std::array<GLfloat,4>& v, const tr5_colour_t& tr_c)
 {
-    v[0] = tr_c->r * 2;
-    v[1] = tr_c->g * 2;
-    v[2] = tr_c->b * 2;
-    v[3] = tr_c->a * 2;
+    v[0] = tr_c.r * 2;
+    v[1] = tr_c.g * 2;
+    v[2] = tr_c.b * 2;
+    v[3] = tr_c.a * 2;
 }
 
-room_sector_p TR_GetRoomSector(uint32_t room_id, int sx, int sy)
+RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
 {
-    room_p room;
-    if(room_id >= engine_world.room_count)
+    if(room_id >= engine_world.rooms.size())
     {
         return NULL;
     }
 
-    room = engine_world.rooms + room_id;
+    auto room = engine_world.rooms[room_id];
     if((sx < 0) || (sx >= room->sectors_x) || (sy < 0) || (sy >= room->sectors_y))
     {
         return NULL;
     }
 
-    return room->sectors + sx * room->sectors_y + sy;
+    return &room->sectors[ sx * room->sectors_y + sy ];
 }
 
-int lua_SetSectorFloorConfig(lua_State * lua)
+void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 floor, float z0, float z1, float z2, float z3)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 10)
-    {
-        Con_AddLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->floor = lua_tonumber(lua, 6);
-    rs->floor_corners[0].m_floats[2] = lua_tonumber(lua, 7);
-    rs->floor_corners[1].m_floats[2] = lua_tonumber(lua, 8);
-    rs->floor_corners[2].m_floats[2] = lua_tonumber(lua, 9);
-    rs->floor_corners[3].m_floats[2] = lua_tonumber(lua, 10);
-
-    return 0;
+    if(pen)   rs->floor_penetration_config = *pen;
+    if(diag)  rs->floor_diagonal_type = *diag;
+    if(floor) rs->floor = *floor;
+    rs->floor_corners[0] = {z0,z1,z2};
+    rs->floor_corners[0][3] = z3;
 }
 
-int lua_SetSectorCeilingConfig(lua_State * lua)
+void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::UInt8 pen, lua::UInt8 diag, lua::Int32 ceil, float z0, float z1, float z2, float z3)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 10)
-    {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->ceiling_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->ceiling = lua_tonumber(lua, 6);
-    rs->ceiling_corners[0].m_floats[2] = lua_tonumber(lua, 7);
-    rs->ceiling_corners[1].m_floats[2] = lua_tonumber(lua, 8);
-    rs->ceiling_corners[2].m_floats[2] = lua_tonumber(lua, 9);
-    rs->ceiling_corners[3].m_floats[2] = lua_tonumber(lua, 10);
-
-    return 0;
+    if(pen)   rs->ceiling_penetration_config = *pen;
+    if(diag)  rs->ceiling_diagonal_type = *diag;
+    if(floor) rs->ceiling = *ceil;
+    rs->ceiling_corners[0] = {z0,z1,z2};
+    rs->ceiling_corners[0][3] = z3;
 }
 
-int lua_SetSectorPortal(lua_State * lua)
+void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 4)
-    {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        return;
     }
 
-    uint32_t p = lua_tointeger(lua, 4);
-    if(p < engine_world.room_count)
+    if(p < engine_world.rooms.size())
     {
         rs->portal_to_room = p;
     }
-
-    return 0;
 }
 
-int lua_SetSectorFlags(lua_State * lua)
+void lua_SetSectorFlags(int id, int sx, int sy, lua::UInt8 fpflag, lua::UInt8 ftflag, lua::UInt8 cpflag, lua::UInt8 ctflag)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
-
-    if(top < 7)
-    {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 1);
-    sx = lua_tointeger(lua, 2);
-    sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
     if(rs == NULL)
     {
-        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
+        ConsoleInfo::instance().addLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        return;
     }
 
-    if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
-    if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
-    if(!lua_isnil(lua, 6))  rs->ceiling_penetration_config = lua_tointeger(lua, 6);
-    if(!lua_isnil(lua, 7))  rs->ceiling_diagonal_type = lua_tointeger(lua, 7);
-
-    return 0;
+    if(fpflag)  rs->floor_penetration_config = *fpflag;
+    if(ftflag)  rs->floor_diagonal_type = *ftflag;
+    if(cpflag)  rs->ceiling_penetration_config = *cpflag;
+    if(ctflag)  rs->ceiling_diagonal_type = *ctflag;
 }
 
 void Res_ScriptsOpen(int engine_version)
@@ -1806,11 +1721,11 @@ void Res_ScriptsOpen(int engine_version)
     if(level_script != NULL)
     {
         luaL_openlibs(level_script);
-        lua_register(level_script, "print", lua_print);
-        lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
-        lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
-        lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
-        lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
+        lua_register(level_script, "print", WRAP_FOR_LUA(lua_print));
+        lua_register(level_script, "setSectorFloorConfig", WRAP_FOR_LUA(lua_SetSectorFloorConfig));
+        lua_register(level_script, "setSectorCeilingConfig", WRAP_FOR_LUA(lua_SetSectorCeilingConfig));
+        lua_register(level_script, "setSectorPortal", WRAP_FOR_LUA(lua_SetSectorPortal));
+        lua_register(level_script, "setSectorFlags", WRAP_FOR_LUA(lua_SetSectorFlags));
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
 
@@ -1902,7 +1817,7 @@ void Res_AutoexecOpen(int engine_version)
     luaL_dofile(engine_lua, temp_script_name);          // do level-specific autoexec
 }
 
-void TR_GenWorld(struct world_s *world, class VT_Level *tr)
+void TR_GenWorld(World *world, class VT_Level *tr)
 {
     world->version = tr->game_version;
 
@@ -1973,7 +1888,7 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 
     // Generate entity functions.
 
-    Res_GenEntityFunctions(world->entity_tree->root);
+    Res_GenEntityFunctions(world->entity_tree);
     Gui_DrawLoadScreen(910);
 
     // Load entity collision flags and ID overrides from script.
@@ -1998,65 +1913,57 @@ void TR_GenWorld(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Res_GenRBTrees(struct world_s *world)
+void Res_GenRBTrees(World *world)
 {
-    world->entity_tree = RB_Init();
-    world->entity_tree->rb_compEQ = compEntityEQ;
-    world->entity_tree->rb_compLT = compEntityLT;
-    world->entity_tree->rb_free_data = RBEntityFree;
-
-    world->items_tree = RB_Init();
-    world->items_tree->rb_compEQ = compEntityEQ;
-    world->items_tree->rb_compLT = compEntityLT;
-    world->items_tree->rb_free_data = RBItemFree;
+    world->entity_tree.clear();
+    world->items_tree.clear();
 }
 
 
-void TR_GenRooms(struct world_s *world, class VT_Level *tr)
+void TR_GenRooms(World *world, class VT_Level *tr)
 {
-    world->room_count = tr->rooms_count;
-    room_p r = world->rooms = (room_p)calloc(world->room_count, sizeof(room_t));
-    for(uint32_t i=0;i<world->room_count;i++,r++)
+    world->rooms.resize(tr->rooms_count);
+    for(uint32_t i=0; i<world->rooms.size(); i++)
     {
-        TR_GenRoom(i, r, world, tr);
+        TR_GenRoom(i, world->rooms[i], world, tr);
     }
 }
 
-void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, class VT_Level *tr)
+void TR_GenRoom(size_t room_index, std::shared_ptr<Room>& room, World *world, class VT_Level *tr)
 {
-    portal_p p;
-    room_p r_dest;
+    room = std::make_shared<Room>();
+
+    Portal* p;
     tr5_room_t *tr_room = &tr->rooms[room_index];
     tr_staticmesh_t *tr_static;
-    static_mesh_p r_static;
     tr_room_portal_t *tr_portal;
-    room_sector_p sector;
+    RoomSector* sector;
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
 
     room->id = room_index;
-    room->active = 1;
-    room->frustum = NULL;
+    room->active = true;
+    room->frustum.clear();
     room->flags = tr->rooms[room_index].flags;
     room->light_mode = tr->rooms[room_index].light_mode;
     room->reverb_info = tr->rooms[room_index].reverb_info;
     room->water_scheme = tr->rooms[room_index].water_scheme;
     room->alternate_group = tr->rooms[room_index].alternate_group;
 
-    Mat4_E_macro(room->transform);
-    room->transform[12] = tr->rooms[room_index].offset.x;                       // x = x;
-    room->transform[13] =-tr->rooms[room_index].offset.z;                       // y =-z;
-    room->transform[14] = tr->rooms[room_index].offset.y;                       // z = y;
+    room->transform.setIdentity();
+    room->transform.getOrigin()[0] = tr->rooms[room_index].offset.x;                       // x = x;
+    room->transform.getOrigin()[1] =-tr->rooms[room_index].offset.z;                       // y =-z;
+    room->transform.getOrigin()[2] = tr->rooms[room_index].offset.y;                       // z = y;
     room->ambient_lighting[0] = tr->rooms[room_index].light_colour.r * 2;
     room->ambient_lighting[1] = tr->rooms[room_index].light_colour.g * 2;
     room->ambient_lighting[2] = tr->rooms[room_index].light_colour.b * 2;
-    room->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
-    room->self->room = room;
-    room->self->object = room;
+    room->self.reset( new EngineContainer() );
+    room->self->room = room.get();
+    room->self->object = room.get();
     room->self->object_type = OBJECT_ROOM_BASE;
-    room->near_room_list_size = 0;
-    room->overlapped_room_list_size = 0;
+    room->near_room_list.clear();
+    room->overlapped_room_list.clear();
 
     TR_GenRoomMesh(world, room_index, room, tr);
 
@@ -2064,28 +1971,23 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     /*
      *  let us load static room meshes
      */
-    room->static_mesh_count = tr_room->num_static_meshes;
-    room->static_mesh = NULL;
-    if(room->static_mesh_count)
-    {
-        room->static_mesh = (static_mesh_p)calloc(room->static_mesh_count, sizeof(static_mesh_t));
-    }
+    room->static_mesh.clear();
 
-    r_static = room->static_mesh;
     for(uint16_t i=0;i<tr_room->num_static_meshes;i++)
     {
         tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
         if(tr_static == NULL)
         {
-            room->static_mesh_count--;
             continue;
         }
-        r_static->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
-        r_static->self->room = room;
-        r_static->self->object = room->static_mesh + i;
+        room->static_mesh.emplace_back( std::make_shared<StaticMesh>() );
+        std::shared_ptr<StaticMesh> r_static = room->static_mesh.back();
+        r_static->self = std::make_shared<EngineContainer>();
+        r_static->self->room = room.get();
+        r_static->self->object = room->static_mesh[i].get();
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->object_id = tr_room->static_meshes[i].object_id;
-        r_static->mesh = world->meshes + tr->mesh_indices[tr_static->mesh];
+        r_static->mesh = world->meshes[ tr->mesh_indices[tr_static->mesh] ];
         r_static->pos[0] = tr_room->static_meshes[i].pos.x;
         r_static->pos[1] =-tr_room->static_meshes[i].pos.z;
         r_static->pos[2] = tr_room->static_meshes[i].pos.y;
@@ -2096,7 +1998,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
         r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
-        r_static->obb = OBB_Create();
+        r_static->obb = new OBB();
 
         r_static->cbb_min[0] = tr_static->collision_box[0].x;
         r_static->cbb_min[1] =-tr_static->collision_box[0].z;
@@ -2112,17 +2014,17 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
         r_static->vbb_max[2] = tr_static->visibility_box[0].y;
 
-        r_static->obb->transform = room->static_mesh[i].transform;
-        r_static->obb->r = room->static_mesh[i].mesh->R;
-        Mat4_E(r_static->transform);
+        r_static->obb->transform = &room->static_mesh[i]->transform;
+        r_static->obb->r = room->static_mesh[i]->mesh->m_radius;
+        r_static->transform.setIdentity();
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
         r_static->was_rendered = 0;
-        OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
-        OBB_Transform(r_static->obb);
+        r_static->obb->rebuild(r_static->vbb_min, r_static->vbb_max);
+        r_static->obb->doTransform();
 
         r_static->bt_body = NULL;
-        r_static->hide = 0;
+        r_static->hide = false;
 
         // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
         // coordinates are equal (TR2-5).
@@ -2152,7 +2054,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
                     break;
 
                 case COLLISION_SHAPE_BOX_BASE:
-                    cshape = BT_CSfromBBox(r_static->mesh->bb_min, r_static->mesh->bb_max, true, true);
+                    cshape = BT_CSfromBBox(r_static->mesh->m_bbMin, r_static->mesh->m_bbMax, true, true);
                     break;
 
                 case COLLISION_SHAPE_TRIMESH:
@@ -2170,31 +2072,26 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
             if(cshape)
             {
-                startTransform.setFromOpenGLMatrix(r_static->transform);
+                startTransform = r_static->transform;
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
                 bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-                r_static->bt_body->setUserPointer(r_static->self);
+                r_static->bt_body->setUserPointer(r_static->self.get());
             }
         }
-        r_static++;
     }
 
     /*
      * sprites loading section
      */
-    room->sprites_count = tr_room->num_sprites;
-    if(room->sprites_count != 0)
+    for(uint32_t i=0;i<tr_room->num_sprites;i++)
     {
-        room->sprites = (room_sprite_p)calloc(room->sprites_count, sizeof(room_sprite_t));
-        for(uint32_t i=0;i<room->sprites_count;i++)
+        room->sprites.emplace_back();
+        if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites.size()))
         {
-            if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites_count))
-            {
-                room->sprites[i].sprite = world->sprites + tr_room->sprites[i].texture;
-                TR_vertex_to_arr(room->sprites[i].pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
-                vec3_add(room->sprites[i].pos, room->sprites[i].pos, room->transform+12);
-            }
+            room->sprites[i].sprite = &world->sprites[tr_room->sprites[i].texture];
+            TR_vertex_to_arr(room->sprites[i].pos, tr_room->vertices[tr_room->sprites[i].vertex].vertex);
+            room->sprites[i].pos += room->transform.getOrigin();
         }
     }
 
@@ -2203,8 +2100,7 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
      */
     room->sectors_x = tr_room->num_xsectors;
     room->sectors_y = tr_room->num_zsectors;
-    room->sectors_count = room->sectors_x * room->sectors_y;
-    room->sectors = (room_sector_p)malloc(room->sectors_count * sizeof(room_sector_t));
+    room->sectors.resize(room->sectors_x * room->sectors_y);
 
     /*
      * base sectors information loading and collisional mesh creation
@@ -2217,16 +2113,16 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     // quickly detect slopes for pushable blocks and other entities that rely on
     // floor level.
 
-    sector = room->sectors;
-    for(uint32_t i=0;i<room->sectors_count;i++,sector++)
+    sector = room->sectors.data();
+    for(uint32_t i=0;i<room->sectors.size();i++,sector++)
     {
         // Filling base sectors information.
 
         sector->index_x = i / room->sectors_y;
         sector->index_y = i % room->sectors_y;
 
-        sector->pos[0] = room->transform[12] + sector->index_x * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
-        sector->pos[1] = room->transform[13] + sector->index_y * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
+        sector->pos[0] = room->transform.getOrigin()[0] + sector->index_x * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
+        sector->pos[1] = room->transform.getOrigin()[1] + sector->index_y * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
         sector->pos[2] = 0.5 * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
@@ -2284,21 +2180,21 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         // copied into heightmap cells Y coordinates. As result, we receive flat
         // heightmap cell, which will be operated later with floordata.
 
-        room->sectors[i].ceiling_corners[0].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0].m_floats[2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[0][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[1].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1].m_floats[2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[1][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[1][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[2].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2].m_floats[2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[2][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[2][2] = (btScalar)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[3].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3].m_floats[2] = (btScalar)sector->ceiling;
+        room->sectors[i].ceiling_corners[3][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].ceiling_corners[3][2] = (btScalar)sector->ceiling;
 
         // BUILDING FLOOR HEIGHTMAP.
 
@@ -2317,32 +2213,27 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
             room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
         }
 
-        room->sectors[i].floor_corners[0].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0].m_floats[2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[0][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[0][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[1].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1].m_floats[2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[1][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[1][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[2].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2].m_floats[2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[2][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[2][2] = (btScalar)sector->floor;
 
-        room->sectors[i].floor_corners[3].m_floats[0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3].m_floats[1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3].m_floats[2] = (btScalar)sector->floor;
+        room->sectors[i].floor_corners[3][0] = (btScalar)sector->index_x * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3][1] = (btScalar)sector->index_y * TR_METERING_SECTORSIZE;
+        room->sectors[i].floor_corners[3][2] = (btScalar)sector->floor;
     }
 
     /*
      *  load lights
      */
-    room->light_count = tr_room->num_lights;
-    room->lights = NULL;
-    if(room->light_count)
-    {
-        room->lights = (light_p)malloc(room->light_count * sizeof(light_t));
-    }
+    room->lights.resize( tr_room->num_lights );
 
     for(uint16_t i=0;i<tr_room->num_lights;i++)
     {
@@ -2397,32 +2288,26 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     /*
      * portals loading / calculation!!!
      */
-    room->portal_count = tr_room->num_portals;
-    p = room->portals = (portal_p)calloc(room->portal_count, sizeof(portal_t));
+    room->portals.resize(tr_room->num_portals);
     tr_portal = tr_room->portals;
-    for(uint16_t i=0;i<room->portal_count;i++,p++,tr_portal++)
+    for(size_t i=0; i<room->portals.size(); i++, tr_portal++)
     {
-        r_dest = world->rooms + tr_portal->adjoining_room;
-        p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
-        p->vertex = (btScalar*)malloc(3*p->vertex_count*sizeof(btScalar));
+        Portal* p = &room->portals[i];
+        std::shared_ptr<Room> r_dest = world->rooms[tr_portal->adjoining_room];
+        p->vertices.resize(4); // in original TR all portals are axis aligned rectangles
         p->flag = 0;
         p->dest_room = r_dest;
         p->current_room = room;
-        TR_vertex_to_arr(p->vertex  , &tr_portal->vertices[3]);
-        vec3_add(p->vertex, p->vertex, room->transform+12);
-        TR_vertex_to_arr(p->vertex+3, &tr_portal->vertices[2]);
-        vec3_add(p->vertex+3, p->vertex+3, room->transform+12);
-        TR_vertex_to_arr(p->vertex+6, &tr_portal->vertices[1]);
-        vec3_add(p->vertex+6, p->vertex+6, room->transform+12);
-        TR_vertex_to_arr(p->vertex+9, &tr_portal->vertices[0]);
-        vec3_add(p->vertex+9, p->vertex+9, room->transform+12);
-        vec3_add(p->centre, p->vertex, p->vertex+3);
-        vec3_add(p->centre, p->centre, p->vertex+6);
-        vec3_add(p->centre, p->centre, p->vertex+9);
-        p->centre[0] /= 4.0;
-        p->centre[1] /= 4.0;
-        p->centre[2] /= 4.0;
-        Portal_GenNormale(p);
+        TR_vertex_to_arr(p->vertices[0], tr_portal->vertices[3]);
+        p->vertices[0] += room->transform.getOrigin();
+        TR_vertex_to_arr(p->vertices[1], tr_portal->vertices[2]);
+        p->vertices[1] += room->transform.getOrigin();
+        TR_vertex_to_arr(p->vertices[2], tr_portal->vertices[1]);
+        p->vertices[2] += room->transform.getOrigin();
+        TR_vertex_to_arr(p->vertices[3], tr_portal->vertices[0]);
+        p->vertices[3] += room->transform.getOrigin();
+        p->centre = std::accumulate(p->vertices.begin(), p->vertices.end(), btVector3()) / 4;
+        p->genNormale();
 
         /*
          * Portal position fix...
@@ -2430,22 +2315,19 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
         // X_MIN
         if((p->norm[0] > 0.999) && (((int)p->centre[0])%2))
         {
-            btScalar pos[3] = {1.0, 0.0, 0.0};
-            Portal_Move(p, pos);
+            p->move({1,0,0});
         }
 
         // Y_MIN
         if((p->norm[1] > 0.999) && (((int)p->centre[1])%2))
         {
-            btScalar pos[3] = {0.0, 1.0, 0.0};
-            Portal_Move(p, pos);
+            p->move({0,1,0});
         }
 
         // Z_MAX
         if((p->norm[2] <-0.999) && (((int)p->centre[2])%2))
         {
-            btScalar pos[3] = {0.0, 0.0, -1.0};
-            Portal_Move(p, pos);
+            p->move({0,0,-1});
         }
     }
 
@@ -2455,10 +2337,10 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
     room->bb_min[2] = tr_room->y_bottom;
     room->bb_max[2] = tr_room->y_top;
 
-    room->bb_min[0] = room->transform[12] + TR_METERING_SECTORSIZE;
-    room->bb_min[1] = room->transform[13] + TR_METERING_SECTORSIZE;
-    room->bb_max[0] = room->transform[12] + TR_METERING_SECTORSIZE * room->sectors_x - TR_METERING_SECTORSIZE;
-    room->bb_max[1] = room->transform[13] + TR_METERING_SECTORSIZE * room->sectors_y - TR_METERING_SECTORSIZE;
+    room->bb_min[0] = room->transform.getOrigin()[0] + TR_METERING_SECTORSIZE;
+    room->bb_min[1] = room->transform.getOrigin()[1] + TR_METERING_SECTORSIZE;
+    room->bb_max[0] = room->transform.getOrigin()[0] + TR_METERING_SECTORSIZE * room->sectors_x - TR_METERING_SECTORSIZE;
+    room->bb_max[1] = room->transform.getOrigin()[1] + TR_METERING_SECTORSIZE * room->sectors_y - TR_METERING_SECTORSIZE;
 
     /*
      * alternate room pointer calculation if one exists.
@@ -2468,15 +2350,13 @@ void TR_GenRoom(size_t room_index, struct room_s *room, struct world_s *world, c
 
     if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
     {
-        room->alternate_room = world->rooms + tr_room->alternate_room;
+        room->alternate_room = world->rooms[ tr_room->alternate_room ];
     }
 }
 
 
-void Res_GenRoomCollision(struct world_s *world)
+void Res_GenRoomCollision(World *world)
 {
-    room_p r = world->rooms;
-
     /*
     if(level_script != NULL)
     {
@@ -2484,8 +2364,9 @@ void Res_GenRoomCollision(struct world_s *world)
     }
     */
 
-    for(uint32_t i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0; i<world->rooms.size(); i++)
     {
+        auto r = world->rooms[i];
         // Inbetween polygons array is later filled by loop which scans adjacent
         // sector heightmaps and fills the gaps between them, thus creating inbetween
         // polygon. Inbetweens can be either quad (if all four corner heights are
@@ -2496,7 +2377,7 @@ void Res_GenRoomCollision(struct world_s *world)
 
         int num_heightmaps = (r->sectors_x * r->sectors_y);
         int num_tweens = (num_heightmaps * 4);
-        sector_tween_s *room_tween   = new sector_tween_s[num_tweens];
+        SectorTween *room_tween   = new SectorTween[num_tweens];
 
         // Clear tween array.
 
@@ -2517,12 +2398,10 @@ void Res_GenRoomCollision(struct world_s *world)
         if(cshape)
         {
             btVector3 localInertia(0, 0, 0);
-            btTransform tr;
-            tr.setFromOpenGLMatrix(r->transform);
-            btDefaultMotionState* motionState = new btDefaultMotionState(tr);
+            btDefaultMotionState* motionState = new btDefaultMotionState(r->transform);
             r->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
             bt_engine_dynamicsWorld->addRigidBody(r->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-            r->bt_body->setUserPointer(r->self);
+            r->bt_body->setUserPointer(r->self.get());
             r->bt_body->setRestitution(1.0);
             r->bt_body->setFriction(1.0);
             r->self->collision_type = COLLISION_TYPE_STATIC;                    // meshtree
@@ -2534,27 +2413,26 @@ void Res_GenRoomCollision(struct world_s *world)
 }
 
 
-void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
+void TR_GenRoomProperties(World *world, class VT_Level *tr)
 {
-    room_p r = world->rooms;
-
-    for(uint32_t i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->rooms.size();i++)
     {
+        std::shared_ptr<Room> r = world->rooms[i];
         if(r->alternate_room != NULL)
         {
             r->alternate_room->base_room = r;   // Refill base room pointer.
         }
 
         // Fill heightmap and translate floordata.
-        for(uint32_t j=0;j<r->sectors_count;j++)
+        for(RoomSector& sector : r->sectors)
         {
-            TR_Sector_TranslateFloorData(r->sectors + j, tr);
+            TR_Sector_TranslateFloorData(&sector, tr);
         }
 
         // Generate links to the near rooms.
-        Room_BuildNearRoomsList(r);
+        r->buildNearRoomsList();
         // Generate links to the overlapped rooms.
-        Room_BuildOverlappedRoomsList(r);
+        r->buildOverlappedRoomsList();
 
         // Basic sector calculations.
         TR_Sector_Calculate(world, tr, i);
@@ -2562,80 +2440,62 @@ void TR_GenRoomProperties(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Res_GenRoomFlipMap(struct world_s *world)
+void Res_GenRoomFlipMap(World *world)
 {
     // Flipmap count is hardcoded, as no original levels contain such info.
-
-    world->flip_count = FLIPMAP_MAX_NUMBER;
-
-    world->flip_map   = (uint8_t*)malloc(world->flip_count * sizeof(uint8_t));
-    world->flip_state = (uint8_t*)malloc(world->flip_count * sizeof(uint8_t));
-
-    memset(world->flip_map,   0, world->flip_count);
-    memset(world->flip_state, 0, world->flip_count);
+    world->flip_data.resize(FLIPMAP_MAX_NUMBER);
 }
 
 
-void TR_GenBoxes(struct world_s *world, class VT_Level *tr)
+void TR_GenBoxes(World *world, class VT_Level *tr)
 {
-    world->room_boxes = NULL;
-    world->room_box_count = tr->boxes_count;
-
-    if(world->room_box_count)
+    world->room_boxes.clear();
+    
+    for(uint32_t i=0;i<tr->boxes_count;i++)
     {
-        world->room_boxes = (room_box_p)malloc(world->room_box_count * sizeof(room_box_t));
-        for(uint32_t i=0;i<world->room_box_count;i++)
-        {
-            world->room_boxes[i].overlap_index = tr->boxes[i].overlap_index;
-            world->room_boxes[i].true_floor =-tr->boxes[i].true_floor;
-            world->room_boxes[i].x_min = tr->boxes[i].xmin;
-            world->room_boxes[i].x_max = tr->boxes[i].xmax;
-            world->room_boxes[i].y_min =-tr->boxes[i].zmax;
-            world->room_boxes[i].y_max =-tr->boxes[i].zmin;
-        }
+        world->room_boxes.emplace_back();
+        auto& room = world->room_boxes.back();
+        room.overlap_index = tr->boxes[i].overlap_index;
+        room.true_floor =-tr->boxes[i].true_floor;
+        room.x_min = tr->boxes[i].xmin;
+        room.x_max = tr->boxes[i].xmax;
+        room.y_min =-tr->boxes[i].zmax;
+        room.y_max =-tr->boxes[i].zmin;
     }
 }
 
-void TR_GenCameras(struct world_s *world, class VT_Level *tr)
+void TR_GenCameras(World *world, class VT_Level *tr)
 {
-    world->cameras_sinks = NULL;
-    world->cameras_sinks_count = tr->cameras_count;
-
-    if(world->cameras_sinks_count)
-    {
-        world->cameras_sinks = (stat_camera_sink_p)malloc(world->cameras_sinks_count * sizeof(stat_camera_sink_t));
-        for(uint32_t i=0;i<world->cameras_sinks_count;i++)
-        {
-            world->cameras_sinks[i].x                   =  tr->cameras[i].x;
-            world->cameras_sinks[i].y                   =  tr->cameras[i].z;
-            world->cameras_sinks[i].z                   = -tr->cameras[i].y;
-            world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
-            world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
-        }
+    world->cameras_sinks.clear();
+    
+    for(uint32_t i=0; i<tr->cameras_count; i++) {
+        world->cameras_sinks.emplace_back();
+        world->cameras_sinks[i].x                   =  tr->cameras[i].x;
+        world->cameras_sinks[i].y                   =  tr->cameras[i].z;
+        world->cameras_sinks[i].z                   = -tr->cameras[i].y;
+        world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
+        world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
     }
 }
 
 /**
  * sprites loading, works correct in TR1 - TR5
  */
-void TR_GenSprites(struct world_s *world, class VT_Level *tr)
+void TR_GenSprites(World *world, class VT_Level *tr)
 {
-    sprite_p s;
-    tr_sprite_texture_t *tr_st;
-
-    if(tr->sprite_textures_count == 0)
+    if(tr->Spriteextures_count == 0)
     {
-        world->sprites = NULL;
-        world->sprites_count = 0;
+        world->sprites.clear();
         return;
     }
 
-    world->sprites_count = tr->sprite_textures_count;
-    s = world->sprites = (sprite_p)calloc(world->sprites_count, sizeof(sprite_t));
 
-    for(uint32_t i=0;i<world->sprites_count;i++,s++)
+    for(uint32_t i=0;i<tr->Spriteextures_count;i++)
     {
-        tr_st = &tr->sprite_textures[i];
+        world->sprites.emplace_back();
+        auto s = &world->sprites.back();
+
+        auto tr_st = &tr->Spriteextures[i];
 
         s->left = tr_st->left_side;
         s->right = tr_st->right_side;
@@ -2647,38 +2507,37 @@ void TR_GenSprites(struct world_s *world, class VT_Level *tr)
 
     for(uint32_t i=0;i<tr->sprite_sequences_count;i++)
     {
-        if((tr->sprite_sequences[i].offset >= 0) && ((uint32_t)tr->sprite_sequences[i].offset < world->sprites_count))
+        if((tr->sprite_sequences[i].offset >= 0) && ((uint32_t)tr->sprite_sequences[i].offset < world->sprites.size()))
         {
             world->sprites[tr->sprite_sequences[i].offset].id = tr->sprite_sequences[i].object_id;
         }
     }
 }
 
-void Res_GenSpritesBuffer(struct world_s *world)
+void Res_GenSpritesBuffer(World *world)
 {
-    for (uint32_t i = 0; i < world->room_count; i++)
-        Res_GenRoomSpritesBuffer(&world->rooms[i]);
+    for (uint32_t i = 0; i < world->rooms.size(); i++)
+        Res_GenRoomSpritesBuffer(world->rooms[i]);
 }
 
-void TR_GenTextures(struct world_s* world, class VT_Level *tr)
+void TR_GenTextures(World* world, class VT_Level *tr)
 {
-    int border_size = renderer.settings.texture_border;
+    int border_size = renderer.settings().texture_border;
     border_size = (border_size < 0)?(0):(border_size);
     border_size = (border_size > 128)?(128):(border_size);
-    world->tex_atlas = new bordered_texture_atlas(border_size,
+    world->tex_atlas.reset( new BorderedTextureAtlas(border_size,
                                                   tr->textile32_count,
                                                   tr->textile32,
                                                   tr->object_textures_count,
                                                   tr->object_textures,
-                                                  tr->sprite_textures_count,
-                                                  tr->sprite_textures);
+                                                  tr->Spriteextures_count,
+                                                  tr->Spriteextures) );
 
-    world->tex_count = (uint32_t) world->tex_atlas->getNumAtlasPages() + 1;
-    world->textures = (GLuint*)malloc(world->tex_count * sizeof(GLuint));
+    world->textures.resize(world->tex_atlas->getNumAtlasPages() + 1);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelZoom(1, 1);
-    world->tex_atlas->createTextures(world->textures, 1);
+    world->tex_atlas->createTextures(world->textures.data(), 1);
 
     // white texture data for coloured polygons and debug lines.
     GLubyte whtx[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -2689,7 +2548,7 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   // Mag filter is always linear.
 
     // Select mipmap mode
-    switch(renderer.settings.mipmap_mode)
+    switch(renderer.settings().mipmap_mode)
     {
         case 0:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
@@ -2710,16 +2569,16 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
     };
 
     // Set mipmaps number
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings.mipmaps);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, renderer.settings().mipmaps);
 
     // Set anisotropy degree
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings.anisotropy);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, renderer.settings().anisotropy);
 
     // Read lod bias
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings.lod_bias);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, renderer.settings().lod_bias);
 
 
-    glBindTexture(GL_TEXTURE_2D, world->textures[world->tex_count-1]);          // solid color =)
+    glBindTexture(GL_TEXTURE_2D, world->textures.back());          // solid color =)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, whtx);
@@ -2734,33 +2593,28 @@ void TR_GenTextures(struct world_s* world, class VT_Level *tr)
   *   is then parsed on the fly. What we do is parse this stream to the
   *   proper structures to be used later within renderer.
   */
-void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
+void TR_GenAnimTextures(World *world, class VT_Level *tr)
 {
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
     int32_t   uvrotate_script = 0;
-    polygon_t p0, p;
+    Polygon p0, p;
 
-    p0.vertex_count = 0;
-    p0.vertices = NULL;
-    p.vertex_count = 0;
-    p.vertices = NULL;
-    Polygon_Resize(&p0, 3);
-    Polygon_Resize(&p, 3);
+    p0.vertices.resize(3);
+    p.vertices.resize(3);
 
     pointer       = tr->animated_textures;
     num_uvrotates = tr->animated_textures_uv_count;
 
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
 
-    world->anim_sequences_count = num_sequences;
-    world->anim_sequences = (anim_seq_p)calloc(num_sequences, sizeof(anim_seq_t));
+    world->anim_sequences.resize(num_sequences);
 
-    anim_seq_p seq = world->anim_sequences;
+    AnimSeq* seq = world->anim_sequences.data();
     for(uint16_t i = 0; i < num_sequences; i++,seq++)
     {
-        seq->frames_count = *(pointer++) + 1;
-        seq->frame_list   =  (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));
+        seq->frames.resize(*(pointer++) + 1);
+        seq->frame_list.resize(seq->frames.size());
 
         // Fill up new sequence with frame list.
         seq->anim_type         = TR_ANIMTEXTURE_FORWARD;
@@ -2771,7 +2625,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         seq->frame_time        = 0.0;   // Reset frame time to initial state.
         seq->current_frame     = 0;     // Reset current frame to zero.
 
-        for(uint16_t j = 0; j < seq->frames_count; j++)
+        for(uint16_t j = 0; j < seq->frames.size(); j++)
         {
             seq->frame_list[j] = *(pointer++);  // Add one frame.
         }
@@ -2801,11 +2655,10 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             // Get texture height and divide it in half.
             // This way, we get a reference value which is used to identify
             // if scrolling is completed or not.
-            seq->frames_count = 8;
+            seq->frames.resize(8);
             seq->uvrotate_max   = world->tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
-            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames_count;
-            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
-            seq->frame_list = (uint32_t *) calloc(seq->frames_count, sizeof(uint32_t));
+            seq->uvrotate_speed = seq->uvrotate_max / (btScalar)seq->frames.size();
+            seq->frame_list.resize(8);
 
             if(uvrotate_script > 0)
             {
@@ -2817,7 +2670,7 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
             }
 
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0.0, true);
-            for(uint16_t j=0;j<seq->frames_count;j++)
+            for(uint16_t j=0;j<seq->frames.size();j++)
             {
                 engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, (GLfloat)j * seq->uvrotate_speed, true);
                 seq->frames[j].tex_ind = p.tex_index;
@@ -2845,9 +2698,8 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         }
         else
         {
-            seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
             engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p0);
-            for(uint16_t j=0;j<seq->frames_count;j++)
+            for(uint16_t j=0;j<seq->frames.size();j++)
             {
                 engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, &p);
                 seq->frames[j].tex_ind = p.tex_index;
@@ -2875,8 +2727,6 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
 
         }
     }
-    Polygon_Clear(&p0);
-    Polygon_Clear(&p);
 }
 
 /**   Assign animated texture to a polygon.
@@ -2886,13 +2736,13 @@ void TR_GenAnimTextures(struct world_s *world, class VT_Level *tr)
   *   same TexInfo index that is applied to polygon, and if corresponding
   *   animation list is found, we assign it to polygon.
   */
-bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_s *world)
+bool SetAnimTexture(Polygon* polygon, uint32_t tex_index, World *world)
 {
     polygon->anim_id = 0;                           // Reset to 0 by default.
 
-    for(uint32_t i = 0; i < world->anim_sequences_count; i++)
+    for(uint32_t i = 0; i < world->anim_sequences.size(); i++)
     {
-        for(uint16_t j = 0; j < world->anim_sequences[i].frames_count; j++)
+        for(uint16_t j = 0; j < world->anim_sequences[i].frames.size(); j++)
         {
             if(world->anim_sequences[i].frame_list[j] == tex_index)
             {
@@ -2909,73 +2759,43 @@ bool SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct world_
     return false;   // No such TexInfo found in animation textures lists.
 }
 
-static void addPolygonCopyToList(const polygon_s *polygon, polygon_s *&list)
+void TR_GenMeshes(World *world, class VT_Level *tr)
 {
-    polygon_p np = (polygon_p)calloc(1, sizeof(polygon_t));
-    Polygon_Copy(np, polygon);
-    np->next = list;
-    list = np;
-}
-
-void Res_Poly_SortInMesh(struct base_mesh_s *mesh)
-{
-    polygon_p p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->polygons_count;i++,p++)
-    {
-        if((p->anim_id > 0) && (p->anim_id <= engine_world.anim_sequences_count))
-        {
-            anim_seq_p seq = engine_world.anim_sequences + (p->anim_id - 1);
-            // set tex coordinates to the first frame for correct texture transform in renderer
-            engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, p, 0, seq->uvrotate);
-        }
-
-        if(p->transparency >= 2)
-        {
-            addPolygonCopyToList(p, mesh->transparency_polygons);
-        }
+    world->meshes.resize( tr->meshes_count );
+    size_t i=0;
+    for(std::shared_ptr<BaseMesh>& baseMesh : world->meshes) {
+        baseMesh = std::make_shared<BaseMesh>();
+        TR_GenMesh(world, i++, baseMesh, tr);
     }
 }
 
-
-void TR_GenMeshes(struct world_s *world, class VT_Level *tr)
+static void tr_copyNormals(Polygon* polygon, const std::shared_ptr<BaseMesh>& mesh, const uint16_t *mesh_vertex_indices)
 {
-    base_mesh_p base_mesh;
-
-    world->meshes_count = tr->meshes_count;
-    base_mesh = world->meshes = (base_mesh_p)calloc(world->meshes_count, sizeof(base_mesh_t));
-    for(uint32_t i=0;i<world->meshes_count;i++,base_mesh++)
+    for (size_t i=0; i<polygon->vertices.size(); ++i)
     {
-        TR_GenMesh(world, i, base_mesh, tr);
+        polygon->vertices[i].normal = mesh->m_vertices[mesh_vertex_indices[i]].normal;
     }
 }
 
-static void tr_copyNormals(const polygon_p polygon, base_mesh_p mesh, const uint16_t *mesh_vertex_indices)
+void tr_accumulateNormals(tr4_mesh_t *tr_mesh, BaseMesh* mesh, int numCorners, const uint16_t *vertex_indices, Polygon* p)
 {
-    for (int i = 0; i < polygon->vertex_count; i++)
-    {
-        vec3_copy(polygon->vertices[i].normal, mesh->vertices[mesh_vertex_indices[i]].normal);
-    }
-}
-
-void tr_accumulateNormals(tr4_mesh_t *tr_mesh, base_mesh_p mesh, int numCorners, const uint16_t *vertex_indices, polygon_p p)
-{
-    Polygon_Resize(p, numCorners);
+    p->vertices.resize(numCorners);
 
     for (int i = 0; i < numCorners; i++)
     {
-        TR_vertex_to_arr(p->vertices[i].position, &tr_mesh->vertices[vertex_indices[i]]);
+        TR_vertex_to_arr(p->vertices[i].position, tr_mesh->vertices[vertex_indices[i]]);
     }
-    Polygon_FindNormale(p);
+    p->findNormal();
 
     for (int i = 0; i < numCorners; i++)
     {
-        vec3_add(mesh->vertices[vertex_indices[i]].normal, mesh->vertices[vertex_indices[i]].normal, p->plane);
+        mesh->m_vertices[vertex_indices[i]].normal += p->plane;
     }
 }
 
-void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, const uint16_t *vertex_indices, unsigned color, polygon_p p)
+void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, BaseMesh* mesh, const uint16_t *vertex_indices, unsigned color, Polygon* p)
 {
-    for (int i = 0; i < p->vertex_count; i++)
+    for (int i = 0; i < p->vertices.size(); i++)
     {
         p->vertices[i].color[0] = tr->palette.colour[color].r / 255.0f;
         p->vertices[i].color[1] = tr->palette.colour[color].g / 255.0f;
@@ -2991,12 +2811,12 @@ void tr_setupColoredFace(tr4_mesh_t *tr_mesh, VT_Level *tr, base_mesh_p mesh, co
         p->vertices[i].tex_coord[0] = i & 2 ? 1.0 : 0.0;
         p->vertices[i].tex_coord[1] = i >= 2 ? 1.0 : 0.0;
     }
-    mesh->uses_vertex_colors = 1;
+    mesh->m_usesVertexColors = true;
 }
 
-void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t *vertex_indices, polygon_p p)
+void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, BaseMesh* mesh, const uint16_t *vertex_indices, Polygon* p)
 {
-    for (int i = 0; i < p->vertex_count; i++)
+    for (int i = 0; i < p->vertices.size(); i++)
     {
         if(tr_mesh->num_lights == tr_mesh->num_vertices)
         {
@@ -3005,26 +2825,18 @@ void tr_setupTexturedFace(tr4_mesh_t *tr_mesh, base_mesh_p mesh, const uint16_t 
             p->vertices[i].color[2] = 1.0f - (tr_mesh->lights[vertex_indices[i]] / (8192.0f));
             p->vertices[i].color[3] = 1.0f;
 
-            mesh->uses_vertex_colors = 1;
+            mesh->m_usesVertexColors = true;
         }
         else
         {
-            vec4_set_one(p->vertices[i].color);
+            p->vertices[i].color.fill(1);
         }
     }
 }
 
-void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *mesh, class VT_Level *tr)
+void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<BaseMesh> mesh, class VT_Level *tr)
 {
-    uint16_t col;
-    tr4_mesh_t *tr_mesh;
-    tr4_face4_t *face4;
-    tr4_face3_t *face3;
-    tr4_object_texture_t *tex;
-    polygon_p p;
-    btScalar n;
-    vertex_p vertex;
-    uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
     /* TR WAD FORMAT DOCUMENTATION!
      * tr4_face[3,4]_t:
@@ -3041,132 +2853,142 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      * of the square angle of the triangles, 7 represents a quad.
      */
 
-    tr_mesh = &tr->meshes[mesh_index];
-    mesh->id = mesh_index;
-    mesh->centre[0] = tr_mesh->centre.x;
-    mesh->centre[1] =-tr_mesh->centre.z;
-    mesh->centre[2] = tr_mesh->centre.y;
-    mesh->R = tr_mesh->collision_size;
-    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
+    tr4_mesh_t* tr_mesh = &tr->meshes[mesh_index];
+    mesh->m_id = mesh_index;
+    mesh->m_center[0] = tr_mesh->centre.x;
+    mesh->m_center[1] =-tr_mesh->centre.z;
+    mesh->m_center[2] = tr_mesh->centre.y;
+    mesh->m_radius = tr_mesh->collision_size;
+    mesh->m_texturePageCount = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
 
-    mesh->vertex_count = tr_mesh->num_vertices;
-    vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));
-    for(uint32_t i=0;i<mesh->vertex_count;i++,vertex++)
+    mesh->m_vertices.resize( tr_mesh->num_vertices );
+    auto vertex = mesh->m_vertices.data();
+    for(size_t i=0; i<mesh->m_vertices.size(); i++, vertex++)
     {
-        TR_vertex_to_arr(vertex->position, &tr_mesh->vertices[i]);
-        vec3_set_zero(vertex->normal);                                          // paranoid
+        TR_vertex_to_arr(vertex->position, tr_mesh->vertices[i]);
+        vertex->normal.setZero();                                          // paranoid
     }
 
-    BaseMesh_FindBB(mesh);
+    mesh->findBB();
 
-    mesh->polygons_count = tr_mesh->num_textured_triangles + tr_mesh->num_coloured_triangles + tr_mesh->num_textured_rectangles + tr_mesh->num_coloured_rectangles;
-    p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
+    mesh->m_polygons.clear();
 
     /*
      * textured triangles
      */
-    for(int16_t i=0;i<tr_mesh->num_textured_triangles;i++,p++)
+    for(size_t i=0; i<tr_mesh->num_textured_triangles; ++i)
     {
-        face3 = &tr_mesh->textured_triangles[i];
-        tex = &tr->object_textures[face3->texture & tex_mask];
+        mesh->m_polygons.emplace_back();
+        Polygon& p = mesh->m_polygons.back();
 
-        p->double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        auto face3 = &tr_mesh->textured_triangles[i];
+        auto tex = &tr->object_textures[face3->texture & tex_mask];
 
-        SetAnimTexture(p, face3->texture & tex_mask, world);
+        p.double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+
+        SetAnimTexture(&p, face3->texture & tex_mask, world);
 
         if(face3->lighting & 0x01)
         {
-            p->transparency = BM_MULTIPLY;
+            p.transparency = BM_MULTIPLY;
         }
         else
         {
-            p->transparency = tex->transparency_flags;
+            p.transparency = tex->transparency_flags;
         }
 
-        tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
-        tr_setupTexturedFace(tr_mesh, mesh, face3->vertices, p);
+        tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, &p);
+        tr_setupTexturedFace(tr_mesh, mesh.get(), face3->vertices, &p);
 
-        world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, p);
+        world->tex_atlas->getCoordinates(face3->texture & tex_mask, 0, &p);
     }
 
     /*
      * coloured triangles
      */
-    for(int16_t i=0;i<tr_mesh->num_coloured_triangles;i++,p++)
+    for(size_t i=0; i<tr_mesh->num_coloured_triangles; ++i)
     {
-        face3 = &tr_mesh->coloured_triangles[i];
-        col = face3->texture & 0xff;
-        p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
-        p->transparency = 0;
-        p->anim_id = 0;
+        mesh->m_polygons.emplace_back();
+        Polygon& p = mesh->m_polygons.back();
 
-        tr_accumulateNormals(tr_mesh, mesh, 3, face3->vertices, p);
-        tr_setupColoredFace(tr_mesh, tr, mesh, face3->vertices, col, p);
+        auto face3 = &tr_mesh->coloured_triangles[i];
+        auto col = face3->texture & 0xff;
+        p.tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
+        p.transparency = 0;
+        p.anim_id = 0;
+
+        tr_accumulateNormals(tr_mesh, mesh.get(), 3, face3->vertices, &p);
+        tr_setupColoredFace(tr_mesh, tr, mesh.get(), face3->vertices, col, &p);
     }
 
     /*
      * textured rectangles
      */
-    for(int16_t i=0;i<tr_mesh->num_textured_rectangles;i++,p++)
+    for(size_t i=0; i<tr_mesh->num_textured_rectangles; ++i)
     {
-        face4 = &tr_mesh->textured_rectangles[i];
-        tex = &tr->object_textures[face4->texture & tex_mask];
+        mesh->m_polygons.emplace_back();
+        Polygon& p = mesh->m_polygons.back();
 
-        p->double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        auto face4 = &tr_mesh->textured_rectangles[i];
+        auto tex = &tr->object_textures[face4->texture & tex_mask];
 
-        SetAnimTexture(p, face4->texture & tex_mask, world);
+        p.double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+
+        SetAnimTexture(&p, face4->texture & tex_mask, world);
 
         if(face4->lighting & 0x01)
         {
-            p->transparency = BM_MULTIPLY;
+            p.transparency = BM_MULTIPLY;
         }
         else
         {
-            p->transparency = tex->transparency_flags;
+            p.transparency = tex->transparency_flags;
         }
 
-        tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
-        tr_setupTexturedFace(tr_mesh, mesh, face4->vertices, p);
+        tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, &p);
+        tr_setupTexturedFace(tr_mesh, mesh.get(), face4->vertices, &p);
 
-        world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, p);
+        world->tex_atlas->getCoordinates(face4->texture & tex_mask, 0, &p);
     }
 
     /*
      * coloured rectangles
      */
-    for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++,p++)
+    for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++)
     {
-        face4 = &tr_mesh->coloured_rectangles[i];
-        col = face4->texture & 0xff;
-        Polygon_Resize(p, 4);
-        p->tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
-        p->transparency = 0;
-        p->anim_id = 0;
+        mesh->m_polygons.emplace_back();
+        Polygon& p = mesh->m_polygons.back();
 
-        tr_accumulateNormals(tr_mesh, mesh, 4, face4->vertices, p);
-        tr_setupColoredFace(tr_mesh, tr, mesh, face4->vertices, col, p);
+        auto face4 = &tr_mesh->coloured_rectangles[i];
+        auto col = face4->texture & 0xff;
+        p.vertices.resize(4);
+        p.tex_index = (uint32_t)world->tex_atlas->getNumAtlasPages();
+        p.transparency = 0;
+        p.anim_id = 0;
+
+        tr_accumulateNormals(tr_mesh, mesh.get(), 4, face4->vertices, &p);
+        tr_setupColoredFace(tr_mesh, tr, mesh.get(), face4->vertices, col, &p);
     }
 
     /*
      * let us normalise normales %)
      */
-    p = mesh->polygons;
-    for(uint32_t i=0;i<mesh->vertex_count;i++)
-    {
-        vec3_norm(mesh->vertices[i].normal, n);
+    for(Vertex& v : mesh->m_vertices) {
+        v.normal.normalize();
     }
 
     /*
      * triangles
      */
+    auto p = mesh->m_polygons.begin();
     for(int16_t i=0;i<tr_mesh->num_textured_triangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_mesh->textured_triangles[i].vertices);
+        tr_copyNormals(&*p, mesh, tr_mesh->textured_triangles[i].vertices);
     }
 
     for(int16_t i=0;i<tr_mesh->num_coloured_triangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_mesh->coloured_triangles[i].vertices);
+        tr_copyNormals(&*p, mesh, tr_mesh->coloured_triangles[i].vertices);
     }
 
     /*
@@ -3174,39 +2996,34 @@ void TR_GenMesh(struct world_s *world, size_t mesh_index, struct base_mesh_s *me
      */
     for(int16_t i=0;i<tr_mesh->num_textured_rectangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_mesh->textured_rectangles[i].vertices);
+        tr_copyNormals(&*p, mesh, tr_mesh->textured_rectangles[i].vertices);
     }
 
     for(int16_t i=0;i<tr_mesh->num_coloured_rectangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_mesh->coloured_rectangles[i].vertices);
+        tr_copyNormals(&*p, mesh, tr_mesh->coloured_rectangles[i].vertices);
     }
 
-    if(mesh->vertex_count > 0)
-    {
-        mesh->vertex_count = 0;
-        free(mesh->vertices);
-        mesh->vertices = NULL;
-    }
-    Mesh_GenFaces(mesh);
-    Res_Poly_SortInMesh(mesh);
+    mesh->m_vertices.clear();
+    mesh->genFaces();
+    mesh->polySortInMesh();
 }
 
-void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_room_t *tr_room, base_mesh_p mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, polygon_p p)
+void tr_setupRoomVertices(World *world, VT_Level *tr, tr5_room_t *tr_room, const std::shared_ptr<BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, Polygon* p)
 {
-    Polygon_Resize(p, numCorners);
+    p->vertices.resize(numCorners);
 
     for (int i = 0; i < numCorners; i++)
     {
-        TR_vertex_to_arr(p->vertices[i].position, &tr_room->vertices[vertices[i]].vertex);
+        TR_vertex_to_arr(p->vertices[i].position, tr_room->vertices[vertices[i]].vertex);
     }
-    Polygon_FindNormale(p);
+    p->findNormal();
 
     for (int i = 0; i < numCorners; i++)
     {
-        vec3_add(mesh->vertices[vertices[i]].normal, mesh->vertices[vertices[i]].normal, p->plane);
-        vec3_copy(p->vertices[i].normal, p->plane);
-        TR_color_to_arr(p->vertices[i].color, &tr_room->vertices[vertices[i]].colour);
+        mesh->m_vertices[vertices[i]].normal += p->plane;
+        p->vertices[i].normal = p->plane;
+        TR_color_to_arr(p->vertices[i].color, tr_room->vertices[vertices[i]].colour);
     }
 
     tr4_object_texture_t *tex = &tr->object_textures[masked_texture];
@@ -3217,16 +3034,11 @@ void tr_setupRoomVertices(struct world_s *world, class VT_Level *tr, const tr5_r
 
 }
 
-void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *room, class VT_Level *tr)
+void TR_GenRoomMesh(World *world, size_t room_index, std::shared_ptr<Room> room, class VT_Level *tr)
 {
-    tr5_room_t *tr_room;
-    polygon_p p;
-    base_mesh_p mesh;
-    btScalar n;
-    vertex_p vertex;
-    uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (world->version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
 
-    tr_room = &tr->rooms[room_index];
+    auto tr_room = &tr->rooms[room_index];
 
     if(tr_room->num_triangles + tr_room->num_rectangles == 0)
     {
@@ -3234,30 +3046,30 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
         return;
     }
 
-    mesh = room->mesh = (base_mesh_p)calloc(1, sizeof(base_mesh_t));
-    mesh->id = room_index;
-    mesh->num_texture_pages = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
-    mesh->uses_vertex_colors = 1; // This is implicitly true on room meshes
+    room->mesh = std::make_shared<BaseMesh>();
+    room->mesh->m_id = room_index;
+    room->mesh->m_texturePageCount = (uint32_t)world->tex_atlas->getNumAtlasPages() + 1;
+    room->mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
-    mesh->vertex_count = tr_room->num_vertices;
-    vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));
-    for(uint32_t i=0;i<mesh->vertex_count;i++,vertex++)
+    room->mesh->m_vertices.resize( tr_room->num_vertices );
+    auto vertex = room->mesh->m_vertices.data();
+    for(size_t i=0; i<room->mesh->m_vertices.size(); i++, vertex++)
     {
-        TR_vertex_to_arr(vertex->position, &tr_room->vertices[i].vertex);
-        vec3_set_zero(vertex->normal);                                          // paranoid
+        TR_vertex_to_arr(vertex->position, tr_room->vertices[i].vertex);
+        vertex->normal.setZero();                                          // paranoid
     }
 
-    BaseMesh_FindBB(mesh);
+    room->mesh->findBB();
 
-    mesh->polygons_count = tr_room->num_triangles + tr_room->num_rectangles;
-    p = mesh->polygons = Polygon_CreateArray(mesh->polygons_count);
+    room->mesh->m_polygons.resize( tr_room->num_triangles + tr_room->num_rectangles );
+    auto p = room->mesh->m_polygons.begin();
 
     /*
      * triangles
      */
     for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
     {
-        tr_setupRoomVertices(world, tr, tr_room, mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, p);
+        tr_setupRoomVertices(world, tr, tr_room, room->mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
         p->double_side = tr_room->triangles[i].texture & 0x8000;
     }
 
@@ -3266,25 +3078,25 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
      */
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        tr_setupRoomVertices(world, tr, tr_room, mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, p);
+        tr_setupRoomVertices(world, tr, tr_room, room->mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
         p->double_side = tr_room->rectangles[i].texture & 0x8000;
     }
 
     /*
      * let us normalise normales %)
      */
-    for(uint32_t i=0;i<mesh->vertex_count;i++)
+    for(Vertex& v : room->mesh->m_vertices)
     {
-        vec3_norm(mesh->vertices[i].normal, n);
+        v.normal.normalize();
     }
 
     /*
      * triangles
      */
-    p = mesh->polygons;
-    for(uint32_t i=0;i<tr_room->num_triangles;i++,p++)
+    p = room->mesh->m_polygons.begin();
+    for(size_t i=0; i<tr_room->num_triangles; i++, p++)
     {
-        tr_copyNormals(p, mesh, tr_room->triangles[i].vertices);
+        tr_copyNormals(&*p, room->mesh, tr_room->triangles[i].vertices);
     }
 
     /*
@@ -3292,30 +3104,25 @@ void TR_GenRoomMesh(struct world_s *world, size_t room_index, struct room_s *roo
      */
     for(uint32_t i=0;i<tr_room->num_rectangles;i++,p++)
     {
-        tr_copyNormals(p, mesh, tr_room->rectangles[i].vertices);
+        tr_copyNormals(&*p, room->mesh, tr_room->rectangles[i].vertices);
     }
 
-    if(mesh->vertex_count > 0)
-    {
-        mesh->vertex_count = 0;
-        free(mesh->vertices);
-        mesh->vertices = NULL;
-    }
-    Mesh_GenFaces(mesh);
-    Res_Poly_SortInMesh(mesh);
+    room->mesh->m_vertices.clear();
+    room->mesh->genFaces();
+    room->mesh->polySortInMesh();
 }
 
-void Res_GenRoomSpritesBuffer(struct room_s *room)
+void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
 {
     // Find the number of different texture pages used and the number of non-null sprites
     uint32_t highestTexturePageFound = 0;
     int actualSpritesFound = 0;
-    for (uint32_t i = 0; i < room->sprites_count; i++)
+    for(RoomSprite& sp : room->sprites)
     {
-        if (room->sprites[i].sprite)
+        if (sp.sprite)
         {
             actualSpritesFound += 1;
-            highestTexturePageFound = std::max(highestTexturePageFound, room->sprites[i].sprite->texture);
+            highestTexturePageFound = std::max(highestTexturePageFound, sp.sprite->texture);
         }
     }
     if (actualSpritesFound == 0)
@@ -3324,7 +3131,7 @@ void Res_GenRoomSpritesBuffer(struct room_s *room)
         return;
     }
 
-    room->sprite_buffer = (struct sprite_buffer_s *) calloc(sizeof(struct sprite_buffer_s), 1);
+    room->sprite_buffer = (SpriteBuffer *) calloc(sizeof(SpriteBuffer), 1);
     room->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
     room->sprite_buffer->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), room->sprite_buffer->num_texture_pages);
 
@@ -3334,9 +3141,8 @@ void Res_GenRoomSpritesBuffer(struct room_s *room)
     GLfloat *spriteData = (GLfloat *) calloc(sizeof(GLfloat [7]), actualSpritesFound * 4);
 
     int writeIndex = 0;
-    for (int i = 0; i < room->sprites_count; i++)
+    for (const RoomSprite& room_sprite : room->sprites)
     {
-        const struct room_sprite_s &room_sprite = room->sprites[i];
         if (room_sprite.sprite)
         {
             int vertexStart = writeIndex;
@@ -3418,52 +3224,52 @@ void Res_GenRoomSpritesBuffer(struct room_s *room)
     glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
     free(elements);
 
-    struct vertex_array_attribute attribs[3] = {
-        vertex_array_attribute(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
-        vertex_array_attribute(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
-        vertex_array_attribute(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
+    VertexArrayAttribute attribs[3] = {
+        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::position, 3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [0])),
+        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::tex_coord, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [3])),
+        VertexArrayAttribute(SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat [7]), sizeof(GLfloat [5]))
     };
 
-    room->sprite_buffer->data = renderer.vertex_array_manager->createArray(elementBuffer, 3, attribs);
+    room->sprite_buffer->data.reset( new VertexArray(elementBuffer, 3, attribs) );
 }
 
-void Res_GenVBOs(struct world_s *world)
+void Res_GenVBOs(World *world)
 {
-    for(uint32_t i=0;i<world->meshes_count;i++)
+    for(uint32_t i=0; i<world->meshes.size(); i++)
     {
-        if(world->meshes[i].vertex_count || world->meshes[i].animated_vertex_count)
+        if(!world->meshes[i]->m_vertices.empty() || world->meshes[i]->m_animatedVertices.size())
         {
-            Mesh_GenVBO(&renderer, world->meshes + i);
+            world->meshes[i]->genVBO(&renderer);
         }
     }
 
-    for(uint32_t i=0;i<world->room_count;i++)
+    for(uint32_t i=0; i<world->rooms.size(); i++)
     {
-        if((world->rooms[i].mesh) && (world->rooms[i].mesh->vertex_count || world->rooms[i].mesh->animated_vertex_count))
+        if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || world->rooms[i]->mesh->m_animatedVertices.size()))
         {
-            Mesh_GenVBO(&renderer, world->rooms[i].mesh);
+            world->rooms[i]->mesh->genVBO(&renderer);
         }
     }
 }
 
-void Res_GenBaseItems(struct world_s* world)
+void Res_GenBaseItems(World* world)
 {
     lua_CallVoidFunc(engine_lua, "genBaseItems");
 
-    if((world->items_tree != NULL) && (world->items_tree->root != NULL))
+    if(!world->items_tree.empty())
     {
-        Res_EntityToItem(world->items_tree->root);
+        Res_EntityToItem(world->items_tree);
     }
 }
 
-void Res_FixRooms(struct world_s *world)
+void Res_FixRooms(World *world)
 {
-    room_p r = world->rooms;
-    for(uint32_t i=0;i<world->room_count;i++,r++)
+    for(uint32_t i=0;i<world->rooms.size();i++)
     {
+        auto r = world->rooms[i];
         if(r->base_room != NULL)
         {
-            Room_Disable(r);    // Disable current room
+            r->disable();    // Disable current room
         }
 
         // Isolated rooms may be used for rolling ball trick (for ex., LEVEL4.PHD).
@@ -3506,38 +3312,37 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, clas
     return tr_animation->frame_offset;
 }
 
-struct skeletal_model_s* Res_GetSkybox(struct world_s *world, uint32_t engine_version)
+SkeletalModel* Res_GetSkybox(World *world, uint32_t engine_version)
 {
     switch(engine_version)
     {
         case TR_II:
         case TR_II_DEMO:
-            return World_GetModelByID(world, TR_ITEM_SKYBOX_TR2);
+            return world->getModelByID(TR_ITEM_SKYBOX_TR2);
 
         case TR_III:
-            return World_GetModelByID(world, TR_ITEM_SKYBOX_TR3);
+            return world->getModelByID(TR_ITEM_SKYBOX_TR3);
 
         case TR_IV:
         case TR_IV_DEMO:
-            return World_GetModelByID(world, TR_ITEM_SKYBOX_TR4);
+            return world->getModelByID(TR_ITEM_SKYBOX_TR4);
 
         case TR_V:
-            return World_GetModelByID(world, TR_ITEM_SKYBOX_TR5);
+            return world->getModelByID(TR_ITEM_SKYBOX_TR5);
 
         default:
             return NULL;
     }
 }
 
-void TR_GenAnimCommands(struct world_s *world, class VT_Level *tr)
+void TR_GenAnimCommands(World *world, class VT_Level *tr)
 {
-    world->anim_commands_count = tr->anim_commands_count;
-    world->anim_commands = tr->anim_commands;
-    tr->anim_commands = NULL;
+    world->anim_commands.assign( tr->anim_commands+0, tr->anim_commands+tr->anim_commands_count );
+    free(tr->anim_commands);
     tr->anim_commands_count = 0;
 }
 
-void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeletal_model_s *model, class VT_Level *tr)
+void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, class VT_Level *tr)
 {
     tr_moveable_t *tr_moveable;
     tr_animation_t *tr_animation;
@@ -3545,29 +3350,27 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     uint32_t frame_offset, frame_step;
     uint16_t temp1, temp2;
     float ang;
-    btScalar rot[3];
 
-    bone_tag_p bone_tag;
-    bone_frame_p bone_frame;
-    mesh_tree_tag_p tree_tag;
-    animation_frame_p anim;
+    BoneTag* bone_tag;
+    BoneFrame* bone_frame;
+    MeshTreeTag* tree_tag;
+    AnimationFrame* anim;
 
     tr_moveable = &tr->moveables[model_num];                                    // original tr structure
-    model->collision_map = (uint16_t*)malloc(model->mesh_count * sizeof(uint16_t));
-    model->collision_map_size = model->mesh_count;
+    model->collision_map.resize(model->mesh_count);
     for(uint16_t i=0;i<model->mesh_count;i++)
     {
         model->collision_map[i] = i;
     }
 
-    model->mesh_tree = (mesh_tree_tag_p)calloc(model->mesh_count, sizeof(mesh_tree_tag_t));
-    tree_tag = model->mesh_tree;
+    model->mesh_tree.resize(model->mesh_count);
+    tree_tag = model->mesh_tree.data();
 
     uint32_t *mesh_index = tr->mesh_indices + tr_moveable->starting_mesh;
 
     for(uint16_t k=0;k<model->mesh_count;k++,tree_tag++)
     {
-        tree_tag->mesh_base = world->meshes + (mesh_index[k]);
+        tree_tag->mesh_base = world->meshes[mesh_index[k]];
         tree_tag->mesh_skin = NULL;                                             ///@PARANOID: I use calloc for tree_tag's
         tree_tag->replace_anim = 0x00;
         tree_tag->replace_mesh = 0x00;
@@ -3598,48 +3401,41 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         /*
          * model has no start offset and any animation
          */
-        model->animation_count = 1;
-        model->animations = (animation_frame_p)malloc(sizeof(animation_frame_t));
-        model->animations->frames_count = 1;
-        model->animations->frames = (bone_frame_p)calloc(model->animations->frames_count , sizeof(bone_frame_t));
-        bone_frame = model->animations->frames;
+        model->animations.resize(1);
+        model->animations.front().frames.resize(1);
+        bone_frame = model->animations.front().frames.data();
 
-        model->animations->id = 0;
-        model->animations->next_anim = NULL;
-        model->animations->next_frame = 0;
-        model->animations->state_change = NULL;
-        model->animations->state_change_count = 0;
-        model->animations->original_frame_rate = 1;
+        model->animations.front().id = 0;
+        model->animations.front().next_anim = NULL;
+        model->animations.front().next_frame = 0;
+        model->animations.front().state_change.clear();
+        model->animations.front().original_frame_rate = 1;
 
-        bone_frame->bone_tag_count = model->mesh_count;
-        bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
+        bone_frame->bone_tags.resize( model->mesh_count );
 
-        vec3_set_zero(bone_frame->pos);
-        vec3_set_zero(bone_frame->move);
+        bone_frame->pos.setZero();
+        bone_frame->move.setZero();
         bone_frame->v_Horizontal = 0.0;
         bone_frame->v_Vertical = 0.0;
         bone_frame->command = 0x00;
-        for(uint16_t k=0;k<bone_frame->bone_tag_count;k++)
+        for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
         {
-            tree_tag = model->mesh_tree + k;
-            bone_tag = bone_frame->bone_tags + k;
+            tree_tag = &model->mesh_tree[k];
+            bone_tag = &bone_frame->bone_tags[k];
 
-            rot[0] = 0.0;
-            rot[1] = 0.0;
-            rot[2] = 0.0;
-            vec4_SetTRRotations(bone_tag->qrotate, rot);
-            vec3_copy(bone_tag->offset, tree_tag->offset);
+            vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+            bone_tag->offset = tree_tag->offset;
         }
         return;
     }
     //Sys_DebugLog(LOG_FILENAME, "model = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
-    model->animation_count = TR_GetNumAnimationsForMoveable(tr, model_num);
-    if(model->animation_count <= 0)
+    model->animations.resize( TR_GetNumAnimationsForMoveable(tr, model_num) );
+    if(model->animations.empty())
     {
         /*
          * the animation count must be >= 1
          */
-        model->animation_count = 1;
+        model->animations.resize(1);
     }
 
     /*
@@ -3651,9 +3447,8 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
      * - in the next follows rotation's data. one word - one rotation, if rotation is one-axis (one angle).
      *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
      */
-    model->animations = (animation_frame_p)calloc(model->animation_count, sizeof(animation_frame_t));
-    anim = model->animations;
-    for(uint16_t i=0;i<model->animation_count;i++,anim++)
+    anim = model->animations.data();
+    for(uint16_t i=0;i<model->animations.size();i++,anim++)
     {
         tr_animation = &tr->animations[tr_moveable->animation_index+i];
         frame_offset = tr_animation->frame_offset / 2;
@@ -3676,7 +3471,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
 
-        anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
+        anim->frames.resize( TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i) );
 
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
@@ -3687,7 +3482,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         if( (anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255) )
         {
             // Calculate current animation anim command block offset.
-            int16_t *pointer = world->anim_commands + anim->anim_command;
+            int16_t *pointer = &world->anim_commands[ anim->anim_command ];
 
             for(uint32_t count = 0; count < anim->num_anim_commands; count++, pointer++)
             {
@@ -3719,71 +3514,63 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
         }
 
 
-        if(anim->frames_count <= 0)
+        if(anim->frames.empty())
         {
             /*
              * number of animations must be >= 1, because frame contains base model offset
              */
-            anim->frames_count = 1;
+            anim->frames.resize(1);
         }
-        anim->frames = (bone_frame_p)calloc(anim->frames_count, sizeof(bone_frame_t));
 
         /*
          * let us begin to load animations
          */
-        bone_frame = anim->frames;
-        for(uint16_t j=0;j<anim->frames_count;j++,bone_frame++,frame_offset+=frame_step)
+        bone_frame = anim->frames.data();
+        for(uint16_t j=0;j<anim->frames.size();j++,bone_frame++,frame_offset+=frame_step)
         {
-            bone_frame->bone_tag_count = model->mesh_count;
-            bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
-            vec3_set_zero(bone_frame->pos);
-            vec3_set_zero(bone_frame->move);
+            bone_frame->bone_tags.resize( model->mesh_count );
+            bone_frame->pos.setZero();
+            bone_frame->move.setZero();
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset >= tr->frame_data_size)
             {
                 //Con_Printf("Bad frame offset");
-                for(uint16_t k=0;k<bone_frame->bone_tag_count;k++)
+                for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
                 {
-                    tree_tag = model->mesh_tree + k;
-                    bone_tag = bone_frame->bone_tags + k;
-                    rot[0] = 0.0;
-                    rot[1] = 0.0;
-                    rot[2] = 0.0;
-                    vec4_SetTRRotations(bone_tag->qrotate, rot);
-                    vec3_copy(bone_tag->offset, tree_tag->offset);
+                    tree_tag = &model->mesh_tree[k];
+                    bone_tag = &bone_frame->bone_tags[k];
+                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+                    bone_tag->offset = tree_tag->offset;
                 }
             }
             else
             {
                 uint16_t l = l_start;
-                for(uint16_t k=0;k<bone_frame->bone_tag_count;k++)
+                for(uint16_t k=0;k<bone_frame->bone_tags.size();k++)
                 {
-                    tree_tag = model->mesh_tree + k;
-                    bone_tag = bone_frame->bone_tags + k;
-                    rot[0] = 0.0;
-                    rot[1] = 0.0;
-                    rot[2] = 0.0;
-                    vec4_SetTRRotations(bone_tag->qrotate, rot);
-                    vec3_copy(bone_tag->offset, tree_tag->offset);
+                    tree_tag = &model->mesh_tree[k];
+                    bone_tag = &bone_frame->bone_tags[k];
+                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,0});
+                    bone_tag->offset = tree_tag->offset;
 
                     switch(tr->game_version)
                     {
                         case TR_I:                                              /* TR_I */
                         case TR_I_UB:
-                        case TR_I_DEMO:
+                        case TR_I_DEMO: {
                             temp2 = tr->frame_data[frame_offset + l];
                             l ++;
                             temp1 = tr->frame_data[frame_offset + l];
                             l ++;
+                            btVector3 rot;
                             rot[0] = (float)((temp1 & 0x3ff0) >> 4);
                             rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                             rot[1] = (float)(temp2 & 0x03ff);
-                            rot[0] *= 360.0 / 1024.0;
-                            rot[1] *= 360.0 / 1024.0;
-                            rot[2] *= 360.0 / 1024.0;
+                            rot *= 360.0 / 1024.0;
                             vec4_SetTRRotations(bone_tag->qrotate, rot);
                             break;
+                        }
 
                         default:                                                /* TR_II + */
                             temp1 = tr->frame_data[frame_offset + l];
@@ -3802,28 +3589,20 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
                             switch (temp1 & 0xc000)
                             {
                                 case 0x4000:    // x only
-                                    rot[0] = ang;
-                                    rot[1] = 0;
-                                    rot[2] = 0;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetTRRotations(bone_tag->qrotate, {ang,0,0});
                                     break;
 
                                 case 0x8000:    // y only
-                                    rot[0] = 0;
-                                    rot[1] = 0;
-                                    rot[2] =-ang;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetTRRotations(bone_tag->qrotate, {0,0,-ang});
                                     break;
 
                                 case 0xc000:    // z only
-                                    rot[0] = 0;
-                                    rot[1] = ang;
-                                    rot[2] = 0;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetTRRotations(bone_tag->qrotate, {0,ang,0});
                                     break;
 
-                                default:        // all three
+                                default: {        // all three
                                     temp2 = tr->frame_data[frame_offset + l];
+                                    btVector3 rot;
                                     rot[0] = (float)((temp1 & 0x3ff0) >> 4);
                                     rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                                     rot[1] = (float)(temp2 & 0x03ff);
@@ -3833,6 +3612,7 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
                                     vec4_SetTRRotations(bone_tag->qrotate, rot);
                                     l ++;
                                     break;
+                                }
                             };
                             break;
                     };
@@ -3844,31 +3624,30 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
     /*
      * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
      */
-    SkeletalModel_InterpolateFrames(model);
+    model->interpolateFrames();
     /*
      * state change's loading
      */
 
 #if LOG_ANIM_DISPATCHES
-    if(model->animation_count > 1)
+    if(model->animations.size() > 1)
     {
-        Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d", model_num, model->animation_count);
+        Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d", model_num, model->animations.size());
     }
 #endif
-    anim = model->animations;
-    for(uint16_t i=0;i<model->animation_count;i++,anim++)
+    anim = model->animations.data();
+    for(uint16_t i=0;i<model->animations.size();i++,anim++)
     {
-        anim->state_change_count = 0;
-        anim->state_change = NULL;
+        anim->state_change.clear();
 
         tr_animation = &tr->animations[tr_moveable->animation_index+i];
         int16_t j = tr_animation->next_animation - tr_moveable->animation_index;
         j &= 0x7fff;
-        if((j >= 0) && (j < model->animation_count))
+        if((j >= 0) && (j < model->animations.size()))
         {
-            anim->next_anim = model->animations + j;
+            anim->next_anim = &model->animations[j];
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
-            anim->next_frame %= anim->next_anim->frames_count;
+            anim->next_frame %= anim->next_anim->frames.size();
             if(anim->next_frame < 0)
             {
                 anim->next_frame = 0;
@@ -3883,50 +3662,47 @@ void TR_GenSkeletalModel(struct world_s *world, size_t model_num, struct skeleta
             anim->next_frame = 0;
         }
 
-        anim->state_change_count = 0;
-        anim->state_change = NULL;
+        anim->state_change.clear();
 
-        if((tr_animation->num_state_changes > 0) && (model->animation_count > 1))
+        if((tr_animation->num_state_changes > 0) && (model->animations.size() > 1))
         {
-            state_change_p sch_p;
+            StateChange* sch_p;
 #if LOG_ANIM_DISPATCHES
             Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?(anim->next_anim->id):(-1), anim->next_frame);
 #endif
-            anim->state_change_count = tr_animation->num_state_changes;
-            sch_p = anim->state_change = (state_change_p)malloc(tr_animation->num_state_changes * sizeof(state_change_t));
+            anim->state_change.resize( tr_animation->num_state_changes );
+            sch_p = anim->state_change.data();
 
             for(uint16_t j=0;j<tr_animation->num_state_changes;j++,sch_p++)
             {
                 tr_state_change_t *tr_sch;
                 tr_sch = &tr->state_changes[j+tr_animation->state_change_offset];
                 sch_p->id = tr_sch->state_id;
-                sch_p->anim_dispatch = NULL;
-                sch_p->anim_dispatch_count = 0;
+                sch_p->anim_dispatch.clear();
                 for(uint16_t l=0;l<tr_sch->num_anim_dispatches;l++)
                 {
                     tr_anim_dispatch_t *tr_adisp = &tr->anim_dispatches[tr_sch->anim_dispatch+l];
                     uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
                     uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
-                    if((next_anim_ind >= 0) &&(next_anim_ind < model->animation_count))
+                    if((next_anim_ind >= 0) &&(next_anim_ind < model->animations.size()))
                     {
-                        sch_p->anim_dispatch_count++;
-                        sch_p->anim_dispatch = (anim_dispatch_p)realloc(sch_p->anim_dispatch, sch_p->anim_dispatch_count * sizeof(anim_dispatch_t));
+                        sch_p->anim_dispatch.emplace_back();
 
-                        anim_dispatch_p adsp = sch_p->anim_dispatch + sch_p->anim_dispatch_count - 1;
-                        uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames_count;
+                        AnimDispatch* adsp = &sch_p->anim_dispatch.back();
+                        uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames.size();
                         uint16_t next_frame = tr_adisp->next_frame - tr->animations[next_anim].frame_start;
 
                         uint16_t low  = tr_adisp->low  - tr_animation->frame_start;
                         uint16_t high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low  = low  % anim->frames_count;
-                        adsp->frame_high = (high - 1) % anim->frames_count;
+                        adsp->frame_low  = low  % anim->frames.size();
+                        adsp->frame_high = (high - 1) % anim->frames.size();
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
                         adsp->next_frame = next_frame % next_frames_count;
 
 #if LOG_ANIM_DISPATCHES
-                        Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], frames_count = %d: interval[%d.. %d], next_anim = %d, next_frame = %d", l,
-                                    anim->frames_count, adsp->frame_low, adsp->frame_high,
+                        Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], frames.size() = %d: interval[%d.. %d], next_anim = %d, next_frame = %d", l,
+                                    anim->frames.size(), adsp->frame_low, adsp->frame_high,
                                     adsp->next_anim, adsp->next_frame);
 #endif
                     }
@@ -4010,7 +3786,7 @@ int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
     return ret;
 }
 
-void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bone_frame)
+void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, BoneFrame *bone_frame)
 {
     unsigned short int *frame;
 
@@ -4049,70 +3825,66 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, bone_frame_p bo
     bone_frame->centre[2] = (bone_frame->bb_min[2] + bone_frame->bb_max[2]) / 2.0;
 }
 
-void TR_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
+void TR_GenSkeletalModels(World *world, class VT_Level *tr)
 {
-    skeletal_model_p smodel;
-    tr_moveable_t *tr_moveable;
+    world->skeletal_models.resize(tr->moveables_count);
 
-    world->skeletal_model_count = tr->moveables_count;
-    smodel = world->skeletal_models = (skeletal_model_p)calloc(world->skeletal_model_count, sizeof(skeletal_model_t));
-
-    for(uint32_t i=0;i<world->skeletal_model_count;i++,smodel++)
+    for(uint32_t i=0;i<tr->moveables_count;i++)
     {
-        tr_moveable = &tr->moveables[i];
+        auto tr_moveable = &tr->moveables[i];
+        auto smodel = &world->skeletal_models[i];
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
         TR_GenSkeletalModel(world, i, smodel, tr);
-        SkeletonModel_FillTransparency(smodel);
+        smodel->fillTransparency();
     }
 }
 
 
-void TR_GenEntities(struct world_s *world, class VT_Level *tr)
+void TR_GenEntities(World *world, class VT_Level *tr)
 {
     int top;
 
     tr2_item_t *tr_item;
-    entity_p entity;
 
     for(uint32_t i=0;i<tr->items_count;i++)
     {
         tr_item = &tr->items[i];
-        entity = Entity_Create();
-        entity->id = i;
-        entity->transform[12] = tr_item->pos.x;
-        entity->transform[13] =-tr_item->pos.z;
-        entity->transform[14] = tr_item->pos.y;
-        entity->angles[0] = tr_item->rotation;
-        entity->angles[1] = 0.0;
-        entity->angles[2] = 0.0;
-        Entity_UpdateTransform(entity);
-        if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->room_count))
+        std::shared_ptr<Entity> entity = (tr_item->object_id==0) ? std::make_shared<Character>() : std::make_shared<Entity>();
+        entity->m_id = i;
+        entity->m_transform.getOrigin()[0] = tr_item->pos.x;
+        entity->m_transform.getOrigin()[1] =-tr_item->pos.z;
+        entity->m_transform.getOrigin()[2] = tr_item->pos.y;
+        entity->m_angles[0] = tr_item->rotation;
+        entity->m_angles[1] = 0.0;
+        entity->m_angles[2] = 0.0;
+        entity->updateTransform();
+        if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms.size()))
         {
-            entity->self->room = world->rooms + tr_item->room;
+            entity->m_self->room = world->rooms[tr_item->room].get();
         }
         else
         {
-            entity->self->room = NULL;
+            entity->m_self->room = NULL;
         }
 
-        entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
-        entity->OCB             = tr_item->ocb;
-        entity->timer           = 0.0;
+        entity->m_triggerLayout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
+        entity->m_OCB             = tr_item->ocb;
+        entity->m_timer           = 0.0;
 
-        entity->self->collision_type = COLLISION_TYPE_KINEMATIC;
-        entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
-        entity->move_type          = 0x0000;
-        entity->inertia_linear     = 0.0;
-        entity->inertia_angular[0] = 0.0;
-        entity->inertia_angular[1] = 0.0;
-        entity->move_type          = 0;
+        entity->m_self->collision_type = COLLISION_TYPE_KINEMATIC;
+        entity->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
+        entity->m_moveType          = 0x0000;
+        entity->m_inertiaLinear     = 0.0;
+        entity->m_inertiaAngular[0] = 0.0;
+        entity->m_inertiaAngular[1] = 0.0;
+        entity->m_moveType          = 0;
 
-        entity->bf.animations.model = World_GetModelByID(world, tr_item->object_id);
+        entity->m_bf.animations.model = world->getModelByID(tr_item->object_id);
 
         if(ent_ID_override != NULL)
         {
-            if(entity->bf.animations.model == NULL)
+            if(entity->m_bf.animations.model == NULL)
             {
                 top = lua_gettop(ent_ID_override);                              // save LUA stack
                 lua_getglobal(ent_ID_override, "getOverridedID");               // add to the up of stack LUA's function
@@ -4120,7 +3892,7 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 lua_pushinteger(ent_ID_override, tr_item->object_id);           // add to stack second argument
                 if (lua_CallAndLog(ent_ID_override, 2, 1, 0))                   // call that function
                 {
-                    entity->bf.animations.model = World_GetModelByID(world, lua_tointeger(ent_ID_override, -1));
+                    entity->m_bf.animations.model = world->getModelByID(lua_tointeger(ent_ID_override, -1));
                 }
                 lua_settop(ent_ID_override, top);                               // restore LUA stack
             }
@@ -4134,62 +3906,53 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 int replace_anim_id = lua_tointeger(ent_ID_override, -1);
                 if(replace_anim_id > 0)
                 {
-                    skeletal_model_s* replace_anim_model = World_GetModelByID(world, replace_anim_id);
-                    animation_frame_p ta;
-                    uint16_t tc;
-                    SWAPT(entity->bf.animations.model->animations, replace_anim_model->animations, ta);
-                    SWAPT(entity->bf.animations.model->animation_count, replace_anim_model->animation_count, tc);
+                    SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
+                    std::swap(entity->m_bf.animations.model->animations, replace_anim_model->animations);
                 }
             }
             lua_settop(ent_ID_override, top);                                      // restore LUA stack
 
         }
 
-        if(entity->bf.animations.model == NULL)
+        if(entity->m_bf.animations.model == NULL)
         {
             // SPRITE LOADING
-            sprite_p sp = World_GetSpriteByID(tr_item->object_id, world);
-            if(sp && entity->self->room)
+            Sprite* sp = world->getSpriteByID(tr_item->object_id);
+            if(sp && entity->m_self->room)
             {
-                room_sprite_p rsp;
-                int sz = ++entity->self->room->sprites_count;
-                entity->self->room->sprites = (room_sprite_p)realloc(entity->self->room->sprites, sz * sizeof(room_sprite_t));
-                rsp = entity->self->room->sprites + sz - 1;
-                rsp->sprite = sp;
-                rsp->pos[0] = entity->transform[12];
-                rsp->pos[1] = entity->transform[13];
-                rsp->pos[2] = entity->transform[14];
-                rsp->was_rendered = 0;
+                entity->m_self->room->sprites.emplace_back();
+                RoomSprite& rsp = entity->m_self->room->sprites.back();
+                rsp.sprite = sp;
+                rsp.pos = entity->m_transform.getOrigin();
+                rsp.was_rendered = false;
             }
 
-            Entity_Clear(entity);
-            free(entity);
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
         }
 
         if(tr->game_version < TR_II && tr_item->object_id == 83)                ///@FIXME: brutal magick hardcode! ;-)
         {
-            Entity_Clear(entity);                                               // skip PSX save model
-            free(entity);
+            // skip PSX save model
             continue;
         }
 
-        SSBoneFrame_CreateFromModel(&entity->bf, entity->bf.animations.model);
+        entity->m_bf.fromModel(entity->m_bf.animations.model);
 
         if(0 == tr_item->object_id)                                             // Lara is unical model
         {
-            skeletal_model_p tmp, LM;                                           // LM - Lara Model
+            std::shared_ptr<Character> lara = std::dynamic_pointer_cast<Character>(entity);
+            assert(lara != nullptr);
 
-            entity->move_type = MOVE_ON_FLOOR;
-            world->Character = entity;
-            entity->self->collision_type = COLLISION_TYPE_ACTOR;
-            entity->self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
-            entity->bf.animations.model->hide = 0;
-            entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            LM = (skeletal_model_p)entity->bf.animations.model;
+            lara->m_moveType = MOVE_ON_FLOOR;
+            world->character = lara;
+            lara->m_self->collision_type = COLLISION_TYPE_ACTOR;
+            lara->m_self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
+            lara->m_bf.animations.model->hide = 0;
+            lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
+            SkeletalModel* LM = lara->m_bf.animations.model;
 
             top = lua_gettop(engine_lua);
-            lua_pushinteger(engine_lua, entity->id);
+            lua_pushinteger(engine_lua, lara->m_id);
             lua_setglobal(engine_lua, "player");
             lua_settop(engine_lua, top);
 
@@ -4198,25 +3961,25 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 case TR_I:
                     if(gameflow_manager.CurrentLevelID == 0)
                     {
-                        LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
+                        LM = world->getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
                         if(LM)
                         {
                             // In TR1, Lara has unified head mesh for all her alternate skins.
                             // Hence, we copy all meshes except head, to prevent Potato Raider bug.
-                            SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count - 1);
+                            SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count - 1);
                         }
                     }
                     break;
 
                 case TR_III:
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR3);
+                    LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR3);
                     if(LM)
                     {
-                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
-                        tmp = World_GetModelByID(world, 11);                   // moto / quadro cycle animations
+                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
+                        auto tmp = world->getModelByID(11);                   // moto / quadro cycle animations
                         if(tmp)
                         {
-                            SkeletonCopyMeshes(tmp->mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                            SkeletonCopyMeshes(tmp->mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
                         }
                     }
                     break;
@@ -4224,84 +3987,69 @@ void TR_GenEntities(struct world_s *world, class VT_Level *tr)
                 case TR_IV:
                 case TR_IV_DEMO:
                 case TR_V:
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
+                    LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
                     if(LM)
                     {
-                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                        SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
                     }
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_JOINTS_TR45);                         // skin skeleton meshes
+                    LM = world->getModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45);                         // skin skeleton meshes
                     if(LM)
                     {
-                        SkeletonCopyMeshes2(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
+                        SkeletonCopyMeshes2(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
                     }
-                    FillSkinnedMeshMap(&world->skeletal_models[0]);
+                    world->skeletal_models[0].fillSkinnedMeshMap();
                     break;
             };
 
-            for(uint16_t j=0;j<entity->bf.bone_tag_count;j++)
+            for(uint16_t j=0;j<lara->m_bf.bone_tags.size();j++)
             {
-                entity->bf.bone_tags[j].mesh_base = entity->bf.animations.model->mesh_tree[j].mesh_base;
-                entity->bf.bone_tags[j].mesh_skin = entity->bf.animations.model->mesh_tree[j].mesh_skin;
-                entity->bf.bone_tags[j].mesh_slot = NULL;
+                lara->m_bf.bone_tags[j].mesh_base = lara->m_bf.animations.model->mesh_tree[j].mesh_base;
+                lara->m_bf.bone_tags[j].mesh_skin = lara->m_bf.animations.model->mesh_tree[j].mesh_skin;
+                lara->m_bf.bone_tags[j].mesh_slot = NULL;
             }
-            Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
-            BT_GenEntityRigidBody(entity);
-            Character_Create(entity);
-            entity->character->Height = 768.0;
-            entity->character->state_func = State_Control_Lara;
+            world->character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+            lara->genEntityRigidBody();
+            lara->m_height = 768.0;
+            lara->state_func = State_Control_Lara;
 
             continue;
         }
 
-        Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
-        Entity_RebuildBV(entity);
-        Room_AddEntity(entity->self->room, entity);
-        World_AddEntity(world, entity);
-        Res_SetEntityModelProperties(entity);
-        BT_GenEntityRigidBody(entity);
+        entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
+        entity->genEntityRigidBody();
 
-        if(!(entity->state_flags & ENTITY_STATE_ENABLED) || !(entity->self->collision_type & 0x0001))
-        {
-            Entity_DisableCollision(entity);
-        }
+        if(!entity->m_enabled || (entity->m_self->collision_type & 0x0001) == 0)
+            entity->disableCollision();
     }
 }
 
 
-void TR_GenSamples(struct world_s *world, class VT_Level *tr)
+void TR_GenSamples(World *world, class VT_Level *tr)
 {
     uint8_t      *pointer = tr->samples_data;
     int8_t        flag;
     uint32_t      ind1, ind2;
     uint32_t      comp_size, uncomp_size;
-    uint32_t      i;
 
     // Generate new buffer array.
-    world->audio_buffers_count = tr->samples_count;
-    world->audio_buffers = (ALuint*)malloc(world->audio_buffers_count * sizeof(ALuint));
-    memset(world->audio_buffers, 0, sizeof(ALuint) * world->audio_buffers_count);
-    alGenBuffers(world->audio_buffers_count, world->audio_buffers);
+    world->audio_buffers.resize(tr->samples_count, 0);
+    alGenBuffers(world->audio_buffers.size(), world->audio_buffers.data());
 
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
     // If script had no such parameter, we define map bounds by default.
-    world->stream_track_map_count = lua_GetNumTracks(engine_lua);
-    if(world->stream_track_map_count == 0) world->stream_track_map_count = TR_AUDIO_STREAM_MAP_SIZE;
-    world->stream_track_map = (uint8_t*)malloc(world->stream_track_map_count * sizeof(uint8_t));
-    memset(world->stream_track_map, 0, sizeof(uint8_t) * world->stream_track_map_count);
+    world->stream_track_map.resize( lua_GetNumTracks(engine_lua), 0 );
+    if(world->stream_track_map.empty())
+        world->stream_track_map.resize( TR_AUDIO_STREAM_MAP_SIZE, 0 );
 
     // Generate new audio effects array.
-    world->audio_effects_count = tr->sound_details_count;
-    world->audio_effects =  (audio_effect_t*)malloc(tr->sound_details_count * sizeof(audio_effect_t));
-    memset(world->audio_effects, 0xFF, sizeof(audio_effect_t) * tr->sound_details_count);
+    world->audio_effects.resize(tr->sound_details_count);
 
     // Generate new audio emitters array.
-    world->audio_emitters_count = tr->sound_sources_count;
-    world->audio_emitters = (audio_emitter_t*)malloc(tr->sound_sources_count * sizeof(audio_emitter_t));
-    memset(world->audio_emitters, 0, sizeof(audio_emitter_t) * tr->sound_sources_count);
+    world->audio_emitters.resize(tr->sound_sources_count);
 
     // Copy sound map.
-    world->audio_map = tr->soundmap;
+    world->audio_map.assign(tr->soundmap+0, tr->soundmap+world->audio_map.size());
     tr->soundmap = NULL;                   /// without it VT destructor free(tr->soundmap)
 
     // Cycle through raw samples block and parse them to OpenAL buffers.
@@ -4320,42 +4068,39 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
             case TR_I:
             case TR_I_DEMO:
             case TR_I_UB:
-                world->audio_map_count = TR_AUDIO_MAP_SIZE_TR1;
+                world->audio_map.resize( TR_AUDIO_MAP_SIZE_TR1 );
 
-                for(i = 0; i < world->audio_buffers_count-1; i++)
+                for(size_t i = 0; i < world->audio_buffers.size()-1; i++)
                 {
                     pointer = tr->samples_data + tr->sample_indices[i];
                     uint32_t size = tr->sample_indices[(i+1)] - tr->sample_indices[i];
                     Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, size);
                 }
-                i = world->audio_buffers_count-1;
-                Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, (tr->samples_count - tr->sample_indices[i]));
+                Audio_LoadALbufferFromWAV_Mem(world->audio_buffers.back(), pointer, (tr->samples_count - tr->sample_indices[world->audio_buffers.size()-1]));
                 break;
 
             case TR_II:
             case TR_II_DEMO:
             case TR_III:
-                world->audio_map_count = (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2);
+            {
+                world->audio_map.resize( (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2));
                 ind1 = 0;
                 ind2 = 0;
                 flag = 0;
-                i = 0;
-                while(pointer < tr->samples_data + tr->samples_data_size - 4)
-                {
+                size_t i = 0;
+                while(pointer < tr->samples_data + tr->samples_data_size - 4) {
                     pointer = tr->samples_data + ind2;
-                    if(0x46464952 == *((int32_t*)pointer))  // RIFF
-                    {
-                        if(flag == 0x00)
-                        {
+                    if(0x46464952 == *((int32_t*)pointer)) {
+                        // RIFF
+                        if(flag == 0x00) {
                             ind1 = ind2;
                             flag = 0x01;
                         }
-                        else
-                        {
+                        else {
                             uncomp_size = ind2 - ind1;
                             Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], tr->samples_data + ind1, uncomp_size);
                             i++;
-                            if(i > world->audio_buffers_count - 1)
+                            if(i >= world->audio_buffers.size())
                             {
                                 break;
                             }
@@ -4366,18 +4111,18 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
                 }
                 uncomp_size = tr->samples_data_size - ind1;
                 pointer = tr->samples_data + ind1;
-                if(i < world->audio_buffers_count)
-                {
+                if(i < world->audio_buffers.size()) {
                     Audio_LoadALbufferFromWAV_Mem(world->audio_buffers[i], pointer, uncomp_size);
                 }
                 break;
+            }
 
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                world->audio_map_count = (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4);
+                world->audio_map.resize( (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4) );
 
-                for(i = 0; i < tr->samples_count; i++)
+                for(size_t i = 0; i < tr->samples_count; i++)
                 {
                     // Parse sample sizes.
                     // Always use comp_size as block length, as uncomp_size is used to cut raw sample data.
@@ -4395,7 +4140,7 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
                 break;
 
             default:
-                world->audio_map_count = TR_AUDIO_MAP_SIZE_NONE;
+                world->audio_map.resize( TR_AUDIO_MAP_SIZE_NONE );
                 free(tr->samples_data);
                 tr->samples_data = NULL;
                 tr->samples_data_size = 0;
@@ -4409,7 +4154,7 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
 
     // Cycle through SoundDetails and parse them into native OpenTomb
     // audio effects structure.
-    for(i = 0; i < world->audio_effects_count; i++)
+    for(size_t i = 0; i < world->audio_effects.size(); i++)
     {
         if(tr->game_version < TR_III)
         {
@@ -4513,7 +4258,7 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
     // Cycle through sound emitters and
     // parse them to native OpenTomb sound emitters structure.
 
-    for(i = 0; i < world->audio_emitters_count; i++)
+    for(size_t i = 0; i < world->audio_emitters.size(); i++)
     {
         world->audio_emitters[i].emitter_index = i;
         world->audio_emitters[i].sound_index   =  tr->sound_sources[i].sound_id;
@@ -4525,38 +4270,32 @@ void TR_GenSamples(struct world_s *world, class VT_Level *tr)
 }
 
 
-void Res_EntityToItem(RedBlackNode_p n)
+void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
 {
-    base_item_p item = (base_item_p)n->data;
-
-    for(uint32_t i=0;i<engine_world.room_count;i++)
+    for(std::map<uint32_t, std::shared_ptr<BaseItem> >::iterator it = map.begin();
+        it != map.end();
+        ++it)
     {
-        engine_container_p cont = engine_world.rooms[i].containers;
-        for(;cont;cont=cont->next)
+        std::shared_ptr<BaseItem> item = it->second;
+
+        for(uint32_t i=0;i<engine_world.rooms.size();i++)
         {
-            if(cont->object_type == OBJECT_ENTITY)
+            for(const std::shared_ptr<EngineContainer>& cont : engine_world.rooms[i]->containers)
             {
-                entity_p ent = (entity_p)cont->object;
-                if(ent->bf.animations.model->id == item->world_model_id)
+                if(cont->object_type == OBJECT_ENTITY)
                 {
-                    char buf[64] = {0};
-                    snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id, ent->id);
-                    luaL_dostring(engine_lua, buf);
-                    snprintf(buf, 32, "pickup_init(%d, %d);", ent->id, item->id);
-                    luaL_dostring(engine_lua, buf);
-                    Entity_DisableCollision(ent);
+                    Entity* ent = static_cast<Entity*>(cont->object);
+                    if(ent->m_bf.animations.model->id == item->world_model_id)
+                    {
+                        char buf[64] = {0};
+                        snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->m_id, ent->m_id);
+                        luaL_dostring(engine_lua, buf);
+                        snprintf(buf, 32, "pickup_init(%d, %d);", ent->m_id, item->id);
+                        luaL_dostring(engine_lua, buf);
+                        ent->disableCollision();
+                    }
                 }
             }
         }
-    }
-
-    if(n->right)
-    {
-        Res_EntityToItem(n->right);
-    }
-
-    if(n->left)
-    {
-        Res_EntityToItem(n->left);
     }
 }

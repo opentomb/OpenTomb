@@ -150,7 +150,7 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
         read_tr_face3(src, room.triangles[i]);
 
     room.num_sprites = read_bitu16(src);
-    room.sprites = (tr_room_sprite_t*)malloc(room.num_sprites * sizeof(tr_room_sprite_t));
+    room.sprites = (tr_room_Sprite*)malloc(room.num_sprites * sizeof(tr_room_Sprite));
     for (i = 0; i < room.num_sprites; i++)
         read_tr_room_sprite(src, room.sprites[i]);
 
@@ -247,13 +247,13 @@ void TR_Level::read_tr4_object_texture(SDL_RWops * const src, tr4_object_texture
  /*
   * tr4 + sprite loading
   */
-void TR_Level::read_tr4_sprite_texture(SDL_RWops * const src, tr_sprite_texture_t & sprite_texture)
+void TR_Level::read_tr4_Spriteexture(SDL_RWops * const src, tr_Spriteexture_t & Spriteexture)
 {
     int tx, ty, tw, th, tleft, tright, ttop, tbottom;
 
-    sprite_texture.tile = read_bitu16(src);
-    if (sprite_texture.tile > 128)
-        Sys_extWarn("sprite_texture.tile > 128");
+    Spriteexture.tile = read_bitu16(src);
+    if (Spriteexture.tile > 128)
+        Sys_extWarn("Spriteexture.tile > 128");
 
     tx = read_bitu8(src);
     ty = read_bitu8(src);
@@ -264,15 +264,15 @@ void TR_Level::read_tr4_sprite_texture(SDL_RWops * const src, tr_sprite_texture_
     tright = read_bit16(src);
     tbottom = read_bit16(src);
 
-    sprite_texture.x0 = tleft;
-    sprite_texture.x1 = tright;
-    sprite_texture.y0 = tbottom;
-    sprite_texture.y1 = ttop;
+    Spriteexture.x0 = tleft;
+    Spriteexture.x1 = tright;
+    Spriteexture.y0 = tbottom;
+    Spriteexture.y1 = ttop;
 
-    sprite_texture.left_side = tx;
-    sprite_texture.right_side = tx + tw / (256);
-    sprite_texture.bottom_side = ty;
-    sprite_texture.top_side = ty + th / (256);
+    Spriteexture.left_side = tx;
+    Spriteexture.right_side = tx + tw / (256);
+    Spriteexture.bottom_side = ty;
+    Spriteexture.top_side = ty + th / (256);
 }
 
 void TR_Level::read_tr4_mesh(SDL_RWops * const src, tr4_mesh_t & mesh)
@@ -584,10 +584,10 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
     if (read_bit8(newsrc) != 'R')
         Sys_extError("read_tr4_level: 'SPR' not found");
 
-    this->sprite_textures_count = read_bitu32(newsrc);
-    this->sprite_textures = (tr_sprite_texture_t*)malloc(this->sprite_textures_count * sizeof(tr_sprite_texture_t));
-    for (i = 0; i < this->sprite_textures_count; i++)
-        read_tr4_sprite_texture(newsrc, this->sprite_textures[i]);
+    this->Spriteextures_count = read_bitu32(newsrc);
+    this->Spriteextures = (tr_Spriteexture_t*)malloc(this->Spriteextures_count * sizeof(tr_Spriteexture_t));
+    for (i = 0; i < this->Spriteextures_count; i++)
+        read_tr4_Spriteexture(newsrc, this->Spriteextures[i]);
 
     this->sprite_sequences_count = read_bitu32(newsrc);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));

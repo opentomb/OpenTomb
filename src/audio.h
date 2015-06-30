@@ -2,17 +2,12 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-#include "al/AL/efx-presets.h"
+#include <AL/al.h>
+#include <AL/efx-presets.h>
+#include <AL/efx-creative.h>
 
-#include "ogg/codec.h"
-#include "ogg/ogg.h"
-#include "ogg/os_types.h"
-#include "ogg/vorbisfile.h"
-}
+#include <ogg/ogg.h>
+#include <vorbis/vorbisfile.h>
 
 #include "vt/vt_level.h"
 #include "game.h"
@@ -20,8 +15,8 @@ extern "C" {
 #include "system.h"
 
 #include <SDL2/SDL_audio.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 // AL_UNITS constant is used to translate native TR coordinates into
 // OpenAL coordinates. By default, it's the same as geometry grid
@@ -256,24 +251,24 @@ enum TR_AUDIO_STREAM_TYPE
 
 
 
-struct camera_s;
-struct entity_s;
+struct Camera;
+struct Entity;
 
 // Audio settings structure.
 
-typedef struct audio_settings_s
+struct AudioSettings
 {
     ALfloat     music_volume;
     ALfloat     sound_volume;
     ALboolean   use_effects;
     ALboolean   listener_is_player; // RESERVED FOR FUTURE USE
     int         stream_buffer_size;
-}audio_settings_t, *audio_settings_p;
+};
 
 // FX manager structure.
 // It contains all necessary info to process sample FX (reverb and echo).
 
-typedef struct audio_fxmanager_s
+struct AudioFxManager
 {
     ALuint      al_filter;
     ALuint      al_effect[TR_AUDIO_FX_LASTINDEX];
@@ -282,47 +277,47 @@ typedef struct audio_fxmanager_s
     ALuint      current_room_type;
     ALuint      last_room_type;
     int8_t      water_state;    // If listener is underwater, all samples will damp.
-}audio_fxmanager_t, *audio_fxmanager_p;
+};
 
 // Effect structure.
 // Contains all global effect parameters.
 
-typedef struct audio_effect_s
+struct AudioEffect
 {    
     // General sound source parameters (similar to TR sound info).
     
-    ALfloat     pitch;          // [PIT in TR] Global pitch shift.
-    ALfloat     gain;           // [VOL in TR] Global gain (volume).
-    ALfloat     range;          // [RAD in TR] Range (radius).
-    ALuint      chance;         // [CH  in TR] Chance to play.
-    ALuint      loop;           // 0 = none, 1 = W, 2 = R, 3 = L.
-    ALboolean   rand_pitch;     // Similar to flag 0x200000 (P) in native TRs.
-    ALboolean   rand_gain;      // Similar to flag 0x400000 (V) in native TRs.
+    ALfloat     pitch = 0;          // [PIT in TR] Global pitch shift.
+    ALfloat     gain = 0;           // [VOL in TR] Global gain (volume).
+    ALfloat     range = 0;          // [RAD in TR] Range (radius).
+    ALuint      chance = 0;         // [CH  in TR] Chance to play.
+    ALuint      loop = 0;           // 0 = none, 1 = W, 2 = R, 3 = L.
+    ALboolean   rand_pitch = false;     // Similar to flag 0x200000 (P) in native TRs.
+    ALboolean   rand_gain = false;      // Similar to flag 0x400000 (V) in native TRs.
     
     // Additional sound source parameters.
     // These are not natively in TR engines, but can be later assigned by
     // external script.
     
-    ALboolean   rand_freq;          // Slightly randomize frequency.
-    ALuint      rand_pitch_var;     // Pitch randomizer bounds.
-    ALuint      rand_gain_var;      // Gain  randomizer bounds.
-    ALuint      rand_freq_var;      // Frequency randomizer bounds.
+    ALboolean   rand_freq = false;          // Slightly randomize frequency.
+    ALuint      rand_pitch_var = 0;     // Pitch randomizer bounds.
+    ALuint      rand_gain_var = 0;      // Gain  randomizer bounds.
+    ALuint      rand_freq_var = 0;      // Frequency randomizer bounds.
 
     // Sample reference parameters.
     
-    ALuint      sample_index;       // First (or only) sample (buffer) index.
-    ALuint      sample_count;       // Sample amount to randomly select from.
-}audio_effect_t, *audio_effect_p;
+    ALuint      sample_index = 0;       // First (or only) sample (buffer) index.
+    ALuint      sample_count = 0;       // Sample amount to randomly select from.
+};
 
 // Audio emitter (aka SoundSource) structure.
 
-typedef struct audio_emitter_s
+struct AudioEmitter
 {
     ALuint      emitter_index;  // Unique emitter index.
     ALuint      sound_index;    // Sound index.
-    btScalar    position[3];    // Vector coordinate.    
+    btVector3   position;    // Vector coordinate.
     uint16_t    flags;          // Flags - MEANING UNKNOWN!!!
-}audio_emitter_t, *audio_emitter_p;
+};
 
 
 // Main audio source class.
@@ -458,13 +453,13 @@ void Audio_PauseAllSources();    // Used to pause all effects currently playing.
 void Audio_StopAllSources();     // Used in audio deinit.
 void Audio_ResumeAllSources();   // Used to resume all effects currently paused.
 void Audio_UpdateSources();      // Main sound loop.
-void Audio_UpdateListenerByCamera(struct camera_s *cam);
-void Audio_UpdateListenerByEntity(struct entity_s *ent);
+void Audio_UpdateListenerByCamera(Camera *cam);
+void Audio_UpdateListenerByEntity(Entity *ent);
 
 bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
-void Audio_LoadOverridedSamples(struct world_s *world);
+void Audio_LoadOverridedSamples(World *world);
 
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 

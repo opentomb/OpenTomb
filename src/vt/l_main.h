@@ -52,8 +52,8 @@ class TR_Level {
             this->animated_textures_count = 0;  // destroyed
             this->animated_textures_uv_count = 0; // destroyed
             this->animated_textures = NULL;     // destroyed
-            this->sprite_textures_count = 0;    // destroyed
-            this->sprite_textures = NULL;       // destroyed
+            this->Spriteextures_count = 0;    // destroyed
+            this->Spriteextures = NULL;       // destroyed
             this->sprite_sequences_count = 0;   // destroyed
             this->sprite_sequences = NULL;      // destroyed
             this->cameras_count = 0;            // destroyed
@@ -195,11 +195,11 @@ class TR_Level {
                 this->animated_textures = NULL; 
             }
             
-            if(this->sprite_textures_count)
+            if(this->Spriteextures_count)
             {
-                this->sprite_textures_count = 0; 
-                free(this->sprite_textures); 
-                this->sprite_textures = NULL; 
+                this->Spriteextures_count = 0; 
+                free(this->Spriteextures); 
+                this->Spriteextures = NULL; 
             }
             
             if(this->sprite_sequences_count)
@@ -484,8 +484,8 @@ class TR_Level {
     uint32_t animated_textures_count;
     uint16_t *animated_textures;            ///< \brief animated textures.
     uint32_t animated_textures_uv_count;
-    uint32_t sprite_textures_count;
-    tr_sprite_texture_t *sprite_textures;   ///< \brief sprite texture definitions.
+    uint32_t Spriteextures_count;
+    tr_Spriteexture_t *Spriteextures;   ///< \brief sprite texture definitions.
     uint32_t sprite_sequences_count;
     tr_sprite_sequence_t *sprite_sequences; ///< \brief sprite sequences for animation.
     uint32_t cameras_count;
@@ -559,7 +559,7 @@ class TR_Level {
     void read_tr_lightmap(SDL_RWops * const src, tr_lightmap_t & lightmap);
     void read_tr_palette(SDL_RWops * const src, tr2_palette_t & palette);
     void read_tr_box(SDL_RWops * const src, tr_box_t & box);
-    void read_tr_room_sprite(SDL_RWops * const src, tr_room_sprite_t & room_sprite);
+    void read_tr_room_sprite(SDL_RWops * const src, tr_room_Sprite & room_sprite);
     void read_tr_room_portal(SDL_RWops * const src, tr_room_portal_t & portal);
     void read_tr_room_sector(SDL_RWops * const src, tr_room_sector_t & room_sector);
     void read_tr_room_light(SDL_RWops * const src, tr5_room_light_t & light);
@@ -568,7 +568,7 @@ class TR_Level {
     void read_tr_room(SDL_RWops * const src, tr5_room_t & room);
     void read_tr_object_texture_vert(SDL_RWops * const src, tr4_object_texture_vert_t & vert);
     void read_tr_object_texture(SDL_RWops * const src, tr4_object_texture_t & object_texture);
-    void read_tr_sprite_texture(SDL_RWops * const src, tr_sprite_texture_t & sprite_texture);
+    void read_tr_Spriteexture(SDL_RWops * const src, tr_Spriteexture_t & Spriteexture);
     void read_tr_sprite_sequence(SDL_RWops * const src, tr_sprite_sequence_t & sprite_sequence);
     void read_tr_mesh(SDL_RWops * const src, tr4_mesh_t & mesh);
     void read_tr_state_changes(SDL_RWops * const src, tr_state_change_t & state_change);
@@ -609,7 +609,7 @@ class TR_Level {
     void read_tr4_item(SDL_RWops * const src, tr2_item_t & item);
     void read_tr4_object_texture_vert(SDL_RWops * const src, tr4_object_texture_vert_t & vert);
     void read_tr4_object_texture(SDL_RWops * const src, tr4_object_texture_t & object_texture);
-    void read_tr4_sprite_texture(SDL_RWops * const src, tr_sprite_texture_t & sprite_texture);
+    void read_tr4_Spriteexture(SDL_RWops * const src, tr_Spriteexture_t & Spriteexture);
     void read_tr4_mesh(SDL_RWops * const src, tr4_mesh_t & mesh);
     void read_tr4_animation(SDL_RWops * const src, tr_animation_t & animation);
     void read_tr4_level(SDL_RWops * const _src);

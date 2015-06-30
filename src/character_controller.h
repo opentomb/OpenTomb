@@ -1,20 +1,22 @@
+#pragma once
 
-#ifndef CHARACTER_CONTROLLER_H
-#define CHARACTER_CONTROLLER_H
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/LinearMath/btVector3.h>
+#include <bullet/BulletCollision/CollisionShapes/btCapsuleShape.h>
+#include <bullet/BulletCollision/CollisionShapes/btSphereShape.h>
+#include <bullet/BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <bullet/BulletDynamics/Dynamics/btRigidBody.h>
+#include <bullet/BulletCollision/CollisionShapes/btBoxShape.h>
+#include <bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
+#include <bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
 
-#include <stdint.h>
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/BulletCollision/CollisionShapes/btCapsuleShape.h"
-#include "bullet/BulletCollision/CollisionShapes/btSphereShape.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionObject.h"
-#include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
-#include "bullet/BulletCollision/CollisionShapes/btBoxShape.h"
-#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
-#include "bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
+#include <cstdint>
+#include <vector>
+#include <list>
+
 #include "engine.h"
-
+#include "entity.h"
 
 /*------ Lara's model-------
              .=.
@@ -107,7 +109,6 @@
 #define DEFAULT_CLIMB_UP_HEIGHT                 (1920.0)                        ///@FIXME: check original
 #define DEFAULT_CRITICAL_SLANT_Z_COMPONENT      (0.810)                         ///@FIXME: cos(alpha = 30 deg)
 #define DEFAULT_CRITICAL_WALL_COMPONENT         (-0.707)                        ///@FIXME: cos(alpha = 45 deg)
-#define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_SLIDE_SPEED_MULT      (75.0)                          ///@FIXME: magic - not like in original
 #define DEFAULT_CHARACTER_CLIMB_R               (32.0)
 #define DEFAULT_CHARACTER_WADE_DEPTH            (256.0)
@@ -169,7 +170,7 @@ enum CharParameters
     PARAM_EXTRA2,
     PARAM_EXTRA3,
     PARAM_EXTRA4,
-    PARAM_LASTINDEX
+    PARAM_SENTINEL
 };
 
 // CHARACTER PARAMETERS DEFAULTS
@@ -181,40 +182,40 @@ enum CharParameters
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
-struct engine_container_s;
-struct entity_s;
-class bt_engine_ClosestConvexResultCallback;
-class bt_engine_ClosestRayResultCallback;
+struct EngineContainer;
+struct Entity;
+class BtEngineClosestConvexResultCallback;
+class BtEngineClosestRayResultCallback;
 class btCollisionObject;
 class btConvexShape;
 
-typedef struct climb_info_s
+struct ClimbInfo
 {
-    int8_t                         height_info;
-    int8_t                         can_hang;
+    int8_t                         height_info = 0;
+    int8_t                         can_hang = 0;
 
-    btScalar                       point[3];
-    btScalar                       n[3];
-    btScalar                       t[3];
-    btScalar                       up[3];
+    btVector3 point;
+    btVector3 n;
+    btVector3 t;
+    btVector3 up;
     btScalar                       floor_limit;
     btScalar                       ceiling_limit;
-    btScalar                       next_z_space;
+    btScalar                       next_z_space = 0;
 
-    int8_t                         wall_hit;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
-    int8_t                         edge_hit;
+    int8_t                         wall_hit = 0;                                    // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
+    int8_t                         edge_hit = 0;
     btVector3                      edge_point;
     btVector3                      edge_normale;
     btVector3                      edge_tan_xy;
     btScalar                       edge_z_ang;
-    btCollisionObject             *edge_obj;
-}climb_info_t, *climb_info_p;
+    btCollisionObject             *edge_obj = nullptr;
+};
 
-typedef struct height_info_s
+struct HeightInfo
 {
-    bt_engine_ClosestRayResultCallback         *cb;
-    bt_engine_ClosestConvexResultCallback      *ccb;
-    btConvexShape                              *sp;
+    std::shared_ptr<BtEngineClosestRayResultCallback> cb;
+    std::shared_ptr<BtEngineClosestConvexResultCallback> ccb;
+    std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);
 
     int8_t                                      ceiling_climb;
     int8_t                                      walls_climb;
@@ -222,51 +223,57 @@ typedef struct height_info_s
 
     btVector3                                   floor_normale;
     btVector3                                   floor_point;
-    int16_t                                     floor_hit;
+    int16_t                                     floor_hit = 0;
     btCollisionObject                          *floor_obj;
 
     btVector3                                   ceiling_normale;
     btVector3                                   ceiling_point;
-    int16_t                                     ceiling_hit;
+    int16_t                                     ceiling_hit = 0;
     btCollisionObject                          *ceiling_obj;
 
     btScalar                                    transition_level;
-    int16_t                                     water;
+    int16_t                                     water = 0;
     int16_t                                     quicksand;
-}height_info_t, *height_info_p;
+};
 
-typedef struct character_command_s
+struct CharacterCommand
 {
-    btScalar    rot[3];
-    int8_t      move[3];
+    btVector3 rot;
+    std::array<int8_t,3> move{{0,0,0}};
 
     int8_t      roll;
     int8_t      jump;
-    int8_t      crouch;
-    int8_t      shift;
-    int8_t      action;
+    int8_t      crouch = 0;
+    int8_t      shift = 0;
+    int8_t      action = 0;
     int8_t      ready_weapon;
     int8_t      sprint;
 
-    int8_t      flags;
-}character_command_t, *character_command_p;
+    int8_t      flags = 0;
+};
 
-typedef struct character_response_s
+struct CharacterResponse
 {
-    int8_t      kill;
-    int8_t      burn;
-    int8_t      vertical_collide;
-    int8_t      horizontal_collide;
-    int8_t      slide;
-}character_response_t, *character_response_p;
+    int8_t      kill = 0;
+    int8_t      vertical_collide = 0;
+    int8_t      horizontal_collide = 0;
+    //int8_t      step_up;
+    int8_t      slide = 0;
+};
 
-typedef struct character_param_s
+struct CharacterParam
 {
-    float       param[PARAM_LASTINDEX];
-    float       maximum[PARAM_LASTINDEX];
-}character_param_t, *character_param_p;
+    std::array<float,PARAM_SENTINEL> param{{}};
+    std::array<float,PARAM_SENTINEL> maximum{{}};
 
-typedef struct character_stats_s
+    CharacterParam()
+    {
+        param.fill(0);
+        maximum.fill(0);
+    }
+};
+
+struct CharacterStats
 {
     float       distance;
     uint32_t    secrets_level;         // Level amount of secrets.
@@ -276,106 +283,147 @@ typedef struct character_stats_s
     uint32_t    kills;
     uint32_t    medipacks_used;
     uint32_t    saves_used;
-}character_stats_t, *character_stats_p;
+};
 
-typedef struct inventory_node_s
+struct InventoryNode
 {
     uint32_t                    id;
     int32_t                     count;
     uint32_t                    max_count;
-    struct inventory_node_s    *next;
-}inventory_node_t, *inventory_node_p;
+};
 
 
-typedef struct character_s
+struct Hair;
+struct SSAnimation;
+
+enum class WeaponState {
+    Hide,
+    HideToReady,
+    Idle,
+    IdleToFire,
+    Fire,
+    FireToIdle,
+    IdleToHide
+};
+
+struct Character : public Entity
 {
-    struct entity_s             *ent;                    // actor entity
-    struct character_command_s   cmd;                    // character control commands
-    struct character_response_s  resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    CharacterCommand   m_command;                    // character control commands
+    CharacterResponse  m_response;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    
+    std::list<InventoryNode> m_inventory;
+    CharacterParam     m_parameters{};
+    CharacterStats     m_statistics;
+    
+    std::vector<std::shared_ptr<Hair>> m_hairs{};
+    
+    int                          m_currentWeapon = 0;
+    WeaponState m_weaponCurrentState = WeaponState::Hide;
+    
+    int (*state_func)(Character* entity, SSAnimation *ssAnim) = nullptr;
+    
+    int8_t                       m_camFollowCenter = 0;
+    btScalar                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
+    btScalar                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
+    btScalar                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
+    btScalar                     m_fallDownHeight;
+    btScalar                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
+    btScalar                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
-    struct inventory_node_s     *inventory;
-    struct character_param_s     parameters;
-    struct character_stats_s     statistics;
+    btScalar                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
+    btScalar                     m_forvardSize = 48;           // offset for climbing calculation
+    btScalar                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
+    btScalar                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
+    btScalar                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
+    
+    std::unique_ptr<btSphereShape> m_sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
+    std::unique_ptr<btSphereShape> m_climbSensor;
 
-    int8_t                       hair_count;
-    struct hair_s               *hairs;
+    HeightInfo         m_heightInfo{};
+    ClimbInfo          m_climb{};
 
-    int                          current_weapon;
-    int                          weapon_current_state;
+    Entity* m_traversedObject = nullptr;
+    
+    std::shared_ptr<BtEngineClosestRayResultCallback> m_rayCb;
+    std::shared_ptr<BtEngineClosestConvexResultCallback> m_convexCb;
 
-    int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
+    Character();
+    ~Character();
 
-    int8_t                       cam_follow_center;
-    btScalar                     min_step_up_height;
-    btScalar                     max_step_up_height;
-    btScalar                     max_climb_height;
-    btScalar                     fall_down_height;
-    btScalar                     critical_slant_z_component;
-    btScalar                     critical_wall_component;
+    int checkNextPenetration(const btVector3& move);
 
-    btScalar                     climb_r;                // climbing sensor radius
-    btScalar                     forvard_size;           // offset for climbing calculation
-    btScalar                     Height;                 // base character height
-    btScalar                     wade_depth;             // water depth that enable wade walk
-    btScalar                     swim_depth;             // depth offset for starting to swim
+    void doWeaponFrame(btScalar time);
 
-    btSphereShape               *sphere;                 // needs to height calculation
-    btSphereShape               *climb_sensor;
+    void fixPenetrations(btVector3* move) override;
+    btVector3 getRoomPos() const override
+    {
+        btVector3 pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
+        pos[0] = m_transform.getOrigin()[0];
+        pos[1] = m_transform.getOrigin()[1];
+        return pos;
+    }
+    void transferToRoom(Room* room) override {
+    }
+    void updateHair() override;
+    void frameImpl(btScalar time, int16_t frame, int state) override;
+    void processSectorImpl() override;
+    void jump(btScalar vert, btScalar hor) override;
+    void kill() override {
+        m_response.kill = 1;
+    }
+    virtual Substance getSubstanceState() const override;
+    void updateTransform() override {
+        ghostUpdate();
+        Entity::updateTransform();
+    }
+    void updateGhostRigidBody() override;
+    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const override {
+        return m_convexCb;
+    }
+    btVector3 camPosForFollowing(btScalar dz) override;
 
-    struct height_info_s         height_info;
-    struct climb_info_s          climb;
+    int32_t addItem(uint32_t item_id, int32_t count);       // returns items count after in the function's end
+    int32_t removeItem(uint32_t item_id, int32_t count);    // returns items count after in the function's end
+    int32_t removeAllItems();
+    int32_t getItemsCount(uint32_t item_id);                // returns items count
 
-    struct entity_s             *traversed_object;
+    static void getHeightInfo(const btVector3& pos, HeightInfo *fc, btScalar v_offset = 0.0);
+    int checkNextStep(const btVector3 &offset, HeightInfo *nfc);
+    int hasStopSlant(HeightInfo* next_fc);
+    ClimbInfo checkClimbability(btVector3 offset, HeightInfo *nfc, btScalar test_height);
+    ClimbInfo checkWallsClimbability();
 
-    bt_engine_ClosestRayResultCallback                  *ray_cb;
-    bt_engine_ClosestConvexResultCallback               *convex_cb;
-}character_t, *character_p;
+    void updateCurrentHeight();
+    void updatePlatformPreStep() override;
+    void updatePlatformPostStep();
 
-void Character_Create(struct entity_s *ent);
-void Character_Clean(struct entity_s *ent);
+    void setToJump(btScalar v_vertical, btScalar v_horizontal);
+    void lean(CharacterCommand* cmd, btScalar max_lean);
+    btScalar inertiaLinear(btScalar max_speed, btScalar accel, int8_t command);
+    btScalar inertiaAngular(btScalar max_angle, btScalar accel, uint8_t axis);
 
-int32_t Character_AddItem(struct entity_s *ent, uint32_t item_id, int32_t count);       // returns items count after in the function's end
-int32_t Character_RemoveItem(struct entity_s *ent, uint32_t item_id, int32_t count);    // returns items count after in the function's end
-int32_t Character_RemoveAllItems(struct entity_s *ent);
-int32_t Character_GetItemsCount(struct entity_s *ent, uint32_t item_id);                // returns items count
+    int moveOnFloor();
+    int freeFalling();
+    int monkeyClimbing();
+    int wallsClimbing();
+    int climbing();
+    int moveUnderWater();
+    int moveOnWater();
 
-void Character_GetHeightInfo(btScalar pos[3], struct height_info_s *fc, btScalar v_offset = 0.0);
-int Character_CheckNextStep(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc);
-int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
-climb_info_t Character_CheckClimbability(struct entity_s *ent, btScalar offset[3], struct height_info_s *nfc, btScalar test_height);
-climb_info_t Character_CheckWallsClimbability(struct entity_s *ent);
+    int findTraverse();
+    int checkTraverse(Entity *obj);
 
-void Character_UpdateCurrentHeight(struct entity_s *ent);
-void Character_UpdatePlatformPreStep(struct entity_s *ent);
-void Character_UpdatePlatformPostStep(struct entity_s *ent);
+    void applyCommands();
+    void updateParams();
 
-void Character_SetToJump(struct entity_s *ent, btScalar v_vertical, btScalar v_horizontal);
-void Character_Lean(struct entity_s *ent, character_command_p cmd, btScalar max_lean);
-btScalar Character_InertiaLinear(struct entity_s *ent, btScalar max_speed, btScalar accel, int8_t command);
-btScalar Character_InertiaAngular(struct entity_s *ent, btScalar max_angle, btScalar accel, uint8_t axis);
+    float getParam(int parameter);
+    int   setParam(int parameter, float value);
+    int   changeParam(int parameter, float value);
+    int   setParamMaximum(int parameter, float max_value);
 
-int Character_MoveOnFloor(struct entity_s *ent);
-int Character_FreeFalling(struct entity_s *ent);
-int Character_MonkeyClimbing(struct entity_s *ent);
-int Character_WallsClimbing(struct entity_s *ent);
-int Character_Climbing(struct entity_s *ent);
-int Character_MoveUnderWater(struct entity_s *ent);
-int Character_MoveOnWater(struct entity_s *ent);
+    int   setWeaponModel(int weapon_model, int armed);
+};
 
-int Character_FindTraverse(struct entity_s *ch);
-int Sector_AllowTraverse(struct room_sector_s *rs, btScalar floor, struct engine_container_s *cont);
-int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj);
+bool IsCharacter(std::shared_ptr<Entity> ent);
+int Sector_AllowTraverse(RoomSector *rs, btScalar floor, const std::shared_ptr<EngineContainer> &cont);
 
-void Character_ApplyCommands(struct entity_s *ent);
-void Character_UpdateParams(struct entity_s *ent);
-
-float Character_GetParam(struct entity_s *ent, int parameter);
-int   Character_SetParam(struct entity_s *ent, int parameter, float value);
-int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
-int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
-
-int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed);
-
-bool IsCharacter(struct entity_s *ent);
-
-#endif  // CHARACTER_CONTROLLER_H

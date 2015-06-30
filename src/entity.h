@@ -1,29 +1,27 @@
+#pragma once
 
-#ifndef ENTITY_H
-#define ENTITY_H
+#include <cstdint>
+#include <memory>
 
-#include <stdint.h>
-
-#include "bullet/LinearMath/btVector3.h"
-#include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
-#include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
-#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+#include <bullet/LinearMath/btVector3.h>
+#include <bullet/BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
+#include "object.h"
 #include "mesh.h"
+
 
 class btCollisionShape;
 class btRigidBody;
 
-struct room_s;
-struct room_sector_s;
-struct obb_s;
-struct character_s;
-struct ss_animation_s;
-struct ss_bone_frame_s;
-
-#define ENTITY_STATE_ENABLED                        (0x0001)    // Entity is enabled.
-#define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
-#define ENTITY_STATE_VISIBLE                        (0x0004)    // Entity is visible.
+struct Room;
+struct RoomSector;
+struct OBB;
+struct Character;
+struct SSAnimation;
+struct SSBoneFrame;
+struct RDSetup;
 
 #define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.
 #define ENTITY_TYPE_INTERACTIVE                     (0x0001)    // Can respond to other entity's commands.
@@ -44,144 +42,180 @@ struct ss_bone_frame_s;
 #define ENTITY_CALLBACK_STAND                       (0x00000008)
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
 
-#define ENTITY_SUBSTANCE_NONE                     0
-#define ENTITY_SUBSTANCE_WATER_SHALLOW            1
-#define ENTITY_SUBSTANCE_WATER_WADE               2
-#define ENTITY_SUBSTANCE_WATER_SWIM               3
-#define ENTITY_SUBSTANCE_QUICKSAND_SHALLOW        4
-#define ENTITY_SUBSTANCE_QUICKSAND_CONSUMED       5
+enum class Substance {
+    None,
+    WaterShallow,
+    WaterWade,
+    WaterSwim,
+    QuicksandShallow,
+    QuicksandConsumed
+};
 
 #define ENTITY_TLAYOUT_MASK     0x1F    // Activation mask
 #define ENTITY_TLAYOUT_EVENT    0x20    // Last trigger event
 #define ENTITY_TLAYOUT_LOCK     0x40    // Activity lock
 #define ENTITY_TLAYOUT_SSTATUS  0x80    // Sector status
 
-#define WEAPON_STATE_HIDE                       (0x00)
-#define WEAPON_STATE_HIDE_TO_READY              (0x01)
-#define WEAPON_STATE_IDLE                       (0x02)
-#define WEAPON_STATE_IDLE_TO_FIRE               (0x03)
-#define WEAPON_STATE_FIRE                       (0x04)
-#define WEAPON_STATE_FIRE_TO_IDLE               (0x05)
-#define WEAPON_STATE_IDLE_TO_HIDE               (0x06)
-
 // Specific in-game entity structure.
 
-#define MAX_OBJECTS_IN_COLLSION_NODE    (4)
-
-typedef struct entity_collision_node_s
+struct EntityCollisionNode
 {
-    uint16_t                    obj_count;
-    btCollisionObject          *obj[MAX_OBJECTS_IN_COLLSION_NODE];
-}entity_collision_node_t, *entity_collision_node_p;
+    std::vector<btCollisionObject*> obj;
+};
 
-typedef struct bt_entity_data_s
+struct BtEntityData
 {
-    int8_t                              no_fix_all;
-    uint32_t                            no_fix_body_parts;
-    btPairCachingGhostObject          **ghostObjects;           // like Bullet character controller for penetration resolving.
-    btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
+    bool no_fix_all;
+    uint32_t no_fix_body_parts;
+    std::vector<std::unique_ptr<btPairCachingGhostObject>> ghostObjects;           // like Bullet character controller for penetration resolving.
+    std::unique_ptr<btManifoldArray> manifoldArray;          // keep track of the contact manifolds
 
-    btCollisionShape                  **shapes;
-    btRigidBody                       **bt_body;
-    uint32_t                            bt_joint_count;         // Ragdoll joints
-    btTypedConstraint                 **bt_joints;              // Ragdoll joints
+    std::vector<std::unique_ptr<btCollisionShape>> shapes;
+    std::vector< std::shared_ptr<btRigidBody> > bt_body;
+    std::vector<std::shared_ptr<btTypedConstraint>> bt_joints;              // Ragdoll joints
+    
+    std::vector<EntityCollisionNode> last_collisions;
+};
 
-    struct entity_collision_node_s     *last_collisions;
-}bt_entity_data_t, *bt_entity_data_p;
+#define DEFAULT_CHARACTER_SPEED_MULT            (31.5)                          ///@FIXME: magic - not like in original
 
-typedef struct entity_s
+class BtEngineClosestConvexResultCallback;
+
+struct Entity : public Object
 {
-    uint32_t                            id;                 // Unique entity ID
-    int32_t                             OCB;                // Object code bit (since TR4)
-    uint8_t                             trigger_layout;     // Mask + once + event + sector status flags
-    float                               timer;              // Set by "timer" trigger field
+    uint32_t                            m_id = 0;                 // Unique entity ID
+    int32_t                             m_OCB = 0;                // Object code bit (since TR4)
+    uint8_t                             m_triggerLayout = 0;     // Mask + once + event + sector status flags
+    float                               m_timer = 0;              // Set by "timer" trigger field
 
-    uint32_t                            callback_flags;     // information about scripts callbacks
-    uint16_t                            type_flags;
-    uint16_t                            state_flags;
+    uint32_t                            m_callbackFlags = 0;     // information about scripts callbacks
+    uint16_t                            m_typeFlags = ENTITY_TYPE_GENERIC;
+    bool m_enabled = true;
+    bool m_active = true;
+    bool m_visible = true;
 
-    uint8_t                             dir_flag;           // (move direction)
-    uint16_t                            move_type;          // on floor / free fall / swim ....
+    uint8_t                             m_dirFlag;           // (move direction)
+    uint16_t                            m_moveType;          // on floor / free fall / swim ....
+    
+    bool m_wasRendered;       // render once per frame trigger
+    bool m_wasRenderedLines; // same for debug lines
 
-    uint8_t                             was_rendered;       // render once per frame trigger
-    uint8_t                             was_rendered_lines; // same for debug lines
+    btScalar                            m_currentSpeed;      // current linear speed from animation info
+    btVector3                           m_speed;              // speed of the entity XYZ
+    btScalar                     m_speedMult = DEFAULT_CHARACTER_SPEED_MULT;
 
-    btScalar                            current_speed;      // current linear speed from animation info
-    btScalar                            speed_mult;
-    btVector3                           speed;              // speed of the entity XYZ
+    btScalar                            m_inertiaLinear;     // linear inertia
+    btScalar                            m_inertiaAngular[2]; // angular inertia - X and Y axes
+    
+    SSBoneFrame m_bf;                 // current boneframe with full frame information
+    BtEntityData m_bt;
+    btVector3 m_angles;
+    btTransform m_transform; // GL transformation matrix
+    btVector3 m_scaling = {1,1,1};
 
-    btScalar                            inertia_linear;     // linear inertia
-    btScalar                            inertia_angular[2]; // angular inertia - X and Y axes
+    std::unique_ptr<OBB> m_obb;                // oriented bounding box
 
-    struct ss_bone_frame_s              bf;                 // current boneframe with full frame information
-    struct bt_entity_data_s             bt;
+    RoomSector* m_currentSector = nullptr;
+    RoomSector* m_lastSector;
 
-    btScalar                            scaling[3];         // entity scaling
-    btScalar                            angles[3];
-    btScalar                            transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
+    std::shared_ptr<EngineContainer> m_self;
 
-    struct obb_s                       *obb;                // oriented bounding box
+    btVector3 m_activationOffset = {0,256,0};   // where we can activate object (dx, dy, dz)
+    btScalar m_activationRadius = 128;
+    
+    Entity();
+    ~Entity();
 
-    struct room_sector_s               *current_sector;
-    struct room_sector_s               *last_sector;
+    void createGhosts();
+    void enable();
+    void disable();
+    void enableCollision();
+    void disableCollision();
+    void genEntityRigidBody();
 
-    struct engine_container_s          *self;
+    void ghostUpdate();
+    void updateCurrentCollisions();
+    int getPenetrationFixVector(btVector3 *reaction, bool hasMove);
+    void checkCollisionCallbacks();
+    bool wasCollisionBodyParts(uint32_t parts_flags);
+    void cleanCollisionAllBodyParts();
+    void cleanCollisionBodyParts(uint32_t parts_flags);
+    btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t *curr_flag);
+    void updateRoomPos();
+    void updateRigidBody(bool force);
+    void rebuildBV();
 
-    btScalar                            activation_offset[4];   // where we can activate object (dx, dy, dz, r)
+    int  getAnimDispatchCase(uint32_t id);
+    static void getNextFrame(SSBoneFrame *bf, btScalar time, StateChange *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+    int  frame(btScalar time);  // process frame + trying to change state
 
-    struct character_s                 *character;
-}entity_t, *entity_p;
+    virtual void updateTransform();
+    void updateCurrentSpeed(bool zeroVz = 0);
+    void addOverrideAnim(int model_id);
+    void checkActivators();
 
+    virtual Substance getSubstanceState() const {
+        return Substance::None;
+    }
 
-entity_p Entity_Create();
-void Entity_CreateGhosts(entity_p entity);
-void Entity_Clear(entity_p entity);
-void Entity_Enable(entity_p ent);
-void Entity_Disable(entity_p ent);
-void Entity_EnableCollision(entity_p ent);
-void Entity_DisableCollision(entity_p ent);
+    static void updateCurrentBoneFrame(SSBoneFrame *bf, const btTransform *etr);
+    void doAnimCommands(SSAnimation *ss_anim, int changing);
+    void processSector();
+    void setAnimation(int animation, int frame = 0, int another_model = -1);
+    void moveForward(btScalar dist);
+    void moveStrafe(btScalar dist);
+    void moveVertical(btScalar dist);
 
-// Bullet entity rigid body generating.
-void BT_GenEntityRigidBody(entity_p ent);
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btScalar correction[3]);
-void Entity_GhostUpdate(struct entity_s *ent);
-void Entity_UpdateCurrentCollisions(struct entity_s *ent);
-int Entity_GetPenetrationFixVector(struct entity_s *ent, btScalar reaction[3], btScalar move_global[3]);
-void Entity_FixPenetrations(struct entity_s *ent, btScalar move[3]);
-int Entity_CheckNextPenetration(struct entity_s *ent, btScalar move[3]);
-void Entity_CheckCollisionCallbacks(struct entity_s *ent);
-bool Entity_WasCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-void Entity_CleanCollisionAllBodyParts(struct entity_s *ent);
-void Entity_CleanCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags);
-btCollisionObject *Entity_GetRemoveCollisionBodyParts(struct entity_s *ent, uint32_t parts_flags, uint32_t *curr_flag);
+    btScalar findDistance(const Entity& entity_2);
 
-void Entity_UpdateRoomPos(entity_p ent);
-void Entity_UpdateRigidBody(entity_p ent, int force);
+    // Constantly updates some specific parameters to keep hair aligned to entity.
+    virtual void updateHair() {
+    }
 
-struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
-struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
-int  Entity_GetAnimDispatchCase(struct entity_s *entity, uint32_t id);
-void Entity_GetNextFrame(struct ss_bone_frame_s *bf, btScalar time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-int  Entity_Frame(entity_p entity, btScalar time);  // process frame + trying to change state
+    bool createRagdoll(RDSetup* setup);
+    bool deleteRagdoll();
 
-void Entity_RebuildBV(entity_p ent);
-void Entity_UpdateTransform(entity_p entity);
-void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz = 0);
-void Entity_AddOverrideAnim(struct entity_s *ent, int model_id);
-void Entity_CheckActivators(struct entity_s *ent);
+    virtual void fixPenetrations(btVector3* move);
+    virtual btVector3 getRoomPos() const
+    {
+        btVector3 v = (m_bf.bb_min + m_bf.bb_max) / 2;
+        return m_transform * v;
+    }
+    virtual void transferToRoom(Room *room);
+    virtual void frameImpl(btScalar time, int16_t frame, int state) {
+    }
 
-int  Entity_GetSubstanceState(entity_p entity);
+    virtual void processSectorImpl() {
+    }
+    virtual void jump(btScalar vert, btScalar hor) {
+    }
+    virtual void kill() {
+    }
+    virtual void updateGhostRigidBody() {
+    }
+    virtual std::shared_ptr<BtEngineClosestConvexResultCallback> callbackForCamera() const;
 
-void Entity_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, btScalar etr[16]);
-void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing);
-void Entity_ProcessSector(struct entity_s *ent);
-void Entity_SetAnimation(entity_p entity, int animation, int frame = 0, int another_model = -1);
-void Entity_MoveForward(struct entity_s *ent, btScalar dist);
-void Entity_MoveStrafe(struct entity_s *ent, btScalar dist);
-void Entity_MoveVertical(struct entity_s *ent, btScalar dist);
+    virtual btVector3 camPosForFollowing(btScalar dz) {
+        auto cam_pos = m_transform * m_bf.bone_tags.front().full_transform.getOrigin();
+        cam_pos[2] += dz;
+        return cam_pos;
+    }
 
-// Helper functions
+    virtual void updatePlatformPreStep() {
+    }
 
-btScalar Entity_FindDistance(entity_p entity_1, entity_p entity_2);
+private:
+    void doAnimMove(int16_t *anim, int16_t *frame);
 
-#endif
+    static btScalar getInnerBBRadius(const btVector3& bb_min, const btVector3& bb_max)
+    {
+        btVector3 d = bb_max-bb_min;
+        return btMin(d[0], btMin(d[1], d[2]));
+    }
+};
+
+int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, btVector3 *correction);
+
+struct StateChange *Anim_FindStateChangeByAnim(struct AnimationFrame *anim, int state_change_anim);
+struct StateChange *Anim_FindStateChangeByID(struct AnimationFrame *anim, uint32_t id);
+

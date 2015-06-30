@@ -1,14 +1,12 @@
+#pragma once
 
-#ifndef SYSTEM_H
-#define SYSTEM_H
-
-#include <stdint.h>
+#include <cstdint>
 #include "gl_util.h"
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 
 #define LOG_FILENAME "d_log.txt"
 
-typedef struct screen_info_s
+struct ScreenInfo
 {
     int16_t     x;
     int16_t     y;
@@ -20,9 +18,9 @@ typedef struct screen_info_s
     float       scale_factor;
     int8_t      FS_flag;
     int8_t      show_debuginfo;
-} screen_info_t, *screen_info_p;
+};
 
-extern screen_info_t screen_info;
+extern ScreenInfo screen_info;
 
 void Sys_Init();
 void Sys_InitGlobals();
@@ -40,5 +38,3 @@ void Sys_DebugLog(const char *file, const char *fmt, ...);
 #define Sys_LogCurrPlace Sys_DebugLog(LOG_FILENAME, "\"%s\" str = %d\n", __FILE__, __LINE__);
 #define Sys_extError(...) {Sys_LogCurrPlace Sys_Error(__VA_ARGS__);}
 #define Sys_extWarn(...) {Sys_LogCurrPlace Sys_Warn(__VA_ARGS__);}
-
-#endif

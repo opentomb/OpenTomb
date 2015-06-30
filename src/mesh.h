@@ -12,93 +12,109 @@
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <stdint.h>
-#include "bullet/LinearMath/btScalar.h"
+#include <cstdint>
+#include <bullet/LinearMath/btScalar.h>
 #include "vertex_array.h"
+#include "object.h"
+#include <memory>
+#include <vector>
+#include "vmath.h"
 
 class btCollisionShape;
 class btRigidBody;
 class btCollisionShape;
 
-struct polygon_s;
-struct room_s;
-struct engine_container_s;
-struct obb_s;
-struct vertex_s;
-struct entity_s;
+struct Polygon;
+struct Room;
+struct EngineContainer;
+struct OBB;
+struct Vertex;
+struct Render;
+struct Entity;
 
-typedef struct transparent_polygon_reference_s {
-    const struct polygon_s *polygon;
-    vertex_array *used_vertex_array;
-    unsigned firstIndex;
-    unsigned count;
+struct TransparentPolygonReference {
+    const Polygon* polygon;
+    std::shared_ptr<VertexArray> used_vertex_array;
+    size_t firstIndex;
+    size_t count;
     bool isAnimated;
-} transparent_polygon_reference_t, *transparent_polygon_reference_p;
+};
 
 /*
  * Animated version of vertex. Does not contain texture coordinate, because that is in a different VBO.
  */
-typedef struct animated_vertex_s {
-    float position[3];
-    float color[4];
-    float normal[3];
-} animated_vertex_t, *animated_vertex_p;
+struct AnimatedVertex {
+    btVector3 position;
+    std::array<float,4> color;
+    btVector3 normal;
+};
 
 /*
  * base mesh, uses everywhere
  */
-typedef struct base_mesh_s
+struct BaseMesh
 {
-    uint32_t              id;                                                   // mesh's ID
-    uint8_t               uses_vertex_colors;                                   // does this mesh have prebaked vertex lighting
+    uint32_t m_id;                                                   // mesh's ID
+    bool m_usesVertexColors;                                   // does this mesh have prebaked vertex lighting
 
-    uint32_t              polygons_count;                                       // number of all mesh's polygons
-    struct polygon_s     *polygons;                                             // polygons data
+    std::vector<Polygon> m_polygons;                                             // polygons data
 
-    struct polygon_s     *transparency_polygons;                                // transparency mesh's polygons list
+    std::vector<Polygon> m_transparencyPolygons;                                // transparency mesh's polygons list
 
-    uint32_t              num_texture_pages;                                    // face without structure wrapping
-    uint32_t             *element_count_per_texture;                            //
-    uint32_t             *elements;                                             //
-    uint32_t alpha_elements;
+    uint32_t              m_texturePageCount;                                    // face without structure wrapping
+    std::vector<uint32_t> m_elementsPerTexture;                            //
+    std::vector<uint32_t> m_elements;                                             //
+    uint32_t m_alphaElements;
 
-    uint32_t              vertex_count;                                         // number of mesh's vertices
-    struct vertex_s      *vertices;
+    std::vector<Vertex> m_vertices;
     
-    uint32_t num_animated_elements;
-    uint32_t num_alpha_animated_elements;
-    uint32_t *animated_elements;
-    uint32_t animated_vertex_count;
-    struct animated_vertex_s *animated_vertices;
+    size_t m_animatedElementCount;
+    size_t m_alphaAnimatedElementCount;
+    std::vector<uint32_t> m_allAnimatedElements;
+    std::vector<AnimatedVertex> m_animatedVertices;
     
-    uint32_t transparent_polygon_count;
-    struct transparent_polygon_reference_s *transparent_polygons;
+    std::vector<TransparentPolygonReference> m_transparentPolygons;
 
-    btScalar              centre[3];                                            // geometry centre of mesh
-    btScalar              bb_min[3];                                            // AABB bounding volume
-    btScalar              bb_max[3];                                            // AABB bounding volume
-    btScalar              R;                                                    // radius of the bounding sphere
-    int8_t               *matrix_indices;                                       // vertices map for skin mesh
+    btVector3 m_center;                                            // geometry centre of mesh
+    btVector3 m_bbMin;                                            // AABB bounding volume
+    btVector3 m_bbMax;                                            // AABB bounding volume
+    btScalar m_radius;                                                    // radius of the bounding sphere
+    struct MatrixIndex {
+        int8_t i=0, j=0;
+    };
+    std::vector<MatrixIndex> m_matrixIndices;                                       // vertices map for skin mesh
 
-    GLuint                vbo_vertex_array;
-    GLuint                vbo_index_array;
-    GLuint                vbo_skin_array;
-    vertex_array *        main_vertex_array;
+    GLuint                m_vboVertexArray;
+    GLuint                m_vboIndexArray;
+    GLuint                m_vboSkinArray;
+    std::shared_ptr<VertexArray> m_mainVertexArray;
     
     // Buffers for animated polygons
     // The first contains position, normal and color.
     // The second contains the texture coordinates. It gets updated every frame.
-    GLuint                animated_vbo_vertex_array;
-    GLuint                animated_vbo_texcoord_array;
-    GLuint                animated_vbo_index_array;
-    vertex_array *        animated_vertex_array;
-}base_mesh_t, *base_mesh_p;
+    GLuint                m_animatedVboVertexArray;
+    GLuint                m_animatedVboTexCoordArray;
+    GLuint                m_animatedVboIndexArray;
+    std::shared_ptr<VertexArray> m_animatedVertexArray;
+
+    ~BaseMesh() {
+        clear();
+    }
+
+    void clear();
+    void findBB();
+    void genVBO(const Render *renderer);
+    void genFaces();
+    uint32_t addVertex(const Vertex& v);
+    uint32_t addAnimatedVertex(const Vertex& v);
+    void polySortInMesh();
+};
 
 
 /*
  * base sprite structure
  */
-typedef struct sprite_s
+struct Sprite
 {
     uint32_t            id;                                                     // object's ID
     uint32_t            texture;                                                // texture number
@@ -108,21 +124,21 @@ typedef struct sprite_s
     btScalar            right;
     btScalar            top;
     btScalar            bottom;
-}sprite_t, *sprite_p;
+};
 
 /*
  * Structure for all the sprites in a room
  */
-typedef struct sprite_buffer_s
+struct SpriteBuffer
 {
     // Vertex data for the sprites
-    vertex_array *data;
+    std::unique_ptr<VertexArray> data;
     
     // How many sub-ranges the element_array_buffer contains. It has one for each texture listed.
     uint32_t              num_texture_pages;
     // The element count for each sub-range.
     uint32_t             *element_count_per_texture;
-}sprite_buffer_t, *sprite_buffer_p;
+};
 
 /*
  * lights
@@ -137,9 +153,9 @@ enum LightType
 };
 
 
-typedef struct light_s
+struct Light
 {
-    float                       pos[4];                                         // world position
+    btVector3 pos;                                         // world position
     float                       colour[4];                                      // RGBA value
 
     float                       inner;
@@ -150,20 +166,20 @@ typedef struct light_s
     float                       falloff;
 
     LightType                   light_type;
-}light_t, *light_p;
+};
 
 /*
  *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
  */
 
-typedef struct tex_frame_s
+struct TexFrame
 {
     btScalar    mat[4];
     btScalar    move[2];
     uint16_t    tex_ind;
-}tex_frame_t, *tex_frame_p;
+};
 
-typedef struct anim_seq_s
+struct AnimSeq
 {
     bool        uvrotate;               // UVRotate mode flag.
     bool        frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
@@ -177,43 +193,41 @@ typedef struct anim_seq_s
     btScalar    frame_time;             // Time passed since last frame update.
     uint16_t    current_frame;          // Current frame for this sequence.
     btScalar    frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
-    uint16_t    frames_count;           // Overall frames to use. If type is 3, it should be 1, else behaviour is undetermined.
 
     btScalar    uvrotate_speed;         // Speed of UVRotation, in seconds.
     btScalar    uvrotate_max;           // Reference value used to restart rotation.
     btScalar    current_uvrotate;       // Current coordinate window position.
 
-    struct tex_frame_s  *frames;
-
-    uint32_t*   frame_list;       // Offset into anim textures frame list.
-}anim_seq_t, *anim_seq_p;
+    std::vector<TexFrame> frames;
+    std::vector<uint32_t> frame_list;       // Offset into anim textures frame list.
+};
 
 
 /*
  * room static mesh.
  */
-typedef struct static_mesh_s
+struct StaticMesh : public Object
 {
     uint32_t                    object_id;                                      //
     uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
     uint8_t                     was_rendered_lines;
-    uint8_t                     hide;                                           // disable static mesh rendering
-    btScalar                    pos[3];                                         // model position
-    btScalar                    rot[3];                                         // model angles
-    GLfloat                     tint[4];                                        // model tint
+    bool hide;                                           // disable static mesh rendering
+    btVector3 pos;                                         // model position
+    btVector3 rot;                                         // model angles
+    std::array<float,4> tint;                                        // model tint
 
-    btScalar                    vbb_min[3];                                     // visible bounding box
-    btScalar                    vbb_max[3];
-    btScalar                    cbb_min[3];                                     // collision bounding box
-    btScalar                    cbb_max[3];
+    btVector3 vbb_min;                                     // visible bounding box
+    btVector3 vbb_max;
+    btVector3 cbb_min;                                     // collision bounding box
+    btVector3 cbb_max;
 
-    btScalar                    transform[16];                                  // gl transformation matrix
-    struct obb_s               *obb;
-    struct engine_container_s  *self;
+    btTransform transform;                                  // gl transformation matrix
+    OBB               *obb;
+    std::shared_ptr<EngineContainer> self;
 
-    struct base_mesh_s         *mesh;                                           // base model
+    std::shared_ptr<BaseMesh> mesh;                                           // base model
     btRigidBody                *bt_body;
-}static_mesh_t, *static_mesh_p;
+};
 
 /*
  * Animated skeletal model. Taken from openraider.
@@ -225,24 +239,27 @@ typedef struct static_mesh_s
  * SMOOTHED ANIMATIONS STRUCTURES
  * stack matrices are needed for skinned mesh transformations.
  */
-typedef struct ss_bone_tag_s
+struct SSBoneTag
 {
-    struct ss_bone_tag_s   *parent;
+    SSBoneTag   *parent;
     uint16_t                index;
-    base_mesh_p             mesh_base;                                          // base mesh - pointer to the first mesh in array
-    base_mesh_p             mesh_skin;                                          // base skinned mesh for ТР4+
-    base_mesh_p             mesh_slot;
-    btScalar                offset[3];                                          // model position offset
+    std::shared_ptr<BaseMesh> mesh_base;                                          // base mesh - pointer to the first mesh in array
+    std::shared_ptr<BaseMesh> mesh_skin;                                          // base skinned mesh for ТР4+
+    std::shared_ptr<BaseMesh> mesh_slot;
+    btVector3 offset;                                          // model position offset
 
-    btScalar                qrotate[4];                                         // quaternion rotation
-    btScalar                transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
-    btScalar                full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
+    btQuaternion qrotate;                                         // quaternion rotation
+    btTransform transform;    // 4x4 OpenGL matrix for stack usage
+    btTransform full_transform;    // 4x4 OpenGL matrix for global usage
 
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
-}ss_bone_tag_t, *ss_bone_tag_p;
+};
 
 
-typedef struct ss_animation_s
+struct SkeletalModel;
+struct Character;
+
+struct SSAnimation
 {
     int16_t                     last_state;
     int16_t                     next_state;
@@ -258,91 +275,90 @@ typedef struct ss_animation_s
     btScalar                    frame_time;                                     // current time
     btScalar                    lerp;
 
-    void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
+    void                      (*onFrame)(Character* ent, SSAnimation *ss_anim, int state);
 
-    struct skeletal_model_s    *model;                                          // pointer to the base model
-    struct ss_animation_s      *next;
-}ss_animation_t, *ss_animation_p;
+    SkeletalModel    *model;                                          // pointer to the base model
+    SSAnimation      *next;
+};
 
 /*
  * base frame of animated skeletal model
  */
-typedef struct ss_bone_frame_s
+struct SSBoneFrame
 {
-    uint16_t                    bone_tag_count;                                 // number of bones
-    struct ss_bone_tag_s       *bone_tags;                                      // array of bones
-    btScalar                    pos[3];                                         // position (base offset)
-    btScalar                    bb_min[3];                                      // bounding box min coordinates
-    btScalar                    bb_max[3];                                      // bounding box max coordinates
-    btScalar                    centre[3];                                      // bounding box centre
+    std::vector<SSBoneTag> bone_tags;                                      // array of bones
+    btVector3 pos;                                         // position (base offset)
+    btVector3 bb_min;                                      // bounding box min coordinates
+    btVector3 bb_max;                                      // bounding box max coordinates
+    btVector3 centre;                                      // bounding box centre
 
-    struct ss_animation_s       animations;                                     // animations list
+    SSAnimation       animations;                                     // animations list
     
     bool hasSkin;                                       // whether any skinned meshes need rendering
-}ss_bone_frame_t, *ss_bone_frame_p;
+
+    void fromModel(SkeletalModel* model);
+};
 
 /*
  * ORIGINAL ANIMATIONS
  */
-typedef struct bone_tag_s
+struct BoneTag
 {
-    btScalar              offset[3];                                            // bone vector
-    btScalar              qrotate[4];                                           // rotation quaternion
-}bone_tag_t, *bone_tag_p;
+    btVector3 offset;                                            // bone vector
+    btQuaternion qrotate;                                           // rotation quaternion
+};
 
 /*
  * base frame of animated skeletal model
  */
-typedef struct bone_frame_s
+struct BoneFrame
 {
-    uint16_t            bone_tag_count;                                         // number of bones
     uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
-    struct bone_tag_s  *bone_tags;                                              // bones data
-    btScalar            pos[3];                                                 // position (base offset)
-    btScalar            bb_min[3];                                              // bounding box min coordinates
-    btScalar            bb_max[3];                                              // bounding box max coordinates
-    btScalar            centre[3];                                              // bounding box centre
-    btScalar            move[3];                                                // move command data
+    std::vector<BoneTag> bone_tags;                                              // bones data
+    btVector3 pos;                                                 // position (base offset)
+    btVector3 bb_min;                                              // bounding box min coordinates
+    btVector3 bb_max;                                              // bounding box max coordinates
+    btVector3 centre;                                              // bounding box centre
+    btVector3 move;                                                // move command data
     btScalar            v_Vertical;                                             // jump command data
     btScalar            v_Horizontal;                                           // jump command data
-}bone_frame_t, *bone_frame_p ;
+};
 
 /*
  * mesh tree base element structure
  */
-typedef struct mesh_tree_tag_s
+struct MeshTreeTag
 {
-    base_mesh_p                 mesh_base;                                      // base mesh - pointer to the first mesh in array
-    base_mesh_p                 mesh_skin;                                      // base skinned mesh for ТР4+
-    btScalar                    offset[3];                                      // model position offset
+    std::shared_ptr<BaseMesh> mesh_base;                                      // base mesh - pointer to the first mesh in array
+    std::shared_ptr<BaseMesh> mesh_skin;                                      // base skinned mesh for ТР4+
+    btVector3 offset;                                      // model position offset
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
     uint32_t                    body_part;
     uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
     uint8_t                     replace_anim;
-}mesh_tree_tag_t, *mesh_tree_tag_p;
+};
 
 /*
  * animation switching control structure
  */
-typedef struct anim_dispatch_s
+struct AnimDispatch
 {
     uint16_t    next_anim;                                                      // "switch to" animation
     uint16_t    next_frame;                                                     // "switch to" frame
     uint16_t    frame_low;                                                      // low border of state change condition
     uint16_t    frame_high;                                                     // high border of state change condition
-}anim_dispatch_t, *anim_dispatch_p;
+};
 
-typedef struct state_change_s
+struct StateChange
 {
     uint32_t                    id;
-    uint16_t                    anim_dispatch_count;
-    struct anim_dispatch_s     *anim_dispatch;
-}state_change_t, *state_change_p;
+    std::vector<AnimDispatch> anim_dispatch;
+};
 
 /*
  * one animation frame structure
  */
-typedef struct animation_frame_s
+struct AnimationFrame
 {
     uint32_t                    id;
     uint8_t                     original_frame_rate;
@@ -353,62 +369,50 @@ typedef struct animation_frame_s
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     uint16_t                    state_id;
-    uint16_t                    frames_count;           // Number of frames
-    struct bone_frame_s        *frames;                 // Frame data
+    std::vector<BoneFrame> frames;                 // Frame data
 
-    uint16_t                    state_change_count;     // Number of animation statechanges
-    struct state_change_s      *state_change;           // Animation statechanges data
+    std::vector<StateChange> state_change;           // Animation statechanges data
 
-    struct animation_frame_s   *next_anim;              // Next default animation
+    AnimationFrame   *next_anim;              // Next default animation
     int                         next_frame;             // Next default frame
-}animation_frame_t, *animation_frame_p;
+};
 
 /*
  * skeletal model with animations data.
  */
 
-typedef struct skeletal_model_s
+struct SkeletalModel
 {
     uint32_t                    id;                                             // ID
     uint8_t                     transparency_flags;                             // transparancy flags; 0 - opaque; 1 - alpha test; other - blending mode
-    uint8_t                     hide;                                           // do not render
-    btScalar                    bbox_min[3];                                    // bbox info
-    btScalar                    bbox_max[3];
-    btScalar                    centre[3];                                      // the centre of model
+    bool hide;                                           // do not render
+    btVector3 bbox_min;                                    // bbox info
+    btVector3 bbox_max;
+    btVector3 centre;                                      // the centre of model
 
-    uint16_t                    animation_count;                                // number of animations
-    struct animation_frame_s   *animations;                                     // animations data
+    std::vector<AnimationFrame> animations;                                     // animations data
 
     uint16_t                    mesh_count;                                     // number of model meshes
-    struct mesh_tree_tag_s     *mesh_tree;                                      // base mesh tree.
-    uint16_t                    collision_map_size;
-    uint16_t                   *collision_map;
-}skeletal_model_t, *skeletal_model_p;
+    std::vector<MeshTreeTag> mesh_tree;                                      // base mesh tree.
+    std::vector<uint16_t> collision_map;
 
+    void clear();
+    void fillTransparency();
+    void interpolateFrames();
+    void fillSkinnedMeshMap();
+};
 
-void BaseMesh_Clear(base_mesh_p mesh);
-void BaseMesh_FindBB(base_mesh_p mesh);
-void Mesh_GenVBO(const struct render_s *renderer, struct base_mesh_s *mesh);
+struct RoomSector;
+struct SectorTween;
 
-void SkeletalModel_Clear(skeletal_model_p model);
-void SkeletonModel_FillTransparency(skeletal_model_p model);
-void SkeletalModel_InterpolateFrames(skeletal_model_p models);
-void FillSkinnedMeshMap(skeletal_model_p model);
-
-void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
-
-void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
-mesh_tree_tag_p SkeletonClone(mesh_tree_tag_p src, int tags_count);
-void SkeletonCopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
-void SkeletonCopyMeshes2(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
-
-
-uint32_t Mesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex);
-void Mesh_GenFaces(base_mesh_p mesh);
+void BoneFrame_Copy(BoneFrame* dst, BoneFrame* src);
+MeshTreeTag* SkeletonClone(MeshTreeTag* src, int tags_count);
+void SkeletonCopyMeshes(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
+void SkeletonCopyMeshes2(MeshTreeTag* dst, MeshTreeTag* src, int tags_count);
 
 /* bullet collision model calculation */
-btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max, bool useCompression, bool buildBvh);
-btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
-btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromBBox(const btVector3 &bb_min, const btVector3 &bb_max, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
+btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, SectorTween *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
 #endif

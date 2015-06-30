@@ -1,66 +1,25 @@
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 
 #include "vmath.h"
 #include "obb.h"
 #include "polygon.h"
 #include "entity.h"
 
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 #include "engine.h"
 
-obb_p OBB_Create()
+void OBB::rebuild(const btVector3& bb_min, const btVector3& bb_max)
 {
-    obb_p ret;
+    extent = (bb_max - bb_min)/2;
+    base_centre = (bb_min + bb_max)/2;
+    r = extent.length();
 
-    ret = (obb_p)malloc(sizeof(obb_t));
-    for(int i=0;i<6;i++)
-    {
-        ret->base_polygons[i].vertex_count = 0;
-        ret->polygons[i].vertex_count = 0;
-        ret->base_polygons[i].vertices = NULL;
-        ret->polygons[i].vertices = NULL;
-        ret->base_polygons[i].next = NULL;
-        ret->polygons[i].next = NULL;
-        Polygon_Resize(ret->base_polygons+i, 4);
-        Polygon_Resize(ret->polygons+i, 4);
-    }
-    ret->transform = NULL;
-
-    return ret;
-}
-
-
-void OBB_Clear(obb_p obb)
-{
-    if(obb != NULL)
-    {
-        for(int i=0;i<6;i++)
-        {
-            Polygon_Clear(obb->polygons + i);
-            Polygon_Clear(obb->base_polygons + i);
-        }
-    }
-}
-
-
-void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3])
-{
-    polygon_p p, p_up, p_down;
-    vertex_p v;
-
-    vec3_sub(obb->extent, bb_max, bb_min);
-    vec3_mul_scalar(obb->extent, obb->extent, 0.5);
-
-    vec3_add(obb->base_centre, bb_min, bb_max);
-    vec3_mul_scalar(obb->base_centre, obb->base_centre, 0.5);
-    obb->r = vec3_abs(obb->extent);
-
-    p = obb->base_polygons;
+    Polygon* p = base_polygons;
     // UP
-    p_up = p;
-    v = p->vertices;
+    Polygon* p_up = p;
+    auto v = &p->vertices.front();
     // 0 1
     // 0 0
     v->position[0] = bb_max[0];
@@ -92,12 +51,12 @@ void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3])
     //p->plane[1] = 0.0;
     //p->plane[2] = 1.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
     // DOWN
-    p_down = p;
-    v = p->vertices;
+    Polygon* p_down = p;
+    v = &p->vertices.front();
     // 0 1
     // 0 0
     v->position[0] = bb_max[0];
@@ -125,107 +84,84 @@ void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3])
     v->position[1] = bb_max[1];
     v->position[2] = bb_min[2];
 
-    //p->plane[0] = 0.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] =-1.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
     // RIGHT: OX+
-    v = p->vertices;
-    vec3_copy(v[0].position, p_up->vertices[0].position);                       // 0 1  up
-    vec3_copy(v[1].position, p_up->vertices[3].position);                       // 1 0  up
-    vec3_copy(v[2].position, p_down->vertices[1].position);                     // 1 0  down
-    vec3_copy(v[3].position, p_down->vertices[0].position);                     // 0 1  down
+    v = &p->vertices.front();
+    v[0].position = p_up->vertices[0].position;                       // 0 1  up
+    v[1].position = p_up->vertices[3].position;                       // 1 0  up
+    v[2].position = p_down->vertices[1].position;                     // 1 0  down
+    v[3].position = p_down->vertices[0].position;                     // 0 1  down
 
-    //p->plane[0] = 1.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
 
     // LEFT: OX-
-    v = p->vertices;
-    vec3_copy(v[0].position, p_up->vertices[1].position);                       // 0 1  up
-    vec3_copy(v[3].position, p_up->vertices[2].position);                       // 1 0  up
-    vec3_copy(v[2].position, p_down->vertices[2].position);                     // 1 0  down
-    vec3_copy(v[1].position, p_down->vertices[3].position);                     // 0 1  down
+    v = &p->vertices.front();
+    v[0].position = p_up->vertices[1].position;                       // 0 1  up
+    v[3].position = p_up->vertices[2].position;                       // 1 0  up
+    v[2].position = p_down->vertices[2].position;                     // 1 0  down
+    v[1].position = p_down->vertices[3].position;                     // 0 1  down
 
-    //p->plane[0] =-1.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
 
     // FORWARD: OY+
-    v = p->vertices;
-    vec3_copy(v[0].position, p_up->vertices[0].position);                       // 0 1  up
-    vec3_copy(v[3].position, p_up->vertices[1].position);                       // 1 0  up
-    vec3_copy(v[2].position, p_down->vertices[3].position);                     // 1 0  down
-    vec3_copy(v[1].position, p_down->vertices[0].position);                     // 0 1  down
+    v = &p->vertices.front();
+    v[0].position = p_up->vertices[0].position;                       // 0 1  up
+    v[3].position = p_up->vertices[1].position;                       // 1 0  up
+    v[2].position = p_down->vertices[3].position;                     // 1 0  down
+    v[1].position = p_down->vertices[0].position;                     // 0 1  down
 
-    //p->plane[0] = 0.0;
-    //p->plane[1] = 1.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
     p++;
 
     // BACKWARD: OY-
-    v = p->vertices;
-    vec3_copy(v[0].position, p_up->vertices[3].position);                       // 0 1  up
-    vec3_copy(v[1].position, p_up->vertices[2].position);                       // 1 0  up
-    vec3_copy(v[2].position, p_down->vertices[2].position);                     // 1 0  down
-    vec3_copy(v[3].position, p_down->vertices[1].position);                     // 0 1  down
+    v = &p->vertices.front();
+    v[0].position = p_up->vertices[3].position;                       // 0 1  up
+    v[1].position = p_up->vertices[2].position;                       // 1 0  up
+    v[2].position = p_down->vertices[2].position;                     // 1 0  down
+    v[3].position = p_down->vertices[1].position;                     // 0 1  down
 
     //p->plane[0] = 0.0;
     //p->plane[1] = 1.0;
     //p->plane[2] = 0.0;
     //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->findNormal();
 }
 
 
-void OBB_Transform(obb_p obb)
+void OBB::doTransform()
 {
-    if(obb->transform != NULL)
-    {
-        for(int i=0;i<6;i++)
-        {
-            Polygon_vTransform(obb->polygons+i, obb->base_polygons+i, obb->transform);
+    if(transform != NULL) {
+        for(int i=0;i<6;i++) {
+            polygons[i].vTransform(&base_polygons[i], *transform);
         }
-        Mat4_vec3_mul_macro(obb->centre, obb->transform, obb->base_centre);
+        centre = *transform * base_centre;
     }
-    else
-    {
-        for(int i=0;i<6;i++)
-        {
-            Polygon_Copy(obb->polygons+i, obb->base_polygons+i);
+    else {
+        for(int i=0;i<6;i++) {
+            polygons[i] = base_polygons[i];
         }
-        vec3_copy(obb->centre, obb->base_centre);
+        centre = base_centre;
     }
 }
 
 /*
  * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
  */
-int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
+int OBB_OBB_Test(const Entity& e1, const Entity& e2)
 {
     //translation, in parent frame
-    btScalar v[3], T[3];
-    vec3_sub(v, e2->obb->centre, e1->obb->centre);
+    auto v = e2.m_obb->centre - e1.m_obb->centre;
     //translation, in A's frame
-    T[0] = vec3_dot(v, e1->transform + 0);
-    T[1] = vec3_dot(v, e1->transform + 4);
-    T[2] = vec3_dot(v, e1->transform + 8);
+    btVector3 T = e1.m_transform.getBasis() * v;
 
-    btScalar *a = e1->obb->extent;
-    btScalar *b = e2->obb->extent;
+    btScalar *a = e1.m_obb->extent;
+    btScalar *b = e2.m_obb->extent;
 
     //B's basis with respect to A's local frame
     btScalar R[3][3];
@@ -237,9 +173,9 @@ int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2)
     {
         for(k=0 ; k<3 ; k++)
         {
-            btScalar *e1b = e1->transform + 4 * i;
-            btScalar *e2b = e2->transform + 4 * k;
-            R[i][k] = vec3_dot(e1b, e2b);
+            const btVector3& e1b = e1.m_transform.getBasis()[i];
+            const btVector3& e2b = e2.m_transform.getBasis()[k];
+            R[i][k] = e1b.dot(e2b);
         }
     }
 

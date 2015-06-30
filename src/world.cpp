@@ -1,12 +1,14 @@
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <algorithm>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
 #include "audio.h"
 #include "vmath.h"
@@ -21,51 +23,29 @@
 #include "engine.h"
 #include "script.h"
 #include "obb.h"
-#include "redblack.h"
 #include "console.h"
 #include "resource.h"
 #include "bsp_tree.h"
 
-void Room_Empty(room_p room)
+void Room::empty()
 {
-    portal_p p;
     btRigidBody* body;
 
-    if(room == NULL)
+    containers.clear();
+
+    near_room_list.clear();
+
+    portals.clear();
+
+    frustum.clear();
+
+    mesh.reset();
+
+    if(!static_mesh.empty())
     {
-        return;
-    }
-
-    room->containers = NULL;
-
-    p = room->portals;
-    room->near_room_list_size = 0;
-
-    if(room->portal_count)
-    {
-        for(uint16_t i=0;i<room->portal_count;i++,p++)
+        for(uint32_t i=0;i<static_mesh.size();i++)
         {
-            Portal_Clear(p);
-        }
-        free(room->portals);
-        room->portals = NULL;
-        room->portal_count = 0;
-    }
-
-    room->frustum = NULL;
-
-    if(room->mesh)
-    {
-        BaseMesh_Clear(room->mesh);
-        free(room->mesh);
-        room->mesh = NULL;
-    }
-
-    if(room->static_mesh_count)
-    {
-        for(uint32_t i=0;i<room->static_mesh_count;i++)
-        {
-            body = room->static_mesh[i].bt_body;
+            body = static_mesh[i]->bt_body;
             if(body)
             {
                 body->setUserPointer(NULL);
@@ -82,27 +62,23 @@ void Room_Empty(room_p room)
 
                 bt_engine_dynamicsWorld->removeRigidBody(body);
                 delete body;
-                room->static_mesh[i].bt_body = NULL;
+                static_mesh[i]->bt_body = NULL;
             }
 
-            OBB_Clear(room->static_mesh[i].obb);
-            free(room->static_mesh[i].obb);
-            room->static_mesh[i].obb = NULL;
-            if(room->static_mesh[i].self)
+            delete static_mesh[i]->obb;
+            static_mesh[i]->obb = nullptr;
+            if(static_mesh[i]->self)
             {
-                room->static_mesh[i].self->room = NULL;
-                free(room->static_mesh[i].self);
-                room->static_mesh[i].self = NULL;
+                static_mesh[i]->self->room = NULL;
+                static_mesh[i]->self.reset();
             }
         }
-        free(room->static_mesh);
-        room->static_mesh = NULL;
-        room->static_mesh_count = 0;
+        static_mesh.clear();
     }
 
-    if(room->bt_body)
+    if(bt_body)
     {
-        body = room->bt_body;
+        body = bt_body;
         if(body)
         {
             body->setUserPointer(NULL);
@@ -119,401 +95,336 @@ void Room_Empty(room_p room)
 
             bt_engine_dynamicsWorld->removeRigidBody(body);
             delete body;
-            room->bt_body = NULL;
+            bt_body = NULL;
         }
     }
 
-    if(room->sectors_count)
-    {
-        free(room->sectors);
-        room->sectors = NULL;
-        room->sectors_count = 0;
-        room->sectors_x = 0;
-        room->sectors_y = 0;
-    }
+    sectors.clear();
+    sectors_x = 0;
+    sectors_y = 0;
 
-    if(room->sprites_count)
-    {
-        free(room->sprites);
-        room->sprites = NULL;
-        room->sprites_count = 0;
-    }
+    sprites.clear();
 
-    if(room->light_count)
-    {
-        free(room->lights);
-        room->lights = NULL;
-        room->light_count = 0;
-    }
+    lights.clear();
 
-    if(room->self)
-    {
-        room->self->room = NULL;
-        free(room->self);
-        room->self = NULL;
-    }
+    self.reset();
 }
 
 
-void Room_AddEntity(room_p room, struct entity_s *entity)
+void Room::addEntity(Entity* entity)
 {
-    engine_container_p curr;
-
-    for(curr=room->containers;curr!=NULL;curr=curr->next)
+    for(const std::shared_ptr<EngineContainer>& curr : containers)
     {
-        if(curr == entity->self)
+        if(curr == entity->m_self)
         {
             return;
         }
     }
 
-    entity->self->room = room;
-    entity->self->next = room->containers;
-    room->containers = entity->self;
+    entity->m_self->room = this;
+    containers.insert(containers.begin(), entity->m_self);
 }
 
 
-int Room_RemoveEntity(room_p room, struct entity_s *entity)
+bool Room::removeEntity(Entity* entity)
 {
-    engine_container_p previous_cont, current_cont;
+    if(!entity || containers.empty())
+        return false;
 
-    if((entity == NULL) || (room->containers == NULL))
-    {
-        return 0;
+    auto it = std::find( containers.begin(), containers.end(), entity->m_self );
+    if(it != containers.end()) {
+        containers.erase(it);
+        entity->m_self->room = nullptr;
+        return true;
     }
 
-    if(room->containers == entity->self)
+    if(containers.front() == entity->m_self)
     {
-        room->containers = entity->self->next;
-        entity->self->room = NULL;
-        return 1;
+        containers.erase(containers.begin());
+        entity->m_self->room = nullptr;
+        return true;
     }
 
-    previous_cont = room->containers;
-    current_cont = previous_cont->next;
-    for(;current_cont!=NULL;)
-    {
-        if(current_cont == entity->self)
-        {
-            previous_cont->next = current_cont->next;
-            entity->self->room = NULL;
-            return 1;
-        }
-
-        previous_cont = current_cont;
-        current_cont = current_cont->next;
-    }
-
-    return 0;
+    return false;
 }
 
 
-void Room_AddToNearRoomsList(room_p room, room_p r)
+void Room::addToNearRoomsList(std::shared_ptr<Room> r)
 {
-    if(room && r && !Room_IsInNearRoomsList(room, r) && room->id != r->id && !Room_IsOverlapped(room, r) && room->near_room_list_size < 64)
+    if(r && !isInNearRoomsList(*r) && id != r->id && !isOverlapped(r.get()))
     {
-        room->near_room_list[room->near_room_list_size] = r;
-        room->near_room_list_size++;
+        near_room_list.push_back(r);
     }
 }
 
 
-int Room_IsInNearRoomsList(room_p r0, room_p r1)
+bool Room::isInNearRoomsList(const Room& r1)
 {
-    if(r0 && r1)
+    if(id == r1.id)
     {
-        if(r0->id == r1->id)
-        {
-            return 1;
-        }
+        return true;
+    }
 
-        if(r1->near_room_list_size >= r0->near_room_list_size)
+    if(r1.near_room_list.size() >= near_room_list.size())
+    {
+        for(const std::shared_ptr<Room>& r : near_room_list)
         {
-            for(uint16_t i=0;i<r0->near_room_list_size;i++)
+            if(r->id == r1.id)
             {
-                if(r0->near_room_list[i]->id == r1->id)
-                {
-                    return 1;
-                }
-            }
-        }
-        else
-        {
-            for(uint16_t i=0;i<r1->near_room_list_size;i++)
-            {
-                if(r1->near_room_list[i]->id == r0->id)
-                {
-                    return 1;
-                }
+                return true;
             }
         }
     }
-
-    return 0;
-}
-
-
-int Room_HasSector(room_p room, int x, int y)
-{
-    if(x < room->sectors_x && y < room->sectors_y )
+    else
     {
-        return 1;
+        for(const std::shared_ptr<Room>& r : r1.near_room_list)
+        {
+            if(r->id == id)
+            {
+                return true;
+            }
+        }
     }
-
-    return 0;
+    return false;
 }
 
 
-room_sector_p Sector_CheckPortalPointerRaw(room_sector_p rs)
+bool Room::hasSector(int x, int y)
 {
-    if((rs != NULL) && (rs->portal_to_room >= 0))
+    return x < sectors_x && y < sectors_y;
+}
+
+
+RoomSector* RoomSector::checkPortalPointerRaw()
+{
+    if(portal_to_room >= 0)
     {
-        room_p r = engine_world.rooms + rs->portal_to_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        std::shared_ptr<Room> r = engine_world.rooms[portal_to_room];
+        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+            return &r->sectors[(ind_x * r->sectors_y + ind_y) ];
         }
     }
 
-    return rs;
+    return this;
 }
 
 
-room_sector_p Sector_CheckPortalPointer(room_sector_p rs)
+RoomSector* RoomSector::checkPortalPointer()
 {
-    if((rs != NULL) && (rs->portal_to_room >= 0))
+    if(portal_to_room >= 0)
     {
-        room_p r = engine_world.rooms + rs->portal_to_room;
-        if((rs->owner_room->base_room != NULL) && (r->alternate_room != NULL))
+        std::shared_ptr<Room> r = engine_world.rooms[ portal_to_room ];
+        if((owner_room->base_room != NULL) && (r->alternate_room != NULL))
         {
             r = r->alternate_room;
         }
-        else if((rs->owner_room->alternate_room != NULL) && (r->base_room != NULL))
+        else if((owner_room->alternate_room != NULL) && (r->base_room != NULL))
         {
             r = r->base_room;
         }
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+            return &r->sectors[ (ind_x * r->sectors_y + ind_y) ];
         }
     }
 
-    return rs;
+    return this;
 }
 
 
-room_sector_p Sector_CheckBaseRoom(room_sector_p rs)
+RoomSector* RoomSector::checkBaseRoom()
 {
-    if((rs != NULL) && (rs->owner_room->base_room != NULL))
+    if(owner_room->base_room != NULL)
     {
-        room_p r = rs->owner_room->base_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        std::shared_ptr<Room> r = owner_room->base_room;
+        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+            return &r->sectors[ (ind_x * r->sectors_y + ind_y) ];
         }
     }
 
-    return rs;
+    return this;
 }
 
 
-room_sector_p Sector_CheckAlternateRoom(room_sector_p rs)
+RoomSector* RoomSector::checkAlternateRoom()
 {
-    if((rs != NULL) && (rs->owner_room->alternate_room != NULL))
+    if(owner_room->alternate_room != NULL)
     {
-        room_p r = rs->owner_room->alternate_room;
-        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
-        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        std::shared_ptr<Room> r = owner_room->alternate_room;
+        int ind_x = (pos[0] - r->transform.getOrigin()[0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (pos[1] - r->transform.getOrigin()[1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+            return &r->sectors[ (ind_x * r->sectors_y + ind_y) ];
         }
     }
 
-    return rs;
+    return this;
 }
 
 
-int Sectors_Is2SidePortals(room_sector_p s1, room_sector_p s2)
+bool RoomSector::is2SidePortals(RoomSector* s2)
 {
-    s1 = Sector_CheckPortalPointer(s1);
-    s2 = Sector_CheckPortalPointer(s2);
+    RoomSector* s1 = checkPortalPointer();
+    s2 = s2->checkPortalPointer();
 
-    if(s1->owner_room == s2->owner_room)
+    if(owner_room == s2->owner_room)
     {
-        return 0;
+        return false;
     }
 
-    room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
-    room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
+    RoomSector* s1p = s2->owner_room->getSectorRaw(pos);
+    RoomSector* s2p = s1->owner_room->getSectorRaw(s2->pos);
 
     // 2 next conditions are the stick for TR_V door-roll-wall
     if(s1p->portal_to_room < 0)
     {
-        s1p = Sector_CheckAlternateRoom(s1p);
+        s1p = s1p->checkAlternateRoom();
         if(s1p->portal_to_room < 0)
         {
-            return 0;
+            return false;
         }
     }
     if(s2p->portal_to_room < 0)
     {
-        s2p = Sector_CheckAlternateRoom(s2p);
+        s2p = s2p->checkAlternateRoom();
         if(s2p->portal_to_room < 0)
         {
-            return 0;
+            return false;
         }
     }
 
-    if((Sector_CheckPortalPointer(s1p) == Sector_CheckBaseRoom(s1)) && (Sector_CheckPortalPointer(s2p) == Sector_CheckBaseRoom(s2)) ||
-       (Sector_CheckPortalPointer(s1p) == Sector_CheckAlternateRoom(s1)) && (Sector_CheckPortalPointer(s2p) == Sector_CheckAlternateRoom(s2)))
+    if((s1p->checkPortalPointer() == s1->checkBaseRoom()) && (s2p->checkPortalPointer() == s2->checkBaseRoom()) ||
+       (s1p->checkPortalPointer() == s1->checkAlternateRoom()) && (s2p->checkPortalPointer() == s2->checkAlternateRoom()))
     {
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }
 
-
-bool Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, bool ignore_doors)
+bool RoomSector::similarCeiling(RoomSector* s2, bool ignore_doors)
 {
-    if(!s1 || !s2) return false;
-    if( s1 ==  s2) return true;
+    if(!s2) return false;
+    if( this == s2 ) return true;
 
-    if( (s1->floor != s2->floor) ||
-        (s1->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (!ignore_doors && (s1->sector_below || s2->sector_below))     )
-          return false;
-
-    for(int i = 0; i < 4; i++)
-    {
-        if(s1->floor_corners->m_floats[2] != s2->floor_corners->m_floats[2]) return false;
-    }
-
-    return true;
-}
-
-
-bool Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, bool ignore_doors)
-{
-    if(!s1 || !s2) return false;
-    if( s1 ==  s2) return true;
-
-    if( (s1->ceiling != s2->ceiling) ||
-        (s1->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+    if( (ceiling != s2->ceiling) ||
+        (ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (!ignore_doors && (s1->sector_above || s2->sector_above))       )
+        (!ignore_doors && (sector_above || s2->sector_above))       )
           return false;
 
     for(int i = 0; i < 4; i++)
     {
-        if(s1->ceiling_corners->m_floats[2] != s2->ceiling_corners->m_floats[2]) return false;
+        if(ceiling_corners->m_floats[2] != s2->ceiling_corners->m_floats[2]) return false;
     }
 
     return true;
 }
 
-btVector3 Sector_HighestFloorCorner(room_sector_p rs)
+bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors)
 {
-    btVector3 r1 = (rs->floor_corners[0].m_floats[2] > rs->floor_corners[1].m_floats[2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
-    btVector3 r2 = (rs->floor_corners[2].m_floats[2] > rs->floor_corners[3].m_floats[2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
+    if(!s2) return false;
+    if( this == s2 ) return true;
 
-    return (r1.m_floats[2] > r2.m_floats[2])?(r1):(r2);
-}
+    if( (floor != s2->floor) ||
+        (floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
+        (!ignore_doors && (sector_below || s2->sector_below))     )
+          return false;
 
-btVector3 Sector_LowestCeilingCorner(room_sector_p rs)
-{
-    btVector3 r1 = (rs->ceiling_corners[0].m_floats[2] > rs->ceiling_corners[1].m_floats[2])?(rs->ceiling_corners[1]):(rs->ceiling_corners[0]);
-    btVector3 r2 = (rs->ceiling_corners[2].m_floats[2] > rs->ceiling_corners[3].m_floats[2])?(rs->ceiling_corners[3]):(rs->ceiling_corners[2]);
-
-    return (r1.m_floats[2] > r2.m_floats[2])?(r2):(r1);
-}
-
-btVector3 Sector_GetFloorPoint(room_sector_p rs)
-{
-    return Sector_HighestFloorCorner(Sector_GetLowest(rs));
-}
-
-btVector3 Sector_GetCeilingPoint(room_sector_p rs)
-{
-    return Sector_LowestCeilingCorner(Sector_GetHighest(rs));
-}
-
-int Room_IsOverlapped(room_p r0, room_p r1)
-{
-    if((r0 == r1) || (r0 == r1->alternate_room) || (r0->alternate_room == r1))
+    for(int i = 0; i < 4; i++)
     {
-        return 0;
+        if(floor_corners->m_floats[2] != s2->floor_corners->m_floats[2]) return false;
     }
 
-    if(r0->bb_min[0] >= r1->bb_max[0] || r0->bb_max[0] <= r1->bb_min[0] ||
-       r0->bb_min[1] >= r1->bb_max[1] || r0->bb_max[1] <= r1->bb_min[1] ||
-       r0->bb_min[2] >= r1->bb_max[2] || r0->bb_max[2] <= r1->bb_min[2])
+    return true;
+}
+
+btVector3 Sector_HighestFloorCorner(RoomSector* rs)
+{
+    btVector3 r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
+    btVector3 r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
+
+    return (r1[2] > r2[2])?(r1):(r2);
+}
+
+btVector3 Sector_LowestCeilingCorner(RoomSector* rs)
+{
+    btVector3 r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[1]):(rs->ceiling_corners[0]);
+    btVector3 r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[3]):(rs->ceiling_corners[2]);
+
+    return (r1[2] > r2[2])?(r2):(r1);
+}
+
+btVector3 RoomSector::getFloorPoint()
+{
+    return Sector_HighestFloorCorner(getLowestSector());
+}
+
+btVector3 RoomSector::getCeilingPoint()
+{
+    return Sector_LowestCeilingCorner(getHighestSector());
+}
+
+bool Room::isOverlapped(Room* r1)
+{
+    if((this == r1) || (this == r1->alternate_room.get()) || (alternate_room.get() == r1))
     {
-        return 0;
+        return false;
     }
 
-    return !Room_IsJoined(r0, r1);
+    if(bb_min[0] >= r1->bb_max[0] || bb_max[0] <= r1->bb_min[0] ||
+       bb_min[1] >= r1->bb_max[1] || bb_max[1] <= r1->bb_min[1] ||
+       bb_min[2] >= r1->bb_max[2] || bb_max[2] <= r1->bb_min[2])
+    {
+        return false;
+    }
+
+    return !isJoined(r1);
 }
 
 
-void World_Prepare(world_p world)
+void World::prepare()
 {
-    world->id = 0;
-    world->name = NULL;
-    world->type = 0x00;
-    world->meshes = NULL;
-    world->meshes_count = 0;
-    world->sprites = NULL;
-    world->sprites_count = 0;
-    world->room_count = 0;
-    world->rooms = 0;
-    world->flip_map = NULL;
-    world->flip_state = NULL;
-    world->flip_count = 0;
-    world->textures = NULL;
-    world->type = 0;
-    world->entity_tree = NULL;
-    world->items_tree = NULL;
-    world->Character = NULL;
+    id = 0;
+    name = NULL;
+    type = 0x00;
+    meshes.clear();
+    sprites.clear();
+    rooms.clear();
+    flip_data.clear();
+    textures.clear();
+    entity_tree.clear();
+    items_tree.clear();
+    character.reset();
 
-    world->audio_sources = NULL;
-    world->audio_sources_count = 0;
-    world->audio_buffers = NULL;
-    world->audio_buffers_count = 0;
-    world->audio_effects = NULL;
-    world->audio_effects_count = 0;
-    world->anim_sequences = NULL;
-    world->anim_sequences_count = 0;
-    world->stream_tracks = NULL;
-    world->stream_tracks_count = 0;
-    world->stream_track_map = NULL;
-    world->stream_track_map_count = 0;
+    audio_sources.clear();
+    audio_buffers.clear();
+    audio_effects.clear();
+    anim_sequences.clear();
+    stream_tracks.clear();
+    stream_track_map.clear();
 
-    world->tex_count = 0;
-    world->textures = 0;
-    world->room_boxes = NULL;
-    world->room_box_count = 0;
-    world->cameras_sinks = NULL;
-    world->cameras_sinks_count = 0;
-    world->skeletal_models = NULL;
-    world->skeletal_model_count = 0;
-    world->sky_box = NULL;
-    world->anim_commands = NULL;
-    world->anim_commands_count = 0;
+    room_boxes.clear();
+    cameras_sinks.clear();
+    skeletal_models.clear();
+    sky_box = NULL;
+    anim_commands.clear();
 }
 
 
-void World_Empty(world_p world)
+void World::empty()
 {
-    extern engine_container_p last_cont;
+    extern EngineContainer* last_cont;
 
     last_cont = NULL;
     Engine_LuaClearTasks();
@@ -526,16 +437,14 @@ void World_Empty(world_p world)
         main_inventory_manager->setItemsType(1);                                // see base items
     }
 
-    if(world->Character != NULL)
+    if(character)
     {
-        world->Character->self->room = NULL;
-        world->Character->self->next = NULL;
-        world->Character->current_sector = NULL;
+        character->m_self->room = nullptr;
+        character->m_currentSector = nullptr;
     }
 
     /* entity empty must be done before rooms destroy */
-    RB_Free(world->entity_tree);
-    world->entity_tree = NULL;
+    entity_tree.clear();
 
     /* Now we can delete bullet misc */
     if(bt_engine_dynamicsWorld != NULL)
@@ -546,7 +455,7 @@ void World_Empty(world_p world)
             btRigidBody* body = btRigidBody::upcast(obj);
             if(body != NULL)
             {
-                engine_container_p cont = (engine_container_p)body->getUserPointer();
+                EngineContainer* cont = (EngineContainer*)body->getUserPointer();
                 body->setUserPointer(NULL);
 
                 if(cont && (cont->object_type == OBJECT_BULLET_MISC))
@@ -572,232 +481,131 @@ void World_Empty(world_p world)
         }
     }
 
-    for(uint32_t i=0;i<world->room_count;i++)
+    for(auto room : rooms)
     {
-        Room_Empty(world->rooms+i);
+        room->empty();
     }
-    free(world->rooms);
-    world->rooms = NULL;
+    rooms.clear();
 
-    free(world->flip_map);
-    free(world->flip_state);
-    world->flip_map = NULL;
-    world->flip_state = NULL;
-    world->flip_count = 0;
+    flip_data.clear();
 
-    if(world->room_box_count)
-    {
-        free(world->room_boxes);
-        world->room_boxes = NULL;
-        world->room_box_count = 0;
-    }
+    room_boxes.clear();
 
-    if(world->cameras_sinks_count)
-    {
-        free(world->cameras_sinks);
-        world->cameras_sinks = NULL;
-        world->cameras_sinks_count = 0;
-    }
+    cameras_sinks.clear();
 
     /*sprite empty*/
-    if(world->sprites_count)
-    {
-        free(world->sprites);
-        world->sprites = NULL;
-        world->sprites_count = 0;
-    }
+    sprites.clear();
 
     /*items empty*/
-    RB_Free(world->items_tree);
-    world->items_tree = NULL;
+    items_tree.clear();
 
-    if(world->Character)
-    {
-        Entity_Clear(world->Character);
-        free(world->Character);
-        world->Character = NULL;
-    }
+    character.reset();
 
-    if(world->skeletal_model_count)
-    {
-        for(uint32_t i=0;i<world->skeletal_model_count;i++)
-        {
-            SkeletalModel_Clear(world->skeletal_models+i);
-        }
-        free(world->skeletal_models);
-        world->skeletal_models = NULL;
-        world->skeletal_model_count = 0;
-    }
+    skeletal_models.clear();
 
     /*mesh empty*/
 
-    if(world->meshes_count)
-    {
-        for(uint32_t i=0;i<world->meshes_count;i++)
-        {
-            BaseMesh_Clear(world->meshes+i);
-        }
-        free(world->meshes);
-        world->meshes = NULL;
-        world->meshes_count = 0;
-    }
+    meshes.clear();
 
-    if(world->tex_count)
-    {
-        glDeleteTextures(world->tex_count ,world->textures);
-        world->tex_count = 0;
-        free(world->textures);
-        world->textures = NULL;
-    }
+    glDeleteTextures(textures.size() ,textures.data());
+    textures.clear();
 
-    if(world->tex_atlas)
-    {
-        delete world->tex_atlas;
-        world->tex_atlas = NULL;
-    }
+    tex_atlas.reset();
 
-    if(world->anim_sequences_count)
-    {
-        for(uint32_t i=0;i < world->anim_sequences_count;i++)
-        {
-            if(world->anim_sequences[i].frames_count != 0)
-            {
-                free(world->anim_sequences[i].frame_list);
-                world->anim_sequences[i].frame_list = NULL;
-                free(world->anim_sequences[i].frames);
-                world->anim_sequences[i].frames = NULL;
-            }
-            world->anim_sequences[i].frames_count = 0;
-        }
-        world->anim_sequences_count = 0;
-        free(world->anim_sequences);
-        world->anim_sequences = NULL;
-    }
+    anim_sequences.clear();
 }
 
 
-int compEntityEQ(void *x, void *y)
+uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const btVector3* pos, const btVector3* ang, int32_t id)
 {
-    return (*((uint32_t*)x) == *((uint32_t*)y));
-}
-
-
-int compEntityLT(void *x, void *y)
-{
-    return (*((uint32_t*)x) < *((uint32_t*)y));
-}
-
-
-void RBEntityFree(void *x)
-{
-    Entity_Clear((entity_p)x);
-    free(x);
-}
-
-
-void RBItemFree(void *x)
-{
-    free(((base_item_p)x)->bf->bone_tags);
-    free(((base_item_p)x)->bf);
-    free(x);
-}
-
-
-uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3], btScalar ang[3], int32_t id)
-{
-    if(engine_world.entity_tree != NULL)
+    if(!entity_tree.empty())
     {
-        skeletal_model_p model = World_GetModelByID(&engine_world, model_id);
+        SkeletalModel* model = getModelByID(model_id);
         if(model != NULL)
         {
-            entity_p ent = World_GetEntityByID(&engine_world, id);
-            RedBlackNode_p node = engine_world.entity_tree->root;
+            std::shared_ptr<Entity> ent = getEntityByID(id);
 
             if(ent != NULL)
             {
                 if(pos != NULL)
                 {
-                    vec3_copy(ent->transform+12, pos);
+                    ent->m_transform.getOrigin() = *pos;
                 }
                 if(ang != NULL)
                 {
-                    vec3_copy(ent->angles, ang);
-                    Entity_UpdateTransform(ent);
+                    ent->m_angles = *ang;
+                    ent->updateTransform();
                 }
-                if(room_id < engine_world.room_count)
+                if(room_id < rooms.size())
                 {
-                    ent->self->room = engine_world.rooms + room_id;
-                    ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
+                    ent->m_self->room = rooms[ room_id ].get();
+                    ent->m_currentSector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
                 }
                 else
                 {
-                    ent->self->room = NULL;
+                    ent->m_self->room = NULL;
                 }
 
-                return ent->id;
+                return ent->m_id;
             }
 
-            ent = Entity_Create();
+            ent = std::make_shared<Entity>();
 
             if(id < 0)
             {
-                ent->id = 0;
-                while(node != NULL)
-                {
-                    ent->id = *((uint32_t*)node->key) + 1;
-                    node = node->right;
-                }
+                ent->m_id = entity_tree.size();
+                entity_tree[id] = ent;
             }
             else
             {
-                ent->id = id;
+                ent->m_id = id;
             }
 
             if(pos != NULL)
             {
-                vec3_copy(ent->transform+12, pos);
+                ent->m_transform.getOrigin() = *pos;
             }
             if(ang != NULL)
             {
-                vec3_copy(ent->angles, ang);
-                Entity_UpdateTransform(ent);
+                ent->m_angles = *ang;
+                ent->updateTransform();
             }
-            if(room_id < engine_world.room_count)
+            if(room_id < rooms.size())
             {
-                ent->self->room = engine_world.rooms + room_id;
-                ent->current_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
+                ent->m_self->room = rooms[ room_id ].get();
+                ent->m_currentSector = ent->m_self->room->getSectorRaw(ent->m_transform.getOrigin());
             }
             else
             {
-                ent->self->room = NULL;
+                ent->m_self->room = NULL;
             }
 
-            ent->type_flags     = ENTITY_TYPE_SPAWNED;
-            ent->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
-            ent->trigger_layout = 0x00;
-            ent->OCB            = 0x00;
-            ent->timer          = 0.0;
+            ent->m_typeFlags     = ENTITY_TYPE_SPAWNED;
+            ent->m_active = ent->m_enabled = ent->m_visible = true;
+            ent->m_triggerLayout = 0x00;
+            ent->m_OCB            = 0x00;
+            ent->m_timer          = 0.0;
 
-            ent->self->collision_type = COLLISION_NONE;
-            ent->self->collision_shape = COLLISION_SHAPE_TRIMESH;
-            ent->move_type          = 0x0000;
-            ent->inertia_linear     = 0.0;
-            ent->inertia_angular[0] = 0.0;
-            ent->inertia_angular[1] = 0.0;
-            ent->move_type          = 0;
+            ent->m_self->collision_type = COLLISION_NONE;
+            ent->m_self->collision_shape = COLLISION_SHAPE_TRIMESH;
+            ent->m_moveType          = 0x0000;
+            ent->m_inertiaLinear     = 0.0;
+            ent->m_inertiaAngular[0] = 0.0;
+            ent->m_inertiaAngular[1] = 0.0;
+            ent->m_moveType          = 0;
 
-            SSBoneFrame_CreateFromModel(&ent->bf, model);
-            Entity_SetAnimation(ent, 0, 0);                                     // Set zero animation and zero frame
-            BT_GenEntityRigidBody(ent);
+            ent->m_bf.fromModel(model);
+            ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
+            ent->genEntityRigidBody();
 
-            Entity_RebuildBV(ent);
-            if(ent->self->room != NULL)
+            ent->rebuildBV();
+            if(ent->m_self->room != NULL)
             {
-                Room_AddEntity(ent->self->room, ent);
+                ent->m_self->room->addEntity(ent.get());
             }
-            World_AddEntity(&engine_world, ent);
+            addEntity(ent);
 
-            return ent->id;
+            return ent->m_id;
         }
     }
 
@@ -805,63 +613,36 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, btScalar pos[3],
 }
 
 
-struct entity_s *World_GetEntityByID(world_p world, uint32_t id)
+std::shared_ptr<Entity> World::getEntityByID(uint32_t id)
 {
-    entity_p ent = NULL;
-    RedBlackNode_p node;
+    auto it = entity_tree.find(id);
+    if(it==entity_tree.end())
+        return nullptr;
+    else
+        return it->second;
+}
 
-    if((world == NULL) || (world->entity_tree == NULL))
-    {
-        return NULL;
-    }
-
-    if((world->Character != NULL) && (world->Character->id == id))
-    {
-        return world->Character;
-    }
-
-    node = RB_SearchNode(&id, world->entity_tree);
-    if(node != NULL)
-    {
-        ent = (entity_p)node->data;
-    }
-
-    return ent;
+std::shared_ptr<Character> World::getCharacterByID(uint32_t id) {
+    return std::dynamic_pointer_cast<Character>(getEntityByID(id));
 }
 
 
-struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id)
+std::shared_ptr<BaseItem> World::getBaseItemByID(uint32_t id)
 {
-    base_item_p item = NULL;
-    RedBlackNode_p node;
-
-    if((world == NULL) || (world->items_tree == NULL))
-    {
-        return NULL;
-    }
-
-    node = RB_SearchNode(&id, world->items_tree);
-    if(node != NULL)
-    {
-        item = (base_item_p)node->data;
-    }
-
-    return item;
+    auto it = items_tree.find(id);
+    if(it==items_tree.end())
+        return nullptr;
+    else
+        return it->second;
 }
 
 
-inline int Room_IsPointIn(room_p room, btScalar dot[3])
-{
-    return (dot[0] >= room->bb_min[0]) && (dot[0] < room->bb_max[0]) &&
-           (dot[1] >= room->bb_min[1]) && (dot[1] < room->bb_max[1]) &&
-           (dot[2] >= room->bb_min[2]) && (dot[2] < room->bb_max[2]);
-}
 
 
-room_p Room_FindPos(btScalar pos[3])
+
+std::shared_ptr<Room> World::findRoomByPosition(const btVector3& pos)
 {
-    room_p r = engine_world.rooms;
-    for(uint32_t i=0;i<engine_world.room_count;i++,r++)
+    for(auto r : rooms)
     {
         if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
@@ -871,15 +652,15 @@ room_p Room_FindPos(btScalar pos[3])
             return r;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 
-room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room)
+Room* Room_FindPosCogerrence(const btVector3 &new_pos, Room* room)
 {
-    if(room == NULL)
+    if(room == nullptr)
     {
-        return Room_FindPos(new_pos);
+        return engine_world.findRoomByPosition(new_pos).get();
     }
 
     if(room->active &&
@@ -892,71 +673,66 @@ room_p Room_FindPosCogerrence(btScalar new_pos[3], room_p room)
         }
         else if(new_pos[2] >= room->bb_max[2])
         {
-            room_sector_p orig_sector = Room_GetSectorRaw(room, new_pos);
+            RoomSector* orig_sector = room->getSectorRaw(new_pos);
             if(orig_sector->sector_above != NULL)
             {
-                return Room_CheckFlip(orig_sector->sector_above->owner_room);
+                return orig_sector->sector_above->owner_room->checkFlip();
             }
         }
         else if(new_pos[2] < room->bb_min[2])
         {
-            room_sector_p orig_sector = Room_GetSectorRaw(room, new_pos);
+            RoomSector* orig_sector = room->getSectorRaw(new_pos);
             if(orig_sector->sector_below != NULL)
             {
-                return Room_CheckFlip(orig_sector->sector_below->owner_room);
+                return orig_sector->sector_below->owner_room->checkFlip();
             }
         }
     }
 
-    room_sector_p new_sector = Room_GetSectorRaw(room, new_pos);
+    RoomSector* new_sector = room->getSectorRaw(new_pos);
     if((new_sector != NULL) && (new_sector->portal_to_room >= 0))
     {
-        return Room_CheckFlip(engine_world.rooms + new_sector->portal_to_room);
+        return engine_world.rooms[new_sector->portal_to_room]->checkFlip();
     }
 
-    for(uint16_t i=0;i<room->near_room_list_size;i++)
+    for(const std::shared_ptr<Room>& r : room->near_room_list)
     {
-        room_p r = room->near_room_list[i];
         if(r->active &&
            (new_pos[0] >= r->bb_min[0]) && (new_pos[0] < r->bb_max[0]) &&
            (new_pos[1] >= r->bb_min[1]) && (new_pos[1] < r->bb_max[1]) &&
            (new_pos[2] >= r->bb_min[2]) && (new_pos[2] < r->bb_max[2]))
         {
-            return r;
+            return r.get();
         }
     }
 
-    return Room_FindPos(new_pos);
+    return engine_world.findRoomByPosition(new_pos).get();
 }
 
 
-room_p Room_GetByID(world_p w, unsigned int ID)
+std::shared_ptr<Room> World::getByID(unsigned int ID)
 {
-    room_p r = w->rooms;
-    for(uint32_t i=0;i<w->room_count;i++,r++)
+    for(auto r : rooms)
     {
         if(ID == r->id)
         {
             return r;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 
-room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3])
+RoomSector* Room::getSectorRaw(const btVector3& pos)
 {
-    int x, y;
-    room_sector_p ret = NULL;
-
-    if((room == NULL) || !room->active)
+    if(!active)
     {
         return NULL;
     }
 
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
-    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
+    int x = (int)(pos[0] - transform.getOrigin()[0]) / 1024;
+    int y = (int)(pos[1] - transform.getOrigin()[1]) / 1024;
+    if(x < 0 || x >= sectors_x || y < 0 || y >= sectors_y)
     {
         return NULL;
     }
@@ -964,19 +740,18 @@ room_sector_p Room_GetSectorRaw(room_p room, btScalar pos[3])
      * column index system
      * X - column number, Y - string number
      */
-    ret = room->sectors + x * room->sectors_y + y;
-    return ret;
+    return &sectors[ x * sectors_y + y ];
 }
 
 
-room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3])
+RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, btScalar pos[3])
 {
     int x, y;
-    room_sector_p ret = NULL;
+    RoomSector* ret = NULL;
 
     if(room != NULL)
     {
-        if(room->active == 0)
+        if(!room->active)
         {
             if((room->base_room != NULL) && (room->base_room->active))
             {
@@ -998,8 +773,8 @@ room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3])
         return NULL;
     }
 
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
+    x = (int)(pos[0] - room->transform.getOrigin()[0]) / 1024;
+    y = (int)(pos[1] - room->transform.getOrigin()[1]) / 1024;
     if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
     {
         return NULL;
@@ -1008,63 +783,42 @@ room_sector_p Room_GetSectorCheckFlip(room_p room, btScalar pos[3])
      * column index system
      * X - column number, Y - string number
      */
-    ret = room->sectors + x * room->sectors_y + y;
+    ret = &room->sectors[ x * room->sectors_y + y ];
     return ret;
 }
 
 
-room_sector_p Sector_CheckFlip(room_sector_p rs)
+RoomSector* RoomSector::checkFlip()
 {
-    if((rs != NULL) && (rs->owner_room->active == 0))
+    if(!owner_room->active)
     {
-        if((rs->owner_room->base_room != NULL) && (rs->owner_room->base_room->active))
+        if((owner_room->base_room != NULL) && (owner_room->base_room->active))
         {
-            room_p r = rs->owner_room->base_room;
-            rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
+            std::shared_ptr<Room> r = owner_room->base_room;
+            return &r->sectors[ index_x * r->sectors_y + index_y ];
         }
-        else if((rs->owner_room->alternate_room != NULL) && (rs->owner_room->alternate_room->active))
+        else if((owner_room->alternate_room != NULL) && (owner_room->alternate_room->active))
         {
-            room_p r = rs->owner_room->alternate_room;
-            rs = r->sectors + rs->index_x * r->sectors_y + rs->index_y;
+            std::shared_ptr<Room> r = owner_room->alternate_room;
+            return &r->sectors[ index_x * r->sectors_y + index_y ];
         }
     }
 
-    return rs;
+    return this;
 }
 
 
-
-
-room_sector_p Sector_GetLowest(room_sector_p sector)
+RoomSector* Room::getSectorXYZ(const btVector3& pos)
 {
-    for(sector=Sector_CheckFlip(sector);sector->sector_below!=NULL;sector=Sector_CheckFlip(sector->sector_below));
-
-    return Sector_CheckFlip(sector);
-}
-
-
-room_sector_p Sector_GetHighest(room_sector_p sector)
-{
-    for(sector=Sector_CheckFlip(sector);sector->sector_above!=NULL;sector=Sector_CheckFlip(sector->sector_above));
-
-    return sector;
-}
-
-
-room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
-{
-    int x, y;
-    room_sector_p ret = NULL;
-
-    room = Room_CheckFlip(room);
+    Room* room = checkFlip();
 
     if(!room->active)
     {
         return NULL;
     }
 
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
+    int x = (int)(pos[0] - room->transform.getOrigin()[0]) / 1024;
+    int y = (int)(pos[1] - room->transform.getOrigin()[1]) / 1024;
     if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
     {
         return NULL;
@@ -1073,195 +827,188 @@ room_sector_p Room_GetSectorXYZ(room_p room, btScalar pos[3])
      * column index system
      * X - column number, Y - string number
      */
-    ret = room->sectors + x * room->sectors_y + y;
+    RoomSector* ret = &room->sectors[ x * room->sectors_y + y ];
 
     /*
      * resolve Z overlapped neighboard rooms. room below has more priority.
      */
     if(ret->sector_below && (ret->sector_below->ceiling >= pos[2]))
     {
-        return Sector_CheckFlip(ret->sector_below);
+        return ret->sector_below->checkFlip();
     }
 
     if(ret->sector_above && (ret->sector_above->floor <= pos[2]))
     {
-        return Sector_CheckFlip(ret->sector_above);
+        return ret->sector_above->checkFlip();
     }
 
     return ret;
 }
 
 
-void Room_Enable(room_p room)
+void Room::enable()
 {
-    if(room->active)
+    if(active)
     {
         return;
     }
 
-    if(room->bt_body != NULL)
+    if(bt_body != NULL)
     {
-        bt_engine_dynamicsWorld->addRigidBody(room->bt_body);
+        bt_engine_dynamicsWorld->addRigidBody(bt_body);
     }
 
-    for(uint32_t i=0;i<room->static_mesh_count;i++)
+    for(auto sm : static_mesh)
     {
-        if(room->static_mesh[i].bt_body != NULL)
+        if(sm->bt_body != NULL)
         {
-            bt_engine_dynamicsWorld->addRigidBody(room->static_mesh[i].bt_body);
+            bt_engine_dynamicsWorld->addRigidBody(sm->bt_body);
         }
     }
 
-    for(engine_container_p cont=room->containers;cont;cont=cont->next)
+    for(const std::shared_ptr<EngineContainer>& cont : containers)
     {
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                Entity_Enable((entity_p)cont->object);
+                static_cast<Entity*>(cont->object)->enable();
                 break;
         }
     }
 
-    room->active = 1;
+    active = true;
 }
 
 
-void Room_Disable(room_p room)
+void Room::disable()
 {
-    if(!room->active)
+    if(!active)
     {
         return;
     }
 
-    if(room->bt_body != NULL)
+    if(bt_body != NULL)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(room->bt_body);
+        bt_engine_dynamicsWorld->removeRigidBody(bt_body);
     }
 
-    for(uint32_t i=0;i<room->static_mesh_count;i++)
+    for(auto sm : static_mesh)
     {
-        if(room->static_mesh[i].bt_body != NULL)
+        if(sm->bt_body != NULL)
         {
-            bt_engine_dynamicsWorld->removeRigidBody(room->static_mesh[i].bt_body);
+            bt_engine_dynamicsWorld->removeRigidBody(sm->bt_body);
         }
     }
 
-    for(engine_container_p cont=room->containers;cont;cont=cont->next)
+    for(const std::shared_ptr<EngineContainer>& cont : containers)
     {
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                Entity_Disable((entity_p)cont->object);
+                static_cast<Entity*>(cont->object)->disable();
                 break;
         }
     }
 
-    room->active = 0;
+    active = false;
 }
 
-void Room_SwapToBase(room_p room)
+void Room::swapToBase()
 {
-    if((room->base_room != NULL) && (room->active == 1))                        //If room is active alternate room
+    if((base_room != NULL) && active)                        //If room is active alternate room
     {
-        Render_CleanList();
-        Room_Disable(room);                             //Disable current room
-        Room_Disable(room->base_room);                  //Paranoid
-        Room_SwapPortals(room, room->base_room);        //Update portals to match this room
-        Room_SwapItems(room, room->base_room);     //Update items to match this room
-        Room_Enable(room->base_room);                   //Enable original room
+        renderer.cleanList();
+        disable();                             //Disable current room
+        base_room->disable();                  //Paranoid
+        swapPortals(base_room);        //Update portals to match this room
+        swapItems(base_room);     //Update items to match this room
+        base_room->enable();                   //Enable original room
     }
 }
 
-void Room_SwapToAlternate(room_p room)
+void Room::swapToAlternate()
 {
-    if((room->alternate_room != NULL) && (room->active == 1))              //If room is active base room
+    if((alternate_room != NULL) && active)              //If room is active base room
     {
-        Render_CleanList();
-        Room_Disable(room);                             //Disable current room
-        Room_Disable(room->alternate_room);             //Paranoid
-        Room_SwapPortals(room, room->alternate_room);   //Update portals to match this room
-        Room_SwapItems(room, room->alternate_room);          //Update items to match this room
-        Room_Enable(room->alternate_room);                              //Enable base room
+        renderer.cleanList();
+        disable();                             //Disable current room
+        alternate_room->disable();             //Paranoid
+        swapPortals(alternate_room);   //Update portals to match this room
+        swapItems(alternate_room);          //Update items to match this room
+        alternate_room->enable();                              //Enable base room
     }
 }
 
-room_p Room_CheckFlip(room_p r)
+Room* Room::checkFlip()
 {
-    if((r != NULL) && (r->active == 0))
+    if(!active)
     {
-        if((r->base_room != NULL) && (r->base_room->active))
+        if((base_room != NULL) && (base_room->active))
         {
-            r = r->base_room;
+            return base_room.get();
         }
-        else if((r->alternate_room != NULL) && (r->alternate_room->active))
+        else if((alternate_room != NULL) && (alternate_room->active))
         {
-            r = r->alternate_room;
+            return alternate_room.get();
         }
     }
 
-    return r;
+    return this;
 }
 
-void Room_SwapPortals(room_p room, room_p dest_room)
+void Room::swapPortals(std::shared_ptr<Room> dest_room)
 {
     //Update portals in room rooms
-    for(uint32_t i=0;i<engine_world.room_count;i++)//For every room in the world itself
+    for(auto r : engine_world.rooms)//For every room in the world itself
     {
-        for(uint16_t j=0;j<engine_world.rooms[i].portal_count;j++)//For every portal in this room
+        for(Portal& p : r->portals) //For every portal in this room
         {
-            if(engine_world.rooms[i].portals[j].dest_room->id == room->id)//If a portal is linked to the input room
+            if(p.dest_room->id == id)//If a portal is linked to the input room
             {
-                engine_world.rooms[i].portals[j].dest_room = dest_room;//The portal destination room is the destination room!
-                //Con_Printf("The current room %d! has room %d joined to it!", room->id, i);
+                p.dest_room = dest_room;//The portal destination room is the destination room!
+                //Con_Printf("The current room %d! has room %d joined to it!", id, i);
             }
         }
-        Room_BuildNearRoomsList(&engine_world.rooms[i]);//Rebuild room near list!
+        r->buildNearRoomsList();//Rebuild room near list!
     }
 }
 
-void Room_SwapItems(room_p room, room_p dest_room)
+void Room::swapItems(std::shared_ptr<Room> dest_room)
 {
-    engine_container_p t;
-
-    for(t=room->containers;t!=NULL;t=t->next)
+    for(std::shared_ptr<EngineContainer> t : containers)
     {
-        t->room = dest_room;
+        t->room = dest_room.get();
     }
 
-    for(t=dest_room->containers;t!=NULL;t=t->next)
+    for(std::shared_ptr<EngineContainer> t : dest_room->containers)
     {
-        t->room = room;
+        t->room = this;
     }
 
-    SWAPT(room->containers, dest_room->containers, t);
+    std::swap(containers, dest_room->containers);
 }
 
-int World_AddEntity(world_p world, struct entity_s *entity)
+int World::addEntity(std::shared_ptr<Entity> entity)
 {
-    RB_InsertIgnore(&entity->id, entity, world->entity_tree);
+    if(entity_tree.find(entity->m_id) != entity_tree.end())
+        return 1;
+    entity_tree[entity->m_id] = entity;
     return 1;
 }
 
 
-int World_DeleteEntity(world_p world, struct entity_s *entity)
+int World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
-    RB_Delete(world->entity_tree, RB_SearchNode(&entity->id, world->entity_tree));
-    return 1;
-}
-
-
-int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
-{
-    skeletal_model_p model = World_GetModelByID(world, model_id);
-    if((model == NULL) || (world->items_tree == NULL))
+    SkeletalModel* model = getModelByID(model_id);
+    if((model == NULL) || (items_tree.empty()))
     {
         return 0;
     }
 
-    ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
-    SSBoneFrame_CreateFromModel(bf, model);
+    std::unique_ptr<SSBoneFrame> bf(new SSBoneFrame());
+    bf->fromModel(model);
 
-    base_item_p item = (base_item_p)malloc(sizeof(base_item_t));
+    auto item = std::make_shared<BaseItem>();
     item->id = item_id;
     item->world_model_id = world_model_id;
     item->type = type;
@@ -1271,55 +1018,46 @@ int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_
     {
         strncpy(item->name, name, 64);
     }
-    item->bf = bf;
+    item->bf = std::move(bf);
 
-    RB_InsertReplace(&item->id, item, world->items_tree);
+    items_tree[item->id] = item;
 
     return 1;
 }
 
 
-int World_DeleteItem(world_p world, uint32_t item_id)
+int World::deleteItem(uint32_t item_id)
 {
-    RB_Delete(world->items_tree, RB_SearchNode(&item_id, world->items_tree));
+    items_tree.erase(items_tree.find(item_id));
     return 1;
 }
 
 
-struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id)
+SkeletalModel* World::getModelByID(uint32_t id)
 {
-    long int i, min, max;
+    if(skeletal_models.front().id == id) {
+        return &skeletal_models.front();
+    }
+    if(skeletal_models.back().id == id) {
+        return &skeletal_models.back();
+    }
 
-    min = 0;
-    max = w->skeletal_model_count - 1;
-    if(w->skeletal_models[min].id == id)
-    {
-        return w->skeletal_models + min;
-    }
-    if(w->skeletal_models[max].id == id)
-    {
-        return w->skeletal_models + max;
-    }
-    do
-    {
-        i = (min + max) / 2;
-        if(w->skeletal_models[i].id == id)
+    size_t min = 0;
+    size_t max = skeletal_models.size()-1;
+    do {
+        auto i = (min + max) / 2;
+        if(skeletal_models[i].id == id)
         {
-            return w->skeletal_models + i;
+            return &skeletal_models[i];
         }
 
-        if(w->skeletal_models[i].id < id)
-        {
+        if(skeletal_models[i].id < id)
             min = i;
-        }
         else
-        {
             max = i;
-        }
-    }
-    while(min < max - 1);
+    } while(min < max - 1);
 
-    return NULL;
+    return nullptr;
 }
 
 
@@ -1327,14 +1065,13 @@ struct skeletal_model_s* World_GetModelByID(world_p w, uint32_t id)
  * find sprite by ID.
  * not a binary search - sprites may be not sorted by ID
  */
-struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world)
+Sprite* World::getSpriteByID(unsigned int ID)
 {
-    sprite_p sp = world->sprites;
-    for(uint32_t i=0;i<world->sprites_count;i++,sp++)
+    for(Sprite& sp : sprites)
     {
-        if(sp->id == ID)
+        if(sp.id == ID)
         {
-            return sp;
+            return &sp;
         }
     }
 
@@ -1345,63 +1082,188 @@ struct sprite_s* World_GetSpriteByID(unsigned int ID, world_p world)
 /*
  * Check for join portals existing
  */
-int Room_IsJoined(room_p r1, room_p r2)
+bool Room::isJoined(Room* r2)
 {
-    portal_p p = r1->portals;
-    for(uint16_t i=0;i<r1->portal_count;i++,p++)
+    for(const Portal& p : portals)
     {
-        if(p->dest_room->id == r2->id)
+        if(p.dest_room && p.dest_room->id == r2->id)
         {
-            return 1;
+            return true;
         }
     }
 
-    p = r2->portals;
-    for(uint16_t i=0;i<r2->portal_count;i++,p++)
+    for(const Portal& p : r2->portals)
     {
-        if(p->dest_room->id == r1->id)
+        if(p.dest_room && p.dest_room->id == id)
         {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
-void Room_BuildNearRoomsList(room_p room)
+void Room::buildNearRoomsList()
 {
-    room->near_room_list_size = 0;
+    near_room_list.clear();
 
-    portal_p p = room->portals;
-    for(uint16_t i=0;i<room->portal_count;i++,p++)
+    for(const Portal& p : portals)
     {
-        Room_AddToNearRoomsList(room, p->dest_room);
+        addToNearRoomsList(p.dest_room);
     }
 
-    uint16_t nc1 = room->near_room_list_size;
-
-    for(uint16_t i=0;i<nc1;i++)
+    for(const std::shared_ptr<Room>& r : near_room_list)
     {
-        room_p r = room->near_room_list[i];
-        p = r->portals;
-        for(uint16_t j=0;j<r->portal_count;j++,p++)
+        if(!r)
+            continue;
+
+        for(const Portal& p : r->portals)
         {
-            Room_AddToNearRoomsList(room, p->dest_room);
+            addToNearRoomsList(p.dest_room);
         }
     }
 }
 
-void Room_BuildOverlappedRoomsList(room_p room)
+void Room::buildOverlappedRoomsList()
 {
-    room->overlapped_room_list_size = 0;
+    overlapped_room_list.clear();
 
-    for(uint32_t i=0;i<engine_world.room_count;i++)
+    for(auto r : engine_world.rooms)
     {
-        if(Room_IsOverlapped(room, engine_world.rooms+i))
+        if(isOverlapped(r.get()))
         {
-            room->overlapped_room_list[room->overlapped_room_list_size] = engine_world.rooms+i;
-            room->overlapped_room_list_size++;
+            overlapped_room_list.push_back(r);
         }
     }
 }
 
+BaseItem::~BaseItem() {
+    bf->bone_tags.clear();
+}
+
+void World::updateAnimTextures()                                                // This function is used for updating global animated texture frame
+{
+    for(AnimSeq& seq : anim_sequences)
+    {
+        if(seq.frame_lock)
+        {
+            continue;
+        }
+
+        seq.frame_time += engine_frame_time;
+        if(seq.frame_time >= seq.frame_rate)
+        {
+            int j = (seq.frame_time / seq.frame_rate);
+            seq.frame_time -= (btScalar)j * seq.frame_rate;
+
+            switch(seq.anim_type)
+            {
+                case TR_ANIMTEXTURE_REVERSE:
+                    if(seq.reverse_direction)
+                    {
+                        if(seq.current_frame == 0)
+                        {
+                            seq.current_frame++;
+                            seq.reverse_direction = false;
+                        }
+                        else if(seq.current_frame > 0)
+                        {
+                            seq.current_frame--;
+                        }
+                    }
+                    else
+                    {
+                        if(seq.current_frame == seq.frames.size() - 1)
+                        {
+                            seq.current_frame--;
+                            seq.reverse_direction = true;
+                        }
+                        else if(seq.current_frame < seq.frames.size() - 1)
+                        {
+                            seq.current_frame++;
+                        }
+                        seq.current_frame %= seq.frames.size();                ///@PARANOID
+                    }
+                    break;
+
+                case TR_ANIMTEXTURE_FORWARD:                                    // inversed in polygon anim. texture frames
+                case TR_ANIMTEXTURE_BACKWARD:
+                    seq.current_frame++;
+                    seq.current_frame %= seq.frames.size();
+                    break;
+            };
+        }
+    }
+}
+
+void World::calculateWaterTint(std::array<float,4>* tint, bool fixed_colour)
+{
+    if(version < TR_IV)  // If water room and level is TR1-3
+    {
+        if(version < TR_III)
+        {
+             // Placeholder, color very similar to TR1 PSX ver.
+            if(fixed_colour)
+            {
+                (*tint)[0] = 0.585f;
+                (*tint)[1] = 0.9f;
+                (*tint)[2] = 0.9f;
+                (*tint)[3] = 1.0f;
+            }
+            else
+            {
+                (*tint)[0] *= 0.585f;
+                (*tint)[1] *= 0.9f;
+                (*tint)[2] *= 0.9f;
+            }
+        }
+        else
+        {
+            // TOMB3 - closely matches TOMB3
+            if(fixed_colour)
+            {
+                (*tint)[0] = 0.275f;
+                (*tint)[1] = 0.45f;
+                (*tint)[2] = 0.5f;
+                (*tint)[3] = 1.0f;
+            }
+            else
+            {
+                (*tint)[0] *= 0.275f;
+                (*tint)[1] *= 0.45f;
+                (*tint)[2] *= 0.5f;
+            }
+        }
+    }
+    else
+    {
+        if(fixed_colour)
+        {
+            (*tint)[0] = 1.0f;
+            (*tint)[1] = 1.0f;
+            (*tint)[2] = 1.0f;
+            (*tint)[3] = 1.0f;
+        }
+    }
+}
+
+RoomSector* RoomSector::getLowestSector()
+{
+    RoomSector* lowest_sector = this;
+
+    for(RoomSector* rs=this;rs!=NULL;rs=rs->sector_below)
+    { lowest_sector = rs; }
+
+    return lowest_sector;
+}
+
+
+RoomSector* RoomSector::getHighestSector()
+{
+    RoomSector* highest_sector = this;
+
+    for(RoomSector* rs=this;rs!=NULL;rs=rs->sector_above)
+    { highest_sector = rs; }
+
+    return highest_sector;
+}

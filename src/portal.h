@@ -8,35 +8,43 @@
 #define SPLIT_EMPTY 0x00
 #define SPLIT_SUCCES 0x01
 
-#include <stdint.h>
+#include <cstdint>
+#include <memory>
+#include <vector>
 
-struct camera_s;
-struct room_s;
-struct polygon_s;
-struct render_s;
-struct frustum_s;
+#include "vmath.h"
 
+struct Room;
+struct RoomSector;
 
 /*
  * пока геометрия текущего портала и портала назначения совпадают.
  * далее будет проведена привязка камеры к взаимоориентации порталов
  */
-typedef struct portal_s                                                         
+struct Portal
 {
-    uint16_t vertex_count;     
-    btScalar *vertex;                                                           // Оригинальные вершины портала
-    btScalar norm[4];                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
-    btScalar centre[3];                                                         // центр портала
-    struct room_s *dest_room;                                                   // куда ведет портал
-    struct room_s *current_room;                                                // комната, где нааходится портал
-    unsigned int flag;                                                          // хз, мб потом понадобится
-}portal_t, *portal_p;
+    std::vector<btVector3> vertices;                                                           // Оригинальные вершины портала
+    btVector3 norm;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
+    btVector3 centre;                                                         // центр портала
+    std::shared_ptr<Room> dest_room = nullptr;                                                   // куда ведет портал
+    std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
+    unsigned int flag = 0;                                                          // хз, мб потом понадобится
 
+    Portal(size_t vcount = 0)
+        : vertices(vcount)
+    {
+    }
 
+    ~Portal() = default;
 
-void Portal_InitGlobals();
-portal_p Portal_Create(unsigned int vcount);
-void Portal_Clear(portal_p p);
+    bool isOnSectorTop(RoomSector *sector) const;
+    bool isWayToSector(RoomSector *sector) const;
+    void move(const btVector3 &mv);
+    bool rayIntersect(const btVector3 &dir, const btVector3 &dot);              // проверка на пересечение луча и портала
+
+    void genNormale();
+};
+
 
 /**
  * Draws wireframe of this portal.
@@ -58,13 +66,5 @@ void Portal_Clear(portal_p p);
  *  - Current position will be arbitrary.
  *  - Vertex pointer will be arbitray.
  */
-
-// тут пошли реальные нешуточные функции
-int Portal_IsOnSectorTop(portal_p p, struct room_sector_s *sector);
-int Portal_IsWayToSector(portal_p p, struct room_sector_s *sector);
-void Portal_Move(portal_p p, btScalar mv[3]);
-int Portal_RayIntersect(portal_p p, btScalar dir[3], btScalar dot[3]);              // проверка на пересечение луча и портала
-
-void Portal_GenNormale(portal_p p);
 
 #endif   // PORTAL_H

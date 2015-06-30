@@ -2,17 +2,15 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
-#include <stdint.h>
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
-}
+#include <cstdint>
+#include <lua.hpp>
+
+#include <map>
+#include <memory>
 
 // This is the global game logic refresh interval.
 // All game logic should be refreshed at this rate, including
@@ -21,18 +19,17 @@ extern "C" {
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0 / 60.0)
 
 class VT_Level;
-struct polygon_s;
-struct base_mesh_s;
-struct room_s;
-struct world_s;
-struct camera_s;
-struct entity_s;
-struct room_sector_s;
-struct RedBlackNode_s;
+struct Polygon;
+struct BaseMesh;
+struct Room;
+struct World;
+struct Camera;
+struct Entity;
+struct RoomSector;
 
-class bt_engine_ClosestConvexResultCallback;
+class BtEngineClosestConvexResultCallback;
 
-extern btScalar cam_angles[3];
+extern btVector3 cam_angles;
 
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(lua_State *lua);
@@ -45,15 +42,15 @@ void     Game_Frame(btScalar time);
 void Game_Prepare();
 void Game_LevelTransition(uint16_t level_index);
 
-void Game_ApplyControls(struct entity_s *ent);
+void Game_ApplyControls(std::shared_ptr<Entity> ent);
 
-void Game_UpdateAllEntities(struct RedBlackNode_s *x);
-void Game_LoopEntities(struct RedBlackNode_s *x);
+void Game_UpdateAllEntities(std::map<uint32_t, std::shared_ptr<Entity> >& entities);
+void Game_LoopEntities(std::map<uint32_t, std::shared_ptr<Entity> >& entities);
 void Game_UpdateAI();
 void Game_UpdateCharacters();
 
-void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, btScalar dx, btScalar dz);
-bool Cam_HasHit(bt_engine_ClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
+void Cam_FollowEntity(struct Camera *cam, struct Entity *ent, btScalar dx, btScalar dz);
+bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
 
 #endif
 

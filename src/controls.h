@@ -1,9 +1,7 @@
-
-#ifndef CONTROLS_H
-#define CONTROLS_H
+#pragma once
 
 #include <SDL2/SDL.h>
-#include <stdint.h>
+#include <cstdint>
 
 #define JOY_BUTTON_MASK  1000
 #define JOY_HAT_MASK     1100
@@ -76,15 +74,15 @@ enum AXES {
     AXIS_LASTINDEX
 };
 
-typedef struct control_action_s
+struct ControlAction
 {
     int      primary;
     int      secondary;
     bool     state;
     bool     already_pressed;
-}control_action_t, *control_action_p;
+};
 
-typedef struct control_settings_s
+struct ControlSettings
 {
     float    mouse_sensitivity;
 
@@ -111,8 +109,8 @@ typedef struct control_settings_s
 
     int8_t   joy_axis_map[AXIS_LASTINDEX];      // Axis array for action mapper.
 
-    control_action_s  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
-}control_settings_t, *control_settings_p;
+    ControlAction  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
+};
 
 
 void Controls_PollSDLInput();
@@ -128,5 +126,3 @@ void Controls_JoyHat(int value);
 void Controls_JoyRumble(float power, int time);
 void Controls_RefreshStates();
 void Controls_InitGlobals();
-
-#endif /* CONTROLS_H */

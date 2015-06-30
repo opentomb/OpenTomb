@@ -1,6 +1,5 @@
-
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <sys/time.h>
 
@@ -12,8 +11,8 @@
 #include "gui.h"
 
 
-screen_info_t           screen_info;
-gui_text_line_t         system_fps;
+ScreenInfo screen_info;
+gui_text_line_t system_fps;
 
 
 // =======================================================================
