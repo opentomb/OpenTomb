@@ -1,221 +1,20 @@
-
-#include <math.h>
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "ragdoll.h"
+
+#include <cmath>
+
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <bullet/btBulletDynamicsCommon.h>
+
 #include "vmath.h"
 #include "character_controller.h"
 
-btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
+#include "engine.h"
+#include "entity.h"
+
+
+bool RDSetup::getSetup(int ragdoll_index)
 {
-    btScalar r = bb_max[0] - bb_min[0];
-    btScalar t = bb_max[1] - bb_min[1];
-    r = (t > r)?(r):(t);
-    t = bb_max[2] - bb_min[2];
-    return (t > r)?(r):(t);
-}
-
-bool Ragdoll_Create(entity_p entity, rd_setup_p setup)
-{
-    // No entity, setup or body count overflow - bypass function.
-
-    if( (!entity) || (!setup) ||
-        (setup->body_count > entity->bf.bone_tag_count) )
-    {
-        return false;
-    }
-
-    bool result = true;
-
-    // If ragdoll already exists, overwrite it with new one.
-
-    if(entity->bt.bt_joint_count > 0)
-    {
-        result = Ragdoll_Delete(entity);
-    }
-
-    // Setup bodies.
-    entity->bt.bt_joint_count = 0;
-    // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    Entity_UpdateCurrentBoneFrame(&entity->bf, entity->transform);
-    entity->bt.no_fix_all = 0x00;
-    entity->bt.no_fix_body_parts = 0x00000000;
-    int map_size = entity->bf.animations.model->collision_map_size;             // does not works, strange...
-    entity->bf.animations.model->collision_map_size = entity->bf.animations.model->mesh_count;
-    Entity_FixPenetrations(entity, NULL);
-    entity->bf.animations.model->collision_map_size = map_size;
-
-    for(int i=0; i<setup->body_count; i++)
-    {
-        if( (i >= entity->bf.bone_tag_count) || (entity->bt.bt_body[i] == NULL) )
-        {
-            result = false;
-            continue;   // If body is absent, return false and bypass this body setup.
-        }
-
-        btVector3 inertia (0.0, 0.0, 0.0);
-        btScalar  mass = setup->body_setup[i].mass;
-
-            bt_engine_dynamicsWorld->removeRigidBody(entity->bt.bt_body[i]);
-
-            entity->bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-            entity->bt.bt_body[i]->setMassProps(mass, inertia);
-
-            entity->bt.bt_body[i]->updateInertiaTensor();
-            entity->bt.bt_body[i]->clearForces();
-
-            entity->bt.bt_body[i]->setLinearFactor (btVector3(1.0, 1.0, 1.0));
-            entity->bt.bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
-
-            entity->bt.bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
-            entity->bt.bt_body[i]->setRestitution(setup->body_setup[i].restitution);
-            entity->bt.bt_body[i]->setFriction(setup->body_setup[i].friction);
-            entity->bt.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
-
-            if(entity->bf.bone_tags[i].parent == NULL)
-            {
-                entity->bf.bone_tags[i].mesh_base;
-                btScalar r = getInnerBBRadius(entity->bf.bone_tags[i].mesh_base->bb_min, entity->bf.bone_tags[i].mesh_base->bb_max);
-                entity->bt.bt_body[i]->setCcdMotionThreshold(0.8 * r);
-                entity->bt.bt_body[i]->setCcdSweptSphereRadius(r);
-            }
-    }
-
-    Entity_UpdateRigidBody(entity, 1);
-    for(uint16_t i=0;i<entity->bf.bone_tag_count;i++)
-    {
-        bt_engine_dynamicsWorld->addRigidBody(entity->bt.bt_body[i]);
-        entity->bt.bt_body[i]->activate();
-        entity->bt.bt_body[i]->setLinearVelocity(entity->speed);
-        if(entity->bt.ghostObjects[i])
-        {
-            bt_engine_dynamicsWorld->removeCollisionObject(entity->bt.ghostObjects[i]);
-            bt_engine_dynamicsWorld->addCollisionObject(entity->bt.ghostObjects[i], COLLISION_NONE, COLLISION_NONE);
-        }
-    }
-
-    // Setup constraints.
-    entity->bt.bt_joint_count = setup->joint_count;
-    entity->bt.bt_joints = (btTypedConstraint**)calloc(entity->bt.bt_joint_count, sizeof(btTypedConstraint*));
-
-    for(int i=0; i<entity->bt.bt_joint_count; i++)
-    {
-        if( (setup->joint_setup[i].body_index >= entity->bf.bone_tag_count) ||
-            (entity->bt.bt_body[setup->joint_setup[i].body_index] == NULL) )
-        {
-            result = false;
-            break;       // If body 1 or body 2 are absent, return false and bypass this joint.
-        }
-
-        btTransform localA, localB;
-        ss_bone_tag_p btB = entity->bf.bone_tags + setup->joint_setup[i].body_index;
-        ss_bone_tag_p btA = btB->parent;
-        if(btA == NULL)
-        {
-            result = false;
-            break;
-        }
-#if 0
-        localA.setFromOpenGLMatrix(btB->transform);
-        localB.setIdentity();
-#else
-        localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
-        //localA.setOrigin(setup->joint_setup[i].body1_offset);
-        localA.setOrigin(btVector3(btB->transform[12+0], btB->transform[12+1], btB->transform[12+2]));
-
-        localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
-        //localB.setOrigin(setup->joint_setup[i].body2_offset);
-        localB.setOrigin(btVector3(0.0, 0.0, 0.0));
-#endif
-
-        switch(setup->joint_setup[i].joint_type)
-        {
-            case RD_CONSTRAINT_POINT:
-                {
-                    btPoint2PointConstraint* pointC = new btPoint2PointConstraint(*entity->bt.bt_body[btA->index], *entity->bt.bt_body[btB->index], localA.getOrigin(), localB.getOrigin());
-                    entity->bt.bt_joints[i] = pointC;
-                }
-                break;
-
-            case RD_CONSTRAINT_HINGE:
-                {
-                    btHingeConstraint* hingeC = new btHingeConstraint(*entity->bt.bt_body[btA->index], *entity->bt.bt_body[btB->index], localA, localB);
-                    hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9, 0.3, 0.3);
-                    entity->bt.bt_joints[i] = hingeC;
-                }
-                break;
-
-            case RD_CONSTRAINT_CONE:
-                {
-                    btConeTwistConstraint* coneC = new btConeTwistConstraint(*entity->bt.bt_body[btA->index], *entity->bt.bt_body[btB->index], localA, localB);
-                    coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9, 0.3, 0.7);
-                    entity->bt.bt_joints[i] = coneC;
-                }
-                break;
-        }
-
-        entity->bt.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
-        entity->bt.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
-
-        entity->bt.bt_joints[i]->setDbgDrawSize(64.0);
-        bt_engine_dynamicsWorld->addConstraint(entity->bt.bt_joints[i], true);
-    }
-
-    if(result == false)
-    {
-        Ragdoll_Delete(entity);  // PARANOID: Clean up the mess, if something went wrong.
-    }
-    else
-    {
-        entity->type_flags |=  ENTITY_TYPE_DYNAMIC;
-    }
-    return result;
-}
-
-
-bool Ragdoll_Delete(entity_p entity)
-{
-    if(entity->bt.bt_joint_count == 0) return false;
-
-    for(int i=0; i<entity->bt.bt_joint_count; i++)
-    {
-        if(entity->bt.bt_joints[i] != NULL)
-        {
-            bt_engine_dynamicsWorld->removeConstraint(entity->bt.bt_joints[i]);
-            delete entity->bt.bt_joints[i];
-            entity->bt.bt_joints[i] = NULL;
-        }
-    }
-
-    for(int i=0;i<entity->bf.bone_tag_count;i++)
-    {
-        bt_engine_dynamicsWorld->removeRigidBody(entity->bt.bt_body[i]);
-        entity->bt.bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        bt_engine_dynamicsWorld->addRigidBody(entity->bt.bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-        if(entity->bt.ghostObjects[i])
-        {
-            bt_engine_dynamicsWorld->removeCollisionObject(entity->bt.ghostObjects[i]);
-            bt_engine_dynamicsWorld->addCollisionObject(entity->bt.ghostObjects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
-        }
-    }
-
-    free(entity->bt.bt_joints);
-    entity->bt.bt_joints = NULL;
-    entity->bt.bt_joint_count = 0;
-
-    entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
-
-    return true;
-
-    // NB! Bodies remain in the same state!
-    // To make them static again, additionally call setEntityBodyMass script function.
-}
-
-
-bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
-{
-    if(!setup) return false;
-
     bool result = true;
 
     int top = lua_gettop(engine_lua);
@@ -235,39 +34,32 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                     size_t string_length  = 0;
                     const char* func_name = lua_tolstring(engine_lua, -1, &string_length);
 
-                    setup->hit_func = (char*)calloc(string_length, sizeof(char));
-                    memcpy(setup->hit_func, func_name, string_length * sizeof(char));
+                    hit_func.assign(func_name+0, func_name+string_length);
                 }
                 else { result = false; }
                 lua_pop(engine_lua, 1);
 
-                setup->joint_count = (uint32_t)lua_GetScalarField(engine_lua, "joint_count");
-                setup->body_count  = (uint32_t)lua_GetScalarField(engine_lua, "body_count");
+                joint_setup.resize( (uint32_t)lua_GetScalarField(engine_lua, "joint_count") );
+                body_setup.resize( (uint32_t)lua_GetScalarField(engine_lua, "body_count") );
 
-                setup->joint_cfm   = lua_GetScalarField(engine_lua, "joint_cfm");
-                setup->joint_erp   = lua_GetScalarField(engine_lua, "joint_erp");
+                joint_cfm   = lua_GetScalarField(engine_lua, "joint_cfm");
+                joint_erp   = lua_GetScalarField(engine_lua, "joint_erp");
 
-                if(setup->body_count > 0)
-                {
-                    setup->body_setup  = (rd_body_setup_p)calloc(setup->body_count, sizeof(rd_body_setup_t));
+                if(!body_setup.empty()) {
 
                     lua_getfield(engine_lua, -1, "body");
-                    if(lua_istable(engine_lua, -1))
-                    {
-                        for(int i=0; i<setup->body_count; i++)
-                        {
+                    if(lua_istable(engine_lua, -1)) {
+                        for(size_t i=0; i<body_setup.size(); i++) {
                             lua_rawgeti(engine_lua, -1, i+1);
-                            if(lua_istable(engine_lua, -1))
-                            {
-                                setup->body_setup[i].mass = lua_GetScalarField(engine_lua, "mass");
-                                setup->body_setup[i].restitution = lua_GetScalarField(engine_lua, "restitution");
-                                setup->body_setup[i].friction = lua_GetScalarField(engine_lua, "friction");
+                            if(lua_istable(engine_lua, -1)) {
+                                body_setup[i].mass = lua_GetScalarField(engine_lua, "mass");
+                                body_setup[i].restitution = lua_GetScalarField(engine_lua, "restitution");
+                                body_setup[i].friction = lua_GetScalarField(engine_lua, "friction");
 
                                 lua_getfield(engine_lua, -1, "damping");
-                                if(lua_istable(engine_lua, -1))
-                                {
-                                    setup->body_setup[i].damping[0] = lua_GetScalarField(engine_lua, 1);
-                                    setup->body_setup[i].damping[1] = lua_GetScalarField(engine_lua, 2);
+                                if(lua_istable(engine_lua, -1)) {
+                                    body_setup[i].damping[0] = lua_GetScalarField(engine_lua, 1);
+                                    body_setup[i].damping[1] = lua_GetScalarField(engine_lua, 2);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
@@ -281,67 +73,57 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
                 }
                 else { result = false; }
 
-                if(setup->joint_count > 0)
-                {
-                    setup->joint_setup = (rd_joint_setup_p)calloc(setup->joint_count, sizeof(rd_joint_setup_t));
+                if(!joint_setup.empty()) {
 
                     lua_getfield(engine_lua, -1, "joint");
-                    if(lua_istable(engine_lua, -1))
-                    {
-                        for(int i=0; i<setup->joint_count; i++)
-                        {
+                    if(lua_istable(engine_lua, -1)) {
+                        for(size_t i=0; i<joint_setup.size(); i++) {
                             lua_rawgeti(engine_lua, -1, i+1);
-                            if(lua_istable(engine_lua, -1))
-                            {
-                                setup->joint_setup[i].body_index = (uint16_t)lua_GetScalarField(engine_lua, "body_index");
-                                setup->joint_setup[i].joint_type = (uint16_t)lua_GetScalarField(engine_lua, "joint_type");
+                            if(lua_istable(engine_lua, -1)) {
+                                joint_setup[i].body_index = (uint16_t)lua_GetScalarField(engine_lua, "body_index");
+                                joint_setup[i].joint_type = static_cast<RDJointSetup::Type>(lua_GetScalarField(engine_lua, "joint_type"));
 
                                 lua_getfield(engine_lua, -1, "body1_offset");
-                                if(lua_istable(engine_lua, -1))
-                                {
-                                    setup->joint_setup[i].body1_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
-                                    setup->joint_setup[i].body1_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
-                                    setup->joint_setup[i].body1_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
+                                if(lua_istable(engine_lua, -1)) {
+                                    joint_setup[i].body1_offset[0] = lua_GetScalarField(engine_lua, 1);
+                                    joint_setup[i].body1_offset[1] = lua_GetScalarField(engine_lua, 2);
+                                    joint_setup[i].body1_offset[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
 
                                 lua_getfield(engine_lua, -1, "body2_offset");
-                                if(lua_istable(engine_lua, -1))
-                                {
-                                    setup->joint_setup[i].body2_offset.m_floats[0] = lua_GetScalarField(engine_lua, 1);
-                                    setup->joint_setup[i].body2_offset.m_floats[1] = lua_GetScalarField(engine_lua, 2);
-                                    setup->joint_setup[i].body2_offset.m_floats[2] = lua_GetScalarField(engine_lua, 3);
+                                if(lua_istable(engine_lua, -1)) {
+                                    joint_setup[i].body2_offset[0] = lua_GetScalarField(engine_lua, 1);
+                                    joint_setup[i].body2_offset[1] = lua_GetScalarField(engine_lua, 2);
+                                    joint_setup[i].body2_offset[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
 
                                 lua_getfield(engine_lua, -1, "body1_angle");
-                                if(lua_istable(engine_lua, -1))
-                                {
-                                    setup->joint_setup[i].body1_angle[0] = lua_GetScalarField(engine_lua, 1);
-                                    setup->joint_setup[i].body1_angle[1] = lua_GetScalarField(engine_lua, 2);
-                                    setup->joint_setup[i].body1_angle[2] = lua_GetScalarField(engine_lua, 3);
+                                if(lua_istable(engine_lua, -1)) {
+                                    joint_setup[i].body1_angle[0] = lua_GetScalarField(engine_lua, 1);
+                                    joint_setup[i].body1_angle[1] = lua_GetScalarField(engine_lua, 2);
+                                    joint_setup[i].body1_angle[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
 
                                 lua_getfield(engine_lua, -1, "body2_angle");
-                                if(lua_istable(engine_lua, -1))
-                                {
-                                    setup->joint_setup[i].body2_angle[0] = lua_GetScalarField(engine_lua, 1);
-                                    setup->joint_setup[i].body2_angle[1] = lua_GetScalarField(engine_lua, 2);
-                                    setup->joint_setup[i].body2_angle[2] = lua_GetScalarField(engine_lua, 3);
+                                if(lua_istable(engine_lua, -1)) {
+                                    joint_setup[i].body2_angle[0] = lua_GetScalarField(engine_lua, 1);
+                                    joint_setup[i].body2_angle[1] = lua_GetScalarField(engine_lua, 2);
+                                    joint_setup[i].body2_angle[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
 
                                 lua_getfield(engine_lua, -1, "joint_limit");
-                                if(lua_istable(engine_lua, -1))
-                                {
-                                    setup->joint_setup[i].joint_limit[0] = lua_GetScalarField(engine_lua, 1);
-                                    setup->joint_setup[i].joint_limit[1] = lua_GetScalarField(engine_lua, 2);
-                                    setup->joint_setup[i].joint_limit[2] = lua_GetScalarField(engine_lua, 3);
+                                if(lua_istable(engine_lua, -1)) {
+                                    joint_setup[i].joint_limit[0] = lua_GetScalarField(engine_lua, 1);
+                                    joint_setup[i].joint_limit[1] = lua_GetScalarField(engine_lua, 2);
+                                    joint_setup[i].joint_limit[2] = lua_GetScalarField(engine_lua, 3);
                                 }
                                 else { result = false; }
                                 lua_pop(engine_lua, 1);
@@ -363,23 +145,15 @@ bool Ragdoll_GetSetup(int ragdoll_index, rd_setup_p setup)
 
     lua_settop(engine_lua, top);
 
-    if(result == false) Ragdoll_ClearSetup(setup);  // PARANOID: Clean up the mess, if something went wrong.
+    if(result == false)
+        clearSetup();  // PARANOID: Clean up the mess, if something went wrong.
     return result;
 }
 
 
-void Ragdoll_ClearSetup(rd_setup_p setup)
+void RDSetup::clearSetup()
 {
-    if(!setup) return;
-
-    free(setup->body_setup);
-    setup->body_setup = NULL;
-    setup->body_count = 0;
-
-    free(setup->joint_setup);
-    setup->joint_setup = NULL;
-    setup->joint_count = 0;
-
-    free(setup->hit_func);
-    setup->hit_func = NULL;
+    body_setup.clear();
+    joint_setup.clear();
+    hit_func.clear();
 }

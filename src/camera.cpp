@@ -1,8 +1,8 @@
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 
 #include "gl_util.h"
 #include "camera.h"
@@ -10,333 +10,147 @@
 #include "polygon.h"
 #include "frustum.h"
 
-
-void Cam_Init(camera_p cam)
+void Camera::apply()
 {
-    cam->aspect = 1.0;
-    cam->fov = 75.0;
-    cam->dist_near = 1.0;
-    cam->dist_far = 65536.0;
+    btMatrix3x3& M = m_glProjMat.getBasis();
+    M.setIdentity();
+    M[0][0] = m_f / m_aspect;
+    M[1][1] = m_f;
+    M[2][2] = (m_distNear + m_distFar) / (m_distNear - m_distFar);
+    M[2][3] =-1.0;
+    m_glProjMat.getOrigin()[2] = 2.0 * m_distNear * m_distFar / (m_distNear - m_distFar);
 
-    cam->f = tanf(M_PI * cam->fov / 360.0);
-    cam->h = 2.0 * cam->dist_near * cam->f;
-    cam->w = cam->h * cam->aspect;
-    cam->f = 1.0 / cam->f;
+    btMatrix3x3& M2 = m_glViewMat.getBasis();
+    M2[0] = m_rightDir;
+    M2[1] = m_upDir;
+    M2[2] = -m_viewDir;
+    M2 = M2.transpose();
 
-    Mat4_E_macro(cam->gl_view_mat);
-    Mat4_E_macro(cam->gl_proj_mat);
-    Mat4_E_macro(cam->gl_view_proj_mat);
+    m_glViewMat.getOrigin() = M2 * m_pos;
+    m_glViewMat.getOrigin().setW(1);
 
-    cam->frustum = (frustum_p)malloc(sizeof(frustum_t));
-    cam->frustum->cam_pos = cam->pos;
-    cam->frustum->vertex_count = 4;
-    cam->frustum->next = NULL;
-    cam->frustum->parent = NULL;
-    cam->frustum->parents_count = 0;
-    cam->frustum->vertex = NULL;
-    cam->frustum->planes = cam->clip_planes;
-    cam->frustum->vertex = (btScalar*)malloc(3*4*sizeof(btScalar));
-
-    cam->pos[0] = 0.0;
-    cam->pos[1] = 0.0;
-    cam->pos[2] = 0.0;
-
-    cam->prev_pos[0] = 0.0;
-    cam->prev_pos[1] = 0.0;
-    cam->prev_pos[2] = 0.0;
-
-    cam->view_dir[0] = 0.0;                                                     // OZ - view
-    cam->view_dir[1] = 0.0;
-    cam->view_dir[2] = 1.0;
-    cam->view_dir[3] = 0.0;
-
-    cam->right_dir[0] = 1.0;                                                    // OX - right
-    cam->right_dir[1] = 0.0;
-    cam->right_dir[2] = 0.0;
-    cam->right_dir[3] = 0.0;
-
-    cam->up_dir[0] = 0.0;                                                       // OY - up
-    cam->up_dir[1] = 1.0;
-    cam->up_dir[2] = 0.0;
-    cam->up_dir[3] = 0.0;
-
-    cam->shake_value    = 0.0;
-    cam->shake_time     = 0.0;
-
-    cam->current_room = NULL;
+    m_glViewProjMat = m_glProjMat * m_glViewMat;
 }
 
-void Cam_Apply(camera_p cam)
+void Camera::setFovAspect(GLfloat fov, GLfloat aspect)
 {
-    GLfloat *M;
-
-    M = cam->gl_proj_mat;
-    M[0 * 4 + 0] = cam->f / cam->aspect;
-    M[0 * 4 + 1] = 0.0;
-    M[0 * 4 + 2] = 0.0;
-    M[0 * 4 + 3] = 0.0;
-
-    M[1 * 4 + 0] = 0.0;
-    M[1 * 4 + 1] = cam->f;
-    M[1 * 4 + 2] = 0.0;
-    M[1 * 4 + 3] = 0.0;
-
-    M[2 * 4 + 0] = 0.0;
-    M[2 * 4 + 1] = 0.0;
-    M[2 * 4 + 2] = (cam->dist_near + cam->dist_far) / (cam->dist_near - cam->dist_far);
-    M[2 * 4 + 3] =-1.0;
-
-    M[3 * 4 + 0] = 0.0;
-    M[3 * 4 + 1] = 0.0;
-    M[3 * 4 + 2] = 2.0 * cam->dist_near * cam->dist_far / (cam->dist_near - cam->dist_far);
-    M[3 * 4 + 3] = 0.0;
-
-    M = cam->gl_view_mat;
-    M[0 * 4 + 0] = cam->right_dir[0];
-    M[1 * 4 + 0] = cam->right_dir[1];
-    M[2 * 4 + 0] = cam->right_dir[2];
-
-    M[0 * 4 + 1] = cam->up_dir[0];
-    M[1 * 4 + 1] = cam->up_dir[1];
-    M[2 * 4 + 1] = cam->up_dir[2];
-
-    M[0 * 4 + 2] = -cam->view_dir[0];
-    M[1 * 4 + 2] = -cam->view_dir[1];
-    M[2 * 4 + 2] = -cam->view_dir[2];
-
-    M[3 * 4 + 0] = -(M[0] * cam->pos[0] + M[4] * cam->pos[1] + M[8]  * cam->pos[2]);
-    M[3 * 4 + 1] = -(M[1] * cam->pos[0] + M[5] * cam->pos[1] + M[9]  * cam->pos[2]);
-    M[3 * 4 + 2] = -(M[2] * cam->pos[0] + M[6] * cam->pos[1] + M[10] * cam->pos[2]);
-
-    M[0 * 4 + 3] = 0.0;
-    M[1 * 4 + 3] = 0.0;
-    M[2 * 4 + 3] = 0.0;
-    M[3 * 4 + 3] = 1.0;
-
-    Mat4_Mat4_mul(cam->gl_view_proj_mat, cam->gl_proj_mat, cam->gl_view_mat);
+    m_fov = fov;
+    m_aspect = aspect;
+    m_f = tanf(M_PI * m_fov / 360.0);
+    m_height = 2.0 * m_distNear * m_f;
+    m_width = m_height * aspect;
+    m_f = 1.0 / m_f;
 }
 
-void Cam_SetFovAspect(camera_p cam, GLfloat fov, GLfloat aspect)
+void Camera::moveAlong(GLfloat dist)
 {
-    cam->fov = fov;
-    cam->aspect = aspect;
-    cam->f = tanf(M_PI * cam->fov / 360.0);
-    cam->h = 2.0 * cam->dist_near * cam->f;
-    cam->w = cam->h * aspect;
-    cam->f = 1.0 / cam->f;
+    m_pos += m_viewDir * dist;
 }
 
-void Cam_MoveAlong(camera_p cam, GLfloat dist)
+void Camera::moveStrafe(GLfloat dist)
 {
-    cam->pos[0] += cam->view_dir[0] * dist;
-    cam->pos[1] += cam->view_dir[1] * dist;
-    cam->pos[2] += cam->view_dir[2] * dist;
+    m_pos += m_rightDir * dist;
 }
 
-void Cam_MoveStrafe(camera_p cam, GLfloat dist)
+void Camera::moveVertical(GLfloat dist)
 {
-    cam->pos[0] += cam->right_dir[0] * dist;
-    cam->pos[1] += cam->right_dir[1] * dist;
-    cam->pos[2] += cam->right_dir[2] * dist;
+    m_pos += m_upDir * dist;
 }
 
-void Cam_MoveVertical(camera_p cam, GLfloat dist)
+void Camera::shake(GLfloat power, GLfloat time)
 {
-    cam->pos[0] += cam->up_dir[0] * dist;
-    cam->pos[1] += cam->up_dir[1] * dist;
-    cam->pos[2] += cam->up_dir[2] * dist;
+    m_shakeValue = power;
+    m_shakeTime  = time;
 }
 
-void Cam_Shake(camera_p cam, GLfloat power, GLfloat time)
+void Camera::deltaRotation(const btVector3& angles)                         //angles = {OX, OY, OZ}
 {
-    cam->shake_value = power;
-    cam->shake_time  = time;
+    m_ang += angles;
+
+    // Roll
+    m_upDir = m_upDir.rotate(m_viewDir, angles.z());
+    // Pitch
+    m_viewDir = m_viewDir.rotate(m_upDir, angles.x());
+    // Yaw
+    m_viewDir = m_viewDir.rotate(m_rightDir, angles.y());
+    m_upDir = m_viewDir.rotate(m_rightDir, angles.y());
 }
 
-void Cam_DeltaRotation(camera_p cam, GLfloat angles[3])                         //angles = {OX, OY, OZ}
+void Camera::setRotation(const btVector3& angles)                          //angles = {OX, OY, OZ}
 {
-    GLfloat R[4], Rt[4], temp[4];
-    GLfloat sin_t2, cos_t2, t;
+    m_ang = angles;
 
-    vec3_add(cam->ang, cam->ang, angles)
+    m_upDir = {0,0,1};
 
-    t = -angles[2] / 2.0;                                                       // ROLL
-    sin_t2 = sinf(t);
-    cos_t2 = cosf(t);
-    R[3] = cos_t2;
-    R[0] = cam->view_dir[0] * sin_t2;
-    R[1] = cam->view_dir[1] * sin_t2;
-    R[2] = cam->view_dir[2] * sin_t2;
-    vec4_sop(Rt, R)
+    m_viewDir = btVector3(0,1,0).rotate(m_upDir, angles.x());
+    m_rightDir = btVector3(1,0,0).rotate(m_upDir, angles.x());
 
-    vec4_mul(temp, R, cam->right_dir)
-    vec4_mul(cam->right_dir, temp, Rt)
-    vec4_mul(temp, R, cam->up_dir)
-    vec4_mul(cam->up_dir, temp, Rt)
+    m_upDir = m_upDir.rotate(m_rightDir, angles.y());
+    m_viewDir = m_viewDir.rotate(m_rightDir, angles.y());
 
-    t = -angles[0] / 2.0;                                                       // LEFT - RIGHT
-    sin_t2 = sinf(t);
-    cos_t2 = cosf(t);
-    R[3] = cos_t2;
-    R[0] = cam->up_dir[0] * sin_t2;
-    R[1] = cam->up_dir[1] * sin_t2;
-    R[2] = cam->up_dir[2] * sin_t2;
-    vec4_sop(Rt, R)
-
-    vec4_mul(temp, R, cam->right_dir)
-    vec4_mul(cam->right_dir, temp, Rt)
-    vec4_mul(temp, R, cam->view_dir)
-    vec4_mul(cam->view_dir, temp, Rt)
-
-    t = angles[1] / 2.0;                                                        // UP - DOWN
-    sin_t2 = sinf(t);
-    cos_t2 = cosf(t);
-    R[3] = cos_t2;
-    R[0] = cam->right_dir[0] * sin_t2;
-    R[1] = cam->right_dir[1] * sin_t2;
-    R[2] = cam->right_dir[2] * sin_t2;
-    vec4_sop(Rt, R)
-
-    vec4_mul(temp, R, cam->view_dir)
-    vec4_mul(cam->view_dir, temp, Rt)
-    vec4_mul(temp, R, cam->up_dir)
-    vec4_mul(cam->up_dir, temp, Rt)
+    m_rightDir = m_rightDir.rotate(m_viewDir, angles.z());
+    m_upDir = m_upDir.rotate(m_viewDir, angles.z());
 }
 
-void Cam_SetRotation(camera_p cam, btScalar angles[3])                          //angles = {OX, OY, OZ}
+void Camera::recalcClipPlanes()
 {
-    GLfloat R[4], Rt[4], temp[4];
-    GLfloat sin_t2, cos_t2, t;
-
-    vec3_copy(cam->ang, angles);
-
-    sin_t2 = sinf(angles[0]);
-    cos_t2 = cosf(angles[0]);
-
-    /*
-     * LEFT - RIGHT INIT
-     */
-    cam->view_dir[0] =-sin_t2;                                                  // OY - view
-    cam->view_dir[1] = cos_t2;
-    cam->view_dir[2] = 0.0;
-    cam->view_dir[3] = 0.0;
-
-    cam->right_dir[0] = cos_t2;                                                 // OX - right
-    cam->right_dir[1] = sin_t2;
-    cam->right_dir[2] = 0.0;
-    cam->right_dir[3] = 0.0;
-
-    cam->up_dir[0] = 0.0;                                                       // OZ - up
-    cam->up_dir[1] = 0.0;
-    cam->up_dir[2] = 1.0;
-    cam->up_dir[3] = 0.0;
-
-    t = angles[1] / 2.0;                                                        // UP - DOWN
-    sin_t2 = sinf(t);
-    cos_t2 = cosf(t);
-    R[3] = cos_t2;
-    R[0] = cam->right_dir[0] * sin_t2;
-    R[1] = cam->right_dir[1] * sin_t2;
-    R[2] = cam->right_dir[2] * sin_t2;
-    vec4_sop(Rt, R);
-
-    vec4_mul(temp, R, cam->up_dir);
-    vec4_mul(cam->up_dir, temp, Rt);
-    vec4_mul(temp, R, cam->view_dir);
-    vec4_mul(cam->view_dir, temp, Rt);
-
-    t = angles[2] / 2.0;                                                        // ROLL
-    sin_t2 = sinf(t);
-    cos_t2 = cosf(t);
-    R[3] = cos_t2;
-    R[0] = cam->view_dir[0] * sin_t2;
-    R[1] = cam->view_dir[1] * sin_t2;
-    R[2] = cam->view_dir[2] * sin_t2;
-    vec4_sop(Rt, R);
-
-    vec4_mul(temp, R, cam->right_dir);
-    vec4_mul(cam->right_dir, temp, Rt);
-    vec4_mul(temp, R, cam->up_dir);
-    vec4_mul(cam->up_dir, temp, Rt);
-}
-
-void Cam_RecalcClipPlanes(camera_p cam)
-{
-    GLfloat T[4], LU[4], V[3], *n = cam->clip_planes;
-
-    V[0] = cam->view_dir[0] * cam->dist_near;                                   // вектор - от позиции камеры до центра плоскости проекции
-    V[1] = cam->view_dir[1] * cam->dist_near;
-    V[2] = cam->view_dir[2] * cam->dist_near;
-
-    T[0] = cam->pos[0] + V[0];                                                  // центр плоскости проекции
-    T[1] = cam->pos[1] + V[1];
-    T[2] = cam->pos[2] + V[2];
+    const btVector3 nearViewPoint = m_viewDir * m_distNear;
 
     //==========================================================================
 
-    vec3_copy(cam->frustum->norm, cam->view_dir);                               // Основная плоскость отсечения (что сзади - то не рисуем)
-    cam->frustum->norm[3] = -vec3_dot(cam->view_dir, cam->pos);                 // плоскость проекции проходит через наблюдателя.
+    frustum->norm = m_viewDir;                               // Основная плоскость отсечения (что сзади - то не рисуем)
+    frustum->norm[3] = -m_viewDir.dot(m_pos);                 // плоскость проекции проходит через наблюдателя.
 
     //==========================================================================
 
     //   DOWN
-    T[3] = cam->h / 2.0;                                                        // половина высоты плоскости проекции
-    LU[0] = V[0] - T[3] * cam->up_dir[0];                                       // вектор нижней плоскости отсечения
-    LU[1] = V[1] - T[3] * cam->up_dir[1];
-    LU[2] = V[2] - T[3] * cam->up_dir[2];
+    btVector3 LU;
+    LU = nearViewPoint - m_height / 2.0 * m_upDir;                                       // вектор нижней плоскости отсечения
 
-    vec3_cross(cam->clip_planes+8, cam->right_dir, LU)
-    LU[3] = vec3_abs(cam->clip_planes+8);                                      // модуль нормали к левой / правой плоскостям
-    vec3_norm_plane(cam->clip_planes+8, cam->pos, LU[3])
+    m_clipPlanes[2] = m_rightDir.cross(LU);
+    m_clipPlanes[2].normalize();
+    m_clipPlanes[2][3] = -m_clipPlanes[2].dot(m_pos);
 
     //   UP
-    LU[0] = V[0] + T[3] * cam->up_dir[0];                                       // вектор верхней плоскости отсечения
-    LU[1] = V[1] + T[3] * cam->up_dir[1];
-    LU[2] = V[2] + T[3] * cam->up_dir[2];
+    LU = nearViewPoint + m_height / 2.0 * m_upDir;                                       // вектор верхней плоскости отсечения
 
-    vec3_cross(cam->clip_planes+12, cam->right_dir, LU)
-    vec3_norm_plane(cam->clip_planes+12, cam->pos, LU[3])
+    m_clipPlanes[3] = m_rightDir.cross(LU);
+    m_clipPlanes[3].normalize();
+    m_clipPlanes[3][3] = -m_clipPlanes[2].dot(m_pos);
 
     //==========================================================================
 
     //   LEFT
-    T[3] = cam->w / 2.0;                                                        // половина ширины плоскости проекции
-    LU[0] = V[0] - T[3] * cam->right_dir[0];                                    // вектор левой плоскости отсечения
-    LU[1] = V[1] - T[3] * cam->right_dir[1];
-    LU[2] = V[2] - T[3] * cam->right_dir[2];
+    LU = nearViewPoint - m_width / 2.0 * m_rightDir;                                    // вектор левой плоскости отсечения
 
-    vec3_cross(cam->clip_planes, cam->up_dir, LU)
-    LU[3] = vec3_abs(cam->clip_planes);                                         // модуль нормали к левой / правой плоскостям
-    vec3_norm_plane(cam->clip_planes, cam->pos, LU[3])
+    m_clipPlanes[0] = m_upDir.cross(LU);
+    m_clipPlanes[0].normalize();
+    m_clipPlanes[0][3] = -m_clipPlanes[2].dot(m_pos);
 
     //   RIGHT
-    LU[0] = V[0] + T[3] * cam->right_dir[0];                                    // вектор правой плоскости отсечения
-    LU[1] = V[1] + T[3] * cam->right_dir[1];
-    LU[2] = V[2] + T[3] * cam->right_dir[2];
+    LU = nearViewPoint + m_width / 2.0 * m_rightDir;                                    // вектор правой плоскости отсечения
 
-    vec3_cross(cam->clip_planes+4, cam->up_dir, LU)
-    vec3_norm_plane(cam->clip_planes+4, cam->pos, LU[3])
+    m_clipPlanes[1] = m_upDir.cross(LU);
+    m_clipPlanes[1].normalize();
+    m_clipPlanes[1][3] = -m_clipPlanes[2].dot(m_pos);
 
-    vec3_add(V, cam->pos, cam->view_dir)
-    if(vec3_plane_dist(n, V) < 0.0)
-    {
-        vec4_inv(n);
-    }
-    n += 4;
-    if(vec3_plane_dist(n, V) < 0.0)
-    {
-        vec4_inv(n);
-    }
-    n += 4;
-    if(vec3_plane_dist(n, V) < 0.0)
-    {
-        vec4_inv(n);
-    }
-    n += 4;
-    if(vec3_plane_dist(n, V) < 0.0)
-    {
-        vec4_inv(n);
-    }
+    auto worldNearViewPoint = m_pos + m_viewDir * m_distNear;
+    for(int i=0; i<4; ++i)
+        if(planeDist(m_clipPlanes[i], worldNearViewPoint) < 0.0)
+            m_clipPlanes[i] = -m_clipPlanes[i];
 
-    vec3_add(cam->frustum->vertex, cam->pos, cam->view_dir);
+    frustum->vertices[0] = m_pos + m_viewDir;
+}
+
+
+Camera::Camera()
+{
+    m_f = 1.0 / std::tan(M_PI * m_fov / 360.0);
+    m_height = 2.0 * m_distNear / m_f;
+    m_width = m_height * m_aspect;
+
+    frustum = std::make_shared<Frustum>();
+    frustum->cam_pos = &m_pos;
+    frustum->vertices.resize(3);
+    frustum->planes.assign( m_clipPlanes+0, m_clipPlanes+4 );
 }

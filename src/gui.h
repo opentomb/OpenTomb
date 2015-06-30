@@ -70,7 +70,7 @@ enum font_Style
 
 #define GUI_MAX_FONTSTYLES 32   // Who even needs so many?
 
-struct inventory_node_s;
+struct InventoryNode;
 
 // Font struct contains additional field for font type which is
 // used to dynamically create or delete fonts.
@@ -518,8 +518,8 @@ void Gui_RenderStrings();
 /**
  * Inventory rendering / manipulation functions
  */
-void Item_Frame(struct ss_bone_frame_s *bf, btScalar time);
-void Gui_RenderItem(struct ss_bone_frame_s *bf, btScalar size, const btScalar *mvMatrix);
+void Item_Frame(struct SSBoneFrame *bf, btScalar time);
+void Gui_RenderItem(struct SSBoneFrame *bf, btScalar size, const btTransform &mvMatrix);
 #if 0
 typedef struct gui_invmenu_item_ammo_s
 {
@@ -629,7 +629,7 @@ public:
 class gui_InventoryManager
 {
 private:
-    struct inventory_node_s   **mInventory;
+    std::list<InventoryNode>* mInventory;
     int                         mCurrentState;
     int                         mNextState;
     int                         mNextItemsCount;
@@ -697,7 +697,7 @@ public:
     }
     
     int setItemsType(int type);
-    void setInventory(struct inventory_node_s **i);
+    void setInventory(std::list<InventoryNode> *i);
     void setTitle(int items_type);
     void frame(float time);
     void render();

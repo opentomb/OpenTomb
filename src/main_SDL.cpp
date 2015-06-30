@@ -1,6 +1,6 @@
-#include <time.h>
-#include <stdio.h>
-#include <string.h>
+#include <ctime>
+#include <cstdio>
+#include <cstring>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
@@ -15,15 +15,10 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
-}
+#include <lua.hpp>
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 #include "vt/vt_level.h"
 
 #include "obb.h"
@@ -56,11 +51,9 @@ extern "C" {
 #include "FindConfigFile.h"
 #endif
 
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-}
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
 
 #define NO_AUDIO        0
 
@@ -75,10 +68,10 @@ ALCcontext             *al_context     = NULL;
 int done = 0;
 btScalar time_scale = 1.0;
 
-GLfloat light_position[] = {255.0, 255.0, 8.0, 0.0};
+btVector3 Lightosition = {255.0, 255.0, 8.0};
 GLfloat cast_ray[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-engine_container_p      last_cont = NULL;
+EngineContainer* last_cont = NULL;
 
 // BULLET IS PERFECT PHYSICS LIBRARY!!!
 /*
@@ -129,7 +122,7 @@ void Engine_InitGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    if(renderer.settings.antialias)
+    if(renderer.settings().antialias)
     {
         glEnable(GL_MULTISAMPLE);
     }
@@ -239,7 +232,7 @@ void Engine_InitSDLVideo()
     }
 
     // Check for correct number of antialias samples.
-    if(renderer.settings.antialias)
+    if(renderer.settings().antialias)
     {
         /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
         sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
@@ -250,17 +243,17 @@ void Engine_InitSDLVideo()
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
         maxSamples = (maxSamples > 16)?(16):(maxSamples);   // Fix for faulty GL max. sample number.
 
-        if(renderer.settings.antialias_samples > maxSamples)
+        if(renderer.settings().antialias_samples > maxSamples)
         {
             if(maxSamples == 0)
             {
-                renderer.settings.antialias = 0;
-                renderer.settings.antialias_samples = 0;
+                renderer.settings().antialias = 0;
+                renderer.settings().antialias_samples = 0;
                 Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
             }
             else
             {
-                renderer.settings.antialias_samples = maxSamples;   // Limit to max.
+                renderer.settings().antialias_samples = maxSamples;   // Limit to max.
                 Sys_DebugLog(LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
             }
         }
@@ -268,8 +261,8 @@ void Engine_InitSDLVideo()
         SDL_GL_DeleteContext(sdl_gl_context);
         SDL_DestroyWindow(sdl_window);
 
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings().antialias);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings().antialias_samples);
     }
     else
     {
@@ -278,7 +271,7 @@ void Engine_InitSDLVideo()
     }
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings().z_depth);
 #if STENCIL_FRUSTUM
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 #endif
@@ -292,12 +285,12 @@ void Engine_InitSDLVideo()
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
 
-    Con_AddLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
-    Con_AddLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
-    char buf[con_base.line_size];
-    snprintf(buf, con_base.line_size, "OpenGL version %s", glGetString(GL_VERSION));
-    Con_AddLine((const char*)buf, FONTSTYLE_CONSOLE_INFO);
-    Con_AddLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine((const char*)glGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine((const char*)glGetString(GL_RENDERER), FONTSTYLE_CONSOLE_INFO);
+    std::string version = "OpenGL version ";
+    version += (const char*)glGetString(GL_VERSION);
+    ConsoleInfo::instance().addLine(version, FONTSTYLE_CONSOLE_INFO);
+    ConsoleInfo::instance().addLine((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION), FONTSTYLE_CONSOLE_INFO);
 }
 
 #if !defined(__MACOSX__)
@@ -386,7 +379,7 @@ void Engine_Start()
 
     // Additional OpenGL initialization.
     Engine_InitGL();
-    Render_DoShaders();
+    renderer.doShaders();
 
     // Secondary (deferred) initialization.
     Engine_Init_Post();
@@ -398,7 +391,7 @@ void Engine_Start()
     Engine_InitAL();
 
     // Clearing up memory for initial level loading.
-    World_Prepare(&engine_world);
+    engine_world.prepare();
 
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -419,8 +412,8 @@ void Engine_Display()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
-        Cam_Apply(&engine_camera);
-        Cam_RecalcClipPlanes(&engine_camera);
+        engine_camera.apply();
+        engine_camera.recalcClipPlanes();
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
         if(screen_info.show_debuginfo)
         {
@@ -429,15 +422,15 @@ void Engine_Display()
 
         glFrontFace(GL_CW);
 
-        Render_GenWorldList();
-        Render_DrawList();
+        renderer.genWorldList();
+        renderer.drawList();
 
         //glDisable(GL_CULL_FACE);
         //Render_DrawAxis(10000.0);
-        /*if(engine_world.Character)
+        /*if(engine_world.character)
         {
             glPushMatrix();
-            glTranslatef(engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+            glTranslatef(engine_world.character->transform[12], engine_world.character->transform[13], engine_world.character->transform[14]);
             Render_DrawAxis(1000.0);
             glPopMatrix();
         }*/
@@ -447,7 +440,7 @@ void Engine_Display()
             glEnable(GL_ALPHA_TEST);
 
             Gui_DrawNotifier();
-            if(engine_world.Character && engine_world.Character->character && main_inventory_manager)
+            if(engine_world.character && main_inventory_manager)
             {
                 Gui_DrawInventory();
             }
@@ -456,7 +449,7 @@ void Engine_Display()
         Gui_Render();
         Gui_SwitchGLMode(0);
 
-        Render_DrawList_DebugLines();
+        renderer.drawListDebugLines();
 
         SDL_GL_SwapWindow(sdl_window);
     }
@@ -473,8 +466,8 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
     Gui_Resize();
 
-    Cam_SetFovAspect(&engine_camera, screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
-    Cam_RecalcClipPlanes(&engine_camera);
+    engine_camera.setFovAspect(screen_info.fov, (btScalar)nominalW/(btScalar)nominalH);
+    engine_camera.recalcClipPlanes();
 
     glViewport(0, 0, pixelsW, pixelsH);
 }
@@ -489,7 +482,6 @@ void Engine_Frame(btScalar time)
         time = 0.1;
     }
 
-    ResetTempbtScalar();
     engine_frame_time = time;
     if(cycles < 20)
     {
@@ -513,11 +505,9 @@ void Engine_Frame(btScalar time)
 
 void ShowDebugInfo()
 {
-    entity_p ent;
-    btTransform trans;
     GLfloat color_array[] = {1.0, 0.0, 0.0, 1.0, 0.0, 0.0};
 
-    vec3_copy(light_position, engine_camera.pos);
+    Lightosition = engine_camera.m_pos;
 
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -526,16 +516,16 @@ void ShowDebugInfo()
     glColorPointer(3, GL_FLOAT, 0, color_array);
     glDrawArrays(GL_LINES, 0, 2);
 
-    ent = engine_world.Character;
-    if(ent && ent->character)
+    std::shared_ptr<Character> ent = engine_world.character;
+    if(ent)
     {
         /*height_info_p fc = &ent->character->height_info
-        txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
+        txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
 
-        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf.animations.last_animation, ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.last_state, ent->bf.animations.next_state);
+        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->m_bf.animations.last_animation, ent->m_bf.animations.current_animation, ent->m_bf.animations.next_animation, ent->m_bf.animations.last_state, ent->m_bf.animations.next_state);
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+        //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.character->transform[12], engine_world.character->transform[13], engine_world.character->transform[14]);
     }
 
     if(last_cont != NULL)
@@ -543,28 +533,28 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf.animations.model->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", std::static_pointer_cast<Entity>(last_cont->object)->m_id, std::static_pointer_cast<Entity>(last_cont->object)->m_bf.animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
-                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", std::static_pointer_cast<StaticMesh>(last_cont->object)->object_id);
                 break;
 
             case OBJECT_ROOM_BASE:
-                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", std::static_pointer_cast<Room>(last_cont->object)->id);
                 break;
         }
 
     }
 
-    if(engine_camera.current_room != NULL)
+    if(engine_camera.m_currentRoom != NULL)
     {
-        room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
+        RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.m_pos);
         if(rs != NULL)
         {
-            Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
+            Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->id, rs->index_x, rs->index_y);
             Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
         }
     }
-    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.m_pos[0], engine_camera.m_pos[1], engine_camera.m_pos[2]);
 }

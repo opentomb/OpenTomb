@@ -1,19 +1,14 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <lua.hpp>
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-#include "lua/lstate.h"
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-}
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #include "console.h"
 #include "engine.h"
@@ -63,12 +58,12 @@ void Gameflow_Do()
                         strncpy(gameflow_manager.CurrentLevelPath, lua_tostring(engine_lua, -3), MAX_ENGINE_PATH); // Third value in stack is level path
 
                         // Now, load the level! + if character exists then save inventory
-                        /*if((engine_world.Character != NULL) && (engine_world.Character->character != NULL))
+                        /*if((engine_world.character != NULL) && (engine_world.character->character != NULL))
                         {
-                            inventory_node_p i = engine_world.Character->character->inventory;
-                            engine_world.Character->character->inventory = NULL;
+                            inventory_node_p i = engine_world.character->character->inventory;
+                            engine_world.character->character->inventory = NULL;
                             Engine_LoadMap(gameflow_manager.CurrentLevelPath);
-                            engine_world.Character->character->inventory = i;
+                            engine_world.character->character->inventory = i;
                         }
                         else*/
                         {
@@ -78,7 +73,7 @@ void Gameflow_Do()
                     else
                     {
                         Gui_FadeStop(FADER_LOADSCREEN);
-                        Con_AddLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
+                        ConsoleInfo::instance().addLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
                     }
                     lua_settop(engine_lua, top);
                     gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;

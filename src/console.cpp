@@ -17,445 +17,268 @@
 #include "gui.h"
 #include "vmath.h"
 
-console_info_t con_base;
-
-void Con_Init()
+void ConsoleInfo::init()
 {
-    con_base.inited = 0;
-    con_base.log_pos = 0;
-
-    con_base.font = NULL;
-
-    // lines count check
-    if(con_base.line_count < CON_MIN_LOG)
-    {
-        con_base.line_count = CON_MIN_LOG;
-    }
-    if(con_base.line_count > CON_MAX_LOG)
-    {
-        con_base.line_count = CON_MAX_LOG;
-    }
-
     // log size check
-    if(con_base.log_lines_count < CON_MIN_LOG)
-    {
-        con_base.log_lines_count = CON_MIN_LOG;
-    }
-    if(con_base.log_lines_count > CON_MAX_LOG)
-    {
-        con_base.log_lines_count = CON_MAX_LOG;
-    }
-
-    // showing lines count check
-    if(con_base.showing_lines < CON_MIN_LINES)
-    {
-        con_base.showing_lines = CON_MIN_LINES;
-    }
-    if(con_base.showing_lines > CON_MAX_LINES)
-    {
-        con_base.showing_lines = CON_MAX_LINES;
-    }
+    if(m_historyLines.size() > CON_MAX_LOG)
+        m_historyLines.resize(CON_MAX_LOG);
 
     // spacing check
-    if(con_base.spacing < CON_MIN_LINE_INTERVAL)
-    {
-        con_base.spacing = CON_MIN_LINE_INTERVAL;
-    }
-    if(con_base.spacing > CON_MAX_LINE_INTERVAL)
-    {
-        con_base.spacing = CON_MAX_LINE_INTERVAL;
-    }
+    if(m_spacing < CON_MIN_LINE_INTERVAL)
+        m_spacing = CON_MIN_LINE_INTERVAL;
+    else if(m_spacing > CON_MAX_LINE_INTERVAL)
+        m_spacing = CON_MAX_LINE_INTERVAL;
 
     // linesize check
-    if(con_base.line_size < CON_MIN_LINE_SIZE)
-    {
-        con_base.line_size = CON_MIN_LINE_SIZE;
-    }
-    if(con_base.line_size > CON_MAX_LINE_SIZE)
-    {
-        con_base.line_size = CON_MAX_LINE_SIZE;
-    }
+    if(m_lineSize < CON_MIN_LINE_SIZE)
+        m_lineSize = CON_MIN_LINE_SIZE;
+    else if(m_lineSize > CON_MAX_LINE_SIZE)
+        m_lineSize = CON_MAX_LINE_SIZE;
 
-    con_base.line_text  = (char**)malloc(con_base.line_count*sizeof(char*));
-    con_base.line_style_id = (uint16_t*)malloc(con_base.line_count * sizeof(uint16_t));
-
-    for(uint16_t i=0;i<con_base.line_count;i++)
-    {
-        con_base.line_text[i]  = (char*) calloc(con_base.line_size*sizeof(char), 1);
-        con_base.line_style_id[i] = FONTSTYLE_GENERIC;
-    }
-
-    con_base.log_lines = (char**) realloc(con_base.log_lines, con_base.log_lines_count * sizeof(char*));
-    for(uint16_t i=0;i<con_base.log_lines_count;i++)
-    {
-        con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
-    }
-    con_base.inited = 1;
+    inited = true;
 }
 
-void Con_InitFonts()
-{
-    con_base.font = FontManager->GetFont(FONT_CONSOLE);
-    Con_SetLineInterval(con_base.spacing);
+void ConsoleInfo::initFonts() {
+    m_font = FontManager->GetFont(FONT_CONSOLE);
+    setLineInterval(m_spacing);
 }
 
-void Con_InitGlobals()
-{
-    con_base.background_color[0] = 1.0;
-    con_base.background_color[1] = 0.9;
-    con_base.background_color[2] = 0.7;
-    con_base.background_color[3] = 0.4;
+void ConsoleInfo::initGlobals() {
+    m_backgroundColor[0] = 1.0;
+    m_backgroundColor[1] = 0.9;
+    m_backgroundColor[2] = 0.7;
+    m_backgroundColor[3] = 0.4;
 
-    con_base.log_lines_count = CON_MIN_LOG;
-    con_base.log_lines       = NULL;
+    m_spacing         = CON_MIN_LINE_INTERVAL;
+    m_lineSize       = CON_MIN_LINE_SIZE;
 
-    con_base.spacing         = CON_MIN_LINE_INTERVAL;
-    con_base.line_count      = CON_MIN_LINES;
-    con_base.line_size       = CON_MIN_LINE_SIZE;
-    con_base.line_text       = NULL;
-    con_base.line_style_id   = NULL;
-
-    con_base.showing_lines = con_base.line_count;
-    con_base.show_cursor_period = 0.5;
+    m_blinkPeriod = 0.5;
 }
 
-void Con_Destroy()
-{
-    if(con_base.inited)
-    {
-        for(uint16_t i=0;i<con_base.line_count;i++)
-        {
-            free(con_base.line_text[i]);
-        }
-        free(con_base.line_text);
-        free(con_base.line_style_id);
-
-        for(uint16_t i=0;i<con_base.log_lines_count;i++)
-        {
-            free(con_base.log_lines[i]);
-        }
-        free(con_base.log_lines);
-        con_base.log_lines = NULL;
-
-        con_base.inited = 0;
-    }
-}
-
-void Con_SetLineInterval(float interval)
-{
-    if((con_base.inited == 0) || (FontManager == NULL) ||
-       (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
+void ConsoleInfo::setLineInterval(float interval) {
+    if(!inited || !FontManager ||
+            (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
     {
         return; // nothing to do
     }
 
-    con_base.inited = 0;
-    con_base.spacing = interval;
-    // con_base.font->font_size has absolute size (after scaling)
-    con_base.line_height = (1.0 + con_base.spacing) * con_base.font->font_size;
-    con_base.cursor_x = 8 + 1;
-    con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
-    if(con_base.cursor_y < 8)
+    inited = false;
+    m_spacing = interval;
+    // font->font_size has absolute size (after scaling)
+    m_lineHeight = (1.0 + m_spacing) * m_font->font_size;
+    m_cursorX = 8 + 1;
+    m_cursorY = screen_info.h - m_lineHeight * m_lines.size();
+    if(m_cursorY < 8)
     {
-        con_base.cursor_y = 8;
+        m_cursorY = 8;
     }
-    con_base.inited = 1;
+    inited = true;
 }
 
-void Con_Draw()
-{
-    if(FontManager && con_base.inited && con_base.show)
+void ConsoleInfo::draw() {
+    if(!FontManager || !inited || !m_isVisible)
+        return;
+
+    drawBackground();
+    drawCursor();
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    std::shared_ptr<TextShaderDescription> shader = renderer.shaderManager()->getTextShader();
+    glUseProgramObjectARB(shader->program);
+    glUniform1iARB(shader->sampler, 0);
+    GLfloat screenSize[2] = {
+        static_cast<GLfloat>(screen_info.w),
+        static_cast<GLfloat>(screen_info.h)
+    };
+    glUniform2fvARB(shader->screenSize, 2, screenSize);
+
+    int x = 8;
+    int y = m_cursorY;
+    size_t n = 0;
+    for(const Line& line : m_lines)
     {
-        int x, y;
-        Con_DrawBackground();
-        Con_DrawCursor();
-
-        x = 8;
-        y = con_base.cursor_y;
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        const text_shader_description *shader = renderer.shader_manager->getTextShader();
-        glUseProgramObjectARB(shader->program);
-        glUniform1iARB(shader->sampler, 0);
-        GLfloat screenSize[2] = {
-            static_cast<GLfloat>(screen_info.w),
-            static_cast<GLfloat>(screen_info.h)
-        };
-        glUniform2fvARB(shader->screenSize, 2, screenSize);
-
-        for(uint16_t i=0;i<con_base.showing_lines;i++)
-        {
-            GLfloat *col = FontManager->GetFontStyle((font_Style)con_base.line_style_id[i])->real_color;
-            y += con_base.line_height;
-            vec4_copy(con_base.font->gl_font_color, col);
-            glf_render_str(con_base.font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
-        }
+        GLfloat *col = FontManager->GetFontStyle(line.styleId)->real_color;
+        y += m_lineHeight;
+        std::copy(col, col+4, m_font->gl_font_color);
+        glf_render_str(m_font, (GLfloat)x, (GLfloat)y, line.text.c_str());
+        ++n;
+        if( n >= m_visibleLines )
+            break;
     }
 }
 
-void Con_DrawBackground()
-{
+void ConsoleInfo::drawBackground() {
     /*
-     * Draw console background to see the text
-     */
-    Gui_DrawRect(0.0, con_base.cursor_y + con_base.line_height - 8, screen_info.w, screen_info.h, con_base.background_color, con_base.background_color, con_base.background_color, con_base.background_color, BM_SCREEN);
+         * Draw console background to see the text
+         */
+    Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, BM_SCREEN);
 
     /*
-     * Draw finalise line
-     */
+         * Draw finalise line
+         */
     GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7 };
-    Gui_DrawRect(0.0, con_base.cursor_y + con_base.line_height - 8, screen_info.w, 2, white, white, white, white, BM_SCREEN);
+    Gui_DrawRect(0.0, m_cursorY + m_lineHeight - 8, screen_info.w, 2, white, white, white, white, BM_SCREEN);
 }
 
-void Con_DrawCursor()
-{
-    GLint y = con_base.cursor_y;
+void ConsoleInfo::drawCursor() {
+    GLint y = m_cursorY;
 
-    if(con_base.show_cursor_period)
+    if(m_blinkPeriod)
     {
-        con_base.cursor_time += engine_frame_time;
-        if(con_base.cursor_time > con_base.show_cursor_period)
+        m_blinkTime += engine_frame_time;
+        if(m_blinkTime > m_blinkPeriod)
         {
-            con_base.cursor_time = 0.0;
-            con_base.show_cursor = !con_base.show_cursor;
+            m_blinkTime = 0.0;
+            m_showCursor = !m_showCursor;
         }
     }
 
-    if(con_base.show_cursor)
+    if(m_showCursor)
     {
         GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7 };
-        Gui_DrawRect(con_base.cursor_x,
-                     y + con_base.line_height * 0.9,
+        Gui_DrawRect(m_cursorX,
+                     y + m_lineHeight * 0.9,
                      1,
-                     con_base.line_height * 0.8,
+                     m_lineHeight * 0.8,
                      white, white, white, white,
                      BM_SCREEN);
     }
 }
 
-void Con_Filter(char *text)
-{
-    if(text != NULL)
-    {
-        while(*text != '\0')
-        {
-            Con_Edit(*text);
-            text++;
-        }
+void ConsoleInfo::filter(const std::string &text) {
+    for(char c : text) {
+        edit(c);
     }
 }
 
-void Con_Edit(int key)
-{
-    if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !con_base.inited)
+void ConsoleInfo::edit(int key) {
+    if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !inited)
     {
         return;
     }
 
     if(key == SDLK_RETURN)
     {
-        Con_AddLog(con_base.line_text[0]);
-        if(!Engine_ExecCmd(con_base.line_text[0]))
-        {
-            //Con_AddLine(con_base.text[0]);
-        }
-        con_base.line_text[0][0] = 0;
-        con_base.cursor_pos = 0;
-        con_base.cursor_x = 8 + 1;
+        addLog(currentLine());
+        if(!Engine_ExecCmd(currentLine().c_str()))
+            currentLine() = std::string();
+        m_cursorPos = 0;
+        m_cursorX = 8 + 1;
         return;
     }
 
-    con_base.cursor_time = 0.0;
-    con_base.show_cursor = 1;
+    m_blinkTime = 0.0;
+    m_showCursor = 1;
 
-    int16_t oldLength = utf8_strlen(con_base.line_text[0]);    // int16_t is absolutly enough
+    int16_t oldLength = utf8_strlen(currentLine().c_str());    // int16_t is absolutly enough
 
     switch(key)
     {
-        case SDLK_UP:
-            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
-            strncpy(con_base.line_text[0], con_base.log_lines[con_base.log_pos], con_base.line_size);
-            con_base.log_pos++;
-            if(con_base.log_pos >= con_base.log_lines_count)
-            {
-                con_base.log_pos = 0;
-            }
-            con_base.cursor_pos = utf8_strlen(con_base.line_text[0]);
-            break;
-
-        case SDLK_DOWN:
-            Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
-            strncpy(con_base.line_text[0], con_base.log_lines[con_base.log_pos], con_base.line_size);
-            if(con_base.log_pos == 0)
-            {
-                con_base.log_pos = con_base.log_lines_count - 1;
-            }
-            else
-            {
-                con_base.log_pos--;
-            }
-            con_base.cursor_pos = utf8_strlen(con_base.line_text[0]);
-            break;
-
-        case SDLK_LEFT:
-            if(con_base.cursor_pos > 0)
-            {
-                con_base.cursor_pos--;
-            }
-            break;
-
-        case SDLK_RIGHT:
-            if(con_base.cursor_pos < oldLength)
-            {
-                con_base.cursor_pos++;
-            }
-            break;
-
-        case SDLK_HOME:
-            con_base.cursor_pos = 0;
-            break;
-
-        case SDLK_END:
-            con_base.cursor_pos = oldLength;
-            break;
-
-        case SDLK_BACKSPACE:
-            if(con_base.cursor_pos > 0)
-            {
-                for(int16_t i = con_base.cursor_pos; i < oldLength ;i++)
-                {
-                    con_base.line_text[0][i-1] = con_base.line_text[0][i];
-                }
-                con_base.line_text[0][oldLength-1] = 0;
-                con_base.line_text[0][oldLength] = 0;
-                con_base.cursor_pos--;
-            }
-            break;
-
-        case SDLK_DELETE:
-            if(/*(con_base.cursor_pos > 0) && */(con_base.cursor_pos < oldLength))
-            {
-                for(int16_t i=con_base.cursor_pos;i<oldLength-1;i++)
-                {
-                    con_base.line_text[0][i] = con_base.line_text[0][i+1];
-                }
-                con_base.line_text[0][oldLength-1] = 0;
-            }
-            break;
-
-        default:
-            if((oldLength < con_base.line_size-1) && (key >= SDLK_SPACE))
-            {
-                for(int16_t i=oldLength;i>con_base.cursor_pos;i--)
-                {
-                    con_base.line_text[0][i] = con_base.line_text[0][i-1];
-                }
-                con_base.line_text[0][con_base.cursor_pos] = key;
-                con_base.line_text[0][++oldLength] = 0;
-                con_base.cursor_pos++;
-            }
-            break;
-    }
-
-    Con_CalcCursorPosition();
-}
-
-void Con_CalcCursorPosition()
-{
-    if(con_base.font)
-    {
-        con_base.cursor_x = 8 + 1 + glf_get_string_len(con_base.font, con_base.line_text[0], con_base.cursor_pos);
-    }
-}
-
-void Con_AddLog(const char *text)
-{
-    if(con_base.inited && (text != NULL) && (text[0] != 0))
-    {
-        if(con_base.log_lines_count > 1)
+    case SDLK_UP:
+        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
+        currentLine() = m_historyLines[m_historyPos];
+        m_historyPos++;
+        if(m_historyPos >= m_historyLines.size())
         {
-            char *last = con_base.log_lines[con_base.log_lines_count-1];        // save pointer to the last log string
-            for(uint16_t i=con_base.log_lines_count-1;i>0;i--)                  // shift log
-            {
-                con_base.log_lines[i] = con_base.log_lines[i-1];                // shift is round
-            }
-            con_base.log_lines[0] = last;                                       // cycle the shift
-            strncpy(con_base.log_lines[0], text, con_base.line_size);
-            con_base.log_lines[0][con_base.line_size-1] = 0;                    // paranoid end of string
+            m_historyPos = 0;
+        }
+        m_cursorPos = utf8_strlen(currentLine().c_str());
+        break;
+
+    case SDLK_DOWN:
+        Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
+        currentLine() = m_historyLines[m_historyPos];
+        if(m_historyPos == 0)
+        {
+            m_historyPos = m_lines.size() - 1;
         }
         else
         {
-            strncpy(con_base.log_lines[0], text, con_base.line_size);
-            con_base.log_lines[0][con_base.line_size-1] = 0;                    // paranoid end of string
+            m_historyPos--;
         }
+        m_cursorPos = utf8_strlen(currentLine().c_str());
+        break;
 
-        con_base.log_pos = 0;
+    case SDLK_LEFT:
+        if(m_cursorPos > 0)
+        {
+            m_cursorPos--;
+        }
+        break;
+
+    case SDLK_RIGHT:
+        if(m_cursorPos < oldLength)
+        {
+            m_cursorPos++;
+        }
+        break;
+
+    case SDLK_HOME:
+        m_cursorPos = 0;
+        break;
+
+    case SDLK_END:
+        m_cursorPos = oldLength;
+        break;
+
+    case SDLK_BACKSPACE:
+        if(m_cursorPos > 0) {
+            currentLine().erase(m_cursorPos-1);
+            m_cursorPos--;
+        }
+        break;
+
+    case SDLK_DELETE:
+        if(m_cursorPos < oldLength) {
+            currentLine().erase(m_cursorPos);
+        }
+        break;
+
+    default:
+        if((oldLength < m_lineSize-1) && (key >= SDLK_SPACE)) {
+            currentLine().insert(currentLine().begin() + m_cursorPos, char(key));
+            m_cursorPos++;
+        }
+        break;
+    }
+
+    calcCursorPosition();
+}
+
+void ConsoleInfo::calcCursorPosition() {
+    if(m_font) {
+        m_cursorX = 8 + 1 + glf_get_string_len(m_font, currentLine().c_str(), m_cursorPos);
     }
 }
 
-void Con_AddLine(const char *text, font_Style style)
-{
-    if(con_base.inited && (text != NULL))
-    {
-        size_t len = 0;
-        do
-        {
-            len = strlen(text);
-            char *last = con_base.line_text[con_base.line_count-1];             // save pointer to the last log string
-            for(uint16_t i=con_base.line_count-1;i>1;i--)                       // shift log
-            {
-                con_base.line_style_id[i] = con_base.line_style_id[i-1];
-                con_base.line_text[i]  = con_base.line_text[i-1];            // shift is round
-            }
-
-            con_base.line_text[1] = last;                                     // cycle the shift
-            con_base.line_style_id[1] = style;
-            strncpy(con_base.line_text[1], text, con_base.line_size);
-            con_base.line_text[1][con_base.line_size-1] = 0;                  // paranoid end of string
-            text += con_base.line_size-1;
-        }
-        while(len >= con_base.line_size);
+void ConsoleInfo::addLog(const std::string &text) {
+    if(inited && !text.empty()) {
+        m_historyLines.insert(m_historyLines.begin(), text);
+        if( m_historyLines.size() > m_bufferSize)
+            m_historyLines.resize(m_bufferSize);
+        m_historyPos = 0;
     }
 }
 
-void Con_AddText(const char *text, font_Style style)
-{
-    char buf[4096], ch;
-    size_t j = 0, text_size = strlen(text);
-
-    buf[0] = 0;
-    for(size_t i=0,j=0;i<text_size;i++)
-    {
-        ch = text[i];
-        if((ch == 10) || (ch == 13))
-        {
-            j = (j < 4096)?(j):(4095);
-            buf[j] = 0;
-            buf[4095] = 0;
-            if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
-            {
-                Con_AddLine(buf, style);
-            }
-            j=0;
-        }
-        else if(j < 4096)
-        {
-           buf[j++] = ch;
-        }
-    }
-
-    buf[4095] = 0;
-    if(j < 4096)
-    {
-        buf[j] = 0;
-    }
-    if((j > 0) && ((buf[0] != 10) && (buf[0] != 13) && ((buf[0] > 31) || (buf[1] > 32))))
-    {
-        Con_AddLine(buf, style);
+void ConsoleInfo::addLine(const std::string &text, font_Style style) {
+    if(inited && !text.empty()) {
+        m_lines.emplace_front(text, style);
+        m_historyPos = 0;
     }
 }
 
-void Con_Printf(const char *fmt, ...)
+void ConsoleInfo::addText(const std::string &text, font_Style style) {
+    size_t pos = 0;
+    while(pos != std::string::npos) {
+        size_t end = text.find_first_of("\r\n", pos);
+        if( end != pos+1 )
+            addLine(text.substr(pos, end-pos-1), style);
+        pos = end+1;
+    }
+}
+
+void ConsoleInfo::printf(const char *fmt, ...)
 {
     va_list argptr;
     char buf[4096];
@@ -464,10 +287,10 @@ void Con_Printf(const char *fmt, ...)
     vsnprintf(buf, 4096, fmt, argptr);
     buf[4096-1] = 0;
     va_end(argptr);
-    Con_AddLine(buf, FONTSTYLE_CONSOLE_NOTIFY);
+    addLine(buf, FONTSTYLE_CONSOLE_NOTIFY);
 }
 
-void Con_Warning(int warn_string_index, ...)
+void ConsoleInfo::warning(int warn_string_index, ...)
 {
     va_list argptr;
     char buf[4096];
@@ -479,10 +302,10 @@ void Con_Warning(int warn_string_index, ...)
     vsnprintf(buf, 4096, (const char*)fmt, argptr);
     buf[4096-1] = 0;
     va_end(argptr);
-    Con_AddLine(buf, FONTSTYLE_CONSOLE_WARNING);
+    addLine(buf, FONTSTYLE_CONSOLE_WARNING);
 }
 
-void Con_Notify(int notify_string_index, ...)
+void ConsoleInfo::notify(int notify_string_index, ...)
 {
     va_list argptr;
     char buf[4096];
@@ -494,16 +317,9 @@ void Con_Notify(int notify_string_index, ...)
     vsnprintf(buf, 4096, (const char*)fmt, argptr);
     buf[4096-1] = 0;
     va_end(argptr);
-    Con_AddLine(buf, FONTSTYLE_CONSOLE_NOTIFY);
+    addLine(buf, FONTSTYLE_CONSOLE_NOTIFY);
 }
 
-void Con_Clean()
-{
-    for(uint16_t i=0;i<con_base.line_count;i++)
-    {
-        con_base.line_text[i][0]  = 0;
-        con_base.line_style_id[i] = FONTSTYLE_GENERIC;
-    }
+void ConsoleInfo::clean() {
+    m_lines.clear();
 }
-
-

@@ -8,35 +8,35 @@
 #ifndef OBB_H
 #define OBB_H
 
-#include <stdint.h>
+#include <cstdint>
 
 #include "polygon.h"
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
+
+#include <memory>
 
 /*
  * In base_edges we safe the initial shape polygons
  */
 
-struct entity_s;
+struct Entity;
 
-typedef struct obb_s
+struct OBB
 {
-    struct polygon_s     base_polygons[6];               // bv base surface
-    struct polygon_s     polygons[6];                       // bv world coordinate surface
-    btScalar            *transform;                      // Object transform matrix
-    btScalar             r;
+    Polygon base_polygons[6];               // bv base surface
+    Polygon polygons[6];                       // bv world coordinate surface
+    const btTransform* transform = nullptr;                      // Object transform matrix
+    btScalar r;
 
-    btScalar             base_centre[3];
-    btScalar             centre[3];
-    btScalar             extent[3];
-} obb_t, *obb_p;
+    btVector3 base_centre;
+    btVector3 centre;
+    btVector3 extent;
 
-obb_p OBB_Create();
-void OBB_Clear(obb_p bv);
+    void doTransform();
+    void rebuild(const btVector3 &bb_min, const btVector3 &bb_max);
+};
 
-void OBB_Rebuild(obb_p obb, btScalar bb_min[3], btScalar bb_max[3]);
-void OBB_Transform(obb_p obb);
-int OBB_OBB_Test(struct entity_s *e1, struct entity_s *e2);
+int OBB_OBB_Test(std::shared_ptr<Entity> e1, std::shared_ptr<Entity> e2);
 
 #endif /* OBB_H */
 

@@ -2,21 +2,24 @@
 #ifndef PARSE_H
 #define PARSE_H
 
-struct screen_info_s;
-struct console_info_s;
-struct entity_s;
+struct ScreenInfo;
+struct ConsoleInfo;
+struct Entity;
 struct lua_State;
+struct AudioSettings;
+struct ControlSettings;
+struct RenderSettings;
 
 #define CVAR_NAME_SIZE 32
 #define CVAR_LUA_TABLE_NAME "cvars"
 
-#include "bullet/LinearMath/btScalar.h"
+#include <bullet/LinearMath/btScalar.h>
 
 extern lua_State *engine_lua;
 
-char *parse_token(char *data, char *token);
+const char *parse_token(const char *data, char *token);
 
-float SC_ParseFloat(char **ch);
+float SC_ParseFloat(const char **ch);
 int   SC_ParseInt(char **ch);
 
 void lua_Clean(lua_State *lua);
@@ -24,11 +27,11 @@ void lua_Clean(lua_State *lua);
 #define lua_CallAndLog(L,n,r,f) lua_CallWithError(L, n, r, f, __FILE__, __LINE__)
 bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline);
 
-int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc);
-int lua_ParseRender(lua_State *lua, struct render_settings_s *rs);
-int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as);
-int lua_ParseConsole(lua_State *lua, struct console_info_s *cn);
-int lua_ParseControls(lua_State *lua, struct control_settings_s *cs);
+int lua_ParseScreen(lua_State *lua, ScreenInfo *sc);
+int lua_ParseRender(lua_State *lua, RenderSettings *rs);
+int lua_ParseAudio(lua_State *lua, AudioSettings *as);
+int lua_ParseConsole(lua_State *lua, ConsoleInfo *cn);
+int lua_ParseControls(lua_State *lua, ControlSettings *cs);
 
 bool lua_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask);
 bool lua_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_number, int *samples_count);

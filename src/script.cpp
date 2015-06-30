@@ -1,7 +1,7 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "script.h"
 #include "system.h"
@@ -19,16 +19,12 @@
 #include "audio.h"
 #include "string.h"
 
-extern "C" {
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-}
+#include <lua.hpp>
 
 /*
  * MISK
  */
-char *parse_token(char *data, char *token)
+const char *parse_token(const char *data, char *token)
 {
     ///@FIXME: token may be overflowed
     int c;
@@ -104,7 +100,7 @@ char *parse_token(char *data, char *token)
     return data;
 }
 
-float SC_ParseFloat(char **ch)
+float SC_ParseFloat(const char **ch)
 {
     char token[64];
     (*ch) = parse_token(*ch, token);
@@ -118,7 +114,7 @@ float SC_ParseFloat(char **ch)
 int SC_ParseInt(char **ch)
 {
     char token[64];
-    (*ch) = parse_token(*ch, token);
+    (*ch) = const_cast<char*>( parse_token(*ch, token) );
     if(token[0])
     {
         return atoi(token);
@@ -548,8 +544,8 @@ int lua_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activa
 
 void lua_LoopEntity(lua_State *lua, int object_id)
 {
-    entity_p ent = World_GetEntityByID(&engine_world, object_id);
-    if((lua) && (ent->state_flags & ENTITY_STATE_ACTIVE))
+    std::shared_ptr<Entity> ent = engine_world.getEntityByID(object_id);
+    if((lua) && ent->m_active)
     {
         int top = lua_gettop(lua);
         lua_getglobal(lua, "loopEntity");
@@ -565,7 +561,7 @@ void lua_LoopEntity(lua_State *lua, int object_id)
 /*
  * Game structures parse
  */
-int lua_ParseControls(lua_State *lua, struct control_settings_s *cs)
+int lua_ParseControls(lua_State *lua, struct ControlSettings *cs)
 {
     if(lua)
     {
@@ -596,7 +592,7 @@ int lua_ParseControls(lua_State *lua, struct control_settings_s *cs)
     return -1;
 }
 
-int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
+int lua_ParseScreen(lua_State *lua, struct ScreenInfo *sc)
 {
     if(lua)
     {
@@ -620,7 +616,7 @@ int lua_ParseScreen(lua_State *lua, struct screen_info_s *sc)
     return -1;
 }
 
-int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
+int lua_ParseRender(lua_State *lua, struct RenderSettings *rs)
 {
     if(lua)
     {
@@ -631,11 +627,11 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
         rs->mipmaps = lua_GetScalarField(lua, "mipmaps");
         rs->lod_bias = lua_GetScalarField(lua, "lod_bias");
         rs->anisotropy = lua_GetScalarField(lua, "anisotropy");
-        rs->antialias = lua_GetScalarField(lua, "antialias");
+        rs->antialias = lua_GetScalarField(lua, "antialias")!=0;
         rs->antialias_samples = lua_GetScalarField(lua, "antialias_samples");
         rs->texture_border = lua_GetScalarField(lua, "texture_border");
         rs->z_depth = lua_GetScalarField(lua, "z_depth");
-        rs->fog_enabled = lua_GetScalarField(lua, "fog_enabled");
+        rs->fog_enabled = lua_GetScalarField(lua, "fog_enabled") != 0;
         rs->fog_start_depth = lua_GetScalarField(lua, "fog_start_depth");
         rs->fog_end_depth = lua_GetScalarField(lua, "fog_end_depth");
 
@@ -660,7 +656,7 @@ int lua_ParseRender(lua_State *lua, struct render_settings_s *rs)
     return -1;
 }
 
-int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
+int lua_ParseAudio(lua_State *lua, struct AudioSettings *as)
 {
     if(lua)
     {
@@ -684,7 +680,7 @@ int lua_ParseAudio(lua_State *lua, struct audio_settings_s *as)
     return -1;
 }
 
-int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
+int lua_ParseConsole(lua_State *lua, ConsoleInfo *cn)
 {
     if(lua)
     {
@@ -694,41 +690,41 @@ int lua_ParseConsole(lua_State *lua, struct console_info_s *cn)
         lua_getfield(lua, -1, "background_color");
         if(lua_istable(lua, -1))
         {
-            cn->background_color[0] = (GLfloat)lua_GetScalarField(lua, "r") / 255.0;
-            cn->background_color[1] = (GLfloat)lua_GetScalarField(lua, "g") / 255.0;
-            cn->background_color[2] = (GLfloat)lua_GetScalarField(lua, "b") / 255.0;
-            cn->background_color[3] = (GLfloat)lua_GetScalarField(lua, "a") / 255.0;
+            cn->setBackgroundColor( (GLfloat)lua_GetScalarField(lua, "r") / 255.0,
+                                    (GLfloat)lua_GetScalarField(lua, "g") / 255.0,
+                                    (GLfloat)lua_GetScalarField(lua, "b") / 255.0,
+                                    (GLfloat)lua_GetScalarField(lua, "a") / 255.0);
         }
         lua_pop(lua, 1);
 
         float tf = lua_GetScalarField(lua, "spacing");
         if(tf >= CON_MIN_LINE_INTERVAL && tf <= CON_MAX_LINE_INTERVAL)
         {
-            cn->spacing = tf;
+            cn->setSpacing( tf );
         }
         int t = lua_GetScalarField(lua, "line_size");
         if(t >= CON_MIN_LINE_SIZE && t <= CON_MAX_LINE_SIZE)
         {
-            cn->line_size = t;
+            cn->setLineSize( t );
         }
         t = lua_GetScalarField(lua, "showing_lines");
         if(t >= CON_MIN_LINES && t <= CON_MAX_LINES)
         {
-            cn->showing_lines = t;
+            cn->setVisibleLines( t );
         }
         t = lua_GetScalarField(lua, "log_size");
         if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
         {
-            cn->log_lines_count = t;
+            cn->setHistorySize( t );
         }
         t = lua_GetScalarField(lua, "lines_count");
         if(t >= CON_MIN_LOG && t <= CON_MAX_LOG)
         {
-            cn->line_count = t;
+            cn->setBufferSize( t );
         }
 
-        cn->show = lua_GetScalarField(lua, "show");
-        cn->show_cursor_period = lua_GetScalarField(lua, "show_cursor_period");
+        cn->setVisible( lua_GetScalarField(lua, "show") != 0 );
+        cn->setShowCursorPeriod( lua_GetScalarField(lua, "show_cursor_period") );
 
         lua_settop(lua, top);
         return 1;
@@ -773,7 +769,7 @@ bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, con
             snprintf(errormessage, sizeof(errormessage), "Lua error without message (called from %s:%d)", cfile, cline);
         }
         //fprintf(stderr, "%s\n", errormessage);
-        Con_AddLine(errormessage, FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine(errormessage, FONTSTYLE_CONSOLE_WARNING);
         return false;
     }
     return true;

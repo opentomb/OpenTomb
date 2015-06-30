@@ -1,16 +1,15 @@
-#ifndef __OpenTomb__shader_description__
-#define __OpenTomb__shader_description__
+#pragma once
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include "gl_util.h"
 
-struct shader_stage
+struct ShaderStage
 {
     GLhandleARB shader;
     
-    shader_stage(GLenum type, const char *filename, const char *additionalDefines = 0);
-    ~shader_stage();
+    ShaderStage(GLenum type, const char *filename, const char *additionalDefines = 0);
+    ~ShaderStage();
 };
 
 /*!
@@ -20,19 +19,19 @@ struct shader_stage
  * of shader_description. We assume (for now) that every shader
  * has a texture.
  */
-struct shader_description
+struct ShaderDescription
 {
     GLhandleARB program;
     GLint sampler;
     
-    shader_description(const shader_stage &vertex, const shader_stage &fragment);
-    ~shader_description();
+    ShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
+    ~ShaderDescription();
 };
 
 /*!
  * A shader description specifically for use in GUI situations.
  */
-struct gui_shader_description : public shader_description
+struct GuiShaderDescription : public ShaderDescription
 {
     GLint offset;
     GLint factor;
@@ -42,13 +41,13 @@ struct gui_shader_description : public shader_description
         color
     };
     
-    gui_shader_description(const shader_stage &vertex, const shader_stage &fragment);
+    GuiShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
 /*!
  * A shader description specifically for use in GUI situations.
  */
-struct sprite_shader_description : public shader_description
+struct SpriteShaderDescription : public ShaderDescription
 {
     GLint model_view;
     GLint projection;
@@ -59,13 +58,13 @@ struct sprite_shader_description : public shader_description
         tex_coord
     };
     
-    sprite_shader_description(const shader_stage &vertex, const shader_stage &fragment);
+    SpriteShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
 /*!
  * A shader description for text
  */
-struct text_shader_description : public shader_description
+struct TextShaderDescription : public ShaderDescription
 {
     GLint screenSize;
     
@@ -75,25 +74,25 @@ struct text_shader_description : public shader_description
         tex_coord
     };
     
-    text_shader_description(const shader_stage &vertex, const shader_stage &fragment);
+    TextShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
 /*!
  * A shader description type that contains transform information. This comes in the form of a model view projection matrix.
  */
-struct unlit_shader_description : public shader_description
+struct UnlitShaderDescription : public ShaderDescription
 {
     GLint model_view_projection;
     
-    enum vertex_attribs {
-        position = 0,
-        color,
-        tex_coord,
-        normal,
-        matrix_index
+    enum VertexAttribs {
+        Position = 0,
+        Color,
+        TexCoord,
+        Normal,
+        MatrixIndex
     };
     
-    unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment);
+    UnlitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
 /*!
@@ -101,26 +100,24 @@ struct unlit_shader_description : public shader_description
  * contains a model view matrix and information about the current
  * light situation
  */
-struct lit_shader_description : public unlit_shader_description
+struct LitShaderDescription : public UnlitShaderDescription
 {
     GLint model_view;
     GLint projection;
     GLint number_of_lights;
-    GLint light_position;
+    GLint Lightosition;
     GLint light_color;
     GLint light_inner_radius;
     GLint light_outer_radius;
     GLint light_ambient;
     
-    lit_shader_description(const shader_stage &vertex, const shader_stage &fragment);
+    LitShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
-struct unlit_tinted_shader_description : public unlit_shader_description
+struct UnlitTintedShaderDescription : public UnlitShaderDescription
 {
     GLint current_tick;
     GLint tint_mult;
     
-    unlit_tinted_shader_description(const shader_stage &vertex, const shader_stage &fragment);
+    UnlitTintedShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
-
-#endif /* defined(__OpenTomb__shader_description__) */

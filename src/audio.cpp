@@ -2,17 +2,13 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_audio.h>
 
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-#include "al/AL/efx-presets.h"
+#include <AL/al.h>
+#include <AL/alext.h>
+#include <AL/efx.h>
+#include <AL/efx-presets.h>
 
-#include "ogg/codec.h"
-#include "ogg/ogg.h"
-#include "ogg/os_types.h"
-#include "ogg/vorbisfile.h"
-}
+#include <ogg/ogg.h>
+#include <vorbis/vorbisfile.h>
 
 #include "audio.h"
 #include "console.h"
@@ -24,10 +20,10 @@ extern "C" {
 #include "system.h"
 #include "render.h"
 #include "string.h"
-#include <math.h>
+#include <cmath>
 
-ALfloat                     listener_position[3];
-struct audio_fxmanager_s    fxManager;
+btVector3 listener_position;
+struct AudioFxManager    fxManager;
 
 bool                        StreamTrack::damp_active = false;
 
@@ -316,19 +312,12 @@ void AudioSource::SetUnderwater()
 
 void AudioSource::LinkEmitter()
 {
-    ALfloat  vec[3];
-    entity_p ent;
-
     switch(emitter_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            ent = World_GetEntityByID(&engine_world, emitter_ID);
-            if(ent)
-            {
-                vec3_copy(vec, ent->transform + 12);
-                SetPosition(vec);
-                vec3_copy(vec, ent->speed.m_floats);
-                SetVelocity(vec);
+            if(std::shared_ptr<Entity> ent = engine_world.getEntityByID(emitter_ID)) {
+                SetPosition(ent->m_transform.getOrigin());
+                SetVelocity(ent->m_speed);
             }
             return;
 
@@ -437,7 +426,7 @@ bool StreamTrack::Load_Ogg(const char *path)
 
     vorbis_Info = ov_info(&vorbis_Stream, -1);
 
-    Con_Notify(SYSNOTE_OGG_OPENED, path,
+    ConsoleInfo::instance().notify(SYSNOTE_OGG_OPENED, path,
                vorbis_Info->channels, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
 
     if(vorbis_Info->channels == 1)
@@ -840,9 +829,9 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // Don't even try to do anything with track, if its index is greater than overall amount of
     // soundtracks specified in a stream track map count (which is derived from script).
 
-    if(track_index >= engine_world.stream_track_map_count)
+    if(track_index >= engine_world.stream_track_map.size())
     {
-        Con_AddLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -851,7 +840,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(Audio_IsTrackPlaying(track_index))
     {
-        Con_AddLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
@@ -863,7 +852,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!lua_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
     {
-        Con_AddLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -888,7 +877,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
         target_stream = Audio_GetFreeStream();        // Try again to assign free stream.
 
         if(target_stream == -1)
-            Con_AddLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
+            ConsoleInfo::instance().addLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
             return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
     }
     else
@@ -905,7 +894,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!engine_world.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
     {
-        Con_AddLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_LOADERROR;
     }
 
@@ -913,7 +902,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!(engine_world.stream_tracks[target_stream].Play(do_fade_in)))
     {
-        Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
+        ConsoleInfo::instance().addLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_PLAYERROR;
     }
 
@@ -932,7 +921,7 @@ void Audio_UpdateStreamsDamping()
     // NOT background. So we simply check this condition and set damp activity flag
     // if condition is met.
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
     {
         if(engine_world.stream_tracks[i].IsPlaying())
         {
@@ -952,7 +941,7 @@ void Audio_UpdateStreams()
 {
     Audio_UpdateStreamsDamping();
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
     {
         if(engine_world.stream_tracks[i].IsPlaying())
         {
@@ -970,7 +959,7 @@ void Audio_UpdateStreams()
 
 bool Audio_IsTrackPlaying(uint32_t track_index)
 {
-    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
     {
         if(engine_world.stream_tracks[i].IsPlaying() &&
            engine_world.stream_tracks[i].IsTrack(track_index))
@@ -989,7 +978,7 @@ bool Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask)
         return false;   // No mask, play in any case.
     }
 
-    if(track_index >= engine_world.stream_track_map_count)
+    if(track_index >= engine_world.stream_track_map.size())
     {
         return true;    // No such track, hence "already" played.
     }
@@ -1019,7 +1008,7 @@ bool Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask)
 
 int Audio_GetFreeStream()
 {
-    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
     {
         if( (!engine_world.stream_tracks[i].IsPlaying()) &&
             (!engine_world.stream_tracks[i].IsActive())   )
@@ -1035,7 +1024,7 @@ bool Audio_StopStreams(int stream_type)
 {
     bool result = false;
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
     {
         if(engine_world.stream_tracks[i].IsPlaying()          &&
            (engine_world.stream_tracks[i].IsType(stream_type) ||
@@ -1053,7 +1042,7 @@ bool Audio_EndStreams(int stream_type)
 {
     bool result = false;
 
-    for(uint32_t i = 0; i < engine_world.stream_tracks_count; i++)
+    for(uint32_t i = 0; i < engine_world.stream_tracks.size(); i++)
     {
         if( (stream_type == -1) ||                              // End ALL streams at once.
             ((engine_world.stream_tracks[i].IsPlaying()) &&
@@ -1071,26 +1060,25 @@ bool Audio_EndStreams(int stream_type)
 
 bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 {
-    ALfloat  vec[3] = {0.0, 0.0, 0.0}, dist;
-    entity_p ent;
+    btVector3 vec{0,0,0};
 
     switch(entity_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            ent = World_GetEntityByID(&engine_world, entity_ID);
-            if(!ent)
-            {
+            if(std::shared_ptr<Entity> ent = engine_world.getEntityByID(entity_ID)) {
+                vec = ent->m_transform.getOrigin();
+            }
+            else {
                 return false;
             }
-            vec3_copy(vec, ent->transform + 12);
             break;
 
         case TR_AUDIO_EMITTER_SOUNDSOURCE:
-            if((uint32_t)entity_ID + 1 > engine_world.audio_emitters_count)
+            if((uint32_t)entity_ID + 1 > engine_world.audio_emitters.size())
             {
                 return false;
             }
-            vec3_copy(vec, engine_world.audio_emitters[entity_ID].position);
+            vec = engine_world.audio_emitters[entity_ID].position;
             break;
 
         case TR_AUDIO_EMITTER_GLOBAL:
@@ -1100,7 +1088,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
             return false;
     }
 
-    dist = vec3_dist_sq(listener_position, vec);
+    auto dist = (listener_position - vec).length2();
 
     // We add 1/4 of overall distance to fix up some issues with
     // pseudo-looped sounds that are called at certain frames in animations.
@@ -1113,19 +1101,19 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
 
 void Audio_UpdateSources()
 {
-    if(engine_world.audio_sources_count < 1)
+    if(engine_world.audio_sources.size() < 1)
     {
         return;
     }
 
     alGetListenerfv(AL_POSITION, listener_position);
 
-    for(uint32_t i = 0; i < engine_world.audio_emitters_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_emitters.size(); i++)
     {
         Audio_Send(engine_world.audio_emitters[i].sound_index, TR_AUDIO_EMITTER_SOUNDSOURCE, i);
     }
 
-    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
         engine_world.audio_sources[i].Update();
     }
@@ -1134,7 +1122,7 @@ void Audio_UpdateSources()
 
 void Audio_PauseAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
         if(engine_world.audio_sources[i].IsActive())
         {
@@ -1145,7 +1133,7 @@ void Audio_PauseAllSources()
 
 void Audio_StopAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
         engine_world.audio_sources[i].Stop();
     }
@@ -1153,7 +1141,7 @@ void Audio_StopAllSources()
 
 void Audio_ResumeAllSources()
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
         if(engine_world.audio_sources[i].IsActive())
         {
@@ -1165,7 +1153,7 @@ void Audio_ResumeAllSources()
 
 int Audio_GetFreeSource()   ///@FIXME: add condition (compare max_dist with new source dist)
 {
-    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
         if(engine_world.audio_sources[i].IsActive() == false)
         {
@@ -1181,7 +1169,7 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
 {
     int state;
 
-    for(uint32_t i = 0; i < engine_world.audio_sources_count; i++)
+    for(uint32_t i = 0; i < engine_world.audio_sources.size(); i++)
     {
         if( (engine_world.audio_sources[i].emitter_type == (uint32_t)entity_type) &&
             (engine_world.audio_sources[i].emitter_ID   == ( int32_t)entity_ID  ) &&
@@ -1205,17 +1193,16 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     int32_t         source_number;
     uint16_t        random_value;
     ALfloat         random_float;
-    audio_effect_p  effect = NULL;
+    AudioEffect*  effect = NULL;
     AudioSource    *source = NULL;
 
     // If there are no audio buffers or effect index is wrong, don't process.
 
-    if((engine_world.audio_buffers_count < 1) ||
-       (effect_ID < 0)) return TR_AUDIO_SEND_IGNORED;
+    if(engine_world.audio_buffers.size() < 1 || effect_ID < 0) return TR_AUDIO_SEND_IGNORED;
 
     // Remap global engine effect ID to local effect ID.
 
-    if((uint32_t)effect_ID >= engine_world.audio_map_count)
+    if((uint32_t)effect_ID >= engine_world.audio_buffers.size())
     {
         return TR_AUDIO_SEND_NOSAMPLE;  // Sound is out of bounds; stop.
     }
@@ -1230,7 +1217,7 @@ int Audio_Send(int effect_ID, int entity_type, int entity_ID)
     }
     else
     {
-        effect = engine_world.audio_effects + real_ID;
+        effect = &engine_world.audio_effects[real_ID];
     }
 
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
@@ -1368,7 +1355,7 @@ int Audio_Kill(int effect_ID, int entity_type, int entity_ID)
 }
 
 
-void Audio_LoadOverridedSamples(struct world_s *world)
+void Audio_LoadOverridedSamples(struct World *world)
 {
     int  num_samples, num_sounds;
     int  sample_index, sample_count;
@@ -1379,7 +1366,7 @@ void Audio_LoadOverridedSamples(struct world_s *world)
     {
         int buffer_counter = 0;
 
-        for(uint32_t i = 0; i < world->audio_map_count; i++)
+        for(uint32_t i = 0; i < world->audio_buffers.size(); i++)
         {
             if(world->audio_map[i] != -1)
             {
@@ -1415,7 +1402,7 @@ void Audio_InitGlobals()
 
 void Audio_InitFX()
 {
-    memset(&fxManager, 0, sizeof(audio_fxmanager_s));
+    memset(&fxManager, 0, sizeof(AudioFxManager));
 
     // Set up effect slots, effects and filters.
 
@@ -1488,14 +1475,12 @@ void Audio_Init(uint32_t num_Sources)
     // Generate new source array.
 
     num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
-    engine_world.audio_sources_count = num_Sources;
-    engine_world.audio_sources = new AudioSource[num_Sources];
+    engine_world.audio_sources.resize(num_Sources);
 
     // Generate stream tracks array.
-
-    engine_world.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
-    engine_world.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
-
+    
+    engine_world.stream_tracks.resize( TR_AUDIO_STREAM_NUMSOURCES );
+    
     // Reset last room type used for assigning reverb.
 
     fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;
@@ -1506,50 +1491,17 @@ int Audio_DeInit()
     Audio_StopAllSources();
     Audio_StopStreams();
 
-    if(engine_world.audio_sources)
-    {
-        delete[] engine_world.audio_sources;
-        engine_world.audio_sources = NULL;
-        engine_world.audio_sources_count = 0;
-    }
-
-    if(engine_world.stream_tracks)
-    {
-        delete[] engine_world.stream_tracks;
-        engine_world.stream_tracks = NULL;
-        engine_world.stream_tracks_count = 0;
-    }
-
-    if(engine_world.stream_track_map)
-    {
-        delete[] engine_world.stream_track_map;
-        engine_world.stream_track_map = NULL;
-        engine_world.stream_track_map_count = 0;
-    }
+    engine_world.audio_sources.clear();
+    engine_world.stream_tracks.clear();
+    engine_world.stream_track_map.clear();
 
     ///@CRITICAL: You must delete all sources before buffers deleting!!!
 
-    if(engine_world.audio_buffers)
-    {
-        alDeleteBuffers(engine_world.audio_buffers_count, engine_world.audio_buffers);
-        free(engine_world.audio_buffers);
-        engine_world.audio_buffers = NULL;
-        engine_world.audio_buffers_count = 0;
-    }
+    alDeleteBuffers(engine_world.audio_buffers.size(), engine_world.audio_buffers.data());
+    engine_world.audio_buffers.clear();
 
-    if(engine_world.audio_effects)
-    {
-        free(engine_world.audio_effects);
-        engine_world.audio_effects = NULL;
-        engine_world.audio_effects_count = 0;
-    }
-
-    if(engine_world.audio_map)
-    {
-        free(engine_world.audio_map);
-        engine_world.audio_map = NULL;
-        engine_world.audio_map_count = 0;
-    }
+    engine_world.audio_effects.clear();
+    engine_world.audio_map.clear();
 
     if(audio_settings.use_effects)
     {
@@ -1663,13 +1615,13 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 
     if(!file)
     {
-        Con_Warning(SYSWARN_CANT_OPEN_FILE);
+        ConsoleInfo::instance().warning(SYSWARN_CANT_OPEN_FILE);
         return -1;
     }
 
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
-        Con_Warning(SYSWARN_BAD_FILE_FORMAT);
+        ConsoleInfo::instance().warning(SYSWARN_BAD_FILE_FORMAT);
         return -2;
     }
 
@@ -1780,37 +1732,37 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
  * that function have to be called every game frame.
  * @param cam - pointer to the camera structure.
  */
-void Audio_UpdateListenerByCamera(struct camera_s *cam)
+void Audio_UpdateListenerByCamera(struct Camera *cam)
 {
-    ALfloat v[6];       // vec3 - forvard, vec3 - up
+    ALfloat v[6] = {
+        cam->m_viewDir[0], cam->m_viewDir[1], cam->m_viewDir[2],
+        cam->m_upDir[0], cam->m_upDir[1], cam->m_upDir[2]
+    };
 
-    vec3_copy(v+0, cam->view_dir);
-    vec3_copy(v+3, cam->up_dir);
     alListenerfv(AL_ORIENTATION, v);
 
-    vec3_copy(v, cam->pos);
-    alListenerfv(AL_POSITION, v);
+    alListenerfv(AL_POSITION, cam->m_pos);
 
-    vec3_sub(v, cam->pos, cam->prev_pos);
-    v[3] = 1.0 / engine_frame_time;
-    vec3_mul_scalar(v, v, v[3]);
-    alListenerfv(AL_VELOCITY, v);
-    vec3_copy(cam->prev_pos, cam->pos);
+    btVector3 v2 = cam->m_pos - cam->m_prevPos;
+    v2[3] = 1.0 / engine_frame_time;
+    v2 *= v2[3];
+    alListenerfv(AL_VELOCITY, v2);
+    cam->m_prevPos = cam->m_pos;
 
-    if(cam->current_room)
+    if(cam->m_currentRoom)
     {
-        if(cam->current_room->flags & TR_ROOM_FLAG_WATER)
+        if(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER)
         {
             fxManager.current_room_type = TR_AUDIO_FX_WATER;
         }
         else
         {
-            fxManager.current_room_type = cam->current_room->reverb_info;
+            fxManager.current_room_type = cam->m_currentRoom->reverb_info;
         }
 
-        if(fxManager.water_state != (int8_t)(cam->current_room->flags & TR_ROOM_FLAG_WATER))
+        if(fxManager.water_state != (int8_t)(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
         {
-            fxManager.water_state = cam->current_room->flags & TR_ROOM_FLAG_WATER;
+            fxManager.water_state = cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER;
 
             if(fxManager.water_state)
             {
@@ -1824,7 +1776,7 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
     }
 }
 
-void Audio_UpdateListenerByEntity(struct entity_s *ent)
+void Audio_UpdateListenerByEntity(struct Entity *ent)
 {
     ///@FIXME: Add entity listener updater here.
 }
@@ -1833,5 +1785,5 @@ void Audio_Update()
 {
     Audio_UpdateSources();
     Audio_UpdateStreams();
-    Audio_UpdateListenerByCamera(renderer.cam);
+    Audio_UpdateListenerByCamera(renderer.camera());
 }

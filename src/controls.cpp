@@ -24,7 +24,7 @@ extern SDL_GameController   *sdl_controller;
 extern SDL_Haptic           *sdl_haptic;
 extern SDL_Window           *sdl_window;
 
-extern engine_container_p last_cont;
+extern EngineContainer* last_cont;
 
 
 void Controls_Key(int32_t button, int state)
@@ -121,9 +121,9 @@ void Controls_Key(int32_t button, int state)
                 case ACT_CONSOLE:
                     if(!state)
                     {
-                        con_base.show = !con_base.show;
+                        ConsoleInfo::instance().toggleVisibility();
 
-                        if(con_base.show)
+                        if(ConsoleInfo::instance().isVisible())
                         {
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                             SDL_ShowCursor(1);
@@ -466,7 +466,7 @@ void Controls_PollSDLInput()
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(!con_base.show && control_states.mouse_look != 0 &&
+                if(!ConsoleInfo::instance().isVisible() && control_states.mouse_look != 0 &&
                     ((event.motion.x != (screen_info.w/2)) ||
                      (event.motion.y != (screen_info.h/2))))
                 {
@@ -532,9 +532,9 @@ void Controls_PollSDLInput()
 
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
-                if(con_base.show && event.key.state)
+                if(ConsoleInfo::instance().isVisible() && event.key.state)
                 {
-                    Con_Filter(event.text.text);
+                    ConsoleInfo::instance().filter(event.text.text);
                     return;
                 }
                 break;
@@ -549,7 +549,7 @@ void Controls_PollSDLInput()
                     break;
                 }
 
-                if(con_base.show && event.key.state)
+                if(ConsoleInfo::instance().isVisible() && event.key.state)
                 {
                     switch (event.key.keysym.sym)
                     {
@@ -562,7 +562,7 @@ void Controls_PollSDLInput()
                         case SDLK_END:
                         case SDLK_BACKSPACE:
                         case SDLK_DELETE:
-                            Con_Edit(event.key.keysym.sym);
+                            ConsoleInfo::instance().edit(event.key.keysym.sym);
                             break;
                         default:
                             break;
@@ -646,11 +646,11 @@ void Controls_DebugKeys(int button, int state)
 
 void Controls_PrimaryMouseDown()
 {
-    engine_container_p cont = Container_Create();
+    EngineContainer* cont = new EngineContainer();
     btScalar dbgR = 128.0;
-    btScalar *v = engine_camera.pos;
-    btScalar *dir = engine_camera.view_dir;
-    btScalar new_pos[3];
+    btVector3 v = engine_camera.m_pos;
+    btVector3 dir = engine_camera.m_viewDir;
+    btVector3 new_pos;
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape;
@@ -659,16 +659,14 @@ void Controls_PrimaryMouseDown()
     cshape = new btSphereShape(dbgR);
     //cshape = new btCapsuleShapeZ(50.0, 100.0);
     startTransform.setIdentity();
-    new_pos[0] = v[0];
-    new_pos[1] = v[1];
-    new_pos[2] = v[2];
+    new_pos = v;
     startTransform.setOrigin(btVector3(new_pos[0], new_pos[1], new_pos[2]));
     cshape->calculateLocalInertia(12.0, localInertia);
     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
     body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(btVector3(dir[0], dir[1], dir[2]) * 6000);
-    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.current_room);
+    cont->room = Room_FindPosCogerrence(new_pos, engine_camera.m_currentRoom);
     cont->object_type = OBJECT_BULLET_MISC;                     // bullet have to destroy this user pointer
     body->setUserPointer(cont);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
@@ -678,19 +676,16 @@ void Controls_PrimaryMouseDown()
 
 void Controls_SecondaryMouseDown()
 {
-    engine_container_t *c0;
+    EngineContainer* c0;
     btVector3 from, to, place;
-    engine_container_t cam_cont;
 
-    vec3_copy(from.m_floats, engine_camera.pos);
-    to = from + btVector3(engine_camera.view_dir[0], engine_camera.view_dir[1], engine_camera.view_dir[2]) * 32768.0;
+    from = engine_camera.m_pos;
+    to = from + btVector3(engine_camera.m_viewDir[0], engine_camera.m_viewDir[1], engine_camera.m_viewDir[2]) * 32768.0;
 
-    cam_cont.next = NULL;
-    cam_cont.object = NULL;
-    cam_cont.object_type = 0;
-    cam_cont.room = engine_camera.current_room;
+    EngineContainer cam_cont;
+    cam_cont.room = engine_camera.m_currentRoom;
 
-    bt_engine_ClosestRayResultCallback cbc(&cam_cont);
+    BtEngineClosestRayResultCallback cbc(&cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     bt_engine_dynamicsWorld->rayTest(from, to, cbc);
     if(cbc.hasHit())
@@ -698,12 +693,12 @@ void Controls_SecondaryMouseDown()
         extern GLfloat cast_ray[6];
 
         place.setInterpolate3(from, to, cbc.m_closestHitFraction);
-        vec3_copy(cast_ray, place.m_floats);
-        cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld.m_floats[0];
-        cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld.m_floats[1];
-        cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld.m_floats[2];
+        std::copy(place+0, place+3, cast_ray);
+        cast_ray[3] = cast_ray[0] + 100.0 * cbc.m_hitNormalWorld[0];
+        cast_ray[4] = cast_ray[1] + 100.0 * cbc.m_hitNormalWorld[1];
+        cast_ray[5] = cast_ray[2] + 100.0 * cbc.m_hitNormalWorld[2];
 
-        if((c0 = (engine_container_p)cbc.m_collisionObject->getUserPointer()))
+        if((c0 = (EngineContainer*)cbc.m_collisionObject->getUserPointer()))
         {
             if(c0->object_type == OBJECT_BULLET_MISC)
             {

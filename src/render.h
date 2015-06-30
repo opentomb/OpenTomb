@@ -1,105 +1,86 @@
+#pragma once
 
-#ifndef RENDER_H
-#define RENDER_H
-
-#include <stdint.h>
+#include <cstdint>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
-#include "bullet/LinearMath/btScalar.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/LinearMath/btIDebugDraw.h"
+#include <bullet/LinearMath/btScalar.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/LinearMath/btIDebugDraw.h>
 
-#define R_DRAW_WIRE             0x00000001      // Wireframe rendering
-#define R_DRAW_ROOMBOXES        0x00000002      // Show room bounds
-#define R_DRAW_BOXES            0x00000004      // Show boxes
-#define R_DRAW_PORTALS          0x00000008      // Show portals
-#define R_DRAW_FRUSTUMS         0x00000010      // Show frustums
-#define R_DRAW_NORMALS          0x00000020      // Show normals
-#define R_DRAW_AXIS             0x00000040      // Show axes
-#define R_SKIP_ROOM             0x00000080      // Hide rooms
-#define R_SKIP_STATIC           0x00000100      // Hide statics
-#define R_SKIP_ENTITIES         0x00000200      // Hide entities
-#define R_DRAW_NULLMESHES       0x00000400      // Draw nullmesh entities
-#define R_DRAW_DUMMY_STATICS    0x00000800      // Draw empty static meshes
-#define R_DRAW_COLL             0x00001000      // Draw Bullet physics world
-#define R_DRAW_SKYBOX           0x00002000      // Draw skybox
-#define R_DRAW_POINTS           0x00004000      // Points rendering
+#include <memory>
+#include <vector>
+
+#include "vertex_array.h"
 
 #define DEBUG_DRAWER_DEFAULT_BUFFER_SIZE        (128 * 1024)
 #define INIT_FRAME_VERTEX_BUFFER_SIZE           (1024 * 1024)
 
-#ifdef BT_USE_DOUBLE_PRECISION
-    #define GL_BT_SCALAR GL_DOUBLE
-#else
-    #define GL_BT_SCALAR GL_FLOAT
-#endif
-
 #define STENCIL_FRUSTUM 1
 
-struct portal_s;
-struct frustum_s;
-struct world_s;
-struct room_s;
-struct camera_s;
-struct entity_s;
-struct sprite_s;
-struct base_mesh_s;
-struct obb_s;
-struct lit_shader_description;
-class vertex_array;
+struct Portal;
+struct Frustum;
+struct World;
+struct Room;
+struct Camera;
+struct Entity;
+struct Sprite;
+struct BaseMesh;
+struct OBB;
+struct LitShaderDescription;
+struct SSBoneFrame;
+struct RoomSector;
+struct Render;
 
-class render_DebugDrawer:public btIDebugDraw
+class RenderDebugDrawer : public btIDebugDraw
 {
-    uint32_t m_debugMode;
-    uint32_t m_max_lines;
-    uint32_t m_lines;
-    bool     m_need_realloc;
+    uint32_t m_debugMode = 0;
 
-    GLfloat m_color[3];
-    GLfloat *m_buffer;
+    std::array<GLfloat,3> m_color{{0,0,0}};
+    std::vector<std::array<GLfloat,3>> m_buffer;
     
-    struct obb_s *m_obb;
+    std::unique_ptr<OBB> m_obb;
 
-    void addLine(const GLfloat start[3], const GLfloat end[3]);
-    void addLine(const GLfloat start[3], const GLfloat startColor[3], const GLfloat end[3], const GLfloat endColor[3]);
+    void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &end);
+    void addLine(const btVector3& start, const btVector3& end);
+    void addLine(const std::array<GLfloat,3> &start, const std::array<GLfloat,3> &startColor, const std::array<GLfloat,3> &end, const std::array<GLfloat,3> &endColor);
     
-    vertex_array *m_vertex_array;
-    GLuint m_glbuffer;
+    std::unique_ptr<VertexArray> m_vertexArray{};
+    GLuint m_glbuffer = 0;
     
-    public:
-        // engine debug function
-        render_DebugDrawer();
-        ~render_DebugDrawer();
-        bool IsEmpty()
-        {
-            return m_lines == 0;
-        }
-        void reset();
-        void render();
-        void setColor(GLfloat r, GLfloat g, GLfloat b)
-        {
-            m_color[0] = r;
-            m_color[1] = g;
-            m_color[2] = b;
-        }
-        void drawAxis(btScalar r, btScalar transform[16]);
-        void drawPortal(struct portal_s *p);
-        void drawFrustum(struct frustum_s *f);
-        void drawBBox(btScalar bb_min[3], btScalar bb_max[3], btScalar *transform);
-        void drawOBB(struct obb_s *obb);
-        void drawMeshDebugLines(struct base_mesh_s *mesh, btScalar transform[16], const btScalar *overrideVertices, const btScalar *overrideNormals);
-        void drawSkeletalModelDebugLines(struct ss_bone_frame_s *bframe, btScalar transform[16]);
-        void drawEntityDebugLines(struct entity_s *entity);
-        void drawSectorDebugLines(struct room_sector_s *rs);
-        void drawRoomDebugLines(struct room_s *room, struct render_s *render);
-        
-        // bullet's debug interface
-        virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color);
-        virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color);
-        virtual void   reportErrorWarning(const char* warningString);
-        virtual void   draw3dText(const btVector3& location, const char* textString);
-        virtual void   setDebugMode(int debugMode);
-        virtual int    getDebugMode() const {return m_debugMode;}
+public:
+    // engine debug function
+    RenderDebugDrawer();
+    ~RenderDebugDrawer();
+    bool IsEmpty()
+    {
+        return m_buffer.empty();
+    }
+    void reset();
+    void render();
+    void setColor(GLfloat r, GLfloat g, GLfloat b)
+    {
+        m_color[0] = r;
+        m_color[1] = g;
+        m_color[2] = b;
+    }
+    void drawAxis(btScalar r, const btTransform& transform);
+    void drawPortal(const Portal &p);
+    void drawFrustum(const Frustum &f);
+    void drawBBox(const btVector3 &bb_min, const btVector3 &bb_max, const btTransform *transform);
+    void drawOBB(OBB *obb);
+    void drawMeshDebugLines(const std::shared_ptr<BaseMesh> &mesh, const btTransform& transform, const std::vector<btVector3> &overrideVertices, const std::vector<btVector3> &overrideNormals, Render* render);
+    void drawSkeletalModelDebugLines(SSBoneFrame *bframe, const btTransform& transform, Render *render);
+    void drawEntityDebugLines(std::shared_ptr<Entity> entity, Render *render);
+    void drawSectorDebugLines(RoomSector *rs);
+    void drawRoomDebugLines(std::shared_ptr<Room> room, Render *render);
+
+    // bullet's debug interface
+    virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color);
+    virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color);
+    virtual void   reportErrorWarning(const char* warningString);
+    virtual void   draw3dText(const btVector3& location, const char* textString);
+    virtual void   setDebugMode(int debugMode);
+    virtual int    getDebugMode() const {return m_debugMode;}
 };
 
 
@@ -128,85 +109,163 @@ enum BlendingMode
 #define TR_ANIMTEXTURE_REVERSE           2
 
 
-typedef struct render_list_s
+struct RenderList
 {
-    char               active;
-    struct room_s     *room;
-    btScalar           dist;
-}render_list_t, *render_list_p;
+    bool active = false;
+    std::shared_ptr<Room> room{};
+    btScalar dist = 0;
+};
 
-typedef struct render_settings_s
+struct RenderSettings
 {
-    float     lod_bias;
-    uint32_t  mipmap_mode;
-    uint32_t  mipmaps;
-    uint32_t  anisotropy;
-    int8_t    antialias;
-    int8_t    antialias_samples;
-    int8_t    texture_border;
-    int8_t    z_depth;
-    int8_t    fog_enabled;
-    GLfloat   fog_color[4];
-    float     fog_start_depth;
-    float     fog_end_depth;
-}render_settings_t, *render_settings_p;
+    float     lod_bias = 0;
+    uint32_t  mipmap_mode = 3;
+    uint32_t  mipmaps = 3;
+    uint32_t  anisotropy = 0;
+    bool antialias = false;
+    int8_t    antialias_samples = 0;
+    int8_t    texture_border = 8;
+    int8_t    z_depth = 16;
+    bool fog_enabled = true;
+    GLfloat   fog_color[4]{0,0,0,1};
+    float     fog_start_depth = 10000;
+    float     fog_end_depth = 16000;
+};
 
-typedef struct render_s
+class ShaderManager;
+struct BSPNode;
+struct UnlitTintedShaderDescription;
+struct SSBoneFrame;
+struct BSPFaceRef;
+struct Character;
+
+class Render
 {
-    int8_t                      blocked;
-    uint32_t                    style;                                          //
-    struct world_s             *world;
-    struct camera_s            *cam;
-    struct render_settings_s    settings;
-    class shader_manager *shader_manager;
-    class vertex_array_manager *vertex_array_manager;
+    friend class RenderDebugDrawer;
+private:
+    bool m_blocked = true;
+    World* m_world = nullptr;
+    Camera* m_cam = nullptr;
+    RenderSettings m_settings;
+    std::unique_ptr<ShaderManager> m_shaderManager;
 
-    uint32_t                    r_list_size;
-    uint32_t                    r_list_active_count;
-    struct render_list_s       *r_list;
-}render_t, *render_p;
+    size_t m_rListActiveCount = 0;
+    std::vector<RenderList> m_rList{};
 
-extern render_t renderer;
+    bool m_drawWire = false;
+    bool m_drawRoomBoxes = false;
+    bool m_drawBoxes = false;
+    bool m_drawPortals = false;
+    bool m_drawFrustums = false;
+    bool m_drawNormals = false;
+    bool m_drawAxis = false;
+    bool m_skipRoom = false;
+    bool m_skipStatic = false;
+    bool m_skipEntities = false;
+    bool m_drawNullMeshes = false;
+    bool m_drawDummyStatics = false;
+    bool m_drawColl = false;
+    bool m_drawSkybox = false;
+    bool m_drawPoints = false;
+public:
+    void cleanList();
+    void genWorldList();
+    void drawList();
+    void drawListDebugLines();
+    void doShaders();
+    void initGlobals();
+    void init();
+    void empty();
+    int addRoom(std::shared_ptr<Room> room);
+    void setWorld(World* m_world);
+    void resetWorld() {
+        m_world = nullptr;
+    }
 
-void Render_DoShaders();
-void Render_Empty(render_p render);
-void Render_InitGlobals();
-void Render_Init();
+    void resetRListActiveCount() {
+        m_rListActiveCount = 0;
+    }
 
-render_list_p Render_CreateRoomListArray(unsigned int count);
-void Render_Entity(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
-void Render_DynamicEntity(const struct lit_shader_description *shader, struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
-void Render_DynamicEntitySkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar pMatrix[16]);
-void Render_SkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const btScalar mvMatrix[16], const btScalar mvpMatrix[16]);
-void Render_SkeletalModelSkin(const struct lit_shader_description *shader, struct entity_s *ent, const btScalar mvMatrix[16], const btScalar pMatrix[16]);
-void Render_Hair(struct entity_s *entity, const btScalar modelViewMatrix[16], const btScalar modelViewProjectionMatrix[16]);
-void Render_SkyBox(const btScalar matrix[16]);
-void Render_Mesh(struct base_mesh_s *mesh);
-void Render_PolygonTransparency(uint16_t &currentTransparency, const struct bsp_face_ref_s *p, const struct unlit_tinted_shader_description *shader);
-void Render_BSPFrontToBack(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
-void Render_BSPBackToFront(uint16_t &currentTransparency, struct bsp_node_s *root, const struct unlit_tinted_shader_description *shader);
-void Render_UpdateAnimTextures();
-void Render_CleanList();
+    const std::unique_ptr<ShaderManager>& shaderManager() {
+        return m_shaderManager;
+    }
+    Camera* camera() {
+        return m_cam;
+    }
+    void setCamera(Camera* cam) {
+        m_cam = cam;
+    }
 
+    World* world() {
+        return m_world;
+    }
+    const RenderSettings& settings() const {
+        return m_settings;
+    }
+    RenderSettings& settings() {
+        return m_settings;
+    }
 
-void Render_Room(struct room_s *room, struct render_s *render, const btScalar matrix[16], const btScalar modelViewProjectionMatrix[16], const btScalar projection[16]);
-void Render_Room_Sprites(struct room_s *room, struct render_s *render, const btScalar modelViewMatrix[16], const btScalar projectionMatrix[16]);
-int Render_AddRoom(struct room_s *room);
-void Render_DrawList();
-void Render_DrawList_DebugLines();
+    void hideSkyBox() {
+        m_drawSkybox = false;
+    }
+    void toggleWireframe() {
+        m_drawWire = !m_drawWire;
+    }
+    void toggleDrawPoints() {
+        m_drawPoints = !m_drawPoints;
+    }
+    void toggleDrawColl() {
+        m_drawColl = !m_drawColl;
+    }
+    void toggleDrawNormals() {
+        m_drawNormals = !m_drawNormals;
+    }
+    void toggleDrawPortals() {
+        m_drawPortals = !m_drawPortals;
+    }
+    void toggleDrawFrustums() {
+        m_drawFrustums = !m_drawFrustums;
+    }
+    void toggleDrawRoomBoxes() {
+        m_drawRoomBoxes = !m_drawRoomBoxes;
+    }
+    void toggleDrawBoxes() {
+        m_drawBoxes = !m_drawBoxes;
+    }
+    void toggleDrawAxis() {
+        m_drawAxis = !m_drawAxis;
+    }
+    void toggleDrawNullMeshes() {
+        m_drawNullMeshes = !m_drawNullMeshes;
+    }
+    void toggleDrawDummyStatics() {
+        m_drawDummyStatics = !m_drawDummyStatics;
+    }
+    void toggleSkipRoom() {
+        m_skipRoom = !m_skipRoom;
+    }
 
-int Render_HaveFrustumParent(struct room_s *room, struct frustum_s *frus);
-int Render_ProcessRoom(struct portal_s *portal, struct frustum_s *frus);
-void Render_GenWorldList();
+    void renderEntity(std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix, const btTransform &projection);
+    void renderDynamicEntity(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> entity, const btTransform &modelViewMatrix, const btTransform &modelViewProjectionMatrix);
+    void renderDynamicEntitySkin(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> ent, const btTransform& mvMatrix, const btTransform& pMatrix);
+    void renderSkeletalModel(const std::shared_ptr<LitShaderDescription> &shader, SSBoneFrame* bframe, const btTransform &mvMatrix, const btTransform &mvpMatrix);
+    void renderSkeletalModelSkin(const std::shared_ptr<LitShaderDescription> &shader, std::shared_ptr<Entity> ent, const btTransform &mvMatrix, const btTransform &pMatrix);
+    void renderHair(std::shared_ptr<Character> entity, const btTransform& modelViewMatrix, const btTransform& modelViewProjectionMatrix);
+    void renderSkyBox(const btTransform &matrix);
+    void renderMesh(const std::shared_ptr<BaseMesh> &mesh);
+    void renderPolygonTransparency(uint16_t &currentTransparency, const BSPFaceRef &p, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
+    void renderBSPFrontToBack(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription>& shader);
+    void renderBSPBackToFront(uint16_t &currentTransparency, const std::unique_ptr<BSPNode> &root, const std::shared_ptr<UnlitTintedShaderDescription> &shader);
+    void renderRoom(std::shared_ptr<Room> room, const btTransform& matrix, const btTransform& modelViewProjectionMatrix, const btTransform& projection);
+    void renderRoomSprites(std::shared_ptr<Room> room, const btTransform& modelViewMatrix, const btTransform& projectionMatrix);
 
-void Render_SetWorld(struct world_s *world);
+    int haveFrustumParent(Room *room, Frustum *frus);
+    int processRoom(Portal *portal, const std::shared_ptr<Frustum> &frus);
+    void renderSkyBoxDebugLines();
 
-void Render_CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
+private:
+    std::shared_ptr<LitShaderDescription> setupEntityLight(std::shared_ptr<Entity> entity, const btTransform& modelViewMatrix, bool skin);
+};
 
-/*
- * DEBUG PRIMITIVES RENDERING
- */
-void Render_SkyBox_DebugLines();
-
-
-#endif
+extern Render renderer;

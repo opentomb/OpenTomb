@@ -1,38 +1,52 @@
-#ifndef __OpenTomb__shader_manager__
-#define __OpenTomb__shader_manager__
+#pragma once
 
 #include "shader_description.h"
+
+#include <memory>
 
 // Highest number of lights that will show up in the entity shader.
 #define MAX_NUM_LIGHTS 8
 
-class shader_manager {
-    unlit_tinted_shader_description *room_shaders[2][2];
-    unlit_tinted_shader_description *static_mesh_shader;
-    unlit_shader_description *stencil;
-    unlit_shader_description *debugline;
-    lit_shader_description *entity_shader[MAX_NUM_LIGHTS+1][2];
-    gui_shader_description *gui;
-    gui_shader_description *gui_textured;
-    text_shader_description *text;
-    sprite_shader_description *sprites;
+class ShaderManager {
+private:
+    std::shared_ptr<UnlitTintedShaderDescription> m_roomShaders[2][2];
+    std::shared_ptr<UnlitTintedShaderDescription> m_staticMeshShader;
+    std::shared_ptr<UnlitShaderDescription> m_stencil;
+    std::shared_ptr<UnlitShaderDescription> m_debugline;
+    std::shared_ptr<LitShaderDescription> m_entityShader[MAX_NUM_LIGHTS+1][2];
+    std::shared_ptr<GuiShaderDescription> m_gui;
+    std::shared_ptr<GuiShaderDescription> m_guiTextured;
+    std::shared_ptr<TextShaderDescription> m_text;
+    std::shared_ptr<SpriteShaderDescription> m_sprites;
 
 public:
-    shader_manager();
-    ~shader_manager();
+    ShaderManager();
+    ~ShaderManager() = default;
     
-    const lit_shader_description *getEntityShader(unsigned numberOfLights, bool skin) const;
-    
-    const unlit_tinted_shader_description *getStaticMeshShader() const { return static_mesh_shader; }
-    
-    const unlit_shader_description *getStencilShader() const { return stencil; }
-    
-    const unlit_shader_description *getDebugLineShader() const { return debugline; }
-    
-    const unlit_tinted_shader_description *getRoomShader(bool isFlickering, bool isWater) const;
-    const gui_shader_description *getGuiShader(bool includingTexture) const;
-    const text_shader_description *getTextShader() const { return text; }
-    const sprite_shader_description *getSpriteShader() const { return sprites; }
-};
+    std::shared_ptr<LitShaderDescription> getEntityShader(unsigned numberOfLights, bool skin) const {
+        assert(numberOfLights <= MAX_NUM_LIGHTS);
 
-#endif /* defined(__OpenTomb__shader_manager__) */
+        return m_entityShader[numberOfLights][skin ? 1 : 0];
+    }
+    
+    std::shared_ptr<UnlitTintedShaderDescription> getStaticMeshShader() const { return m_staticMeshShader; }
+    
+    std::shared_ptr<UnlitShaderDescription> getStencilShader() const { return m_stencil; }
+    
+    std::shared_ptr<UnlitShaderDescription> getDebugLineShader() const { return m_debugline; }
+    
+    std::shared_ptr<UnlitTintedShaderDescription> getRoomShader(bool isFlickering, bool isWater) const
+    {
+        return m_roomShaders[isWater ? 1 : 0][isFlickering ? 1 : 0];
+    }
+
+    std::shared_ptr<GuiShaderDescription> getGuiShader(bool includingTexture) const
+    {
+        if (includingTexture)
+            return m_guiTextured;
+        else
+            return m_gui;
+    }
+    std::shared_ptr<TextShaderDescription> getTextShader() const { return m_text; }
+    std::shared_ptr<SpriteShaderDescription> getSpriteShader() const { return m_sprites; }
+};

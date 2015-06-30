@@ -1,8 +1,6 @@
+#pragma once
 
-#ifndef CONSOLE_H
-#define CONSOLE_H
-
-#include <stdint.h>
+#include <cstdint>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
@@ -21,60 +19,156 @@
 #define CON_MIN_LINE_INTERVAL 0.5
 #define CON_MAX_LINE_INTERVAL 4.0
 
-typedef struct console_info_s
+struct ConsoleInfo
 {
-    struct gl_tex_font_s       *font;                       // Texture font renderer
+private:
+    struct Line {
+        std::string text{};
+        font_Style styleId = FONTSTYLE_GENERIC;
+
+        Line() = default;
+        Line(const std::string& t, font_Style s = FONTSTYLE_GENERIC)
+            : text(t)
+            , styleId(s)
+        {
+        }
+    };
+
+    gl_tex_font_s *m_font = nullptr;                       // Texture font renderer
     
-    GLfloat                     background_color[4];
+    GLfloat m_backgroundColor[4];
 
-    uint16_t                    log_lines_count;            // Amount of log lines to use
-    uint16_t                    log_pos;                    // Current log position
-    char                      **log_lines;                  // Console lines
+    size_t m_historyPos = 0;                    // Current log position
+    size_t m_historySize;
+    std::vector<std::string> m_historyLines;
     
-    uint16_t                    line_count;                 // Amount of shown lines
-    uint16_t                   *line_style_id;
-    char                      **line_text;                  // Console text
+    std::list<Line> m_lines;
+    size_t m_visibleLines;
+    size_t m_bufferSize;
     
-    uint16_t                    line_size;                  // Console line size
-    int16_t                     line_height;                // Height, including spacing
+    uint16_t m_lineSize = CON_MAX_LINE_SIZE;                  // Console line size
+    int16_t m_lineHeight;                // Height, including spacing
     
-    uint16_t                    showing_lines;              // Amount of visible lines
-    float                       spacing;                    // Line spacing
+    float m_spacing = CON_MIN_LINE_INTERVAL;                    // Line spacing
     
-    int16_t                     cursor_pos;                 // Current cursor position, in symbols
-    int16_t                     cursor_x;                   // Cursor position in pixels
-    int16_t                     cursor_y;
-    float                       cursor_time;                // Current cursor draw time
-    float                       show_cursor_period;
-    int8_t                      show_cursor;                // Cursor visibility flag
+    int16_t m_cursorPos;                 // Current cursor position, in symbols
+    int16_t m_cursorX;                   // Cursor position in pixels
+    int16_t m_cursorY;
+    float m_blinkTime;                // Current cursor draw time
+    float m_blinkPeriod;
+    int8_t m_showCursor;                // Cursor visibility flag
 
-    int8_t                      inited;                     // Ready-to-use flag
-    int8_t                      show;                       // Visibility flag
-}console_info_t, *console_info_p;
+    bool inited = false;                     // Ready-to-use flag
+    bool m_isVisible;                       // Visibility flag
 
-extern console_info_t con_base;
+    std::string& currentLine() {
+        return m_lines.front().text;
+    }
 
-void Con_Init();
-void Con_InitFonts();
-void Con_InitGlobals();
-void Con_Destroy();
+    ConsoleInfo() = default;
 
-void Con_SetLineInterval(float interval);
+public:
+    void init();
 
-void Con_Draw();
-void Con_DrawBackground();
-void Con_DrawCursor();
+    static ConsoleInfo& instance() {
+        static ConsoleInfo con_base;
+        return con_base;
+    }
 
-void Con_Filter(char *text);
-void Con_Edit(int key);
-void Con_CalcCursorPosition();
-void Con_AddLog(const char *text);
-void Con_AddLine(const char *text, font_Style style = FONTSTYLE_CONSOLE_INFO);
-void Con_AddText(const char *text, font_Style style = FONTSTYLE_CONSOLE_INFO);
-void Con_Printf(const char *fmt, ...);
-void Con_Warning(int warn_string_index, ...);
-void Con_Notify(int notify_string_index, ...);
+    ~ConsoleInfo() = default;
 
-void Con_Clean();
+    void initFonts();
 
-#endif
+    void initGlobals();
+
+    void setLineInterval(float interval);
+
+    void draw();
+
+    void drawBackground();
+
+    void drawCursor();
+
+    void filter(const std::string& text);
+
+    void edit(int key);
+
+    void calcCursorPosition();
+
+    void addLog(const std::string& text);
+
+    void addLine(const std::string& text, font_Style style);
+
+    void addText(const std::string& text, font_Style style);
+
+    void printf(const char *fmt, ...);
+
+    void warning(int warn_string_index, ...);
+
+    void notify(int notify_string_index, ...);
+
+    void clean();
+
+    bool isVisible() const {
+        return m_isVisible;
+    }
+
+    void toggleVisibility() {
+        m_isVisible = !m_isVisible;
+    }
+
+    int spacing() const {
+        return m_spacing;
+    }
+
+    void setSpacing(float val) {
+        m_spacing = val;
+    }
+
+    void setVisible(bool val) {
+        m_isVisible = val;
+    }
+
+    void setShowCursorPeriod(float val) {
+        m_blinkPeriod = val;
+    }
+
+    void setLineSize(uint16_t val) {
+        m_lineSize = val;
+    }
+
+    void setVisibleLines(size_t val) {
+        m_visibleLines = val;
+    }
+
+    size_t visibleLines() const {
+        return m_visibleLines;
+    }
+
+    void setBufferSize(size_t val) {
+        m_bufferSize = val;
+    }
+
+    void setHistorySize(size_t val) {
+        m_historySize = val;
+    }
+
+    uint16_t lineSize() const {
+        return m_lineSize;
+    }
+
+    int16_t lineHeight() const {
+        return m_lineHeight;
+    }
+
+    void setCursorY(int16_t y) {
+        m_cursorY = y;
+    }
+
+    void setBackgroundColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
+        m_backgroundColor[0] = r;
+        m_backgroundColor[1] = g;
+        m_backgroundColor[2] = b;
+        m_backgroundColor[3] = a;
+    }
+};

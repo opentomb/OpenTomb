@@ -647,10 +647,10 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
     if (read_bit8(src) != 0)
         Sys_extError("read_tr5_level: 'SPR' not found");
 
-    this->sprite_textures_count = read_bitu32(src);
-    this->sprite_textures = (tr_sprite_texture_t*)malloc(this->sprite_textures_count * sizeof(tr_sprite_texture_t));
-    for (i = 0; i < this->sprite_textures_count; i++)
-        read_tr4_sprite_texture(src, this->sprite_textures[i]);
+    this->Spriteextures_count = read_bitu32(src);
+    this->Spriteextures = (tr_Spriteexture_t*)malloc(this->Spriteextures_count * sizeof(tr_Spriteexture_t));
+    for (i = 0; i < this->Spriteextures_count; i++)
+        read_tr4_Spriteexture(src, this->Spriteextures[i]);
 
     this->sprite_sequences_count = read_bitu32(src);
     this->sprite_sequences = (tr_sprite_sequence_t*)malloc(this->sprite_sequences_count * sizeof(tr_sprite_sequence_t));
