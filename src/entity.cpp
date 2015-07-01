@@ -1558,7 +1558,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     }
 
     updateRigidBody(true);
-    for(uint16_t i=0;i<m_bf.bone_tags.size();i++) {
+    for(size_t i=0; i<m_bf.bone_tags.size(); i++) {
         bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get());
         m_bt.bt_body[i]->activate();
         m_bt.bt_body[i]->setLinearVelocity(m_speed);

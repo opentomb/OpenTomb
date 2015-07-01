@@ -144,6 +144,9 @@ void Frustum::genClipPlanes(Camera *cam)
  */
 std::shared_ptr<Frustum> Frustum::portalFrustumIntersect(Portal *portal, const std::shared_ptr<Frustum>& emitter, Render *render)
 {
+    if(!portal->dest_room)
+        return nullptr;
+
     if(planeDist(portal->norm, render->camera()->m_pos) < -SPLIT_EPSILON)    // non face or degenerate to the line portal
     {
         return nullptr;

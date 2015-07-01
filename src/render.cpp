@@ -1184,7 +1184,7 @@ void Render::setWorld(World *world)
         m_rList.resize(list_size);
     }
 
-    world = world;
+    m_world = world;
     m_drawSkybox = false;
     m_rListActiveCount = 0;
 
