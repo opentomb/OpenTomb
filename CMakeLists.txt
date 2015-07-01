@@ -49,6 +49,7 @@ endfunction(trylinklib)
 trylinklib("ogg" SHARED)
 trylinklib("vorbis" SHARED)
 trylinklib("vorbisfile" SHARED)
+trylinklib("sndfile" SHARED)
 
 find_package(ZLIB REQUIRED)
 INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})
@@ -128,6 +129,7 @@ TARGET_LINK_LIBRARIES(
     ${ogg_LIB}
     ${vorbis_LIB}
     ${vorbisfile_LIB}
+    ${sndfile_LIB}
 )
 
 IF(APPLE)
