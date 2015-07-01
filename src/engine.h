@@ -252,11 +252,7 @@ void Engine_Display();
 
 void Engine_BTInit();
 
-<<<<<<< HEAD
 int lua_print(lua_State * lua);
-=======
-int lua_print(lua_State*);
->>>>>>> origin/master
 bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);

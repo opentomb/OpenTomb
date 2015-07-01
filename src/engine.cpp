@@ -234,15 +234,9 @@ int lua_CheckStack(lua_State *lua)
      return 0;
  }
 
-<<<<<<< HEAD
-int lua_print(lua_State * lua)
-{
-     int top = lua_gettop(lua);
-=======
 int lua_print(lua_State* lua)
 {
      const int top = lua_gettop(lua);
->>>>>>> origin/master
 
      if(top == 0)
      {
@@ -252,15 +246,9 @@ int lua_print(lua_State* lua)
 
      for(int i=1; i<=top; i++)
      {
-<<<<<<< HEAD
-         ConsoleInfo::instance().addLine(lua_tostring(lua, i), FONTSTYLE_CONSOLE_EVENT);
+        const char* str = lua_tostring(lua, i);
+        ConsoleInfo::instance().addLine(str ? str : std::string(), FONTSTYLE_CONSOLE_EVENT);
      }
-
-=======
-         const char* str = lua_tostring(lua, i);
-         ConsoleInfo::instance().addLine(str ? str : std::string(), FONTSTYLE_CONSOLE_EVENT);
-     }
->>>>>>> origin/master
      return 0;
 }
 
@@ -293,12 +281,7 @@ int lua_DumpRoom(lua_State * lua)
 
     if(lua_gettop(lua) == 0)
     {
-<<<<<<< HEAD
         r = engine_camera.m_currentRoom;
-=======
-        ConsoleInfo::instance().printf("wrong model id = %d", id);
-        return;
->>>>>>> origin/master
     }
     else
     {
@@ -891,26 +874,7 @@ int lua_AddCharacterHair(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
     {
-<<<<<<< HEAD
         ConsoleInfo::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id], [hair_setup_index]");
-=======
-        HairSetup hair_setup;
-
-        if(!hair_setup.getSetup(setup_index))
-        {
-            ConsoleInfo::instance().warning(SYSWARN_NO_HAIR_SETUP, setup_index);
-        }
-        else
-        {
-            ent->m_hairs.emplace_back(std::make_shared<Hair>());
-
-            if(!ent->m_hairs.back()->create(&hair_setup, ent))
-            {
-                ConsoleInfo::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
-                ent->m_hairs.pop_back();
-            }
-        }
->>>>>>> origin/master
     }
     else
     {
@@ -4188,7 +4152,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     // Register script functions
 
     lua_registerc(lua, "print", lua_print);
-<<<<<<< HEAD
     lua_registerc(lua, "checkStack", lua_CheckStack);
     lua_registerc(lua, "dumpModel", lua_DumpModel);
     lua_registerc(lua, "dumpRoom", lua_DumpRoom);
@@ -4303,121 +4266,6 @@ void Engine_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
     lua_register(lua, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
     lua_register(lua, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
-=======
-    lua_registerc(lua, "checkStack", WRAP_FOR_LUA(lua_CheckStack));
-    lua_registerc(lua, "dumpModel", WRAP_FOR_LUA(lua_DumpModel));
-    lua_registerc(lua, "dumpRoom", WRAP_FOR_LUA(lua_dumpRoom1, lua_dumpRoom2));
-    lua_registerc(lua, "setRoomEnabled", WRAP_FOR_LUA(lua_SetRoomEnabled));
-
-    lua_registerc(lua, "playSound", WRAP_FOR_LUA(lua_PlaySound1, lua_PlaySound2));
-    lua_registerc(lua, "stopSound", WRAP_FOR_LUA(lua_StopSound1, lua_StopSound2));
-
-    lua_registerc(lua, "playStream", WRAP_FOR_LUA(lua_PlayStream1, lua_PlayStream2));
-
-    lua_registerc(lua, "setLevel", WRAP_FOR_LUA(lua_SetLevel));
-    lua_registerc(lua, "getLevel", WRAP_FOR_LUA(lua_GetLevel));
-
-    lua_registerc(lua, "setGame", WRAP_FOR_LUA(lua_SetGame1, lua_SetGame2));
-    lua_registerc(lua, "loadMap", WRAP_FOR_LUA(lua_LoadMap1, lua_LoadMap2, lua_LoadMap3));
-
-    lua_register(lua, "camShake", WRAP_FOR_LUA(lua_CamShake2, lua_CamShake1));
-
-    lua_register(lua, "fadeOut", WRAP_FOR_LUA(lua_FadeOut));
-    lua_register(lua, "fadeIn", WRAP_FOR_LUA(lua_FadeIn));
-    lua_register(lua, "fadeCheck", WRAP_FOR_LUA(lua_FadeCheck));
-
-    lua_register(lua, "flashSetup", WRAP_FOR_LUA(lua_FlashSetup));
-    lua_register(lua, "flashStart", WRAP_FOR_LUA(lua_FlashStart));
-
-    lua_register(lua, "getLevelVersion", WRAP_FOR_LUA(lua_GetLevelVersion));
-
-    lua_register(lua, "setFlipMap", WRAP_FOR_LUA(lua_SetFlipMap));
-    lua_register(lua, "getFlipMap", WRAP_FOR_LUA(lua_GetFlipMap));
-    lua_register(lua, "setFlipState", WRAP_FOR_LUA(lua_SetFlipState));
-    lua_register(lua, "getFlipState", WRAP_FOR_LUA(lua_GetFlipState));
-
-    lua_register(lua, "setModelCollisionMapSize", WRAP_FOR_LUA(lua_SetModelCollisionMapSize));
-    lua_register(lua, "setModelCollisionMap", WRAP_FOR_LUA(lua_SetModelCollisionMap));
-    lua_register(lua, "getAnimCommandTransform", WRAP_FOR_LUA(lua_GetAnimCommandTransform));
-    lua_register(lua, "setAnimCommandTransform", WRAP_FOR_LUA(lua_SetAnimCommandTransform1, lua_SetAnimCommandTransform2));
-    lua_register(lua, "setStateChangeRange", WRAP_FOR_LUA(lua_SetStateChangeRange2, lua_SetStateChangeRange1));
-
-    lua_register(lua, "addItem", WRAP_FOR_LUA(lua_AddItem3, lua_AddItem2));
-    lua_register(lua, "removeItem", WRAP_FOR_LUA(lua_RemoveItem));
-    lua_register(lua, "removeAllItems", WRAP_FOR_LUA(lua_RemoveAllItems));
-    lua_register(lua, "getItemsCount", WRAP_FOR_LUA(lua_GetItemsCount));
-    lua_register(lua, "createBaseItem", WRAP_FOR_LUA(lua_CreateBaseItem2, lua_CreateBaseItem1));
-    lua_register(lua, "deleteBaseItem", WRAP_FOR_LUA(lua_DeleteBaseItem));
-    lua_register(lua, "printItems", WRAP_FOR_LUA(lua_PrintItems));
-
-    lua_register(lua, "canTriggerEntity", WRAP_FOR_LUA(lua_CanTriggerEntity3,lua_CanTriggerEntity2,lua_CanTriggerEntity1));
-    lua_register(lua, "spawnEntity", WRAP_FOR_LUA(lua_SpawnEntity2,lua_SpawnEntity1));
-    lua_register(lua, "enableEntity", WRAP_FOR_LUA(lua_EnableEntity));
-    lua_register(lua, "disableEntity", WRAP_FOR_LUA(lua_DisableEntity));
-
-    lua_register(lua, "sameRoom", WRAP_FOR_LUA(lua_SameRoom));
-    lua_register(lua, "newSector", WRAP_FOR_LUA(lua_NewSector));
-    lua_register(lua, "similarSector", WRAP_FOR_LUA(lua_SimilarSector2,lua_SimilarSector1));
-    lua_register(lua, "getSectorHeight", WRAP_FOR_LUA(lua_GetSectorHeight3,lua_GetSectorHeight2,lua_GetSectorHeight1));
-
-    lua_register(lua, "moveEntityGlobal", WRAP_FOR_LUA(lua_MoveEntityGlobal));
-    lua_register(lua, "moveEntityLocal", WRAP_FOR_LUA(lua_MoveEntityLocal));
-    lua_register(lua, "moveEntityToSink", WRAP_FOR_LUA(lua_MoveEntityToSink));
-    lua_register(lua, "moveEntityToEntity", WRAP_FOR_LUA(lua_MoveEntityToEntity2,lua_MoveEntityToEntity1));
-    lua_register(lua, "rotateEntity", WRAP_FOR_LUA(lua_RotateEntity2, lua_RotateEntity1));
-
-    lua_register(lua, "getEntityModelID", WRAP_FOR_LUA(lua_GetEntityModelID));
-
-    lua_register(lua, "getEntityVector", WRAP_FOR_LUA(lua_GetEntityVector));
-    lua_register(lua, "getEntityDirDot", WRAP_FOR_LUA(lua_GetEntityDirDot));
-    lua_register(lua, "getEntityDistance", WRAP_FOR_LUA(lua_GetEntityDistance));
-    lua_register(lua, "getEntityPos", WRAP_FOR_LUA(lua_GetEntityPosition));
-    lua_register(lua, "setEntityPos", WRAP_FOR_LUA(lua_SetEntityPosition2,lua_SetEntityPosition1));
-    lua_register(lua, "getEntityAngles", WRAP_FOR_LUA(lua_GetEntityAngles));
-    lua_register(lua, "setEntityAngles", WRAP_FOR_LUA(lua_SetEntityAngles2,lua_SetEntityAngles1));
-    lua_register(lua, "getEntityScaling", WRAP_FOR_LUA(lua_GetEntityScaling));
-    lua_register(lua, "setEntityScaling", WRAP_FOR_LUA(lua_SetEntityScaling));
-    lua_register(lua, "getEntitySpeed", WRAP_FOR_LUA(lua_GetEntitySpeed));
-    lua_register(lua, "setEntitySpeed", WRAP_FOR_LUA(lua_SetEntitySpeed2,lua_SetEntitySpeed1));
-    lua_register(lua, "getEntitySpeedLinear", WRAP_FOR_LUA(lua_GetEntitySpeedLinear));
-    lua_register(lua, "setEntityCollision", WRAP_FOR_LUA(lua_SetEntityCollision));
-    lua_register(lua, "setEntityCollisionFlags", WRAP_FOR_LUA(lua_SetEntityCollisionFlags3,lua_SetEntityCollisionFlags2,lua_SetEntityCollisionFlags1));
-    lua_register(lua, "getEntityAnim", WRAP_FOR_LUA(lua_GetEntityAnim));
-    lua_register(lua, "setEntityAnim", WRAP_FOR_LUA(lua_SetEntityAnim3,lua_SetEntityAnim2,lua_SetEntityAnim1));
-    lua_register(lua, "setEntityAnimFlag", WRAP_FOR_LUA(lua_SetEntityAnimFlag));
-    lua_register(lua, "setEntityBodyPartFlag", WRAP_FOR_LUA(lua_SetEntityBodyPartFlag));
-    lua_register(lua, "setModelBodyPartFlag", WRAP_FOR_LUA(lua_SetModelBodyPartFlag));
-    lua_register(lua, "getEntityModel", WRAP_FOR_LUA(lua_GetEntityModel));
-    lua_register(lua, "getEntityVisibility", WRAP_FOR_LUA(lua_GetEntityVisibility));
-    lua_register(lua, "setEntityVisibility", WRAP_FOR_LUA(lua_SetEntityVisibility));
-    lua_register(lua, "getEntityActivity", WRAP_FOR_LUA(lua_GetEntityActivity));
-    lua_register(lua, "setEntityActivity", WRAP_FOR_LUA(lua_SetEntityActivity));
-    lua_register(lua, "getEntityEnability", WRAP_FOR_LUA(lua_GetEntityEnability));
-    lua_register(lua, "getEntityOCB", WRAP_FOR_LUA(lua_GetEntityOCB));
-    lua_register(lua, "setEntityOCB", WRAP_FOR_LUA(lua_SetEntityOCB));
-    lua_register(lua, "getEntityTimer", WRAP_FOR_LUA(lua_GetEntityTimer));
-    lua_register(lua, "setEntityTimer", WRAP_FOR_LUA(lua_SetEntityTimer));
-    lua_register(lua, "getEntityFlags", WRAP_FOR_LUA(lua_GetEntityFlags));
-    lua_register(lua, "setEntityFlags", WRAP_FOR_LUA(lua_SetEntityFlags2,lua_SetEntityFlags1));
-    lua_register(lua, "getEntityTypeFlag", WRAP_FOR_LUA(lua_GetEntityTypeFlag2,lua_GetEntityTypeFlag1));
-    lua_register(lua, "setEntityTypeFlag", WRAP_FOR_LUA(lua_SetEntityTypeFlag2,lua_SetEntityTypeFlag1));
-    lua_register(lua, "getEntityStateFlag", WRAP_FOR_LUA(lua_GetEntityStateFlag));
-    lua_register(lua, "setEntityStateFlag", WRAP_FOR_LUA(lua_SetEntityStateFlag2,lua_SetEntityStateFlag1));
-    lua_register(lua, "getEntityCallbackFlag", WRAP_FOR_LUA(lua_GetEntityCallbackFlag2,lua_GetEntityCallbackFlag1));
-    lua_register(lua, "setEntityCallbackFlag", WRAP_FOR_LUA(lua_SetEntityCallbackFlag2,lua_SetEntityCallbackFlag1));
-    lua_register(lua, "getEntityState", WRAP_FOR_LUA(lua_GetEntityState));
-    lua_register(lua, "setEntityState", WRAP_FOR_LUA(lua_SetEntityState2,lua_SetEntityState1));
-    lua_register(lua, "setEntityRoomMove", WRAP_FOR_LUA(lua_SetEntityRoomMove));
-    lua_register(lua, "getEntityMoveType", WRAP_FOR_LUA(lua_GetEntityMoveType));
-    lua_register(lua, "setEntityMoveType", WRAP_FOR_LUA(lua_SetEntityMoveType));
-    lua_register(lua, "getEntityResponse", WRAP_FOR_LUA(lua_GetEntityResponse));
-    lua_register(lua, "setEntityResponse", WRAP_FOR_LUA(lua_SetEntityResponse));
-    lua_register(lua, "getEntityMeshCount", WRAP_FOR_LUA(lua_GetEntityMeshCount));
-    lua_register(lua, "setEntityMeshswap", WRAP_FOR_LUA(lua_SetEntityMeshswap));
-    lua_register(lua, "setModelMeshReplaceFlag", WRAP_FOR_LUA(lua_SetModelMeshReplaceFlag));
-    lua_register(lua, "setModelAnimReplaceFlag", WRAP_FOR_LUA(lua_SetModelAnimReplaceFlag));
-    lua_register(lua, "copyMeshFromModelToModel", WRAP_FOR_LUA(lua_CopyMeshFromModelToModel));
->>>>>>> origin/master
 
     lua_register(lua, "setEntityBodyMass", lua_SetEntityBodyMass);
     lua_register(lua, "pushEntityBody", lua_PushEntityBody);

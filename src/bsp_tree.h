@@ -46,11 +46,7 @@ class DynamicBSP
 private:
     std::unique_ptr<BSPNode> m_root{ new BSPNode() };
 
-<<<<<<< HEAD
     void addPolygon(const std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const struct Polygon &transformed);
-=======
-    void addPolygon(std::unique_ptr<BSPNode> &root, const BSPFaceRef &p, const Polygon &transformed);
->>>>>>> origin/master
     
 public:
     void addNewPolygonList(const std::vector<TransparentPolygonReference> &p, const btTransform &transform, const std::vector<std::shared_ptr<Frustum> > &f);

@@ -1787,17 +1787,10 @@ void Res_ScriptsOpen(int engine_version)
     {
         luaL_openlibs(level_script);
         lua_register(level_script, "print", lua_print);
-<<<<<<< HEAD
         lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
         lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
-=======
-        lua_register(level_script, "setSectorFloorConfig", WRAP_FOR_LUA(lua_SetSectorFloorConfig));
-        lua_register(level_script, "setSectorCeilingConfig", WRAP_FOR_LUA(lua_SetSectorCeilingConfig));
-        lua_register(level_script, "setSectorPortal", WRAP_FOR_LUA(lua_SetSectorPortal));
-        lua_register(level_script, "setSectorFlags", WRAP_FOR_LUA(lua_SetSectorFlags));
->>>>>>> origin/master
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
 
