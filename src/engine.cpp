@@ -96,7 +96,7 @@ void Engine_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatc
     if(c1 && c1 == c0)
     {
         if(((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->isStaticOrKinematicObject() ||
-                ((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->isStaticOrKinematicObject())
+            ((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->isStaticOrKinematicObject())
         {
             return;                                                             // No self interaction
         }
