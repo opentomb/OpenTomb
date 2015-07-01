@@ -61,8 +61,8 @@ struct lua_State;
 struct EngineContainer
 {
     uint16_t object_type = 0;
-    uint16_t                     collision_type;
-    uint16_t                     collision_shape;
+    uint16_t collision_type = COLLISION_TYPE_NONE;
+    uint16_t collision_shape = 0;
     Object* object = nullptr;
     Room* room = nullptr;
 };
@@ -252,7 +252,11 @@ void Engine_Display();
 
 void Engine_BTInit();
 
+<<<<<<< HEAD
 int lua_print(lua_State * lua);
+=======
+int lua_print(lua_State*);
+>>>>>>> origin/master
 bool Engine_LuaInit();
 void Engine_LuaClearTasks();
 void Engine_LuaRegisterFuncs(lua_State *lua);

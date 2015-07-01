@@ -20,8 +20,10 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/map.hpp>
+
 #include <limits>
 #include <string>
+#include <iostream>
 
 #include <lua.h>
 
@@ -343,8 +345,10 @@ struct Dispatcher {
     int operator()(lua_State* lua) {
         const int providedArgs = lua_gettop(lua);
         static constexpr int ArgCount = MPL::size<ParameterTypes>::value;
-        if(providedArgs < ArgCount)
+        if(providedArgs < ArgCount) {
+            throw FunctionNotFoundError("Too few parameters provided");
             return 0;
+        }
 
         state() = lua;
         int n = CallTraits<MPL::size<ParameterTypes>::value, ResultType, F>::call(m_function, lua);
@@ -392,30 +396,37 @@ struct MultiDispatcher
     template<typename N>
     int doCall( lua_State* lua, const MPL::false_& )
     {
+        throw FunctionNotFoundError("A function signature is missing");
         return 0;
     }
 
     template<typename N>
     int doCall(lua_State* lua) {
         using SigFound = typename FUS::result_of::has_key<FunctionMap, N>::type;
-        doCall<N>( lua, SigFound() );
+        return doCall<N>( lua, SigFound() );
     }
 
     int operator()(lua_State* lua) {
         const auto argCount = lua_gettop(lua);
-        switch(argCount) {
+        try {
+            switch(argCount) {
 
 #define LUA_RUNTIME_TO_TEMPLATE(z, n, data) \
-        case n: return doCall<MPL::long_<n>>(lua);
+                case n: return doCall<MPL::long_<n>>(lua);
 
 #define LUA_TRANSLATE_CALLS(n) \
     BOOST_PP_REPEAT(n, LUA_RUNTIME_TO_TEMPLATE, ())
 
-            LUA_TRANSLATE_CALLS(21)
+                LUA_TRANSLATE_CALLS(21)
 
-            default: throw FunctionNotFoundError("Only functions with up to 20 parameters are possible");
+                default: throw FunctionNotFoundError("Only functions with up to 20 parameters are possible");
 #undef LUA_TRANSLATE_CALLS
 #undef LUA_RUNTIME_TO_TEMPLATE
+            }
+        }
+        catch(std::runtime_error& ex) {
+            std::cerr << ex.what();
+            return 0;
         }
     }
 };

@@ -73,7 +73,7 @@ void Res_SetEntityModelProperties(std::shared_ptr<Entity> ent)
         if(lua_isfunction(level_script, -1))
         {
             lua_pushinteger(level_script, engine_world.version);                // engine version
-            lua_pushinteger(level_script, ent->m_bf.animations.model->id);        // entity model id
+            lua_pushinteger(level_script, ent->m_bf.animations.model->id);      // entity model id
             if (lua_CallAndLog(level_script, 2, 4, 0))                          // call that function
             {
                 if(!lua_isnil(level_script, -4))
@@ -1787,10 +1787,17 @@ void Res_ScriptsOpen(int engine_version)
     {
         luaL_openlibs(level_script);
         lua_register(level_script, "print", lua_print);
+<<<<<<< HEAD
         lua_register(level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
         lua_register(level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
         lua_register(level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(level_script, "setSectorFlags", lua_SetSectorFlags);
+=======
+        lua_register(level_script, "setSectorFloorConfig", WRAP_FOR_LUA(lua_SetSectorFloorConfig));
+        lua_register(level_script, "setSectorCeilingConfig", WRAP_FOR_LUA(lua_SetSectorCeilingConfig));
+        lua_register(level_script, "setSectorPortal", WRAP_FOR_LUA(lua_SetSectorPortal));
+        lua_register(level_script, "setSectorFlags", WRAP_FOR_LUA(lua_SetSectorFlags));
+>>>>>>> origin/master
 
         luaL_dofile(level_script, "scripts/staticmesh/staticmesh_script.lua");
 
@@ -4077,11 +4084,18 @@ void TR_GenEntities(World *world, class VT_Level *tr)
             lara->m_height = 768.0;
             lara->state_func = State_Control_Lara;
 
+            world->addEntity(lara);
+
             continue;
         }
 
         entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
         entity->genEntityRigidBody();
+
+        entity->rebuildBV();
+        entity->m_self->room->addEntity(entity.get());
+        world->addEntity(entity);
+        Res_SetEntityModelProperties(entity);
 
         if(!entity->m_enabled || (entity->m_self->collision_type & 0x0001) == 0)
             entity->disableCollision();

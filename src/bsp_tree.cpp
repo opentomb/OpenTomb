@@ -12,6 +12,9 @@
 
 void DynamicBSP::addPolygon(const std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const struct Polygon& transformed)
 {
+    if(!root)
+        root.reset(new BSPNode());
+
     if(root->polygons_front.empty())
     {
         // we though root->front == NULL and root->back == NULL

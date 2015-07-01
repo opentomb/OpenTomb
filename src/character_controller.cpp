@@ -242,7 +242,8 @@ void Character::getHeightInfo(const btVector3& pos, struct HeightInfo *fc, btSca
     fc->transition_level = 32512.0;
 
     r = Room_FindPosCogerrence(pos, r);
-    r = r->checkFlip();
+    if(r)
+        r = r->checkFlip();
     if(r)
     {
         rs = r->getSectorXYZ(pos);                                         // if r != NULL then rs can not been NULL!!!
